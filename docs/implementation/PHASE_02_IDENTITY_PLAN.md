@@ -46,11 +46,11 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Recheck ACTIVE account state atomically when accepting/touching an existing session.
 - [x] Implement server-only Resend transactional email adapter for verification and password-reset messages.
 - [ ] Configure a Resend API key and verified sender in deployment secrets; perform a real delivery smoke test.
-- [ ] Add resend-verification cooldown and anti-enumeration behavior.
+- [x] Add resend-verification abuse throttling (separate persistent budget) and generic anti-enumeration response.
 - [x] Add a fail-closed trusted-proxy IP resolver for explicitly configured Cloudflare/Vercel edge headers; arbitrary `X-Forwarded-For` is never trusted. Configure only after the edge overwrites the header and origin bypass is blocked.
-- [ ] Add HTTP registration and verification routes only after email delivery and abuse controls are ready.
+- [x] Add minimal HTTP registration, verification, and resend routes with same-origin/JSON checks; real delivery remains blocked on deployment configuration.
 - [ ] Configure `TRUSTED_PROXY_IP_HEADER` for the actual deployment edge; keep IP-dependent endpoints closed until verified.
-- [ ] Add end-to-end registration and verification tests through public HTTP endpoints.
+- [ ] Run one HTTP end-to-end registration → verification → login → authenticated request → logout journey after deployment configuration.
 
 ### 2.5 Login, logout, recovery, and enforcement
 - [x] Implement password login domain service: normalized identity lookup, dummy-hash verification for unknown accounts, generic credential failures, verified/active account checks, attempt recording, throttling before scrypt, session issuance, and successful-login audit event (CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822).
@@ -64,7 +64,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [ ] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes.
 - [ ] Negative tests: anonymous access, suspended user, expired/revoked session, cross-store access, replayed token, brute-force limits.
 
-## PostgreSQL integration work
+## Minimal verification gates\n\n1. General CI: Prisma validate/generate, typecheck, lint, unit tests, and production build.\n2. PostgreSQL identity integration for registration/verification/login/session/authorization.\n3. PostgreSQL password-reset lifecycle: digest-only token, one-time use, password change, audit, session revocation.\n4. One HTTP end-to-end journey after email/proxy configuration.\n\nDo not add tests for every helper; add tests only for critical security regressions, real bugs, or independent business invariants.\n\n## PostgreSQL integration work
 
 - [x] Add a dedicated integration-test configuration so database tests never run in the mocked/unit CI job.
 - [x] Add a PostgreSQL 16 workflow that deploys committed migrations, seeds baseline roles/permissions, and executes real database tests.

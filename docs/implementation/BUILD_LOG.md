@@ -645,3 +645,11 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added focused tests for unset configuration, untrusted forwarding headers, valid IPv6, Vercel proxy chains, and malformed values.
 - **Deployment is not configured yet.** The operator must select the actual edge header, ensure the edge overwrites it, and block direct origin access. Until then, IP-dependent public identity routes must fail closed.
 - Public routes remain blocked pending verified Resend delivery, resend-verification throttling, and the trusted proxy deployment contract.
+
+
+## 2026-11-03 — Verification resend CI correction
+
+- General CI on commit `4db0ed483afc2b8f8f3e9925d57325df9d4efac5` failed TypeScript checking because the resend route referenced a missing challenge service and throttle export.
+- Added the missing server-only challenge issuer. It only issues challenges for pending, unverified accounts, invalidates previous unused challenges transactionally, stores a SHA-256 digest, and returns the raw token only to the trusted mail adapter.
+- Added a separate HMAC-namespaced persistent rate-limit budget for verification sends (3 per identifier/IP pair and 10 per trusted IP per 15-minute window); it does not share login/reset buckets.
+- PostgreSQL integration workflow passed on the affected commit, but general CI failed; the correction is awaiting CI. No broader test suite was added.
