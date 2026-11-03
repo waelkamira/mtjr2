@@ -2,6 +2,7 @@ import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { createDraftProduct } from "@/server/catalog/products";
+import { listDiscoverableProducts } from "@/server/catalog/discovery";
 
 export const runtime = "nodejs";
 const bodySchema = z.object({
@@ -22,5 +23,16 @@ export async function POST(request: Request): Promise<Response> {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid product input.", issues: error.issues }, { status: 400 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to create product." }, { status: 400 });
+  }
+}
+
+export async function GET(request: Request): Promise<Response> {
+  try {
+    const params = Object.fromEntries(new URL(request.url).searchParams.entries());
+    const result = await listDiscoverableProducts(params);
+    return Response.json(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) return Response.json({ error: "Invalid product query.", issues: error.issues }, { status: 400 });
+    return Response.json({ error: "Unable to list products." }, { status: 500 });
   }
 }
