@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. The canonical schema, seller/catalog services, inventory foundation, buyer storefront, and first seller workspace slice are committed. Latest consolidated CI is being rerun after fixing a lint failure; PostgreSQL verification of the newest combined migrations/services remains pending. No production database has been accessed.
+**Status:** In implementation. Canonical schema, seller/catalog services, inventory foundation, buyer storefront, and seller/admin workspaces are committed. General CI and disposable PostgreSQL integration both passed on `3a9369bf`. No production database has been accessed.
 
 ## Architecture and constraints
 
@@ -42,17 +42,19 @@
 - [x] Platform approval and store-scoped publication validation.
 - [x] Draft metadata update with review reset and platform rejection with mandatory reason.
 - [x] Persist rejection reason through additive migration.
-- [ ] Complete General CI for the latest lifecycle changes.
+- [x] General CI passed for the consolidated marketplace changes (`3a9369bf`).
 
 ## 3.5 Discovery and search
 
 - [x] Public active-product listing and slug detail APIs.
 - [x] Category, brand, market, currency, and text filters; bounded pagination and stable sorting.
 - [x] Localized active search-synonym expansion.
-- [ ] Complete General CI for the latest discovery changes.
+- [x] General CI passed for the consolidated discovery changes (`3a9369bf`).
 - [ ] Add full-text/typo-tolerant ranking only after measuring baseline query behavior and catalog volume.
 - [x] Initial buyer storefront homepage and product detail route consume the public market/category/product APIs; search, category filtering, market selection, and localized currency display are connected.
-- [ ] Complete buyer catalog journeys (pagination, richer filters, SEO metadata, and accessible product media gallery).
+- [x] Buyer discovery pagination, brand/category/market/currency/search filters, and sorting are connected.
+- [x] Product detail has an accessible selectable media gallery with primary-image default.
+- [ ] Add server-rendered product SEO metadata and structured data.
 
 ## 3.6 Inventory and warehouse foundation
 
@@ -63,7 +65,7 @@
 - [x] Add draft transfer creation, ship, and receive operations with transactional stock movements and audit events.
 - [x] Require store ownership or exact STORE-scoped `inventory:manage` permission; reject cross-store transfers.
 - [x] Make stock-transfer creation idempotent with a required unique idempotency key and payload consistency check.
-- [ ] Complete General CI and PostgreSQL migration replay for inventory, market, seller catalog, and moderation queries.
+- [x] General CI and disposable PostgreSQL migration replay passed for inventory, market, seller catalog, and moderation queries.
 - [ ] Add reservation create/consume/release/expiry lifecycle when the cart/checkout system defines ownership and idempotency contracts.
 - [ ] Add reconciliation/stock-count workflow after movement ledger behavior is verified.
 
