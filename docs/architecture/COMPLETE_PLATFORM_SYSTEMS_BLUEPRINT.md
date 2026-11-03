@@ -87,7 +87,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `Review`, `ReviewMedia`, `StoreReview`, `OrderItem`, `Product`, `Store`, `Seller`, `AuditLog`.
 - **API:** `/api/reviews`, `/api/reviews/[id]`, `/api/stores/[id]/reviews`, `/api/admin/reviews/*`, `/api/seller/reviews`.
 - **Must include:** verified purchase, one-review policy, rating aggregates, media validation, report/appeal, moderation queue and seller response.
-- **Current state:** **Partial / needs verification.** Review components and admin surfaces exist; canonical persistence and migration-backed end-to-end behavior are not established by the audit.
+- **Current state (2026-11-03):** **Initial verified product-review slice implemented on `feat/verified-purchase-reviews`.** Added canonical `ProductReview` and `ReviewStatus` persistence with migration `20261104001000_verified_product_reviews`; submission is restricted to the signed-in purchaser of a delivered order item, one review per customer/product, and all new reviews enter PENDING moderation. Public product review list/aggregate, customer reviewable-purchase and review-history APIs, audited admin moderation APIs, product-detail review UI and admin review queue UI are connected. Store reviews, seller responses, review media, reports/appeals, and advanced moderation remain incomplete.
 
 #### 07. Wishlist, favorites and recommendations
 - **Purpose:** Save products, organize wishlists and show relevant recommendations.
