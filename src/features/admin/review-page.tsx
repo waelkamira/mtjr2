@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 type SellerApplication = {
-  id: string; legalName: string; displayName: string | null; createdAt: string;
-  owner: { id: string; email: string; name: string | null };
+  id: string; legalName: string | null; displayName: string | null; createdAt: string;
+  owner: { id: string; email: string; displayName: string | null };
 };
 type PendingProduct = {
   id: string; name: string; slug: string; description: string | null; createdAt: string;
@@ -111,7 +111,7 @@ export default function AdminReviewPage() {
           <div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Seller applications</h2><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs">{queues.sellers.length} pending</span></div>
           {!queues.sellers.length ? <p className="mt-4 text-sm text-[var(--muted)]">No pending seller applications.</p> : <div className="mt-4 divide-y divide-[var(--border)]">
             {queues.sellers.map((seller) => <article key={seller.id} className="grid gap-3 py-5 md:grid-cols-[1fr_1fr]">
-              <div><h3 className="font-semibold">{seller.displayName || seller.legalName}</h3><p className="mt-1 text-sm text-[var(--muted)]">{seller.legalName}</p><p className="mt-1 text-xs text-[var(--muted)]">{seller.owner.name || seller.owner.email} · {seller.owner.email}</p><p className="mt-1 text-xs text-[var(--muted)]">Submitted {new Date(seller.createdAt).toLocaleDateString()}</p></div>
+              <div><h3 className="font-semibold">{seller.displayName || seller.legalName}</h3><p className="mt-1 text-sm text-[var(--muted)]">{seller.legalName}</p><p className="mt-1 text-xs text-[var(--muted)]">{seller.owner.displayName || seller.owner.email} · {seller.owner.email}</p><p className="mt-1 text-xs text-[var(--muted)]">Submitted {new Date(seller.createdAt).toLocaleDateString()}</p></div>
               <div className="grid gap-2"><input className={field} value={reasons[seller.id] ?? ""} onChange={(e) => setReasons((current) => ({ ...current, [seller.id]: e.target.value }))} placeholder="Rejection reason (required to reject)" /><div className="flex gap-2"><button disabled={!!busyId} onClick={() => reviewSeller(seller.id, "APPROVE")} className={action + " bg-[var(--color-forest-900)] text-white"}>Approve seller</button><button disabled={!!busyId} onClick={() => reviewSeller(seller.id, "REJECT")} className={action + " border border-red-200 text-red-700"}>Reject</button></div></div>
             </article>)}
           </div>}
