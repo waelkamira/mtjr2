@@ -1,4 +1,4 @@
-name: Identity PostgreSQL Integration
+name: Platform PostgreSQL Integration
 
 on:
   workflow_dispatch:
@@ -17,11 +17,11 @@ on:
       - ".github/workflows/identity-integration.yml"
 
 concurrency:
-  group: identity-integration-${{ github.ref }}
+  group: platform-postgres-integration-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  identity-postgres:
+  platform-postgres:
     runs-on: ubuntu-latest
     services:
       postgres:
