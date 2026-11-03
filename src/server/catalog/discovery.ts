@@ -20,6 +20,25 @@ const querySchema = z.object({
 
 export type ProductDiscoveryInput = z.input<typeof querySchema>;
 
+type ProductWithPrices = {
+  variants: Array<{ prices: Array<{ amountMinor: bigint; compareAtMinor: bigint | null }> }>;
+};
+
+/** Convert Prisma BigInt minor-unit amounts to JSON-safe decimal strings at the API boundary. */
+function serializeProductPrices<T extends ProductWithPrices>(product: T) {
+  return {
+    ...product,
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      prices: variant.prices.map((price) => ({
+        ...price,
+        amountMinor: price.amountMinor.toString(),
+        compareAtMinor: price.compareAtMinor?.toString() ?? null
+      }))
+    }))
+  };
+}
+
 function buildWhere(query: z.output<typeof querySchema>, searchTerms: string[]): Prisma.ProductWhereInput {
   return {
     status: CatalogEntityStatus.ACTIVE,
@@ -78,7 +97,7 @@ export async function listDiscoverableProducts(input: unknown = {}) {
   ]);
   return {
     items: items.map((item) => ({
-      ...item,
+      ...serializeProductPrices(item),
       name: item.translations[0]?.name ?? item.name,
       description: item.translations[0]?.description ?? item.description
     })),
@@ -109,5 +128,5 @@ export async function getDiscoverableProduct(slug: string, locale = "en") {
     }
   });
   if (!product) return null;
-  return { ...product, name: product.translations[0]?.name ?? product.name, description: product.translations[0]?.description ?? product.description };
+  return { ...serializeProductPrices(product), name: product.translations[0]?.name ?? product.name, description: product.translations[0]?.description ?? product.description };
 }
