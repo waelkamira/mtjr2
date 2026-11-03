@@ -20,18 +20,18 @@ const querySchema = z.object({
 
 export type ProductDiscoveryInput = z.input<typeof querySchema>;
 
-function buildWhere(query: z.output<typeof querySchema>): Prisma.ProductWhereInput {
+function buildWhere(query: z.output<typeof querySchema>, searchTerms: string[]): Prisma.ProductWhereInput {
   return {
     status: CatalogEntityStatus.ACTIVE,
     store: { status: "ACTIVE", seller: { status: "ACTIVE" } },
     ...(query.brandId ? { brandId: query.brandId } : {}),
     ...(query.categoryId ? { categories: { some: { categoryId: query.categoryId } } } : {}),
-    ...(query.q ? { OR: [
-      { name: { contains: query.q, mode: "insensitive" } },
-      { slug: { contains: query.q, mode: "insensitive" } },
-      { description: { contains: query.q, mode: "insensitive" } },
-      { translations: { some: { locale: query.locale, name: { contains: query.q, mode: "insensitive" } } } }
-    ] } : {}),
+    ...(searchTerms.length ? { OR: searchTerms.flatMap((term) => [
+      { name: { contains: term, mode: "insensitive" as const } },
+      { slug: { contains: term, mode: "insensitive" as const } },
+      { description: { contains: term, mode: "insensitive" as const } },
+      { translations: { some: { locale: query.locale, name: { contains: term, mode: "insensitive" as const } } } }
+    ]) } : {}),
     ...(query.marketId ? { variants: { some: {
       isActive: true,
       prices: { some: { marketId: query.marketId, ...(query.currencyCode ? { currencyCode: query.currencyCode } : {}) } }
@@ -42,7 +42,15 @@ function buildWhere(query: z.output<typeof querySchema>): Prisma.ProductWhereInp
 /** Public discovery only returns active products from active sellers and stores. */
 export async function listDiscoverableProducts(input: unknown = {}) {
   const query = querySchema.parse(input);
-  const where = buildWhere(query);
+  let searchTerms = query.q ? [query.q] : [];
+  if (query.q) {
+    const synonyms = await prisma.searchSynonym.findMany({
+      where: { locale: query.locale, isActive: true, OR: [{ term: query.q }, { synonym: query.q }] },
+      select: { term: true, synonym: true }, take: 30
+    });
+    searchTerms = [...new Set([query.q, ...synonyms.flatMap((item) => [item.term, item.synonym])])].slice(0, 31);
+  }
+  const where = buildWhere(query, searchTerms);
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
     query.sort === "name_asc" ? [{ name: "asc" }, { id: "asc" }] :
     query.sort === "name_desc" ? [{ name: "desc" }, { id: "asc" }] :
