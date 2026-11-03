@@ -111,3 +111,16 @@
 - CI run `41573058187` for commit `852c837c70aa648327a170758c4945af08901afc` completed successfully: Prisma validate/generate, TypeScript, ESLint, Vitest, and production build all passed.
 - This successful run includes the pure authorization policy and its six tests, but predates the database permission repository and environment validation changes.
 - CI runs for the latest commits have been triggered; their final results are pending. No pass is claimed for the newest files yet.
+
+
+## 2026-11-03 — Canonical role assignment scopes
+
+**Implemented**
+- Added `normalizeRoleScope`: omitted scope resolves to the reserved global pair; scoped assignments require a non-empty type and identifier.
+- Scope types are canonicalized to uppercase and identifiers are trimmed.
+- The reserved `GLOBAL` marker cannot be used as a real scope type or identifier.
+- Added five tests for global defaults, normalization, incomplete scope rejection, and reserved marker rejection.
+
+**Verification**
+- Files committed as `fbc6d7a4d72cc87d1a0c4b106101c8a770b2c32e`.
+- The CI run for the prior implementation commit is still pending in GitHub Actions; the new tests have not yet been observed passing.
