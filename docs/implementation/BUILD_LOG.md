@@ -871,3 +871,22 @@ The project owner approved Resend as the transactional email provider. The serve
 
 **Safety**
 - No production database, Vercel environment variable, or deployment configuration was accessed or changed.
+
+
+## 2026-11-03 — Seller review and store creation workflows
+
+**Verification**
+- General CI for seller application submission commit `dd069434` completed successfully: Prisma validate/generate, typecheck, lint, unit tests, and production build.
+- PostgreSQL integration workflow had already passed for the marketplace schema migration baseline; no production database was accessed.
+
+**Implemented**
+- Added permission-protected seller application review using the existing `users:manage` permission.
+- Approval atomically changes PENDING → ACTIVE, grants the existing seeded SELLER role, and writes an audit event.
+- Rejection requires a reason, changes PENDING → REJECTED, and writes an audit event.
+- Added draft store creation for the authenticated approved seller; selected markets must be active and their country/default currency must be active. Store-market links and audit event are created in the same transaction.
+- Added focused tests for approval, rejection validation, and store creation alongside application submission tests.
+
+**Remaining in this slice**
+- Store-scoped staff invitation/acceptance/revocation and authorization.
+- Store activation/review workflow and seller profile/KYC requirements.
+- The newly added review/store services await the next CI run; they are not yet marked verified.
