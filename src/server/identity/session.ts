@@ -111,10 +111,18 @@ export async function resolveUserSession(
     return null;
   }
 
-  await prisma.userSession.update({
-    where: { id: session.id },
+  const touched = await prisma.userSession.updateMany({
+    where: {
+      id: session.id,
+      revokedAt: null,
+      expiresAt: { gt: now }
+    },
     data: { lastSeenAt: now }
   });
+
+  // Re-check the revocation/expiry predicate atomically before accepting the
+  // session. This avoids authenticating a session revoked during the read.
+  if (touched.count !== 1) return null;
 
   return {
     id: session.id,
