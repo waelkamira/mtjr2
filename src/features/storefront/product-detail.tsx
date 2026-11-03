@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
+type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { name: string; slug: string };
@@ -14,11 +15,20 @@ type Product = {
 export default function ProductDetail({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState("");
+  const [markets, setMarkets] = useState<Market[]>([]);
+  const [selectedMarketId, setSelectedMarketId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
+    fetch("/api/markets").then(async (response) => {
+      if (!response.ok) throw new Error("Markets unavailable.");
+      return response.json() as Promise<{ items: Market[] }>;
+    }).then((result) => {
+      if (!active) return;
+      setMarkets(result.items);
+    }).catch(() => { /* Product details remain available if market reference data is temporarily unavailable. */ });
     fetch(`/api/products/${encodeURIComponent(slug)}?locale=en`)
       .then(async (response) => {
         if (!response.ok) throw new Error(response.status === 404 ? "This product is not available." : "Product details could not be loaded.");
@@ -38,7 +48,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
   if (error || !product) return <main className="mx-auto min-h-screen max-w-3xl px-5 py-24 text-center"><p role="alert" className="text-lg">{error || "Product not found."}</p><Link href="/" className="mt-6 inline-block text-sm text-[var(--color-forest-800)] underline">Back to marketplace</Link></main>;
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
-  const price = variant?.prices[0];
+  const price = variant?.prices.find((item) => !selectedMarketId || item.marketId === selectedMarketId);
   const amount = price ? Number(price.amountMinor) / (10 ** (price.currency.minorUnit ?? 2)) : null;
 
   return <main className="min-h-screen bg-[var(--background)]">
@@ -49,6 +59,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{product.brand?.name ?? "Marketplace selection"}</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)] sm:text-4xl">{product.name}</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">Sold by {product.store.name}</p>
+        {markets.length > 0 && <label className="mt-5 block text-sm font-medium">Delivery market<select aria-label="Choose delivery market" value={selectedMarketId} onChange={(event) => setSelectedMarketId(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3"><option value="">All available markets</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}</select></label>}
         <p className="mt-7 text-3xl font-semibold">{price && amount !== null ? new Intl.NumberFormat(undefined, { style: "currency", currency: price.currencyCode }).format(amount) : "Price unavailable"}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">Choose an option<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || "Variant"}</option>)}</select></label>}
