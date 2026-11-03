@@ -30,7 +30,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Session create/resolve/revoke and revoke-all operations.
 - [x] HttpOnly session cookie helpers; Secure in production.
 - [x] Unit tests for password and session primitives/lifecycle.
-- [ ] Add session-cookie/API integration tests.\n- [x] Add a fail-closed same-origin JSON mutation guard: require exact configured application Origin, reject non-same-origin Fetch Metadata when supplied, and require application/json. Public mutation routes must invoke it before reading bodies or calling domain services.
+- [ ] Add session-cookie/API integration tests.
+- [x] Add a fail-closed same-origin JSON mutation guard: require exact configured application Origin, reject non-same-origin Fetch Metadata when supplied, and require application/json. Public mutation routes must invoke it before reading bodies or calling domain services.
 - [x] Add persistent, HMAC-keyed login rate-limit buckets for normalized identifier/IP pairs and trusted client IPs; store only keyed digests, never raw identifiers/IPs in the throttle ledger.
 - [x] Add unit tests for persistent login-throttle key derivation, pair clearing, validation, threshold blocking, and window reset.
 - [x] Verify PostgreSQL-backed concurrent login-throttle integration tests, persistent blocking, and pair-bucket clearing (run 41577891224 on commit `399fd314a5c94585b02089e939ae1f3b9bd5e19b`).
@@ -53,7 +54,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Server-side logout primitive revokes the current cookie-backed session, records an audit event, and clears the cookie even on invalid-session/error paths (unit tests and CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822). HTTP route remains blocked on CSRF/Origin enforcement.
 - [x] Add server-side password-reset challenge issuance for active verified accounts; invalidate older outstanding challenges and persist only SHA-256 token digests (verified by PostgreSQL integration run 41581259836).
 - [x] Add atomic one-time password-reset completion, password replacement, session revocation, and audit event (verified by PostgreSQL integration run 41581259836).
-- [x] Add reset-request throttling with separate HMAC-keyed identifier/IP buckets (3 per identifier/IP pair and 10 per IP per 15 minutes); reset traffic cannot consume login-attempt budget. The HTTP handler must return the same generic response for unknown, throttled, and eligible accounts.\n- [ ] Connect a real email adapter; do not expose raw reset tokens or enable public recovery until delivery is configured.
+- [x] Add reset-request throttling with separate HMAC-keyed identifier/IP buckets (3 per identifier/IP pair and 10 per IP per 15 minutes); reset traffic cannot consume login-attempt budget. The HTTP handler must return the same generic response for unknown, throttled, and eligible accounts.
+- [ ] Connect a real email adapter; do not expose raw reset tokens or enable public recovery until delivery is configured.
 - [x] Server-side current-session resolver for server components/route handlers; reads only the HttpOnly request cookie and resolves it against the session store, with a fail-closed required-session guard (unit tests and CI passed on commit `1de06a1325b29cafbeae5693d3aa78ff7dc339e5`).
 - [x] Server-only permission guard composes the verified request session with database-loaded permissions; denies missing permissions and never accepts a client-selected authorization subject (unit tests and CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822).
 - [ ] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes.
