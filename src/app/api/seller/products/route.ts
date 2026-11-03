@@ -1,6 +1,4 @@
-import { z } from "zod";
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
-import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { listSellerStoreProducts } from "@/server/catalog/products";
 
 export const runtime = "nodejs";
@@ -16,10 +14,4 @@ export async function GET(request: Request): Promise<Response> {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     return Response.json({ error: "Store catalog access denied." }, { status: 403 });
   }
-}
-
-export async function POST(request: Request): Promise<Response> {
-  const rejected = validateIdentityMutationRequest(request);
-  if (rejected) return rejected;
-  return Response.json({ error: "Use the product creation endpoint." }, { status: 405 });
 }
