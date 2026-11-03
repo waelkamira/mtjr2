@@ -130,12 +130,15 @@ export async function processVerifiedPaymentEvent(input: {
         }
       });
 
+      const isNewerEvent = !payment.lastProviderEventAt || input.event.occurredAt > payment.lastProviderEventAt;
       let nextStatus = payment.status;
-      if (payment.status !== PaymentStatus.SUCCEEDED) {
+      if (isNewerEvent) {
         if (input.event.eventType === "succeeded") nextStatus = PaymentStatus.SUCCEEDED;
-        else if (input.event.eventType === "processing") nextStatus = PaymentStatus.PROCESSING;
-        else if (input.event.eventType === "failed") nextStatus = PaymentStatus.FAILED;
-        else if (input.event.eventType === "cancelled") nextStatus = PaymentStatus.CANCELLED;
+        else if (payment.status !== PaymentStatus.SUCCEEDED && payment.status !== PaymentStatus.FAILED && payment.status !== PaymentStatus.CANCELLED) {
+          if (input.event.eventType === "processing") nextStatus = PaymentStatus.PROCESSING;
+          else if (input.event.eventType === "failed") nextStatus = PaymentStatus.FAILED;
+          else if (input.event.eventType === "cancelled") nextStatus = PaymentStatus.CANCELLED;
+        }
       }
 
       if (nextStatus === PaymentStatus.SUCCEEDED && payment.order.status !== OrderStatus.PENDING_PAYMENT && payment.order.status !== OrderStatus.CONFIRMED) {
@@ -148,11 +151,12 @@ export async function processVerifiedPaymentEvent(input: {
           status: nextStatus,
           succeededAt: nextStatus === PaymentStatus.SUCCEEDED ? (payment.succeededAt ?? input.event.occurredAt) : payment.succeededAt,
           failureCode: nextStatus === PaymentStatus.FAILED ? "PROVIDER_PAYMENT_FAILED" : null,
-          failureMessage: nextStatus === PaymentStatus.FAILED ? "The payment provider reported a failed payment." : null
+          failureMessage: nextStatus === PaymentStatus.FAILED ? "The payment provider reported a failed payment." : null,
+          lastProviderEventAt: isNewerEvent ? input.event.occurredAt : payment.lastProviderEventAt
         }
       });
 
-      if (nextStatus === PaymentStatus.SUCCEEDED && payment.order.status === OrderStatus.PENDING_PAYMENT) {
+      if (isNewerEvent && nextStatus === PaymentStatus.SUCCEEDED && payment.order.status === OrderStatus.PENDING_PAYMENT) {
         await tx.order.update({ where: { id: payment.orderId }, data: { status: OrderStatus.CONFIRMED } });
         await tx.orderStatusHistory.create({
           data: { orderId: payment.orderId, status: OrderStatus.CONFIRMED, note: "Payment confirmed by a verified provider event.", createdAt: now }
