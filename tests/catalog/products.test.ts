@@ -3,6 +3,8 @@ import type { Prisma } from "@prisma/client";
 
 const mocks = vi.hoisted(() => ({
   requirePermission: vi.fn(),
+  requireCurrentSession: vi.fn(),
+  userHasScopedPermission: vi.fn(),
   storeFindUnique: vi.fn(),
   brandFindFirst: vi.fn(),
   categoryCount: vi.fn(),
@@ -16,6 +18,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/permission-guard", () => ({ requirePermission: mocks.requirePermission }));
+vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
+vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { product: { findUnique: mocks.productFindUnique }, $transaction: mocks.transaction }
 }));
@@ -25,7 +29,9 @@ import { createDraftProduct, publishProduct } from "@/server/catalog/products";
 describe("product lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requirePermission.mockResolvedValue({ userId: "seller-1" });
+    mocks.requirePermission.mockResolvedValue({ userId: "admin-1" });
+    mocks.requireCurrentSession.mockResolvedValue({ userId: "seller-1" });
+    mocks.userHasScopedPermission.mockResolvedValue(false);
     mocks.storeFindUnique.mockResolvedValue({
       id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE" },
       markets: [{ marketId: "market-1" }]
@@ -34,7 +40,7 @@ describe("product lifecycle", () => {
     mocks.categoryCount.mockResolvedValue(1);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
-    mocks.productFindUnique.mockResolvedValue({ storeId: "store-1" });
+    mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
     mocks.transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
