@@ -29,7 +29,7 @@ describe("marketplace seller lifecycle", () => {
       role: { findUnique: roleFindUnique },
       userRoleAssignment: { upsert: roleUpsert },
       auditLog: { create: auditCreate },
-      market: { findMany: vi.fn().mockResolvedValue([{ id: "market-1" }]) },
+      market: { findMany: vi.fn().mockResolvedValue([{ id: "market-1", defaultCurrencyCode: "EUR", currencies: [{ currencyCode: "EUR" }] }]) },
       store: { create: vi.fn().mockResolvedValue({ id: "store-1", name: "Shop", slug: "shop", status: "DRAFT" }) }
     }));
   });
