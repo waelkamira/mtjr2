@@ -105,7 +105,7 @@ export default function CartPage() {
             </section> :
             <div className="mt-8 space-y-6">
               {carts.filter((cart) => cart.items.length > 0).map((cart) => {
-                const subtotal = cart.items.reduce((sum, item) => sum + (item.price ? BigInt(item.price.amountMinor) * BigInt(item.quantity) : BigInt(0)), 0n);
+                const subtotal = cart.items.reduce((sum, item) => sum + (item.price ? BigInt(item.price.amountMinor) * BigInt(item.quantity) : BigInt(0)), BigInt(0));
                 return <section key={cart.id} className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
                   <div className="flex flex-wrap justify-between gap-2 border-b border-[var(--border)] bg-[var(--color-ivory-100)] px-5 py-4">
                     <div><p className="font-semibold text-[var(--color-forest-950)]">{cart.market.name}</p><p className="text-xs text-[var(--muted)]">Prices in {cart.currency.code}</p></div>
