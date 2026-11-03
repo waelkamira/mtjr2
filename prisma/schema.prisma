@@ -51,6 +51,7 @@ model User {
   sentStoreInvitations SellerStaff[]        @relation("SellerStaffInviter")
   carts                 Cart[]
   checkoutQuotes        CheckoutQuote[]
+  addresses             UserAddress[]
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -317,6 +318,7 @@ model Country {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   markets          Market[]
+  userAddresses    UserAddress[]
 
   @@index([isActive, name])
 }
@@ -896,6 +898,7 @@ model CheckoutQuote {
   market         Market              @relation(fields: [marketId], references: [id], onDelete: Restrict)
   currency       Currency            @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
   lines          CheckoutQuoteLine[]
+  deliveryAddress CheckoutQuoteAddress?
 
   @@index([cartId, status, expiresAt])
   @@index([userId, status, expiresAt])
@@ -919,4 +922,48 @@ model CheckoutQuoteLine {
 
   @@unique([quoteId, variantId])
   @@index([variantId])
+}
+
+model UserAddress {
+  id            String   @id @default(cuid())
+  userId        String
+  countryId     String
+  label         String?  @db.VarChar(80)
+  recipientName String  @db.VarChar(160)
+  phone         String  @db.VarChar(32)
+  line1         String  @db.VarChar(200)
+  line2         String? @db.VarChar(200)
+  city          String  @db.VarChar(120)
+  region        String? @db.VarChar(120)
+  postalCode    String? @db.VarChar(32)
+  isDefault     Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  country       Country @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  quoteSnapshots CheckoutQuoteAddress[]
+
+  @@index([userId, isDefault, createdAt])
+  @@index([countryId])
+}
+
+model CheckoutQuoteAddress {
+  id            String   @id @default(cuid())
+  quoteId       String   @unique
+  sourceAddressId String?
+  recipientName String  @db.VarChar(160)
+  phone         String  @db.VarChar(32)
+  countryCode   String  @db.Char(2)
+  countryName   String  @db.VarChar(120)
+  line1         String  @db.VarChar(200)
+  line2         String? @db.VarChar(200)
+  city          String  @db.VarChar(120)
+  region        String? @db.VarChar(120)
+  postalCode    String? @db.VarChar(32)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  quote         CheckoutQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  sourceAddress UserAddress? @relation(fields: [sourceAddressId], references: [id], onDelete: SetNull)
+
+  @@index([sourceAddressId])
 }
