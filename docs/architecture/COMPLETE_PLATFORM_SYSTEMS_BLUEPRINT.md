@@ -63,7 +63,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `Product`, `ProductVariant`, `ProductPrice`, `Category`, `Brand`, `SearchSynonym`; PostgreSQL trigram/search indexes where appropriate.
 - **API:** `/api/search`, `/api/search/suggestions`, `/api/admin/search-synonyms`.
 - **Must include:** query validation, autocomplete, synonyms, category/brand/price/availability filters, stable pagination, relevance sorting and abuse protection.
-- **Current state:** **Partial.** The canonical storefront discovery UI calls `GET /api/products` with query, market, category, brand, sort and pagination parameters; the server filters active products from active stores and returns bounded results. The demo fixture adds representative searchable products, but has not yet been seeded into a database. Typo-tolerant relevance ranking, autocomplete/suggestions, URL-shareable search state, price/availability facets and admin synonym management remain incomplete.
+- **Current state:** **Partial.** The canonical storefront discovery UI calls `GET /api/products` with query, market, category, brand, sort and pagination parameters; the server filters active products from active stores and returns bounded results. The demo fixture adds representative searchable products, but has not yet been seeded into a database. The storefront now restores query, market, category, brand, sort and page from the URL and keeps them synchronized, including browser back/forward navigation. Typo-tolerant relevance ranking, autocomplete/suggestions, price/availability facets and admin synonym management remain incomplete.
 
 #### 04. Cart and checkout
 - **Purpose:** Persistent guest/customer cart and safe conversion into a marketplace order.
