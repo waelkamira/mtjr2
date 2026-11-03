@@ -50,3 +50,7 @@ ALTER TABLE "SupportTicket" ADD CONSTRAINT "SupportTicket_category_check"
   CHECK ("category" IN ('GENERAL', 'ORDER', 'PAYMENT', 'DELIVERY', 'ACCOUNT', 'SELLER'));
 ALTER TABLE "SupportMessage" ADD CONSTRAINT "SupportMessage_body_length_check"
   CHECK (char_length(btrim("body")) BETWEEN 2 AND 8000);
+
+ALTER TABLE "SupportTicket" ADD COLUMN "customerReadAt" TIMESTAMP(3);
+ALTER TABLE "SupportTicket" ADD COLUMN "agentReadAt" TIMESTAMP(3);
+ALTER TABLE "SupportTicket" ADD COLUMN "firstResponseAt" TIMESTAMP(3);
