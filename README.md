@@ -194,3 +194,12 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Added connected `/notifications` page with unread count, open-resource links, and mark-as-read action.
 - Order placement now creates buyer and store-owner notifications in the same transaction as order/vendor-order creation. Unique deduplication keys prevent duplicate events on retries.
 - This is the in-app order-event foundation only. Email delivery, preferences, retries/outbox, and other event categories remain incomplete.
+
+
+## Verified product reviews
+
+- Added canonical `ProductReview` and `ReviewStatus` models in `prisma/schema.prisma`, with migration `20261104001000_verified_product_reviews`.
+- Customers can submit a review only for a delivered order item they own. A unique customer/product constraint enforces one review per customer and product.
+- New reviews enter moderation as `PENDING`; only published reviews appear publicly.
+- Connected product detail reviews, review submission, reviewable delivered purchases, customer review history, and the admin moderation queue/API.
+- Store reviews, seller responses, review media, reports/appeals and extended moderation workflows remain future work.
