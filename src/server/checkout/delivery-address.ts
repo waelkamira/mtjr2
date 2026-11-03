@@ -125,10 +125,14 @@ export async function setCheckoutDeliveryAddress(guestToken: string, quoteId: st
       };
     }
 
-    return tx.checkoutQuoteAddress.upsert({
+    const snapshot = await tx.checkoutQuoteAddress.upsert({
       where: { quoteId },
       create: { quoteId, ...address },
       update: { ...address }
     });
+    // Address changes invalidate destination-dependent shipping and tax selections.
+    await tx.checkoutShippingSelection.deleteMany({ where: { quoteId } });
+    await tx.checkoutTaxSnapshot.deleteMany({ where: { quoteId } });
+    return snapshot;
   }, { isolationLevel: "Serializable" });
 }
