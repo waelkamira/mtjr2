@@ -55,6 +55,8 @@ model User {
   orders                Order[]
   notifications         Notification[]
   productReviews        ProductReview[]
+  productQuestions      ProductQuestion[]
+  productAnswers        ProductAnswer[]
   storeReviews          StoreReview[]
   favorites             Favorite[]
 
@@ -340,6 +342,20 @@ enum ReviewStatus {
   HIDDEN
 }
 
+enum ProductQuestionStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  HIDDEN
+}
+
+enum ProductAnswerStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  HIDDEN
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -575,6 +591,7 @@ model Product {
   attributes     ProductAttribute[]
   orderItems     OrderItem[]
   reviews        ProductReview[]
+  questions      ProductQuestion[]
   favorites      Favorite[]
 
   @@unique([storeId, slug])
@@ -1288,6 +1305,43 @@ model StoreReview {
 
   @@unique([userId, storeId])
   @@index([storeId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model ProductQuestion {
+  id          String                @id @default(cuid())
+  productId   String
+  userId      String
+  question    String                @db.VarChar(2000)
+  status      ProductQuestionStatus @default(PENDING)
+  moderatedAt DateTime?
+  moderatedBy String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  product     Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  answers     ProductAnswer[]
+
+  @@index([productId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model ProductAnswer {
+  id          String              @id @default(cuid())
+  questionId  String
+  userId      String
+  body        String              @db.VarChar(4000)
+  status      ProductAnswerStatus @default(PENDING)
+  moderatedAt DateTime?
+  moderatedBy String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  question    ProductQuestion    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([questionId, status, createdAt])
   @@index([userId, createdAt])
   @@index([status, createdAt])
 }
