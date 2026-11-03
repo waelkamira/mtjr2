@@ -3,6 +3,7 @@ import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { hashPassword } from "@/server/identity/password";
+import { consumeLoginAttempt } from "@/server/identity/login-throttle";
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 
@@ -64,6 +65,27 @@ export async function createPasswordResetChallenge(
   });
 
   return { userId: user.id, token, expiresAt };
+}
+
+
+/**
+ * Public reset-request entry point. Reuses the established persistent
+ * identifier/IP throttle so reset requests cannot bypass login abuse limits.
+ * The HTTP handler must always return the same generic response regardless
+ * of whether a challenge was created, the account was unknown, or the request
+ * was throttled. trustedIpAddress must be resolved by trusted proxy config.
+ */
+export async function requestPasswordReset(
+  email: string,
+  trustedIpAddress: string,
+  now = new Date()
+): Promise<PasswordResetChallenge | null> {
+  const throttle = await consumeLoginAttempt(
+    { identifier: email, trustedIpAddress },
+    now
+  );
+  if (throttle.blocked) return null;
+  return createPasswordResetChallenge(email, now);
 }
 
 /**
