@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "src/server/identity/**"
+      - "src/app/api/auth/**"
       - "prisma/schema.prisma"
       - "prisma/migrations/**"
       - "prisma/seed.cjs"

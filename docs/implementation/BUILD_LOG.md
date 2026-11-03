@@ -661,3 +661,11 @@ The project owner approved Resend as the transactional email provider. The serve
 - Tokens are submitted only to same-origin APIs, never displayed in page content, and removed from the visible URL after successful processing. Both pages set `no-referrer` metadata.
 - No helper-by-helper test expansion was added. The existing general CI and PostgreSQL integration gates remain the required checks for this change.
 - Phase 2 remains blocked only on passing CI for this commit and deployment-only verification: configure Resend credentials/verified sender and trusted edge IP header, verify real email delivery, then execute one HTTP journey (register → verify → login → `/api/auth/me` → logout → anonymous request denied). No real email or deployed HTTP journey is claimed.
+
+
+## 2026-11-03 — Keep route changes inside the integration gate
+
+- General CI passed on the latest UI/action-page commit `7a30994e62de079839c8778f3d1f1a368097c2bc` ([run 41645257014](https://github.com/waelkamira/mtjr2/actions/runs/41645257014)).
+- The PostgreSQL identity integration suite passed on `da19c57876e39d9564e0ca519726e3b6b2efcf0a` ([run 41643736067](https://github.com/waelkamira/mtjr2/actions/runs/41643736067)); the latest commit changed only UI pages and documentation.
+- Updated the integration workflow path filter to include `src/app/api/auth/**`. Future API-route changes now trigger the essential database suite.
+- No new test cases added. The only remaining Phase 2 exit work is real deployment configuration, a delivery smoke test, and one end-to-end HTTP journey. Keep Phase 3 blocked until that journey passes.
