@@ -1076,3 +1076,27 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Verify the existing PostgreSQL migration/integration workflows against disposable CI PostgreSQL.
 3. Continue the Phase 3 vertical slice: seller-center UI wired to seller/store/catalog/inventory APIs, followed by remaining storefront catalog UX.
 4. Add deterministic reference data only after launch markets are approved.
+
+
+## 2026-11-03 — Seller workspace connected to seller and inventory APIs
+
+**Implemented**
+- Added an authenticated seller workspace query that returns only stores owned by the current user or stores where the user has an active staff membership. It includes the seller's current application status, enabled markets, warehouses, and inventory-record counts.
+- Extended `GET /api/seller/stores` to expose that server-authorized workspace data; the existing `POST` continues to create draft stores using the existing permission and market validation.
+- Added `/seller` UI for verified-email seller application submission, seller status, store creation with active-market selection, warehouse creation, and inventory overview.
+- Connected the seller UI to `/api/seller/applications`, `/api/seller/stores`, `/api/markets`, `/api/seller/warehouses`, and `/api/seller/inventory`. No user ID or store ownership is trusted from the browser; the backend resolves access from the authenticated session and database relations.
+- Fixed the storefront lint failure by removing the synchronous loading-state update from the product-fetch effect.
+
+**Prisma decision**
+- No schema migration was needed for this screen: `Seller`, `Store`, `StoreMarket`, `SellerStaff`, `Warehouse`, and `Inventory` already model every field and relation used by the workspace. The query uses these canonical relations; no duplicate UI-specific tables or fields were introduced.
+
+**Verification**
+- The earlier General CI run `41682051189` passed Prisma validation/generation and TypeScript, then failed ESLint on a synchronous `setState` in the storefront product effect. That defect is fixed.
+- General CI was repeatedly superseded by subsequent commits before reaching a complete run. The consolidated run after the seller workspace commits must pass Prisma validate/generate, typecheck, lint, unit tests, and production build before this slice is marked verified.
+- PostgreSQL migration replay for the latest combined schema/services remains pending. All database checks remain isolated to CI; no owner database or Vercel environment variables were accessed.
+
+**Next**
+1. Complete one consolidated General CI run and resolve only reported blockers.
+2. Run the existing disposable PostgreSQL baseline/integration workflows once against the latest schema.
+3. Continue seller product-management, staff, and stock-operation screens, then platform-admin moderation screens.
+4. Keep the Prisma schema aligned with the blueprint; add migrations only when a real domain workflow requires new persisted data.
