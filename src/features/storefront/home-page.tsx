@@ -9,6 +9,7 @@ type Market = {
   defaultCurrency: Currency;
 };
 type Category = { id: string; slug: string; name: string; children: Category[] };
+type Brand = { id: string; slug: string; name: string };
 type ProductPrice = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
@@ -34,9 +35,11 @@ function formatPrice(price: ProductPrice | undefined, markets: Market[]) {
 export default function StorefrontHomePage() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [marketId, setMarketId] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [draftQuery, setDraftQuery] = useState("");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "name_asc" | "name_desc">("newest");
@@ -56,11 +59,16 @@ export default function StorefrontHomePage() {
       fetch("/api/categories?locale=en&limit=30").then(async (response) => {
         if (!response.ok) throw new Error("Categories could not be loaded.");
         return response.json() as Promise<PageResult<Category>>;
+      }),
+      fetch("/api/brands?locale=en&limit=100").then(async (response) => {
+        if (!response.ok) throw new Error("Brands could not be loaded.");
+        return response.json() as Promise<PageResult<Brand>>;
       })
-    ]).then(([marketResult, categoryResult]) => {
+    ]).then(([marketResult, categoryResult, brandResult]) => {
       if (!active) return;
       setMarkets(marketResult.items);
       setCategories(categoryResult.items);
+      setBrands(brandResult.items);
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Marketplace data is unavailable.");
     }).finally(() => {
@@ -78,6 +86,7 @@ export default function StorefrontHomePage() {
       if (currency) params.set("currencyCode", currency);
     }
     if (categoryId) params.set("categoryId", categoryId);
+    if (brandId) params.set("brandId", brandId);
     if (query) params.set("q", query);
     Promise.resolve().then(() => { if (active) setLoadingProducts(true); });
     fetch(`/api/products?${params.toString()}`)
@@ -91,7 +100,7 @@ export default function StorefrontHomePage() {
       })
       .finally(() => { if (active) setLoadingProducts(false); });
     return () => { active = false; };
-  }, [marketId, categoryId, query, markets, sort, page]);
+  }, [marketId, categoryId, brandId, query, markets, sort, page]);
 
   const flatCategories = useMemo(() => flattenCategories(categories), [categories]);
   const selectedMarket = markets.find((market) => market.id === marketId);
@@ -163,7 +172,7 @@ export default function StorefrontHomePage() {
       <section id="discover" className="mx-auto max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Selected for discovery</p><h2 className="mt-2 text-3xl font-semibold tracking-tight">Explore the marketplace</h2><p className="mt-2 text-sm text-[var(--muted)]">{selectedMarket ? `Prices for ${selectedMarket.name} · ${selectedMarket.defaultCurrency.code}` : "Discover products from active stores"}</p></div>
-          <div className="flex flex-wrap items-center gap-3"><label className="text-sm text-[var(--muted)]">Sort by <select aria-label="Sort products" value={sort} onChange={(event) => { setSort(event.target.value as typeof sort); setPage(1); }} className="ml-2 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="newest">Newest</option><option value="name_asc">Name: A–Z</option><option value="name_desc">Name: Z–A</option></select></label>{(query || categoryId) && <button type="button" onClick={() => { setQuery(""); setDraftQuery(""); setCategoryId(""); setPage(1); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">Clear filters</button>}</div>
+          <div className="flex flex-wrap items-center gap-3"><label className="text-sm text-[var(--muted)]">Brand <select aria-label="Filter by brand" value={brandId} onChange={(event) => { setBrandId(event.target.value); setPage(1); }} className="ml-2 max-w-44 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">All brands</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label><label className="text-sm text-[var(--muted)]">Sort by <select aria-label="Sort products" value={sort} onChange={(event) => { setSort(event.target.value as typeof sort); setPage(1); }} className="ml-2 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="newest">Newest</option><option value="name_asc">Name: A–Z</option><option value="name_desc">Name: Z–A</option></select></label>{(query || categoryId || brandId) && <button type="button" onClick={() => { setQuery(""); setDraftQuery(""); setCategoryId(""); setBrandId(""); setPage(1); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">Clear filters</button>}</div>
         </div>
         {error && <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {loadingProducts ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <div key={index} className="h-72 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" />)}</div> : products.length ? (
