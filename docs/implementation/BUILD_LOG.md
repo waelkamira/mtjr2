@@ -542,3 +542,23 @@
 - Integrate a real transactional email provider through a server-only adapter.
 - Add CSRF/Origin enforcement before exposing mutation routes.
 - Add route-level HTTP tests and review concurrency/error handling.
+
+
+## 2026-11-03 — Focused password-reset verification and test-scope decision
+
+**Verified**
+- PostgreSQL integration run [41581259836](https://github.com/waelkamira/mtjr2/actions/runs/41581259836) passed on commit `6dcd566c6bbd5fdf8eb903e4c4b7f3ca636ff944`. Its password-reset scenario verifies digest-only token persistence, one-time consumption, password replacement, audit event creation, and revocation of existing sessions.
+- General CI run [41581280754](https://github.com/waelkamira/mtjr2/actions/runs/41581280754) passed on commit `79e260082aebe48d6fe2bca535b4f36a55ba4f3b`, including Prisma validation/generation, typecheck, lint, unit tests, and production build.
+- The subsequent changes in this commit only correct documentation; no application code changed.
+
+**Test strategy decision**
+- Avoid adding a separate test for every helper or trivial branch.
+- Keep the essential gates: general CI (schema/type/lint/unit/build), one PostgreSQL-backed identity journey covering registration/verification/login/session, one PostgreSQL password-reset lifecycle, and one public HTTP end-to-end journey once routes exist.
+- Add a new test only for a security-critical regression, a real bug, or a distinct business invariant not already covered.
+
+**Remaining Phase 2 blockers**
+- Request throttling and generic response behavior for password-reset requests.
+- Server-only email delivery adapter.
+- CSRF/Origin enforcement before public mutation routes.
+- A single critical public HTTP authentication journey, then focused security review.
+- Phase 3 remains blocked until these essentials pass.
