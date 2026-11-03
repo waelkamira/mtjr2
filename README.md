@@ -15,8 +15,6 @@ A ground-up implementation of a global, multi-vendor commerce platform.
 
 ## Target architecture
 
-The initial architecture will be established before feature implementation:
-
 - **Web application:** Next.js App Router and TypeScript.
 - **Database:** PostgreSQL with Prisma ORM.
 - **Application layers:** UI → route/controller → authentication and validation → domain service → repository → Prisma.
@@ -42,7 +40,6 @@ This sequence is dependency-aware. The 49 systems will be mapped to these delive
 ## Definition of done
 
 A system may be marked **Complete** only when:
-
 - its user and operational workflows are implemented;
 - data ownership, schema constraints, and migrations are correct;
 - APIs validate inputs and enforce authorization;
@@ -60,18 +57,13 @@ A system may be marked **Complete** only when:
 
 ## Current status
 
-**Status: Phase 1 foundation scaffolded; Phase 2 identity/access in progress.** The repository was verified empty before initialization. The Next.js/TypeScript application shell, environment validation, Prisma client singleton, identity/access schema, authorization policy, password hashing, session lifecycle, transactional registration/email-verification services, and persistent login-throttle foundation are committed. CI run [41575486446](https://github.com/waelkamira/mtjr2/actions/runs/41575486446) passed Prisma validation/generation, TypeScript, ESLint, all unit tests, and the production build for commit `021a8527a0be6c3dd819441b8d1e1cd4a7953543`. The throttle tests and pair-key consistency defect found in the preceding failed run were corrected. No migration has been generated or applied yet; PostgreSQL migration rehearsal, baseline role/permission seed, real database integration tests, email delivery, and public authentication routes remain outstanding. Phase 3 is blocked until all Phase 2 exit gates pass. See [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and the [build log](docs/implementation/BUILD_LOG.md).
+**Status: Phase 1 foundation scaffolded; Phase 2 identity/access in progress.** The canonical identity schema, committed baseline migration, repeatable role/permission seed, password primitives, session lifecycle, transactional registration/email verification, authorization policy/repository, and persistent login-throttle foundation are implemented. The committed migration deployed successfully to clean PostgreSQL 16 and the seed ran twice in the database baseline workflow. CI run [41577431810](https://github.com/waelkamira/mtjr2/actions/runs/41577431810) and the first PostgreSQL integration run [41577431835](https://github.com/waelkamira/mtjr2/actions/runs/41577431835) passed on commit `3a4b040a523922cf927a1732819a946c67951314`. The integration suite verified registration, consent/token persistence, one-time verification, scoped permission loading and denial, assignment uniqueness, and session creation/revocation. New concurrency tests for verification and login throttling are being added and await CI verification. Public login/logout, password recovery, real email delivery, CSRF/origin protection, and full HTTP E2E are still outstanding. **Phase 3 is blocked** until every Phase 2 exit gate passes. See [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and [build log](docs/implementation/BUILD_LOG.md).
 
+## Phase 2 — Verified database baseline
 
-### Phase 2 checkpoint — identity database baseline
-- [x] Initial Prisma identity migration committed and deployed to a clean PostgreSQL 16 database in CI.
-- [x] Deterministic baseline role/permission seed implemented; repeatability was verified by two consecutive executions on a clean PostgreSQL 16 database (run [41576588203](https://github.com/waelkamira/mtjr2/actions/runs/41576588203)).
-- [ ] PostgreSQL-backed identity integration tests and full authentication journey.
-- Phase 3 remains blocked until all Phase 2 exit gates in `docs/implementation/PHASE_02_IDENTITY_PLAN.md` pass.
-
-
-### Phase 2 — PostgreSQL integration checkpoint
-- [x] Added a dedicated PostgreSQL 16 identity integration workflow and isolated Vitest configuration.
-- [x] Added an initial real-database registration → verification → scoped authorization → session revocation test.
-- [ ] First integration workflow run must pass before this slice is considered verified.
+- [x] Initial Prisma identity migration committed and deployed to clean PostgreSQL 16.
+- [x] Deterministic baseline role/permission seed verified through two consecutive executions.
+- [x] Initial PostgreSQL-backed identity integration journey passed.
+- [ ] Updated PostgreSQL concurrency integration suite must pass.
+- [ ] Complete login, logout, password reset, email delivery, and protected HTTP journey.
 - Phase 3 remains blocked until all Phase 2 exit gates pass.

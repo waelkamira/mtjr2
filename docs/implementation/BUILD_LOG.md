@@ -361,3 +361,26 @@
 1. Inspect the first Identity PostgreSQL Integration run and fix any failing test or workflow issue.
 2. Add real-database rollback and login-throttle concurrency coverage.
 3. Implement login, logout, password reset, trusted session resolution, and server-side authorization enforcement.
+
+
+## 2026-11-03 — PostgreSQL integration verification and concurrency expansion
+
+**Verified**
+- General CI run [41577431810](https://github.com/waelkamira/mtjr2/actions/runs/41577431810) passed every step on commit `3a4b040a523922cf927a1732819a946c67951314`: dependency install, Prisma validate/generate, TypeScript, ESLint, unit tests, and production build.
+- Identity PostgreSQL Integration run [41577431835](https://github.com/waelkamira/mtjr2/actions/runs/41577431835) passed every step: PostgreSQL 16 startup, committed migration deployment, baseline seed, and real-database integration tests.
+- The passing integration slice covered transactional registration data, consent records, token digest persistence and single-use verification, scoped permission loading and cross-scope denial, role-assignment uniqueness, and session lifecycle/revocation.
+
+**Added after the passing run**
+- Changed the verification test to race two consumers against the same token and assert exactly one succeeds.
+- Added concurrent PostgreSQL login-throttle requests, persisted block verification, and pair-bucket clearing coverage.
+- These new assertions are committed separately and must pass the next integration workflow before they are marked verified.
+
+**Remaining Phase 2 gates**
+- Login/logout service and routes; trusted server-side session resolver and authorization guards.
+- Password-reset token lifecycle and session revocation.
+- Real email adapter and resend anti-enumeration/cooldown.
+- CSRF/origin protections and public HTTP E2E journey.
+- Security review and final evidence in this log.
+
+**Boundary**
+- Phase 2 remains in progress. No Marketplace Core (Phase 3) work has started.

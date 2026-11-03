@@ -22,7 +22,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Database grant reader, restricted to trusted server-side user IDs.
 - [x] Canonical role-scope normalization.
 - [ ] Implement audited role/permission assignment services.
-- [ ] Add integration tests against PostgreSQL for grant loading and assignment uniqueness.
+- [x] PostgreSQL integration coverage for grant loading, cross-store denial, and assignment uniqueness (verified in run 41577431835).
 
 ### 2.3 Password and session security
 - [x] Versioned scrypt password hashing and timing-safe verification.
@@ -32,8 +32,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Unit tests for password and session primitives/lifecycle.
 - [ ] Add session-cookie/API integration tests and CSRF/origin checks for state-changing routes.
 - [x] Add persistent, HMAC-keyed login rate-limit buckets for normalized identifier/IP pairs and trusted client IPs; store only keyed digests, never raw identifiers/IPs in the throttle ledger.
-- [x] Add unit tests for persistent login-throttle key derivation, pair clearing, validation, threshold blocking, and window reset (CI-verified in run 41575486446).
-- [ ] Add PostgreSQL-backed login throttling integration/concurrency tests and tune thresholds using production telemetry before enabling public login.
+- [x] Add unit tests for persistent login-throttle key derivation, pair clearing, validation, threshold blocking, and window reset.
+- [ ] Verify PostgreSQL-backed concurrent login-throttle integration tests and tune thresholds using production telemetry before enabling public login.
 
 ### 2.4 Registration and email verification
 - [x] Validate registration input and require terms/privacy consent.
@@ -45,7 +45,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [ ] Connect a real transactional email provider through a server-only adapter.
 - [ ] Add resend-verification cooldown and anti-enumeration behavior.
 - [ ] Add HTTP registration and verification routes only after email delivery and abuse controls are ready.
-- [ ] Add end-to-end registration and verification tests.
+- [ ] Add end-to-end registration and verification tests through public HTTP endpoints.
 
 ### 2.5 Login, logout, recovery, and enforcement
 - [ ] Login service: normalized identity lookup, password verification, verified/active account checks, attempt recording, throttling, session issuance.
@@ -56,13 +56,16 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [ ] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes.
 - [ ] Negative tests: anonymous access, suspended user, expired/revoked session, cross-store access, replayed token, brute-force limits.
 
-## PostgreSQL integration work — initial slice
+## PostgreSQL integration work
 
 - [x] Add a dedicated integration-test configuration so database tests never run in the mocked/unit CI job.
 - [x] Add a PostgreSQL 16 workflow that deploys committed migrations, seeds baseline roles/permissions, and executes real database tests.
-- [x] Add an initial real-database journey covering registration, consent persistence, email-token digest storage and single-use verification, store-scoped permission resolution, assignment uniqueness, session creation, and revocation.
-- [ ] Observe the first integration workflow run and fix any failures before marking this slice verified.
-- [ ] Extend real-database coverage to rollback behavior, password reset, and login-throttle concurrency.
+- [x] Verify registration, consent persistence, verification-token digest storage, and one-time token consumption against PostgreSQL.
+- [x] Verify concurrent verification-token consumption allows exactly one successful consumer.
+- [x] Verify store-scoped permission resolution, cross-store denial, assignment uniqueness, session creation, and revocation against PostgreSQL.
+- [x] Add PostgreSQL integration coverage for concurrent login-throttle requests, persistent blocking, and pair-bucket clearing.
+- [ ] Observe and pass the updated integration workflow before marking the concurrency test verified.
+- [ ] Extend database coverage to registration rollback fault injection and password-reset token lifecycle.
 
 ## Exit gates — all required
 
@@ -74,4 +77,4 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 6. CI passes Prisma validation/generation, typecheck, lint, all unit/integration tests, and production build.
 7. Security review and this plan/build log document evidence and remaining limitations.
 
-**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is implemented and verified for repeatability by two consecutive executions against the same clean PostgreSQL 16 database (CI run 41576588203). The general CI and clean database baseline both passed on commit `eb30e3bd39caafa9c20f115589fc3983ec528f46` (runs 41576951370 and 41576951316). A first PostgreSQL-backed identity integration suite and dedicated workflow have now been added, but their first run is pending; they are not yet counted as verified. This phase is not complete, and Phase 3 remains blocked.
+**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is verified for repeatability by two consecutive executions. The general CI and first PostgreSQL-backed identity integration workflow both passed on commit `3a4b040a523922cf927a1732819a946c67951314` (runs 41577431810 and 41577431835). The first integration run verified registration, one-time email verification, scoped authorization, assignment uniqueness, and session revocation. Concurrent verification-token consumption and PostgreSQL-backed login-throttle concurrency tests have now been added, but the updated workflow must pass before those new assertions are counted as verified. Login/logout/recovery endpoints, email delivery, CSRF/origin protection, and full public HTTP E2E remain outstanding. Phase 2 is not complete; Phase 3 remains blocked.
