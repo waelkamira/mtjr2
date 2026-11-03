@@ -28,7 +28,7 @@ Set these for Production (and Preview only when using isolated preview resources
 | `NEXT_PUBLIC_APP_URL` | Exact canonical HTTPS production URL, with no trailing slash. |
 | `AUTH_SECRET` | Random secret of at least 32 characters; generate a unique value for each environment. |
 | `RESEND_API_KEY` | Resend API key with permission to send from the verified domain. |
-| `RESEND_FROM_EMAIL` | Sender address verified by Resend, e.g. `Mtjr2 <no-reply@example.com>`. |
+| `RESEND_FROM_EMAIL` | Sender address verified by Resend, e.g. `no-reply@example.com` (the current environment schema requires a plain email address). |
 | `TRUSTED_PROXY_IP_HEADER` | Set to `x-vercel-forwarded-for` only after confirming the deployed request path is exclusively through Vercel and the origin cannot be reached directly. |
 
 Never use the example values from `.env.example` in production. Do not expose `AUTH_SECRET`, database credentials, or the Resend key as `NEXT_PUBLIC_*` variables.
