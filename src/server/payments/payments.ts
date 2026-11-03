@@ -54,25 +54,36 @@ export async function startOrderPayment(input: {
   if (order.status !== OrderStatus.PENDING_PAYMENT) throw new Error("This order is not awaiting payment.");
   if (order.totalMinor <= BigInt(0)) throw new Error("A zero-value order does not require a payment.");
 
-  const existing = await prisma.payment.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
-  if (existing) {
-    if (existing.orderId !== order.id || existing.provider !== provider.key) throw new Error("The payment idempotency key is already used for another request.");
-    if (existing.status !== PaymentStatus.INITIATING || existing.checkoutUrl) return serializePayment(existing);
-  }
-
-  const payment = existing ?? await prisma.payment.create({
-    data: {
-      orderId: order.id, provider: provider.key, amountMinor: order.totalMinor,
-      currencyCode: order.currencyCode, idempotencyKey: input.idempotencyKey,
-      status: PaymentStatus.INITIATING
+  const payment = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${order.id}), hashtext(${provider.key}))`);
+    const existing = await tx.payment.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
+    if (existing) {
+      if (existing.orderId !== order.id || existing.provider !== provider.key) {
+        throw new Error("The payment idempotency key is already used for another request.");
+      }
+      return existing;
     }
+    const active = await tx.payment.findFirst({
+      where: { orderId: order.id, provider: provider.key, status: { in: [PaymentStatus.INITIATING, PaymentStatus.REQUIRES_ACTION, PaymentStatus.PROCESSING] } },
+      orderBy: { createdAt: "desc" }
+    });
+    if (active) return active;
+    return tx.payment.create({
+      data: {
+        orderId: order.id, provider: provider.key, amountMinor: order.totalMinor,
+        currencyCode: order.currencyCode, idempotencyKey: input.idempotencyKey,
+        status: PaymentStatus.INITIATING
+      }
+    });
   });
+
+  if (payment.status !== PaymentStatus.INITIATING || payment.checkoutUrl) return serializePayment(payment);
 
   try {
     const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.NEXT_PUBLIC_APP_URL).toString();
     const intent = await provider.createIntent({
       paymentId: payment.id, orderNumber: order.orderNumber, amountMinor: order.totalMinor.toString(),
-      currencyCode: order.currencyCode, idempotencyKey: input.idempotencyKey, returnUrl,
+      currencyCode: order.currencyCode, idempotencyKey: payment.idempotencyKey, returnUrl,
       metadata: { orderId: order.id, paymentId: payment.id }
     });
     const checkoutUrl = new URL(intent.checkoutUrl);
@@ -88,9 +99,11 @@ export async function startOrderPayment(input: {
     });
     return serializePayment(updated);
   } catch (error) {
+    // Keep the attempt INITIATING: a network timeout can happen after the provider
+    // created its intent. Retrying must reuse the same provider idempotency key.
     await prisma.payment.updateMany({
       where: { id: payment.id, status: PaymentStatus.INITIATING },
-      data: { status: PaymentStatus.FAILED, failureCode: "PROVIDER_INTENT_FAILED", failureMessage: "Payment session could not be started." }
+      data: { failureCode: "PROVIDER_RESPONSE_UNCERTAIN", failureMessage: "Payment session is being reconciled. Retry safely." }
     });
     throw error;
   }
