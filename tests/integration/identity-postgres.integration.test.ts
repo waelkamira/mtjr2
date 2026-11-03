@@ -110,7 +110,8 @@ describe("identity PostgreSQL integration", () => {
 
   it("enforces persistent login throttling under concurrent PostgreSQL requests", async () => {
     const throttleEmail = `throttle-${suffix}@example.test`;
-    const trustedIpAddress = `2001:db8::${suffix.replaceAll("-", "")}`;
+    const ipHex = suffix.replaceAll("-", "");
+    const trustedIpAddress = `2001:db8:${ipHex.slice(0, 4)}:${ipHex.slice(4, 8)}:${ipHex.slice(8, 12)}:${ipHex.slice(12, 16)}:${ipHex.slice(16, 20)}:${ipHex.slice(20, 24)}`;
 
     const attempts = await Promise.all(
       Array.from({ length: 8 }, () =>
