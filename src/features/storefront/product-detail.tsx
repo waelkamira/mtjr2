@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null };
+type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { name: string; slug: string };
@@ -39,7 +39,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
   const price = variant?.prices[0];
-  const amount = price ? Number(price.amountMinor) / 100 : null;
+  const amount = price ? Number(price.amountMinor) / (10 ** (price.currency.minorUnit ?? 2)) : null;
 
   return <main className="min-h-screen bg-[var(--background)]">
     <header className="border-b border-[var(--border)] px-5 py-5"><div className="mx-auto flex max-w-6xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><Link href="/" className="text-sm text-[var(--color-forest-800)]">← Back to marketplace</Link></div></header>
