@@ -91,3 +91,23 @@
 **Verification**
 - Both files were re-fetched from GitHub after commit `852c837c70aa648327a170758c4945af08901afc`.
 - The latest GitHub Actions run is still executing dependency installation. No test result is claimed yet.
+
+
+## 2026-11-03 — Environment validation and database-backed permission loading
+
+**Implemented**
+- Added Zod-based environment parsing for PostgreSQL `DATABASE_URL`, public application URL, `AUTH_SECRET` (minimum 32 characters), and supported `NODE_ENV` values.
+- Prisma singleton now validates configuration before creating a client and receives the validated database URL explicitly.
+- Added configuration tests for valid values, invalid database protocol, short auth secret, and invalid app URL.
+- Added a server-side permission repository that loads active user role assignments and their permissions from PostgreSQL, then evaluates them with the pure scope-aware policy.
+- The repository rejects blank user IDs and documents that the ID must originate from a verified server session, never client input.
+
+**Security boundary / remaining work**
+- Authentication and trusted session resolution do not exist yet. The repository must not be exposed through a route until a verified session resolver is implemented.
+- Permission assignment write paths, scope-pair validation, audit events, database migration, and integration tests remain outstanding.
+- Environment validation is exercised by unit tests; no real production secrets are stored in the repository.
+
+**Verification**
+- CI run `41573058187` for commit `852c837c70aa648327a170758c4945af08901afc` completed successfully: Prisma validate/generate, TypeScript, ESLint, Vitest, and production build all passed.
+- This successful run includes the pure authorization policy and its six tests, but predates the database permission repository and environment validation changes.
+- CI runs for the latest commits have been triggered; their final results are pending. No pass is claimed for the newest files yet.
