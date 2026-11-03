@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** Started at the planning boundary. Production identity checks from Phase 2 remain deferred; they are not marked passed. Marketplace development proceeds against the disposable PostgreSQL database in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
+**Status:** In implementation. The Country/Currency/Market Prisma models and first migration have been committed; Prisma/CI verification is pending. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
 
 ## Goal
 
@@ -13,7 +13,8 @@ Do not copy legacy application code or add models without a defined workflow.
 ## Delivery order
 
 ### 3.1 Market reference data
-- [ ] Define canonical Country, Currency, Market, and market-currency availability models.
+- [x] Define canonical Country, Currency, Market, and market-currency availability models (commit `a84c4da`).
+- [x] Add the initial additive migration (commit `d120587`); CI migration verification is pending.
 - [ ] Define ISO codes, enabled/disabled states, default currency, and explicit decimal precision rules.
 - [ ] Add deterministic reference-data seed that is safe to run repeatedly.
 - [ ] Add repository/service read paths and a minimal admin-protected management API only where required.
