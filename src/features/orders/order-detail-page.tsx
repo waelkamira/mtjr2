@@ -37,7 +37,7 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
   }, [orderId]);
 
   return <main className="min-h-screen bg-[var(--background)]">
-    <header className="border-b border-[var(--border)] bg-white px-5 py-5"><div className="mx-auto flex max-w-4xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><Link href="/account/orders" className="text-sm text-[var(--color-forest-800)]">Order history</Link></div></header>
+    <header className="border-b border-[var(--border)] bg-white px-5 py-5"><div className="mx-auto flex max-w-4xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><div className="flex items-center gap-4"><Link href="/notifications" className="text-sm text-[var(--color-forest-800)]">Notifications</Link><Link href="/account/orders" className="text-sm text-[var(--color-forest-800)]">Order history</Link></div></div></header>
     <div className="mx-auto max-w-4xl px-5 py-10">
       {loading ? <div className="h-64 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /> : error ? <div role="alert" className="rounded-2xl bg-red-50 p-5 text-sm text-red-800">{error}</div> : order ? <>
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Order confirmation</p>
