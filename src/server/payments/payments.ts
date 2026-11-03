@@ -197,7 +197,16 @@ export async function processVerifiedPaymentEvent(input: {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return { accepted: true, duplicate: true };
+      const existingEvent = await prisma.paymentWebhookEvent.findUnique({
+        where: { provider_providerEventId: { provider: input.providerKey, providerEventId: input.event.eventId } },
+        select: { payloadHash: true }
+      });
+      if (existingEvent) {
+        if (existingEvent.payloadHash !== input.payloadHash) {
+          throw new Error("The provider reused an event ID with a different payload.");
+        }
+        return { accepted: true, duplicate: true };
+      }
     }
     throw error;
   }
