@@ -70,7 +70,7 @@ A system may be marked **Complete** only when:
 
 ## Current status
 
-**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; production-only exit checks are deferred, not passed. Phase 3 Marketplace Core: in progress; seller/store, taxonomy, product lifecycle, discovery, inventory foundations, and the connected buyer/seller/admin workspaces are implemented. Buyer product SEO metadata is now server-generated from the catalog service. Market reference data, seller/store workflows, taxonomy, product lifecycle, public discovery APIs, and warehouse/inventory foundations are implemented. The buyer storefront consumes the live market/category/product APIs, including product detail and currency-aware price display. The seller workspace supports seller applications, store/warehouse management, inventory viewing, and API-connected product draft creation/editing/publication. A platform moderation workspace is connected to protected seller/product review queues. Seller team and invitation/acceptance/revocation screens are now connected to scoped staff APIs. Reference-data activation and inventory reservation lifecycle remain pending. General CI and disposable PostgreSQL migration/integration verification passed on commit `3a9369bf`; the buyer product detail now includes an accessible media gallery. Warehouse, stock adjustment, and stock transfer screens are connected to the existing backend APIs.**
+**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; production-only exit checks are deferred, not passed. Phase 3 Marketplace Core: in progress; seller/store, taxonomy, product lifecycle, discovery, inventory foundations, and the connected buyer/seller/admin workspaces are implemented. Buyer product SEO metadata is now server-generated from the catalog service. Market reference data, seller/store workflows, taxonomy, product lifecycle, public discovery APIs, and warehouse/inventory foundations are implemented. The buyer storefront consumes the live market/category/product APIs, including product detail and currency-aware price display. The seller workspace supports seller applications, store/warehouse management, inventory viewing, and API-connected product draft creation/editing/publication. A platform moderation workspace is connected to protected seller/product review queues. Seller team and invitation/acceptance/revocation screens are now connected to scoped staff APIs. Reference-data activation remains pending. Buying Core is now in progress: persistent cart and checkout quote/reservation are verified; delivery-address capture is implemented and awaiting its CI/PostgreSQL verification. General CI and disposable PostgreSQL migration/integration verification passed on commit `3a9369bf`; the buyer product detail now includes an accessible media gallery. Warehouse, stock adjustment, and stock transfer screens are connected to the existing backend APIs.**
 
 Implemented identity capabilities include registration, email verification, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter, and a fail-closed trusted-proxy IP resolver.
 
@@ -106,7 +106,7 @@ Phase 3 execution plan: [Marketplace Core plan](docs/implementation/PHASE_03_MAR
 
 ## 2026-11-03 — Buying Core 4.1: persistent cart foundation
 
-**Implemented on `feat/buying-cart-core` (verification pending)**
+**Implemented and verified on `feat/buying-cart-core`**
 
 - Added canonical `GuestSession`, `Cart`, and `CartItem` models plus migration `20261103193000_cart_foundation`.
 - Enforced exactly one cart owner (customer or guest), unique active carts per owner/market/currency, and cart-line quantity bounds in PostgreSQL.
@@ -130,3 +130,23 @@ Phase 3 execution plan: [Marketplace Core plan](docs/implementation/PHASE_03_MAR
 2. Run one disposable PostgreSQL migration/integration check.
 3. Record exact results, review, and merge the cart foundation.
 4. Continue with checkout quote and reservation lifecycle per `PHASE_04_BUYING_PLAN.md`.
+
+## Buying Core progress — 2026-11-03
+
+### 4.2 Checkout quote and inventory reservation
+- Implemented on `feat/checkout-quote-reservations`; PR #2 depends on PR #1.
+- Added Prisma `CheckoutQuote` and `CheckoutQuoteLine` plus migration `20261103200000_checkout_quote_reservations`.
+- Server calculates item prices from active market product prices, snapshots line details in minor units, and reserves available stock transactionally for ten minutes.
+- Added quote create/read/release APIs, idempotency, expiry/release handling, and a connected `/checkout` review page.
+- General CI passed: [run 41704221580](https://github.com/waelkamira/mtjr2/actions/runs/41704221580). Disposable PostgreSQL integration passed: [run 41704221517](https://github.com/waelkamira/mtjr2/actions/runs/41704221517).
+
+### 4.2a Delivery address capture
+- Implemented on `feat/checkout-address-capture`; PR #3 is stacked on PR #2.
+- Added Prisma `UserAddress` and `CheckoutQuoteAddress` plus migration `20261103210000_checkout_address_capture`.
+- Added authenticated account address-book APIs and quote-scoped delivery address APIs for guest and signed-in checkout.
+- Delivery country is derived from the selected market on the server; the connected checkout UI supports new and saved addresses.
+- General CI and disposable PostgreSQL integration are pending for this slice: [PR #3](https://github.com/waelkamira/mtjr2/pull/3).
+- Shipping prices, tax, discounts, payments, and order creation are not implemented in this slice. No totals are fabricated.
+- No owner database or Vercel environment has been accessed.
+
+See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation boundary and `docs/implementation/BUILD_LOG.md` for exact evidence.
