@@ -86,8 +86,9 @@ model UserRoleAssignment {
   id          String    @id @default(cuid())
   userId      String
   roleId      String
-  scopeType   String?
-  scopeId     String?
+  // GLOBAL is the reserved unscoped assignment; scoped grants must provide both values.
+  scopeType   String    @default("GLOBAL")
+  scopeId     String    @default("GLOBAL")
   assignedAt  DateTime  @default(now())
   expiresAt   DateTime?
   assignedBy  String?
