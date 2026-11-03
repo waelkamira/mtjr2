@@ -55,7 +55,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `Product`, `ProductCategory`, `Category`, `CategoryTranslation`, `Brand`, `BrandTranslation`, `ProductTranslation`, `ProductMedia`, `AttributeDefinition`, `AttributeTranslation`, `ProductAttribute`, `ProductAttributeValue`, `ProductVariant`, `VariantAttribute`, `ProductIdentifier`, `ProductPrice`.
 - **API:** `/api/products`, `/api/products/[id]`, `/api/categories`, `/api/brands`.
 - **Must include:** active/approved visibility, canonical store ownership, variant selection, price per currency, media safety, structured attributes, SEO metadata and pagination.
-- **Current state:** **Partial.** Canonical `/products` and detail pages were added; legacy catalog endpoints still need migration. Phase Three is not complete.
+- **Current state:** **Partial.** Canonical `/products` and detail pages, variant/market pricing, product media, and cart entry are connected. The `feat/storefront-demo-experience` branch adds an opt-in demo catalog fixture (market/store/categories/brands/eight published products/prices/media/stock) and an image-led category grid plus visible buyer/seller navigation. The fixture has not been run against a database and is not on `main`; legacy catalog endpoints still need migration. Phase Three is not complete.
 
 #### 03. Search, filtering and sorting
 - **Purpose:** Search products and stores with useful relevance, facets, typo tolerance and URL-shareable filters.
@@ -63,7 +63,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `Product`, `ProductVariant`, `ProductPrice`, `Category`, `Brand`, `SearchSynonym`; PostgreSQL trigram/search indexes where appropriate.
 - **API:** `/api/search`, `/api/search/suggestions`, `/api/admin/search-synonyms`.
 - **Must include:** query validation, autocomplete, synonyms, category/brand/price/availability filters, stable pagination, relevance sorting and abuse protection.
-- **Current state:** **Partial / legacy-incompatible.** Search exists but uses legacy product columns; AUD-002 and AUD-006 apply.
+- **Current state:** **Partial.** The canonical storefront discovery UI calls `GET /api/products` with query, market, category, brand, sort and pagination parameters; the server filters active products from active stores and returns bounded results. The demo fixture adds representative searchable products, but has not yet been seeded into a database. Typo-tolerant relevance ranking, autocomplete/suggestions, URL-shareable search state, price/availability facets and admin synonym management remain incomplete.
 
 #### 04. Cart and checkout
 - **Purpose:** Persistent guest/customer cart and safe conversion into a marketplace order.
