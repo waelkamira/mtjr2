@@ -854,3 +854,20 @@ The project owner approved Resend as the transactional email provider. The serve
 - The Platform PostgreSQL Integration workflow is configured to deploy every committed migration to an isolated PostgreSQL 16 service.
 - Current Vercel status remains QUEUED and is not treated as successful CI evidence.
 - No production database or Vercel environment variables were accessed or changed.
+
+
+## 2026-11-03 — Seller application submission service
+
+**Implemented**
+- Added `submitSellerApplication` as a server-only domain service using the verified HttpOnly-cookie session; callers cannot supply an owner ID.
+- Requires an active authenticated session and verified email before accepting an application.
+- Creates a PENDING seller record and audit event in one transaction.
+- Pending applications are idempotent; concurrent duplicate submissions resolve to the existing pending application. Existing non-pending seller records are not silently overwritten.
+- Seller approval, role assignment, store creation, KYC, and staff authorization remain separate workflows and are not claimed complete.
+
+**Focused tests added**
+- New seller application tests cover successful atomic submission, pending resubmission, unverified-account rejection, and input validation.
+- The tests have been committed; CI is the execution gate.
+
+**Safety**
+- No production database, Vercel environment variable, or deployment configuration was accessed or changed.
