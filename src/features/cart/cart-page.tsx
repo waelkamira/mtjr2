@@ -126,7 +126,7 @@ export default function CartPage() {
             <div className="mt-8 space-y-6">
               {carts.filter((cart) => cart.items.length > 0).map((cart) => {
                 const subtotal = cart.items.reduce((sum, item) => sum + (item.price ? BigInt(item.price.amountMinor) * BigInt(item.quantity) : BigInt(0)), BigInt(0));
-                return <section key={cart.id} className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+                return <><section key={cart.id} className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
                   <div className="flex flex-wrap justify-between gap-2 border-b border-[var(--border)] bg-[var(--color-ivory-100)] px-5 py-4">
                     <div><p className="font-semibold text-[var(--color-forest-950)]">{cart.market.name}</p><p className="text-xs text-[var(--muted)]">Prices in {cart.currency.code}</p></div>
                     <p className="text-sm font-semibold">{formatMoney(subtotal.toString(), cart.currency.code, cart.currency.minorUnit)}</p>
@@ -160,7 +160,7 @@ export default function CartPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-white p-5">
                   <div><p className="font-semibold text-[var(--color-forest-950)]">Ready to review?</p><p className="mt-1 text-xs text-[var(--muted)]">We will recheck prices and temporarily reserve available stock.</p></div>
                   <button type="button" disabled={Boolean(checkingOutCartId) || cart.items.some((item) => !item.price || item.availableQuantity < item.quantity)} onClick={() => void beginCheckout(cart)} className="rounded-xl bg-[var(--color-forest-900)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{checkingOutCartId === cart.id ? "Preparing…" : "Review checkout"}</button>
-                </div>;
+                </div></>;
               })}
               <p className="rounded-xl bg-[var(--color-sage-100)] p-4 text-sm leading-6 text-[var(--color-forest-950)]">The checkout quote is calculated by the server and reserves stock for ten minutes. Shipping, tax, discounts and payment are not included yet.</p>
             </div>
