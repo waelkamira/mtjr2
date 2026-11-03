@@ -229,7 +229,7 @@ describe("identity PostgreSQL integration", () => {
     expect(challenge).not.toBeNull();
     if (!challenge) throw new Error("Expected a password reset challenge.");
 
-    const storedToken = await prisma.passwordResetToken.findUniqueOrThrow({
+    const storedToken = await prisma.passwordResetToken.findFirstOrThrow({
       where: { userId: registration.userId },
       orderBy: { createdAt: "desc" }
     });
