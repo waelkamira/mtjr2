@@ -62,6 +62,7 @@ export async function getCheckoutAddressOptions(guestToken: string, quoteId: str
   return {
     quoteId,
     quoteStatus: quote.status,
+    isAuthenticated: "userId" in owner,
     marketCountry: market.country,
     deliveryAddress: quote.deliveryAddress ?? null,
     savedAddresses: savedAddresses.map(({ country, ...address }) => ({
