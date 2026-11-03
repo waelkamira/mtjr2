@@ -10,6 +10,8 @@ const environmentSchema = z.object({
     ),
   NEXT_PUBLIC_APP_URL: z.string().url(),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must contain at least 32 characters"),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_FROM_EMAIL: z.string().email().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development")
 });
 
