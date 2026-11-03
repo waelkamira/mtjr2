@@ -449,3 +449,11 @@
 2. Add a server-side permission guard that composes the verified current session with the scoped permission repository.
 3. Implement logout with server-side revocation and cookie clearing, then add database-backed lifecycle coverage.
 4. Continue CSRF/origin controls and password-reset lifecycle before public authentication routes.
+
+
+## 2026-11-03 — Vitest server-only resolution fix
+
+- CI on commit `4507382bffc27aeecee4a99626b72409aa72ae00` found one unit-test environment issue: Vitest could not resolve Next.js's `server-only` poison-pill package when importing the server session resolver.
+- PostgreSQL integration passed on that commit. Prisma validation/generation, typecheck, and lint passed; 48 unit tests passed, while the new current-session test suite failed at module resolution before its assertions. Production build was skipped after the test failure.
+- Added a Vitest-only alias to a local empty shim under `tests/mocks`. This shim is used only by Vitest; the production source still imports `server-only`, preserving Next.js's server/client boundary enforcement.
+- The fix is awaiting CI rerun. Do not count the current-session unit suite or production build as verified until the new run passes.
