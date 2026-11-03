@@ -198,8 +198,8 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 
 ## Verified product reviews
 
-- Added canonical `ProductReview` and `ReviewStatus` models in `prisma/schema.prisma`, with migration `20261104001000_verified_product_reviews`.
+- Added canonical `ProductReview`, `StoreReview` and `ReviewStatus` models in `prisma/schema.prisma`, with migration `20261104001000_verified_product_reviews`.
 - Customers can submit a review only for a delivered order item they own. A unique customer/product constraint enforces one review per customer and product.
 - New reviews enter moderation as `PENDING`; only published reviews appear publicly.
-- Connected product detail reviews, review submission, reviewable delivered purchases, customer review history, and the admin moderation queue/API.
+- Connected product and store review display/submission, reviewable delivered purchases, customer review history, seller review center and owner responses, and separate admin product/store moderation queues/APIs.
 - Store reviews, seller responses, review media, reports/appeals and extended moderation workflows remain future work.
