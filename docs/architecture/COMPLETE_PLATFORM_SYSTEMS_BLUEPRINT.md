@@ -119,7 +119,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `Notification`, `User`, `Order`, `Payment`, `Shipment`, `StoreMessage`, `UserConsent`.
 - **API:** `/api/notifications`, `/api/notifications/[id]/read`, `/api/account/notification-preferences`.
 - **Must include:** user-scoped reads, delivery status, preferences, deduplication, retries and event-triggered creation.
-- **Current state:** **Partial.** Notification persistence exists in selected flows; full delivery/preferences coverage needs verification.
+- **Current state (2026-11-03):** **Initial in-app order notifications implemented on PR #6; broader system remains partial.** Added `Notification` persistence and migration `20261103234000_order_notifications`, authenticated `GET /api/notifications`, owner-scoped read API, and connected `/notifications` UI. Order placement creates buyer and store-owner notifications in the same transaction as order creation, with unique deduplication keys. Email delivery, preferences, retry/outbox processing, payment/shipment/message event coverage, and staff recipient routing remain incomplete.
 
 #### 11. Returns and refunds (customer journey)
 - **Purpose:** Request a return/refund, upload evidence and track the resolution.
