@@ -220,3 +220,13 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Active store owners can answer published questions. Admin moderation is permission-protected, audited and sends in-app notifications when questions/answers are published.
 - Connected product detail Q&A, `/account/questions`, `/seller/questions` and `/admin/questions` to the APIs.
 - Staff-scoped answers, abuse reporting, attachments and richer answer history controls remain future work.
+
+
+## System 09 — Customer support tickets (initial slice)
+
+- Added canonical `SupportTicket` and `SupportMessage` models and migration `20261104010000_customer_support_tickets`. Ticket ownership, optional agent assignment, priority/status, message visibility, and queue indexes are persisted in PostgreSQL.
+- Connected customer ticket creation/list/detail/reply APIs and the `/account/support` and `/account/support/[ticketId]` pages.
+- Connected the permission-protected admin queue, ticket detail, status/priority updates, self-assignment, public replies, and internal notes at `/admin/support`.
+- Customer queries are owner-scoped; internal notes are excluded from customer responses. Admin mutations are audited; customer-facing agent replies create deduplicated in-app notifications transactionally.
+- Still incomplete: customer-to-store conversations, attachments, read receipts, SLA timers/escalation, agent team routing, and outbound email. This is an initial support-ticket workflow, not full System 09 completion.
+- No production or owner database was accessed. No PR was merged.
