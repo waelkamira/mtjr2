@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { userHasScopedPermission } from "@/server/identity/permission-repository";
+import { requirePermission } from "@/server/identity/permission-guard";
 
 const priceSchema = z.object({
   marketId: z.string().trim().min(1),
