@@ -212,3 +212,68 @@ model AuditLog {
   @@index([scopeType, scopeId, occurredAt])
   @@index([occurredAt])
 }
+
+
+enum MarketStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+}
+
+model Country {
+  id               String   @id @default(cuid())
+  iso2             String   @unique @db.Char(2)
+  iso3             String?  @unique @db.Char(3)
+  name             String
+  nativeName       String?
+  phoneCallingCode String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  markets          Market[]
+
+  @@index([isActive, name])
+}
+
+model Currency {
+  code          String           @id @db.Char(3)
+  name          String
+  symbol        String?
+  minorUnit     Int              @default(2)
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  defaultMarkets Market[]        @relation("MarketDefaultCurrency")
+  marketLinks   MarketCurrency[]
+
+  @@index([isActive, name])
+}
+
+model Market {
+  id                  String          @id @default(cuid())
+  code                String          @unique @db.VarChar(32)
+  name                String
+  countryId           String
+  defaultCurrencyCode String          @db.Char(3)
+  status              MarketStatus    @default(DRAFT)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  country             Country         @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  defaultCurrency     Currency        @relation("MarketDefaultCurrency", fields: [defaultCurrencyCode], references: [code], onDelete: Restrict)
+  currencies          MarketCurrency[]
+
+  @@index([countryId, status])
+  @@index([defaultCurrencyCode])
+}
+
+model MarketCurrency {
+  marketId    String   @db.Text
+  currencyCode String  @db.Char(3)
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  market      Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  currency    Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+
+  @@id([marketId, currencyCode])
+  @@index([currencyCode, isEnabled])
+}
