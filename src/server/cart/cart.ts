@@ -102,9 +102,9 @@ async function resolveOwner(
   return { guestSessionId: guest.id } as const;
 }
 
-async function getAvailableStock(tx: Prisma.TransactionClient, variantId: string) {
+async function getAvailableStock(tx: Prisma.TransactionClient, variantId: string, storeId: string) {
   const rows = await tx.inventory.findMany({
-    where: { variantId, warehouse: { isActive: true } },
+    where: { variantId, warehouse: { isActive: true, storeId } },
     select: { quantityOnHand: true, quantityReserved: true }
   });
   return rows.reduce((total, row) => total + row.quantityOnHand - row.quantityReserved, 0);
@@ -134,7 +134,7 @@ async function validatePurchasableVariant(
       product: {
         status: CatalogEntityStatus.ACTIVE,
         approvalStatus: ProductApprovalStatus.APPROVED,
-        store: { status: "ACTIVE", seller: { status: "ACTIVE" } }
+        store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: { some: { marketId, isEnabled: true } } }
       },
       prices: { some: { marketId, currencyCode } }
     },
@@ -147,7 +147,7 @@ async function validatePurchasableVariant(
       },
       product: {
         select: {
-          id: true, slug: true, name: true,
+          id: true, slug: true, name: true, storeId: true,
           store: { select: { name: true, slug: true } },
           media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 1, select: { url: true, altText: true } }
         }
@@ -155,7 +155,7 @@ async function validatePurchasableVariant(
     }
   });
   if (!variant || !variant.prices[0]) throw new Error("This product option is no longer available for the selected market.");
-  return { variant, available: await getAvailableStock(tx, variantId) };
+  return { variant, available: await getAvailableStock(tx, variantId, variant.product.storeId) };
 }
 
 function ownerFilter(owner: { userId: string } | { guestSessionId: string }) {
