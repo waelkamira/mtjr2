@@ -1348,9 +1348,9 @@ The project owner approved Resend as the transactional email provider. The serve
 
 ## 2026-11-03 — System 06 initial slice: verified product reviews
 
-- Added canonical `ReviewStatus` and `ProductReview` models; migration: `20261104001000_verified_product_reviews`.
+- Added canonical `ReviewStatus`, `ProductReview` and `StoreReview` models; migration: `20261104001000_verified_product_reviews`.
 - Enforced delivered-order ownership at submission, one review per customer/product, and unique review per purchased order item.
 - Added public product review list/aggregate, authenticated reviewable-purchase lookup, customer review history, and audited platform moderation APIs.
-- Connected product detail review display/submission, customer review history, and admin moderation queue UI.
+- Connected product detail product/store review display, product review submission, delivered-order store review submission, customer product/store review history, seller review center with owner responses, and admin product/store moderation queue UIs.
 - All submissions are PENDING until moderation; unapproved content is not exposed publicly.
 - Store reviews, seller responses, media, reports/appeals remain incomplete. No expanded test matrix added.
