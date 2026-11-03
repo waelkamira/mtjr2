@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { userHasScopedPermission } from "@/server/identity/permission-repository";
+import { createInAppNotification } from "@/server/notifications/notifications";
 
 const id = z.string().trim().min(1).max(128);
 const messageSchema = z.object({ body: z.string().trim().min(2).max(8000) }).strict();
@@ -55,7 +56,7 @@ export async function startStoreConversation(input: unknown, now = new Date()) {
     },select:{id:true,subject:true,storeId:true,createdAt:true,lastMessageAt:true}});
     const recipients = await storeMessageRecipientIds(store.id, store.seller.ownerId, actor.userId, now);
     for (const userId of recipients) {
-      await tx.notification.create({data:{
+      await createInAppNotification(tx, {data:{
         userId,type:"STORE_MESSAGE",title:"New customer message",
         message:"A customer has started a conversation with your store.",resourceType:"store_conversation",
         resourceId:conversation.id,deduplicationKey:"store-message:"+conversation.id+":"+userId
@@ -90,7 +91,7 @@ export async function replyCustomerConversation(conversationId:string,input:unkn
   await tx.storeConversation.update({where:{id:c.id},data:{lastMessageAt:now,customerReadAt:now}});
   const recipients = await storeMessageRecipientIds(c.storeId, c.store.seller.ownerId, actor.userId, now);
   for (const userId of recipients) {
-   await tx.notification.create({data:{userId,type:"STORE_MESSAGE",title:"New customer message",message:"A customer replied to your store conversation.",resourceType:"store_conversation",resourceId:c.id,deduplicationKey:"store-message:"+message.id+":"+userId}});
+   await createInAppNotification(tx, {data:{userId,type:"STORE_MESSAGE",title:"New customer message",message:"A customer replied to your store conversation.",resourceType:"store_conversation",resourceId:c.id,deduplicationKey:"store-message:"+message.id+":"+userId}});
   }
   return {...message,createdAt:message.createdAt.toISOString()};
  });
@@ -120,7 +121,7 @@ export async function replyStoreConversation(storeIdInput:string,conversationId:
   if(!c||!(await canAccessStore(actor.userId,storeId,c.store.seller.ownerId,now)))throw new Error("Conversation not found.");
   const message=await tx.storeMessage.create({data:{conversationId:c.id,senderId:actor.userId,body:data.body},select:{id:true,body:true,createdAt:true}});
   await tx.storeConversation.update({where:{id:c.id},data:{lastMessageAt:now,storeReadAt:now}});
-  await tx.notification.create({data:{userId:c.customerId,type:"STORE_MESSAGE",title:"Your store replied",message:"There is a new reply to your store conversation.",resourceType:"store_conversation",resourceId:c.id,deduplicationKey:"store-message:"+message.id}});
+  await createInAppNotification(tx, {data:{userId:c.customerId,type:"STORE_MESSAGE",title:"Your store replied",message:"There is a new reply to your store conversation.",resourceType:"store_conversation",resourceId:c.id,deduplicationKey:"store-message:"+message.id}});
   await tx.auditLog.create({data:{actorType:AuditActorType.USER,actorId:actor.userId,action:"store.conversation.replied",resource:"store_conversation",resourceId:c.id,scopeType:"STORE",scopeId:storeId,occurredAt:now}});
   return {...message,createdAt:message.createdAt.toISOString()};
  });
