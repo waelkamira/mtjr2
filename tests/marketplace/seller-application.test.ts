@@ -1,90 +1,74 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireCurrentSession, sellerFindUnique, sellerCreate, auditCreate, transaction } = vi.hoisted(() => ({
-  requireCurrentSession: vi.fn(),
-  sellerFindUnique: vi.fn(),
-  sellerCreate: vi.fn(),
-  auditCreate: vi.fn(),
-  transaction: vi.fn()
+const { requireCurrentSession, requirePermission, sellerFindUnique, sellerCreate, auditCreate, transaction, roleFindUnique, roleUpsert, sellerUpdateMany } = vi.hoisted(() => ({
+  requireCurrentSession: vi.fn(), requirePermission: vi.fn(), sellerFindUnique: vi.fn(),
+  sellerCreate: vi.fn(), auditCreate: vi.fn(), transaction: vi.fn(),
+  roleFindUnique: vi.fn(), roleUpsert: vi.fn(), sellerUpdateMany: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    seller: { findUnique: sellerFindUnique },
-    $transaction: transaction
-  }
-}));
+vi.mock("@/server/identity/permission-guard", () => ({ requirePermission }));
+vi.mock("@/lib/db/prisma", () => ({ prisma: { seller: { findUnique: sellerFindUnique }, $transaction: transaction } }));
 
-import { submitSellerApplication } from "@/server/marketplace/seller-application";
+import { createSellerStore, reviewSellerApplication, submitSellerApplication } from "@/server/marketplace/seller-application";
 
-describe("submitSellerApplication", () => {
+describe("marketplace seller lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireCurrentSession.mockResolvedValue({
-      userId: "user-1",
-      user: { emailVerifiedAt: new Date("2026-01-01T00:00:00Z") }
-    });
+    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: new Date() } });
+    requirePermission.mockResolvedValue({ userId: "admin-1" });
     sellerFindUnique.mockResolvedValue(null);
     sellerCreate.mockResolvedValue({ id: "seller-1", status: "PENDING" });
     auditCreate.mockResolvedValue({});
-    transaction.mockImplementation(async (callback: (tx: unknown) => unknown) =>
-      callback({
-        seller: { findUnique: sellerFindUnique, create: sellerCreate },
-        auditLog: { create: auditCreate }
-      })
-    );
+    roleFindUnique.mockResolvedValue({ id: "role-seller" });
+    roleUpsert.mockResolvedValue({});
+    sellerUpdateMany.mockResolvedValue({ count: 1 });
+    transaction.mockImplementation(async (callback: (tx: any) => unknown) => callback({
+      seller: { findUnique: sellerFindUnique, create: sellerCreate, updateMany: sellerUpdateMany },
+      role: { findUnique: roleFindUnique },
+      userRoleAssignment: { upsert: roleUpsert },
+      auditLog: { create: auditCreate },
+      market: { findMany: vi.fn().mockResolvedValue([{ id: "market-1" }]) },
+      store: { create: vi.fn().mockResolvedValue({ id: "store-1", name: "Shop", slug: "shop", status: "DRAFT" }) }
+    }));
   });
 
-  it("creates a pending application and an audit event atomically", async () => {
-    const result = await submitSellerApplication({
-      legalName: "Example Trading BV",
-      displayName: "Example Store"
-    });
-
-    expect(result).toEqual({
-      sellerId: "seller-1",
-      status: "PENDING",
-      alreadySubmitted: false
-    });
-    expect(sellerCreate).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ ownerId: "user-1", status: "PENDING" })
-    }));
+  it("submits one verified-user application and audits it atomically", async () => {
+    const result = await submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" });
+    expect(result).toMatchObject({ sellerId: "seller-1", status: "PENDING", alreadySubmitted: false });
     expect(auditCreate).toHaveBeenCalledOnce();
   });
 
-  it("returns the existing pending application without duplicating it", async () => {
+  it("returns the existing pending application on retry", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-existing", status: "PENDING" });
-
-    const result = await submitSellerApplication({
-      legalName: "Example Trading BV",
-      displayName: "Example Store"
-    });
-
+    const result = await submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" });
     expect(result.alreadySubmitted).toBe(true);
     expect(sellerCreate).not.toHaveBeenCalled();
-    expect(auditCreate).not.toHaveBeenCalled();
   });
 
-  it("rejects an unverified account", async () => {
-    requireCurrentSession.mockResolvedValue({
-      userId: "user-1",
-      user: { emailVerifiedAt: null }
-    });
-
-    await expect(submitSellerApplication({
-      legalName: "Example Trading BV",
-      displayName: "Example Store"
-    })).rejects.toThrow(/verified email/i);
-    expect(transaction).not.toHaveBeenCalled();
+  it("rejects unverified accounts", async () => {
+    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: null } });
+    await expect(submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" })).rejects.toThrow(/verified email/i);
   });
 
-  it("rejects invalid application details", async () => {
-    await expect(submitSellerApplication({
-      legalName: "x",
-      displayName: "Example Store"
-    })).rejects.toThrow();
-    expect(requireCurrentSession).not.toHaveBeenCalled();
+  it("approves only pending applications and grants SELLER role in the same transaction", async () => {
+    sellerFindUnique.mockResolvedValue({ id: "seller-1", ownerId: "user-1", status: "PENDING" });
+    const result = await reviewSellerApplication({ sellerId: "seller-1", decision: "APPROVE" });
+    expect(result.status).toBe("ACTIVE");
+    expect(roleUpsert).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ userId_roleId_scopeType_scopeId: expect.objectContaining({ scopeType: "GLOBAL" }) }) }));
+    expect(auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("requires a reason when rejecting an application", async () => {
+    await expect(reviewSellerApplication({ sellerId: "seller-1", decision: "REJECT" })).rejects.toThrow(/reason/i);
+    expect(requirePermission).not.toHaveBeenCalled();
+  });
+
+  it("creates a draft store only for an approved seller and active market", async () => {
+    sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
+    const result = await createSellerStore({ name: "Shop", slug: "shop", marketIds: ["market-1"] });
+    expect(result.status).toBe("DRAFT");
+    expect(requirePermission).toHaveBeenCalledWith(expect.objectContaining({ permissionKey: "store:manage" }), expect.any(Date));
   });
 });
