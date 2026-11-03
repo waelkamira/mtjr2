@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   userHasPermission: vi.fn(),
   warehouseFindUnique: vi.fn(),
   productVariantFindFirst: vi.fn(),
+  productVariantFindMany: vi.fn(),
   inventoryFindUnique: vi.fn(),
   inventoryCreate: vi.fn(),
   inventoryUpdateMany: vi.fn(),
@@ -13,16 +14,17 @@ const mocks = vi.hoisted(() => ({
   inventoryMovementCreate: vi.fn(),
   auditCreate: vi.fn(),
   stockTransferFindUnique: vi.fn(),
+  stockTransferCreate: vi.fn(),
   stockTransferUpdateMany: vi.fn()
 }));
 
 const tx = {
   warehouse: { findUnique: mocks.warehouseFindUnique },
-  productVariant: { findFirst: mocks.productVariantFindFirst },
+  productVariant: { findFirst: mocks.productVariantFindFirst, findMany: mocks.productVariantFindMany },
   inventory: { findUnique: mocks.inventoryFindUnique, create: mocks.inventoryCreate, updateMany: mocks.inventoryUpdateMany },
   inventoryMovement: { findUnique: mocks.inventoryMovementFindUnique, create: mocks.inventoryMovementCreate },
   auditLog: { create: mocks.auditCreate },
-  stockTransfer: { findUnique: mocks.stockTransferFindUnique, updateMany: mocks.stockTransferUpdateMany }
+  stockTransfer: { findUnique: mocks.stockTransferFindUnique, create: mocks.stockTransferCreate, updateMany: mocks.stockTransferUpdateMany }
 };
 
 vi.mock("server-only", () => ({}));
@@ -35,7 +37,7 @@ vi.mock("@/server/identity/permission-repository", () => ({
   userHasPermission: mocks.userHasPermission
 }));
 
-import { adjustInventory, shipStockTransfer } from "@/server/inventory/stock";
+import { adjustInventory, createStockTransfer, shipStockTransfer } from "@/server/inventory/stock";
 
 describe("seller inventory operations", () => {
   beforeEach(() => {
@@ -43,10 +45,10 @@ describe("seller inventory operations", () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "owner-1" });
     mocks.userHasScopedPermission.mockResolvedValue(false);
     mocks.userHasPermission.mockResolvedValue(false);
-    mocks.warehouseFindUnique.mockResolvedValue({
-      id: "warehouse-1", storeId: "store-1", isActive: true,
+    mocks.warehouseFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => ({
+      id: where.id, storeId: "store-1", isActive: true,
       store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "owner-1" } }
-    });
+    }));
     mocks.productVariantFindFirst.mockResolvedValue({ id: "variant-1" });
     mocks.inventoryMovementFindUnique.mockResolvedValue(null);
     mocks.inventoryFindUnique.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 2 });
@@ -106,6 +108,26 @@ describe("seller inventory operations", () => {
       quantityDelta: 5, idempotencyKey: "adjustment-key-0004"
     })).rejects.toThrow("different inventory operation");
     expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("replays a stock transfer idempotently without creating a duplicate", async () => {
+    mocks.stockTransferFindUnique.mockResolvedValue({
+      id: "transfer-existing", status: "DRAFT",
+      sourceWarehouseId: "warehouse-1", destinationWarehouseId: "warehouse-2",
+      items: [{ variantId: "variant-1", quantity: 3 }]
+    });
+    const result = await createStockTransfer({
+      sourceWarehouseId: "warehouse-1", destinationWarehouseId: "warehouse-2",
+      idempotencyKey: "stock-transfer-key-0001",
+      items: [{ variantId: "variant-1", quantity: 3 }]
+    });
+    expect(result).toEqual({
+      id: "transfer-existing", status: "DRAFT",
+      sourceWarehouseId: "warehouse-1", destinationWarehouseId: "warehouse-2",
+      alreadyApplied: true
+    });
+    expect(mocks.stockTransferCreate).not.toHaveBeenCalled();
+    expect(mocks.productVariantFindMany).not.toHaveBeenCalled();
   });
 
   it("does not ship a transfer when available stock is insufficient", async () => {
