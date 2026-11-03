@@ -9,7 +9,7 @@ type Market = {
   defaultCurrency: Currency;
 };
 type Category = { id: string; slug: string; name: string; children: Category[] };
-type ProductPrice = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null };
+type ProductPrice = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { name: string };
@@ -25,7 +25,7 @@ function flattenCategories(items: Category[]): Category[] {
 function formatPrice(price: ProductPrice | undefined, markets: Market[]) {
   if (!price) return "Price unavailable";
   const currency = markets.flatMap((market) => [market.defaultCurrency]).find((item) => item.code === price.currencyCode);
-  const minorUnit = currency?.minorUnit ?? 2;
+  const minorUnit = price.currency.minorUnit ?? currency?.minorUnit ?? 2;
   return new Intl.NumberFormat(undefined, { style: "currency", currency: price.currencyCode }).format(
     Number(price.amountMinor) / (10 ** minorUnit)
   );
