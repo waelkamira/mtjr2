@@ -211,3 +211,12 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Added authenticated list, status, add and remove APIs. Favorites are unique per customer/product and only active approved products can be newly saved.
 - Connected the product-detail save control and the customer `/account/wishlist` page to the APIs.
 - Guest wishlist merge, named lists and recommendations remain future work.
+
+
+## Product questions and answers
+
+- Added `ProductQuestion` and `ProductAnswer` models with separate moderation states in `prisma/schema.prisma`; migration: `20261104003000_product_questions_answers`.
+- Authenticated customers can submit product questions. Only published questions and answers are publicly visible.
+- Active store owners can answer published questions. Admin moderation is permission-protected, audited and sends in-app notifications when questions/answers are published.
+- Connected product detail Q&A, `/account/questions`, `/seller/questions` and `/admin/questions` to the APIs.
+- Staff-scoped answers, abuse reporting, attachments and richer answer history controls remain future work.
