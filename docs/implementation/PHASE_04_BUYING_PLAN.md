@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — cart, quote/reservation, and delivery-address capture are implemented and verified. Shipping, tax, order, and payment workflows remain.
+**Status:** In progress — cart, quote/reservation, and delivery-address capture are implemented. Shipping is implemented pending final CI; market tax configuration and quote calculation are now implemented on the next stacked branch. Discounts, order, and payment workflows remain.
 
 ## Objective
 
@@ -54,11 +54,17 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 **Verification:** Disposable PostgreSQL migration/integration passed (run 41708370004). General CI (run 41708369901) found a BigInt literal target mismatch, fixed in 59a5155; focused shipping tests were added in 2667857. Awaiting a fresh full General CI run; do not mark complete until it passes.
 
-## 4.4 — Tax, discounts, and final checkout validation
+## 4.4 — Market tax configuration and quote calculation
 
-- Model jurisdiction-scoped tax rules with country/region, product/category applicability where required, inclusive/exclusive treatment, effective dates, and currency-safe calculation.
-- Add coupons only after eligibility, usage limits, stacking, and seller/platform funding rules are specified.
-- Recalculate all lines, shipping, taxes, and discounts on the server when checkout is confirmed. Never trust browser totals.
+**First tax slice implemented on `feat/checkout-tax-calculation`; verification pending.**
+
+- Added `MarketTaxRate` for explicit platform-managed market and optional destination-region rates, inclusive/exclusive treatment, shipping applicability, priority, and effective dates.
+- Added `CheckoutTaxSnapshot` to persist the selected rule and calculated amount against the owned quote.
+- Added protected platform configuration API `GET/POST /api/admin/tax-rates` and admin UI at `/admin/tax-rates`.
+- Added quote tax calculation API `POST /api/checkout/quote/[quoteId]/tax` and connected buyer checkout tax/estimated-total UI.
+- Calculation uses integer minor units and basis points. Region-specific rules take precedence over market-wide rules. No configured rule means no tax is guessed; checkout reports that configuration is missing.
+- Current first slice applies one market/region rule to the quote subtotal and optionally shipping. Product/category exemptions, multiple tax jurisdictions, VAT registration/nexus, compound taxes, and coupon interactions remain future jurisdiction-specific work. Do not treat this generic rule engine as legal tax advice or a complete tax-compliance engine.
+- Coupons are deferred until eligibility, usage limits, stacking, and seller/platform funding rules are defined.
 
 ## 4.5 — Order creation and payment boundary
 
@@ -81,4 +87,4 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 - PR #1 cart and PR #2 quote/reservations are stacked predecessors.
 - PR #3 delivery address is implemented and its General CI/PostgreSQL workflows pass; it remains a draft stacked on PR #2 pending review/merge.
-- Next implementation slice is configurable store shipping rules and quote shipping selection, including seller/admin configuration and buyer checkout UI.
+- Next implementation slice is final quote validation and order/vendor-order creation, using the persisted address, shipping, and tax snapshots. Discounts remain deferred until their business rules are defined.
