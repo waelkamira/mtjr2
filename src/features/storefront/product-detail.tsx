@@ -15,6 +15,7 @@ type Product = {
 export default function ProductDetail({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState("");
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [markets, setMarkets] = useState<Market[]>([]);
   const [selectedMarketId, setSelectedMarketId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
         setProduct(result);
         setSelectedVariant(result.variants[0]?.id ?? "");
         setSelectedMarketId(result.variants[0]?.prices[0]?.marketId ?? "");
+        setSelectedMediaIndex(Math.max(0, result.media.findIndex((item) => item.isPrimary)));
       })
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Product details are unavailable."); })
       .finally(() => { if (active) setLoading(false); });
@@ -51,11 +53,15 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
   const price = variant?.prices.find((item) => !selectedMarketId || item.marketId === selectedMarketId);
   const amount = price ? Number(price.amountMinor) / (10 ** (price.currency.minorUnit ?? 2)) : null;
+  const selectedMedia = product.media[selectedMediaIndex] ?? product.media.find((item) => item.isPrimary) ?? product.media[0];
 
   return <main className="min-h-screen bg-[var(--background)]">
     <header className="border-b border-[var(--border)] px-5 py-5"><div className="mx-auto flex max-w-6xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><Link href="/" className="text-sm text-[var(--color-forest-800)]">← Back to marketplace</Link></div></header>
     <div className="mx-auto grid max-w-6xl gap-10 px-5 py-10 md:grid-cols-2 md:py-16">
-      <div className="space-y-3">{product.media.length ? product.media.map((media) => <img key={media.url} src={media.url} alt={media.altText ?? product.name} className="aspect-square w-full rounded-3xl bg-[var(--color-ivory-100)] object-cover" />) : <div className="flex aspect-square items-center justify-center rounded-3xl bg-[var(--color-ivory-100)] text-sm text-[var(--muted)]">No product image available</div>}</div>
+      <div className="space-y-3">
+        {selectedMedia ? <img src={selectedMedia.url} alt={selectedMedia.altText ?? product.name} className="aspect-square w-full rounded-3xl bg-[var(--color-ivory-100)] object-cover" /> : <div className="flex aspect-square items-center justify-center rounded-3xl bg-[var(--color-ivory-100)] text-sm text-[var(--muted)]">No product image available</div>}
+        {product.media.length > 1 && <div aria-label="Product images" className="grid grid-cols-5 gap-3">{product.media.map((media, index) => <button key={media.url} type="button" onClick={() => setSelectedMediaIndex(index)} aria-label={`View product image ${index + 1}`} aria-pressed={selectedMediaIndex === index} className={`overflow-hidden rounded-xl border-2 ${selectedMediaIndex === index ? "border-[var(--color-forest-800)]" : "border-transparent"} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-copper-600)]`}><img src={media.url} alt="" className="aspect-square w-full object-cover" /></button>)}</div>}
+      </div>
       <section className="flex flex-col pt-2">
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{product.brand?.name ?? "Marketplace selection"}</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)] sm:text-4xl">{product.name}</h1>
