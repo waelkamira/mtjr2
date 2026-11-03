@@ -22,7 +22,7 @@ interface RateLimitBucket {
   blockedUntil: Date | null;
 }
 
-function digestSubject(kind: "identifier" | "ip", value: string): string {
+function digestSubject(kind: "identifier" | "identifier-ip" | "ip", value: string): string {
   return createHmac("sha256", env.AUTH_SECRET)
     .update(`${kind}:${value}`, "utf8")
     .digest("hex");
@@ -109,7 +109,7 @@ export async function clearLoginThrottle(
   const ip = trustedIpAddress.trim();
   if (!identifier || identifier.length > 254 || !ip || ip.length > 64) return;
 
-  const pairKey = digestSubject("identifier-ip", `${identifier}: ${ip}`);
+  const pairKey = digestSubject("identifier-ip", JSON.stringify([identifier, ip]));
   await prisma.loginRateLimitBucket.updateMany({
     where: { keyHash: pairKey },
     data: {

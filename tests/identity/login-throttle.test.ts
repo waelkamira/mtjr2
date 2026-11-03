@@ -68,7 +68,7 @@ describe("persistent login throttling", () => {
   });
 
   it("clears only the normalized identifier/IP pair after successful authentication", async () => {
-    txMock.loginRateLimitBucket.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.loginRateLimitBucket.updateMany.mockResolvedValue({ count: 1 });
 
     await clearLoginThrottle(" Buyer@Example.COM ", "203.0.113.8");
 
@@ -138,7 +138,7 @@ describe("persistent login throttling", () => {
       blockedUntil: null
     });
 
-    await expect(consumeLoginAttempt({ identifier: "buyer@example.com" }, now))
+    await expect(consumeLoginAttempt({ identifier: "buyer@example.com", trustedIpAddress: "203.0.113.8" }, now))
       .resolves.toEqual({ blocked: false });
 
     expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith(
