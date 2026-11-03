@@ -1164,3 +1164,23 @@ The project owner approved Resend as the transactional email provider. The serve
 1. Let one consolidated General CI run complete on the latest code and fix only concrete findings.
 2. Run the existing PostgreSQL integration workflow once against disposable CI PostgreSQL.
 3. Continue the buyer catalog journey and reference-data activation; keep cart/checkout paired with its backend phase.
+
+
+## 2026-11-03 — Buyer discovery filters connected to catalog APIs
+
+**Implemented**
+- Added the storefront brand selector using `GET /api/brands?locale=en&limit=100` and passed the selected `brandId` into `GET /api/products`.
+- Brand selection resets pagination; clear filters resets the query, category, and brand together. Existing market/currency filtering, sorting, and pagination remain connected to the discovery API.
+- Commit: `3bd744a44f5265ab6e41b08168085b7e1b7cbe82`.
+
+**Prisma decision**
+- No schema change or migration is needed for these UI filters: `Brand`, product-brand relation, market pricing, and the discovery query already exist in `prisma/schema.prisma` and the catalog service. Adding duplicate fields would violate the canonical blueprint rules.
+
+**Verification**
+- General CI passed on commit `3bd744a44f5265ab6e41b08168085b7e1b7cbe82`: [run 41693570451](https://github.com/waelkamira/mtjr2/actions/runs/41693570451). Prisma validate/generate, typecheck, lint, unit tests, and production build all passed.
+- PostgreSQL integration workflow has not yet been run against the latest marketplace changes; do not treat migration replay as verified until a disposable PostgreSQL run succeeds.
+- No owner database or Vercel environment variables were accessed or changed.
+
+**Next**
+1. Run the disposable PostgreSQL integration workflow and verify all committed migrations replay cleanly.
+2. Continue remaining Marketplace Core work only after reviewing the integration result; update Prisma only for a demonstrated missing domain relation or invariant.
