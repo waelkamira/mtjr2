@@ -6,10 +6,10 @@ import Link from "next/link";
 type Order = {
   id: string; orderNumber: string; status: string; currencyCode: string;
   currency: { minorUnit: number; symbol: string | null };
-  subtotalMinor: string; shippingMinor: string; taxMinor: string; totalMinor: string; placedAt: string;
+  subtotalMinor: string; shippingMinor: string; taxMinor: string; totalMinor: string; tax: { ruleName: string; rateBasisPoints: number; inclusive: boolean; includesShipping: boolean; destinationRegion: string | null }; placedAt: string;
   address: { recipientName: string; phone: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   vendorOrders: Array<{
-    id: string; status: string; store: { name: string; slug: string };
+    id: string; status: string; store: { name: string; slug: string }; shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
     subtotalMinor: string; shippingMinor: string; taxMinor: string; totalMinor: string;
     items: Array<{ id: string; productName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: string; lineTotalMinor: string }>;
   }>;
@@ -45,10 +45,11 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
         <p className="mt-2 text-sm text-[var(--muted)]">Order {order.orderNumber} · {new Date(order.placedAt).toLocaleString()}</p>
         <div className="mt-6 rounded-3xl border border-[var(--border)] bg-white p-6">
           <div className="flex flex-wrap justify-between gap-3"><div><p className="text-sm text-[var(--muted)]">Order status</p><p className="mt-1 font-semibold">{order.status.replaceAll("_", " ")}</p></div><div className="text-right"><p className="text-sm text-[var(--muted)]">Total</p><p className="mt-1 text-2xl font-semibold tabular-nums">{money(order.totalMinor, order.currencyCode, order.currency.minorUnit)}</p></div></div>
+          <div className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm"><div className="flex justify-between"><span className="text-[var(--muted)]">Items</span><strong>{money(order.subtotalMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><div className="flex justify-between"><span className="text-[var(--muted)]">Shipping</span><strong>{money(order.shippingMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><div className="flex justify-between"><span className="text-[var(--muted)]">Tax · {order.tax.ruleName} ({(order.tax.rateBasisPoints / 100).toFixed(2)}%)</span><strong>{money(order.taxMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><p className="text-xs text-[var(--muted)]">{order.tax.inclusive ? "Included in listed prices" : "Added to subtotal"}{order.tax.destinationRegion ? ` · ${order.tax.destinationRegion}` : ""}</p></div>
           <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-3 text-sm leading-6 text-[var(--muted)]">Your order has been recorded. Payment has not been initiated yet; fulfillment will remain pending until a payment provider is connected and payment is confirmed.</p>
         </div>
         <section className="mt-6 space-y-4">{order.vendorOrders.map((vendor) => <article key={vendor.id} className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-[var(--muted)]">Seller order</p><h2 className="mt-1 text-lg font-semibold">{vendor.store.name}</h2></div><p className="text-sm font-semibold">{vendor.status.replaceAll("_", " ")}</p></div>
+          <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-[var(--muted)]">Seller order</p><h2 className="mt-1 text-lg font-semibold">{vendor.store.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{vendor.shippingServiceName}{vendor.minDeliveryDays != null ? ` · ${vendor.minDeliveryDays}–${vendor.maxDeliveryDays ?? vendor.minDeliveryDays} days` : ""}</p></div><p className="text-sm font-semibold">{vendor.status.replaceAll("_", " ")}</p></div>
           <div className="mt-4 divide-y divide-[var(--border)]">{vendor.items.map((item) => <div key={item.id} className="flex justify-between gap-4 py-3"><div><p className="font-medium">{item.productName}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.sku}{item.variantName ? ` · ${item.variantName}` : ""} · Qty {item.quantity}</p></div><p className="font-semibold tabular-nums">{money(item.lineTotalMinor, order.currencyCode, order.currency.minorUnit)}</p></div>)}</div>
           <div className="mt-4 flex justify-between border-t border-[var(--border)] pt-4 text-sm"><span className="text-[var(--muted)]">Seller order total</span><strong>{money(vendor.totalMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>
         </article>)}</section>
