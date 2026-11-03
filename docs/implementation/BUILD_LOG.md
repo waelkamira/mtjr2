@@ -1321,3 +1321,17 @@ The project owner approved Resend as the transactional email provider. The serve
 - Scope limitation: this first rule engine applies one market/region rule to the full item subtotal and optionally shipping. Product/category exemptions, multiple overlapping jurisdictions, compound taxes, legal registration/nexus, and discounts remain future work and require launch-jurisdiction rules.
 - No new test matrix was added. One normal CI run and one disposable PostgreSQL migration/integration run are the only verification gates for this schema slice.
 - Verification pending. No owner database, production database, or Vercel environment was accessed.
+
+
+## 2026-11-03 — Buying Core 4.5: transactional order and vendor-order creation
+
+**Implemented on `feat/order-vendor-order-creation`, stacked on tax PR #5**
+
+- Added canonical Prisma models `Order`, `OrderAddress`, `VendorOrder`, `OrderItem`, `OrderStatusHistory`, and `VendorOrderStatusHistory`, with order/vendor status enums and migration `20261103233000_order_vendor_order_creation`.
+- Added `InventoryMovementType.SALE` to record stock consumption against the created order.
+- Added `placeOrderFromCheckoutQuote`: verifies ownership, quote status/expiry, address, per-store shipping selections, currency consistency, tax snapshot, and reservation coverage. Uses a serializable transaction and deterministic quote idempotency.
+- Creates one marketplace order and one vendor order per distinct store. Allocates tax shares deterministically in integer minor units and preserves order item/address/price snapshots.
+- Consumes inventory reservation rows and decrements both on-hand and reserved quantities atomically; writes SALE movements; marks quote CONVERTED and cart CHECKED_OUT.
+- Added buyer placement API, buyer order detail/history APIs and pages, plus store-scoped seller order API/page linked from seller workspace.
+- Payment is intentionally not initiated. Parent and vendor orders remain PENDING_PAYMENT; fulfillment is not authorized until provider-confirmed payment.
+- Verification pending. No additional test matrix added; the only gates are the existing General CI and disposable PostgreSQL integration workflow. No owner/production database or Vercel environment accessed.
