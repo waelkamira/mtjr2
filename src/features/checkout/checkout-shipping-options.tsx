@@ -44,7 +44,7 @@ export default function CheckoutShippingOptions({ quoteId, currencyCode, minorUn
   return <section className="rounded-3xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)] md:p-6">
     <p className="text-xs font-semibold uppercase tracking-[.16em] text-[var(--color-copper-600)]">Delivery method</p>
     <h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">Shipping options by seller</h2>
-    <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Each seller's service is selected separately. Only currently configured rates for the delivery market and region are shown.</p>
+    <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Each seller&apos;s service is selected separately. Only currently configured rates for the delivery market and region are shown.</p>
     {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
     {message && <p role="status" className="mt-3 rounded-xl bg-[var(--color-sage-100)] p-3 text-sm text-[var(--color-forest-900)]">{message}</p>}
     {!loaded ? <button type="button" onClick={() => void load()} disabled={quoteStatus !== "ACTIVE" || busy !== ""} className="mt-4 rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy === "load" ? "Loading…" : "Load shipping options"}</button> :
