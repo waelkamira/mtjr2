@@ -1469,3 +1469,11 @@ The project owner approved Resend as the transactional email provider. The serve
 - Inspected the failed General CI run on the System 10 head. Prisma validation, Prisma Client generation and TypeScript typecheck had passed; lint failed on seven pre-existing React effect/state hydration patterns in tax rules, seller messages, wishlist, product/store review queues and product reviews. The build and unit-test steps were skipped by the workflow after lint failed.
 - Applied focused asynchronous effect-hydration changes to those existing pages on the returns branch. No domain behavior, API contracts or database behavior was changed by these lint corrections.
 - The System 10 disposable PostgreSQL integration job completed successfully. The initial System 11 CI attempt was cancelled when the branch received follow-up commits; a new run for the latest head has not yet been observed. No build/lint pass is claimed.
+
+
+## 2026-11-04 — Homepage discovery section
+
+- Added a responsive editorial discovery panel between the hero and category/catalog sections to make the homepage feel intentionally composed even before demo catalog data is available.
+- Wired the primary CTA to the existing product discovery section, the category tile to the live category section, and the seller CTA to `/seller`.
+- No fabricated product cards, stock, pricing, reviews, or sales figures were introduced. Actual products/categories remain API-backed; if the database has no active catalog data, the existing honest empty states remain.
+- UI-only change; no Prisma schema/migration required. No test suite was added or awaited.
