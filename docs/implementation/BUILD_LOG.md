@@ -1363,3 +1363,12 @@ The project owner approved Resend as the transactional email provider. The serve
 - Connected product detail save/remove control and `/account/wishlist` UI.
 - Server validates product availability and enforces unique customer/product favorites.
 - Guest merge, named lists and recommendation logic remain incomplete. No expanded test matrix added.
+
+
+## 2026-11-03 — System 08 initial slice: product questions and answers
+
+- Added `ProductQuestion` and `ProductAnswer` models and separate moderation enums; migration: `20261104003000_product_questions_answers`.
+- Added authenticated customer question submission, public published-only Q&A, active store-owner answers, customer history, seller inbox and admin moderation APIs.
+- Added audit events and in-app notifications when questions or answers are published.
+- Connected product detail, customer account, seller workspace and admin moderation interfaces.
+- Staff-scoped answers, abuse reporting, attachments and advanced history/editing remain incomplete. No broad test suite added.
