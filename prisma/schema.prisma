@@ -55,6 +55,7 @@ model User {
   orders                Order[]
   notifications         Notification[]
   productReviews        ProductReview[]
+  storeReviews          StoreReview[]
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -436,6 +437,7 @@ model Store {
   markets   StoreMarket[]
   staff     SellerStaff[]
   products  Product[]
+  reviews   StoreReview[]
   warehouses Warehouse[]
   stockTransfers StockTransfer[]
   shippingRates StoreShippingRate[]
@@ -1186,6 +1188,7 @@ model VendorOrder {
   shippingRate    StoreShippingRate? @relation(fields: [shippingRateId], references: [id], onDelete: SetNull)
   items           OrderItem[]
   statusHistory   VendorOrderStatusHistory[]
+  storeReview     StoreReview?
 
   @@unique([orderId, storeId])
   @@index([storeId, status, createdAt])
@@ -1258,6 +1261,31 @@ model ProductReview {
 
   @@unique([userId, productId])
   @@index([productId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model StoreReview {
+  id              String       @id @default(cuid())
+  storeId         String
+  userId          String
+  vendorOrderId   String       @unique
+  rating          Int
+  title           String       @db.VarChar(120)
+  body            String       @db.VarChar(4000)
+  status          ReviewStatus @default(PENDING)
+  sellerResponse  String?      @db.VarChar(2000)
+  sellerRespondedAt DateTime?
+  moderatedAt     DateTime?
+  moderatedBy     String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  store           Store        @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vendorOrder     VendorOrder  @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, storeId])
+  @@index([storeId, status, createdAt])
   @@index([userId, createdAt])
   @@index([status, createdAt])
 }
