@@ -24,6 +24,7 @@ CREATE TABLE "Payment" (
   "failureCode" VARCHAR(120),
   "failureMessage" VARCHAR(500),
   "succeededAt" TIMESTAMP(3),
+  "lastProviderEventAt" TIMESTAMP(3),
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "Payment_pkey" PRIMARY KEY ("id"),
