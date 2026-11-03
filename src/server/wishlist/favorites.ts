@@ -16,23 +16,15 @@ export async function listMyFavorites(now = new Date()) {
         select: {
           id: true, name: true, slug: true,
           media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
-          store: { select: { name: true, slug: true } },
-          variants: { where: { isActive: true }, take: 1, select: { prices: { where: { market: { status: "ACTIVE" }, currency: { isActive: true } }, take: 1, select: { amountMinor: true, currencyCode: true, currency: { select: { minorUnit: true } } } } } }
+          store: { select: { name: true, slug: true } }
         }
       }
     }
   });
-  return favorites.map((favorite) => {
-    const price = favorite.product.variants[0]?.prices[0];
-    return {
-      id: favorite.id, createdAt: favorite.createdAt.toISOString(),
-      product: {
-        ...favorite.product,
-        image: favorite.product.media[0] ?? null,
-        price: price ? { amountMinor: price.amountMinor.toString(), currencyCode: price.currencyCode, minorUnit: price.currency.minorUnit } : null
-      }
-    };
-  });
+  return favorites.map((favorite) => ({
+    id: favorite.id, createdAt: favorite.createdAt.toISOString(),
+    product: { ...favorite.product, image: favorite.product.media[0] ?? null }
+  }));
 }
 
 export async function getFavoriteStatus(productId: string, now = new Date()) {
