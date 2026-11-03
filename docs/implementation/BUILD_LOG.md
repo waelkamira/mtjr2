@@ -1034,3 +1034,18 @@ The project owner approved Resend as the transactional email provider. The serve
 - Adjustment idempotency is bound to the exact warehouse/variant inventory row; reusing a key for a different row or delta is rejected.
 - Reservations are modeled but reservation creation/consumption/release/expiry service behavior is deferred until cart/checkout defines customer/guest ownership and idempotency contracts. No insecure generic reservation endpoint was exposed.
 - Next: complete CI and PostgreSQL replay, then implement market reference-data services without activating launch markets until their scope is agreed.
+
+
+## 2026-11-03 — Market reference read APIs and stock-transfer idempotency
+
+**Implemented**
+- Added active market listing and individual market lookup APIs, normalizing market codes.
+- Added public currency and country reference APIs derived only from enabled currencies and valid ACTIVE markets. A market is excluded unless its default currency is active and enabled within that market.
+- Added focused market-query tests for default-currency enforcement, deduplication, and market-code normalization.
+- Made stock-transfer creation require a unique idempotency key; a retry with the same source, destination, and item quantities returns the existing transfer, while reuse with a different payload is rejected.
+- Added a focused stock-transfer replay test.
+
+**Verification status**
+- The current combined CI and PostgreSQL workflows are queued/running. Earlier CI run `41677499072` passed install, Prisma validate/generate, typecheck, and lint on an intermediate inventory commit, but was superseded before unit tests and build. It is not a complete pass.
+- Database Baseline and Platform PostgreSQL Integration for the inventory migration are not yet complete. No success is claimed for the latest migration or the current full commit.
+- No active markets/countries/currencies are seeded or activated because the owner has not defined launch geography. The new public APIs correctly return empty collections until approved reference data is configured.
