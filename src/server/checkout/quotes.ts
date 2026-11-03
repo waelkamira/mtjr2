@@ -49,10 +49,12 @@ async function releaseQuoteReservations(tx: Prisma.TransactionClient, quoteId: s
 async function expireReservations(tx: Prisma.TransactionClient, now: Date) {
   const expiredQuotes = await tx.checkoutQuote.findMany({
     where: { status: CheckoutQuoteStatus.ACTIVE, expiresAt: { lte: now } },
-    select: { id: true }
+    select: { id: true },
+    orderBy: { expiresAt: "asc" },
+    take: 100
   });
   for (const quote of expiredQuotes) {
-    await releaseQuoteReservations(tx, quote.id, CheckoutQuoteStatus.EXPIRED);
+    await releaseQuoteReservations(tx, quote.id, CheckoutQuoteStatus.EXPIRED, now);
   }
 }
 
