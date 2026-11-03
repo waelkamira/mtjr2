@@ -884,6 +884,7 @@ model StoreShippingRate {
   market            Market   @relation(fields: [marketId], references: [id], onDelete: Restrict)
   currency          Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
   selections        CheckoutShippingSelection[]
+  vendorOrders      VendorOrder[]
 
   @@index([storeId, marketId, isActive, priority])
   @@index([marketId, currencyCode, isActive])
@@ -1113,6 +1114,11 @@ model Order {
   subtotalMinor   BigInt
   shippingMinor   BigInt
   taxMinor        BigInt
+  taxRuleName     String      @db.VarChar(120)
+  taxRateBasisPoints Int
+  taxInclusive   Boolean
+  taxIncludesShipping Boolean
+  taxDestinationRegion String? @db.VarChar(120)
   totalMinor      BigInt
   idempotencyKey  String      @unique @db.VarChar(160)
   placedAt        DateTime    @default(now())
@@ -1156,11 +1162,17 @@ model VendorOrder {
   subtotalMinor   BigInt
   shippingMinor   BigInt
   taxMinor        BigInt
+  shippingServiceName String    @db.VarChar(120)
+  shippingRateId String?
+  shippingDestinationRegion String? @db.VarChar(120)
+  minDeliveryDays Int?
+  maxDeliveryDays Int?
   totalMinor      BigInt
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   order           Order            @relation(fields: [orderId], references: [id], onDelete: Restrict)
   store           Store            @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  shippingRate    StoreShippingRate? @relation(fields: [shippingRateId], references: [id], onDelete: SetNull)
   items           OrderItem[]
   statusHistory   VendorOrderStatusHistory[]
 
