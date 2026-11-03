@@ -21,7 +21,7 @@ const { prismaMock, txMock } = vi.hoisted(() => {
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 
 import {
-  clearIdentifierLoginThrottle,
+  clearLoginThrottle,
   consumeLoginAttempt
 } from "../../src/server/identity/login-throttle";
 
@@ -67,10 +67,10 @@ describe("persistent login throttling", () => {
     }
   });
 
-  it("clears only the normalized identifier bucket after successful authentication", async () => {
+  it("clears only the normalized identifier/IP pair after successful authentication", async () => {
     txMock.loginRateLimitBucket.updateMany.mockResolvedValue({ count: 1 });
 
-    await clearIdentifierLoginThrottle(" Buyer@Example.COM ");
+    await clearLoginThrottle(" Buyer@Example.COM ", "203.0.113.8");
 
     expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith({
       where: { keyHash: expect.stringMatching(/^[a-f0-9]{64}$/) },
@@ -82,13 +82,15 @@ describe("persistent login throttling", () => {
     });
   });
 
-  it("rejects an empty or oversized identifier before database access", async () => {
-    await expect(consumeLoginAttempt({ identifier: "  " }, now)).rejects.toThrow(
-      /valid login identifier/
-    );
-    await expect(consumeLoginAttempt({ identifier: "x".repeat(255) }, now)).rejects.toThrow(
-      /valid login identifier/
-    );
+  it("requires a valid identifier and trusted client IP before database access", async () => {
+    await expect(consumeLoginAttempt({
+      identifier: "buyer@example.com",
+      trustedIpAddress: ""
+    }, now)).rejects.toThrow(/trusted client IP/);
+    await expect(consumeLoginAttempt({
+      identifier: "x".repeat(255),
+      trustedIpAddress: "203.0.113.8"
+    }, now)).rejects.toThrow(/valid login identifier/);
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 

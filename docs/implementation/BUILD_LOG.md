@@ -248,8 +248,9 @@
 **Design**
 - Added a dedicated `LoginRateLimitBucket` table with an atomic counter, fixed rolling-window start, and temporary block expiry.
 - Rate-limit keys are HMAC-SHA256 digests using the server-only `AUTH_SECRET`; raw email identifiers and IP addresses are not stored in throttle buckets.
+- A successful login clears only its identifier/IP pair bucket; IP-wide counters remain, so successful sign-in does not reset network abuse signals.
 - Reworked the `LoginAttempt` schema to store keyed identifier/IP digests rather than raw values, preserving the future audit trail without retaining direct login identifiers or network addresses.
-- Current conservative defaults: 5 attempts per normalized identifier and 30 attempts per trusted client IP within 15 minutes; threshold crossing blocks that key for 15 minutes.
+- Current conservative defaults: 5 attempts per normalized identifier/IP pair and 30 attempts per trusted client IP within 15 minutes; threshold crossing blocks that key for 15 minutes. Pair-based throttling avoids globally locking a victim's account when an attacker targets the email from unrelated IP addresses.
 - Client IP must be derived only from a correctly configured trusted-proxy boundary. Do not trust arbitrary `X-Forwarded-For` values from the public request.
 
 **Implementation boundary**

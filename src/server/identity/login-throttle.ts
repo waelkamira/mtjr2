@@ -12,7 +12,7 @@ const IP_LIMIT = 30;
 interface LoginThrottleInput {
   identifier: string;
   /** Must come from the application's trusted proxy/IP resolution layer. */
-  trustedIpAddress?: string | null;
+  trustedIpAddress: string;
 }
 
 interface RateLimitBucket {
@@ -97,18 +97,21 @@ async function consumeBucket(
 }
 
 /**
- * Clears the identifier bucket after a successful authentication so normal
- * repeated sign-ins do not lock out a legitimate account. IP abuse counters
- * are intentionally retained.
+ * Clears the identifier/IP pair bucket after successful authentication.
+ * This avoids locking an account globally when an attacker targets its email
+ * from unrelated IP addresses. IP abuse counters are intentionally retained.
  */
-export async function clearIdentifierLoginThrottle(
-  identifierInput: string
+export async function clearLoginThrottle(
+  identifierInput: string,
+  trustedIpAddress: string
 ): Promise<void> {
   const identifier = normalizeEmail(identifierInput);
-  if (!identifier || identifier.length > 254) return;
+  const ip = trustedIpAddress.trim();
+  if (!identifier || identifier.length > 254 || !ip || ip.length > 64) return;
 
+  const pairKey = digestSubject("identifier-ip", `${identifier}: ${ip}`);
   await prisma.loginRateLimitBucket.updateMany({
-    where: { keyHash: digestSubject("identifier", identifier) },
+    where: { keyHash: pairKey },
     data: {
       windowStartedAt: new Date(),
       attemptCount: 0,
@@ -118,10 +121,10 @@ export async function clearIdentifierLoginThrottle(
 }
 
 /**
- * Atomically consumes an attempt against identifier and (when supplied) IP
- * buckets. Call before password hashing/verification. After successful
- * authentication, clear the identifier bucket. The caller must pass only a
- * client IP resolved through trusted proxy configuration.
+ * Atomically consumes an attempt against an identifier/IP pair bucket and
+ * an IP-wide bucket. Call before password hashing/verification. After
+ * successful authentication, clear only the pair bucket. The caller must
+ * pass a client IP resolved through trusted proxy configuration.
  */
 export async function consumeLoginAttempt(
   input: LoginThrottleInput,
@@ -133,24 +136,22 @@ export async function consumeLoginAttempt(
   }
 
   const identifierKey = digestSubject("identifier", identifier);
-  const ip = input.trustedIpAddress?.trim();
-  if (ip && ip.length > 64) {
-    throw new Error("The trusted client IP value is invalid.");
+  const ip = input.trustedIpAddress.trim();
+  if (!ip || ip.length > 64) {
+    throw new Error("A trusted client IP value is required.");
   }
-  const ipKey = ip ? digestSubject("ip", ip) : null;
+  const pairKey = digestSubject("identifier-ip", `${identifier}:${ip}`);
+  const ipKey = digestSubject("ip", ip);
 
   return prisma.$transaction(async (tx) => {
-    const identifierBlocked = await consumeBucket(
+    const pairBlocked = await consumeBucket(
       tx,
-      identifierKey,
+      pairKey,
       IDENTIFIER_LIMIT,
       now
     );
+    const ipBlocked = await consumeBucket(tx, ipKey, IP_LIMIT, now);
 
-    const ipBlocked = ipKey
-      ? await consumeBucket(tx, ipKey, IP_LIMIT, now)
-      : false;
-
-    return { blocked: identifierBlocked || ipBlocked };
+    return { blocked: pairBlocked || ipBlocked };
   });
 }
