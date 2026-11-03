@@ -25,7 +25,7 @@ Do not copy legacy application code or add models without a defined workflow.
 - [x] Add authenticated, email-verified seller application submission with atomic audit and idempotent pending retry.
 - [x] Add permission-protected approve/reject transitions; approval grants the seeded SELLER role atomically, and rejection requires a reason.
 - [x] Add approved-seller draft-store creation with active-market validation and an atomic audit event.
-- [ ] Add store-scoped staff invitation, acceptance, revocation, and authorization workflows.
+- [x] Add store-scoped staff invitation, acceptance, revocation, and STORE_MANAGER role grants; review the workflow in PostgreSQL integration before production use.
 - [ ] Add store-scoped staff invitation, acceptance, revocation, and authorization workflows. Keep KYC documents and payout activation for their later dedicated systems.
 
 ### 3.3 Catalog taxonomy
