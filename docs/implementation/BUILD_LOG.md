@@ -1372,3 +1372,15 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added audit events and in-app notifications when questions or answers are published.
 - Connected product detail, customer account, seller workspace and admin moderation interfaces.
 - Staff-scoped answers, abuse reporting, attachments and advanced history/editing remain incomplete. No broad test suite added.
+
+
+## 2026-11-04 — System 09 initial slice: customer support tickets
+
+**Implemented on `feat/customer-support-tickets` (draft PR #11 planned):**
+- Added canonical `SupportTicket` and `SupportMessage` Prisma models, status/priority enums, customer/assignee/sender relations, queue indexes, and migration `20261104010000_customer_support_tickets`.
+- Added transactional ticket creation with initial message and audit event; customer-owned list/detail/reply services; permission-protected admin queue/detail/reply/internal-note/status/priority/self-assignment operations.
+- Added customer APIs `/api/support/tickets` and `/api/support/tickets/[ticketId]`, admin APIs `/api/admin/support/tickets` and `/api/admin/support/tickets/[ticketId]`.
+- Connected `/account/support`, `/account/support/[ticketId]`, and `/admin/support` interfaces to those APIs.
+- Customer reads are strictly scoped to the authenticated owner and never include internal notes. Agent replies create customer in-app notifications in the same transaction; administrative changes and ticket creation are audited.
+- Not implemented in this slice: store-to-customer conversations, attachments, read receipts, SLA automation/escalation, team routing, and email delivery.
+- Verification: files and migration were committed through GitHub. Prisma validation, migration replay, typecheck, and production build have **not** yet been observed for this branch. No routine test matrix was expanded. No production database or Vercel environment was accessed.
