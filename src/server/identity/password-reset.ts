@@ -3,7 +3,6 @@ import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { hashPassword } from "@/server/identity/password";
-import { revokeAllUserSessions } from "@/server/identity/session";
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 
