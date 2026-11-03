@@ -400,6 +400,7 @@ model Category {
   parent      Category?           @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
   children    Category[]          @relation("CategoryTree")
   translations CategoryTranslation[]
+  productLinks ProductCategory[]
 
   @@index([parentId, status, sortOrder])
   @@index([status, sortOrder])
