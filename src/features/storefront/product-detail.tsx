@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductReviews from "@/features/storefront/product-reviews";
 import StoreReviews from "@/features/storefront/store-reviews";
+import ProductQuestions from "@/features/storefront/product-questions";
 
 type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
@@ -130,5 +131,6 @@ export default function ProductDetail({ slug }: { slug: string }) {
     </div>
     <ProductReviews productId={product.id} />
     <StoreReviews storeId={product.store.id} storeName={product.store.name} />
+    <ProductQuestions productId={product.id} />
   </main>;
 }
