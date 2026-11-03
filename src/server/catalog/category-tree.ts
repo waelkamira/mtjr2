@@ -38,7 +38,6 @@ export function buildCategoryTree(
   }
 
   const valid = new Set<string>();
-  const depths = new Map<string, number>();
 
   for (const row of byId.values()) {
     let current: CategoryTreeRow | undefined = row;
@@ -69,7 +68,6 @@ export function buildCategoryTree(
 
     if (safe) {
       valid.add(row.id);
-      depths.set(row.id, depth);
     }
   }
 
