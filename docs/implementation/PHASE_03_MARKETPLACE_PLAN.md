@@ -14,7 +14,7 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ### 3.1 Market reference data
 - [x] Define canonical Country, Currency, Market, and market-currency availability models (commit `a84c4da`).
-- [x] Add the initial additive migration (commit `d120587`); CI migration verification is pending.
+- [x] Add the initial additive migration (commit `d120587`); schema validation and migration rehearsal passed in CI.
 - [x] Define ISO country/currency codes, enabled states, default currency relation, and explicit currency minor-unit precision constraint.
 - [ ] Add deterministic reference-data seed that is safe to run repeatedly.
 - [ ] Add repository/service read paths and a minimal admin-protected management API only where required.
@@ -25,8 +25,10 @@ Do not copy legacy application code or add models without a defined workflow.
 - [x] Add authenticated, email-verified seller application submission with atomic audit and idempotent pending retry.
 - [x] Add permission-protected approve/reject transitions; approval grants the seeded SELLER role atomically, and rejection requires a reason.
 - [x] Add approved-seller draft-store creation with active-market validation and an atomic audit event.
-- [x] Add store-scoped staff invitation, acceptance, revocation, and STORE_MANAGER role grants; review the workflow in PostgreSQL integration before production use.
-- [ ] Add store-scoped staff invitation, acceptance, revocation, and authorization workflows. Keep KYC documents and payout activation for their later dedicated systems.
+- [x] Add store-scoped staff invitation and acceptance; grant STORE_MANAGER only in the exact store scope.
+- [x] Add owner/scoped-manager authorization for staff invitations and reject cross-user invitation acceptance.
+- [ ] Expose and test staff revocation through an API route; verify staff lifecycle against PostgreSQL integration.
+- [ ] Add store profile editing, seller suspension lifecycle, KYC documents, and payout activation in their dedicated systems.
 
 ### 3.3 Catalog taxonomy
 - [x] Define hierarchical Category, CategoryTranslation, Brand, and BrandTranslation schema with draft/active/archive lifecycle.
