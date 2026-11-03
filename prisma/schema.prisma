@@ -1411,6 +1411,9 @@ model SupportTicket {
   lastMessageAt  DateTime              @default(now())
   resolvedAt     DateTime?
   closedAt       DateTime?
+  customerReadAt DateTime?
+  agentReadAt    DateTime?
+  firstResponseAt DateTime?
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
   customer       User                  @relation("SupportTicketCustomer", fields: [customerId], references: [id], onDelete: Restrict)
