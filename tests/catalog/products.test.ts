@@ -79,7 +79,7 @@ describe("product lifecycle", () => {
 
   it("rejects a price targeting a market not enabled for the store", async () => {
     mocks.storeFindUnique.mockResolvedValue({
-      id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE" }, markets: []
+      id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: []
     });
     await expect(createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
