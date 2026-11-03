@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Prisma } from "@prisma/client";
 
 const { requireCurrentSession, requirePermission, sellerFindUnique, sellerCreate, auditCreate, transaction, roleFindUnique, roleUpsert, sellerUpdateMany } = vi.hoisted(() => ({
   requireCurrentSession: vi.fn(), requirePermission: vi.fn(), sellerFindUnique: vi.fn(),
@@ -24,7 +25,7 @@ describe("marketplace seller lifecycle", () => {
     roleFindUnique.mockResolvedValue({ id: "role-seller" });
     roleUpsert.mockResolvedValue({});
     sellerUpdateMany.mockResolvedValue({ count: 1 });
-    transaction.mockImplementation(async (callback: (tx: any) => unknown) => callback({
+    transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       seller: { findUnique: sellerFindUnique, create: sellerCreate, updateMany: sellerUpdateMany },
       role: { findUnique: roleFindUnique },
       userRoleAssignment: { upsert: roleUpsert },
