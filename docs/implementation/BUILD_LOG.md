@@ -1142,3 +1142,25 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Run the existing PostgreSQL integration workflow on the latest committed migrations and queries.
 3. Implement store staff invitation/acceptance/revocation UI, then return to remaining buyer catalog UX.
 4. Keep cart/checkout outside this phase until its backend domain is implemented.
+
+## 2026-11-03 — Seller team and invitation UI integration
+
+**Implemented**
+- Added a store-scoped staff listing query, protected by store owner or exact STORE-scoped `store:staff:manage` authorization, and exposed it through GET /api/stores/[storeId]/staff alongside the existing invitation POST.
+- Added GET /api/stores/staff-invitations to list invitations addressed to the authenticated user.
+- Added /seller/staff: store team listing, invitation submission for existing active accounts, invitation acceptance, and membership revocation. The page calls the backend APIs; it does not mutate membership or permissions client-side.
+- Linked team management from the seller workspace.
+
+**Prisma decision**
+- No schema migration is required for this UI. `SellerStaff` already persists store/user membership, inviter, status, invitation timestamp, and acceptance timestamp; the existing scoped role assignment represents the granted store permission. Adding duplicate invitation/member tables would create conflicting sources of truth.
+- The invitation form currently uses the target account's user ID; email-based account lookup and email delivery are intentionally deferred until the identity/contact and notification workflow is specified.
+
+**Verification and safety**
+- The stock transfer listing syntax issue was fixed in commit `3ec5b23e`.
+- CI runs were repeatedly cancelled by subsequent pushes. The latest complete General CI result is not yet available; do not mark this batch green until a consolidated run completes.
+- No owner PostgreSQL database was connected and no Vercel environment variables were accessed or changed.
+
+**Next**
+1. Let one consolidated General CI run complete on the latest code and fix only concrete findings.
+2. Run the existing PostgreSQL integration workflow once against disposable CI PostgreSQL.
+3. Continue the buyer catalog journey and reference-data activation; keep cart/checkout paired with its backend phase.
