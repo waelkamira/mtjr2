@@ -130,12 +130,21 @@ export default function StorefrontHomePage() {
               {markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}
             </select>
           </label>
-          <Link href="/cart" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Cart</Link>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Link href="/account/wishlist" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Wishlist</Link>
+            <Link href="/account/orders" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">Orders</Link>
+            <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
+            <Link href="/register" className="hidden rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">Create account</Link>
+            <Link href="/cart" className="rounded-lg bg-[var(--color-forest-800)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Cart</Link>
+          </div>
         </div>
         <nav aria-label="Main navigation" className="mx-auto flex max-w-[1440px] gap-7 overflow-x-auto px-5 pb-3 text-sm text-[var(--color-ink-700)] lg:px-10">
           <a href="#discover" className="whitespace-nowrap font-medium text-[var(--color-forest-800)]">Discover</a>
           <a href="#categories" className="whitespace-nowrap">Categories</a>
           <a href="#about" className="whitespace-nowrap">Our marketplace</a>
+          <Link href="/seller" className="whitespace-nowrap">Sell on Mtjr</Link>
+          <Link href="/account/messages" className="whitespace-nowrap">Messages</Link>
+          <Link href="/notifications" className="whitespace-nowrap">Notifications</Link>
         </nav>
       </header>
 
