@@ -5,7 +5,8 @@ const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
     user: { create: vi.fn(), updateMany: vi.fn() },
     verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
-    userConsent: { createMany: vi.fn() }
+    userConsent: { createMany: vi.fn() },
+    auditLog: { create: vi.fn() }
   };
   return {
     txMock: tx,
@@ -66,6 +67,7 @@ describe("registration and email verification", () => {
       })
     }));
 
+    expect(txMock.auditLog.create).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "identity.registration.created", resourceId: "user-1" }) });
     expect(txMock.userConsent.createMany).toHaveBeenCalledWith({
       data: expect.arrayContaining([
         expect.objectContaining({ type: ConsentType.TERMS_OF_SERVICE, granted: true }),
@@ -108,6 +110,7 @@ describe("registration and email verification", () => {
       where: { id: "user-1", status: UserStatus.PENDING },
       data: { status: UserStatus.ACTIVE, emailVerifiedAt: now }
     });
+    expect(txMock.auditLog.create).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "identity.email_verification.completed", resourceId: "user-1" }) });
   });
 
   it("rejects expired, consumed, wrong-purpose, and malformed challenges", async () => {
