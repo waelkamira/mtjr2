@@ -96,4 +96,27 @@ describe("product lifecycle", () => {
     }));
     expect(mocks.productUpdateMany).toHaveBeenCalledOnce();
   });
+
+  it("denies a different seller even when that seller has a global catalog role", async () => {
+    mocks.storeFindUnique.mockResolvedValue({
+      id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "another-seller" },
+      markets: [{ marketId: "market-1" }]
+    });
+    mocks.userHasScopedPermission.mockResolvedValue(false);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/catalog access/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("allows a delegated manager only through an exact store grant", async () => {
+    mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "another-seller" } } });
+    mocks.userHasScopedPermission.mockResolvedValue(true);
+    await publishProduct("product-1");
+    expect(mocks.userHasScopedPermission).toHaveBeenCalledWith("seller-1", expect.objectContaining({
+      permissionKey: "catalog:manage", scope: { type: "STORE", id: "store-1" }
+    }));
+  });
+
 });
