@@ -23,19 +23,18 @@ function hashGuestToken(token: string) {
 
 async function ensureGuestSession(tx: Prisma.TransactionClient, token: string, now: Date) {
   const tokenHash = hashGuestToken(token);
-  const existing = await tx.guestSession.findUnique({ where: { tokenHash } });
-  if (existing) {
-    if (existing.expiresAt <= now || existing.convertedAt) {
-      return tx.guestSession.update({
-        where: { id: existing.id },
-        data: { expiresAt: new Date(now.getTime() + guestTtlMs), convertedAt: null }
-      });
-    }
-    return existing;
-  }
-  return tx.guestSession.create({
-    data: { tokenHash, expiresAt: new Date(now.getTime() + guestTtlMs) }
+  const session = await tx.guestSession.upsert({
+    where: { tokenHash },
+    create: { tokenHash, expiresAt: new Date(now.getTime() + guestTtlMs) },
+    update: {}
   });
+  if (session.expiresAt <= now || session.convertedAt) {
+    return tx.guestSession.update({
+      where: { id: session.id },
+      data: { expiresAt: new Date(now.getTime() + guestTtlMs), convertedAt: null }
+    });
+  }
+  return session;
 }
 
 async function getOrCreateOwnerCart(
@@ -62,6 +61,12 @@ async function mergeGuestCarts(
 ) {
   const guest = await tx.guestSession.findUnique({ where: { tokenHash: hashGuestToken(guestToken) } });
   if (!guest || guest.expiresAt <= now || guest.convertedAt) return;
+  // Claim the merge once. Concurrent requests cannot increment customer quantities twice.
+  const claimed = await tx.guestSession.updateMany({
+    where: { id: guest.id, convertedAt: null, expiresAt: { gt: now } },
+    data: { convertedAt: now }
+  });
+  if (claimed.count !== 1) return;
   const carts = await tx.cart.findMany({
     where: { guestSessionId: guest.id, status: CartStatus.ACTIVE },
     include: { items: true }
@@ -85,7 +90,6 @@ async function mergeGuestCarts(
     }
     await tx.cart.update({ where: { id: guestCart.id }, data: { status: CartStatus.MERGED } });
   }
-  await tx.guestSession.update({ where: { id: guest.id }, data: { convertedAt: now } });
 }
 
 async function resolveOwner(
