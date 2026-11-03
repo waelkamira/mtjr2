@@ -85,7 +85,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Purpose:** Verified-purchase product reviews and store reputation with moderation.
 - **Pages:** product review section, `/account/reviews`, store reviews, `/admin/reviews`, seller review center.
 - **Models:** `Review`, `ReviewMedia`, `StoreReview`, `OrderItem`, `Product`, `Store`, `Seller`, `AuditLog`.
-- **API:** `/api/reviews`, `/api/reviews/[id]`, `/api/stores/[id]/reviews`, `/api/admin/reviews/*`, `/api/seller/reviews`.
+- **API:** `/api/products/[productId]/reviews`, `/api/stores/[storeId]/reviews`, `/api/account/reviews`, `/api/admin/reviews/*`, `/api/admin/store-reviews/*`, `/api/seller/reviews/*`.
 - **Must include:** verified purchase, one-review policy, rating aggregates, media validation, report/appeal, moderation queue and seller response.
 - **Current state (2026-11-03):** **Initial verified product-review slice implemented on `feat/verified-purchase-reviews`.** Added canonical `ProductReview`, `StoreReview` and `ReviewStatus` persistence with migration `20261104001000_verified_product_reviews`; submission is restricted to the signed-in purchaser of a delivered order item/vendor order, one review per customer/product and per customer/store, and all new reviews enter PENDING moderation. Public product/store review lists and aggregates, customer reviewable-purchase and review-history APIs, audited admin moderation APIs, product-detail product/store review panels, delivered-order store review form, seller review center with owner responses, and admin product/store moderation queues are connected. Review media, reports/appeals, staff-scoped seller responses, and advanced moderation remain incomplete.
 
@@ -95,7 +95,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `Favorite`, `Recommendation`, `Product`, `ProductVariant`, `Store`, `User`.
 - **API:** `/api/favorites`, `/api/favorites/[productId]`, `/api/recommendations`.
 - **Must include:** server-side ownership, guest merge, deduplication, cache reconciliation and privacy-safe recommendation logic.
-- **Current state:** **Partial.** Favorite routes/UI exist; the audit identifies competing local/server state and incomplete canonical delegate coverage.
+- **Current state (2026-11-03):** **Initial authenticated favorites slice implemented on `feat/wishlist-favorites`.** Added canonical `Favorite` persistence and migration `20261104002000_customer_favorites`, owner-scoped list/status/add/remove APIs, a connected product-detail save control, and `/account/wishlist` UI. Server-side ownership, active-product checks and unique customer/product deduplication are enforced. Guest wishlist merge, multiple named lists, recommendations, and cache reconciliation remain incomplete.
 
 #### 08. Product questions and answers
 - **Purpose:** Pre-purchase questions answered by sellers or authorized staff.
