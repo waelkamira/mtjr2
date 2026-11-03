@@ -241,3 +241,18 @@ Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https:/
 - Customer support tickets connect to customer pages and the admin support desk. Admin management uses dedicated `support:manage`; store messaging uses store-scoped `messages:manage`.
 - Customer/agent and customer/store read timestamps are persisted. Ticket first-response time is recorded. Ticket creation/admin changes are audited; public replies create in-app notifications. Internal support notes are never returned to customers.
 - **Not yet complete:** attachment upload/storage and security scanning (object-storage provider required), formal SLA targets and scheduled escalation, staff recipient routing, outbound email. Do not call System 09 fully complete until these dependencies and workflows are delivered.
+
+
+## Storefront readiness — known release blocker
+
+The current storefront source has a search form, product-discovery API integration, category/brand/market filters, product-detail route, and cart entry point. However, `prisma/seed.cjs` currently seeds identity roles and permissions only; it does **not** seed an active market, currencies, categories, brands, seller/store, products, variants, prices, media, or stock. Therefore an empty disposable database produces an almost empty marketplace and does not provide a meaningful search/catalog demo.
+
+Also, PRs #1–#11 are a stacked, unmerged implementation chain. The newer customer/storefront pages and workflows on these branches are not part of `main` until the chain is reviewed and merged in order. Do not treat the current deployed/main experience as proof that the branch implementation is visible.
+
+**Next storefront delivery priority (separate from System 09):**
+1. Add deterministic, repeatable demo seed data for one clearly labelled demo market, store, categories, brands, products, variants, media URLs and inventory; never run it against production.
+2. Rebuild the homepage as a complete marketplace landing page with visible category grid, featured/new products, brand strip, value propositions, search/filter/sort, pagination and working navigation.
+3. Verify the full public journey from home → search/category → product detail → cart → checkout, including empty/loading/error states.
+4. Add visible account, seller and admin entry points according to authentication and authorization.
+
+Until demo market/catalog data is seeded, search is connected in code but cannot return demo results from an empty database.
