@@ -714,3 +714,22 @@ The project owner approved Resend as the transactional email provider. The serve
 1. Implement the Country + Currency + Market schema slice, with constraints and deterministic seed.
 2. Generate a migration for CI/local disposable PostgreSQL only.
 3. Run the existing General CI plus one focused PostgreSQL integration gate; do not expand the test matrix without a concrete invariant.
+
+
+## 2026-11-03 — Phase 3.1 market reference schema
+
+**Implemented**
+- Added canonical `Country`, `Currency`, `Market`, and `MarketCurrency` models to `prisma/schema.prisma`.
+- Added ISO country/currency code constraints, market lifecycle status, default market currency relation, enabled market-currency links, foreign keys, lookup indexes, and a database check limiting currency minor units to 0–4.
+- Added additive migration `20261103010000_market_reference_data`; the existing identity baseline migration was not modified.
+- Updated the Phase 3 plan to record the schema/migration work.
+
+**Verification**
+- No production or owner-local database was accessed.
+- Prisma validation, client generation, migration deployment, and integration tests have not yet been observed for this new schema. Do not mark the slice verified until CI completes.
+- No country/currency sample data was seeded yet; avoid inventing launch-market coverage. The authoritative reference-data seed is the next implementation task.
+
+**Next**
+1. Confirm Prisma validation and generated-client compatibility in General CI.
+2. Add a deterministic reference-data seed from an explicit, versioned ISO data source.
+3. Add one PostgreSQL integration check for ISO uniqueness, default-currency relation, and market-currency membership.
