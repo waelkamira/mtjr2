@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+type PaymentProvider = { key: string; displayName: string };
 type Order = {
   id: string; orderNumber: string; status: string; currencyCode: string;
   currency: { minorUnit: number; symbol: string | null };
@@ -23,6 +24,9 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentProviders, setPaymentProviders] = useState<PaymentProvider[]>([]);
+  const [paymentBusy, setPaymentBusy] = useState("");
+  const [paymentError, setPaymentError] = useState("");
   useEffect(() => {
     let active = true;
     fetch(`/api/orders/${encodeURIComponent(orderId)}`, { cache: "no-store" })
@@ -36,6 +40,35 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
     return () => { active = false; };
   }, [orderId]);
 
+  useEffect(() => {
+    let active = true;
+    fetch("/api/payments/providers", { cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json() as { providers?: PaymentProvider[] };
+        if (active && response.ok) setPaymentProviders(data.providers || []);
+      })
+      .catch(() => { if (active) setPaymentProviders([]); });
+    return () => { active = false; };
+  }, []);
+
+  async function startPayment(provider: PaymentProvider) {
+    if (!order) return;
+    setPaymentBusy(provider.key);
+    setPaymentError("");
+    try {
+      const response = await fetch(`/api/orders/${encodeURIComponent(order.id)}/payments`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: provider.key, idempotencyKey: crypto.randomUUID() })
+      });
+      const data = await response.json() as { payment?: { checkoutUrl: string | null }; error?: string };
+      if (!response.ok || !data.payment) throw new Error(data.error || "Payment could not be started.");
+      if (!data.payment.checkoutUrl) throw new Error("The payment session is being prepared. Refresh this page shortly.");
+      window.location.assign(data.payment.checkoutUrl);
+    } catch (cause) {
+      setPaymentError(cause instanceof Error ? cause.message : "Payment could not be started.");
+    } finally { setPaymentBusy(""); }
+  }
+
   return <main className="min-h-screen bg-[var(--background)]">
     <header className="border-b border-[var(--border)] bg-white px-5 py-5"><div className="mx-auto flex max-w-4xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><div className="flex items-center gap-4"><Link href="/notifications" className="text-sm text-[var(--color-forest-800)]">Notifications</Link><Link href="/account/orders" className="text-sm text-[var(--color-forest-800)]">Order history</Link></div></div></header>
     <div className="mx-auto max-w-4xl px-5 py-10">
@@ -48,6 +81,12 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
           <div className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm"><div className="flex justify-between"><span className="text-[var(--muted)]">Items</span><strong>{money(order.subtotalMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><div className="flex justify-between"><span className="text-[var(--muted)]">Shipping</span><strong>{money(order.shippingMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><div className="flex justify-between"><span className="text-[var(--muted)]">Tax · {order.tax.ruleName} ({(order.tax.rateBasisPoints / 100).toFixed(2)}%)</span><strong>{money(order.taxMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><p className="text-xs text-[var(--muted)]">{order.tax.inclusive ? "Included in listed prices" : "Added to subtotal"}{order.tax.destinationRegion ? ` · ${order.tax.destinationRegion}` : ""}</p></div>
           <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-3 text-sm leading-6 text-[var(--muted)]">Your order has been recorded. Payment has not been initiated yet; fulfillment will remain pending until a payment provider is connected and payment is confirmed.</p>
         </div>
+        {order.status === "PENDING_PAYMENT" && <section className="mt-5 rounded-3xl border border-[var(--border)] bg-white p-6">
+          <h2 className="font-semibold text-[var(--color-forest-950)]">Payment</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Choose a configured payment method to continue. Your order will only be confirmed after the provider verifies payment.</p>
+          {paymentError && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800">{paymentError}</p>}
+          {paymentProviders.length ? <div className="mt-4 flex flex-wrap gap-3">{paymentProviders.map((provider) => <button key={provider.key} type="button" disabled={Boolean(paymentBusy)} onClick={() => void startPayment(provider)} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{paymentBusy === provider.key ? "Connecting…" : `Pay with ${provider.displayName}`}</button>)}</div> : <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm text-[var(--muted)]">Online payment is not configured yet. Your order is safely awaiting payment; no charge has been made.</p>}
+        </section>}
         <section className="mt-6 space-y-4">{order.vendorOrders.map((vendor) => <article key={vendor.id} className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-[var(--muted)]">Seller order</p><h2 className="mt-1 text-lg font-semibold">{vendor.store.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{vendor.shippingServiceName}{vendor.minDeliveryDays != null ? ` · ${vendor.minDeliveryDays}–${vendor.maxDeliveryDays ?? vendor.minDeliveryDays} days` : ""}</p></div><p className="text-sm font-semibold">{vendor.status.replaceAll("_", " ")}</p></div>
           <div className="mt-4 divide-y divide-[var(--border)]">{vendor.items.map((item) => <div key={item.id} className="flex justify-between gap-4 py-3"><div><p className="font-medium">{item.productName}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.sku}{item.variantName ? ` · ${item.variantName}` : ""} · Qty {item.quantity}</p></div><p className="font-semibold tabular-nums">{money(item.lineTotalMinor, order.currencyCode, order.currency.minorUnit)}</p></div>)}</div>
