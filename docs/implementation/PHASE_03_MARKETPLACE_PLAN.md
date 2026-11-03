@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. Market reference models and Seller/Store foundation models plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
+**Status:** In implementation. Market, Seller/Store, and Category/Brand taxonomy schema foundations plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
 
 ## Goal
 
@@ -26,8 +26,8 @@ Do not copy legacy application code or add models without a defined workflow.
 - [ ] Keep KYC documents and payout activation out of the first slice unless required to complete the onboarding workflow.
 
 ### 3.3 Catalog taxonomy
-- [ ] Define hierarchical Category, translations, Brand, and localized display fields.
-- [ ] Add deterministic seed data and safe category-tree queries.
+- [x] Define hierarchical Category, CategoryTranslation, Brand, and BrandTranslation schema with draft/active/archive lifecycle.
+- [ ] Add deterministic seed data, bounded cycle-safe category-tree queries, and repository/service layer.
 - [ ] Enforce active/visible status and bounded pagination.
 
 ### 3.4 Product catalog
@@ -43,7 +43,7 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ## Required first vertical slice
 
-The first implementation increment is **Country + Currency + Market**. Its schema and migration are committed; seed, repository/service, and the focused PostgreSQL gate remain outstanding. Seller/Store schema foundations were added in parallel as the next dependency slice, but their workflows remain unimplemented.
+The first implementation increment is **Country + Currency + Market**. Its schema and migration are committed; seed, repository/service, and the focused PostgreSQL gate remain outstanding. Seller/Store and Category/Brand taxonomy schema foundations were added in dependency order; their workflows remain unimplemented.
 
 ## Minimal verification gates
 
