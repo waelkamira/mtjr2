@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CheckoutDeliveryAddress from "@/features/checkout/checkout-delivery-address";
+import CheckoutShippingOptions from "@/features/checkout/checkout-shipping-options";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Quote = {
@@ -102,7 +103,8 @@ export default function CheckoutReviewPage() {
             </aside>
           </div>
           <div className="mt-6"><CheckoutDeliveryAddress quoteId={quote.id} quoteStatus={quote.status} /></div>
-          <div className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--muted)]">Shipping rates, taxes, discounts and payment are not configured yet. The delivery address is stored as a quote snapshot; no shipping or tax amount is included.</div></>
+          <div className="mt-4"><CheckoutShippingOptions quoteId={quote.id} currencyCode={quote.currency.code} minorUnit={quote.currency.minorUnit} quoteStatus={quote.status} /></div>
+          <div className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--muted)]">Shipping selections are stored per seller. Tax, discounts, final totals, order creation and payment remain pending; this step does not create an order or charge a payment.</div></>
           : <div className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-8 text-center"><p className="font-semibold text-[var(--color-forest-950)]">Checkout quote unavailable</p><Link href="/cart" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Return to cart</Link></div>
         }
       </div>
