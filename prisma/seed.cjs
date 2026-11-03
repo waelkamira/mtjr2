@@ -134,7 +134,7 @@ async function main() {
     await seedDemoCatalog();
   }
 
-  if (process.env.SEED_DEMO_CATALOG === "true") {\n    await seedDemoCatalog();\n  }\n\n  const [roleCount, permissionCount, assignmentCount] = await Promise.all([
+  const [roleCount, permissionCount, assignmentCount] = await Promise.all([
     prisma.role.count({ where: { isSystem: true } }),
     prisma.permission.count(),
     prisma.rolePermission.count(),
