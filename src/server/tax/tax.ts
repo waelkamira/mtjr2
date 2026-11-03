@@ -96,8 +96,8 @@ export async function calculateCheckoutTax(guestToken: string, quoteId: string, 
     const basis = BigInt(rate.rateBasisPoints);
     const denominator = BigInt(10000);
     const taxAmount = rate.isInclusive
-      ? (taxableAmount * basis) / (denominator + basis)
-      : (taxableAmount * basis) / denominator;
+      ? (taxableAmount * basis + (denominator + basis) / BigInt(2)) / (denominator + basis)
+      : (taxableAmount * basis + denominator / BigInt(2)) / denominator;
     const snapshot = await tx.checkoutTaxSnapshot.upsert({
       where: { quoteId },
       create: {
