@@ -156,3 +156,11 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - The quote read/idempotent replay path was also corrected to return its persisted delivery-address snapshot. This is part of the current PR branch and is being re-verified.
 - Next: configurable store/market shipping rules and buyer quote shipping selection. No shipping rates, carrier, tax rates, or launch geography are assumed.
 - PR #3 remains a draft stacked on PR #2; no PR was merged and no owner database or Vercel environment was accessed.
+
+
+### Buying Core — latest implementation slice
+
+- Cart, checkout quote/reservations, and delivery-address capture are implemented; address slice General CI and disposable PostgreSQL runs passed ([41706908024](https://github.com/waelkamira/mtjr2/actions/runs/41706908024), [41706907994](https://github.com/waelkamira/mtjr2/actions/runs/41706907994)).
+- Configurable store shipping rates and per-store quote selections are now implemented on the stacked branch `feat/store-shipping-options`; Prisma migration, seller workspace, buyer checkout UI, and APIs are connected. Verification is pending.
+- Tax, discounts, final checkout totals, order creation, payment, and shipment execution remain incomplete. No production database or Vercel environment was accessed.
+- Follow the detailed status and verification gate in [Phase 4 Buying Plan](docs/implementation/PHASE_04_BUYING_PLAN.md).
