@@ -41,18 +41,18 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Fixed quote reads and idempotent replays to include the saved delivery-address snapshot; without this, a page reload could lose the address in the quote response.
 - Address data does not alter item subtotal. Shipping and tax are not guessed or calculated yet.
 
-## 4.3 — Shipping configuration and checkout options (next)
+## 4.3 — Store shipping configuration and checkout options
 
-Build a configurable shipping foundation before calculating shipping totals:
+**Implemented on `feat/store-shipping-options`; verification pending.**
 
-1. Define store-owned shipping services/rules scoped to an active market and destination country/region, with currency and integer-minor-unit price.
-2. Add explicit eligibility, active dates/status, and deterministic selection/ordering. Do not invent carrier prices or universal shipping fees.
-3. Add a quote-owned shipping selection/snapshot so a chosen option cannot change after order creation.
-4. Add seller/admin configuration APIs and a management UI; add buyer quote shipping-options API and connect it to checkout.
-5. Validate selected service against every store represented in the quote; multi-vendor checkout must not apply one seller's service to another seller's lines.
-6. Add Prisma migration only for these persisted rules/selections, then one disposable PostgreSQL integration run and General CI.
+- Added `StoreShippingRate` scoped to store, active market, currency, optional destination region, effective dates, delivery window, and integer minor-unit amount.
+- Added `CheckoutShippingSelection` as a quote-owned per-store immutable snapshot. Added `storeId` to `CheckoutQuoteLine` and backfilled it from the variant's product store so multi-vendor shipping cannot cross seller boundaries.
+- Added migration `20261103223000_store_shipping_options`; the migration adds constraints for non-negative amounts, delivery-day ranges, effective date ranges, and foreign keys.
+- Added seller shipping-rate create/list APIs and connected configuration UI in the seller workspace.
+- Added buyer shipping-options read/select APIs and connected the checkout UI. Options are filtered by quote market, currency, destination region, store-market activation, and effective dates.
+- No carrier integration, country list, tax, final order total, or default shipping amount is assumed. Unconfigured stores return no shipping options.
 
-**Boundary:** no launch countries, carriers, or shipping prices are assumed. The data model must allow configuration; only configured eligible options can be offered. Tax calculation follows as a separate jurisdiction-aware slice.
+**Verification gate:** General CI (Prisma validate/generate, typecheck, lint, unit tests, production build) plus the disposable PostgreSQL migration/integration workflow. This slice is not complete until both pass.
 
 ## 4.4 — Tax, discounts, and final checkout validation
 
