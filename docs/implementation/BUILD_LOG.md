@@ -1184,3 +1184,23 @@ The project owner approved Resend as the transactional email provider. The serve
 **Next**
 1. Run the disposable PostgreSQL integration workflow and verify all committed migrations replay cleanly.
 2. Continue remaining Marketplace Core work only after reviewing the integration result; update Prisma only for a demonstrated missing domain relation or invariant.
+
+
+## 2026-11-03 — Marketplace verification and buyer product gallery
+
+**Verification completed**
+- General CI passed on commit `3a9369bf`, run [41694468941](https://github.com/waelkamira/mtjr2/actions/runs/41694468941): Prisma validate/generate, TypeScript, lint, focused unit tests, and production build.
+- Disposable PostgreSQL integration passed on the same commit, run [41694468501](https://github.com/waelkamira/mtjr2/actions/runs/41694468501). The workflow applied the committed migrations to its isolated PostgreSQL service and completed its integration suite.
+- These results verify the combined marketplace/catalog/inventory changes at `3a9369bf`; they do not imply production DB connectivity or deployed HTTP E2E verification.
+
+**Implemented after verification**
+- Added an accessible product media gallery to the buyer product detail page: primary image selected by default, selectable thumbnails, keyboard-operable buttons, and pressed-state semantics.
+- Commit: `a50435590e9dd63b725e7a6484a2e59a9dbd2b2f`.
+
+**Prisma decision**
+- No schema change or migration was required for the gallery. It presents the existing product media records and primary-image flag; no new persisted business state is introduced.
+
+**Next**
+1. Verify the gallery commit with General CI.
+2. Add server-rendered product metadata using the canonical public product API, without duplicating product data models.
+3. Keep launch-market seeding blocked until supported launch countries/currencies are approved.
