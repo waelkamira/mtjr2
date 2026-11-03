@@ -122,12 +122,13 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Current state (2026-11-04):** **In-app notification preferences and core event delivery implemented on stacked PR #14; broader delivery system remains partial.** Added `NotificationPreference` persistence and migration `20261104030000_notification_preferences`, authenticated `GET/PUT /api/account/notification-preferences`, and connected preference controls inside `/notifications`. Order placed, seller order received, store message and support reply events now consult the recipient's persisted in-app preference before creating a notification; missing preferences default to enabled. Existing user-scoped inbox/read behavior and deduplication remain. Email delivery, outbox/retries, payment/shipment event coverage, and richer preference channels remain incomplete.
 
 #### 11. Returns and refunds (customer journey)
-- **Purpose:** Request a return/refund, upload evidence and track the resolution.
-- **Pages:** `/account/returns`, `/account/returns/new`, return detail.
-- **Models:** `ReturnRequest`, `ReturnItem`, `Order`, `OrderItem`, `Refund`, `Payment`, `Shipment`, `AuditLog`.
-- **API:** `/api/returns`, `/api/returns/[id]`, `/api/returns/[id]/evidence`.
-- **Must include:** return windows, item quantities, reason codes, evidence, shipping instructions, partial refunds and status notifications.
-- **Current state:** **Partial / needs verification.** Customer/admin return surfaces were identified; complete canonical workflow is not proven.
+- **Purpose:** Request a return for delivered goods, review the request and track the physical return state before any financial refund is considered.
+- **Pages:** `/account/returns` (customer request/history), `/admin/returns` (authorized review queue); order detail links delivered orders to returns.
+- **Models:** `ReturnRequest`, `ReturnItem`, `Order`, `VendorOrder`, `OrderItem`, `User`, `AuditLog`. Refund/payment models are deliberately not introduced by this slice.
+- **API:** `GET/POST /api/returns`, `GET /api/returns/[returnId]`, `GET /api/admin/returns`, `PATCH /api/admin/returns/[returnId]`.
+- **Implemented safeguards:** customer ownership is resolved from the authenticated session; only items in a DELIVERED vendor order can be requested; quantities are bounded by ordered quantity less all non-rejected/non-cancelled prior return quantities; the write runs at SERIALIZABLE isolation; return status transitions use compare-and-set updates and are audited. Admin actions require the global `returns:manage` permission.
+- **Current state:** **Partial — initial canonical workflow implemented on `feat/returns-workflow`.** Customers can request a return for one delivered order item at a time, select a reason and optional details, and view status/review notes. Authorized support/admin operators can approve/reject requests and mark approved items received. The migration adds `ReturnRequest`/`ReturnItem`; it has not been applied to any owner database.
+- **Explicit gaps / safety boundary:** no jurisdiction-specific return window has been approved, so this slice enforces delivered-order eligibility but does not invent a time limit; evidence upload/storage, return-label/shipping instructions, seller portal actions, notifications, partial refund calculation, payment-provider refund execution and ledger postings remain future work. Approving or marking goods received never charges, credits, or refunds money.
 
 ### B. Seller systems
 
