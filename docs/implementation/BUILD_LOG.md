@@ -429,3 +429,23 @@
 **Boundary**
 - This is the visual foundation only. Storefront pages, shared components, seller center, and admin UI have not yet been implemented or visually verified.
 - Design foundation proceeds in parallel and does not alter Phase 2 identity/security exit gates. Phase 3 remains blocked until Phase 2 is complete.
+
+
+## 2026-11-03 — Request-bound server session resolver
+
+**Implemented**
+- Added `src/server/identity/current-session.ts` as a server-only request-bound session resolver.
+- The resolver reads the HttpOnly session cookie through Next.js request cookies and validates it through the existing database-backed session lifecycle service.
+- Added `requireCurrentSession`, which fails closed with a typed `AuthenticationRequiredError` for protected server operations.
+- Added unit tests for valid cookie resolution, missing cookie short-circuit, invalid session rejection, and authenticated resolution.
+- Updated the Phase 2 plan. This resolver is an internal server primitive; no public route or client-controlled user-ID authentication path was introduced.
+
+**Verification**
+- CI for the visual foundation commit `23a2c242c6d8c5b03facdf93ca6ceddcc76d63c0` is still in progress (run 41579469059); its final result is not yet known.
+- The new resolver and tests are committed in this change and remain pending CI verification.
+
+**Next**
+1. Verify this commit with CI.
+2. Add a server-side permission guard that composes the verified current session with the scoped permission repository.
+3. Implement logout with server-side revocation and cookie clearing, then add database-backed lifecycle coverage.
+4. Continue CSRF/origin controls and password-reset lifecycle before public authentication routes.

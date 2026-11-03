@@ -52,7 +52,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Implement password login domain service: normalized identity lookup, dummy-hash verification for unknown accounts, generic credential failures, verified/active account checks, attempt recording, throttling before scrypt, session issuance, and successful-login audit event (CI verification pending).
 - [ ] Logout route: revoke current session and clear cookie.
 - [ ] Password-reset request and completion with one-time tokens and session revocation.
-- [ ] Server-side session resolver for route handlers and server components.
+- [x] Server-side current-session resolver for server components/route handlers; reads only the HttpOnly request cookie and resolves it against the session store, with a fail-closed required-session guard (unit tests added; CI verification pending).
 - [ ] Authorization guard for permissions and resource scopes.
 - [ ] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes.
 - [ ] Negative tests: anonymous access, suspended user, expired/revoked session, cross-store access, replayed token, brute-force limits.
