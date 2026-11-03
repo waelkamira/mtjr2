@@ -107,3 +107,6 @@ Marketplace Core is complete only when a seller can be represented by an authori
 - [x] Add category, brand, market, currency, text filters, stable sort options, and bounded pagination.
 - [x] Add focused tests for product edit/rejection and staff revocation.
 - [ ] Complete General CI and PostgreSQL integration for the combined changes.
+
+
+**Security follow-up:** Staff-manager authorization now uses exact STORE-scoped grants; global role grants cannot authorize management of arbitrary stores. A focused delegated-manager test was added. CI verification is pending.
