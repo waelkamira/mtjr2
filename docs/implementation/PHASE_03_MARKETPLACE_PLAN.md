@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. The canonical schema and first seller/catalog services are committed. Product discovery, inventory, and onboarding changes from the latest work are awaiting the consolidated CI and PostgreSQL verification gates. No production database has been accessed.
+**Status:** In implementation. The canonical schema, seller/catalog services, inventory foundation, buyer storefront, and first seller workspace slice are committed. Latest consolidated CI is being rerun after fixing a lint failure; PostgreSQL verification of the newest combined migrations/services remains pending. No production database has been accessed.
 
 ## Architecture and constraints
 
@@ -74,7 +74,9 @@
 - [x] Connect the homepage to active market, category, and product read APIs.
 - [x] Connect product detail routes to the canonical public product API.
 - [x] Serialize Prisma BigInt price amounts as JSON-safe minor-unit strings and include each currency's minor-unit precision.
-- [ ] Build seller-center screens against seller/store/catalog/inventory APIs; keep all mutations server-authorized.
+- [x] Add the seller application screen connected to `POST /api/seller/applications`.
+- [x] Add the authenticated seller workspace connected to `GET/POST /api/seller/stores`, active-market lookup, warehouse creation, and inventory listing APIs.
+- [ ] Add product create/edit/publish, staff invitation, stock adjustment, and transfer screens against their existing APIs.
 - [ ] Build platform-admin screens against seller/product moderation APIs.
 - [ ] Add cart/checkout UI only alongside the Buying Core APIs; never ship inert purchase controls.
 
