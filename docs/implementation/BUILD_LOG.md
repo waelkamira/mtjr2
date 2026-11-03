@@ -630,3 +630,8 @@
 **Verification**
 - CI run 41582452462 failed at TypeScript parsing in `request-security.ts` due to the malformed regex. Prisma validation/generation passed; subsequent lint/tests/build were skipped.
 - The regex correction, Resend adapter, env changes, and documentation are newer than that failed run and are awaiting a fresh CI run.
+
+
+## Resend decision — accepted
+
+The project owner approved Resend as the transactional email provider. The server-only adapter is implemented for verification and password-reset messages. Deployment configuration remains intentionally absent from source control: add `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL` as protected environment secrets. Until those are supplied and a real delivery smoke test succeeds, the provider integration is code-complete but operationally unconfigured; public email-dependent routes must remain closed.
