@@ -37,6 +37,10 @@ Exact dependency versions and deployment choices will be pinned during the found
 
 This sequence is dependency-aware. The 49 systems will be mapped to these delivery slices and implemented incrementally; it is not a promise to create all systems in one pass.
 
+## Required page inventory
+
+The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the companion inventory for public storefront, authentication, customer account, seller center, admin, global operations, property/booking, and legal/system pages. Treat routes there as required targets, not as proof that they already exist. Every page must be connected to the owning API/domain service and have access control, loading/empty/error states, and verified key actions. Implement in dependency order and record evidence in the build log.
+
 ## Definition of done
 
 A system may be marked **Complete** only when:
