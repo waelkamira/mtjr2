@@ -103,7 +103,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `ProductQuestion`, `ProductAnswer`, `Product`, `Store`, `User`, `AuditLog`.
 - **API:** `/api/products/[id]/questions`, `/api/questions/[id]/answers`, `/api/seller/questions`, `/api/admin/questions`.
 - **Must include:** public/private moderation states, seller ownership, notifications, abuse reporting and answer history.
-- **Current state:** **Schema-only / not demonstrated.**
+- **Current state (2026-11-03):** **Initial moderated product Q&A slice implemented on `feat/product-qa`.** Added `ProductQuestion` and `ProductAnswer` persistence with separate moderation states and migration `20261104003000_product_questions_answers`. Authenticated customers can submit questions; only published questions and answers appear publicly. Active store owners can answer published questions; admin moderation is audited and publishing notifies the seller or question author through in-app notifications. Connected product detail Q&A, customer question history, seller inbox/answer form, and admin moderation queue. Staff-scoped answering, abuse reports, attachments, and richer answer editing/history controls remain incomplete.
 
 #### 09. Customer messaging and support
 - **Purpose:** Customer-to-store conversations and platform support tickets.
