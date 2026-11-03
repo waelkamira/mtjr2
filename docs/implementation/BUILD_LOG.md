@@ -596,3 +596,20 @@
 
 **Next**
 - Keep public recovery routes blocked until a server-only email delivery adapter and CSRF/Origin checks are in place.
+
+
+## 2026-11-03 — Separate recovery throttling and add mutation request guard
+
+**Implemented**
+- Password-reset abuse limits now use distinct action-namespaced HMAC keys (3 per identifier/IP pair and 10 per IP per 15 minutes). The login and recovery budgets are isolated while sharing the same persistent atomic bucket implementation.
+- Added `validateIdentityMutationRequest`: it fails closed when Origin is missing or differs from the configured application origin, rejects non-same-origin Fetch Metadata when present, and requires JSON content type.
+- All future public identity mutation handlers must invoke this guard before reading request bodies or calling domain services.
+
+**Verification**
+- The initial reset-throttle wrapper passed general CI on commit `00404c2` (run 41581773538), but its shared login budget was identified in review and corrected.
+- The isolation correction, Origin guard, and documentation are pending a fresh general CI run. They have not yet been reported as passing.
+- No public HTTP routes or email provider are configured yet; the guard is not evidence that the endpoints are already protected.
+
+**Next**
+- Add a server-only email delivery contract with a configured provider before public registration/recovery endpoints.
+- Add the minimal public route set and one end-to-end HTTP identity journey only after delivery and abuse controls are ready.
