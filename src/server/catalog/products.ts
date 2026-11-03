@@ -211,3 +211,94 @@ export async function publishProduct(productId: string, now = new Date()) {
     return { productId: id, status: CatalogEntityStatus.ACTIVE, publishedAt: now };
   });
 }
+
+
+const updateProductSchema = z.object({
+  name: z.string().trim().min(2).max(180).optional(),
+  slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180).optional(),
+  description: z.string().trim().max(12000).nullable().optional(),
+  brandId: z.string().trim().min(1).nullable().optional(),
+  categoryIds: z.array(z.string().trim().min(1)).max(30).optional()
+}).strict().refine((data) => Object.keys(data).length > 0, "At least one product field must be updated.");
+
+export type UpdateProductInput = z.input<typeof updateProductSchema>;
+
+/** Updates draft product metadata; edits reset prior review decisions and are audited. */
+export async function updateDraftProduct(productId: string, input: UpdateProductInput, now = new Date()) {
+  const id = z.string().trim().min(1).parse(productId);
+  const data = updateProductSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.product.findUnique({
+      where: { id },
+      select: { id: true, storeId: true, status: true, store: { select: { seller: { select: { ownerId: true } } } } }
+    });
+    if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
+    if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
+      throw new Error("You do not have catalog access to this store.");
+    }
+    if (data.brandId) {
+      const brand = await tx.brand.findFirst({ where: { id: data.brandId, status: CatalogEntityStatus.ACTIVE }, select: { id: true } });
+      if (!brand) throw new Error("The selected brand is not active.");
+    }
+    const categoryIds = data.categoryIds === undefined ? undefined : [...new Set(data.categoryIds)];
+    if (categoryIds?.length) {
+      const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
+      if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
+    }
+    const changed = await tx.product.updateMany({
+      where: { id, status: CatalogEntityStatus.DRAFT },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.slug !== undefined ? { slug: data.slug } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.brandId !== undefined ? { brandId: data.brandId } : {}),
+        approvalStatus: ProductApprovalStatus.PENDING,
+        approvedAt: null,
+        rejectionReason: null
+      }
+    });
+    if (changed.count !== 1) throw new Error("Product could not be updated.");
+    if (categoryIds !== undefined) {
+      await tx.productCategory.deleteMany({ where: { productId: id } });
+      if (categoryIds.length) await tx.productCategory.createMany({
+        data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
+      });
+    }
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.updated",
+      resource: "product", resourceId: id, scopeType: "STORE", scopeId: current.storeId,
+      occurredAt: now, metadata: { fields: Object.keys(data) }
+    }});
+    return { productId: id, approvalStatus: ProductApprovalStatus.PENDING };
+  });
+}
+
+/** Platform reviewer rejects only pending draft products and must provide a reason. */
+export async function rejectProduct(input: { productId: string; reason: string }, now = new Date()) {
+  const data = z.object({
+    productId: z.string().trim().min(1),
+    reason: z.string().trim().min(5).max(2000)
+  }).strict().parse(input);
+  const actor = await requirePermission({ permissionKey: "users:manage", now });
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id: data.productId },
+      select: { id: true, storeId: true, status: true, approvalStatus: true }
+    });
+    if (!product || product.status !== CatalogEntityStatus.DRAFT || product.approvalStatus !== ProductApprovalStatus.PENDING) {
+      throw new Error("Only pending draft products can be rejected.");
+    }
+    const changed = await tx.product.updateMany({
+      where: { id: data.productId, status: CatalogEntityStatus.DRAFT, approvalStatus: ProductApprovalStatus.PENDING },
+      data: { approvalStatus: ProductApprovalStatus.REJECTED, rejectionReason: data.reason, approvedAt: null }
+    });
+    if (changed.count !== 1) throw new Error("Product has already been reviewed.");
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.rejected",
+      resource: "product", resourceId: product.id, scopeType: "STORE", scopeId: product.storeId,
+      occurredAt: now, metadata: { reason: data.reason }
+    }});
+    return { productId: product.id, approvalStatus: ProductApprovalStatus.REJECTED };
+  });
+}
