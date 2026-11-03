@@ -75,3 +75,19 @@
 - Removed npm caching from setup-node because no lockfile exists yet.
 - Corrected workflow is triggering new runs; the final result is pending at this log entry.
 - No Prisma/typecheck/lint/test/build pass is claimed until a completed run is inspected.
+
+
+## 2026-11-03 — First authorization policy slice
+
+**Implemented**
+- Added a pure server-side permission evaluation policy in `src/server/identity/authorization.ts`.
+- Global grants apply to all scopes; scoped grants apply only to an exact type/identifier match.
+- Expired grants, permission mismatches, and scoped grants without a requested scope are denied.
+- Added six unit tests covering global allow, exact-scope allow, cross-store denial, expiry, missing scope, and permission mismatch.
+
+**Limit**
+- This is only the policy evaluator. Trusted grant loading from the database, authentication/session resolution, API enforcement, and end-to-end tests are still not implemented.
+
+**Verification**
+- Both files were re-fetched from GitHub after commit `852c837c70aa648327a170758c4945af08901afc`.
+- The latest GitHub Actions run is still executing dependency installation. No test result is claimed yet.
