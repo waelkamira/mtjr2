@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. Market, Seller/Store, Category/Brand, Product/Variant/Media/Price, structured attributes, and localized search synonym schema foundations plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
+**Status:** In implementation. Market, Seller/Store, Category/Brand, Product/Variant/Media/Price, structured attributes, and localized search synonym schema foundations plus additive migrations are committed; Prisma and the latest General CI/PostgreSQL migration verification passed for the committed schema baseline. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
 
 ## Goal
 
@@ -22,8 +22,11 @@ Do not copy legacy application code or add models without a defined workflow.
 ### 3.2 Seller and store foundation
 - [x] Define Seller, Store, seller/store lifecycle enums, owner relation, and store-scoped staff membership schema.
 - [x] Connect seller ownership and staff membership to existing User identity; no duplicate User/Role/Permission models.
-- [x] Add the first seller application submission service: authenticated, email-verified owner, pending state, atomic audit event, and idempotent pending resubmission. Approval transitions, seller-role assignment, store creation, and scoped staff authorization remain outstanding.
-- [ ] Keep KYC documents and payout activation out of the first slice unless required to complete the onboarding workflow.
+- [x] Add authenticated, email-verified seller application submission with atomic audit and idempotent pending retry.
+- [x] Add permission-protected approve/reject transitions; approval grants the seeded SELLER role atomically, and rejection requires a reason.
+- [x] Add approved-seller draft-store creation with active-market validation and an atomic audit event.
+- [ ] Add store-scoped staff invitation, acceptance, revocation, and authorization workflows.
+- [ ] Add store-scoped staff invitation, acceptance, revocation, and authorization workflows. Keep KYC documents and payout activation for their later dedicated systems.
 
 ### 3.3 Catalog taxonomy
 - [x] Define hierarchical Category, CategoryTranslation, Brand, and BrandTranslation schema with draft/active/archive lifecycle.
@@ -38,7 +41,7 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ### 3.5 Discovery
 - [ ] Add canonical product listing/detail/category/brand read APIs and pages.
-- [x] Add the localized search-synonym persistence model.\n- [x] Add the localized search-synonym persistence model and a read-only active-market query that rejects markets whose default currency is not enabled.\n- [ ] Add validated search, filtering, stable sorting, and pagination.
+- [x] Add localized search-synonym persistence and an active-market read query that rejects markets whose default currency is not enabled.\n- [ ] Add validated search, filtering, stable sorting, and pagination.
 - [ ] Add indexes only for demonstrated query patterns; defer external search infrastructure.
 
 ## Required first vertical slice
