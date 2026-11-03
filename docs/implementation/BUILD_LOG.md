@@ -890,3 +890,25 @@ The project owner approved Resend as the transactional email provider. The serve
 - Store-scoped staff invitation/acceptance/revocation and authorization.
 - Store activation/review workflow and seller profile/KYC requirements.
 - The newly added review/store services await the next CI run; they are not yet marked verified.
+
+
+## 2026-11-03 — Seller and store onboarding vertical slice
+
+**Implemented**
+- Confirmed CI run `41666232503` passed on commit `dd069434`: Prisma validate/generate, typecheck, lint, unit tests, and production build.
+- Added seller approval workflow: requires global `platform:manage`, accepts only PENDING applications, validates selected ACTIVE markets and enabled default currencies, creates the first ACTIVE store, activates the seller, assigns the owner the existing SELLER role scoped to that store, and writes an audit event in one transaction.
+- Added store staff invitation requiring `store:staff:manage` in the exact STORE scope. Only active accounts can be invited.
+- Added invitation acceptance bound to the authenticated invitee; acceptance activates membership and grants STORE_MANAGER only in that store scope, with an audit event.
+- Added mutation-protected API routes for seller applications, admin approval, staff invitations, and invitation acceptance.
+- Added focused tests for approval, market-currency invariant, scoped invitation authorization, invite acceptance, and cross-user acceptance denial.
+
+**Verification**
+- CI for the seller application submission slice passed in run `41666232503`.
+- CI for the complete onboarding/API slice is triggered by the latest commits and remains pending; no pass is claimed until the run completes.
+- PostgreSQL migration integration was not rerun for this service-only change.
+- No production database or Vercel environment settings were accessed or changed.
+
+**Remaining in seller/store foundation**
+- Rejection workflow and seller profile/KYC verification.
+- Store profile editing, invitation cancellation/revocation, and seller suspension lifecycle.
+- Store-scoped authorization tests against PostgreSQL; API-level tests.
