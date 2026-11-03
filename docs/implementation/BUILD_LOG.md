@@ -1251,3 +1251,31 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Run one disposable PostgreSQL migration/integration check.
 3. Record exact results, review, and merge the cart foundation.
 4. Continue with checkout quote and reservation lifecycle per `PHASE_04_BUYING_PLAN.md`.
+
+## 2026-11-03 — Buying Core 4.2: checkout quote and inventory reservation
+
+**Implemented and verified**
+- Added `CheckoutQuote` and `CheckoutQuoteLine` to the canonical Prisma schema with migration `20261103200000_checkout_quote_reservations`.
+- Added server-side price snapshots in integer minor units; browser-submitted totals are never trusted.
+- Added ten-minute checkout quotes, idempotent create/read/release APIs, and atomic stock reservations using conditional inventory updates and `InventoryReservation`.
+- Added bounded expiry processing and lazy expiration on quote access/creation.
+- Connected the cart's Review checkout action to `/checkout`; the review UI reads the quote from the API and can release the hold.
+- Added focused tests for quote price snapshots, idempotent replay, and insufficient stock.
+- PR #2: https://github.com/waelkamira/mtjr2/pull/2 (stacked on PR #1).
+
+**Verification**
+- General CI passed: [run 41704221580](https://github.com/waelkamira/mtjr2/actions/runs/41704221580).
+- Disposable PostgreSQL migration/integration passed: [run 41704221517](https://github.com/waelkamira/mtjr2/actions/runs/41704221517).
+- No owner database was accessed and no Vercel environment was read or changed.
+
+## 2026-11-03 — Buying Core 4.2a: delivery address capture
+
+**Implemented on `feat/checkout-address-capture`; verification pending**
+- Added `UserAddress` and `CheckoutQuoteAddress` to `prisma/schema.prisma` with migration `20261103210000_checkout_address_capture`.
+- Added customer address-book list/create service and authenticated `GET/POST /api/account/addresses`.
+- Added quote-scoped delivery address read/write APIs. Guest buyers can enter a one-time address; signed-in buyers can choose a saved address or save a new one.
+- Delivery country is derived from the quote's market on the server; clients cannot select or override it. Address snapshots are stored on the quote and do not alter the quote's item subtotal.
+- Connected checkout review UI to the delivery-address API and added focused tests for guest address snapshots, country override rejection, and guest restrictions on saved-address references.
+- Shipping rates, tax, coupon, payment and order creation are intentionally not represented as completed; they need their own canonical rules and persisted models.
+- Next verification: General CI and the disposable PostgreSQL integration workflow on the exact address-capture commit.
+- No owner database or Vercel environment was accessed.
