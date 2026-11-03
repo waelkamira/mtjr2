@@ -44,7 +44,7 @@ export function validateIdentityMutationRequest(
   }
 
   const contentType = request.headers.get("content-type") ?? "";
-  if (!/^application\\/json(?:\\s*;|$)/i.test(contentType)) {
+  if (!/^application\/json(?:\s*;|$)/i.test(contentType)) {
     return Response.json(
       { error: "Content-Type must be application/json." },
       { status: 415 }
