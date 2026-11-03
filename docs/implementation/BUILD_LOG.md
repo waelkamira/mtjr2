@@ -981,3 +981,26 @@ The project owner approved Resend as the transactional email provider. The serve
 
 **Architecture rule going forward**
 - Never treat a global SELLER role permission as proof of ownership of an individual store, product, order, inventory location, or other seller-owned resource. Resolve ownership from trusted database relations; otherwise require an exact scoped grant. Apply this rule to every subsequent seller-domain service.
+
+
+## 2026-11-03 — Product lifecycle completion and public discovery slice
+
+**Implemented**
+- Added `Product.rejectionReason` and additive migration `20261103070000_product_review_reason`.
+- Added draft product metadata update. It resolves store ownership from trusted database relations, requires owner/exact store-scoped catalog access/platform administration, updates only DRAFT products, resets review to PENDING, and writes an audit event in the same transaction.
+- Added platform product rejection for pending drafts with a mandatory 5–2000 character reason and atomic audit.
+- Added PATCH `/api/products/[productId]` and POST `/api/admin/products/[productId]/reject`; both use the existing mutation request protections.
+- Added public product listing and slug detail queries/routes. Public visibility requires ACTIVE product, ACTIVE store, and ACTIVE seller. Listing supports text/category/brand/market/currency filters, stable sort, and bounded pagination.
+- Added focused unit tests for product edit/rejection and staff revocation.
+- Corrected the category tree service call to pass the requested locale and corrected Prisma transaction test-double typing.
+
+**Verification**
+- The prior General CI run `41673989060` failed at TypeScript after Prisma validate/generate passed. The reported issues were the missing category-tree locale argument, incomplete mocked Prisma transaction delegate types, and an ES2017-incompatible BigInt literal in a test. These have been corrected.
+- The combined implementation and focused tests are committed; the new General CI run is pending. No test pass is claimed until completion.
+- PostgreSQL integration for the newest migration and services remains pending.
+- No production database was accessed, no migrations were run against the owner's database, and no Vercel environment variables were read or changed.
+
+**Next**
+1. Complete General CI; fix only concrete failures.
+2. Run the existing PostgreSQL integration workflow once against its isolated PostgreSQL service.
+3. Finish search execution and deterministic market/currency reference data without inventing launch countries or currencies.
