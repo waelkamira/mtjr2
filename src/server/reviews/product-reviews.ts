@@ -63,6 +63,7 @@ export async function listMyReviewableOrderItems(productId: string, now = new Da
   return prisma.orderItem.findMany({
     where: {
       productId: id, review: null,
+      product: { reviews: { none: { userId: actor.userId } } },
       vendorOrder: { status: VendorOrderStatus.DELIVERED, order: { userId: actor.userId } }
     },
     orderBy: { createdAt: "desc" },
