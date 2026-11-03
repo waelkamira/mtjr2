@@ -457,3 +457,27 @@
 - PostgreSQL integration passed on that commit. Prisma validation/generation, typecheck, and lint passed; 48 unit tests passed, while the new current-session test suite failed at module resolution before its assertions. Production build was skipped after the test failure.
 - Added a Vitest-only alias to a local empty shim under `tests/mocks`. This shim is used only by Vitest; the production source still imports `server-only`, preserving Next.js's server/client boundary enforcement.
 - The fix is awaiting CI rerun. Do not count the current-session unit suite or production build as verified until the new run passes.
+
+
+## 2026-11-03 — Current-session CI verification and server permission guard
+
+**Verification**
+- CI run [41579953764](https://github.com/waelkamira/mtjr2/actions/runs/41579953764) passed on commit `1de06a1325b29cafbeae5693d3aa78ff7dc339e5`: Prisma validate/generate, typecheck, ESLint, all unit tests, and production build.
+- This verifies the Vitest-only `server-only` alias and the request-bound current-session resolver unit tests.
+- PostgreSQL integration run [41579638692](https://github.com/waelkamira/mtjr2/actions/runs/41579638692) passed on commit `4507382bffc27aeecee4a99626b72409aa72ae00`. It verifies the existing migration-backed identity integration suite, not the later permission guard.
+
+**Implemented next**
+- Added `src/server/identity/permission-guard.ts` as a server-only enforcement boundary.
+- It requires the current verified request session, obtains the authorization subject exclusively from `session.userId`, loads database-backed grants, and denies requests without the requested permission.
+- Added tests for allowed scoped permission, denied permission, unauthenticated short-circuit, and ignoring an attacker-selected user ID.
+- Updated the Phase 2 execution plan to reflect verified session resolver status and the new guard.
+
+**Verification boundary**
+- The permission guard is committed but awaits its own CI run. The current integration suite does not yet test this new guard against PostgreSQL.
+- The guard is a server-side primitive; no public route has been exposed and no resource route has yet adopted it.
+
+**Next**
+1. Verify this guard in CI.
+2. Add PostgreSQL coverage for login service success/failure and login-attempt persistence.
+3. Implement logout service/route behavior: revoke the current session and clear the HttpOnly cookie.
+4. Add password-reset lifecycle, CSRF/origin controls, and HTTP-level negative tests before exposing authentication endpoints.
