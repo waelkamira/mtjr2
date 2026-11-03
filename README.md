@@ -54,6 +54,12 @@ A system may be marked **Complete** only when:
 - Shared design specification: [Mtjr2 Visual Design System](docs/design/VISUAL_DESIGN_SYSTEM.md).
 - Foundation tokens are implemented in `src/app/globals.css`; storefront, seller, and admin UI implementation follows the delivery sequence and does not bypass Phase 2 security gates.
 
+## Deployment
+
+- Production hosting decision: Vercel.
+- Vercel setup, environment variables, PostgreSQL migration procedure, trusted-proxy requirements, and the single Phase 2 production verification journey: [Vercel deployment guide](docs/deployment/VERCEL.md).
+- Vercel account/project connection and production secrets are not yet configured; do not treat the deployment gates as passed until evidence is recorded in the build log.
+
 ## Documentation
 
 - `docs/architecture/` — architecture decisions, domain boundaries, and system blueprint.
