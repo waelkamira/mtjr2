@@ -21,7 +21,7 @@ export type ApplicationEnvironment = z.infer<typeof environmentSchema>;
  * never secret values.
  */
 export function parseEnvironment(
-  source: NodeJS.ProcessEnv
+  source: Record<string, string | undefined>
 ): ApplicationEnvironment {
   const result = environmentSchema.safeParse(source);
 
