@@ -347,7 +347,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `SupportTicket`, `SupportMessage`, `User`, `Seller`, `Order`, `Payment`, `AuditLog`, `Notification`.
 - **API:** `/api/admin/support/tickets`, `/api/admin/support/tickets/[id]`, `/api/admin/support/assignments`.
 - **Must include:** role-based assignment, internal notes, attachments, macros, SLA timers and customer-visible status.
-- **Current state:** **Not implemented / schema-only.** Support models exist; a complete ticketing workflow was not identified.
+- **Current state (2026-11-04):** **Central support desk initial slice delivered by System 09 shared ticket foundation.** Admin queue, priority/status, assignment, internal notes, public replies, support:manage authorization, audit, read receipts and first-response timestamps exist on Draft PR #11. This system remains open for attachment handling, agreed SLA policy/escalation, team routing, workload/analytics, email delivery and operational runbooks; avoid duplicating the customer-facing ticket models from System 09.
 
 #### 39. CMS and content administration
 - **Purpose:** Manage static pages, translations, banners, navigation and publish scheduling.
