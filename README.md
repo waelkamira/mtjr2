@@ -64,13 +64,19 @@ A system may be marked **Complete** only when:
 
 ## Current status
 
-**Status: Phase 1 foundation scaffolded; Phase 2 identity/access in progress.** The canonical identity migration and repeatable seed passed clean PostgreSQL baseline checks. Registration/email verification, scoped authorization, password login, session resolution/revocation, login throttling, logout primitive, and password reset are implemented at the server-service layer. The password-reset lifecycle (digest-only token, one-time consumption, password replacement, audit event, and session revocation) passed PostgreSQL integration run [41581259836](https://github.com/waelkamira/mtjr2/actions/runs/41581259836); general CI passed on commit `79e260082aebe48d6fe2bca535b4f36a55ba4f3b` in [run 41581280754](https://github.com/waelkamira/mtjr2/actions/runs/41581280754). These checks are intentionally focused on critical workflows, not exhaustive tests for every helper. Public HTTP authentication routes, trusted deployment-proxy IP configuration, Resend credentials/verified sender configuration and delivery smoke test, resend-verification cooldown, session-cookie/API integration, and one end-to-end public HTTP journey remain outstanding. The server-only Resend adapter, separate password-reset abuse limits, fail-closed same-origin JSON mutation guard, and an explicit trusted-proxy IP resolver are implemented. The proxy resolver accepts only an operator-selected Cloudflare or Vercel edge header and fails closed when unset. Routes must invoke the guard before domain operations. **Phase 3 remains blocked** until the essential Phase 2 gates are closed. See [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and [build log](docs/implementation/BUILD_LOG.md).
+**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; deployment exit checks remain.**
 
-## Phase 2 — Verified database baseline
+Implemented identity capabilities include registration, email verification, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter, and a fail-closed trusted-proxy IP resolver.
 
-- [x] Initial Prisma identity migration committed and deployed to clean PostgreSQL 16.
-- [x] Deterministic baseline role/permission seed verified through two consecutive executions.
-- [x] Initial PostgreSQL-backed identity integration journey passed.
-- [x] Updated PostgreSQL concurrency integration suite passed on commit `399fd314a5c94585b02089e939ae1f3b9bd5e19b`.
-- [x] Add separate password-reset abuse buckets, same-origin JSON mutation guard, and server-only Resend email adapter (CI verification pending).\n- [ ] Configure real transactional email delivery and verification resend controls.\n- [ ] Complete public login/logout/recovery routes and the protected HTTP journey.
-- Phase 3 remains blocked until all Phase 2 exit gates pass.
+**Verification evidence**
+- General CI passed on the latest documentation commit `0716f8f43e60771c3702bb6984715915a0a1a665`: [run 41648760634](https://github.com/waelkamira/mtjr2/actions/runs/41648760634). It includes Prisma validate/generate, typecheck, lint, unit tests, and production build.
+- PostgreSQL identity integration passed on `0ffb3b4651b06d90c9eecb10eed960c87bae0348`: [run 41647984160](https://github.com/waelkamira/mtjr2/actions/runs/41647984160).
+- The existing focused password-reset PostgreSQL lifecycle and general CI evidence is recorded in [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and [build log](docs/implementation/BUILD_LOG.md).
+
+**Only remaining Phase 2 exit work (deployment-dependent)**
+1. Set `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL`; send one real verification email as a delivery smoke test.
+2. Set `TRUSTED_PROXY_IP_HEADER` to the actual Cloudflare/Vercel edge header; verify the edge overwrites it and direct origin access is blocked.
+3. Run one deployed HTTP journey: register → verify email → login → `/api/auth/me` → logout → confirm anonymous access is denied.
+4. Record the deployment evidence and focused security review.
+
+No additional helper-level test suites are planned. Keep Phase 3 (Marketplace Core) gated until the single operational HTTP journey passes. Once it does, begin Phase 3 immediately.
