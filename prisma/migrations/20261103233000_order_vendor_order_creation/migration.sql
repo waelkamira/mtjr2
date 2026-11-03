@@ -15,6 +15,11 @@ CREATE TABLE "Order" (
   "subtotalMinor" BIGINT NOT NULL,
   "shippingMinor" BIGINT NOT NULL,
   "taxMinor" BIGINT NOT NULL,
+  "taxRuleName" VARCHAR(120) NOT NULL,
+  "taxRateBasisPoints" INTEGER NOT NULL,
+  "taxInclusive" BOOLEAN NOT NULL,
+  "taxIncludesShipping" BOOLEAN NOT NULL,
+  "taxDestinationRegion" VARCHAR(120),
   "totalMinor" BIGINT NOT NULL,
   "idempotencyKey" VARCHAR(160) NOT NULL,
   "placedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -49,6 +54,11 @@ CREATE TABLE "VendorOrder" (
   "subtotalMinor" BIGINT NOT NULL,
   "shippingMinor" BIGINT NOT NULL,
   "taxMinor" BIGINT NOT NULL,
+  "shippingServiceName" VARCHAR(120) NOT NULL,
+  "shippingRateId" TEXT,
+  "shippingDestinationRegion" VARCHAR(120),
+  "minDeliveryDays" INTEGER,
+  "maxDeliveryDays" INTEGER,
   "totalMinor" BIGINT NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -115,6 +125,7 @@ ALTER TABLE "Order" ADD CONSTRAINT "Order_marketId_fkey" FOREIGN KEY ("marketId"
 ALTER TABLE "Order" ADD CONSTRAINT "Order_currencyCode_fkey" FOREIGN KEY ("currencyCode") REFERENCES "Currency"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "OrderAddress" ADD CONSTRAINT "OrderAddress_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "VendorOrder" ADD CONSTRAINT "VendorOrder_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "VendorOrder" ADD CONSTRAINT "VendorOrder_shippingRateId_fkey" FOREIGN KEY ("shippingRateId") REFERENCES "StoreShippingRate"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "VendorOrder" ADD CONSTRAINT "VendorOrder_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_vendorOrderId_fkey" FOREIGN KEY ("vendorOrderId") REFERENCES "VendorOrder"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
