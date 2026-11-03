@@ -1428,3 +1428,13 @@ The project owner approved Resend as the transactional email provider. The serve
 
 
 - CI trigger inspection found the new feature branch was missing from both workflow PR base-branch allowlists. Added `feat/storefront-demo-experience` to the General CI and disposable PostgreSQL integration workflow allowlists so PR #12 is eligible for those workflows. This is a workflow-trigger correction, not a test expansion.
+
+
+## 2026-11-04 — System 03: shareable storefront discovery state
+
+- Synced the active storefront query, market, category, brand, sort and page into the browser URL without adding a new API or Prisma model.
+- Restored validated query state from the URL before the first product request, preventing an initial unfiltered request from racing with deep-link restoration.
+- Browser back/forward navigation restores the visible discovery controls and triggers the corresponding catalog API request.
+- Existing `/api/products` validation, active-product filtering, market-aware pricing, synonym expansion and pagination remain the source of truth; no client-side catalog filtering was introduced.
+- No Prisma schema or migration change was needed. No database was accessed and no routine test suite was expanded or awaited.
+- Known gaps: typo-tolerant ranking, autocomplete/suggestions and richer facets remain deferred until catalog scale and relevance requirements are measured.
