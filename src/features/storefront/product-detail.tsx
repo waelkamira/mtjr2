@@ -25,6 +25,9 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [favoriteError, setFavoriteError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -43,6 +46,10 @@ export default function ProductDetail({ slug }: { slug: string }) {
       .then((result) => {
         if (!active) return;
         setProduct(result);
+        fetch(`/api/favorites/${encodeURIComponent(result.id)}`, { cache: "no-store" })
+          .then(async (response) => response.ok ? response.json() as Promise<{ isFavorite: boolean }> : { isFavorite: false })
+          .then((favorite) => { if (active) setIsFavorite(favorite.isFavorite); })
+          .catch(() => { if (active) setIsFavorite(false); });
         setSelectedVariant(result.variants[0]?.id ?? "");
         setSelectedMarketId(result.variants[0]?.prices[0]?.marketId ?? "");
         setSelectedMediaIndex(Math.max(0, result.media.findIndex((item) => item.isPrimary)));
@@ -60,6 +67,22 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const amount = price ? Number(price.amountMinor) / (10 ** (price.currency.minorUnit ?? 2)) : null;
   const selectedMedia = product.media[selectedMediaIndex] ?? product.media.find((item) => item.isPrimary) ?? product.media[0];
   const selectedMarket = markets.find((item) => item.id === selectedMarketId);
+
+  async function toggleFavorite() {
+    if (!product) return;
+    setFavoriteBusy(true); setFavoriteError("");
+    try {
+      const response = await fetch(`/api/favorites/${encodeURIComponent(product.id)}`, {
+        method: isFavorite ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" }, body: "{}"
+      });
+      const result = await response.json() as { isFavorite?: boolean; error?: string };
+      if (!response.ok) throw new Error(result.error || "Sign in to save favorites.");
+      setIsFavorite(Boolean(result.isFavorite));
+    } catch (cause) {
+      setFavoriteError(cause instanceof Error ? cause.message : "Unable to update your wishlist.");
+    } finally { setFavoriteBusy(false); }
+  }
 
   async function addSelectedVariantToCart() {
     if (!variant || !price || !selectedMarketId) return;
@@ -97,6 +120,8 @@ export default function ProductDetail({ slug }: { slug: string }) {
         <p className="mt-7 text-3xl font-semibold">{price && amount !== null ? new Intl.NumberFormat(undefined, { style: "currency", currency: price.currencyCode }).format(amount) : "Price unavailable"}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">Choose an option<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || "Variant"}</option>)}</select></label>}
+        <button type="button" onClick={() => void toggleFavorite()} disabled={favoriteBusy} aria-pressed={isFavorite} className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{favoriteBusy ? "Saving…" : isFavorite ? "♥ Saved to wishlist" : "♡ Save to wishlist"}</button>
+        {favoriteError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{favoriteError} <Link href="/login" className="font-semibold underline">Sign in</Link></p>}
         <button type="button" onClick={addSelectedVariantToCart} disabled={!variant || !price || !selectedMarket || addingToCart} className="mt-8 rounded-xl bg-[var(--color-forest-900)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)] disabled:cursor-not-allowed disabled:opacity-50">{addingToCart ? "Adding…" : "Add to cart"}</button>
         {cartMessage && <p role="status" className="mt-3 text-sm text-[var(--color-success)]">{cartMessage} <Link href="/cart" className="font-semibold underline">View cart</Link></p>}
         {cartError && <p role="alert" className="mt-3 text-sm text-[var(--color-danger)]">{cartError}</p>}
