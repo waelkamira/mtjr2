@@ -5,6 +5,7 @@ import { CartStatus, CheckoutQuoteStatus, InventoryMovementType, InventoryReserv
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { getCheckoutQuote } from "@/server/checkout/quotes";
+import { createInAppNotification } from "@/server/notifications/notifications";
 
 const reservationReference = "CHECKOUT_QUOTE";
 
@@ -161,7 +162,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
     });
 
     if ("userId" in owner) {
-      await tx.notification.create({
+      await createInAppNotification(tx, {
         data: {
           userId: owner.userId, type: "ORDER_PLACED", title: "Order received",
           message: `Order ${order.orderNumber} was created and is awaiting payment.`,
@@ -235,7 +236,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         where: { id: storeId }, select: { name: true, seller: { select: { ownerId: true } } }
       });
       if (storeOwner.seller.ownerId !== ("userId" in owner ? owner.userId : "")) {
-        await tx.notification.create({
+        await createInAppNotification(tx, {
           data: {
             userId: storeOwner.seller.ownerId, type: "SELLER_ORDER_RECEIVED",
             title: "New order for your store",
