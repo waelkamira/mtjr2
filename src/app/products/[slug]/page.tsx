@@ -4,9 +4,9 @@ import { getDiscoverableProduct } from "@/server/catalog/discovery";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
 
-function toDecimalPrice(amountMinor: string, minorUnit: number): string {
-  const amount = BigInt(amountMinor);
-  const divisor = 10n ** BigInt(minorUnit);
+function toDecimalPrice(amountMinor: bigint, minorUnit: number): string {
+  const amount = amountMinor;
+  const divisor = BigInt(10) ** BigInt(minorUnit);
   const whole = amount / divisor;
   if (minorUnit === 0) return whole.toString();
   const fraction = (amount % divisor).toString().padStart(minorUnit, "0");
