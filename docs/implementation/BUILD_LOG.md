@@ -24,3 +24,22 @@
 3. Add a deterministic seed for baseline system roles and permissions.
 4. Implement environment validation, structured errors, and server-side authorization policy tests.
 5. Implement registration/login/session lifecycle as the first end-to-end vertical slice.
+
+## 2026-11-03 — Blueprint and CI baseline
+
+**Added**
+- Imported the complete 49-system blueprint into `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` as the target functional specification for Mtjr2.
+- Added Tailwind CSS v4 PostCSS configuration.
+- Added Vitest configuration and the first email-normalization unit test.
+- Added a GitHub Actions CI workflow using Node.js 22 and PostgreSQL 16. It runs Prisma validation/generation, typecheck, lint, unit tests, and production build.
+- Added the initial test strategy document.
+
+**Verification**
+- Re-fetched the key files from GitHub and confirmed that they exist on `main`.
+- GitHub Actions run was created: [CI run](https://github.com/waelkamira/mtjr2/actions/runs/41572745940).
+- At the time of this log update, the workflow was still queued. No passing result is claimed.
+- No local dependency installation, Prisma validation, client generation, migration, typecheck, lint, or test execution has been performed in this session.
+
+**Next gate**
+- Wait for and inspect the CI result; fix any dependency/configuration/schema issues it reports.
+- Only after a successful clean PostgreSQL migration rehearsal should the initial identity schema be treated as a validated baseline.
