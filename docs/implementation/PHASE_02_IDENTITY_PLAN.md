@@ -98,3 +98,14 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - The integration workflow now also triggers when `src/app/api/auth/**` changes, so future public-route changes cannot silently skip the database integration gate.
 - Remaining blockers are operational, not a request for more unit tests: configure Resend API key + verified sender and trusted proxy header in deployment settings; smoke-test email delivery; then run one HTTP journey covering register, verify, login, `/api/auth/me`, logout, and denial after logout.
 - Do not expand the suite beyond the existing general CI, PostgreSQL integration, and one HTTP journey. Phase 3 stays blocked until the operational journey is verified.
+
+
+## Role-management update — 2026-11-03
+
+- Implemented audited role assignment and revocation services. Assignment requires a verified actor with `roles:assign`, an ACTIVE target account, rejects `SUPER_ADMIN`, rejects expired grants, and prevents delegating permissions the actor does not hold in the requested scope.
+- Added `POST` and `DELETE /api/admin/users/[userId]/roles` endpoints with same-origin/JSON mutation validation.
+- Corrected revocation so the assignment must belong to the user identified by the route path; mismatches return not-found rather than revoking another user's grant.
+- General CI passed on the exact latest commit `61213d50c70e759d5f9a9af57c8718a7e5adba19` ([run 41646776279](https://github.com/waelkamira/mtjr2/actions/runs/41646776279)): Prisma validate/generate, typecheck, lint, unit tests, and production build.
+- PostgreSQL identity integration passed on preceding commit `fc853041398d825e67998bbb6cdba7ebb4bb58f7` ([run 41646756451]). The role-management code was not covered by that run.
+- The integration workflow path filter now needs to include the admin role route; the next PostgreSQL run will verify the latest role-management changes through the existing essential suite. No helper-by-helper tests are planned.
+- Phase 2 remains open pending the PostgreSQL run on the latest role-management code and the deployment-only email/proxy smoke test plus one HTTP identity journey. Phase 3 remains blocked until the exit gates pass.
