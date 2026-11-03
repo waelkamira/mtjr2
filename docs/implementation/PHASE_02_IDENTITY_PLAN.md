@@ -33,7 +33,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [ ] Add session-cookie/API integration tests and CSRF/origin checks for state-changing routes.
 - [x] Add persistent, HMAC-keyed login rate-limit buckets for normalized identifier/IP pairs and trusted client IPs; store only keyed digests, never raw identifiers/IPs in the throttle ledger.
 - [x] Add unit tests for persistent login-throttle key derivation, pair clearing, validation, threshold blocking, and window reset.
-- [ ] Verify PostgreSQL-backed concurrent login-throttle integration tests and tune thresholds using production telemetry before enabling public login.
+- [x] Verify PostgreSQL-backed concurrent login-throttle integration tests, persistent blocking, and pair-bucket clearing (run 41577891224 on commit `399fd314a5c94585b02089e939ae1f3b9bd5e19b`).
+- [ ] Tune thresholds using production telemetry before enabling public login.
 
 ### 2.4 Registration and email verification
 - [x] Validate registration input and require terms/privacy consent.
@@ -48,7 +49,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [ ] Add end-to-end registration and verification tests through public HTTP endpoints.
 
 ### 2.5 Login, logout, recovery, and enforcement
-- [ ] Login service: normalized identity lookup, password verification, verified/active account checks, attempt recording, throttling, session issuance.
+- [x] Implement password login domain service: normalized identity lookup, dummy-hash verification for unknown accounts, generic credential failures, verified/active account checks, attempt recording, throttling before scrypt, session issuance, and successful-login audit event (CI verification pending).
 - [ ] Logout route: revoke current session and clear cookie.
 - [ ] Password-reset request and completion with one-time tokens and session revocation.
 - [ ] Server-side session resolver for route handlers and server components.
@@ -64,7 +65,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Verify concurrent verification-token consumption allows exactly one successful consumer.
 - [x] Verify store-scoped permission resolution, cross-store denial, assignment uniqueness, session creation, and revocation against PostgreSQL.
 - [x] Add PostgreSQL integration coverage for concurrent login-throttle requests, persistent blocking, and pair-bucket clearing.
-- [ ] Observe and pass the updated integration workflow before marking the concurrency test verified.
+- [x] Updated integration workflow passed on the current pre-login-service commit.
 - [ ] Extend database coverage to registration rollback fault injection and password-reset token lifecycle.
 
 ## Exit gates — all required
@@ -77,4 +78,4 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 6. CI passes Prisma validation/generation, typecheck, lint, all unit/integration tests, and production build.
 7. Security review and this plan/build log document evidence and remaining limitations.
 
-**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is verified for repeatability by two consecutive executions. The general CI and first PostgreSQL-backed identity integration workflow both passed on commit `3a4b040a523922cf927a1732819a946c67951314` (runs 41577431810 and 41577431835). The first integration run verified registration, one-time email verification, scoped authorization, assignment uniqueness, and session revocation. Concurrent verification-token consumption and PostgreSQL-backed login-throttle concurrency tests have now been added, but the updated workflow must pass before those new assertions are counted as verified. Login/logout/recovery endpoints, email delivery, CSRF/origin protection, and full public HTTP E2E remain outstanding. Phase 2 is not complete; Phase 3 remains blocked.
+**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is verified for repeatability by two consecutive executions. The general CI and first PostgreSQL-backed identity integration workflow both passed on commit `3a4b040a523922cf927a1732819a946c67951314` (runs 41577431810 and 41577431835). The first integration run verified registration, one-time email verification, scoped authorization, assignment uniqueness, and session revocation. Concurrent verification-token consumption and PostgreSQL-backed login-throttle concurrency tests passed in run 41577891224 on commit `399fd314a5c94585b02089e939ae1f3b9bd5e19b`. General CI run 41577891247 also passed on that exact commit. A password login service and focused unit tests were then added in commit `654f581198393d9a981e46460ff92f4deab16957`; their CI result is pending. Logout/recovery endpoints, email delivery, CSRF/origin protection, and full public HTTP E2E remain outstanding. The new login service is not yet CI-verified and is not exposed through an HTTP route. Phase 2 is not complete; Phase 3 remains blocked.

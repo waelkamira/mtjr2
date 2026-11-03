@@ -384,3 +384,30 @@
 
 **Boundary**
 - Phase 2 remains in progress. No Marketplace Core (Phase 3) work has started.
+
+
+## 2026-11-03 — PostgreSQL concurrency verification and password-login service
+
+**Verified on commit `399fd314a5c94585b02089e939ae1f3b9bd5e19b`**
+- General CI run [41577891247](https://github.com/waelkamira/mtjr2/actions/runs/41577891247) passed dependency installation, Prisma validate/generate, TypeScript, ESLint, all unit tests, and production build.
+- Identity PostgreSQL Integration run [41577891224](https://github.com/waelkamira/mtjr2/actions/runs/41577891224) passed PostgreSQL startup, committed migration deployment, baseline seed, and real database integration tests.
+- The updated integration tests verified that concurrent consumers of one verification token produce exactly one successful activation.
+- They also verified concurrent login-throttle requests, persisted blocking, and clearing only the identifier/IP pair bucket while retaining the IP-wide counter.
+- The earlier runs 41577859328 and 41577859276 on the parent commit were cancelled during dependency installation when newer pushes superseded them. They are not counted as failures or passes; the replacement runs above passed on the corrected commit.
+
+**Implemented next — commit `654f581198393d9a981e46460ff92f4deab16957`**
+- Added `src/server/identity/login.ts` as a server-side password-login domain service.
+- The service normalizes email, consumes persistent throttling before scrypt, performs dummy-hash verification for unknown accounts, uses a generic credential failure for unknown/wrong-password/unverified/inactive accounts, and issues sessions only to active email-verified accounts.
+- It records successful and failed login attempts using HMAC-keyed identifier/IP digests, updates last-login time, and writes a successful-login audit event. If the success-recording transaction fails after session creation, it revokes that session.
+- Added focused unit tests for successful login, unknown-account timing path, inactive accounts, throttle short-circuiting, and invalid input.
+
+**Verification boundary**
+- Commit `654f581198393d9a981e46460ff92f4deab16957` has been pushed. Its general CI and PostgreSQL integration workflows must complete before the new login service is marked verified.
+- No public login/logout HTTP route exists yet. Trusted proxy IP resolution, CSRF/origin enforcement, logout, password reset, real email delivery, session resolver/route guards, and public HTTP E2E remain open.
+- The integration workflow currently verifies the identity persistence/throttle slice; it does not yet exercise the new login service against PostgreSQL.
+
+**Next**
+1. Inspect CI and PostgreSQL integration runs for commit `654f581198393d9a981e46460ff92f4deab16957`.
+2. Fix any test/type/lint/build failures before moving forward.
+3. Extend PostgreSQL integration coverage to login-attempt persistence, successful login/session issuance, and inactive/unverified rejection.
+4. Then implement the trusted server session resolver and logout/recovery flows. Phase 3 remains blocked.
