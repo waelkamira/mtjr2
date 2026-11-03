@@ -21,7 +21,8 @@ const preferenceUpdateSchema = z.object({
     .refine((items) => new Set(items.map((item) => item.type)).size === preferenceDefinitions.length, "Each notification type must appear exactly once.")
 }).strict();
 
-export async function createInAppNotification(tx: Prisma.TransactionClient, data: Prisma.NotificationUncheckedCreateInput) {
+export async function createInAppNotification(tx: Prisma.TransactionClient, input: { data: Prisma.NotificationUncheckedCreateInput }) {
+  const data = input.data;
   const preference = await tx.notificationPreference.findUnique({
     where: { userId_type: { userId: data.userId, type: data.type } },
     select: { inAppEnabled: true }
