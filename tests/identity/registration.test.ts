@@ -18,7 +18,6 @@ const { prismaMock, txMock } = vi.hoisted(() => {
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 
 import {
-  IdentityConflictError,
   registerUser,
   verifyUserEmail
 } from "../../src/server/identity/registration";

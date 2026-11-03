@@ -1,3 +1,5 @@
+// CommonJS is intentional: this seed is executed directly by Node via `db:seed`.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();

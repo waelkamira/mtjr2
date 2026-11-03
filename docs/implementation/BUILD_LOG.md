@@ -323,3 +323,22 @@
 1. Verify the committed-migration workflow and two consecutive seed executions.
 2. Add database-backed integration tests for uniqueness, scoped grants, registration transactions, session lifecycle, and throttle concurrency.
 3. Continue login/recovery/session resolver work and close the Phase 2 exit gates. Phase 3 remains blocked.
+
+
+## 2026-11-03 — Clean PostgreSQL baseline and CI lint correction
+
+**Verification**
+- Database Baseline run [41576588203](https://github.com/waelkamira/mtjr2/actions/runs/41576588203) passed on commit `5106f13755ff51a00e40707bf82282ef02b11cb1`.
+- The workflow verified the committed migration, deployed it to a clean PostgreSQL 16 database, checked migration status, and executed `npm run db:seed` twice successfully.
+- The seed created/updated 6 system role definitions, 21 permissions, and their role-permission links; it did not assign any role to a user.
+- The general CI run [41576588184](https://github.com/waelkamira/mtjr2/actions/runs/41576588184) failed only at ESLint: CommonJS `require` in the executable seed was flagged, and an unused test import was reported. Prisma validation/generation and TypeScript passed; tests/build were skipped due to lint failure.
+
+**Correction**
+- Kept the seed as CommonJS because the package script invokes the `.cjs` file directly; added a narrowly scoped lint suppression with an explanatory comment rather than changing runtime module semantics.
+- Removed the unused `IdentityConflictError` test import.
+- This correction must pass the full CI pipeline before being treated as complete.
+
+**Next**
+1. Verify the new full CI run after the lint correction.
+2. Add PostgreSQL-backed tests for authorization scope, registration/session transactions, and rate-limit concurrency.
+3. Continue the remaining Phase 2 authentication journey; Phase 3 remains blocked.

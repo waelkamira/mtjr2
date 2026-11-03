@@ -65,6 +65,6 @@ A system may be marked **Complete** only when:
 
 ### Phase 2 checkpoint — identity database baseline
 - [x] Initial Prisma identity migration committed and deployed to a clean PostgreSQL 16 database in CI.
-- [x] Deterministic baseline role/permission seed implemented; repeatability is verified by running it twice in the database workflow.
+- [x] Deterministic baseline role/permission seed implemented; repeatability was verified by two consecutive executions on a clean PostgreSQL 16 database (run [41576588203](https://github.com/waelkamira/mtjr2/actions/runs/41576588203)).
 - [ ] PostgreSQL-backed identity integration tests and full authentication journey.
 - Phase 3 remains blocked until all Phase 2 exit gates in `docs/implementation/PHASE_02_IDENTITY_PLAN.md` pass.

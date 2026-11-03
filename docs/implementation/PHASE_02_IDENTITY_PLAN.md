@@ -66,4 +66,4 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 6. CI passes Prisma validation/generation, typecheck, lint, all unit/integration tests, and production build.
 7. Security review and this plan/build log document evidence and remaining limitations.
 
-**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is implemented and is being verified for repeatability by running it twice. This phase is not complete. Email delivery, public routes, login/recovery, PostgreSQL-backed identity integration tests, and end-to-end verification remain outstanding.
+**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is implemented and verified for repeatability by two consecutive executions against the same clean PostgreSQL 16 database (CI run 41576588203). This phase is not complete. Email delivery, public routes, login/recovery, PostgreSQL-backed identity integration tests, and end-to-end verification remain outstanding.
