@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   membershipUpdateMany: vi.fn(),
   roleFind: vi.fn(),
   roleUpsert: vi.fn(),
+  roleDeleteMany: vi.fn(),
   auditCreate: vi.fn()
 }));
 
@@ -19,7 +20,7 @@ vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: moc
 vi.mock("@/server/identity/permission-repository", () => ({ userHasPermission: mocks.userHasPermission }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
 
-import { acceptStoreStaffInvitation, inviteStoreStaff } from "@/server/marketplace/store-staff";
+import { acceptStoreStaffInvitation, inviteStoreStaff, revokeStoreStaff } from "@/server/marketplace/store-staff";
 
 describe("store staff lifecycle", () => {
   beforeEach(() => {
@@ -33,13 +34,14 @@ describe("store staff lifecycle", () => {
     mocks.membershipUpdateMany.mockResolvedValue({ count: 1 });
     mocks.roleFind.mockResolvedValue({ id: "manager-role" });
     mocks.roleUpsert.mockResolvedValue({});
+    mocks.roleDeleteMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
     mocks.transaction.mockImplementation((callback: (tx: unknown) => unknown) => callback({
       store: { findUnique: mocks.storeFind },
       user: { findUnique: mocks.userFind },
       sellerStaff: { upsert: mocks.membershipUpsert, findUnique: mocks.membershipFind, updateMany: mocks.membershipUpdateMany },
       role: { findUnique: mocks.roleFind },
-      userRoleAssignment: { upsert: mocks.roleUpsert },
+      userRoleAssignment: { upsert: mocks.roleUpsert, deleteMany: mocks.roleDeleteMany },
       auditLog: { create: mocks.auditCreate }
     }));
   });
@@ -72,4 +74,14 @@ describe("store staff lifecycle", () => {
     await expect(acceptStoreStaffInvitation("membership-1")).rejects.toThrow(/invitation not found/i);
     expect(mocks.roleUpsert).not.toHaveBeenCalled();
   });
+  it("lets the store owner revoke staff membership and its scoped role grant", async () => {
+    const result = await revokeStoreStaff("membership-1");
+    expect(result).toBe(true);
+    expect(mocks.membershipUpdateMany).toHaveBeenCalledOnce();
+    expect(mocks.roleDeleteMany).toHaveBeenCalledWith({
+      where: { userId: "staff-1", roleId: "manager-role", scopeType: "STORE", scopeId: "store-1" }
+    });
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
 });
