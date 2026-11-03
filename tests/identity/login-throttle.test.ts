@@ -72,7 +72,7 @@ describe("persistent login throttling", () => {
 
     await clearLoginThrottle(" Buyer@Example.COM ", "203.0.113.8");
 
-    expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith({
+    expect(prismaMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith({
       where: { keyHash: expect.stringMatching(/^[a-f0-9]{64}$/) },
       data: {
         windowStartedAt: expect.any(Date),
@@ -108,7 +108,7 @@ describe("persistent login throttling", () => {
       blockedUntil: new Date(now.getTime() + 15 * 60 * 1000)
     });
 
-    await expect(consumeLoginAttempt({ identifier: "buyer@example.com" }, now))
+    await expect(consumeLoginAttempt({ identifier: "buyer@example.com", trustedIpAddress: "203.0.113.8" }, now))
       .resolves.toEqual({ blocked: true });
 
     expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith(

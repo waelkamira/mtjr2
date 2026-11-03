@@ -135,7 +135,6 @@ export async function consumeLoginAttempt(
     throw new Error("A valid login identifier is required.");
   }
 
-  const identifierKey = digestSubject("identifier", identifier);
   const ip = input.trustedIpAddress.trim();
   if (!ip || ip.length > 64) {
     throw new Error("A trusted client IP value is required.");
