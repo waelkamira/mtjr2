@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Prisma } from "@prisma/client";
 
-const { requirePermission, storeFindUnique, brandFindFirst, categoryCount, marketFindMany, productCreate, auditCreate, transaction } = vi.hoisted(() => ({
+const { requirePermission, storeFindUnique, brandFindFirst, categoryCount, marketFindMany, productCreate, productFindUnique, productUpdateMany, auditCreate, transaction } = vi.hoisted(() => ({
   requirePermission: vi.fn(), storeFindUnique: vi.fn(), brandFindFirst: vi.fn(),
   categoryCount: vi.fn(), marketFindMany: vi.fn(), productCreate: vi.fn(),
   auditCreate: vi.fn(), transaction: vi.fn()
@@ -9,9 +9,9 @@ const { requirePermission, storeFindUnique, brandFindFirst, categoryCount, marke
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/permission-guard", () => ({ requirePermission }));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: transaction } }));
+vi.mock("@/lib/db/prisma", () => ({ prisma: { product: { findUnique: productFindUnique }, $transaction: transaction } }));
 
-import { createDraftProduct } from "@/server/catalog/products";
+import { createDraftProduct, publishProduct } from "@/server/catalog/products";
 
 describe("draft product creation", () => {
   beforeEach(() => {
@@ -24,14 +24,14 @@ describe("draft product creation", () => {
     brandFindFirst.mockResolvedValue({ id: "brand-1" });
     categoryCount.mockResolvedValue(1);
     marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
-    productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
+    productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });\n    productFindUnique.mockResolvedValue({ storeId: "store-1" });\n    productUpdateMany.mockResolvedValue({ count: 1 });
     auditCreate.mockResolvedValue({});
     transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       store: { findUnique: storeFindUnique },
       brand: { findFirst: brandFindFirst },
       category: { count: categoryCount },
       market: { findMany: marketFindMany },
-      product: { create: productCreate },
+      product: { create: productCreate, findUnique: vi.fn().mockResolvedValue({\n        id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED",\n        store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] },\n        variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }],\n        media: [{ id: "media-1" }]\n      }), updateMany: productUpdateMany },
       auditLog: { create: auditCreate }
     }));
   });
