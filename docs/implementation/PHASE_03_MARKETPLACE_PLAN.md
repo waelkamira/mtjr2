@@ -51,7 +51,8 @@
 - [x] Localized active search-synonym expansion.
 - [ ] Complete General CI for the latest discovery changes.
 - [ ] Add full-text/typo-tolerant ranking only after measuring baseline query behavior and catalog volume.
-- [ ] Storefront listing/detail pages follow the backend contracts.
+- [x] Initial buyer storefront homepage and product detail route consume the public market/category/product APIs; search, category filtering, market selection, and localized currency display are connected.
+- [ ] Complete buyer catalog journeys (pagination, richer filters, SEO metadata, and accessible product media gallery).
 
 ## 3.6 Inventory and warehouse foundation
 
@@ -65,6 +66,17 @@
 - [ ] Complete General CI and PostgreSQL migration replay for inventory and market queries.
 - [ ] Add reservation create/consume/release/expiry lifecycle when the cart/checkout system defines ownership and idempotency contracts.
 - [ ] Add reconciliation/stock-count workflow after movement ledger behavior is verified.
+
+
+## 3.7 Frontend/backend integration
+
+- [x] Establish the shared storefront shell using the approved visual tokens.
+- [x] Connect the homepage to active market, category, and product read APIs.
+- [x] Connect product detail routes to the canonical public product API.
+- [x] Serialize Prisma BigInt price amounts as JSON-safe minor-unit strings and include each currency's minor-unit precision.
+- [ ] Build seller-center screens against seller/store/catalog/inventory APIs; keep all mutations server-authorized.
+- [ ] Build platform-admin screens against seller/product moderation APIs.
+- [ ] Add cart/checkout UI only alongside the Buying Core APIs; never ship inert purchase controls.
 
 ## Minimal verification gates
 
