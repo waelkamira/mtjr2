@@ -687,3 +687,30 @@ The project owner approved Resend as the transactional email provider. The serve
 - Role assignment/revocation, registration/verification/login/logout/password-reset audit coverage, scoped authorization, session lifecycle, and password-reset lifecycle are implemented and covered by the existing focused gates.
 - Remaining Phase 2 work is deployment-only: configure Resend credentials/sender, configure and secure the trusted edge IP header, smoke-test actual email delivery, then execute one deployed HTTP journey (register → verify → login → `/api/auth/me` → logout → anonymous denied).
 - No further helper-level tests or expanded test matrix are planned. Phase 3 remains gated only by that final operational HTTP journey.
+
+
+## 2026-11-03 — Resume Phase 3 planning; defer production-only gates
+
+**Repository review**
+- Rechecked the live `main` branch, canonical Prisma schema, README, and platform blueprint before resuming implementation.
+- Confirmed that `prisma/schema.prisma` currently contains the identity/access foundation only; marketplace domain models and the catalog workflow are not implemented.
+- Corrected the blueprint's baseline statement so it no longer claims that 136 marketplace models or canonical catalog pages already exist.
+- Added `docs/implementation/PHASE_03_MARKETPLACE_PLAN.md` with dependency-ordered delivery slices and a first vertical slice: Country + Currency + Market.
+- Updated the README: Phase 2 production email/proxy/HTTP journey remains deferred and is not marked passed; local/CI Marketplace Core development may proceed without production database access.
+
+**Safety boundary**
+- No production database connection, credential read, migration, or deployment environment mutation was performed.
+- Use only local/disposable/CI PostgreSQL for Phase 3 development until the owner explicitly approves production access.
+
+**Verification**
+- Documentation files were committed to `main`:
+  - Phase 3 plan: `34f3bac2cb6be8416b1b22ad21426443f8e8b6de`
+  - README plan/status: `c3b11f35c39750c04c9fddb2921c63ae3ea2d946`
+  - Blueprint baseline correction: `1a48052b030d7c967ed906285d4def146cb34018`
+- No application code or Prisma schema changed in this documentation-only step; no new application test result is claimed.
+- Vercel status for the latest commit was still pending at the time of this entry. The existing successful General CI and PostgreSQL identity runs remain the latest application-code verification evidence.
+
+**Next**
+1. Implement the Country + Currency + Market schema slice, with constraints and deterministic seed.
+2. Generate a migration for CI/local disposable PostgreSQL only.
+3. Run the existing General CI plus one focused PostgreSQL integration gate; do not expand the test matrix without a concrete invariant.
