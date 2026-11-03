@@ -135,3 +135,40 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
     return store;
   });
 }
+
+
+/** Returns only stores owned by the current seller or explicitly joined as active staff. */
+export async function getSellerWorkspace(now = new Date()) {
+  const actor = await requireCurrentSession(now);
+  const seller = await prisma.seller.findUnique({
+    where: { ownerId: actor.userId },
+    select: { id: true, status: true, legalName: true, displayName: true }
+  });
+  const stores = await prisma.store.findMany({
+    where: {
+      OR: [
+        { seller: { ownerId: actor.userId } },
+        { staff: { some: { userId: actor.userId, status: "ACTIVE" } } }
+      ]
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    select: {
+      id: true, name: true, slug: true, status: true,
+      seller: { select: { ownerId: true } },
+      markets: { where: { isEnabled: true }, select: { market: { select: { id: true, code: true, name: true, defaultCurrencyCode: true } } } },
+      warehouses: {
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        select: { id: true, code: true, name: true, _count: { select: { inventories: true } } }
+      }
+    }
+  });
+  return {
+    seller,
+    stores: stores.map(({ seller: storeSeller, ...store }) => ({
+      ...store,
+      isOwner: storeSeller.ownerId === actor.userId
+    }))
+  };
+}
