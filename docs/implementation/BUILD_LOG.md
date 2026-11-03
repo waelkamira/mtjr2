@@ -825,3 +825,16 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Implement typed attribute validation, variant-level enforcement, product publishability, and server-side store/market authorization in domain services.
 3. Implement market reference seed/repository/service and category-tree read service.
 4. Continue to discovery/search only after product write and read contracts are established.
+
+
+## 2026-11-03 — Phase 3.5 search synonym persistence
+
+**Implemented**
+- Added localized `SearchSynonym` records with active state and unique locale/term/synonym combinations.
+- Added lookup index for locale + term + active state.
+- Added additive migration `20261103060000_search_synonyms`.
+- Search execution, normalization, typo handling, filters, ranking, and API endpoints remain unimplemented.
+
+**Verification**
+- Schema/migration are committed but Prisma validation, generated-client compatibility, and isolated PostgreSQL replay remain pending.
+- No production database or deployment environment was accessed.
