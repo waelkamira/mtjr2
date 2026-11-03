@@ -49,6 +49,7 @@ describe("seller inventory operations", () => {
     });
     mocks.productVariantFindFirst.mockResolvedValue({ id: "variant-1" });
     mocks.inventoryMovementFindUnique.mockResolvedValue(null);
+    mocks.inventoryFindUnique.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 2 });
     mocks.inventoryMovementCreate.mockResolvedValue({ id: "movement-1" });
     mocks.inventoryCreate.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 0 });
     mocks.inventoryUpdateMany.mockResolvedValue({ count: 1 });
@@ -93,6 +94,17 @@ describe("seller inventory operations", () => {
       quantityDelta: 5, idempotencyKey: "adjustment-key-0003"
     });
     expect(result.alreadyApplied).toBe(true);
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects reuse of an adjustment key for a different inventory row", async () => {
+    mocks.inventoryMovementFindUnique.mockResolvedValue({
+      id: "movement-existing", inventoryId: "inventory-other", quantityDelta: 5, type: "ADJUSTMENT"
+    });
+    await expect(adjustInventory({
+      warehouseId: "warehouse-1", variantId: "variant-1",
+      quantityDelta: 5, idempotencyKey: "adjustment-key-0004"
+    })).rejects.toThrow("different inventory operation");
     expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
   });
 
