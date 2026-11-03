@@ -124,3 +124,36 @@
 **Verification**
 - Files committed as `fbc6d7a4d72cc87d1a0c4b106101c8a770b2c32e`.
 - The CI run for the prior implementation commit is still pending in GitHub Actions; the new tests have not yet been observed passing.
+
+
+## 2026-11-03 — Session lifecycle and password primitives
+
+**CI failure diagnosis and correction**
+- Retrieved the failing TypeScript job log. Prisma validation and client generation passed; typecheck failed because the environment parser accepted `NodeJS.ProcessEnv`, while the unit-test fixture was a plain object whose `NODE_ENV` widened to `string`.
+- Changed the parser input type to `Record<string, string | undefined>`, which matches both process environment and test fixtures without weakening runtime Zod validation.
+- CI for the corrected change is still running; no passing result is claimed yet.
+
+**Implemented**
+- Added 256-bit URL-safe random session tokens. Only SHA-256 digests are persisted.
+- Added database-backed session creation restricted to active accounts, session resolution, single-session revocation, and all-session revocation.
+- Session resolution rejects missing, malformed, expired, revoked, and inactive-account sessions. It rechecks revocation and expiry atomically when updating last-seen time.
+- Added HTTP-only, SameSite=Lax session cookie helpers, Secure in production.
+- Added versioned scrypt password hashing with random salts, fixed resource parameters, timing-safe comparison, and a 12–128 character policy.
+- Added unit tests for token primitives, password hashing, and mocked database session lifecycle.
+
+**Limitations / next security gates**
+- No public registration or login route is exposed yet.
+- Login throttling, email verification delivery, password reset workflow, CSRF/origin protection for mutations, and end-to-end browser/API tests remain necessary before production authentication.
+- Session/database integration tests currently mock Prisma; a real PostgreSQL migration-backed test run is still required.
+- No Prisma migration has been generated or applied.
+
+**Commits**
+- Environment parser typing fix: `a0b41291c86640df384b262c504c45c19a83ce01`.
+- Session service: `31de4f4708f01ea59e184de2eb487704a6ded225`.
+- Password hashing and cookie helpers: `e4790257f6ab54af9a318add766d2c9012c9026b`.
+- Session revocation race guard: `ac51ebbea5b93d75c748fcd721d1caa79be8f8e9`.
+- Session lifecycle tests: `806493e93245351ad700d039faa7f894c548a2ae`.
+
+**Verification**
+- Earlier baseline CI passed at `852c837c70aa648327a170758c4945af08901afc`.
+- CI runs for the corrected environment parser and session implementation are pending. Their test/build outcomes must be checked before the identity slice is considered validated.
