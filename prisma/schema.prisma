@@ -244,6 +244,12 @@ enum SellerStaffStatus {
   REVOKED
 }
 
+enum CatalogEntityStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -363,4 +369,71 @@ model SellerStaff {
   @@unique([storeId, userId])
   @@index([userId, status])
   @@index([storeId, status])
+}
+
+
+model Category {
+  id          String              @id @default(cuid())
+  parentId    String?
+  slug        String              @unique @db.VarChar(180)
+  name        String
+  description String?
+  imageUrl    String?
+  status      CatalogEntityStatus @default(DRAFT)
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  parent      Category?           @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    Category[]          @relation("CategoryTree")
+  translations CategoryTranslation[]
+
+  @@index([parentId, status, sortOrder])
+  @@index([status, sortOrder])
+}
+
+model CategoryTranslation {
+  id          String   @id @default(cuid())
+  categoryId  String
+  locale      String   @db.VarChar(16)
+  name        String
+  description String?
+  seoTitle    String?
+  seoDescription String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+  @@index([locale, name])
+}
+
+model Brand {
+  id          String              @id @default(cuid())
+  slug        String              @unique @db.VarChar(180)
+  name        String
+  description String?
+  logoUrl     String?
+  websiteUrl  String?
+  status      CatalogEntityStatus @default(DRAFT)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  translations BrandTranslation[]
+
+  @@index([status, name])
+}
+
+model BrandTranslation {
+  id          String   @id @default(cuid())
+  brandId     String
+  locale      String   @db.VarChar(16)
+  name        String
+  description String?
+  seoTitle    String?
+  seoDescription String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([brandId, locale])
+  @@index([locale, name])
 }
