@@ -48,11 +48,18 @@ A system may be marked **Complete** only when:
 - type checking and linting pass;
 - documentation includes implementation evidence and known limitations.
 
+## Visual design direction
+
+- Approved premium visual direction: forest green, sage, warm ivory, and restrained copper, based on the user's supplied references.
+- Shared design specification: [Mtjr2 Visual Design System](docs/design/VISUAL_DESIGN_SYSTEM.md).
+- Foundation tokens are implemented in `src/app/globals.css`; storefront, seller, and admin UI implementation follows the delivery sequence and does not bypass Phase 2 security gates.
+
 ## Documentation
 
 - `docs/architecture/` — architecture decisions, domain boundaries, and system blueprint.
 - `docs/implementation/` — phase plans and implementation records.
 - `docs/quality/` — test strategy, security, and release evidence.
+- `docs/design/` — visual design system, component rules, and accessibility standards.
 - `prisma/` — canonical Prisma schema, migrations, and seed data.
 
 ## Current status

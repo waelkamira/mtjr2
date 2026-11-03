@@ -411,3 +411,21 @@
 2. Fix any test/type/lint/build failures before moving forward.
 3. Extend PostgreSQL integration coverage to login-attempt persistence, successful login/session issuance, and inactive/unverified rejection.
 4. Then implement the trusted server session resolver and logout/recovery flows. Phase 3 remains blocked.
+
+
+## 2026-11-03 — Premium marketplace visual foundation
+
+**Direction approved**
+- Reviewed the two user-provided visual references.
+- Adopted a premium botanical/editorial direction: deep forest green, sage, warm ivory, and restrained copper accents, with soft depth, rounded surfaces, generous spacing, and image-led product presentation.
+- Adapted the visual language for a global multi-vendor marketplace rather than copying grocery/plant-shop content or screen layouts.
+
+**Implemented**
+- Added `docs/design/VISUAL_DESIGN_SYSTEM.md` covering palette, surface hierarchy, shape, typography, marketplace component principles, responsive behavior, RTL/LTR, accessibility, rollout sequence, and acceptance criteria.
+- Replaced the starter CSS colors with shared semantic design tokens in `src/app/globals.css`.
+- Added visible keyboard focus styling and reduced-motion support.
+- Updated README to make the design system an official project reference.
+
+**Boundary**
+- This is the visual foundation only. Storefront pages, shared components, seller center, and admin UI have not yet been implemented or visually verified.
+- Design foundation proceeds in parallel and does not alter Phase 2 identity/security exit gates. Phase 3 remains blocked until Phase 2 is complete.

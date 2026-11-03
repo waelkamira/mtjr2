@@ -1,12 +1,61 @@
 @import "tailwindcss";
 
+/*
+ * Mtjr2 visual foundation
+ * Palette: forest green + sage + warm ivory + restrained copper.
+ * Glass effects are reserved for selected hero/overlay surfaces.
+ */
 :root {
   color-scheme: light;
-  --background: #f7f7f5;
-  --foreground: #171717;
-  --muted: #737373;
-  --border: #e7e5e4;
-  --brand: #e87524;
+
+  --color-forest-950: #102d27;
+  --color-forest-900: #173b32;
+  --color-forest-800: #245044;
+  --color-forest-700: #326657;
+  --color-sage-600: #718f7d;
+  --color-sage-500: #8fa997;
+  --color-sage-300: #c3d2c6;
+  --color-sage-200: #dce7dd;
+  --color-sage-100: #edf2ec;
+
+  --color-ivory-50: #fcfbf7;
+  --color-ivory-100: #f6f4ed;
+  --color-ivory-200: #ece9df;
+  --color-stone-300: #d8d7ce;
+  --color-stone-500: #777d75;
+  --color-ink-900: #1b2823;
+  --color-ink-700: #3d4b43;
+
+  --color-copper-600: #b96d36;
+  --color-copper-500: #d18449;
+  --color-copper-100: #f5e5d6;
+
+  --color-success: #287653;
+  --color-warning: #a66a24;
+  --color-danger: #b64d45;
+  --color-info: #477b91;
+
+  --background: var(--color-ivory-50);
+  --foreground: var(--color-ink-900);
+  --muted: var(--color-stone-500);
+  --border: var(--color-ivory-200);
+  --brand: var(--color-forest-800);
+  --accent: var(--color-copper-500);
+  --surface: #ffffff;
+  --surface-soft: var(--color-ivory-100);
+  --surface-tint: var(--color-sage-100);
+
+  --radius-control: 0.75rem;
+  --radius-card: 1.125rem;
+  --radius-panel: 1.5rem;
+  --radius-feature: 2rem;
+
+  --shadow-card: 0 8px 28px rgb(24 49 39 / 6%);
+  --shadow-floating: 0 18px 48px rgb(16 45 39 / 14%);
+  --shadow-glow: 0 12px 36px rgb(113 143 125 / 20%);
+
+  --content-max: 1440px;
+  --page-gutter: clamp(1rem, 3vw, 2.5rem);
 }
 
 * { box-sizing: border-box; }
@@ -16,14 +65,36 @@ html, body {
   margin: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+  background: var(--background);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-feature-settings: "ss01" on;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 a { color: inherit; text-decoration: none; }
-
 button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
 
-::selection { background: #f7d7bf; color: #49230c; }
+::selection { background: var(--color-sage-200); color: var(--color-forest-950); }
+
+:focus-visible {
+  outline: 3px solid var(--color-copper-500);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
