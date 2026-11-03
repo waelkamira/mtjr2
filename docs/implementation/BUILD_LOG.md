@@ -759,3 +759,6 @@ The project owner approved Resend as the transactional email provider. The serve
 1. Run the existing General CI (Prisma validate/generate, typecheck, lint, unit tests, build).
 2. Run the existing PostgreSQL integration workflow against an isolated disposable database to replay both migrations.
 3. Complete the Market seed/repository/service slice and implement seller onboarding and scoped authorization before claiming either workflow complete.
+
+
+- Blueprint consistency follow-up: clarified that the 49-system model inventory is a **target inventory**, not a declaration that all models already exist. Refreshed the schema baseline and replaced the stale SNAP conflict/duplicate warning with the current static inspection result. Blueprint documentation commit: `cd1b7cfeacde516c5e501afc89a87e07a813f884`.
