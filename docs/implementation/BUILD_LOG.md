@@ -613,3 +613,20 @@
 **Next**
 - Add a server-only email delivery contract with a configured provider before public registration/recovery endpoints.
 - Add the minimal public route set and one end-to-end HTTP identity journey only after delivery and abuse controls are ready.
+
+
+## 2026-11-03 — Resend adapter and CI failure correction
+
+**Implemented**
+- Added a server-only Resend adapter for email verification and password reset.
+- Added optional `RESEND_API_KEY` and `RESEND_FROM_EMAIL` environment validation and documented placeholders in `.env.example`.
+- The adapter uses Resend's HTTPS email API, requires a confirmed provider message ID, uses the configured application URL for action links, and does not log or return raw tokens/provider response bodies.
+- Corrected the JSON content-type regular expression in the same-origin mutation guard after CI caught malformed escaping.
+
+**Configuration still required**
+- The repository does not contain a Resend API key or a verified sender address. These must be added as deployment secrets/environment variables by the project owner. No real email has been sent or verified yet.
+- Public registration and recovery routes remain disabled until Resend is configured, a real delivery smoke test passes, and trusted-proxy IP resolution is defined.
+
+**Verification**
+- CI run 41582452462 failed at TypeScript parsing in `request-security.ts` due to the malformed regex. Prisma validation/generation passed; subsequent lint/tests/build were skipped.
+- The regex correction, Resend adapter, env changes, and documentation are newer than that failed run and are awaiting a fresh CI run.
