@@ -194,3 +194,11 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Added connected `/notifications` page with unread count, open-resource links, and mark-as-read action.
 - Order placement now creates buyer and store-owner notifications in the same transaction as order/vendor-order creation. Unique deduplication keys prevent duplicate events on retries.
 - This is the in-app order-event foundation only. Email delivery, preferences, retries/outbox, and other event categories remain incomplete.
+
+
+## Payment lifecycle foundation
+
+- Provider-neutral payment persistence is defined in `prisma/schema.prisma` with migration `20261103235000_payment_lifecycle_foundation`.
+- Payment intents are owner-scoped, order-total/currency-bound and idempotent. Provider adapters must implement intent creation and signed webhook verification.
+- Parent and vendor orders become `CONFIRMED` only after a verified provider success event. Repeated webhook event IDs with changed payloads are rejected.
+- Buyer order detail is connected to the available provider list and payment-intent API. No provider is configured by default, so no live payment is collected until the launch provider and market are approved.
