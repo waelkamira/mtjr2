@@ -207,6 +207,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         data: {
           orderId: order.id, storeId, status: VendorOrderStatus.PENDING_PAYMENT,
           subtotalMinor: vendorSubtotal, shippingMinor: vendorShipping, taxMinor: vendorTax,
+          taxInclusive: quote.taxSnapshot.isInclusive,
           shippingServiceName: selections.get(storeId)!.serviceName, shippingRateId: selections.get(storeId)!.shippingRateId,
           shippingDestinationRegion: selections.get(storeId)!.destinationRegion,
           minDeliveryDays: selections.get(storeId)!.minDeliveryDays, maxDeliveryDays: selections.get(storeId)!.maxDeliveryDays,
