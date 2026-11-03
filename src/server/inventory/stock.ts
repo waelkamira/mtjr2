@@ -118,19 +118,19 @@ export async function adjustInventory(input: unknown, now = new Date()) {
       select: { id: true }
     });
     if (!variant) throw new Error("The product variant does not belong to this store.");
+    let inventory = await tx.inventory.findUnique({
+      where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: variant.id } }
+    });
     const existing = await tx.inventoryMovement.findUnique({
       where: { idempotencyKey: data.idempotencyKey },
       select: { id: true, inventoryId: true, quantityDelta: true, type: true }
     });
     if (existing) {
-      if (existing.quantityDelta !== data.quantityDelta || existing.type !== InventoryMovementType.ADJUSTMENT) {
+      if (!inventory || existing.inventoryId !== inventory.id || existing.quantityDelta !== data.quantityDelta || existing.type !== InventoryMovementType.ADJUSTMENT) {
         throw new Error("The idempotency key was already used for a different inventory operation.");
       }
       return { movementId: existing.id, inventoryId: existing.inventoryId, alreadyApplied: true };
     }
-    let inventory = await tx.inventory.findUnique({
-      where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: variant.id } }
-    });
     if (!inventory) {
       if (data.quantityDelta < 0) throw new Error("Insufficient available stock.");
       inventory = await tx.inventory.create({
