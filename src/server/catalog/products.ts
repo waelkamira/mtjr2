@@ -3,7 +3,8 @@ import "server-only";
 import { AuditActorType, CatalogEntityStatus, Prisma, ProductApprovalStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { requirePermission } from "@/server/identity/permission-guard";
+import { requireCurrentSession } from "@/server/identity/current-session";
+import { userHasScopedPermission } from "@/server/identity/permission-repository";
 
 const priceSchema = z.object({
   marketId: z.string().trim().min(1),
@@ -41,11 +42,7 @@ export type CreateProductInput = z.input<typeof createSchema>;
 /** Creates a draft product and its variants, media, categories and market prices atomically. */
 export async function createDraftProduct(input: CreateProductInput, now = new Date()) {
   const data = createSchema.parse(input);
-  const actor = await requirePermission({
-    permissionKey: "catalog:manage",
-    scope: { type: "STORE", id: data.storeId },
-    now
-  });
+  const actor = await requireCurrentSession(now);
 
   const categoryIds = [...new Set(data.categoryIds)];
   const marketIds = [...new Set(data.variants.flatMap((variant) => variant.prices.map((price) => price.marketId)))];
@@ -64,10 +61,15 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
   return prisma.$transaction(async (tx) => {
     const store = await tx.store.findUnique({
       where: { id: data.storeId },
-      select: { id: true, status: true, seller: { select: { status: true } }, markets: { where: { isEnabled: true }, select: { marketId: true } } }
+      select: { id: true, status: true, seller: { select: { status: true, ownerId: true } }, markets: { where: { isEnabled: true }, select: { marketId: true } } }
     });
     if (!store || store.seller.status !== "ACTIVE" || store.status === "SUSPENDED" || store.status === "CLOSED") {
       throw new Error("An active seller store is required to manage products.");
+    }
+    if (store.seller.ownerId !== actor.userId && !(await userHasScopedPermission(actor.userId, {
+      permissionKey: "catalog:manage", scope: { type: "STORE", id: store.id }, now
+    }))) {
+      throw new Error("You do not have catalog access to this store.");
     }
 
     if (data.brandId) {
@@ -151,13 +153,16 @@ export async function approveProduct(productId: string, now = new Date()) {
 /** Publishes only approved products with a primary image and prices in every enabled active store market. */
 export async function publishProduct(productId: string, now = new Date()) {
   const id = z.string().trim().min(1).parse(productId);
-  const target = await prisma.product.findUnique({ where: { id }, select: { storeId: true } });
-  if (!target) throw new Error("Product was not found.");
-  const actor = await requirePermission({
-    permissionKey: "catalog:manage",
-    scope: { type: "STORE", id: target.storeId },
-    now
+  const target = await prisma.product.findUnique({
+    where: { id }, select: { storeId: true, store: { select: { seller: { select: { ownerId: true } } } } }
   });
+  if (!target) throw new Error("Product was not found.");
+  const actor = await requireCurrentSession(now);
+  if (target.store.seller.ownerId !== actor.userId && !(await userHasScopedPermission(actor.userId, {
+    permissionKey: "catalog:manage", scope: { type: "STORE", id: target.storeId }, now
+  }))) {
+    throw new Error("You do not have catalog access to this store.");
+  }
   return prisma.$transaction(async (tx) => {
     const product = await tx.product.findUnique({
       where: { id },
