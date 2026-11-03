@@ -32,7 +32,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Unit tests for password and session primitives/lifecycle.
 - [ ] Add session-cookie/API integration tests and CSRF/origin checks for state-changing routes.
 - [x] Add persistent, HMAC-keyed login rate-limit buckets for normalized identifier/IP pairs and trusted client IPs; store only keyed digests, never raw identifiers/IPs in the throttle ledger.
-- [ ] Add login throttling integration tests and tune thresholds using production telemetry before enabling public login.
+- [x] Add unit tests for persistent login-throttle key derivation, pair clearing, validation, threshold blocking, and window reset (CI-verified in run 41575486446).
+- [ ] Add PostgreSQL-backed login throttling integration/concurrency tests and tune thresholds using production telemetry before enabling public login.
 
 ### 2.4 Registration and email verification
 - [x] Validate registration input and require terms/privacy consent.

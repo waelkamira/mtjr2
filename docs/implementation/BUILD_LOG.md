@@ -276,4 +276,23 @@
 - Corrected the earlier log wording and synchronized the remaining-work list with the implemented throttle foundation.
 
 **Verification**
-- The correction is committed in the follow-up change. Its CI run must complete successfully before this fix is considered verified.
+- Correction commit: `021a8527a0be6c3dd819441b8d1e1cd4a7953543`.
+- CI run [41575486446](https://github.com/waelkamira/mtjr2/actions/runs/41575486446) completed successfully: Prisma validate/generate, TypeScript, ESLint, all unit tests, and production build passed.
+- The corrected throttle unit tests are now CI-verified. PostgreSQL-backed throttle/concurrency tests and telemetry-based threshold tuning remain open; no migration or public login route exists yet.
+
+## 2026-11-03 — Phase 2 validation checkpoint
+
+**Verified**
+- Confirmed `main` points to `021a8527a0be6c3dd819441b8d1e1cd4a7953543`.
+- Confirmed successful CI run `41575486446` on that exact commit. All quality steps completed successfully, including the production build.
+- Updated the throttle pair-key implementation and tests after the previous CI failure; the successful run verifies this correction at unit-test/build level.
+
+**Next work package (still Phase 2)**
+1. Generate the initial identity migration from the canonical Prisma schema using the pinned Prisma CLI.
+2. Apply it to a disposable, clean PostgreSQL 16 instance in CI and inspect the generated SQL before committing it.
+3. Add deterministic, repeatable baseline roles and permissions seed.
+4. Add real PostgreSQL integration tests for uniqueness, scoped grant loading/assignment, session lifecycle, registration transactionality, and rate-limit concurrency.
+
+**Boundary**
+- The successful CI run uses mocked Prisma for unit tests and a CI-only DATABASE_URL for CLI configuration; it does not prove a PostgreSQL connection or migration works.
+- Phase 2 remains in progress. Phase 3 is not authorized until every exit gate in `PHASE_02_IDENTITY_PLAN.md` is satisfied.
