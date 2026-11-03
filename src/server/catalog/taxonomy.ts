@@ -1,6 +1,6 @@
 import "server-only";
 
-import { CatalogEntityStatus, Prisma } from "@prisma/client";
+import { CatalogEntityStatus, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 
@@ -27,7 +27,7 @@ type CategoryRow = {
   translations: Array<{ name: string; description: string | null }>;
 };
 
-export function buildCategoryTree(rows: CategoryRow[], locale: string): CategoryTreeNode[] {
+export function buildCategoryTree(rows: CategoryRow[]): CategoryTreeNode[] {
   const nodes = new Map<string, CategoryTreeNode>();
   for (const row of rows) {
     const translation = row.translations.find((item) => item.name.trim().length > 0);
@@ -40,7 +40,6 @@ export function buildCategoryTree(rows: CategoryRow[], locale: string): Category
   }
 
   const roots: CategoryTreeNode[] = [];
-  const attached = new Set<string>();
   for (const node of nodes.values()) {
     if (!node.parentId || !nodes.has(node.parentId) || node.parentId === node.id) {
       roots.push(node);
@@ -57,7 +56,7 @@ export function buildCategoryTree(rows: CategoryRow[], locale: string): Category
       ancestor = ancestor.parentId ? nodes.get(ancestor.parentId) : undefined;
     }
     if (cyclic) roots.push(node);
-    else { parent.children.push(node); attached.add(node.id); }
+    else parent.children.push(node);
   }
 
   const sort = (items: CategoryTreeNode[]) => {
@@ -87,7 +86,7 @@ export async function listActiveCategoryTree(input: unknown = {}) {
     prisma.category.count({ where })
   ]);
   return {
-    items: buildCategoryTree(rows, query.locale),
+    items: buildCategoryTree(rows),
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
   };
 }
