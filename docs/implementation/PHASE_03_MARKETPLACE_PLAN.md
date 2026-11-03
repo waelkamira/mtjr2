@@ -117,3 +117,13 @@ Marketplace Core is complete when authorized sellers can manage stores and wareh
 ## Buying Core handoff — 2026-11-03
 
 Marketplace Core's buyer catalog now has a connected product detail journey. The next implementation slice is tracked separately in `docs/implementation/PHASE_04_BUYING_PLAN.md`. Cart/checkout must remain server-owned and connected end-to-end; launch market/taxonomy seed decisions remain owner-controlled. Do not describe Phase 3 as fully production-ready until the pending disposable PostgreSQL checkpoint and launch reference-data decisions are resolved.
+
+
+## 3.5a — Shareable storefront discovery state
+
+- [x] Restore search query, market, category, brand, sort and page from the URL before requesting products.
+- [x] Synchronize active discovery state to the URL for reloads and shareable links.
+- [x] Restore discovery controls on browser back/forward navigation.
+- [x] Reuse the canonical `/api/products` query contract; no duplicate search endpoint or Prisma model was added.
+- [ ] Typo-tolerant ranking, autocomplete and richer facets remain deferred.
+- Verification policy: focused code review only for this UI state slice; no database, Prisma migration, or broad routine test run.
