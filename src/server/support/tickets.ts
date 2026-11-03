@@ -26,7 +26,7 @@ const ticketSelect = {
   customerReadAt: true, agentReadAt: true, firstResponseAt: true
 } as const;
 
-function serializeTicket<T extends { lastMessageAt: Date; createdAt: Date; updatedAt: Date; resolvedAt: Date | null; closedAt: Date | null }>(ticket: T) {
+function serializeTicket<T extends { lastMessageAt: Date; createdAt: Date; updatedAt: Date; resolvedAt: Date | null; closedAt: Date | null; customerReadAt: Date | null; agentReadAt: Date | null; firstResponseAt: Date | null }>(ticket: T) {
   return { ...ticket, lastMessageAt: ticket.lastMessageAt.toISOString(), createdAt: ticket.createdAt.toISOString(), updatedAt: ticket.updatedAt.toISOString(), resolvedAt: ticket.resolvedAt?.toISOString() ?? null, closedAt: ticket.closedAt?.toISOString() ?? null,
     customerReadAt: ticket.customerReadAt?.toISOString() ?? null, agentReadAt: ticket.agentReadAt?.toISOString() ?? null, firstResponseAt: ticket.firstResponseAt?.toISOString() ?? null };
 }
