@@ -492,7 +492,7 @@ These are target information architectures. Existing route names may be retained
 
 The model names below are the canonical domain inventory to reuse. The model map is the authority for current callsites and relationships. A model appearing here does not authorize creating another similarly named table.
 
-| Domain | Existing canonical models (examples; see schema for full fields/relations) | Primary owner |
+| Domain | Target canonical models (add incrementally; verify actual presence in schema) | Primary owner |
 |---|---|---|
 | Identity/access | User, UserSession, OAuthAccount, Role, Permission, RolePermission, UserRoleAssignment, TwoFactorAuthentication, PasswordResetToken, VerificationToken, UserConsent, LoginAttempt, UserAddress | Identity |
 | Global markets | Currency, ExchangeRate, Country, StateProvince, City | Platform markets |
