@@ -1004,3 +1004,10 @@ The project owner approved Resend as the transactional email provider. The serve
 1. Complete General CI; fix only concrete failures.
 2. Run the existing PostgreSQL integration workflow once against its isolated PostgreSQL service.
 3. Finish search execution and deterministic market/currency reference data without inventing launch countries or currencies.
+
+
+**Additional security and search follow-up**
+- Staff invitations now require an exact STORE-scoped `store:staff:manage` grant for delegated managers; global grants are excluded. Store owners remain authorized by trusted ownership relation.
+- Product discovery now expands exact localized active search synonyms (case-insensitive) before applying the bounded product search query.
+- Added focused tests for synonym expansion, public-only product visibility, currency/market query validation, product lifecycle edits/rejections, and staff revocation/delegation.
+- These latest changes are awaiting the consolidated General CI run; no pass is claimed yet.
