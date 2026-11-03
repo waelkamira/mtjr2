@@ -302,3 +302,28 @@ export async function rejectProduct(input: { productId: string; reason: string }
     return { productId: product.id, approvalStatus: ProductApprovalStatus.REJECTED };
   });
 }
+
+
+/** Lists a seller's own store catalog; delegated staff must hold exact STORE scope. */
+export async function listSellerStoreProducts(storeIdInput: string, now = new Date()) {
+  const storeId = z.string().trim().min(1).parse(storeIdInput);
+  const actor = await requireCurrentSession(now);
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { id: true, seller: { select: { ownerId: true } } }
+  });
+  if (!store || !(await canManageStoreCatalog(actor.userId, store.seller.ownerId, store.id, now))) {
+    throw new Error("You do not have catalog access to this store.");
+  }
+  return prisma.product.findMany({
+    where: { storeId },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    take: 100,
+    select: {
+      id: true, name: true, slug: true, status: true, approvalStatus: true,
+      rejectionReason: true, updatedAt: true,
+      media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
+      variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
+    }
+  });
+}
