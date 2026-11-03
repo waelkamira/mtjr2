@@ -62,7 +62,7 @@ function serializeQuote(quote: {
   id: string; status: CheckoutQuoteStatus; market: { code: string; name: string; country?: { iso2: string; name: string } };
   currency: { code: string; symbol: string | null; minorUnit: number };
   subtotalMinor: bigint; expiresAt: Date;
-  deliveryAddress?: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
+  deliveryAddress?: { id: string; sourceAddressId: string | null; recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   lines: Array<{ id: string; productName: string; storeName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
 }) {
   return {
