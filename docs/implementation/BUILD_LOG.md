@@ -580,3 +580,19 @@
 **Next**
 - Configure a real server-only transactional email adapter before exposing recovery routes.
 - Then add CSRF/Origin protection and one public HTTP authentication journey.
+
+
+## 2026-11-03 — Isolate password-reset abuse budget from login
+
+**Review correction**
+- The first reset-throttling wrapper reused login bucket keys. Review identified that this would let reset requests consume login attempts and potentially cause unrelated login lockouts.
+- Corrected this before exposing any public route: password-reset requests now use action-namespaced HMAC keys and separate thresholds (3 attempts per identifier/IP pair and 10 per IP per 15-minute window), while sharing only the tested persistent bucket storage/atomic counter implementation.
+- Login buckets and their successful-login clearing behavior remain independent from password-reset buckets.
+
+**Verification**
+- The previous general CI passed for the first wrapper implementation: run 41581773538, commit `00404c2dbef8ddde168431699c3a919abfae62de`.
+- The isolation correction and documentation are newer commits and are awaiting CI. No claim of test success is made for these latest changes.
+- No new test matrix was added; the focused HTTP auth journey will verify reset throttling without expanding tests for each helper.
+
+**Next**
+- Keep public recovery routes blocked until a server-only email delivery adapter and CSRF/Origin checks are in place.
