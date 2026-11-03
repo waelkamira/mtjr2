@@ -3,7 +3,7 @@ import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { hashPassword } from "@/server/identity/password";
-import { consumeLoginAttempt } from "@/server/identity/login-throttle";
+import { consumePasswordResetAttempt } from "@/server/identity/login-throttle";
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 
@@ -80,7 +80,7 @@ export async function requestPasswordReset(
   trustedIpAddress: string,
   now = new Date()
 ): Promise<PasswordResetChallenge | null> {
-  const throttle = await consumeLoginAttempt(
+  const throttle = await consumePasswordResetAttempt(
     { identifier: email, trustedIpAddress },
     now
   );
