@@ -185,3 +185,12 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Orders intentionally remain `PENDING_PAYMENT`; no payment or seller fulfillment is simulated. Payment provider and signed webhook lifecycle are next.
 - Verification is pending. Only the normal CI and disposable PostgreSQL migration/integration workflows are used; no expanding test matrix. No owner database or Vercel environment was accessed.
 - See `docs/implementation/PHASE_04_BUYING_PLAN.md` for workflow boundaries and payment follow-up.
+
+
+## In-app order notifications (2026-11-03)
+
+- Added `Notification` to the canonical Prisma schema and migration `20261103234000_order_notifications`.
+- Added authenticated, user-scoped `GET /api/notifications` and `POST /api/notifications/[notificationId]/read`.
+- Added connected `/notifications` page with unread count, open-resource links, and mark-as-read action.
+- Order placement now creates buyer and store-owner notifications in the same transaction as order/vendor-order creation. Unique deduplication keys prevent duplicate events on retries.
+- This is the in-app order-event foundation only. Email delivery, preferences, retries/outbox, and other event categories remain incomplete.
