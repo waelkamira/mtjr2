@@ -42,7 +42,8 @@ Do not copy legacy application code or add models without a defined workflow.
 - [x] Add product approval lifecycle fields (PENDING/APPROVED/REJECTED) and draft/active/archive status; publishability transition rules remain to be implemented in services.
 - [x] Store prices as integer minor units (BigInt) with explicit currency and market; add database checks for non-negative amounts and compare-at price consistency.
 - [x] Add atomic draft product creation with store-scope authorization, active category/brand checks, enabled store-market/currency checks, variants, media, minor-unit prices, and audit event.
-- [ ] Add product update, approval, and publishability workflows with server-side store-scope/platform authorization.
+- [x] Add platform-permission product approval and store-scoped publishing with active store/seller, active variant, primary image, and per-market enabled-currency price checks.
+- [ ] Add product update/rejection workflows and broader integration coverage.
 
 ### 3.5 Discovery
 - [ ] Add canonical product listing/detail/category/brand read APIs and pages.
@@ -51,7 +52,7 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ## Required first vertical slice
 
-The schema foundations for **Country + Currency + Market**, **Seller + Store**, **Category + Brand**, and **Product + Variant + Media + Price** are committed in additive migrations. Reference-data seed, product update/approval/publishing, product discovery/search APIs, and post-change CI/PostgreSQL verification remain outstanding. Draft product creation and taxonomy read APIs are implemented but await CI verification.
+The schema foundations for **Country + Currency + Market**, **Seller + Store**, **Category + Brand**, and **Product + Variant + Media + Price** are committed in additive migrations. Reference-data seed, product update/rejection, product discovery/search APIs, and post-change CI/PostgreSQL verification remain outstanding. Draft product creation and taxonomy read APIs are implemented but await CI verification.
 
 ## Minimal verification gates
 
@@ -90,3 +91,9 @@ Marketplace Core is complete only when a seller can be represented by an authori
 - Deterministic ISO country/currency seed and read APIs.
 - Store-staff revocation tests and PostgreSQL integration coverage.
 - Product update, platform approval, publishability rules, product detail/listing, search/filter/sort/pagination.
+
+
+### Product lifecycle extension (2026-11-03)
+- [x] Approve pending draft products through a permission-protected admin API; approval and audit are atomic.
+- [x] Publish only approved drafts through a store-scoped API; validate active seller/store, active variants, primary image, and a valid price for every enabled active store market before the status transition.
+- [ ] Add product update and rejection-with-reason workflows, then validate lifecycle against PostgreSQL integration.
