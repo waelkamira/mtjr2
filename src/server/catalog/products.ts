@@ -4,7 +4,7 @@ import { AuditActorType, CatalogEntityStatus, Prisma, ProductApprovalStatus } fr
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
-import { userHasScopedPermission } from "@/server/identity/permission-repository";
+import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { requirePermission } from "@/server/identity/permission-guard";
 
 const priceSchema = z.object({
@@ -40,6 +40,15 @@ const createSchema = z.object({
 
 export type CreateProductInput = z.input<typeof createSchema>;
 
+async function canManageStoreCatalog(userId: string, ownerId: string, storeId: string, now: Date) {
+  if (ownerId === userId) return true;
+  const [scopedManager, platformAdmin] = await Promise.all([
+    userHasScopedPermission(userId, { permissionKey: "catalog:manage", scope: { type: "STORE", id: storeId }, now }),
+    userHasPermission(userId, { permissionKey: "users:manage", now })
+  ]);
+  return scopedManager || platformAdmin;
+}
+
 /** Creates a draft product and its variants, media, categories and market prices atomically. */
 export async function createDraftProduct(input: CreateProductInput, now = new Date()) {
   const data = createSchema.parse(input);
@@ -67,9 +76,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     if (!store || store.seller.status !== "ACTIVE" || store.status === "SUSPENDED" || store.status === "CLOSED") {
       throw new Error("An active seller store is required to manage products.");
     }
-    if (store.seller.ownerId !== actor.userId && !(await userHasScopedPermission(actor.userId, {
-      permissionKey: "catalog:manage", scope: { type: "STORE", id: store.id }, now
-    }))) {
+    if (!(await canManageStoreCatalog(actor.userId, store.seller.ownerId, store.id, now))) {
       throw new Error("You do not have catalog access to this store.");
     }
 
@@ -159,9 +166,7 @@ export async function publishProduct(productId: string, now = new Date()) {
   });
   if (!target) throw new Error("Product was not found.");
   const actor = await requireCurrentSession(now);
-  if (target.store.seller.ownerId !== actor.userId && !(await userHasScopedPermission(actor.userId, {
-    permissionKey: "catalog:manage", scope: { type: "STORE", id: target.storeId }, now
-  }))) {
+  if (!(await canManageStoreCatalog(actor.userId, target.store.seller.ownerId, target.storeId, now))) {
     throw new Error("You do not have catalog access to this store.");
   }
   return prisma.$transaction(async (tx) => {
