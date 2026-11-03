@@ -63,7 +63,7 @@
 - [x] Add draft transfer creation, ship, and receive operations with transactional stock movements and audit events.
 - [x] Require store ownership or exact STORE-scoped `inventory:manage` permission; reject cross-store transfers.
 - [x] Make stock-transfer creation idempotent with a required unique idempotency key and payload consistency check.
-- [ ] Complete General CI and PostgreSQL migration replay for inventory and market queries.
+- [ ] Complete General CI and PostgreSQL migration replay for inventory, market, seller catalog, and moderation queries.
 - [ ] Add reservation create/consume/release/expiry lifecycle when the cart/checkout system defines ownership and idempotency contracts.
 - [ ] Add reconciliation/stock-count workflow after movement ledger behavior is verified.
 
@@ -76,8 +76,9 @@
 - [x] Serialize Prisma BigInt price amounts as JSON-safe minor-unit strings and include each currency's minor-unit precision.
 - [x] Add the seller application screen connected to `POST /api/seller/applications`.
 - [x] Add the authenticated seller workspace connected to `GET/POST /api/seller/stores`, active-market lookup, warehouse creation, and inventory listing APIs.
-- [ ] Add product create/edit/publish, staff invitation, stock adjustment, and transfer screens against their existing APIs.
-- [ ] Build platform-admin screens against seller/product moderation APIs.
+- [x] Add seller product draft creation/editing and approved-product publishing UI against the existing catalog APIs; price entry covers every enabled store market.
+- [ ] Add staff invitation, stock adjustment, and transfer screens against their existing APIs.
+- [x] Add protected pending seller/product review queues and platform-admin moderation UI for approve/reject decisions with mandatory rejection reasons.
 - [ ] Add cart/checkout UI only alongside the Buying Core APIs; never ship inert purchase controls.
 
 ## Minimal verification gates
