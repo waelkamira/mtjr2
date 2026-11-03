@@ -269,6 +269,27 @@ enum AttributeValueType {
   MULTI_SELECT
 }
 
+enum InventoryMovementType {
+  RECEIPT
+  ADJUSTMENT
+  TRANSFER_OUT
+  TRANSFER_IN
+}
+
+enum InventoryReservationStatus {
+  ACTIVE
+  CONSUMED
+  RELEASED
+  EXPIRED
+}
+
+enum StockTransferStatus {
+  DRAFT
+  SHIPPED
+  RECEIVED
+  CANCELLED
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -357,6 +378,7 @@ model Store {
   markets   StoreMarket[]
   staff     SellerStaff[]
   products  Product[]
+  warehouses Warehouse[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
@@ -553,6 +575,8 @@ model ProductVariant {
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   prices      ProductPrice[]
   attributes  VariantAttribute[]
+  inventories Inventory[]
+  transferItems StockTransferItem[]
 
   @@index([productId, isActive])
 }
@@ -667,4 +691,112 @@ model SearchSynonym {
 
   @@unique([locale, term, synonym])
   @@index([locale, term, isActive])
+}
+
+
+model Warehouse {
+  id             String          @id @default(cuid())
+  storeId        String
+  code           String          @db.VarChar(40)
+  name           String
+  isActive       Boolean         @default(true)
+  address        Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  store          Store           @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  inventories    Inventory[]
+  outgoingTransfers StockTransfer[] @relation("StockTransferSource")
+  incomingTransfers StockTransfer[] @relation("StockTransferDestination")
+
+  @@unique([storeId, code])
+  @@index([storeId, isActive, name])
+}
+
+model Inventory {
+  id                String                 @id @default(cuid())
+  warehouseId       String
+  variantId         String
+  quantityOnHand    Int                    @default(0)
+  quantityReserved  Int                    @default(0)
+  reorderPoint      Int                    @default(0)
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  warehouse         Warehouse              @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  variant           ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  movements         InventoryMovement[]
+  reservations      InventoryReservation[]
+
+  @@unique([warehouseId, variantId])
+  @@index([variantId, warehouseId])
+  @@index([warehouseId, quantityOnHand, quantityReserved])
+}
+
+model InventoryMovement {
+  id             String                @id @default(cuid())
+  inventoryId    String
+  type           InventoryMovementType
+  quantityDelta  Int
+  referenceType  String?               @db.VarChar(40)
+  referenceId    String?               @db.VarChar(128)
+  idempotencyKey String?               @unique @db.VarChar(160)
+  note           String?               @db.VarChar(500)
+  createdById    String?
+  createdAt      DateTime              @default(now())
+  inventory      Inventory             @relation(fields: [inventoryId], references: [id], onDelete: Restrict)
+
+  @@index([inventoryId, createdAt])
+  @@index([referenceType, referenceId])
+}
+
+model InventoryReservation {
+  id             String                    @id @default(cuid())
+  inventoryId    String
+  quantity       Int
+  status         InventoryReservationStatus @default(ACTIVE)
+  referenceType  String                    @db.VarChar(40)
+  referenceId    String                    @db.VarChar(128)
+  idempotencyKey String                    @unique @db.VarChar(160)
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  releasedAt     DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  inventory      Inventory                 @relation(fields: [inventoryId], references: [id], onDelete: Restrict)
+
+  @@index([status, expiresAt])
+  @@index([inventoryId, status])
+  @@index([referenceType, referenceId])
+}
+
+model StockTransfer {
+  id                String             @id @default(cuid())
+  storeId           String
+  sourceWarehouseId String
+  destinationWarehouseId String
+  status            StockTransferStatus @default(DRAFT)
+  reference         String?            @db.VarChar(100)
+  createdById       String?
+  shippedAt         DateTime?
+  receivedAt        DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  sourceWarehouse   Warehouse          @relation("StockTransferSource", fields: [sourceWarehouseId], references: [id], onDelete: Restrict)
+  destinationWarehouse Warehouse       @relation("StockTransferDestination", fields: [destinationWarehouseId], references: [id], onDelete: Restrict)
+  items             StockTransferItem[]
+
+  @@index([storeId, status, createdAt])
+  @@index([sourceWarehouseId, status])
+  @@index([destinationWarehouseId, status])
+}
+
+model StockTransferItem {
+  id         String         @id @default(cuid())
+  transferId String
+  variantId  String
+  quantity   Int
+  transfer   StockTransfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@unique([transferId, variantId])
+  @@index([variantId])
 }
