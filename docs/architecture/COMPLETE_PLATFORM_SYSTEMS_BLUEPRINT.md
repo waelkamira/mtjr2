@@ -71,7 +71,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `GuestSession`, `Cart`, `CartItem`, `Product`, `ProductVariant`, `ProductPrice`, `Inventory`, `InventoryReservation`, `UserAddress`, `Order`, `OrderItem`, `OrderAddress`, `Coupon`, `TaxLine`, `Shipment`, `Payment`.
 - **API:** `/api/cart`, `/api/cart/items`, `/api/checkout/quote`, `/api/checkout`, `/api/orders`.
 - **Must include:** guest-to-user merge, variant-based items, server-calculated totals, live stock validation, reservations, shipping/tax/coupon calculation, idempotency and transactional order creation.
-- **Current state:** **Legacy / incompatible.** Current cart is browser-local and checkout uses old product/order contracts; AUD-003, AUD-005 and AUD-007 apply.
+- **Current state (2026-11-03):** **Partial.** Canonical GuestSession/Cart/CartItem models and migration, server-owned guest/customer cart APIs, market/currency/price/stock validation, guest-to-customer merge, and the /cart plus product add-to-cart UI are implemented on feature branch `feat/buying-cart-core`; CI and disposable PostgreSQL verification are pending. Checkout quote, reservation lifecycle, shipping/tax/coupon, payment and order creation remain unimplemented. Legacy cart/checkout flows are not treated as canonical.
 
 #### 05. Orders and order tracking
 - **Purpose:** Customer order history, order details, status timeline, invoices, cancellation and reorder.
