@@ -24,7 +24,7 @@ export default function WishlistPage() {
   }, []);
   useEffect(() => {
     let active = true;
-    load().catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Wishlist could not be loaded."); })
+    void Promise.resolve().then(load).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Wishlist could not be loaded."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [load]);
