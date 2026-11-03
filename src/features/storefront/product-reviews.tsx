@@ -40,7 +40,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
 
   useEffect(() => {
     let active = true;
-    Promise.all([loadReviews(), loadEligible()])
+    void Promise.resolve().then(() => Promise.all([loadReviews(), loadEligible()]))
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Reviews are unavailable."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
