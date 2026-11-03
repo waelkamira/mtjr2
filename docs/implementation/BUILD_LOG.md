@@ -762,3 +762,25 @@ The project owner approved Resend as the transactional email provider. The serve
 
 
 - Blueprint consistency follow-up: clarified that the 49-system model inventory is a **target inventory**, not a declaration that all models already exist. Refreshed the schema baseline and replaced the stale SNAP conflict/duplicate warning with the current static inspection result. Blueprint documentation commit: `cd1b7cfeacde516c5e501afc89a87e07a813f884`.
+
+
+## 2026-11-03 — Phase 3.3 catalog taxonomy schema
+
+**Implemented**
+- Added hierarchical `Category` with parent/children relation, unique slug, status, sort order, and optional image.
+- Added `CategoryTranslation` with locale-unique translations and SEO fields.
+- Added `Brand` and `BrandTranslation` with status, unique slug, localized names/descriptions, and SEO fields.
+- Added additive migration `20261103030000_catalog_taxonomy`.
+- Generalized the existing PostgreSQL integration workflow name/scope to Platform PostgreSQL Integration. It already deploys all committed migrations on an isolated PostgreSQL 16 service, runs the idempotent identity seed, and executes the existing integration suite. No second DB workflow or test matrix was added.
+
+**Verification**
+- Static schema scan after the taxonomy additions: 25 Prisma models, no duplicate model declarations, no conflict markers.
+- Prisma validation/client generation and PostgreSQL migration replay are pending the GitHub Actions run triggered by the schema/migration changes.
+- No production or owner-local database was accessed.
+- No category or brand sample data was invented or seeded.
+
+**Remaining**
+1. Confirm General CI and Platform PostgreSQL Integration pass on the current schema.
+2. Implement safe category tree reads with bounded depth/pagination and cycle prevention in the service layer.
+3. Implement market reference data seed/repository/service.
+4. Continue with Product, ProductVariant, ProductMedia, localized product data, attributes, identifiers, and prices only after the taxonomy and store authorization foundations are verified.
