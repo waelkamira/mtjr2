@@ -172,3 +172,15 @@ export async function getSellerWorkspace(now = new Date()) {
     }))
   };
 }
+
+
+/** Platform-only queue of seller applications awaiting review. */
+export async function listPendingSellerApplications(now = new Date()) {
+  await requirePermission({ permissionKey: "users:manage", now });
+  return prisma.seller.findMany({
+    where: { status: SellerStatus.PENDING },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    take: 100,
+    select: { id: true, legalName: true, displayName: true, createdAt: true, owner: { select: { id: true, email: true, name: true } } }
+  });
+}
