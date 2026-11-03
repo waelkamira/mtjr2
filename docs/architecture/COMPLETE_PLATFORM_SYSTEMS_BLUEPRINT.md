@@ -33,7 +33,7 @@
 | **Needs verification** | The audit found a surface, but permissions, persistence, runtime behavior, or test coverage has not been proven. |
 | **Complete** | Reserved for a fully tested end-to-end capability. No system is promoted to this status by inference. |
 
-**Current baseline:** The audit reports that the canonical schema describes the normalized marketplace domains, while many older commerce handlers still use legacy product/order/payment shapes. The 136-model usage map is a static inventory, not runtime proof. Phase Three is in progress; canonical catalog pages have been added, but the full catalog/cart/checkout journey is not complete. See the companion audit for exact blockers and latest test counts.
+**Current baseline (verified against the repository on 2026-11-03):** `prisma/schema.prisma` currently contains the identity/access foundation only. Marketplace domain models, seller/store workflows, canonical catalog APIs, and storefront product journeys have not yet been implemented in this greenfield repository. This blueprint is the target specification, not evidence that its listed models or pages exist. Begin Phase 3 with Country + Currency + Market as defined in `docs/implementation/PHASE_03_MARKETPLACE_PLAN.md`.
 
 ## 3. System inventory — 49 systems
 
