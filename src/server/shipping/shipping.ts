@@ -13,7 +13,7 @@ const rateInput = z.object({
   currencyCode: z.string().trim().length(3).toUpperCase(),
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().max(500).optional(),
-  amountMinor: z.coerce.bigint().min(0n).max(9_000_000_000_000_000n),
+  amountMinor: z.coerce.bigint().min(BigInt(0)).max(BigInt("9000000000000000")),
   destinationRegion: z.string().trim().max(120).optional().nullable(),
   minDeliveryDays: z.number().int().min(0).max(365).optional().nullable(),
   maxDeliveryDays: z.number().int().min(0).max(365).optional().nullable(),
