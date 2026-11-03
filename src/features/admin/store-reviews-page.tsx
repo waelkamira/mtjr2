@@ -23,7 +23,7 @@ export default function AdminStoreReviewsPage() {
   }, []);
   useEffect(() => {
     let active = true;
-    load().catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Store review queue unavailable."); })
+    void Promise.resolve().then(load).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Store review queue unavailable."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [load]);
