@@ -481,3 +481,24 @@
 2. Add PostgreSQL coverage for login service success/failure and login-attempt persistence.
 3. Implement logout service/route behavior: revoke the current session and clear the HttpOnly cookie.
 4. Add password-reset lifecycle, CSRF/origin controls, and HTTP-level negative tests before exposing authentication endpoints.
+
+
+## 2026-11-03 — Server-side scoped permission guard and logout primitive
+
+**Implemented**
+- Added `src/server/identity/permission-guard.ts`: requires the cookie-backed verified session, loads database grants for `session.userId`, and denies missing permissions. No client-supplied identity is used as the authorization subject.
+- Added unit tests for allowed/denied permission, unauthenticated short-circuit, and attacker-selected identity input.
+- Added `src/server/identity/logout.ts`: resolves and revokes the current cookie-backed session, writes a logout audit event on successful revocation, and clears the cookie in a `finally` path.
+- Added logout tests for successful revocation/audit, missing cookie, invalid session, and revocation failure.
+- Updated the Phase 2 plan. No public logout route was added: CSRF/Origin enforcement must precede state-changing public endpoints.
+
+**Verification**
+- CI run [41579953764](https://github.com/waelkamira/mtjr2/actions/runs/41579953764) passed on commit `1de06a1325b29cafbeae5693d3aa78ff7dc339e5`, including the current-session resolver tests and production build.
+- Permission-guard CI run [41580232391](https://github.com/waelkamira/mtjr2/actions/runs/41580232391) and PostgreSQL run [41580232470](https://github.com/waelkamira/mtjr2/actions/runs/41580232470) were started on commit `37d026617ac5ea36f3394ef3a8300af90f752a03`; they were still running at the time this logout primitive was authored. Therefore the permission guard is not yet marked CI-verified.
+- The logout primitive is new and awaits CI.
+
+**Next**
+1. Verify permission guard and logout primitive in CI.
+2. Add PostgreSQL-backed login service tests (session issuance, login-attempt persistence, inactive/unverified rejection).
+3. Add database-backed logout lifecycle/audit test.
+4. Implement password reset and trusted-proxy/CSRF/Origin boundary before adding public authentication routes.

@@ -50,7 +50,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 
 ### 2.5 Login, logout, recovery, and enforcement
 - [x] Implement password login domain service: normalized identity lookup, dummy-hash verification for unknown accounts, generic credential failures, verified/active account checks, attempt recording, throttling before scrypt, session issuance, and successful-login audit event (CI verification pending).
-- [ ] Logout route: revoke current session and clear cookie.
+- [x] Server-side logout primitive revokes the current cookie-backed session, records an audit event, and clears the cookie even on invalid-session/error paths (unit tests added; CI pending). HTTP route remains blocked on CSRF/Origin enforcement.
 - [ ] Password-reset request and completion with one-time tokens and session revocation.
 - [x] Server-side current-session resolver for server components/route handlers; reads only the HttpOnly request cookie and resolves it against the session store, with a fail-closed required-session guard (unit tests and CI passed on commit `1de06a1325b29cafbeae5693d3aa78ff7dc339e5`).
 - [x] Server-only permission guard composes the verified request session with database-loaded permissions; denies missing permissions and never accepts a client-selected authorization subject (unit tests added; CI pending).
