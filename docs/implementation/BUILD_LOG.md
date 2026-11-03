@@ -188,3 +188,29 @@
 **Verification**
 - Workflow change committed as `f34daadca924b7c3979ab0ac861c6521cbb72e42`.
 - CI has been triggered by this change; its result must be inspected before claiming the current identity slice passes.
+
+
+## 2026-11-03 — Phase 2 registration and email verification services
+
+**Plan alignment**
+- Rechecked the root README delivery sequence. Work remains inside Phase 2 (Identity and access); Phase 3 Marketplace Core is explicitly blocked until Phase 2 exit gates are met.
+- Added a dedicated [Phase 2 execution plan](PHASE_02_IDENTITY_PLAN.md) with package-level checklists and measurable exit gates.
+
+**Implemented**
+- Added transactional registration service: validates email/password and required terms/privacy consent, normalizes the email, hashes the password, and creates a PENDING user.
+- Creates the email-verification challenge in the same database transaction and stores only its SHA-256 digest.
+- Adds immutable consent records for the terms and privacy versions accepted at registration.
+- Added single-use verification flow. It checks purpose, expiry, and consumption state, atomically consumes the token, then activates the account.
+- Added focused tests for registration persistence, password hash handling, consent capture, required-consent rejection, token expiry/replay/wrong-purpose rejection, and atomic consumption races.
+
+**Security and product boundary**
+- The raw verification token is returned only to a trusted server-side caller so a future mail adapter can deliver it. It must never be returned by a public API or logged.
+- No email provider is configured, so no verification email is sent yet.
+- No public registration/verification endpoint is exposed. Login, password recovery, rate limiting, migrations, and PostgreSQL integration remain incomplete.
+- This code is a domain-service slice, not a completed registration journey.
+
+**Verification**
+- Commit: `f8eae103369ce609c6b64f4889562b67f294aeb4`.
+- CI run for this commit is pending; no passing test/build result is claimed.
+- Previous CI runs exposed a Vitest alias resolution problem, now fixed in `df26102fcaba04288aab92b8cc38d08dbf505ff1`.
+- CI's PostgreSQL service was removed from the unit/build job because current tests mock Prisma and do not connect to a database. A dedicated PostgreSQL integration/migration job remains a mandatory Phase 2 exit gate.
