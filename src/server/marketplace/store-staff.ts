@@ -131,3 +131,19 @@ export async function listStoreStaff(storeIdInput: string, now = new Date()) {
     });
   });
 }
+
+
+/** Lists invitations addressed to the authenticated user. */
+export async function listMyStaffInvitations(now = new Date()) {
+  const actor = await requireCurrentSession(now);
+  return prisma.sellerStaff.findMany({
+    where: { userId: actor.userId, status: SellerStaffStatus.INVITED, store: { seller: { status: "ACTIVE" } } },
+    orderBy: [{ invitedAt: "desc" }, { id: "desc" }],
+    take: 50,
+    select: {
+      id: true, invitedAt: true,
+      store: { select: { id: true, name: true, slug: true } },
+      invitedBy: { select: { displayName: true, email: true } }
+    }
+  });
+}
