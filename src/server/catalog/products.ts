@@ -122,3 +122,76 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     return product;
   });
 }
+
+
+/** Platform reviewer approves a pending product; approval is audited atomically. */
+export async function approveProduct(productId: string, now = new Date()) {
+  const id = z.string().trim().min(1).parse(productId);
+  const actor = await requirePermission({ permissionKey: "users:manage", now });
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id }, select: { id: true, storeId: true, status: true, approvalStatus: true }
+    });
+    if (!product || product.approvalStatus !== ProductApprovalStatus.PENDING || product.status !== CatalogEntityStatus.DRAFT) {
+      throw new Error("Only pending draft products can be approved.");
+    }
+    const changed = await tx.product.updateMany({
+      where: { id, status: CatalogEntityStatus.DRAFT, approvalStatus: ProductApprovalStatus.PENDING },
+      data: { approvalStatus: ProductApprovalStatus.APPROVED, approvedAt: now }
+    });
+    if (changed.count !== 1) throw new Error("Product has already been reviewed.");
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.approved",
+      resource: "product", resourceId: id, scopeType: "STORE", scopeId: product.storeId, occurredAt: now
+    }});
+    return { productId: id, approvalStatus: ProductApprovalStatus.APPROVED };
+  });
+}
+
+/** Publishes only approved products with a primary image and prices in every enabled active store market. */
+export async function publishProduct(productId: string, now = new Date()) {
+  const id = z.string().trim().min(1).parse(productId);
+  const actor = await requirePermission({ permissionKey: "catalog:manage", scope: { type: "STORE", id: "pending" }, now }).catch(() => null);
+  if (!actor) throw new Error("Store-scoped catalog permission is required.");
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id },
+      select: {
+        id: true, storeId: true, status: true, approvalStatus: true,
+        store: {
+          select: {
+            status: true, seller: { select: { status: true } },
+            markets: { where: { isEnabled: true, market: { status: "ACTIVE" } }, select: { marketId: true, market: { select: { currencies: { where: { isEnabled: true, currency: { isActive: true } }, select: { currencyCode: true } } } } } }
+          }
+        },
+        variants: { where: { isActive: true }, select: { id: true, prices: { select: { marketId: true, currencyCode: true } } } },
+        media: { where: { type: "IMAGE", isPrimary: true }, select: { id: true }, take: 1 }
+      }
+    });
+    if (!product || product.status !== CatalogEntityStatus.DRAFT || product.approvalStatus !== ProductApprovalStatus.APPROVED) {
+      throw new Error("Only approved draft products can be published.");
+    }
+    if (product.store.status !== "ACTIVE" || product.store.seller.status !== "ACTIVE") throw new Error("An active seller store is required to publish products.");
+    if (product.variants.length === 0 || product.media.length === 0) throw new Error("A product needs an active variant and a primary image before publishing.");
+    const markets = product.store.markets;
+    if (markets.length === 0) throw new Error("The store must have at least one active market.");
+    for (const variant of product.variants) {
+      for (const market of markets) {
+        const allowed = new Set(market.market.currencies.map((currency) => currency.currencyCode));
+        if (!variant.prices.some((price) => price.marketId === market.marketId && allowed.has(price.currencyCode))) {
+          throw new Error("Every active variant needs a price in every active store market.");
+        }
+      }
+    }
+    const changed = await tx.product.updateMany({
+      where: { id, status: CatalogEntityStatus.DRAFT, approvalStatus: ProductApprovalStatus.APPROVED },
+      data: { status: CatalogEntityStatus.ACTIVE, publishedAt: now }
+    });
+    if (changed.count !== 1) throw new Error("Product could not be published.");
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.published",
+      resource: "product", resourceId: id, scopeType: "STORE", scopeId: product.storeId, occurredAt: now
+    }});
+    return { productId: id, status: CatalogEntityStatus.ACTIVE, publishedAt: now };
+  });
+}
