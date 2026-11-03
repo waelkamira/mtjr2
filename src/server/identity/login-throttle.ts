@@ -186,3 +186,26 @@ export async function consumePasswordResetAttempt(
     return { blocked: pairBlocked || ipBlocked };
   });
 }
+
+
+/** Separate abuse budget for registration and verification-email sends. */
+export async function consumeVerificationEmailAttempt(
+  input: LoginThrottleInput,
+  now = new Date()
+): Promise<{ blocked: boolean }> {
+  const identifier = normalizeEmail(input.identifier);
+  if (!identifier || identifier.length > 254) {
+    throw new Error("A valid email identifier is required.");
+  }
+  const ip = input.trustedIpAddress.trim();
+  if (!ip || ip.length > 64) throw new Error("A trusted client IP value is required.");
+
+  const pairKey = digestSubject("verification-email-identifier-ip", JSON.stringify([identifier, ip]));
+  const ipKey = digestSubject("verification-email-ip", ip);
+
+  return prisma.$transaction(async (tx) => {
+    const pairBlocked = await consumeBucket(tx, pairKey, 3, now);
+    const ipBlocked = await consumeBucket(tx, ipKey, 10, now);
+    return { blocked: pairBlocked || ipBlocked };
+  });
+}

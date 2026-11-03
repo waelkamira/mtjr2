@@ -30,7 +30,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Session create/resolve/revoke and revoke-all operations.
 - [x] HttpOnly session cookie helpers; Secure in production.
 - [x] Unit tests for password and session primitives/lifecycle.
-- [ ] Add session-cookie/API integration tests.
+- [ ] Cover session cookie issuance and clearing in the single HTTP end-to-end identity journey.
 - [x] Add a fail-closed same-origin JSON mutation guard: require exact configured application Origin, reject non-same-origin Fetch Metadata when supplied, and require application/json. Public mutation routes must invoke it before reading bodies or calling domain services.
 - [x] Add persistent, HMAC-keyed login rate-limit buckets for normalized identifier/IP pairs and trusted client IPs; store only keyed digests, never raw identifiers/IPs in the throttle ledger.
 - [x] Add unit tests for persistent login-throttle key derivation, pair clearing, validation, threshold blocking, and window reset.
@@ -46,11 +46,11 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Recheck ACTIVE account state atomically when accepting/touching an existing session.
 - [x] Implement server-only Resend transactional email adapter for verification and password-reset messages.
 - [ ] Configure a Resend API key and verified sender in deployment secrets; perform a real delivery smoke test.
-- [ ] Add resend-verification cooldown and anti-enumeration behavior.
+- [x] Add a shared, persistent action-specific throttle for registration and verification-email sends; public responses are generic.
 - [x] Add a fail-closed trusted-proxy IP resolver for explicitly configured Cloudflare/Vercel edge headers; arbitrary `X-Forwarded-For` is never trusted. Configure only after the edge overwrites the header and origin bypass is blocked.
-- [ ] Add HTTP registration and verification routes only after email delivery and abuse controls are ready.
+- [x] Add minimal HTTP registration, verification, login, logout, and password-reset routes with same-origin/JSON enforcement; email delivery and deployment secrets remain operational gates.
 - [ ] Configure `TRUSTED_PROXY_IP_HEADER` for the actual deployment edge; keep IP-dependent endpoints closed until verified.
-- [ ] Add end-to-end registration and verification tests through public HTTP endpoints.
+- [ ] Run the single HTTP end-to-end identity journey after deployment email/proxy configuration.
 
 ### 2.5 Login, logout, recovery, and enforcement
 - [x] Implement password login domain service: normalized identity lookup, dummy-hash verification for unknown accounts, generic credential failures, verified/active account checks, attempt recording, throttling before scrypt, session issuance, and successful-login audit event (CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822).
@@ -61,10 +61,10 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Implement server-only Resend email delivery adapter; public recovery remains blocked until credentials and a verified sender are configured and delivery is smoke-tested.
 - [x] Server-side current-session resolver for server components/route handlers; reads only the HttpOnly request cookie and resolves it against the session store, with a fail-closed required-session guard (unit tests and CI passed on commit `1de06a1325b29cafbeae5693d3aa78ff7dc339e5`).
 - [x] Server-only permission guard composes the verified request session with database-loaded permissions; denies missing permissions and never accepts a client-selected authorization subject (unit tests and CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822).
-- [ ] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes.
-- [ ] Negative tests: anonymous access, suspended user, expired/revoked session, cross-store access, replayed token, brute-force limits.
+- [ ] Review audit coverage in the final focused security review; add only missing critical events.
+- [ ] Cover critical denials and replay protection through existing database tests and the single HTTP journey; no separate broad negative-test matrix.
 
-## PostgreSQL integration work
+## Minimal verification gates\n\n1. General CI: Prisma validate/generate, typecheck, lint, unit tests, and production build.\n2. PostgreSQL identity journey: registration/verification/login/session/authorization.\n3. PostgreSQL password-reset lifecycle: digest-only token, one-time use, password change, audit, session revocation.\n4. One HTTP end-to-end journey after provider and proxy configuration.\n\nDo not add tests for every helper. Add a test only for a critical security regression, a real bug, or an independent business invariant.\n\n## PostgreSQL integration work
 
 - [x] Add a dedicated integration-test configuration so database tests never run in the mocked/unit CI job.
 - [x] Add a PostgreSQL 16 workflow that deploys committed migrations, seeds baseline roles/permissions, and executes real database tests.
@@ -74,7 +74,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Add PostgreSQL integration coverage for concurrent login-throttle requests, persistent blocking, and pair-bucket clearing.
 - [x] Updated integration workflow passed on the current pre-login-service commit.
 - [x] Add PostgreSQL integration coverage for password login success/failure, login-attempt persistence, audit creation, session token digest storage, session resolution, and revocation (verified by PostgreSQL integration run 41581259836).
-- [ ] Extend database coverage to registration rollback fault injection.
+- [x] Existing PostgreSQL identity journey covers transactional registration/consent, token consumption, login/session, and password reset; no separate rollback fault-injection suite is planned.
 - [x] Add PostgreSQL coverage for password-reset token digest storage, one-time consumption, password replacement, audit event, and session revocation (verified by PostgreSQL integration run 41581259836).
 
 ## Exit gates — all required
@@ -88,3 +88,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 7. Security review and this plan/build log document evidence and remaining limitations.
 
 **Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is verified for repeatability by two consecutive executions. The general CI and first PostgreSQL-backed identity integration workflow both passed on commit `3a4b040a523922cf927a1732819a946c67951314` (runs 41577431810 and 41577431835). The first integration run verified registration, one-time email verification, scoped authorization, assignment uniqueness, and session revocation. Concurrent verification-token consumption and PostgreSQL-backed login-throttle concurrency tests passed in run 41577891224 on commit `399fd314a5c94585b02089e939ae1f3b9bd5e19b`. General CI run 41577891247 also passed on that exact commit. The password login service and focused unit tests passed CI on commit `87fc2167a3ae97109cb15160d7f28076d8e829f8` (run 41578452511); its PostgreSQL persistence path is now covered by the integration test added on commit `bdd5d195f34f3325dea3d7a1a18299751aad11d2` (run 41580756063). The current-session resolver and its unit tests passed CI on commit `1de06a1325b29cafbeae5693d3aa78ff7dc339e5` (run 41579953764). Logout/recovery endpoints, email delivery, CSRF/origin protection, and full public HTTP E2E remain outstanding. The permission guard and logout primitive passed general CI and PostgreSQL integration on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d` (runs 41580301822 and 41580301896). The logout primitive itself is unit-tested; there is not yet a cookie-context HTTP logout integration test. The PostgreSQL-backed login service test passed on commit `bdd5d195f34f3325dea3d7a1a18299751aad11d2` (run 41580756063), and general CI passed on that commit (run 41580756068). The password-reset service and PostgreSQL lifecycle test passed in run 41581259836; general CI passed on documentation head 79e260082aebe48d6fe2bca535b4f36a55ba4f3b (run 41581280754). Reset-request throttling now uses distinct action-namespaced HMAC buckets in the existing persistent bucket table, keeping login and recovery budgets isolated. A fail-closed Origin/Fetch Metadata/JSON content-type guard is committed. The first CI attempt exposed a malformed regular-expression escape in that guard; it has been corrected. Resend adapter and corrected guard are awaiting CI. Phase 2 remains incomplete; Phase 3 remains blocked. Password reset has passed its focused PostgreSQL lifecycle test and general CI. Phase 2 remains incomplete; Phase 3 remains blocked.
+
+
+## Scope reduction — essential tests only
+
+The project owner explicitly requested a small, finite test scope. The only required gates are: (1) general CI, (2) one PostgreSQL-backed identity journey, (3) one PostgreSQL-backed password-reset lifecycle, and (4) one public HTTP end-to-end identity journey. No per-helper or exhaustive negative-case test expansion is planned. Add tests only for a demonstrated critical security regression, a real bug, or an independent business invariant.
