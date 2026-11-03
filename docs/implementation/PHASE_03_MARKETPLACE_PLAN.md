@@ -72,6 +72,7 @@
 
 - [x] Establish the shared storefront shell using the approved visual tokens.
 - [x] Connect the homepage to active market, category, and product read APIs.
+- [x] Connect buyer discovery filters for brand, category, market/currency, query, sorting, and pagination to the catalog APIs.
 - [x] Connect product detail routes to the canonical public product API.
 - [x] Serialize Prisma BigInt price amounts as JSON-safe minor-unit strings and include each currency's minor-unit precision.
 - [x] Add the seller application screen connected to `POST /api/seller/applications`.
