@@ -379,6 +379,7 @@ model Store {
   staff     SellerStaff[]
   products  Product[]
   warehouses Warehouse[]
+  stockTransfers StockTransfer[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
@@ -780,6 +781,7 @@ model StockTransfer {
   receivedAt        DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  store             Store              @relation(fields: [storeId], references: [id], onDelete: Restrict)
   sourceWarehouse   Warehouse          @relation("StockTransferSource", fields: [sourceWarehouseId], references: [id], onDelete: Restrict)
   destinationWarehouse Warehouse       @relation("StockTransferDestination", fields: [destinationWarehouseId], references: [id], onDelete: Restrict)
   items             StockTransferItem[]
