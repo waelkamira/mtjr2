@@ -102,3 +102,31 @@ Phase 3 execution plan: [Marketplace Core plan](docs/implementation/PHASE_03_MAR
 - General CI passed on this exact commit: [run 41698547547](https://github.com/waelkamira/mtjr2/actions/runs/41698547547). All quality steps passed, including Prisma validate/generate, typecheck, lint, unit tests, and production build.
 - No Prisma change was required: metadata is derived from existing product, translation, store, and media records. No production database or Vercel environment was accessed.
 - Remaining Phase 3 blockers are deliberate reference-data decisions (launch markets and taxonomy seed); do not fabricate countries, currencies, categories, or brands. Continue with structured product data/SEO only if the existing product DTO supports it without duplicating domain logic, then close Phase 3 verification and hand off to Buying Core.
+
+
+## 2026-11-03 — Buying Core 4.1: persistent cart foundation
+
+**Implemented on `feat/buying-cart-core` (verification pending)**
+
+- Added canonical `GuestSession`, `Cart`, and `CartItem` models plus migration `20261103193000_cart_foundation`.
+- Enforced exactly one cart owner (customer or guest), unique active carts per owner/market/currency, and cart-line quantity bounds in PostgreSQL.
+- Guest sessions use an opaque HttpOnly cookie; only a SHA-256 token hash is persisted. Guest carts merge transactionally into the signed-in customer's matching market/currency carts.
+- Added `GET /api/cart`, `POST /api/cart/items`, `PATCH /api/cart/items/[itemId]`, and `DELETE /api/cart/items/[itemId]`.
+- Server validates active market/currency, published product, active variant, current price, and available inventory before adding or changing quantities.
+- Connected product detail's Add to cart action, homepage cart navigation, and the `/cart` buyer page to the real APIs.
+- Added focused tests for guest-token hashing, valid add, quantity bounds, and insufficient stock.
+- No checkout, payment, order, or stock reservation behavior is claimed complete. Cart additions do not reserve inventory.
+
+**Prisma decision**
+- Schema changes are required because the canonical blueprint calls for persistent guest/customer carts and the existing schema had no GuestSession, Cart, or CartItem models. The migration adds only those required records and their ownership/quantity constraints.
+
+**Verification and safety**
+- Latest main General CI before this feature passed: run [41699817283](https://github.com/waelkamira/mtjr2/actions/runs/41699817283), including Prisma validate/generate, typecheck, lint, unit tests, and production build.
+- The cart feature branch still requires its own General CI and one disposable PostgreSQL migration replay. No result is claimed yet.
+- No owner database was connected, no production migration was run, and no Vercel environment variable was read or changed.
+
+**Next**
+1. Complete General CI for `feat/buying-cart-core` and fix only actual failures.
+2. Run one disposable PostgreSQL migration/integration check.
+3. Record exact results, review, and merge the cart foundation.
+4. Continue with checkout quote and reservation lifecycle per `PHASE_04_BUYING_PLAN.md`.
