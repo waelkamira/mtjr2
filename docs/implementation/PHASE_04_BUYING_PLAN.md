@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — Cart foundation verified; checkout quote/reservation implementation awaiting CI and disposable PostgreSQL verification.
+**Status:** In progress — Cart and quote/reservation slices verified; delivery-address capture is implemented and awaiting CI and disposable PostgreSQL verification.
 
 ## Objective
 
@@ -24,6 +24,27 @@ Implement the buyer purchase journey as server-owned domain workflows. The brows
 - Focused tests cover hashed guest identity, valid add, invalid quantity, and insufficient stock.
 
 ## 4.2 — Checkout quote and inventory reservation
+
+**Implemented and verified on `feat/checkout-quote-reservations`. General CI run 41704221580 and disposable PostgreSQL integration run 41704221517 both passed.**
+
+- Add `CheckoutQuote` and `CheckoutQuoteLine` snapshots with market/currency ownership, immutable product/variant labels and integer-minor-unit prices.
+- Create server-priced quotes with a ten-minute expiry; atomically reserve inventory across active warehouses belonging to the owning store.
+- Enforce quote ownership, idempotency, conditional stock updates, and release/expiry reconciliation using `InventoryReservation`.
+- Add create/read/release quote APIs and connect `/cart` to `/checkout` review UI.
+- Expose a bounded `expireDueCheckoutQuotes` cleanup service and expire due quotes during quote creation/read; an actual scheduled invocation remains an operational follow-up.
+
+## 4.2a — Delivery address capture
+
+**Implemented on `feat/checkout-address-capture`; CI and disposable PostgreSQL verification pending.**
+
+- Add `UserAddress` for authenticated customer address books and `CheckoutQuoteAddress` as a delivery snapshot attached to the quote.
+- Add authenticated `GET/POST /api/account/addresses` and quote-scoped `GET/POST /api/checkout/quote/[quoteId]/address`.
+- Guest checkout can enter an address without saving it; authenticated customers may select saved addresses or save a new address.
+- Delivery country is derived from the selected market on the server; the browser cannot override it. Saved addresses from another country are rejected for this market.
+- Connect checkout review UI to the address APIs. The delivery address is not added to the price total.
+- No shipping rate or tax amount is calculated yet; those require explicit market/carrier and tax-jurisdiction rules.
+
+## 4.3 — Checkout and order creation
 
 Not started. Before creating orders:
 - Define a quote contract with immutable server-calculated line prices, currency precision, item availability, and quote expiry.
@@ -54,5 +75,6 @@ Not started. Build only after 4.2 is verified:
 ## Current handoff
 
 - 4.1 schema, migration, service, APIs, product CTA, cart page, and focused unit tests are committed to `feat/buying-cart-core`.
-- Required next actions: complete General CI, replay migrations on disposable PostgreSQL, fix only demonstrated failures, update this document and BUILD_LOG with actual run evidence, then merge after review.
+- Cart foundation is verified by General CI run 41702592022 and disposable PostgreSQL integration run 41702592323. Quote/reservation is verified by General CI run 41704221580 and disposable PostgreSQL integration run 41704221517. PR #1 and PR #2 remain separate reviewable changes; PR #2 depends on PR #1.
+- Current next action: verify address capture migration/service/UI on General CI and disposable PostgreSQL, fix only demonstrated failures, then record exact evidence before merge.
 - 4.2 and 4.3 remain pending; checkout is intentionally not exposed yet.
