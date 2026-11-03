@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type CartItem = {
   id: string;
@@ -31,6 +32,8 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [busyItem, setBusyItem] = useState("");
   const [error, setError] = useState("");
+  const [checkingOutCartId, setCheckingOutCartId] = useState("");
+  const router = useRouter();
 
   const refresh = useCallback(async () => {
     const response = await fetch("/api/cart", { cache: "no-store" });
@@ -80,6 +83,23 @@ export default function CartPage() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Item could not be removed.");
     } finally { setBusyItem(""); }
+  }
+
+  async function beginCheckout(cart: Cart) {
+    setCheckingOutCartId(cart.id);
+    setError("");
+    try {
+      const response = await fetch("/api/checkout/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartId: cart.id, idempotencyKey: crypto.randomUUID() })
+      });
+      const result = await response.json() as { quote?: { id: string }; error?: string };
+      if (!response.ok || !result.quote) throw new Error(result.error || "Unable to prepare checkout.");
+      router.push(`/checkout?quoteId=${encodeURIComponent(result.quote.id)}`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to prepare checkout.");
+    } finally { setCheckingOutCartId(""); }
   }
 
   return (
@@ -136,9 +156,13 @@ export default function CartPage() {
                       </article>;
                     })}
                   </div>
-                </section>;
+                </section>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-white p-5">
+                  <div><p className="font-semibold text-[var(--color-forest-950)]">Ready to review?</p><p className="mt-1 text-xs text-[var(--muted)]">We will recheck prices and temporarily reserve available stock.</p></div>
+                  <button type="button" disabled={Boolean(checkingOutCartId) || cart.items.some((item) => !item.price || item.availableQuantity < item.quantity)} onClick={() => void beginCheckout(cart)} className="rounded-xl bg-[var(--color-forest-900)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{checkingOutCartId === cart.id ? "Preparing…" : "Review checkout"}</button>
+                </div>;
               })}
-              <p className="rounded-xl bg-[var(--color-sage-100)] p-4 text-sm leading-6 text-[var(--color-forest-950)]">Prices and available stock are revalidated by the server when you update your cart. Checkout, shipping, taxes and payment will be added in the next Buying Core slice.</p>
+              <p className="rounded-xl bg-[var(--color-sage-100)] p-4 text-sm leading-6 text-[var(--color-forest-950)]">The checkout quote is calculated by the server and reserves stock for ten minutes. Shipping, tax, discounts and payment are not included yet.</p>
             </div>
         }
       </div>
