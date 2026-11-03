@@ -54,7 +54,7 @@ export default function SellerWorkspacePage() {
   const reload = useCallback(async () => {
     const data = await readJson<Workspace>(await fetch("/api/seller/stores", { cache: "no-store" }));
     setWorkspace(data);
-    if (!selectedStoreId && data.stores[0]) setSelectedStoreId(data.stores[0].id);
+    if (!selectedStoreId && data.stores[0]) { setSelectedStoreId(data.stores[0].id); localStorage.setItem("mtjr.activeStoreId", data.stores[0].id); }
   }, [selectedStoreId]);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function SellerWorkspacePage() {
       if (!active) return;
       setMarkets(marketResult.items);
       setWorkspace(sellerResult);
-      if (sellerResult.stores[0]) setSelectedStoreId(sellerResult.stores[0].id);
+      if (sellerResult.stores[0]) { setSelectedStoreId(sellerResult.stores[0].id); localStorage.setItem("mtjr.activeStoreId", sellerResult.stores[0].id); }
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Sign in to access the seller workspace.");
     }).finally(() => { if (active) setLoading(false); });
@@ -149,7 +149,8 @@ export default function SellerWorkspacePage() {
               <h2 className="text-lg font-semibold">Your stores</h2>
               {!workspace.stores.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">No stores have been created yet.</p> : (
                 <>
-                  <div className="mt-4 flex flex-wrap gap-2">{workspace.stores.map((store) => <button key={store.id} onClick={() => setSelectedStoreId(store.id)} className={`rounded-xl border px-4 py-2 text-sm ${selectedStoreId === store.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-900)] text-white" : "border-[var(--border)]"}`}>{store.name}</button>)}</div>
+                  <div className="mt-4"><Link href="/seller/messages" className="inline-flex rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white">Open store inbox</Link></div>
+                  <div className="mt-4 flex flex-wrap gap-2">{workspace.stores.map((store) => <button key={store.id} onClick={() => { setSelectedStoreId(store.id); localStorage.setItem("mtjr.activeStoreId", store.id); }} className={`rounded-xl border px-4 py-2 text-sm ${selectedStoreId === store.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-900)] text-white" : "border-[var(--border)]"}`}>{store.name}</button>)}</div>
                   {selectedStore && <div className="mt-6 border-t border-[var(--border)] pt-5">
                     <div className="flex flex-wrap items-center justify-between gap-2"><div><div><h3 className="font-semibold">{selectedStore.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{selectedStore.slug} · {selectedStore.status}</p></div><div className="mt-2 flex flex-wrap gap-2"><Link href="/seller/products" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">Manage products</Link><Link href="/seller/orders" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">Seller orders</Link><Link href="/seller/inventory" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">Inventory operations</Link><Link href="/seller/staff" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">Team & access</Link></div></div><span className="text-xs text-[var(--muted)]">{selectedStore.markets.length} active markets</span></div>
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
