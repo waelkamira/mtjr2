@@ -100,7 +100,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       where: { id: quoteId, ...ownerWhere(owner), status: CheckoutQuoteStatus.ACTIVE, expiresAt: { gt: now } },
       include: {
         deliveryAddress: true,
-        lines: { orderBy: { createdAt: "asc" } },
+        lines: { orderBy: { createdAt: "asc" }, include: { variant: { select: { productId: true } } } },
         shippingSelections: true,
         taxSnapshot: true,
         cart: { select: { id: true, status: true } }
@@ -204,7 +204,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
           subtotalMinor: vendorSubtotal, shippingMinor: vendorShipping, taxMinor: vendorTax, totalMinor: vendorTotal,
           statusHistory: { create: { status: VendorOrderStatus.PENDING_PAYMENT, note: "Awaiting payment; fulfillment is not yet authorized." } },
           items: { create: lines.map((line) => ({
-            productId: null, variantId: line.variantId, productName: line.productName, sku: line.sku,
+            productId: line.variant.productId, variantId: line.variantId, productName: line.productName, sku: line.sku,
             variantName: line.variantName, quantity: line.quantity,
             unitAmountMinor: line.unitAmountMinor, lineTotalMinor: line.lineTotalMinor
           })) }
