@@ -20,6 +20,9 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const [selectedMarketId, setSelectedMarketId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState("");
+  const [cartError, setCartError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -54,6 +57,28 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const price = variant?.prices.find((item) => !selectedMarketId || item.marketId === selectedMarketId);
   const amount = price ? Number(price.amountMinor) / (10 ** (price.currency.minorUnit ?? 2)) : null;
   const selectedMedia = product.media[selectedMediaIndex] ?? product.media.find((item) => item.isPrimary) ?? product.media[0];
+  const selectedMarket = markets.find((item) => item.id === selectedMarketId);
+
+  async function addSelectedVariantToCart() {
+    if (!variant || !price || !selectedMarketId) return;
+    setAddingToCart(true);
+    setCartError("");
+    setCartMessage("");
+    try {
+      const response = await fetch("/api/cart/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marketId: selectedMarketId, currencyCode: price.currencyCode, variantId: variant.id, quantity: 1 })
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Unable to add this item.");
+      setCartMessage("Added to your cart.");
+    } catch (cause) {
+      setCartError(cause instanceof Error ? cause.message : "Unable to add this item.");
+    } finally {
+      setAddingToCart(false);
+    }
+  }
 
   return <main className="min-h-screen bg-[var(--background)]">
     <header className="border-b border-[var(--border)] px-5 py-5"><div className="mx-auto flex max-w-6xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><Link href="/" className="text-sm text-[var(--color-forest-800)]">← Back to marketplace</Link></div></header>
@@ -70,7 +95,10 @@ export default function ProductDetail({ slug }: { slug: string }) {
         <p className="mt-7 text-3xl font-semibold">{price && amount !== null ? new Intl.NumberFormat(undefined, { style: "currency", currency: price.currencyCode }).format(amount) : "Price unavailable"}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">Choose an option<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || "Variant"}</option>)}</select></label>}
-        <p className="mt-8 rounded-xl bg-[var(--color-sage-100)] p-4 text-sm leading-6 text-[var(--color-forest-950)]">This listing is connected to the live marketplace catalog. Cart and checkout actions will be enabled in the Buying Core phase.</p>
+        <button type="button" onClick={addSelectedVariantToCart} disabled={!variant || !price || !selectedMarket || addingToCart} className="mt-8 rounded-xl bg-[var(--color-forest-900)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)] disabled:cursor-not-allowed disabled:opacity-50">{addingToCart ? "Adding…" : "Add to cart"}</button>
+        {cartMessage && <p role="status" className="mt-3 text-sm text-[var(--color-success)]">{cartMessage} <Link href="/cart" className="font-semibold underline">View cart</Link></p>}
+        {cartError && <p role="alert" className="mt-3 text-sm text-[var(--color-danger)]">{cartError}</p>}
+        <p className="mt-5 text-xs leading-6 text-[var(--muted)]">Price and stock are checked again by the marketplace before an item is added.</p>
       </section>
     </div>
   </main>;
