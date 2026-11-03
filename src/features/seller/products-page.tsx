@@ -79,7 +79,15 @@ export default function SellerProductsPage() {
       setCategories(categoryResult.items);
       setBrands(brandResult.items);
       const initialStore = workspace.stores[0];
-      if (initialStore) setStoreId(initialStore.id);
+      if (initialStore) {
+        setStoreId(initialStore.id);
+        const enabled = new Set(initialStore.markets.map((entry) => entry.market.id));
+        const initialMarket = marketResult.items.find((market) => enabled.has(market.id));
+        if (initialMarket) {
+          setMarketId(initialMarket.id);
+          setCurrencyCode(initialMarket.defaultCurrency.code);
+        }
+      }
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load seller catalog.");
     }).finally(() => { if (active) setLoading(false); });
@@ -153,7 +161,15 @@ export default function SellerProductsPage() {
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">Loading catalog…</p> : <div className="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
         <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <h2 className="text-lg font-semibold">Create product draft</h2>
-          <label className="mt-5 grid gap-2 text-sm font-medium">Store<select className={inputClass} value={storeId} onChange={(e) => setStoreId(e.target.value)}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
+          <label className="mt-5 grid gap-2 text-sm font-medium">Store<select className={inputClass} value={storeId} onChange={(e) => {
+            const nextId = e.target.value;
+            setStoreId(nextId);
+            const nextStore = stores.find((store) => store.id === nextId);
+            const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
+            const nextMarket = markets.find((market) => allowed.has(market.id));
+            setMarketId(nextMarket?.id ?? "");
+            setCurrencyCode(nextMarket?.defaultCurrency.code ?? "");
+          }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
           {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm">Create a store and activate its markets before adding products.</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
             <label className="grid gap-1 text-sm">Product name<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
             <label className="grid gap-1 text-sm">URL slug<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
