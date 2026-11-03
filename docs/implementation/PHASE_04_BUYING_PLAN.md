@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — cart, quote/reservation, and delivery-address capture are implemented. Shipping is implemented pending final CI; market tax configuration and quote calculation are now implemented on the next stacked branch. Discounts, order, and payment workflows remain.
+**Status:** In progress — cart, quote/reservation, address, shipping configuration, and initial market-tax calculation are implemented across stacked branches. Transactional order/vendor-order creation and buyer/seller order views are now implemented on this branch; final verification is pending. Payment, discounts, and fulfillment transitions remain.
 
 ## Objective
 
@@ -66,12 +66,24 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Current first slice applies one market/region rule to the quote subtotal and optionally shipping. Product/category exemptions, multiple tax jurisdictions, VAT registration/nexus, compound taxes, and coupon interactions remain future jurisdiction-specific work. Do not treat this generic rule engine as legal tax advice or a complete tax-compliance engine.
 - Coupons are deferred until eligibility, usage limits, stacking, and seller/platform funding rules are defined.
 
-## 4.5 — Order creation and payment boundary
+## 4.5 — Order creation and vendor split
 
-- Add customer `Order`, per-store `VendorOrder`, `OrderItem`, and immutable address/price/shipping/tax snapshots.
-- Create order and consume reservations transactionally with idempotency and valid state transitions.
-- Keep payment pending until a real provider integration and verified webhook lifecycle are implemented; never simulate successful payment.
-- Connect checkout confirmation, order confirmation, and order history pages to real APIs.
+**Initial implementation completed on `feat/order-vendor-order-creation`; verification pending.**
+
+- Added canonical `Order`, `OrderAddress`, `VendorOrder`, `OrderItem`, `OrderStatusHistory`, and `VendorOrderStatusHistory` models, plus `OrderStatus` and `VendorOrderStatus` enums.
+- Added migration `20261103233000_order_vendor_order_creation`, including sale inventory movement type and database checks for owner, money totals, and item quantities.
+- Added `POST /api/checkout/quote/[quoteId]/place-order`. It requires the owned active quote, address, one shipping selection per seller, and a persisted tax snapshot.
+- Order creation is one serializable transaction: creates the parent order and one vendor order per store, copies immutable delivery/item/price/shipping/tax snapshots, consumes stock reservations and on-hand inventory, records SALE movements, converts the quote, and closes the cart.
+- Added idempotent replay by quote: a converted quote returns its existing order rather than creating a duplicate.
+- Connected buyer checkout confirmation to the order API; added buyer order confirmation/detail and authenticated order-history views.
+- Added store-scoped seller order listing API and seller orders UI. Staff access requires the exact `orders:manage` store permission; store owners and platform admins can view their allowed orders.
+- Orders remain `PENDING_PAYMENT`. No payment is captured and sellers are not authorized to fulfill until a real payment provider and verified webhook lifecycle exist.
+
+## 4.6 — Payment integration boundary
+
+- Integrate a real payment provider only after launch-country, currency, merchant-account, and payment-method requirements are approved.
+- Create payment intents with idempotency; verify signed provider webhooks; reconcile asynchronous success, failure, cancellation, refund, and dispute events.
+- Transition parent and vendor order states only from verified payment events. Never simulate successful payment.
 
 ## Invariants and test policy
 
@@ -87,4 +99,4 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 - PR #1 cart and PR #2 quote/reservations are stacked predecessors.
 - PR #3 delivery address is implemented and its General CI/PostgreSQL workflows pass; it remains a draft stacked on PR #2 pending review/merge.
-- Next implementation slice is final quote validation and order/vendor-order creation, using the persisted address, shipping, and tax snapshots. Discounts remain deferred until their business rules are defined.
+- Next implementation slice is payment intent/provider lifecycle and verified webhook handling. Discount rules and fulfillment transitions remain separate follow-up slices.
