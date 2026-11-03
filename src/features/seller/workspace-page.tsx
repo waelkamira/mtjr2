@@ -162,7 +162,7 @@ export default function SellerWorkspacePage() {
                     </form>}
                     <div className="mt-7 border-t border-[var(--border)] pt-6">
                       <h3 className="font-semibold">Shipping services</h3>
-                      <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Rates are scoped to a market and optional destination region. Enter the amount in the selected currency's minor units.</p>
+                      <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Rates are scoped to a market and optional destination region. Enter the amount in the selected currency&apos;s minor units.</p>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {shippingRates.map((rate) => <div key={rate.id} className="rounded-xl bg-[var(--color-ivory-100)] p-3 text-sm"><p className="font-semibold">{rate.name} · {rate.market.name}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.amountMinor} {rate.currencyCode} minor units{rate.destinationRegion ? ` · ${rate.destinationRegion}` : " · All regions"}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} days · {rate.isActive ? "Active" : "Inactive"}</p></div>)}
                         {!shippingRates.length && <p className="rounded-xl bg-[var(--color-ivory-100)] p-4 text-xs text-[var(--muted)]">No shipping services configured.</p>}
