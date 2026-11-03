@@ -1,13 +1,13 @@
 import { env } from "@/lib/env";
-import { prisma } from "@/lib/db/prisma";
 import { resendEmailAdapter } from "@/server/email/resend";
 import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { requestPasswordReset } from "@/server/identity/password-reset";
+import { consumeVerificationEmailAttempt } from "@/server/identity/login-throttle";
+import { issueVerificationEmailChallenge } from "@/server/identity/verification-email";
 
 export const runtime = "nodejs";
 
-const GENERIC_RESPONSE = { message: "If an eligible account exists, password reset instructions will be sent." };
+const GENERIC_RESPONSE = { message: "If the account is eligible, a verification email will be sent." };
 
 export async function POST(request: Request): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
@@ -25,16 +25,18 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const challenge = await requestPasswordReset(body.email, ip);
-    if (challenge) {
-      const user = await prisma.user.findUnique({
-        where: { id: challenge.userId },
-        select: { email: true }
-      });
-      if (user) await resendEmailAdapter.sendPasswordResetEmail(user.email, challenge.token);
+    const throttle = await consumeVerificationEmailAttempt({
+      identifier: body.email,
+      trustedIpAddress: ip
+    });
+    if (!throttle.blocked) {
+      const challenge = await issueVerificationEmailChallenge(body.email);
+      if (challenge) {
+        await resendEmailAdapter.sendVerificationEmail(challenge.email, challenge.token);
+      }
     }
   } catch {
-    // Preserve the same public response for unknown, throttled and eligible accounts.
+    // Keep account state and mail-provider failures out of the public response.
   }
 
   return Response.json(GENERIC_RESPONSE, { status: 202 });
