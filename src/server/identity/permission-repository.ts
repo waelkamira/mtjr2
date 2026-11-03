@@ -63,3 +63,20 @@ export async function userHasPermission(
   const grants = await getUserAuthorizationGrants(userId, request.now);
   return hasPermission(grants, request);
 }
+
+
+/**
+ * Evaluates only a grant explicitly assigned to the requested resource scope.
+ * Unlike userHasPermission, GLOBAL grants are intentionally excluded. Use this
+ * when a domain resource must be owned by the actor or delegated explicitly.
+ */
+export async function userHasScopedPermission(
+  userId: string,
+  request: AuthorizationRequest & { scope: { type: string; id: string } }
+): Promise<boolean> {
+  const grants = await getUserAuthorizationGrants(userId, request.now);
+  const exactScopeGrants = grants.filter(
+    (grant) => grant.scopeType === request.scope.type && grant.scopeId === request.scope.id
+  );
+  return hasPermission(exactScopeGrants, request);
+}
