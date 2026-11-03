@@ -37,10 +37,12 @@ function allocateAmount(total: bigint, bases: Array<{ storeId: string; base: big
 function serializeOrder(order: {
   id: string; orderNumber: string; status: OrderStatus; currencyCode: string; currency: { minorUnit: number; symbol: string | null };
   subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
+  taxRuleName: string; taxRateBasisPoints: number; taxInclusive: boolean; taxIncludesShipping: boolean; taxDestinationRegion: string | null;
   placedAt: Date;
   address: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   vendorOrders: Array<{
     id: string; status: VendorOrderStatus; store: { name: string; slug: string };
+    shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
     subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
     items: Array<{ id: string; productName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
   }>;
@@ -48,10 +50,11 @@ function serializeOrder(order: {
   return {
     id: order.id, orderNumber: order.orderNumber, status: order.status, currencyCode: order.currencyCode, currency: order.currency,
     subtotalMinor: order.subtotalMinor.toString(), shippingMinor: order.shippingMinor.toString(),
-    taxMinor: order.taxMinor.toString(), totalMinor: order.totalMinor.toString(), placedAt: order.placedAt.toISOString(),
+    taxMinor: order.taxMinor.toString(), totalMinor: order.totalMinor.toString(), tax: { ruleName: order.taxRuleName, rateBasisPoints: order.taxRateBasisPoints, inclusive: order.taxInclusive, includesShipping: order.taxIncludesShipping, destinationRegion: order.taxDestinationRegion }, placedAt: order.placedAt.toISOString(),
     address: order.address,
     vendorOrders: order.vendorOrders.map((vendor) => ({
       id: vendor.id, status: vendor.status, store: vendor.store,
+      shippingServiceName: vendor.shippingServiceName, shippingDestinationRegion: vendor.shippingDestinationRegion, minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
       items: vendor.items.map((item) => ({
@@ -142,7 +145,9 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         orderNumber: makeOrderNumber(), quoteId, ...ownerWhere(owner),
         marketId: quote.marketId, currencyCode: quote.currencyCode,
         status: OrderStatus.PENDING_PAYMENT, subtotalMinor: subtotal, shippingMinor: shipping,
-        taxMinor: tax, totalMinor: total, idempotencyKey: `checkout:${quote.id}`,
+        taxMinor: tax, taxRuleName: quote.taxSnapshot.ruleName, taxRateBasisPoints: quote.taxSnapshot.rateBasisPoints,
+        taxInclusive: quote.taxSnapshot.isInclusive, taxIncludesShipping: quote.taxSnapshot.includesShipping,
+        taxDestinationRegion: quote.taxSnapshot.destinationRegion, totalMinor: total, idempotencyKey: `checkout:${quote.id}`,
         placedAt: now,
         address: { create: {
           recipientName: quote.deliveryAddress.recipientName, phone: quote.deliveryAddress.phone,
@@ -201,7 +206,11 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       await tx.vendorOrder.create({
         data: {
           orderId: order.id, storeId, status: VendorOrderStatus.PENDING_PAYMENT,
-          subtotalMinor: vendorSubtotal, shippingMinor: vendorShipping, taxMinor: vendorTax, totalMinor: vendorTotal,
+          subtotalMinor: vendorSubtotal, shippingMinor: vendorShipping, taxMinor: vendorTax,
+          shippingServiceName: selections.get(storeId)!.serviceName, shippingRateId: selections.get(storeId)!.shippingRateId,
+          shippingDestinationRegion: selections.get(storeId)!.destinationRegion,
+          minDeliveryDays: selections.get(storeId)!.minDeliveryDays, maxDeliveryDays: selections.get(storeId)!.maxDeliveryDays,
+          totalMinor: vendorTotal,
           statusHistory: { create: { status: VendorOrderStatus.PENDING_PAYMENT, note: "Awaiting payment; fulfillment is not yet authorized." } },
           items: { create: lines.map((line) => ({
             productId: line.variant.productId, variantId: line.variantId, productName: line.productName, sku: line.sku,
