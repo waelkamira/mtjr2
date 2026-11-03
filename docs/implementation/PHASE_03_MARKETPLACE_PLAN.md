@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. Canonical schema, seller/catalog services, inventory foundation, buyer storefront, and seller/admin workspaces are committed. General CI and disposable PostgreSQL integration both passed on `3a9369bf`. No production database has been accessed.
+**Status:** In implementation, approaching exit review. Canonical schema, seller/catalog services, inventory foundation, buyer storefront, and seller/admin workspaces are committed. General CI and disposable PostgreSQL integration passed on `3a9369bf`; latest General CI passed on `dd725732`. No production database has been accessed.
 
 ## Architecture and constraints
 
@@ -54,7 +54,8 @@
 - [x] Initial buyer storefront homepage and product detail route consume the public market/category/product APIs; search, category filtering, market selection, and localized currency display are connected.
 - [x] Buyer discovery pagination, brand/category/market/currency/search filters, and sorting are connected.
 - [x] Product detail has an accessible selectable media gallery with primary-image default.
-- [ ] Add server-rendered product SEO metadata and structured data.
+- [x] Add server-rendered product SEO metadata (title, description, canonical, Open Graph, Twitter, and missing-product noindex) using the catalog domain service.
+- [ ] Add product structured data only after verifying all required fields and price/availability semantics in the canonical product DTO.
 
 ## 3.6 Inventory and warehouse foundation
 
@@ -83,6 +84,7 @@
 - [x] Add seller team screen with store staff listing/invitation/revocation and the current user's invitation inbox/acceptance, connected to scoped backend APIs.
 - [x] Add inventory UI for warehouse creation, stock adjustment, transfer creation, shipment, receipt, and transfer history against the existing inventory APIs.
 - [x] Add protected pending seller/product review queues and platform-admin moderation UI for approve/reject decisions with mandatory rejection reasons.
+- [x] Buyer product SEO metadata is server-generated from the canonical catalog service; General CI passed on commit `dd725732`.
 - [ ] Add cart/checkout UI only alongside the Buying Core APIs; never ship inert purchase controls.
 
 ## Minimal verification gates
@@ -99,3 +101,14 @@ Cart, checkout, orders, payments, refunds, shipments, seller payouts, accounting
 ## Definition of done
 
 Marketplace Core is complete when authorized sellers can manage stores and warehouses, create and publish approved products with variants/media/prices, maintain stock safely, and customers can discover active products through canonical category/product/search journeys with market-aware prices. All sensitive writes must be validated, authorized, auditable, transactional, and pass the minimal CI/PostgreSQL gates.
+
+
+## Phase 3 latest verification and exit review — 2026-11-03
+
+- General CI passed on `dd725732dab3e7a7a6466254828a9e13467c0ef2` (run [41698547547](https://github.com/waelkamira/mtjr2/actions/runs/41698547547)); Prisma validate/generate, typecheck, lint, unit tests, and production build all succeeded.
+- Product SEO metadata is complete for the current product page; it reuses `getDiscoverableProduct` and existing persisted fields. No schema change or migration is justified.
+- The earlier disposable PostgreSQL integration result remains tied to `3a9369bf`; it is not evidence for later UI-only commits. Re-run the existing disposable PostgreSQL workflow once at the Phase 3 integration checkpoint, not for each presentation-only change.
+- Remaining Phase 3 dependencies: owner-approved launch markets/currencies and initial taxonomy seed; optional structured data after DTO verification; one consolidated disposable PostgreSQL integration run; final responsive/browser journey review.
+- No live database, production migration, or Vercel environment was accessed.
+
+**Next implementation boundary:** do not add cart/checkout buttons or client-only cart persistence. Start Buying Core only with the server-owned cart, price revalidation, inventory reservation contract, idempotency, and order lifecycle APIs, then connect the buyer UI to those APIs.

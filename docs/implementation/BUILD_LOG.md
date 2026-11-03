@@ -1204,3 +1204,22 @@ The project owner approved Resend as the transactional email provider. The serve
 1. Verify the gallery commit with General CI.
 2. Add server-rendered product metadata using the canonical public product API, without duplicating product data models.
 3. Keep launch-market seeding blocked until supported launch countries/currencies are approved.
+
+
+## 2026-11-03 — Server-generated buyer product SEO metadata
+
+**Implemented**
+- Added `generateMetadata` to `src/app/products/[slug]/page.tsx`, resolving the public product through `getDiscoverableProduct` rather than duplicating catalog queries.
+- Generates product title, description, canonical URL, Open Graph metadata/image, and Twitter card; missing products receive `noindex` metadata.
+- Commit: `dd725732dab3e7a7a6466254828a9e13467c0ef2`.
+
+**Prisma decision**
+- No schema change or migration: the metadata uses existing product, localized translation, store, and media fields. This is presentation metadata, not new persisted business state.
+
+**Verification**
+- General CI passed on the exact commit: [run 41698547547](https://github.com/waelkamira/mtjr2/actions/runs/41698547547). Prisma validate, Prisma generate, typecheck, lint, unit tests, and production build all completed successfully.
+- No production database was accessed; no Vercel environment variables were read or changed.
+
+**Next**
+1. Keep launch market and taxonomy seeding blocked until the owner approves supported launch countries/currencies and the initial taxonomy.
+2. Finish the remaining Marketplace Core review against the blueprint, then begin Buying Core with cart/checkout persistence, inventory reservation lifecycle, and idempotent order creation as one connected backend/frontend slice.
