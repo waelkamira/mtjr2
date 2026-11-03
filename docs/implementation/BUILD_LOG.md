@@ -969,3 +969,15 @@ The project owner approved Resend as the transactional email provider. The serve
 - Product update and rejection-with-reason workflows.
 - Focused staff-revocation tests and PostgreSQL integration replay of the complete migration set.
 - Product listing/detail/discovery APIs, validated search, filtering, sorting, and pagination.
+
+
+## 2026-11-03 — Cross-store authorization hardening
+
+**Security finding and fix**
+- Review of the global SELLER role grant exposed an authorization pitfall: global role grants intentionally satisfy permission checks across all scopes, so a plain `catalog:manage` check is not sufficient to prove ownership of a specific store.
+- Added `userHasScopedPermission`, which deliberately filters out GLOBAL grants and accepts only a grant whose scope type and ID exactly match the requested resource.
+- Product creation now requires the authenticated seller to own the store or hold an exact STORE-scoped catalog grant. Product publishing resolves the product's store from the database and applies the same owner-or-exact-grant rule before mutation.
+- Added tests for denial of a different seller despite the global SELLER role and acceptance of an explicitly delegated exact-store grant.
+
+**Architecture rule going forward**
+- Never treat a global SELLER role permission as proof of ownership of an individual store, product, order, inventory location, or other seller-owned resource. Resolve ownership from trusted database relations; otherwise require an exact scoped grant. Apply this rule to every subsequent seller-domain service.
