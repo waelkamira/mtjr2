@@ -35,7 +35,7 @@ function allocateAmount(total: bigint, bases: Array<{ storeId: string; base: big
 }
 
 function serializeOrder(order: {
-  id: string; orderNumber: string; status: OrderStatus; currencyCode: string;
+  id: string; orderNumber: string; status: OrderStatus; currencyCode: string; currency: { minorUnit: number; symbol: string | null };
   subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
   placedAt: Date;
   address: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
@@ -46,7 +46,7 @@ function serializeOrder(order: {
   }>;
 }) {
   return {
-    id: order.id, orderNumber: order.orderNumber, status: order.status, currencyCode: order.currencyCode,
+    id: order.id, orderNumber: order.orderNumber, status: order.status, currencyCode: order.currencyCode, currency: order.currency,
     subtotalMinor: order.subtotalMinor.toString(), shippingMinor: order.shippingMinor.toString(),
     taxMinor: order.taxMinor.toString(), totalMinor: order.totalMinor.toString(), placedAt: order.placedAt.toISOString(),
     address: order.address,
@@ -85,6 +85,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
     const existing = await prisma.order.findFirst({
       where: { quoteId, ...ownerWhere(owner) },
       include: {
+        currency: { select: { minorUnit: true, symbol: true } },
         address: true,
         vendorOrders: { include: { store: { select: { name: true, slug: true } }, items: true } }
       }
@@ -245,6 +246,7 @@ export async function getOwnedOrder(guestToken: string, orderId: string, now = n
   const order = await prisma.order.findFirst({
     where: { id: orderId, ...ownerWhere(owner) },
     include: {
+      currency: { select: { minorUnit: true, symbol: true } },
       address: true,
       vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
     }
