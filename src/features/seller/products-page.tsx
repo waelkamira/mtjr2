@@ -43,9 +43,7 @@ export default function SellerProductsPage() {
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [marketId, setMarketId] = useState("");
-  const [currencyCode, setCurrencyCode] = useState("");
-  const [amountMinor, setAmountMinor] = useState("");
+  const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -57,8 +55,6 @@ export default function SellerProductsPage() {
   const [editSlug, setEditSlug] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
-  const selectedMarket = markets.find((market) => market.id === marketId);
-  const currencies = selectedMarket?.currencies.map((entry) => entry.currency) ?? [];
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
@@ -86,32 +82,13 @@ export default function SellerProductsPage() {
       if (initialStore) {
         setStoreId(initialStore.id);
         const enabled = new Set(initialStore.markets.map((entry) => entry.market.id));
-        const initialMarket = marketResult.items.find((market) => enabled.has(market.id));
-        if (initialMarket) {
-          setMarketId(initialMarket.id);
-          setCurrencyCode(initialMarket.defaultCurrency.code);
-        }
+        setMarketPrices(Object.fromEntries(marketResult.items.filter((market) => enabled.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
       }
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load seller catalog.");
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
-
-  useEffect(() => {
-    if (!availableMarkets.length) { setMarketId(""); setCurrencyCode(""); return; }
-    if (!availableMarkets.some((market) => market.id === marketId)) {
-      const market = availableMarkets[0];
-      setMarketId(market.id);
-      setCurrencyCode(market.defaultCurrency.code);
-    }
-  }, [availableMarkets, marketId]);
-
-  useEffect(() => {
-    if (!currencies.some((currency) => currency.code === currencyCode)) {
-      setCurrencyCode(selectedMarket?.defaultCurrency.code ?? currencies[0]?.code ?? "");
-    }
-  }, [currencies, currencyCode, selectedMarket]);
 
   useEffect(() => {
     let active = true;
@@ -131,11 +108,11 @@ export default function SellerProductsPage() {
           storeId, name, slug, description, ...(brandId ? { brandId } : {}),
           categoryIds: categoryId ? [categoryId] : [],
           media: imageUrl ? [{ url: imageUrl, altText: name, sortOrder: 0, isPrimary: true }] : [],
-          variants: [{ sku, prices: [{ marketId, currencyCode, amountMinor }] }]
+          variants: [{ sku, prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "" })) }]
         })
       }));
       setMessage(`Draft product created (${product.id}). It is awaiting platform review.`);
-      setName(""); setSlug(""); setDescription(""); setSku(""); setImageUrl(""); setAmountMinor(""); setCategoryId(""); setBrandId("");
+      setName(""); setSlug(""); setDescription(""); setSku(""); setImageUrl(""); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Product could not be created.");
@@ -187,25 +164,31 @@ export default function SellerProductsPage() {
             setStoreId(nextId);
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
-            const nextMarket = markets.find((market) => allowed.has(market.id));
-            setMarketId(nextMarket?.id ?? "");
-            setCurrencyCode(nextMarket?.defaultCurrency.code ?? "");
+            setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
           }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
           {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm">Create a store and activate its markets before adding products.</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
             <label className="grid gap-1 text-sm">Product name<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
             <label className="grid gap-1 text-sm">URL slug<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">Description<textarea maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label>
-            <label className="grid gap-1 text-sm">Primary image URL<input type="url" className={inputClass} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" /></label>
+            <label className="grid gap-1 text-sm">Primary image URL<input required type="url" className={inputClass} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" /></label>
             <label className="grid gap-1 text-sm">Category<select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">No category</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             <label className="grid gap-1 text-sm">Brand<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">No brand</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
             <div className="grid gap-3 rounded-2xl bg-[var(--color-ivory-100)] p-4">
-              <p className="text-sm font-semibold">Initial market price</p>
-              <label className="grid gap-1 text-sm">Market<select required className={inputClass} value={marketId} onChange={(e) => { const market = availableMarkets.find((item) => item.id === e.target.value); setMarketId(e.target.value); setCurrencyCode(market?.defaultCurrency.code ?? ""); }}><option value="">Select market</option>{availableMarkets.map((market) => <option key={market.id} value={market.id}>{market.name}</option>)}</select></label>
-              <label className="grid gap-1 text-sm">Currency<select required className={inputClass} value={currencyCode} onChange={(e) => setCurrencyCode(e.target.value)}>{currencies.map((currency) => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select></label>
-              <label className="grid gap-1 text-sm">Price in minor units<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={amountMinor} onChange={(e) => setAmountMinor(e.target.value)} placeholder="e.g. 1299" /><span className="text-xs text-[var(--muted)]">Enter integer minor units; currency precision: {currencies.find((c) => c.code === currencyCode)?.minorUnit ?? selectedMarket?.defaultCurrency.minorUnit ?? 2}.</span></label>
+              <p className="text-sm font-semibold">Prices for every enabled store market</p>
+              {!availableMarkets.length && <p className="text-xs text-amber-800">This store has no active markets enabled.</p>}
+              {availableMarkets.map((market) => {
+                const draft = marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amountMinor: "" };
+                const currencies = market.currencies.map((entry) => entry.currency);
+                const currency = currencies.find((item) => item.code === draft.currencyCode) ?? market.defaultCurrency;
+                return <div key={market.id} className="grid gap-2 rounded-xl border border-[var(--border)] bg-white p-3">
+                  <p className="text-sm font-semibold">{market.name}</p>
+                  <label className="grid gap-1 text-sm">Currency<select required className={inputClass} value={draft.currencyCode} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, currencyCode: e.target.value } }))}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
+                  <label className="grid gap-1 text-sm">Price in minor units<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.amountMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amountMinor: e.target.value } }))} placeholder="e.g. 1299" /><span className="text-xs text-[var(--muted)]">Integer minor units · precision {currency.minorUnit}.</span></label>
+                </div>;
+              })}
             </div>
-            <button disabled={busy || !storeId || !marketId || !currencyCode || !availableMarkets.length} className="mt-2 rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Saving…" : "Create draft product"}</button>
+            <button disabled={busy || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Saving…" : "Create draft product"}</button>
           </form>}
         </section>
         <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
