@@ -838,3 +838,19 @@ The project owner approved Resend as the transactional email provider. The serve
 **Verification**
 - Schema/migration are committed but Prisma validation, generated-client compatibility, and isolated PostgreSQL replay remain pending.
 - No production database or deployment environment was accessed.
+
+
+## 2026-11-03 — Phase 3 read-side foundations
+
+**Implemented**
+- Added a localized active-category tree query with a 500-row cap and maximum depth 1–10.
+- Added a pure category-tree builder that omits orphaned/cyclic branches and applies localized labels when available.
+- Added four focused unit cases for localization/hierarchy, cycles/orphans, depth bounds, and invalid depth configuration.
+- Added an active-market read query that returns enabled currencies only and rejects a market when its default currency is not enabled in that market.
+- Files: `src/server/catalog/category-tree.ts`, `src/server/catalog/category-query.ts`, `tests/catalog/category-tree.test.ts`, `src/server/marketplace/market-query.ts`.
+
+**Verification**
+- The focused unit tests have been added but have not been executed in this environment; General CI is the verification gate.
+- The Platform PostgreSQL Integration workflow is configured to deploy every committed migration to an isolated PostgreSQL 16 service.
+- Current Vercel status remains QUEUED and is not treated as successful CI evidence.
+- No production database or Vercel environment variables were accessed or changed.
