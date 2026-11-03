@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 type Market = { id: string; code: string; name: string };
@@ -25,17 +25,19 @@ export default function AdminTaxRatesPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     const [marketData, rateData] = await Promise.all([
       json(await fetch("/api/markets", { cache: "no-store" })),
       json(await fetch("/api/admin/tax-rates", { cache: "no-store" }))
     ]);
     setMarkets(marketData.markets || []);
     setRates(rateData.rates || []);
-    if (!marketId && marketData.markets?.[0]) setMarketId(marketData.markets[0].id);
-  }
+    setMarketId((current) => current || marketData.markets?.[0]?.id || "");
+  }, []);
 
-  useEffect(() => { void load().catch((cause) => setError(cause instanceof Error ? cause.message : "Unable to load tax rules.")); }, []);
+  useEffect(() => {
+    void load().catch((cause) => setError(cause instanceof Error ? cause.message : "Unable to load tax rules."));
+  }, [load]);
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(""); setMessage("");
