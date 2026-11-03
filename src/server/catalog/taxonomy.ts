@@ -86,7 +86,7 @@ export async function listActiveCategoryTree(input: unknown = {}) {
     prisma.category.count({ where })
   ]);
   return {
-    items: buildCategoryTree(rows),
+    items: buildCategoryTree(rows, query.locale),
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
   };
 }
