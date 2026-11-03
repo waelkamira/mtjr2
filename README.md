@@ -70,7 +70,7 @@ A system may be marked **Complete** only when:
 
 ## Current status
 
-**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; deployment exit checks remain.**
+**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; production-only exit checks are deferred, not passed. Phase 3 Marketplace Core: planning started; no marketplace domain schema or production workflow is claimed complete.**
 
 Implemented identity capabilities include registration, email verification, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter, and a fail-closed trusted-proxy IP resolver.
 
@@ -79,10 +79,12 @@ Implemented identity capabilities include registration, email verification, logi
 - PostgreSQL identity integration passed on `0ffb3b4651b06d90c9eecb10eed960c87bae0348`: [run 41647984160](https://github.com/waelkamira/mtjr2/actions/runs/41647984160).
 - The existing focused password-reset PostgreSQL lifecycle and general CI evidence is recorded in [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and [build log](docs/implementation/BUILD_LOG.md).
 
-**Only remaining Phase 2 exit work (deployment-dependent)**
-1. Set `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL`; send one real verification email as a delivery smoke test.
-2. Set `TRUSTED_PROXY_IP_HEADER` to the actual Cloudflare/Vercel edge header; verify the edge overwrites it and direct origin access is blocked.
+**Deferred Phase 2 production exit work (not passed)**
+1. Configure a verified Resend sender and perform one real delivery smoke test.
+2. Verify the trusted proxy header and block direct origin bypass.
 3. Run one deployed HTTP journey: register → verify email → login → `/api/auth/me` → logout → confirm anonymous access is denied.
-4. Record the deployment evidence and focused security review.
+4. Record deployment evidence and the focused security review.
 
-No additional helper-level test suites are planned. Keep Phase 3 (Marketplace Core) gated until the single operational HTTP journey passes. Once it does, begin Phase 3 immediately.
+These are production-release gates, not blockers for schema/domain development in Phase 3. Continue using only local/disposable/CI PostgreSQL until the owner explicitly approves production database access. No additional helper-level test suites are planned.
+
+Phase 3 execution plan: [Marketplace Core plan](docs/implementation/PHASE_03_MARKETPLACE_PLAN.md).
