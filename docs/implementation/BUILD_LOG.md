@@ -173,3 +173,18 @@
 **Verification**
 - The alias fix is committed as `df26102fcaba04288aab92b8cc38d08dbf505ff1`.
 - CI for this correction and the new session tests is pending; no complete passing run is claimed yet.
+
+
+## 2026-11-03 — CI runner simplification (identity unit-test stage)
+
+**Observed**
+- The current identity test suite mocks Prisma for session lifecycle checks; it does not connect to PostgreSQL.
+- The CI job nevertheless started a PostgreSQL service container on every push. Container initialization was the long-running step and provided no value to the current mocked/unit-test stage.
+
+**Change**
+- Removed the unused PostgreSQL service from the unit/build CI job. A syntactically valid CI-only PostgreSQL URL remains for environment parsing and Prisma CLI configuration; no connection is attempted by these steps.
+- PostgreSQL will be restored in a dedicated integration/migration workflow when the plan reaches real database integration tests. This is not a replacement for that gate.
+
+**Verification**
+- Workflow change committed as `f34daadca924b7c3979ab0ac861c6521cbb72e42`.
+- CI has been triggered by this change; its result must be inspected before claiming the current identity slice passes.
