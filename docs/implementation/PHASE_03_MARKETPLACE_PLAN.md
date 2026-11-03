@@ -38,12 +38,12 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ### 3.5 Discovery
 - [ ] Add canonical product listing/detail/category/brand read APIs and pages.
-- [x] Add the localized search-synonym persistence model.\n- [ ] Add validated search, filtering, stable sorting, and pagination.
+- [x] Add the localized search-synonym persistence model.\n- [x] Add the localized search-synonym persistence model and a read-only active-market query that rejects markets whose default currency is not enabled.\n- [ ] Add validated search, filtering, stable sorting, and pagination.
 - [ ] Add indexes only for demonstrated query patterns; defer external search infrastructure.
 
 ## Required first vertical slice
 
-The schema foundations for **Country + Currency + Market**, **Seller + Store**, **Category + Brand**, and **Product + Variant + Media + Price** are committed in additive migrations. Reference-data seed, repositories/services, authorization, publishability rules, and post-change CI/PostgreSQL verification remain outstanding.
+The schema foundations for **Country + Currency + Market**, **Seller + Store**, **Category + Brand**, and **Product + Variant + Media + Price** are committed in additive migrations. Reference-data seed, product write services, authorization, publishability rules, discovery APIs, and post-change CI/PostgreSQL verification remain outstanding.
 
 ## Minimal verification gates
 
