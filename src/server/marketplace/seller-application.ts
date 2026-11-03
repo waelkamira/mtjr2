@@ -109,9 +109,16 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
 
     const markets = await tx.market.findMany({
       where: { id: { in: marketIds }, status: "ACTIVE", country: { isActive: true }, defaultCurrency: { isActive: true } },
-      select: { id: true }
+      select: {
+        id: true,
+        defaultCurrencyCode: true,
+        currencies: { where: { isEnabled: true, currency: { isActive: true } }, select: { currencyCode: true } }
+      }
     });
-    if (markets.length !== marketIds.length) throw new Error("Every selected market must exist and be active.");
+    if (markets.length !== marketIds.length ||
+      markets.some((market) => !market.currencies.some((currency) => currency.currencyCode === market.defaultCurrencyCode))) {
+      throw new Error("Every selected market must be active and have its default currency enabled.");
+    }
 
     const store = await tx.store.create({
       data: {
