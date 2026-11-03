@@ -24,7 +24,7 @@ function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-async function releaseQuoteReservations(tx: Prisma.TransactionClient, quoteId: string, status: CheckoutQuoteStatus) {
+async function releaseQuoteReservations(tx: Prisma.TransactionClient, quoteId: string, status: CheckoutQuoteStatus, now = new Date()) {
   const reservations = await tx.inventoryReservation.findMany({
     where: { referenceType: reservationReference, referenceId: quoteId, status: InventoryReservationStatus.ACTIVE },
     select: { id: true, inventoryId: true, quantity: true }
@@ -37,7 +37,7 @@ async function releaseQuoteReservations(tx: Prisma.TransactionClient, quoteId: s
     if (changed.count !== 1) throw new Error("Inventory reservation reconciliation is required.");
     await tx.inventoryReservation.update({
       where: { id: reservation.id },
-      data: { status: status === CheckoutQuoteStatus.EXPIRED ? InventoryReservationStatus.EXPIRED : InventoryReservationStatus.RELEASED, releasedAt: new Date() }
+      data: { status: status === CheckoutQuoteStatus.EXPIRED ? InventoryReservationStatus.EXPIRED : InventoryReservationStatus.RELEASED, releasedAt: now }
     });
   }
   await tx.checkoutQuote.updateMany({
@@ -92,6 +92,7 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
       });
 
   return prisma.$transaction(async (tx) => {
+    await expireReservations(tx, now);
     const existingQuote = await tx.checkoutQuote.findUnique({
       where: { idempotencyKey: data.idempotencyKey },
       include: { market: { select: { code: true, name: true } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, lines: true }
@@ -103,7 +104,6 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
       return serializeQuote(existingQuote);
     }
 
-    await expireReservations(tx, now);
     const cart = await tx.cart.findFirst({
       where: { id: data.cartId, ...ownerWhere(owner), status: CartStatus.ACTIVE },
       include: {
@@ -131,7 +131,7 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
       where: { cartId: cart.id, status: CheckoutQuoteStatus.ACTIVE },
       select: { id: true }
     });
-    for (const prior of priorQuotes) await releaseQuoteReservations(tx, prior.id, CheckoutQuoteStatus.RELEASED);
+    for (const prior of priorQuotes) await releaseQuoteReservations(tx, prior.id, CheckoutQuoteStatus.RELEASED, now);
 
     const expiresAt = new Date(now.getTime() + quoteTtlMs);
     const quote = await tx.checkoutQuote.create({
@@ -227,8 +227,25 @@ export async function getCheckoutQuote(guestToken: string, quoteId: string, now 
 export async function releaseCheckoutQuote(guestToken: string, quoteId: string, now = new Date()) {
   const quote = await getCheckoutQuote(guestToken, quoteId, now);
   if (quote.status !== CheckoutQuoteStatus.ACTIVE) return { released: false, status: quote.status };
-  await prisma.$transaction(async (tx) => releaseQuoteReservations(tx, quoteId, CheckoutQuoteStatus.RELEASED), {
+  await prisma.$transaction(async (tx) => releaseQuoteReservations(tx, quoteId, CheckoutQuoteStatus.RELEASED, now), {
     isolationLevel: Prisma.TransactionIsolationLevel.Serializable
   });
   return { released: true, status: CheckoutQuoteStatus.RELEASED };
+}
+
+/** Bounded scheduled cleanup; releases expired holds without requiring a shopper request. */
+export async function expireDueCheckoutQuotes(now = new Date(), batchSize = 100) {
+  const limit = z.number().int().min(1).max(500).parse(batchSize);
+  return prisma.$transaction(async (tx) => {
+    const due = await tx.checkoutQuote.findMany({
+      where: { status: CheckoutQuoteStatus.ACTIVE, expiresAt: { lte: now } },
+      select: { id: true },
+      orderBy: { expiresAt: "asc" },
+      take: limit
+    });
+    for (const quote of due) {
+      await releaseQuoteReservations(tx, quote.id, CheckoutQuoteStatus.EXPIRED, now);
+    }
+    return { expiredQuotes: due.length, processedAt: now.toISOString() };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
