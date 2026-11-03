@@ -111,3 +111,23 @@ export async function revokeStoreStaff(membershipId: string, now = new Date()) {
     return true;
   });
 }
+
+
+/** Lists staff and outstanding invitations for a store after checking management scope. */
+export async function listStoreStaff(storeIdInput: string, now = new Date()) {
+  const storeId = z.string().trim().min(1).parse(storeIdInput);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    await requireStoreStaffManager(tx, storeId, actor.userId, now);
+    return tx.sellerStaff.findMany({
+      where: { storeId },
+      orderBy: [{ status: "asc" }, { invitedAt: "desc" }],
+      take: 100,
+      select: {
+        id: true, status: true, invitedAt: true, acceptedAt: true,
+        user: { select: { id: true, email: true, displayName: true } },
+        invitedBy: { select: { id: true, email: true, displayName: true } }
+      }
+    });
+  });
+}
