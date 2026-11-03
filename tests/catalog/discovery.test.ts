@@ -48,7 +48,7 @@ describe("public product discovery", () => {
       translations: [],
       name: "Sample product",
       description: null,
-      variants: [{ prices: [{ amountMinor: 1299n, compareAtMinor: 1599n }] }]
+      variants: [{ prices: [{ amountMinor: BigInt(1299), compareAtMinor: BigInt(1599) }] }]
     });
     const product = await getDiscoverableProduct("sample-product");
     expect(product?.variants[0].prices[0]).toMatchObject({
