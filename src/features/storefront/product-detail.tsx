@@ -29,6 +29,8 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [favoriteError, setFavoriteError] = useState("");
+  const [messageBusy, setMessageBusy] = useState(false);
+  const [messageError, setMessageError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -68,6 +70,18 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const amount = price ? Number(price.amountMinor) / (10 ** (price.currency.minorUnit ?? 2)) : null;
   const selectedMedia = product.media[selectedMediaIndex] ?? product.media.find((item) => item.isPrimary) ?? product.media[0];
   const selectedMarket = markets.find((item) => item.id === selectedMarketId);
+
+  async function contactStore() {
+    if (!product) return;
+    setMessageBusy(true); setMessageError("");
+    try {
+      const response = await fetch("/api/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ storeId: product.store.id, subject: "Question about " + product.name, body: "Hello, I have a question about this product: " + product.name }) });
+      const result = await response.json() as { conversation?: { id: string }; error?: string };
+      if (!response.ok || !result.conversation) throw new Error(result.error || "Sign in to contact this store.");
+      window.location.assign("/account/messages/" + result.conversation.id);
+    } catch (cause) { setMessageError(cause instanceof Error ? cause.message : "Unable to contact this store."); }
+    finally { setMessageBusy(false); }
+  }
 
   async function toggleFavorite() {
     if (!product) return;
@@ -123,6 +137,8 @@ export default function ProductDetail({ slug }: { slug: string }) {
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">Choose an option<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || "Variant"}</option>)}</select></label>}
         <button type="button" onClick={() => void toggleFavorite()} disabled={favoriteBusy} aria-pressed={isFavorite} className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{favoriteBusy ? "Saving…" : isFavorite ? "♥ Saved to wishlist" : "♡ Save to wishlist"}</button>
         {favoriteError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{favoriteError} <Link href="/login" className="font-semibold underline">Sign in</Link></p>}
+        {messageError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{messageError}</p>}
+        <button type="button" onClick={contactStore} disabled={messageBusy} className="mt-3 rounded-xl border border-[var(--border)] px-6 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{messageBusy ? "Opening…" : "Message this store"}</button>
         <button type="button" onClick={addSelectedVariantToCart} disabled={!variant || !price || !selectedMarket || addingToCart} className="mt-8 rounded-xl bg-[var(--color-forest-900)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)] disabled:cursor-not-allowed disabled:opacity-50">{addingToCart ? "Adding…" : "Add to cart"}</button>
         {cartMessage && <p role="status" className="mt-3 text-sm text-[var(--color-success)]">{cartMessage} <Link href="/cart" className="font-semibold underline">View cart</Link></p>}
         {cartError && <p role="alert" className="mt-3 text-sm text-[var(--color-danger)]">{cartError}</p>}
