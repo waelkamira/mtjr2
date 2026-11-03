@@ -912,3 +912,18 @@ The project owner approved Resend as the transactional email provider. The serve
 - Rejection workflow and seller profile/KYC verification.
 - Store profile editing, invitation cancellation/revocation, and seller suspension lifecycle.
 - Store-scoped authorization tests against PostgreSQL; API-level tests.
+
+
+## 2026-11-03 — Seller/store workflow consolidation and API coverage
+
+**Consolidation**
+- Removed the duplicate seller/store lifecycle service and its duplicate test file. The canonical seller application service owns submission, review, and draft-store creation; the canonical store-staff service owns invitation, acceptance, and revocation.
+- Updated API routes to call those canonical services, avoiding two competing authorization implementations.
+- Added the approved seller's draft-store creation endpoint.
+- Added focused store-staff tests for owner invitation, exact-scope manager authorization, acceptance by the invited account, and cross-account denial.
+- Corrected the Phase 3 plan to remove duplicated and contradictory checkboxes.
+
+**Verification**
+- The seller application submission baseline passed General CI in run `41666232503`.
+- Latest consolidated service/API/test changes are committed; their General CI run is pending. Previous per-commit runs were cancelled by the workflow's intentional concurrency policy as newer commits arrived.
+- The PostgreSQL integration workflow was not rerun for these application-service changes. No production DB was accessed.
