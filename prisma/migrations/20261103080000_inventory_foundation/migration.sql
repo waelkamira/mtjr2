@@ -82,6 +82,7 @@ CREATE TABLE "StockTransfer" (
   "destinationWarehouseId" TEXT NOT NULL,
   "status" "StockTransferStatus" NOT NULL DEFAULT 'DRAFT',
   "reference" VARCHAR(100),
+  "idempotencyKey" VARCHAR(160) NOT NULL,
   "createdById" TEXT,
   "shippedAt" TIMESTAMP(3),
   "receivedAt" TIMESTAMP(3),
@@ -90,6 +91,7 @@ CREATE TABLE "StockTransfer" (
   CONSTRAINT "StockTransfer_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "StockTransfer_different_warehouses_check" CHECK ("sourceWarehouseId" <> "destinationWarehouseId")
 );
+CREATE UNIQUE INDEX "StockTransfer_idempotencyKey_key" ON "StockTransfer"("idempotencyKey");
 CREATE INDEX "StockTransfer_storeId_status_createdAt_idx" ON "StockTransfer"("storeId", "status", "createdAt");
 CREATE INDEX "StockTransfer_sourceWarehouseId_status_idx" ON "StockTransfer"("sourceWarehouseId", "status");
 CREATE INDEX "StockTransfer_destinationWarehouseId_status_idx" ON "StockTransfer"("destinationWarehouseId", "status");
