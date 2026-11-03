@@ -224,6 +224,8 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 
 ## System 09 — Customer support tickets (initial slice)
 
+Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https://github.com/waelkamira/mtjr2/pull/11)
+
 - Added canonical `SupportTicket` and `SupportMessage` models and migration `20261104010000_customer_support_tickets`. Ticket ownership, optional agent assignment, priority/status, message visibility, and queue indexes are persisted in PostgreSQL.
 - Connected customer ticket creation/list/detail/reply APIs and the `/account/support` and `/account/support/[ticketId]` pages.
 - Connected the permission-protected admin queue, ticket detail, status/priority updates, self-assignment, public replies, and internal notes at `/admin/support`.
