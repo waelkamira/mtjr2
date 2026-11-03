@@ -59,9 +59,10 @@ async function expireReservations(tx: Prisma.TransactionClient, now: Date) {
 }
 
 function serializeQuote(quote: {
-  id: string; status: CheckoutQuoteStatus; market: { code: string; name: string };
+  id: string; status: CheckoutQuoteStatus; market: { code: string; name: string; country?: { iso2: string; name: string } };
   currency: { code: string; symbol: string | null; minorUnit: number };
   subtotalMinor: bigint; expiresAt: Date;
+  deliveryAddress?: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   lines: Array<{ id: string; productName: string; storeName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
 }) {
   return {
@@ -71,6 +72,7 @@ function serializeQuote(quote: {
     currency: quote.currency,
     subtotalMinor: quote.subtotalMinor.toString(),
     expiresAt: quote.expiresAt.toISOString(),
+    deliveryAddress: quote.deliveryAddress ?? null,
     lines: quote.lines.map((line) => ({
       id: line.id, productName: line.productName, storeName: line.storeName,
       sku: line.sku, variantName: line.variantName, quantity: line.quantity,
@@ -195,7 +197,7 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
     await tx.checkoutQuote.update({ where: { id: quote.id }, data: { subtotalMinor: subtotal } });
     const saved = await tx.checkoutQuote.findUniqueOrThrow({
       where: { id: quote.id },
-      include: { market: { select: { code: true, name: true } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, lines: { orderBy: { createdAt: "asc" } } }
+      include: { market: { select: { code: true, name: true, country: { select: { iso2: true, name: true } } } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, lines: { orderBy: { createdAt: "asc" } }, deliveryAddress: true }
     });
     return serializeQuote(saved);
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
