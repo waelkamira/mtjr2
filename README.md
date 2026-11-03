@@ -268,3 +268,8 @@ Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR 
 - The additive Prisma migration is `20261104040000_returns_workflow`; apply it only through the normal reviewed migration process on the intended environment.
 - This is a return-request workflow, **not a refund system**. Approving a request or marking goods received does not move money. Refund calculation, payment-provider execution and ledger postings are deliberately deferred until those systems are integrated.
 - Return-window policy is not configured yet. Eligibility currently requires a delivered vendor order; evidence upload and return shipping/label flows are also pending.
+
+
+## Homepage discovery experience
+
+The storefront homepage includes a responsive editorial discovery feature between the hero and live catalog sections. Its browse actions connect to the existing category and product discovery sections; the seller action opens the seller entry page. The editorial tiles are presentation content, not fake inventory or fabricated product listings. Actual catalog cards still come from the products API.
