@@ -166,3 +166,154 @@ export async function moderateProductReview(reviewId: string, decision: "PUBLISH
     return { reviewId: id, status: nextStatus };
   });
 }
+
+
+const storeReviewInputSchema = reviewInputSchema.extend({ vendorOrderId: z.string().trim().min(1) }).strict();
+
+export async function listPublicStoreReviews(storeId: string, query: unknown = {}) {
+  const id = z.string().trim().min(1).parse(storeId);
+  const page = reviewPageSchema.parse(query);
+  const store = await prisma.store.findFirst({
+    where: { id, status: "ACTIVE", seller: { status: "ACTIVE" } }, select: { id: true }
+  });
+  if (!store) throw new Error("Store not found.");
+  const [items, aggregate] = await Promise.all([
+    prisma.storeReview.findMany({
+      where: { storeId: id, status: ReviewStatus.PUBLISHED },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: page.limit + 1,
+      ...(page.cursor ? { cursor: { id: page.cursor }, skip: 1 } : {}),
+      select: { id: true, rating: true, title: true, body: true, sellerResponse: true, sellerRespondedAt: true, createdAt: true, user: { select: { displayName: true } } }
+    }),
+    prisma.storeReview.aggregate({
+      where: { storeId: id, status: ReviewStatus.PUBLISHED }, _avg: { rating: true }, _count: { _all: true }
+    })
+  ]);
+  const hasMore = items.length > page.limit;
+  const pageItems = hasMore ? items.slice(0, page.limit) : items;
+  return {
+    items: pageItems.map((item) => ({
+      id: item.id, rating: item.rating, title: item.title, body: item.body,
+      author: item.user.displayName?.trim() || "Verified buyer",
+      sellerResponse: item.sellerResponse,
+      sellerRespondedAt: item.sellerRespondedAt?.toISOString() ?? null,
+      createdAt: item.createdAt.toISOString(), verifiedPurchase: true as const
+    })),
+    summary: { averageRating: aggregate._avg.rating ?? 0, reviewCount: aggregate._count._all },
+    nextCursor: hasMore ? pageItems[pageItems.length - 1]?.id ?? null : null
+  };
+}
+
+export async function createVerifiedStoreReview(storeId: string, input: unknown, now = new Date()) {
+  const id = z.string().trim().min(1).parse(storeId);
+  const data = storeReviewInputSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const vendorOrder = await tx.vendorOrder.findFirst({
+        where: {
+          id: data.vendorOrderId, storeId: id, status: VendorOrderStatus.DELIVERED,
+          order: { userId: actor.userId }
+        },
+        select: { id: true, orderId: true }
+      });
+      if (!vendorOrder) throw new Error("A delivered purchase from this store is required to write a review.");
+      const review = await tx.storeReview.create({
+        data: {
+          storeId: id, userId: actor.userId, vendorOrderId: vendorOrder.id,
+          rating: data.rating, title: data.title, body: data.body, status: ReviewStatus.PENDING
+        },
+        select: { id: true, status: true, rating: true, title: true, createdAt: true }
+      });
+      await tx.auditLog.create({
+        data: {
+          actorType: AuditActorType.USER, actorId: actor.userId, action: "review.store.submitted",
+          resource: "store_review", resourceId: review.id, scopeType: "STORE", scopeId: id,
+          occurredAt: now, metadata: { vendorOrderId: vendorOrder.id, orderId: vendorOrder.orderId, rating: data.rating }
+        }
+      });
+      return { ...review, createdAt: review.createdAt.toISOString() };
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new Error("You have already reviewed this store.");
+    }
+    throw error;
+  }
+}
+
+export async function listPendingStoreReviews(now = new Date()) {
+  await requirePermission({ permissionKey: "users:manage", now });
+  return prisma.storeReview.findMany({
+    where: { status: ReviewStatus.PENDING },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }], take: 100,
+    select: {
+      id: true, rating: true, title: true, body: true, createdAt: true,
+      store: { select: { id: true, name: true, slug: true } },
+      user: { select: { id: true, displayName: true, email: true } },
+      vendorOrder: { select: { id: true, order: { select: { orderNumber: true } } } }
+    }
+  });
+}
+
+export async function moderateStoreReview(reviewId: string, decision: "PUBLISH" | "REJECT" | "HIDE", reason?: string, now = new Date()) {
+  const id = z.string().trim().min(1).parse(reviewId);
+  const actor = await requirePermission({ permissionKey: "users:manage", now });
+  return prisma.$transaction(async (tx) => {
+    const review = await tx.storeReview.findUnique({ where: { id }, select: { id: true, storeId: true, status: true } });
+    if (!review) throw new Error("Store review not found.");
+    if (review.status !== ReviewStatus.PENDING && decision !== "HIDE") throw new Error("Only pending reviews can be approved or rejected.");
+    const nextStatus = decision === "PUBLISH" ? ReviewStatus.PUBLISHED : decision === "REJECT" ? ReviewStatus.REJECTED : ReviewStatus.HIDDEN;
+    const changed = await tx.storeReview.updateMany({
+      where: { id, status: review.status },
+      data: { status: nextStatus, moderatedAt: now, moderatedBy: actor.userId }
+    });
+    if (changed.count !== 1) throw new Error("Store review was already moderated.");
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId, action: `review.store.${decision.toLowerCase()}`,
+        resource: "store_review", resourceId: id, scopeType: "STORE", scopeId: review.storeId,
+        occurredAt: now, metadata: { previousStatus: review.status, status: nextStatus, reason: reason?.trim().slice(0, 500) ?? null }
+      }
+    });
+    return { reviewId: id, status: nextStatus };
+  });
+}
+
+export async function listSellerStoreReviews(now = new Date()) {
+  const actor = await requireCurrentSession(now);
+  return prisma.storeReview.findMany({
+    where: { store: { seller: { ownerId: actor.userId } } },
+    orderBy: { createdAt: "desc" }, take: 100,
+    select: {
+      id: true, rating: true, title: true, body: true, status: true, sellerResponse: true,
+      sellerRespondedAt: true, createdAt: true,
+      store: { select: { id: true, name: true, slug: true } },
+      user: { select: { displayName: true } },
+      vendorOrder: { select: { order: { select: { orderNumber: true } } } }
+    }
+  });
+}
+
+export async function respondToStoreReview(reviewId: string, responseText: string, now = new Date()) {
+  const id = z.string().trim().min(1).parse(reviewId);
+  const body = z.string().trim().min(3).max(2000).parse(responseText);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const review = await tx.storeReview.findFirst({
+      where: { id, status: ReviewStatus.PUBLISHED, store: { seller: { ownerId: actor.userId, status: "ACTIVE" } } },
+      select: { id: true, storeId: true }
+    });
+    if (!review) throw new Error("Published store review not found for your store.");
+    const updated = await tx.storeReview.update({
+      where: { id }, data: { sellerResponse: body, sellerRespondedAt: now },
+      select: { id: true, sellerResponse: true, sellerRespondedAt: true }
+    });
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId, action: "review.store.seller_responded",
+        resource: "store_review", resourceId: id, scopeType: "STORE", scopeId: review.storeId, occurredAt: now
+      }
+    });
+    return { ...updated, sellerRespondedAt: updated.sellerRespondedAt?.toISOString() ?? null };
+  });
+}
