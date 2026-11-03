@@ -73,7 +73,7 @@ export default function CartPage() {
     setBusyItem(itemId);
     setError("");
     try {
-      const response = await fetch(`/api/cart/items/${encodeURIComponent(itemId)}`, { method: "DELETE" });
+      const response = await fetch(`/api/cart/items/${encodeURIComponent(itemId)}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Item could not be removed.");
       await refresh();
