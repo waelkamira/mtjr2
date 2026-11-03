@@ -38,6 +38,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
         if (!active) return;
         setProduct(result);
         setSelectedVariant(result.variants[0]?.id ?? "");
+        setSelectedMarketId(result.variants[0]?.prices[0]?.marketId ?? "");
       })
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Product details are unavailable."); })
       .finally(() => { if (active) setLoading(false); });
@@ -59,7 +60,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{product.brand?.name ?? "Marketplace selection"}</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)] sm:text-4xl">{product.name}</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">Sold by {product.store.name}</p>
-        {markets.length > 0 && <label className="mt-5 block text-sm font-medium">Delivery market<select aria-label="Choose delivery market" value={selectedMarketId} onChange={(event) => setSelectedMarketId(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3"><option value="">All available markets</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}</select></label>}
+        {markets.length > 0 && <label className="mt-5 block text-sm font-medium">Delivery market<select aria-label="Choose delivery market" value={selectedMarketId} onChange={(event) => setSelectedMarketId(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3"><option value="">Select a market</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}</select></label>}
         <p className="mt-7 text-3xl font-semibold">{price && amount !== null ? new Intl.NumberFormat(undefined, { style: "currency", currency: price.currencyCode }).format(amount) : "Price unavailable"}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">Choose an option<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || "Variant"}</option>)}</select></label>}
