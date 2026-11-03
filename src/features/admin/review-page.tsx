@@ -9,7 +9,7 @@ type SellerApplication = {
 };
 type PendingProduct = {
   id: string; name: string; slug: string; description: string | null; createdAt: string;
-  store: { id: string; name: string; seller: { id: string; displayName: string | null; legalName: string } };
+  store: { id: string; name: string; seller: { id: string; displayName: string | null; legalName: string | null } };
   media: Array<{ url: string; altText: string | null }>;
   variants: Array<{ id: string; sku: string; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
 };
