@@ -1438,3 +1438,14 @@ The project owner approved Resend as the transactional email provider. The serve
 - Existing `/api/products` validation, active-product filtering, market-aware pricing, synonym expansion and pagination remain the source of truth; no client-side catalog filtering was introduced.
 - No Prisma schema or migration change was needed. No database was accessed and no routine test suite was expanded or awaited.
 - Known gaps: typo-tolerant ranking, autocomplete/suggestions and richer facets remain deferred until catalog scale and relevance requirements are measured.
+
+
+## 2026-11-04 — System 10: persisted in-app notification preferences
+
+- Added canonical `NotificationPreference` rows keyed uniquely by user and event type, with in-app delivery enabled by default. Migration: `20261104030000_notification_preferences`.
+- Added authenticated `GET/PUT /api/account/notification-preferences`; input is restricted to the four currently implemented event types and must include each exactly once.
+- Connected settings controls to the existing `/notifications` page. Users can manage order updates, seller order alerts, store messages and support replies.
+- Centralized preference-aware notification creation and wired it into transactional order, seller order, store messaging and support reply events. A missing preference preserves current behavior (enabled); disabling a type suppresses future in-app records for that recipient. Existing notification history is not deleted.
+- Email preferences/delivery are intentionally not exposed until a verified sender, consent handling, outbox/retries and delivery status exist.
+- Updated the 49-system blueprint. No live database was accessed or migrated; only the committed Prisma schema and additive SQL migration were changed.
+- Verification policy: no routine test expansion or wait. Focus only on Prisma generation/type/build blockers or preference/notification persistence integrity.
