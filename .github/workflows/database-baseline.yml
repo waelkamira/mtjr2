@@ -1,5 +1,8 @@
 name: Database Baseline
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   push:
@@ -62,3 +65,14 @@ jobs:
             prisma/migrations/migration_lock.toml
             prisma/migrations/20261103000000_identity_baseline/migration.sql
           if-no-files-found: error
+      - name: Commit generated baseline migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prisma/migrations/migration_lock.toml prisma/migrations/20261103000000_identity_baseline/migration.sql
+          if git diff --cached --quiet; then
+            echo "Baseline migration is already committed."
+          else
+            git commit -m "db(identity): add initial PostgreSQL baseline migration"
+            git push origin HEAD:main
+          fi
