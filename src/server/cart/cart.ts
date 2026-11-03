@@ -180,7 +180,7 @@ export async function getActiveCarts(guestToken: string, now = new Date()) {
                 id: true, sku: true, name: true,
                 product: {
                   select: {
-                    id: true, slug: true, name: true,
+                    id: true, slug: true, name: true, storeId: true,
                     store: { select: { name: true, slug: true } },
                     media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 1, select: { url: true, altText: true } }
                   }
@@ -189,7 +189,7 @@ export async function getActiveCarts(guestToken: string, now = new Date()) {
                   where: { marketId: { not: "" } },
                   select: { marketId: true, currencyCode: true, amountMinor: true, compareAtMinor: true, currency: { select: { minorUnit: true } } }
                 },
-                inventories: { where: { warehouse: { isActive: true } }, select: { quantityOnHand: true, quantityReserved: true } }
+                inventories: { where: { warehouse: { isActive: true } }, select: { quantityOnHand: true, quantityReserved: true, warehouse: { select: { storeId: true } } } }
               }
             }
           }
@@ -202,12 +202,12 @@ export async function getActiveCarts(guestToken: string, now = new Date()) {
       currency: cart.currency,
       items: cart.items.map((item) => {
         const price = item.variant.prices.find((candidate) => candidate.marketId === cart.marketId && candidate.currencyCode === cart.currencyCode);
-        const availableQuantity = item.variant.inventories.reduce((total, stock) => total + stock.quantityOnHand - stock.quantityReserved, 0);
+        const availableQuantity = item.variant.inventories.filter((stock) => stock.warehouse.storeId === item.variant.product.storeId).reduce((total, stock) => total + stock.quantityOnHand - stock.quantityReserved, 0);
         return {
           id: item.id, quantity: item.quantity,
           variant: {
             id: item.variant.id, sku: item.variant.sku, name: item.variant.name,
-            product: item.variant.product
+            product: { id: item.variant.product.id, slug: item.variant.product.slug, name: item.variant.product.name, store: item.variant.product.store, media: item.variant.product.media }
           },
           price: price ? {
             amountMinor: price.amountMinor.toString(),
