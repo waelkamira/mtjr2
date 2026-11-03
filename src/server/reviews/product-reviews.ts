@@ -118,14 +118,26 @@ export async function createVerifiedProductReview(productId: string, input: unkn
 
 export async function listMyProductReviews(now = new Date()) {
   const actor = await requireCurrentSession(now);
-  return prisma.productReview.findMany({
-    where: { userId: actor.userId },
-    orderBy: { createdAt: "desc" }, take: 50,
-    select: {
-      id: true, rating: true, title: true, body: true, status: true, createdAt: true,
-      product: { select: { id: true, name: true, slug: true, media: { where: { isPrimary: true }, take: 1, select: { url: true } } } }
-    }
-  });
+  const [productItems, storeItems] = await Promise.all([
+    prisma.productReview.findMany({
+      where: { userId: actor.userId },
+      orderBy: { createdAt: "desc" }, take: 50,
+      select: {
+        id: true, rating: true, title: true, body: true, status: true, createdAt: true,
+        product: { select: { id: true, name: true, slug: true, media: { where: { isPrimary: true }, take: 1, select: { url: true } } } }
+      }
+    }),
+    prisma.storeReview.findMany({
+      where: { userId: actor.userId },
+      orderBy: { createdAt: "desc" }, take: 50,
+      select: {
+        id: true, rating: true, title: true, body: true, status: true, sellerResponse: true, createdAt: true,
+        store: { select: { id: true, name: true, slug: true } },
+        vendorOrder: { select: { order: { select: { orderNumber: true } } } }
+      }
+    })
+  ]);
+  return { productItems, storeItems };
 }
 
 export async function listPendingProductReviews(now = new Date()) {
