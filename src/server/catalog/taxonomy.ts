@@ -27,7 +27,7 @@ type CategoryRow = {
   translations: Array<{ name: string; description: string | null }>;
 };
 
-export function buildCategoryTree(rows: CategoryRow[]): CategoryTreeNode[] {
+export function buildCategoryTree(rows: CategoryRow[], _locale: string): CategoryTreeNode[] {
   const nodes = new Map<string, CategoryTreeNode>();
   for (const row of rows) {
     const translation = row.translations.find((item) => item.name.trim().length > 0);
