@@ -64,7 +64,7 @@ describe("product lifecycle", () => {
         updateMany: mocks.productUpdateMany
       },
       auditLog: { create: mocks.auditCreate }
-    }));
+    } as unknown as Prisma.TransactionClient));
   });
 
   it("creates variants and minor-unit prices atomically in the store's enabled market", async () => {
@@ -75,7 +75,7 @@ describe("product lifecycle", () => {
     });
     expect(result).toMatchObject({ id: "product-1", status: "DRAFT", approvalStatus: "PENDING" });
     const createArg = mocks.productCreate.mock.calls[0][0];
-    expect(createArg.data.variants.create[0].prices.create[0].amountMinor).toBe(2499n);
+    expect(createArg.data.variants.create[0].prices.create[0].amountMinor).toBe(BigInt("2499"));
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
