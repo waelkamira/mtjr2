@@ -232,3 +232,12 @@ Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https:/
 - Customer queries are owner-scoped; internal notes are excluded from customer responses. Admin mutations are audited; customer-facing agent replies create deduplicated in-app notifications transactionally.
 - Still incomplete: customer-to-store conversations, attachments, read receipts, SLA timers/escalation, agent team routing, and outbound email. This is an initial support-ticket workflow, not full System 09 completion.
 - No production or owner database was accessed. No PR was merged.
+
+
+## System 09 — Customer messaging and support (core vertical slice)
+
+- Draft PR: [#11](https://github.com/waelkamira/mtjr2/pull/11), branch `feat/customer-support-tickets`, stacked on product Q&A PR #10.
+- Added canonical `StoreConversation`/`StoreMessage` and `SupportTicket`/`SupportMessage` persistence with migrations. Customer-to-store messaging is available from product detail and customer inbox; seller inbox is store-scoped.
+- Customer support tickets connect to customer pages and the admin support desk. Admin management uses dedicated `support:manage`; store messaging uses store-scoped `messages:manage`.
+- Customer/agent and customer/store read timestamps are persisted. Ticket first-response time is recorded. Ticket creation/admin changes are audited; public replies create in-app notifications. Internal support notes are never returned to customers.
+- **Not yet complete:** attachment upload/storage and security scanning (object-storage provider required), formal SLA targets and scheduled escalation, staff recipient routing, outbound email. Do not call System 09 fully complete until these dependencies and workflows are delivered.
