@@ -53,6 +53,8 @@ model User {
   checkoutQuotes        CheckoutQuote[]
   addresses             UserAddress[]
   orders                Order[]
+  returnRequests        ReturnRequest[] @relation("ReturnRequestCustomer")
+  reviewedReturnRequests ReturnRequest[] @relation("ReturnRequestReviewer")
   notifications         Notification[]
   notificationPreferences NotificationPreference[]
   productReviews        ProductReview[]
@@ -338,6 +340,14 @@ enum VendorOrderStatus {
   READY_TO_SHIP
   SHIPPED
   DELIVERED
+  CANCELLED
+}
+
+enum ReturnRequestStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
   CANCELLED
 }
 
@@ -1169,6 +1179,7 @@ model Order {
   currency        Currency    @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
   address         OrderAddress?
   vendorOrders    VendorOrder[]
+  returnRequests  ReturnRequest[]
   statusHistory   OrderStatusHistory[]
   conversations StoreConversation[]
 
@@ -1238,6 +1249,7 @@ model OrderItem {
   product          Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
   variant          ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
   review           ProductReview?
+  returnItems      ReturnItem[]
 
   @@index([vendorOrderId])
   @@index([productId])
@@ -1268,6 +1280,43 @@ model VendorOrderStatusHistory {
   @@index([vendorOrderId, createdAt])
 }
 
+
+model ReturnRequest {
+  id             String              @id @default(cuid())
+  returnNumber   String              @unique @db.VarChar(32)
+  orderId        String
+  customerId     String
+  status         ReturnRequestStatus @default(REQUESTED)
+  reasonCode     String              @db.VarChar(32)
+  reasonDetails  String?             @db.VarChar(2000)
+  reviewNote     String?             @db.VarChar(1000)
+  requestedAt    DateTime            @default(now())
+  reviewedAt     DateTime?
+  reviewedById   String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  order          Order               @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  customer       User                @relation("ReturnRequestCustomer", fields: [customerId], references: [id], onDelete: Restrict)
+  reviewedBy     User?               @relation("ReturnRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  items          ReturnItem[]
+
+  @@index([customerId, requestedAt])
+  @@index([orderId, status])
+  @@index([status, requestedAt])
+}
+
+model ReturnItem {
+  id              String       @id @default(cuid())
+  returnRequestId String
+  orderItemId     String
+  quantity        Int
+  createdAt       DateTime     @default(now())
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItem       OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@unique([returnRequestId, orderItemId])
+  @@index([orderItemId])
+}
 
 model ProductReview {
   id          String       @id @default(cuid())
