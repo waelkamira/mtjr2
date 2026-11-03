@@ -11,7 +11,7 @@ type Market = {
 type Category = { id: string; name: string; children: Category[] };
 type Brand = { id: string; name: string };
 type Product = {
-  id: string; name: string; slug: string; status: string; approvalStatus: string;
+  id: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
   media: Array<{ url: string; altText: string | null }>;
   variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
@@ -52,6 +52,10 @@ export default function SellerProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [editingId, setEditingId] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   const selectedMarket = markets.find((market) => market.id === marketId);
   const currencies = selectedMarket?.currencies.map((entry) => entry.currency) ?? [];
@@ -138,6 +142,23 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
+  async function saveProductEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingId) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editName, slug: editSlug, description: editDescription })
+      }));
+      setEditingId("");
+      setMessage("Draft product updated and returned to pending review.");
+      await loadProducts(storeId);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Product could not be updated.");
+    } finally { setBusy(false); }
+  }
+
   async function publish(id: string) {
     setBusy(true); setError(""); setMessage("");
     try {
@@ -191,8 +212,18 @@ export default function SellerProductsPage() {
           <h2 className="text-lg font-semibold">Store catalog</h2>
           {!products.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">No products in this store yet.</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} variants</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--color-ivory-100)] px-2.5 py-1 text-xs">{product.status}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{product.approvalStatus}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">Review: {product.rejectionReason}</p>}</div>
-            {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">Publish</button>}
+            <div className="flex flex-wrap gap-2">
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">Edit draft</button>}
+              {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">Publish</button>}
+            </div>
           </article>)}</div>}
+          {editingId && <form onSubmit={saveProductEdit} className="mt-5 grid gap-3 rounded-2xl border border-[var(--border)] p-4">
+            <h3 className="font-semibold">Edit draft product</h3>
+            <label className="grid gap-1 text-sm">Name<input required minLength={2} maxLength={180} className={inputClass} value={editName} onChange={(e) => setEditName(e.target.value)} /></label>
+            <label className="grid gap-1 text-sm">Slug<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={editSlug} onChange={(e) => setEditSlug(e.target.value)} /></label>
+            <label className="grid gap-1 text-sm">Description<textarea maxLength={12000} rows={3} className={inputClass} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} /></label>
+            <div className="flex gap-2"><button disabled={busy} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2 text-xs font-semibold text-white">Save changes</button><button type="button" onClick={() => setEditingId("")} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">Cancel</button></div>
+          </form>}
         </section>
       </div>}
     </div>
