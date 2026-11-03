@@ -4,7 +4,7 @@ import { AuditActorType, SellerStaffStatus, UserStatus, type Prisma } from "@pri
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
-import { userHasPermission } from "@/server/identity/permission-repository";
+import { userHasScopedPermission } from "@/server/identity/permission-repository";
 
 const inviteSchema = z.object({
   storeId: z.string().trim().min(1),
@@ -18,7 +18,7 @@ async function requireStoreStaffManager(tx: Prisma.TransactionClient, storeId: s
   });
   if (!store || store.seller.status !== "ACTIVE") throw new Error("Active store not found.");
   if (store.seller.ownerId !== userId) {
-    const allowed = await userHasPermission(userId, {
+    const allowed = await userHasScopedPermission(userId, {
       permissionKey: "store:staff:manage",
       scope: { type: "STORE", id: storeId },
       now
