@@ -24,6 +24,7 @@ const transferSchema = z.object({
   sourceWarehouseId: z.string().trim().min(1),
   destinationWarehouseId: z.string().trim().min(1),
   reference: z.string().trim().max(100).optional(),
+  idempotencyKey: z.string().trim().min(16).max(160),
   items: z.array(z.object({
     variantId: z.string().trim().min(1),
     quantity: z.number().int().min(1).max(1000000)
@@ -176,6 +177,18 @@ export async function createStockTransfer(input: unknown, now = new Date()) {
     const source = await requireWarehouseAccess(tx, data.sourceWarehouseId, actor.userId, now);
     const destination = await requireWarehouseAccess(tx, data.destinationWarehouseId, actor.userId, now);
     if (source.storeId !== destination.storeId) throw new Error("Stock transfers must stay within one store.");
+    const existing = await tx.stockTransfer.findUnique({
+      where: { idempotencyKey: data.idempotencyKey },
+      include: { items: true }
+    });
+    if (existing) {
+      const existingItems = existing.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })).sort((a, b) => a.variantId.localeCompare(b.variantId));
+      const requestedItems = data.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })).sort((a, b) => a.variantId.localeCompare(b.variantId));
+      if (existing.sourceWarehouseId !== source.id || existing.destinationWarehouseId !== destination.id || JSON.stringify(existingItems) !== JSON.stringify(requestedItems)) {
+        throw new Error("The idempotency key was already used for a different stock transfer.");
+      }
+      return { id: existing.id, status: existing.status, sourceWarehouseId: existing.sourceWarehouseId, destinationWarehouseId: existing.destinationWarehouseId, alreadyApplied: true };
+    }
     const variants = await tx.productVariant.findMany({
       where: { id: { in: variantIds }, product: { storeId: source.storeId } }, select: { id: true }
     });
@@ -184,7 +197,7 @@ export async function createStockTransfer(input: unknown, now = new Date()) {
       data: {
         storeId: source.storeId, sourceWarehouseId: source.id,
         destinationWarehouseId: destination.id, reference: data.reference,
-        createdById: actor.userId,
+        idempotencyKey: data.idempotencyKey, createdById: actor.userId,
         items: { create: data.items }
       },
       select: { id: true, status: true, sourceWarehouseId: true, destinationWarehouseId: true }
@@ -194,7 +207,7 @@ export async function createStockTransfer(input: unknown, now = new Date()) {
       resource: "stock_transfer", resourceId: transfer.id, scopeType: "STORE", scopeId: source.storeId,
       occurredAt: now, metadata: { itemCount: data.items.length }
     }});
-    return transfer;
+    return { ...transfer, alreadyApplied: false };
   });
 }
 
