@@ -519,3 +519,26 @@
 **Verification boundary**
 - The new login integration test is committed but not yet run in CI. The previous PostgreSQL workflow did not exercise the login service directly.
 - The logout primitive passed unit tests; cookie-bound HTTP logout, CSRF/Origin checks, password reset, email delivery, and full HTTP E2E remain outstanding.
+
+
+## 2026-11-03 — Password reset service and PostgreSQL lifecycle coverage
+
+**Implemented**
+- Added `src/server/identity/password-reset.ts`.
+- Reset challenges are generated with 256 bits of entropy; only SHA-256 digests are persisted, with a one-hour expiry.
+- Issuing a new challenge invalidates previous outstanding challenges for the same account.
+- Challenge issuance is restricted to active accounts with verified email addresses. The trusted caller receives the raw token only for server-side email delivery; public HTTP responses must remain generic.
+- Completion hashes the new password before opening the transaction, atomically consumes the challenge, updates the password only for an active account, revokes all existing sessions in the same transaction, and records an audit event.
+- Added a PostgreSQL integration scenario covering digest-only storage, one-time consumption, password replacement, audit evidence, and session revocation.
+- Updated the Phase 2 plan and retained the Phase 3 block.
+
+**Verification**
+- Changes were committed directly to `main`; the latest code/documentation commit at this log entry is `e148bf6dbf0b0ad3d3a4840488895c470b3da55e`.
+- CI and PostgreSQL integration for the password-reset implementation have not yet been observed. No pass is claimed.
+- No local tests were run in this session.
+
+**Remaining before public exposure**
+- Add request throttling/cooldown and generic HTTP response behavior.
+- Integrate a real transactional email provider through a server-only adapter.
+- Add CSRF/Origin enforcement before exposing mutation routes.
+- Add route-level HTTP tests and review concurrency/error handling.
