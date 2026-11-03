@@ -643,3 +643,8 @@ After the current schema is validated:
 4. Refresh the model-to-callsite map when its canonical location is confirmed.
 
 **Scope note:** this is a remote static inspection only. No local runtime validation, Prisma generation, database migration replay, or production database access was performed as part of this documentation update.
+
+
+## Buying Core implementation update — 2026-11-03
+
+The current implementation status is tracked in `docs/implementation/PHASE_04_BUYING_PLAN.md`. Cart, checkout quote/reservation, and delivery-address capture have passed their focused CI and disposable PostgreSQL gates. Configurable store shipping rates and per-store quote selections have been implemented on the stacked shipping branch, including Prisma persistence, migration, seller configuration UI, buyer checkout UI, and APIs; their verification is pending. Tax, discount, final order totals, order creation, payment, and shipment execution are not yet complete. Do not mark the buying system complete until its remaining workflows and verification gates pass.
