@@ -13,7 +13,8 @@ const { prismaMock, txMock } = vi.hoisted(() => {
   return {
     txMock: tx,
     prismaMock: {
-      $transaction: vi.fn((callback: (client: typeof tx) => unknown) => callback(tx))
+      $transaction: vi.fn((callback: (client: typeof tx) => unknown) => callback(tx)),
+      loginRateLimitBucket: { updateMany: vi.fn() }
     }
   };
 });
