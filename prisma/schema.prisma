@@ -54,6 +54,7 @@ model User {
   addresses             UserAddress[]
   orders                Order[]
   notifications         Notification[]
+  productReviews        ProductReview[]
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -330,6 +331,13 @@ enum VendorOrderStatus {
   CANCELLED
 }
 
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  HIDDEN
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -563,6 +571,7 @@ model Product {
   identifiers    ProductIdentifier[]
   attributes     ProductAttribute[]
   orderItems     OrderItem[]
+  reviews        ProductReview[]
 
   @@unique([storeId, slug])
   @@index([storeId, status, approvalStatus, createdAt])
@@ -1198,6 +1207,7 @@ model OrderItem {
   vendorOrder      VendorOrder @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
   product          Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
   variant          ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  review           ProductReview?
 
   @@index([vendorOrderId])
   @@index([productId])
@@ -1228,6 +1238,29 @@ model VendorOrderStatusHistory {
   @@index([vendorOrderId, createdAt])
 }
 
+
+model ProductReview {
+  id          String       @id @default(cuid())
+  productId   String
+  userId      String
+  orderItemId String       @unique
+  rating      Int
+  title       String       @db.VarChar(120)
+  body        String       @db.VarChar(4000)
+  status      ReviewStatus @default(PENDING)
+  moderatedAt DateTime?
+  moderatedBy String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, productId])
+  @@index([productId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
 
 model Notification {
   id                String   @id @default(cuid())
