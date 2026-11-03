@@ -1414,3 +1414,14 @@ The project owner approved Resend as the transactional email provider. The serve
 - Latest staff-routing and documentation commits triggered General CI run `41723375413` and PostgreSQL integration run `41723375356`; both were pending at the time of this entry. No claim of success is made.
 - System 09 still depends on an approved object-storage provider/upload policy for attachments, an agreed SLA policy plus worker, and a verified outbound-email sender. These are explicit decisions/operational dependencies, not hidden implementation claims.
 - No production database, local owner database, or Vercel environment was accessed. No pull request was merged.
+
+
+## 2026-11-04 — Storefront demo experience
+
+- Created `feat/storefront-demo-experience` on top of the latest System 09 branch; no PR was merged.
+- Added an opt-in repeatable demo seed fixture to `prisma/seed.cjs`: NL demo market/EUR, demo seller/store, 4 active categories with images, 3 brands, 8 approved/published products, translations, variants, EUR prices, product media, warehouse and stock.
+- The fixture requires both `SEED_DEMO_CATALOG=true` and `ALLOW_DEMO_CATALOG_SEED=true`, and refuses to run under `NODE_ENV=production`. The normal seed path remains identity-only. No database was connected to or seeded during this work.
+- Updated storefront navigation with visible sign-in/register, wishlist, orders, cart, seller, messages and notifications links. Replaced the category chip row with an image-led responsive category grid and added featured-brand filters.
+- Existing search/filter/sort/pagination and product detail/cart/favorite/messaging calls remain wired to canonical APIs. No Prisma schema change was necessary because the fixture uses existing models.
+- The Netherlands/EUR market is clearly a demo fixture only, not a launch market, tax rule or regulatory decision. Checkout still needs approved shipping/tax/payment configuration before an end-to-end paid order can be demonstrated.
+- Verification policy: no broad test matrix was added or awaited. No database seed, Prisma migration, production database, or Vercel environment was run/changed in this implementation. Focus next on only any typecheck/build/data-integrity blocker reported by CI.
