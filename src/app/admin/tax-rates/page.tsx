@@ -36,7 +36,11 @@ export default function AdminTaxRatesPage() {
   }, []);
 
   useEffect(() => {
-    void load().catch((cause) => setError(cause instanceof Error ? cause.message : "Unable to load tax rules."));
+    let active = true;
+    void Promise.resolve().then(load).catch((cause) => {
+      if (active) setError(cause instanceof Error ? cause.message : "Unable to load tax rules.");
+    });
+    return () => { active = false; };
   }, [load]);
 
   async function submit(event: FormEvent) {
