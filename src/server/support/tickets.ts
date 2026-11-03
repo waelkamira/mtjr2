@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { requirePermission } from "@/server/identity/permission-guard";
+import { createInAppNotification } from "@/server/notifications/notifications";
 
 const idSchema = z.string().trim().min(1).max(128);
 const createSchema = z.object({
@@ -121,7 +122,7 @@ export async function adminReplyToSupportTicket(ticketId: string, input: unknown
     if (ticket.status === SupportTicketStatus.CLOSED) throw new Error("Closed tickets cannot receive replies.");
     const message = await tx.supportMessage.create({ data: { ticketId: id, senderId: actor.userId, body: data.body, isInternal: data.internal ?? false }, select: { id: true, body: true, isInternal: true, createdAt: true } });
     await tx.supportTicket.update({ where: { id }, data: { status: data.internal ? ticket.status : SupportTicketStatus.WAITING_CUSTOMER, lastMessageAt: now, agentReadAt: now, ...(!data.internal && !ticket.firstResponseAt ? { firstResponseAt: now } : {}) } });
-    if (!data.internal) await tx.notification.create({ data: {
+    if (!data.internal) await createInAppNotification(tx, { data: {
       userId: ticket.customerId, type: "SUPPORT_REPLY", title: "Support replied to your ticket",
       message: "There is a new response to your support request.", resourceType: "support_ticket",
       resourceId: id, deduplicationKey: `support-reply:${message.id}`
