@@ -1396,3 +1396,11 @@ The project owner approved Resend as the transactional email provider. The serve
 - Extended support tickets with customer/agent read timestamps and first public response timestamp; admin workflow now uses dedicated `support:manage` rather than broad `users:manage`.
 - Remaining: attachment upload/storage and security scanning require an object-storage provider; SLA target policy/escalation needs agreed operational targets and a worker; staff notification routing and email delivery remain open.
 - Verification: no production database used. Prisma validation/typecheck/build and isolated PostgreSQL migration replay are not yet confirmed for this expanded branch.
+
+
+## Storefront readiness finding (2026-11-04)
+
+- The current home page has a search form wired to `GET /api/products`, market/category/brand filters, sorting, pagination, product links and a cart entry point.
+- `prisma/seed.cjs` seeds only roles and permissions. It does not create demo markets/currencies/catalog/store/products/variants/prices/media/inventory. An empty database therefore has no demo products and the search UI has nothing to find.
+- The implementation chain is stacked and unmerged. PR #11 is based on PR #10, not `main`; its pages will not appear in the main deployment until reviewed/merged in sequence.
+- Next separate delivery slice: deterministic demo catalog seed plus a materially complete homepage and a verified public browse/search/product/cart journey. No production DB seed or credentials will be used.
