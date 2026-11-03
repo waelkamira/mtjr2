@@ -50,6 +50,7 @@ model User {
   storeMemberships  SellerStaff[]          @relation("SellerStaffUser")
   sentStoreInvitations SellerStaff[]        @relation("SellerStaffInviter")
   carts                 Cart[]
+  checkoutQuotes        CheckoutQuote[]
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -298,6 +299,13 @@ enum CartStatus {
   ABANDONED
 }
 
+enum CheckoutQuoteStatus {
+  ACTIVE
+  EXPIRED
+  RELEASED
+  CONVERTED
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -325,6 +333,7 @@ model Currency {
   marketLinks   MarketCurrency[]
   productPrices ProductPrice[]
   carts         Cart[]
+  checkoutQuotes CheckoutQuote[]
 
   @@index([isActive, name])
 }
@@ -344,6 +353,7 @@ model Market {
   storeLinks          StoreMarket[]
   productPrices       ProductPrice[]
   carts               Cart[]
+  checkoutQuotes      CheckoutQuote[]
 
   @@index([countryId, status])
   @@index([defaultCurrencyCode])
@@ -589,6 +599,7 @@ model ProductVariant {
   inventories Inventory[]
   transferItems StockTransferItem[]
   cartItems     CartItem[]
+  checkoutQuoteLines CheckoutQuoteLine[]
 
   @@index([productId, isActive])
 }
@@ -824,6 +835,7 @@ model GuestSession {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   carts       Cart[]
+  checkoutQuotes CheckoutQuote[]
 
   @@index([expiresAt])
 }
@@ -842,6 +854,7 @@ model Cart {
   market          Market     @relation(fields: [marketId], references: [id], onDelete: Restrict)
   currency        Currency   @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
   items           CartItem[]
+  checkoutQuotes  CheckoutQuote[]
 
   @@unique([userId, marketId, currencyCode, status])
   @@unique([guestSessionId, marketId, currencyCode, status])
@@ -861,5 +874,49 @@ model CartItem {
   variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
 
   @@unique([cartId, variantId])
+  @@index([variantId])
+}
+
+model CheckoutQuote {
+  id             String              @id @default(cuid())
+  cartId         String
+  userId         String?
+  guestSessionId String?
+  marketId       String
+  currencyCode   String              @db.Char(3)
+  status         CheckoutQuoteStatus @default(ACTIVE)
+  subtotalMinor  BigInt
+  idempotencyKey String              @unique @db.VarChar(160)
+  expiresAt      DateTime
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  cart           Cart                @relation(fields: [cartId], references: [id], onDelete: Restrict)
+  user           User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestSession   GuestSession?       @relation(fields: [guestSessionId], references: [id], onDelete: Cascade)
+  market         Market              @relation(fields: [marketId], references: [id], onDelete: Restrict)
+  currency       Currency            @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  lines          CheckoutQuoteLine[]
+
+  @@index([cartId, status, expiresAt])
+  @@index([userId, status, expiresAt])
+  @@index([guestSessionId, status, expiresAt])
+}
+
+model CheckoutQuoteLine {
+  id              String         @id @default(cuid())
+  quoteId         String
+  variantId       String
+  productName     String
+  storeName       String
+  sku             String
+  variantName     String?
+  quantity        Int
+  unitAmountMinor BigInt
+  lineTotalMinor  BigInt
+  createdAt       DateTime       @default(now())
+  quote           CheckoutQuote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  variant         ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@unique([quoteId, variantId])
   @@index([variantId])
 }
