@@ -4,6 +4,15 @@ import { getDiscoverableProduct } from "@/server/catalog/discovery";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
 
+function toDecimalPrice(amountMinor: string, minorUnit: number): string {
+  const amount = BigInt(amountMinor);
+  const divisor = 10n ** BigInt(minorUnit);
+  const whole = amount / divisor;
+  if (minorUnit === 0) return whole.toString();
+  const fraction = (amount % divisor).toString().padStart(minorUnit, "0");
+  return `${whole}.${fraction}`;
+}
+
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = await getDiscoverableProduct(slug, "en");
@@ -39,5 +48,31 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  return <ProductDetail slug={slug} />;
+  const product = await getDiscoverableProduct(slug, "en");
+  const structuredData = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description ?? undefined,
+    image: product.media.map((item) => item.url),
+    sku: product.variants.length === 1 ? product.variants[0].sku : undefined,
+    brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
+    offers: product.variants.flatMap((variant) => variant.prices.map((price) => ({
+      "@type": "Offer",
+      price: toDecimalPrice(price.amountMinor, price.currency.minorUnit),
+      priceCurrency: price.currencyCode
+    })))
+  } : null;
+
+  return (
+    <>
+      {structuredData ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+        />
+      ) : null}
+      <ProductDetail slug={slug} />
+    </>
+  );
 }
