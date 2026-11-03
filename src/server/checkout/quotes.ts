@@ -99,7 +99,7 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
     await expireReservations(tx, now);
     const existingQuote = await tx.checkoutQuote.findUnique({
       where: { idempotencyKey: data.idempotencyKey },
-      include: { market: { select: { code: true, name: true } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, lines: true }
+      include: { market: { select: { code: true, name: true } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, deliveryAddress: true, lines: true }
     });
     if (existingQuote) {
       if (existingQuote.cartId !== data.cartId || ("userId" in owner ? existingQuote.userId !== owner.userId : existingQuote.guestSessionId !== owner.guestSessionId)) {
@@ -216,7 +216,7 @@ export async function getCheckoutQuote(guestToken: string, quoteId: string, now 
   return prisma.$transaction(async (tx) => {
     const quote = await tx.checkoutQuote.findFirst({
       where: { id: quoteId, ...ownerWhere(owner) },
-      include: { market: { select: { code: true, name: true } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, lines: { orderBy: { createdAt: "asc" } } }
+      include: { market: { select: { code: true, name: true } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, deliveryAddress: true, lines: { orderBy: { createdAt: "asc" } } }
     });
     if (!quote) throw new Error("Checkout quote not found.");
     if (quote.status === CheckoutQuoteStatus.ACTIVE && quote.expiresAt <= now) {

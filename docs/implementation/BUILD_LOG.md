@@ -1279,3 +1279,19 @@ The project owner approved Resend as the transactional email provider. The serve
 - Shipping rates, tax, coupon, payment and order creation are intentionally not represented as completed; they need their own canonical rules and persisted models.
 - Next verification: General CI and the disposable PostgreSQL integration workflow on the exact address-capture commit.
 - No owner database or Vercel environment was accessed.
+
+## 2026-11-03 — Buying Core 4.2a verification and quote-address read correction
+
+**Verification**
+- Delivery-address capture passed General CI run [41706908024](https://github.com/waelkamira/mtjr2/actions/runs/41706908024).
+- Disposable PostgreSQL migration/integration passed run [41706907994](https://github.com/waelkamira/mtjr2/actions/runs/41706907994).
+- Both runs tested commit `1864542df8b8ce9d643424e8be68541d63099200`; the earlier syntax correction is included.
+
+**Review finding and correction**
+- Review found that `getCheckoutQuote` and idempotent quote replay did not include the optional `deliveryAddress` relation, although the quote serializer supported it. A checkout reload could therefore omit the address snapshot from the quote response.
+- Updated both Prisma include selections to load the quote's address snapshot. This is a query-contract correction; no schema change or migration is required because `CheckoutQuote.deliveryAddress` already exists in the canonical schema.
+- General CI and disposable PostgreSQL verification for this follow-up correction are pending.
+
+**Next**
+- Continue with configurable store/market shipping rules and quote-owned shipping selection. Do not assume carriers, prices, tax rates, or launch countries.
+- No owner database or Vercel environment was accessed or changed.
