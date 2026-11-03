@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   guestFindUnique: vi.fn(),
   guestCreate: vi.fn(),
   guestUpdate: vi.fn(),
+  guestUpsert: vi.fn(),
+  guestUpdateMany: vi.fn(),
   cartUpsert: vi.fn(),
   marketFindFirst: vi.fn(),
   variantFindFirst: vi.fn(),
@@ -17,7 +19,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const tx = {
-  guestSession: { findUnique: mocks.guestFindUnique, create: mocks.guestCreate, update: mocks.guestUpdate },
+  guestSession: { findUnique: mocks.guestFindUnique, create: mocks.guestCreate, update: mocks.guestUpdate, upsert: mocks.guestUpsert, updateMany: mocks.guestUpdateMany },
   cart: { upsert: mocks.cartUpsert },
   market: { findFirst: mocks.marketFindFirst },
   productVariant: { findFirst: mocks.variantFindFirst },
@@ -42,6 +44,8 @@ describe("guest and customer cart", () => {
     mocks.guestFindUnique.mockResolvedValue(null);
     mocks.guestCreate.mockResolvedValue({ id: "guest-1" });
     mocks.guestUpdate.mockResolvedValue({ id: "guest-1" });
+    mocks.guestUpsert.mockResolvedValue({ id: "guest-1", expiresAt: new Date(Date.now() + 86400000), convertedAt: null });
+    mocks.guestUpdateMany.mockResolvedValue({ count: 1 });
     mocks.cartUpsert.mockResolvedValue({ id: "cart-1" });
     mocks.marketFindFirst.mockResolvedValue({ id: "market-1" });
     mocks.variantFindFirst.mockResolvedValue({
@@ -60,7 +64,7 @@ describe("guest and customer cart", () => {
     await addCartItem("opaque-guest-token", {
       marketId: "market-1", currencyCode: "EUR", variantId: "variant-1", quantity: 1
     });
-    const saved = mocks.guestCreate.mock.calls[0][0].data.tokenHash as string;
+    const saved = mocks.guestUpsert.mock.calls[0][0].create.tokenHash as string;
     expect(saved).toMatch(/^[a-f0-9]{64}$/);
     expect(saved).not.toBe("opaque-guest-token");
   });
