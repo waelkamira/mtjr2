@@ -160,6 +160,16 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       }
     });
 
+    if ("userId" in owner) {
+      await tx.notification.create({
+        data: {
+          userId: owner.userId, type: "ORDER_PLACED", title: "Order received",
+          message: `Order ${order.orderNumber} was created and is awaiting payment.`,
+          resourceType: "ORDER", resourceId: order.id, deduplicationKey: `order:${order.id}:buyer:${owner.userId}`
+        }
+      });
+    }
+
     const reservations = await tx.inventoryReservation.findMany({
       where: { referenceType: reservationReference, referenceId: quote.id, status: InventoryReservationStatus.ACTIVE },
       include: { inventory: { select: { id: true, variantId: true } } }
@@ -204,7 +214,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       const vendorShipping = shippingByStore.get(storeId)!;
       const vendorTax = allocatedTax.get(storeId) ?? BigInt(0);
       const vendorTotal = vendorSubtotal + vendorShipping + (quote.taxSnapshot.isInclusive ? BigInt(0) : vendorTax);
-      await tx.vendorOrder.create({
+      const vendorOrder = await tx.vendorOrder.create({
         data: {
           orderId: order.id, storeId, status: VendorOrderStatus.PENDING_PAYMENT,
           subtotalMinor: vendorSubtotal, shippingMinor: vendorShipping, taxMinor: vendorTax,
@@ -221,6 +231,20 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
           })) }
         }
       });
+      const storeOwner = await tx.store.findUniqueOrThrow({
+        where: { id: storeId }, select: { name: true, seller: { select: { ownerId: true } } }
+      });
+      if (storeOwner.seller.ownerId !== ("userId" in owner ? owner.userId : "")) {
+        await tx.notification.create({
+          data: {
+            userId: storeOwner.seller.ownerId, type: "SELLER_ORDER_RECEIVED",
+            title: "New order for your store",
+            message: `Order ${order.orderNumber} includes a new order for ${storeOwner.name}. It is awaiting payment.`,
+            resourceType: "VENDOR_ORDER", resourceId: vendorOrder.id,
+            deduplicationKey: `vendor-order:${vendorOrder.id}:seller:${storeOwner.seller.ownerId}`
+          }
+        });
+      }
     }
 
     await tx.checkoutQuote.update({ where: { id: quote.id }, data: { status: CheckoutQuoteStatus.CONVERTED } });
