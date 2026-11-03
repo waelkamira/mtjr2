@@ -52,6 +52,7 @@ model User {
   carts                 Cart[]
   checkoutQuotes        CheckoutQuote[]
   addresses             UserAddress[]
+  orders                Order[]
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -307,6 +308,26 @@ enum CheckoutQuoteStatus {
   CONVERTED
 }
 
+enum OrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  PROCESSING
+  PARTIALLY_FULFILLED
+  FULFILLED
+  CANCELLED
+  COMPLETED
+}
+
+enum VendorOrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  PROCESSING
+  READY_TO_SHIP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -336,6 +357,7 @@ model Currency {
   productPrices ProductPrice[]
   carts         Cart[]
   checkoutQuotes CheckoutQuote[]
+  orders Order[]
   shippingRates StoreShippingRate[]
 
   @@index([isActive, name])
@@ -357,6 +379,7 @@ model Market {
   productPrices       ProductPrice[]
   carts               Cart[]
   checkoutQuotes      CheckoutQuote[]
+  orders              Order[]
   shippingRates       StoreShippingRate[]
   taxRates            MarketTaxRate[]
 
@@ -408,6 +431,7 @@ model Store {
   shippingRates StoreShippingRate[]
   checkoutShippingSelections CheckoutShippingSelection[]
   checkoutQuoteLines CheckoutQuoteLine[]
+  vendorOrders VendorOrder[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
@@ -536,6 +560,7 @@ model Product {
   variants       ProductVariant[]
   identifiers    ProductIdentifier[]
   attributes     ProductAttribute[]
+  orderItems     OrderItem[]
 
   @@unique([storeId, slug])
   @@index([storeId, status, approvalStatus, createdAt])
@@ -606,6 +631,7 @@ model ProductVariant {
   attributes  VariantAttribute[]
   inventories Inventory[]
   transferItems StockTransferItem[]
+  orderItems OrderItem[]
   cartItems     CartItem[]
   checkoutQuoteLines CheckoutQuoteLine[]
 
@@ -894,6 +920,7 @@ model GuestSession {
   updatedAt   DateTime @updatedAt
   carts       Cart[]
   checkoutQuotes CheckoutQuote[]
+  orders         Order[]
 
   @@index([expiresAt])
 }
@@ -957,6 +984,7 @@ model CheckoutQuote {
   deliveryAddress CheckoutQuoteAddress?
   shippingSelections CheckoutShippingSelection[]
   taxSnapshot CheckoutTaxSnapshot?
+  order Order?
 
   @@index([cartId, status, expiresAt])
   @@index([userId, status, expiresAt])
@@ -1069,4 +1097,118 @@ model CheckoutTaxSnapshot {
   taxRate             MarketTaxRate? @relation(fields: [taxRateId], references: [id], onDelete: SetNull)
 
   @@index([taxRateId])
+}
+
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique @db.VarChar(32)
+  quoteId         String      @unique
+  userId          String?
+  guestSessionId  String?
+  marketId        String
+  currencyCode    String      @db.Char(3)
+  status          OrderStatus @default(PENDING_PAYMENT)
+  subtotalMinor   BigInt
+  shippingMinor   BigInt
+  taxMinor        BigInt
+  totalMinor      BigInt
+  idempotencyKey  String      @unique @db.VarChar(160)
+  placedAt        DateTime    @default(now())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  quote           CheckoutQuote @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestSession    GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  market          Market      @relation(fields: [marketId], references: [id], onDelete: Restrict)
+  currency        Currency    @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  address         OrderAddress?
+  vendorOrders    VendorOrder[]
+  statusHistory   OrderStatusHistory[]
+
+  @@index([userId, placedAt])
+  @@index([guestSessionId, placedAt])
+  @@index([status, placedAt])
+}
+
+model OrderAddress {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  recipientName String   @db.VarChar(160)
+  phone         String   @db.VarChar(32)
+  countryCode   String   @db.Char(2)
+  countryName   String   @db.VarChar(120)
+  line1         String   @db.VarChar(200)
+  line2         String?  @db.VarChar(200)
+  city          String   @db.VarChar(120)
+  region        String?  @db.VarChar(120)
+  postalCode    String?  @db.VarChar(32)
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model VendorOrder {
+  id              String           @id @default(cuid())
+  orderId         String
+  storeId         String
+  status          VendorOrderStatus @default(PENDING_PAYMENT)
+  subtotalMinor   BigInt
+  shippingMinor   BigInt
+  taxMinor        BigInt
+  totalMinor      BigInt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  order           Order            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  store           Store            @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  items           OrderItem[]
+  statusHistory   VendorOrderStatusHistory[]
+
+  @@unique([orderId, storeId])
+  @@index([storeId, status, createdAt])
+  @@index([orderId, status])
+}
+
+model OrderItem {
+  id               String      @id @default(cuid())
+  vendorOrderId    String
+  productId        String?
+  variantId        String?
+  productName      String
+  sku              String      @db.VarChar(100)
+  variantName      String?
+  quantity         Int
+  unitAmountMinor  BigInt
+  lineTotalMinor   BigInt
+  createdAt        DateTime    @default(now())
+  vendorOrder      VendorOrder @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
+  product          Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant          ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([vendorOrderId])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(cuid())
+  orderId     String
+  status      OrderStatus
+  note        String?     @db.VarChar(500)
+  actorId     String?
+  createdAt   DateTime    @default(now())
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model VendorOrderStatusHistory {
+  id            String           @id @default(cuid())
+  vendorOrderId String
+  status        VendorOrderStatus
+  note          String?          @db.VarChar(500)
+  actorId       String?
+  createdAt     DateTime         @default(now())
+  vendorOrder   VendorOrder      @relation(fields: [vendorOrderId], references: [id], onDelete: Cascade)
+
+  @@index([vendorOrderId, createdAt])
 }
