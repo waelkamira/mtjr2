@@ -275,6 +275,7 @@ enum AttributeValueType {
 
 enum InventoryMovementType {
   RECEIPT
+  SALE
   ADJUSTMENT
   TRANSFER_OUT
   TRANSFER_IN
