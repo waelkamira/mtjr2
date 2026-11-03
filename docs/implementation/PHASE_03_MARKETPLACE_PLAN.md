@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. Market, Seller/Store, and Category/Brand taxonomy schema foundations plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
+**Status:** In implementation. Market, Seller/Store, Category/Brand, and Product catalog schema foundations plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
 
 ## Goal
 
@@ -31,9 +31,9 @@ Do not copy legacy application code or add models without a defined workflow.
 - [ ] Enforce active/visible status and bounded pagination.
 
 ### 3.4 Product catalog
-- [ ] Define Product, ProductVariant, ProductMedia, product attributes, identifiers, and store ownership.
-- [ ] Define product moderation/approval and publishability rules.
-- [ ] Store money as integer minor units with an explicit currency; never use floating-point values for prices.
+- [x] Define Product, ProductVariant, ProductMedia, ProductTranslation, ProductIdentifier, ProductCategory, ProductPrice, and store ownership schema. Product attributes remain a separate next increment.
+- [x] Add product approval lifecycle fields (PENDING/APPROVED/REJECTED) and draft/active/archive status; publishability transition rules remain to be implemented in services.
+- [x] Store prices as integer minor units (BigInt) with explicit currency and market; add database checks for non-negative amounts and compare-at price consistency.
 - [ ] Add create/update/publish workflows with server-side store-scope authorization.
 
 ### 3.5 Discovery
@@ -43,7 +43,7 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ## Required first vertical slice
 
-The first implementation increment is **Country + Currency + Market**. Its schema and migration are committed; seed, repository/service, and the focused PostgreSQL gate remain outstanding. Seller/Store and Category/Brand taxonomy schema foundations were added in dependency order; their workflows remain unimplemented.
+The schema foundations for **Country + Currency + Market**, **Seller + Store**, **Category + Brand**, and **Product + Variant + Media + Price** are committed in additive migrations. Reference-data seed, repositories/services, authorization, publishability rules, and post-change CI/PostgreSQL verification remain outstanding.
 
 ## Minimal verification gates
 
