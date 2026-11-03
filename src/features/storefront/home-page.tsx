@@ -16,7 +16,7 @@ type Product = {
   media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
   variants: Array<{ id: string; prices: ProductPrice[] }>;
 };
-type PageResult<T> = { items: T[]; pagination: { total: number } };
+type PageResult<T> = { items: T[]; pagination: { page: number; limit: number; total: number; totalPages: number } };
 
 function flattenCategories(items: Category[]): Category[] {
   return items.flatMap((item) => [item, ...flattenCategories(item.children ?? [])]);
@@ -39,6 +39,9 @@ export default function StorefrontHomePage() {
   const [categoryId, setCategoryId] = useState("");
   const [draftQuery, setDraftQuery] = useState("");
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<"newest" | "name_asc" | "name_desc">("newest");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0 });
   const [loadingReference, setLoadingReference] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState("");
@@ -68,7 +71,7 @@ export default function StorefrontHomePage() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams({ locale: "en", limit: "24" });
+    const params = new URLSearchParams({ locale: "en", limit: "24", page: String(page), sort });
     if (marketId) {
       params.set("marketId", marketId);
       const currency = markets.find((market) => market.id === marketId)?.defaultCurrency.code;
@@ -76,18 +79,19 @@ export default function StorefrontHomePage() {
     }
     if (categoryId) params.set("categoryId", categoryId);
     if (query) params.set("q", query);
+    setLoadingProducts(true);
     fetch(`/api/products?${params.toString()}`)
       .then(async (response) => {
         if (!response.ok) throw new Error("Products could not be loaded.");
         return response.json() as Promise<PageResult<Product>>;
       })
-      .then((result) => { if (active) setProducts(result.items); })
+      .then((result) => { if (active) { setProducts(result.items); setPagination({ total: result.pagination.total, totalPages: result.pagination.totalPages }); } })
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : "Products are unavailable.");
       })
       .finally(() => { if (active) setLoadingProducts(false); });
     return () => { active = false; };
-  }, [marketId, categoryId, query, markets]);
+  }, [marketId, categoryId, query, markets, sort, page]);
 
   const flatCategories = useMemo(() => flattenCategories(categories), [categories]);
   const selectedMarket = markets.find((market) => market.id === marketId);
@@ -95,6 +99,7 @@ export default function StorefrontHomePage() {
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setQuery(draftQuery.trim());
+    setPage(1);
   }
 
   return (
@@ -111,7 +116,7 @@ export default function StorefrontHomePage() {
           </form>
           <label className="ml-auto flex items-center gap-2 text-xs text-[var(--muted)]">
             <span>Ship to</span>
-            <select aria-label="Choose market" value={marketId} onChange={(event) => setMarketId(event.target.value)} className="max-w-40 rounded-lg border border-[var(--border)] bg-white px-2 py-2 text-sm text-[var(--foreground)]">
+            <select aria-label="Choose market" value={marketId} onChange={(event) => { setMarketId(event.target.value); setPage(1); }} className="max-w-40 rounded-lg border border-[var(--border)] bg-white px-2 py-2 text-sm text-[var(--foreground)]">
               <option value="">All markets</option>
               {markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}
             </select>
@@ -146,11 +151,11 @@ export default function StorefrontHomePage() {
       <section id="categories" className="mx-auto max-w-[1440px] px-5 py-7 lg:px-10">
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Explore by interest</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Browse categories</h2></div>
-          <button type="button" onClick={() => setCategoryId("")} className="text-sm text-[var(--color-forest-800)] underline underline-offset-4">View all</button>
+          <button type="button" onClick={() => { setCategoryId(""); setPage(1); }} className="text-sm text-[var(--color-forest-800)] underline underline-offset-4">View all</button>
         </div>
         {loadingReference ? <p className="text-sm text-[var(--muted)]">Loading categories…</p> : flatCategories.length ? (
           <div className="flex gap-3 overflow-x-auto pb-3">
-            {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => setCategoryId(category.id === categoryId ? "" : category.id)} className={`whitespace-nowrap rounded-xl border px-5 py-3 text-sm transition ${categoryId === category.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] bg-white text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{category.name}</button>)}
+            {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => { setCategoryId(category.id === categoryId ? "" : category.id); setPage(1); }} className={`whitespace-nowrap rounded-xl border px-5 py-3 text-sm transition ${categoryId === category.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] bg-white text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{category.name}</button>)}
           </div>
         ) : <p className="rounded-xl bg-[var(--color-ivory-100)] px-5 py-4 text-sm text-[var(--muted)]">Categories will appear here as the marketplace catalog is activated.</p>}
       </section>
@@ -158,7 +163,7 @@ export default function StorefrontHomePage() {
       <section id="discover" className="mx-auto max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Selected for discovery</p><h2 className="mt-2 text-3xl font-semibold tracking-tight">Explore the marketplace</h2><p className="mt-2 text-sm text-[var(--muted)]">{selectedMarket ? `Prices for ${selectedMarket.name} · ${selectedMarket.defaultCurrency.code}` : "Discover products from active stores"}</p></div>
-          {(query || categoryId) && <button type="button" onClick={() => { setQuery(""); setDraftQuery(""); setCategoryId(""); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">Clear filters</button>}
+          <div className="flex flex-wrap items-center gap-3"><label className="text-sm text-[var(--muted)]">Sort by <select aria-label="Sort products" value={sort} onChange={(event) => { setSort(event.target.value as typeof sort); setPage(1); }} className="ml-2 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="newest">Newest</option><option value="name_asc">Name: A–Z</option><option value="name_desc">Name: Z–A</option></select></label>{(query || categoryId) && <button type="button" onClick={() => { setQuery(""); setDraftQuery(""); setCategoryId(""); setPage(1); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">Clear filters</button>}</div>
         </div>
         {error && <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {loadingProducts ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <div key={index} className="h-72 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" />)}</div> : products.length ? (
@@ -182,6 +187,7 @@ export default function StorefrontHomePage() {
         ) : <div className="rounded-2xl border border-dashed border-[var(--color-sage-500)] bg-[var(--color-sage-100)]/50 px-6 py-14 text-center"><h3 className="text-lg font-semibold">The collection is taking shape</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">{query || categoryId ? "No active products match these filters. Try another search or clear the filters." : "Products from approved and active stores will appear here once the catalog is published."}</p></div>}
       </section>
 
+      {!loadingProducts && pagination.totalPages > 1 && <nav aria-label="Product pages" className="mt-8 flex items-center justify-center gap-4"><button type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">Previous</button><span className="text-sm text-[var(--muted)]">Page {page} of {pagination.totalPages} · {pagination.total} products</span><button type="button" disabled={page >= pagination.totalPages} onClick={() => setPage((current) => Math.min(pagination.totalPages, current + 1))} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">Next</button></nav>}
       <footer id="about" className="mt-10 bg-[var(--color-forest-950)] text-white">
         <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-10 text-sm text-white/70 lg:flex-row lg:items-center lg:justify-between lg:px-10">
           <span className="text-xl font-semibold tracking-tight text-white">mtjr<span className="text-[var(--color-copper-500)]">.</span></span>
