@@ -52,7 +52,7 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Added buyer shipping-options read/select APIs and connected the checkout UI. Options are filtered by quote market, currency, destination region, store-market activation, and effective dates.
 - No carrier integration, country list, tax, final order total, or default shipping amount is assumed. Unconfigured stores return no shipping options.
 
-**Verification gate:** General CI (Prisma validate/generate, typecheck, lint, unit tests, production build) plus the disposable PostgreSQL migration/integration workflow. This slice is not complete until both pass.
+**Verification:** Disposable PostgreSQL migration/integration passed (run 41708370004). General CI (run 41708369901) found a BigInt literal target mismatch, fixed in 59a5155; focused shipping tests were added in 2667857. Awaiting a fresh full General CI run; do not mark complete until it passes.
 
 ## 4.4 — Tax, discounts, and final checkout validation
 
