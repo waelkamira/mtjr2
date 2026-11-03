@@ -76,6 +76,7 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Order creation is one serializable transaction: creates the parent order and one vendor order per store, copies immutable delivery/item/price/shipping/tax snapshots, consumes stock reservations and on-hand inventory, records SALE movements, converts the quote, and closes the cart.
 - Added idempotent replay by quote: a converted quote returns its existing order rather than creating a duplicate.
 - Connected buyer checkout confirmation to the order API; added buyer order confirmation/detail and authenticated order-history views.
+- Added the first in-app notification slice: order placement atomically notifies the signed-in buyer and each store owner; notifications are listed and marked read through authenticated APIs and `/notifications`. Email and notification preferences remain separate work.
 - Added store-scoped seller order listing API and seller orders UI. Staff access requires the exact `orders:manage` store permission; store owners and platform admins can view their allowed orders.
 - Orders remain `PENDING_PAYMENT`. No payment is captured and sellers are not authorized to fulfill until a real payment provider and verified webhook lifecycle exist.
 
