@@ -146,7 +146,7 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
     });
 
     const quoteLines: Array<{
-      variantId: string; productName: string; storeName: string; sku: string;
+      variantId: string; storeId: string; productName: string; storeName: string; sku: string;
       variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint;
     }> = [];
     let subtotal = BigInt(0);
@@ -187,7 +187,7 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
       const lineTotalMinor = unitAmountMinor * BigInt(item.quantity);
       subtotal += lineTotalMinor;
       quoteLines.push({
-        variantId: variant.id, productName: product.name, storeName: product.store.name,
+        variantId: variant.id, storeId: product.storeId, productName: product.name, storeName: product.store.name,
         sku: variant.sku, variantName: variant.name, quantity: item.quantity,
         unitAmountMinor, lineTotalMinor
       });
