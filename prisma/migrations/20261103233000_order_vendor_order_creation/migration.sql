@@ -27,7 +27,7 @@ CREATE TABLE "Order" (
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "Order_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "Order_owner_check" CHECK ((("userId" IS NOT NULL)::int + ("guestSessionId" IS NOT NULL)::int) = 1),
-  CONSTRAINT "Order_amounts_check" CHECK ("subtotalMinor" >= 0 AND "shippingMinor" >= 0 AND "taxMinor" >= 0 AND "totalMinor" >= 0 AND "totalMinor" = "subtotalMinor" + "shippingMinor" + "taxMinor")
+  CONSTRAINT "Order_amounts_check" CHECK ("subtotalMinor" >= 0 AND "shippingMinor" >= 0 AND "taxMinor" >= 0 AND "totalMinor" >= 0 AND "totalMinor" = "subtotalMinor" + "shippingMinor" + CASE WHEN "taxInclusive" THEN 0 ELSE "taxMinor" END)
 );
 
 CREATE TABLE "OrderAddress" (
@@ -54,6 +54,7 @@ CREATE TABLE "VendorOrder" (
   "subtotalMinor" BIGINT NOT NULL,
   "shippingMinor" BIGINT NOT NULL,
   "taxMinor" BIGINT NOT NULL,
+  "taxInclusive" BOOLEAN NOT NULL,
   "shippingServiceName" VARCHAR(120) NOT NULL,
   "shippingRateId" TEXT,
   "shippingDestinationRegion" VARCHAR(120),
@@ -63,7 +64,7 @@ CREATE TABLE "VendorOrder" (
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "VendorOrder_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "VendorOrder_amounts_check" CHECK ("subtotalMinor" >= 0 AND "shippingMinor" >= 0 AND "taxMinor" >= 0 AND "totalMinor" >= 0 AND "totalMinor" = "subtotalMinor" + "shippingMinor" + "taxMinor")
+  CONSTRAINT "VendorOrder_amounts_check" CHECK ("subtotalMinor" >= 0 AND "shippingMinor" >= 0 AND "taxMinor" >= 0 AND "totalMinor" >= 0 AND "totalMinor" = "subtotalMinor" + "shippingMinor" + CASE WHEN "taxInclusive" THEN 0 ELSE "taxMinor" END)
 );
 
 CREATE TABLE "OrderItem" (
