@@ -1,0 +1,33 @@
+import { describe, expect, it } from "vitest";
+import { parseEnvironment } from "../../src/lib/env";
+
+const validEnvironment = {
+  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mtjr2_test?schema=public",
+  NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+  AUTH_SECRET: "a-test-only-secret-with-at-least-32-characters",
+  NODE_ENV: "test"
+};
+
+describe("parseEnvironment", () => {
+  it("accepts a valid PostgreSQL and application configuration", () => {
+    expect(parseEnvironment(validEnvironment)).toMatchObject(validEnvironment);
+  });
+
+  it("rejects a non-PostgreSQL database URL", () => {
+    expect(() =>
+      parseEnvironment({ ...validEnvironment, DATABASE_URL: "https://example.com" })
+    ).toThrow(/DATABASE_URL.*PostgreSQL/);
+  });
+
+  it("rejects a short authentication secret without exposing its value", () => {
+    expect(() =>
+      parseEnvironment({ ...validEnvironment, AUTH_SECRET: "short-secret" })
+    ).toThrow(/AUTH_SECRET/);
+  });
+
+  it("rejects an invalid public application URL", () => {
+    expect(() =>
+      parseEnvironment({ ...validEnvironment, NEXT_PUBLIC_APP_URL: "not-a-url" })
+    ).toThrow(/NEXT_PUBLIC_APP_URL/);
+  });
+});
