@@ -21,7 +21,6 @@ type SavedAddress = DeliveryAddress & { id: string; label: string | null; isDefa
 type Props = {
   quoteId: string;
   quoteStatus: string;
-  onSaved: (address: DeliveryAddress) => void;
 };
 
 const emptyAddress = {
@@ -29,9 +28,10 @@ const emptyAddress = {
   region: "", postalCode: ""
 };
 
-export default function CheckoutDeliveryAddress({ quoteId, quoteStatus, onSaved }: Props) {
+export default function CheckoutDeliveryAddress({ quoteId, quoteStatus }: Props) {
   const [country, setCountry] = useState<{ iso2: string; name: string } | null>(null);
   const [saved, setSaved] = useState<SavedAddress[]>([]);
+  const [currentAddress, setCurrentAddress] = useState<DeliveryAddress | null>(null);
   const [selected, setSelected] = useState("new");
   const [draft, setDraft] = useState(emptyAddress);
   const [canSave, setCanSave] = useState(false);
@@ -69,7 +69,7 @@ export default function CheckoutDeliveryAddress({ quoteId, quoteStatus, onSaved 
           });
           const sourceId = result.deliveryAddress.sourceAddressId;
           setSelected(sourceId && result.savedAddresses?.some((item) => item.id === sourceId) ? sourceId : "new");
-          onSaved(result.deliveryAddress);
+          setCurrentAddress(result.deliveryAddress);
         } else {
           const defaultAddress = result.savedAddresses?.find((item) => item.isDefault);
           if (defaultAddress) setSelected(defaultAddress.id);
@@ -78,7 +78,7 @@ export default function CheckoutDeliveryAddress({ quoteId, quoteStatus, onSaved 
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load delivery address options."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [quoteId, onSaved]);
+  }, [quoteId]);
 
   function updateDraft(field: keyof typeof emptyAddress, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -99,7 +99,7 @@ export default function CheckoutDeliveryAddress({ quoteId, quoteStatus, onSaved 
       });
       const result = await response.json() as { address?: DeliveryAddress; error?: string };
       if (!response.ok || !result.address) throw new Error(result.error || "Unable to save delivery address.");
-      onSaved(result.address);
+      setCurrentAddress(result.address);
       setSuccess("Delivery address saved to this checkout quote.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save delivery address.");
@@ -143,6 +143,8 @@ export default function CheckoutDeliveryAddress({ quoteId, quoteStatus, onSaved 
         </div>}
 
         {canSave && selected === "new" && <label className="mt-4 flex items-center gap-2 text-sm text-[var(--color-forest-800)]"><input type="checkbox" checked={saveToBook} onChange={(event) => setSaveToBook(event.target.checked)} disabled={quoteStatus !== "ACTIVE"} />Save to my address book</label>}
+
+        {currentAddress && <div className="mt-5 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--color-forest-900)]"><p className="mb-2 text-xs font-semibold uppercase tracking-wide">Saved to this quote</p>{currentAddress.recipientName}<br />{currentAddress.line1}<br />{currentAddress.city}, {currentAddress.countryName}<br />{currentAddress.phone}</div>}
 
         {selected !== "new" && <div className="mt-5 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--color-forest-900)]">
           {saved.find((item) => item.id === selected)?.recipientName}<br />
