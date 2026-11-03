@@ -49,8 +49,7 @@ export default function SellerStaffPage() {
     await loadStaff(nextId);
   }, [loadStaff, storeId]);
 
-  useEffect(() => { reload().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to load staff workspace.")); }, [reload]);
-  useEffect(() => { if (storeId) loadStaff(storeId).catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to load staff.")); }, [storeId, loadStaff]);
+  useEffect(() => { Promise.resolve().then(() => reload()).catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to load staff workspace.")); }, [reload]);
 
   async function action(path: string, success: string, method = "POST", body?: unknown) {
     setBusy(true); setError(""); setMessage("");
