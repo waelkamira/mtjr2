@@ -174,3 +174,14 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Schema additions: `MarketTaxRate`, `CheckoutTaxSnapshot`; migration: `20261103230000_market_tax_rules`.
 - No discounts, order creation, or payment are claimed complete. No owner database or Vercel environment was accessed.
 - See `docs/implementation/PHASE_04_BUYING_PLAN.md` for boundaries and limitations.
+
+
+## Buying Core — order creation and seller split (2026-11-03)
+
+- Implemented on `feat/order-vendor-order-creation` (draft PR #6, stacked on tax PR #5): canonical Order/OrderAddress/VendorOrder/OrderItem and status history models, with migration `20261103233000_order_vendor_order_creation`.
+- Checkout confirmation now calls `POST /api/checkout/quote/[quoteId]/place-order`. The server requires a live owned quote, saved delivery snapshot, one shipping selection per store, and a persisted tax snapshot.
+- In one serializable transaction, the platform creates one parent order and one vendor order per store, copies immutable item/address/tax/shipping values, consumes inventory reservations and on-hand stock, records SALE inventory movements, converts the quote, and closes the cart.
+- Buyer order confirmation/detail and signed-in order history are connected to APIs. Seller workspace now links to a store-scoped seller orders page and API.
+- Orders intentionally remain `PENDING_PAYMENT`; no payment or seller fulfillment is simulated. Payment provider and signed webhook lifecycle are next.
+- Verification is pending. Only the normal CI and disposable PostgreSQL migration/integration workflows are used; no expanding test matrix. No owner database or Vercel environment was accessed.
+- See `docs/implementation/PHASE_04_BUYING_PLAN.md` for workflow boundaries and payment follow-up.
