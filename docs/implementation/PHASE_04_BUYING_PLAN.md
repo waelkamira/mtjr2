@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — Cart foundation implemented; verification pending.
+**Status:** In progress — Cart foundation verified; checkout quote/reservation implementation awaiting CI and disposable PostgreSQL verification.
 
 ## Objective
 
@@ -11,7 +11,7 @@ Implement the buyer purchase journey as server-owned domain workflows. The brows
 
 ## 4.1 — Persistent cart foundation
 
-**Implemented on `feat/buying-cart-core`; pending CI and disposable PostgreSQL verification.**
+**Implemented and verified on `feat/buying-cart-core`. General CI run 41702592022 and disposable PostgreSQL integration run 41702592323 both passed.**
 
 - Add `GuestSession`, `Cart`, and `CartItem` to the canonical Prisma schema and a forward-only migration.
 - Guest identity uses an opaque random HttpOnly cookie; PostgreSQL stores only its SHA-256 hash. Guest sessions expire after 30 days.
@@ -46,7 +46,7 @@ Not started. Build only after 4.2 is verified:
 1. `prisma/schema.prisma` remains the source of truth; add models only for demonstrated persisted business state.
 2. UI → API → validation/authentication → domain service → Prisma. No Prisma calls from React components.
 3. Server resolves current prices and stock on every cart mutation and checkout quote.
-4. Cart contents do not reserve stock. Reservation starts only during the defined checkout hold.
+4. Cart contents do not reserve stock. A checkout quote reserves stock for ten minutes and releases it on cancellation or expiry.
 5. Money uses integer minor units; serialize BigInt values as strings.
 6. Do not connect to the owner's database, run production migrations, or change Vercel environment variables during this implementation.
 7. Use only focused tests: General CI (Prisma validate/generate, typecheck, lint, unit tests, production build) and one disposable PostgreSQL migration/integration run for the schema change. Add more tests only for concrete critical regressions.
