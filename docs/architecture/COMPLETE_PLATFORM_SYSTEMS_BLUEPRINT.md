@@ -3,7 +3,8 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Status:** Functional target specification for the greenfield implementation  
 **Canonical schema target:** `prisma/schema.prisma` (new implementation; schema is being designed)  
-**Companion audit:** `docs/PROJECT_AUDIT.md`  
+**Companion audit:** `docs/PROJECT_AUDIT.md`
+**Companion page inventory:** `docs/architecture/PLATFORM_PAGE_INVENTORY.md` (required user-facing and operational routes; route presence is not proof of workflow completion)  
 **Model map:** `docs/architecture/prisma-model-usage-map.md`  
 **Imported as baseline:** 2026-11-03
 
