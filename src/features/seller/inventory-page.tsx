@@ -81,7 +81,7 @@ export default function SellerInventoryPage() {
   useEffect(() => {
     if (!storeId) return;
     let active = true;
-    refreshStore(storeId).catch((cause: unknown) => {
+    Promise.resolve().then(() => refreshStore(storeId)).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load inventory.");
     });
     return () => { active = false; };
