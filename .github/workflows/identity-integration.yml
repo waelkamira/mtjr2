@@ -29,16 +29,16 @@ jobs:
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
-          POSTGRES_DB: mtjr2_identity_test
+          POSTGRES_DB: mtjr2_platform_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U ci -d mtjr2_identity_test"
+          --health-cmd "pg_isready -U ci -d mtjr2_platform_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
     env:
-      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_identity_test?schema=public
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_platform_test?schema=public
       AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NODE_ENV: test
@@ -54,5 +54,5 @@ jobs:
         run: npx prisma migrate deploy
       - name: Seed baseline roles and permissions
         run: npm run db:seed
-      - name: Run PostgreSQL-backed identity integration tests
+      - name: Run the existing PostgreSQL integration suite
         run: npm run test:integration
