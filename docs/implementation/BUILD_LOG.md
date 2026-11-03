@@ -1011,3 +1011,26 @@ The project owner approved Resend as the transactional email provider. The serve
 - Product discovery now expands exact localized active search synonyms (case-insensitive) before applying the bounded product search query.
 - Added focused tests for synonym expansion, public-only product visibility, currency/market query validation, product lifecycle edits/rejections, and staff revocation/delegation.
 - These latest changes are awaiting the consolidated General CI run; no pass is claimed yet.
+
+
+## 2026-11-03 — Initial warehouse and inventory operations
+
+**Implemented**
+- Added canonical schema models: `Warehouse`, `Inventory`, `InventoryMovement`, `InventoryReservation`, `StockTransfer`, and `StockTransferItem`.
+- Added additive migration `20261103080000_inventory_foundation` with foreign keys, unique warehouse/variant stock identity, indexes, non-negative on-hand/reserved constraints, positive reservation/transfer quantities, and distinct source/destination warehouses.
+- Added seller-scoped warehouse creation and inventory read APIs.
+- Added stock adjustments with mandatory idempotency keys, store ownership/exact STORE-scoped `inventory:manage` authorization, reserved-stock protection, movement ledger entries, and atomic audit events.
+- Added intra-store stock transfer draft creation, shipping, and receiving. Ship/receive transitions and stock movements run transactionally; cross-store transfers are rejected.
+- Added focused inventory tests for reserved-stock protection, successful adjustment/audit, idempotent replay, key reuse across stock rows, and insufficient-stock transfer rejection.
+- Added API routes under `/api/seller/warehouses` and `/api/seller/inventory/**`.
+
+**Verification**
+- General CI for the previous catalog/discovery slice was repeatedly superseded by later commits before reaching Prisma/typecheck/tests; no pass is claimed for the latest product lifecycle/discovery changes.
+- Database Baseline and Platform PostgreSQL Integration succeeded at commit `9e397ddc`, before the latest product lifecycle and inventory migration. Those results do not verify the current schema.
+- Inventory schema and migration were committed; the latest isolated PostgreSQL workflow is queued/pending. General CI for the combined inventory code is queued/pending.
+- No production database was accessed, and no Vercel environment variables were read or changed.
+
+**Safety and follow-up**
+- Adjustment idempotency is bound to the exact warehouse/variant inventory row; reusing a key for a different row or delta is rejected.
+- Reservations are modeled but reservation creation/consumption/release/expiry service behavior is deferred until cart/checkout defines customer/guest ownership and idempotency contracts. No insecure generic reservation endpoint was exposed.
+- Next: complete CI and PostgreSQL replay, then implement market reference-data services without activating launch markets until their scope is agreed.
