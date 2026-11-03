@@ -1257,6 +1257,7 @@ model Payment {
   failureCode         String?       @db.VarChar(120)
   failureMessage      String?       @db.VarChar(500)
   succeededAt         DateTime?
+  lastProviderEventAt DateTime?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   order               Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
