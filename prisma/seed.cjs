@@ -22,6 +22,7 @@ const permissions = [
   { key: "payments:refund", description: "Initiate or approve refunds within the granted scope." },
   { key: "support:read", description: "Read customer support cases." },
   { key: "support:manage", description: "Manage customer support cases." },
+  { key: "returns:manage", description: "Review and manage customer return requests." },
   { key: "messages:manage", description: "Read and reply to customer conversations within the granted store scope." },
   { key: "roles:read", description: "Read role and permission definitions." },
   { key: "roles:assign", description: "Assign roles within authorized scopes." },
@@ -58,7 +59,7 @@ const roles = [
     key: "SUPPORT_AGENT",
     name: "Support Agent",
     description: "Customer support access limited by explicit support and resource scopes.",
-    permissions: ["users:read", "orders:read", "support:read", "support:manage"],
+    permissions: ["users:read", "orders:read", "support:read", "support:manage", "returns:manage"],
   },
   {
     key: "ADMIN",
@@ -67,7 +68,7 @@ const roles = [
     permissions: [
       "users:read", "users:manage", "store:read", "store:manage", "catalog:read",
       "catalog:manage", "inventory:manage", "orders:read", "orders:manage",
-      "payments:read", "payments:refund", "support:read", "support:manage",
+      "payments:read", "payments:refund", "support:read", "support:manage", "returns:manage",
       "roles:read", "roles:assign", "audit:read",
     ],
   },
