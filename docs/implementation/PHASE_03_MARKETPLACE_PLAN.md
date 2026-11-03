@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. Market, Seller/Store, Category/Brand, Product/Variant/Media/Price, and structured product/variant attribute schema foundations plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
+**Status:** In implementation. Market, Seller/Store, Category/Brand, Product/Variant/Media/Price, structured attributes, and localized search synonym schema foundations plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
 
 ## Goal
 
@@ -38,7 +38,7 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ### 3.5 Discovery
 - [ ] Add canonical product listing/detail/category/brand read APIs and pages.
-- [ ] Add validated search, filtering, stable sorting, and pagination.
+- [x] Add the localized search-synonym persistence model.\n- [ ] Add validated search, filtering, stable sorting, and pagination.
 - [ ] Add indexes only for demonstrated query patterns; defer external search infrastructure.
 
 ## Required first vertical slice
