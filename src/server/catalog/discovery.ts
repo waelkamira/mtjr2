@@ -45,7 +45,7 @@ export async function listDiscoverableProducts(input: unknown = {}) {
   let searchTerms = query.q ? [query.q] : [];
   if (query.q) {
     const synonyms = await prisma.searchSynonym.findMany({
-      where: { locale: query.locale, isActive: true, OR: [{ term: query.q }, { synonym: query.q }] },
+      where: { locale: query.locale, isActive: true, OR: [{ term: { equals: query.q, mode: "insensitive" } }, { synonym: { equals: query.q, mode: "insensitive" } }] },
       select: { term: true, synonym: true }, take: 30
     });
     searchTerms = [...new Set([query.q, ...synonyms.flatMap((item) => [item.term, item.synonym])])].slice(0, 31);
