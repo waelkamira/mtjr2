@@ -261,6 +261,14 @@ enum ProductMediaType {
   VIDEO
 }
 
+enum AttributeValueType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  SELECT
+  MULTI_SELECT
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -475,6 +483,7 @@ model Product {
   media          ProductMedia[]
   variants       ProductVariant[]
   identifiers    ProductIdentifier[]
+  attributes     ProductAttribute[]
 
   @@unique([storeId, slug])
   @@index([storeId, status, approvalStatus, createdAt])
@@ -542,6 +551,7 @@ model ProductVariant {
   updatedAt   DateTime @updatedAt
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   prices      ProductPrice[]
+  attributes  VariantAttribute[]
 
   @@index([productId, isActive])
 }
@@ -573,4 +583,73 @@ model ProductPrice {
 
   @@unique([variantId, marketId, currencyCode])
   @@index([marketId, currencyCode, amountMinor])
+}
+
+
+model AttributeDefinition {
+  id               String            @id @default(cuid())
+  key              String            @unique @db.VarChar(100)
+  valueType        AttributeValueType
+  isVariantLevel   Boolean           @default(false)
+  isFilterable     Boolean           @default(false)
+  isRequired       Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  translations     AttributeTranslation[]
+  productValues    ProductAttribute[]
+  variantValues    VariantAttribute[]
+
+  @@index([isFilterable, valueType])
+}
+
+model AttributeTranslation {
+  id                   String             @id @default(cuid())
+  attributeDefinitionId String
+  locale               String             @db.VarChar(16)
+  name                 String
+  description          String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  attribute            AttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([attributeDefinitionId, locale])
+  @@index([locale, name])
+}
+
+model ProductAttribute {
+  id                   String             @id @default(cuid())
+  productId            String
+  attributeDefinitionId String
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  product              Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attribute            AttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Restrict)
+  values               ProductAttributeValue[]
+
+  @@unique([productId, attributeDefinitionId])
+  @@index([attributeDefinitionId])
+}
+
+model ProductAttributeValue {
+  id                 String          @id @default(cuid())
+  productAttributeId String
+  value              Json
+  sortOrder          Int             @default(0)
+  createdAt          DateTime        @default(now())
+  productAttribute   ProductAttribute @relation(fields: [productAttributeId], references: [id], onDelete: Cascade)
+
+  @@index([productAttributeId, sortOrder])
+}
+
+model VariantAttribute {
+  id                   String             @id @default(cuid())
+  variantId            String
+  attributeDefinitionId String
+  value                Json
+  createdAt            DateTime           @default(now())
+  variant              ProductVariant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  attribute            AttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Restrict)
+
+  @@unique([variantId, attributeDefinitionId])
+  @@index([attributeDefinitionId])
 }
