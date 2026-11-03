@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ProductReviews from "@/features/storefront/product-reviews";
 
 type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
@@ -101,5 +102,6 @@ export default function ProductDetail({ slug }: { slug: string }) {
         <p className="mt-5 text-xs leading-6 text-[var(--muted)]">Price and stock are checked again by the marketplace before an item is added.</p>
       </section>
     </div>
+    <ProductReviews productId={product.id} />
   </main>;
 }
