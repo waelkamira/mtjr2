@@ -77,7 +77,8 @@
 - [x] Add the seller application screen connected to `POST /api/seller/applications`.
 - [x] Add the authenticated seller workspace connected to `GET/POST /api/seller/stores`, active-market lookup, warehouse creation, and inventory listing APIs.
 - [x] Add seller product draft creation/editing and approved-product publishing UI against the existing catalog APIs; price entry covers every enabled store market.
-- [ ] Add staff invitation, stock adjustment, and transfer screens against their existing APIs.
+- [ ] Add store staff invitation, acceptance, and revocation screens against their existing APIs.
+- [x] Add inventory UI for warehouse creation, stock adjustment, transfer creation, shipment, receipt, and transfer history against the existing inventory APIs.
 - [x] Add protected pending seller/product review queues and platform-admin moderation UI for approve/reject decisions with mandatory rejection reasons.
 - [ ] Add cart/checkout UI only alongside the Buying Core APIs; never ship inert purchase controls.
 
