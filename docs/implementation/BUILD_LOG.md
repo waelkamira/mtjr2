@@ -1384,3 +1384,15 @@ The project owner approved Resend as the transactional email provider. The serve
 - Customer reads are strictly scoped to the authenticated owner and never include internal notes. Agent replies create customer in-app notifications in the same transaction; administrative changes and ticket creation are audited.
 - Not implemented in this slice: store-to-customer conversations, attachments, read receipts, SLA automation/escalation, team routing, and email delivery.
 - Verification: files and migration were committed through GitHub. Prisma validation, migration replay, typecheck, and production build have **not** yet been observed for this branch. No routine test matrix was expanded. No production database or Vercel environment was accessed.
+
+
+## 2026-11-04 — System 09 expanded: store messaging, ticket read state
+
+- Added `StoreConversation` and `StoreMessage` Prisma models with a separate migration, customer/store/order relations, conversation indexes, and persisted customer/store read timestamps.
+- Added customer APIs `GET/POST /api/messages` and `GET/POST /api/messages/[conversationId]`; customers can start a conversation from a product page, view their inbox, and reply.
+- Added store-scoped seller APIs `/api/stores/[storeId]/messages` and `/api/stores/[storeId]/messages/[conversationId]`; seller inbox UI `/seller/messages` and customer UI `/account/messages` are connected.
+- Seller access is restricted to store owner or active store staff with scoped `messages:manage`. Product inquiry actions create a server-side conversation; order-linked conversations validate that the order belongs to the customer and includes the selected store.
+- Added dedicated `messages:manage` permission to identity seed roles; customer-facing messages create in-app notifications, and seller replies are audited.
+- Extended support tickets with customer/agent read timestamps and first public response timestamp; admin workflow now uses dedicated `support:manage` rather than broad `users:manage`.
+- Remaining: attachment upload/storage and security scanning require an object-storage provider; SLA target policy/escalation needs agreed operational targets and a worker; staff notification routing and email delivery remain open.
+- Verification: no production database used. Prisma validation/typecheck/build and isolated PostgreSQL migration replay are not yet confirmed for this expanded branch.
