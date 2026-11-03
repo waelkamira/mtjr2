@@ -23,7 +23,7 @@ CREATE TABLE "Cart" (
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "Cart_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "Cart_exactly_one_owner_check" CHECK (
-    (("userId" IS NOT NULL)::int + ("guestSessionId" IS NOT NULL)::int) = 1
+    (("userId" IS NOT NULL AND "guestSessionId" IS NULL) OR ("userId" IS NULL AND "guestSessionId" IS NOT NULL))
   )
 );
 CREATE UNIQUE INDEX "Cart_userId_marketId_currencyCode_status_key" ON "Cart"("userId", "marketId", "currencyCode", "status");
