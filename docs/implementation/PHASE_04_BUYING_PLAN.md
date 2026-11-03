@@ -107,4 +107,5 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 - PR #1 cart and PR #2 quote/reservations are stacked predecessors.
 - PR #3 delivery address is implemented and its General CI/PostgreSQL workflows pass; it remains a draft stacked on PR #2 pending review/merge.
-- Next implementation slice is payment intent/provider lifecycle and verified webhook handling. Discount rules and fulfillment transitions remain separate follow-up slices.
+- PR #7 adds the provider-neutral payment lifecycle foundation. A concrete provider adapter can be enabled only after the launch market, merchant account and supported payment methods are approved; no live charge is enabled by default.
+- Remaining Buying Core work includes provider-specific integration, refunds/disputes/reconciliation, discounts, fulfillment and shipment tracking. Other platform systems continue in parallel rather than waiting on a payment-provider decision.
