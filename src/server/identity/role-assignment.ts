@@ -4,6 +4,7 @@ import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { requirePermission } from "@/server/identity/permission-guard";
 import { normalizeRoleScope, type RoleScope } from "@/server/identity/role-scope";
+import { userHasPermission } from "@/server/identity/permission-repository";
 
 export interface AssignRoleInput {
   targetUserId: string;
@@ -30,10 +31,21 @@ export async function assignRoleToUser(input: AssignRoleInput, now = new Date())
   return prisma.$transaction(async (tx) => {
     const [target, role] = await Promise.all([
       tx.user.findUnique({ where: { id: targetUserId }, select: { id: true, status: true } }),
-      tx.role.findUnique({ where: { key: roleKey }, select: { id: true, key: true } })
+      tx.role.findUnique({ where: { key: roleKey }, select: { id: true, key: true, permissions: { select: { permission: { select: { key: true } } } } } })
     ]);
     if (!target || target.status !== UserStatus.ACTIVE) throw new Error("Role assignments require an active target account.");
     if (!role || role.key === "SUPER_ADMIN") throw new Error("The requested role cannot be assigned through this operation.");
+
+    // Enforce privilege non-escalation: the actor may delegate only permissions
+    // they already hold in this exact scope.
+    for (const { permission } of role.permissions) {
+      const allowed = await userHasPermission(actor.userId, {
+        permissionKey: permission.key,
+        scope: scope.type === "GLOBAL" ? undefined : { type: scope.type, id: scope.id },
+        now
+      });
+      if (!allowed) throw new Error("Cannot delegate permissions the acting user does not hold.");
+    }
 
     const assignment = await tx.userRoleAssignment.create({
       data: { userId: target.id, roleId: role.id, scopeType: scope.type, scopeId: scope.id, expiresAt, assignedBy: actor.userId },
