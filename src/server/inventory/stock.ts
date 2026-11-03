@@ -301,10 +301,27 @@ export async function listStoreStockTransfers(storeIdInput: string, now = new Da
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 100,
     select: {
-      id: true, reference: true, status: true, createdAt: true, shippedAt: true, receivedAt: true,
+      id: true,
+      reference: true,
+      status: true,
+      createdAt: true,
+      shippedAt: true,
+      receivedAt: true,
       sourceWarehouse: { select: { id: true, name: true, code: true } },
       destinationWarehouse: { select: { id: true, name: true, code: true } },
-      items: { select: { quantity: true, variant: { select: { id: true, sku: true, name: true, product: { select: { name: true } } } } }
+      items: {
+        select: {
+          quantity: true,
+          variant: {
+            select: {
+              id: true,
+              sku: true,
+              name: true,
+              product: { select: { name: true } }
+            }
+          }
+        }
+      }
     }
   });
 }
