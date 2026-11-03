@@ -43,3 +43,18 @@
 **Next gate**
 - Wait for and inspect the CI result; fix any dependency/configuration/schema issues it reports.
 - Only after a successful clean PostgreSQL migration rehearsal should the initial identity schema be treated as a validated baseline.
+
+
+## 2026-11-03 — CI bootstrap failure and correction
+
+**Observed failure**
+- The first CI run failed in `actions/setup-node@v4` before dependency installation.
+- The workflow requested npm caching, but the repository did not yet contain a lockfile. Consequently all validation and test steps were skipped; this was an infrastructure failure, not a passing or failing application test.
+
+**Correction**
+- Removed the npm cache option until a committed lockfile is available.
+- The next push should trigger a fresh CI run.
+
+**Verification**
+- Workflow file update committed: `07e2c6e989bb6cb9daa2cc8be482e84236117929`.
+- The rerun has not yet been observed. Prisma validation, generation, typecheck, lint, tests, and build remain unverified.
