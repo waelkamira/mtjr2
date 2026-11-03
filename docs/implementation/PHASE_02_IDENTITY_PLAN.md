@@ -51,6 +51,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Add minimal HTTP registration, verification, and resend routes with same-origin/JSON checks; real delivery remains blocked on deployment configuration.
 - [ ] Configure `TRUSTED_PROXY_IP_HEADER` for the actual deployment edge; keep IP-dependent endpoints closed until verified.
 - [ ] Run one HTTP end-to-end registration → verification → login → authenticated request → logout journey after deployment configuration.
+- [x] Add user-facing verification and password-reset action pages; submit tokens through same-origin APIs, remove them from the visible URL after use, and set `no-referrer` metadata.
 
 ### 2.5 Login, logout, recovery, and enforcement
 - [x] Implement password login domain service: normalized identity lookup, dummy-hash verification for unknown accounts, generic credential failures, verified/active account checks, attempt recording, throttling before scrypt, session issuance, and successful-login audit event (CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822).

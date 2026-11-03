@@ -653,3 +653,11 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added the missing server-only challenge issuer. It only issues challenges for pending, unverified accounts, invalidates previous unused challenges transactionally, stores a SHA-256 digest, and returns the raw token only to the trusted mail adapter.
 - Added a separate HMAC-namespaced persistent rate-limit budget for verification sends (3 per identifier/IP pair and 10 per trusted IP per 15-minute window); it does not share login/reset buckets.
 - PostgreSQL integration workflow passed on the affected commit, but general CI failed; the correction is awaiting CI. No broader test suite was added.
+
+
+## 2026-11-03 — Identity action pages
+
+- Added functional email-verification and password-reset pages, using the existing API endpoints and the established visual tokens.
+- Tokens are submitted only to same-origin APIs, never displayed in page content, and removed from the visible URL after successful processing. Both pages set `no-referrer` metadata.
+- No helper-by-helper test expansion was added. The existing general CI and PostgreSQL integration gates remain the required checks for this change.
+- Phase 2 remains blocked only on passing CI for this commit and deployment-only verification: configure Resend credentials/verified sender and trusted edge IP header, verify real email delivery, then execute one HTTP journey (register → verify → login → `/api/auth/me` → logout → anonymous request denied). No real email or deployed HTTP journey is claimed.
