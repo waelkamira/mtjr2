@@ -157,3 +157,19 @@
 **Verification**
 - Earlier baseline CI passed at `852c837c70aa648327a170758c4945af08901afc`.
 - CI runs for the corrected environment parser and session implementation are pending. Their test/build outcomes must be checked before the identity slice is considered validated.
+
+
+## 2026-11-03 — CI test alias resolution correction
+
+**Observed**
+- CI for commit `a0b41291c86640df384b262c504c45c19a83ce01` passed Prisma validation/generation, TypeScript, and ESLint.
+- Vitest then failed before collecting `role-scope.test.ts`: the TypeScript `@/*` path alias was configured, but Vite/Vitest had no matching runtime alias.
+- Existing 12 collected tests passed; one suite failed during module resolution. This was test-runner configuration, not an authorization assertion failure.
+
+**Correction**
+- Added an explicit `@` alias in `vitest.config.ts` pointing to the repository's `src` directory.
+- Added workflow concurrency cancellation so newer pushes supersede older queued/running CI jobs rather than consuming parallel runners unnecessarily.
+
+**Verification**
+- The alias fix is committed as `df26102fcaba04288aab92b8cc38d08dbf505ff1`.
+- CI for this correction and the new session tests is pending; no complete passing run is claimed yet.
