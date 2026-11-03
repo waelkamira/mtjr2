@@ -75,7 +75,7 @@ export default function CheckoutReviewPage() {
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">This is a server-generated price quote. Available inventory is temporarily held while the quote is active.</p>
         {displayError && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-[var(--color-danger)]">{displayError}</p>}
         {isLoading ? <div className="mt-8 h-56 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> :
-          quote ? <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
+          quote ? <><div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
             <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
               <div className="border-b border-[var(--border)] bg-[var(--color-ivory-100)] px-5 py-4">
                 <p className="font-semibold text-[var(--color-forest-950)]">{quote.market.name}</p>
@@ -102,7 +102,7 @@ export default function CheckoutReviewPage() {
             </aside>
           </div>
           <div className="mt-6"><CheckoutDeliveryAddress quoteId={quote.id} quoteStatus={quote.status} /></div>
-          <div className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--muted)]">Shipping rates, taxes, discounts and payment are not configured yet. The delivery address is stored as a quote snapshot; no shipping or tax amount is included.</div>
+          <div className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--muted)]">Shipping rates, taxes, discounts and payment are not configured yet. The delivery address is stored as a quote snapshot; no shipping or tax amount is included.</div></>
           : <div className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-8 text-center"><p className="font-semibold text-[var(--color-forest-950)]">Checkout quote unavailable</p><Link href="/cart" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Return to cart</Link></div>
         }
       </div>
