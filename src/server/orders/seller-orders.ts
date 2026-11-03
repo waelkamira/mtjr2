@@ -9,9 +9,9 @@ export async function listSellerVendorOrders(now = new Date()) {
   const [platformAdmin, stores] = await Promise.all([
     userHasPermission(actor.userId, { permissionKey: "users:manage", now }),
     prisma.store.findMany({
-      where: {
+      where: platformAdmin ? { seller: { status: "ACTIVE" } } : {
         OR: [
-          { seller: { ownerId: actor.userId } },
+          { seller: { ownerId: actor.userId, status: "ACTIVE" } },
           { staff: { some: { userId: actor.userId, status: "ACTIVE" } } }
         ]
       },
