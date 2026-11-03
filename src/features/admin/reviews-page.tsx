@@ -24,7 +24,7 @@ export default function AdminReviewsPage() {
   }, []);
   useEffect(() => {
     let active = true;
-    load().catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Review queue unavailable."); })
+    void Promise.resolve().then(load).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Review queue unavailable."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [load]);
