@@ -128,7 +128,13 @@ async function main() {
     }
   });
 
-  const [roleCount, permissionCount, assignmentCount] = await Promise.all([
+
+  // Demo catalog is deliberately opt-in. Never seed demo commerce data by default.
+  if (process.env.SEED_DEMO_CATALOG === "true") {
+    await seedDemoCatalog();
+  }
+
+  if (process.env.SEED_DEMO_CATALOG === "true") {\n    await seedDemoCatalog();\n  }\n\n  const [roleCount, permissionCount, assignmentCount] = await Promise.all([
     prisma.role.count({ where: { isSystem: true } }),
     prisma.permission.count(),
     prisma.rolePermission.count(),
