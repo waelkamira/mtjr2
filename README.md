@@ -70,7 +70,7 @@ A system may be marked **Complete** only when:
 
 ## Current status
 
-**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; production-only exit checks are deferred, not passed. Phase 3 Marketplace Core: schema implementation in progress. Country/Currency/Market, Seller/Store, Category/Brand taxonomy, Product/Variant/Media/Price, and structured attribute schema foundations are committed; domain workflows, reference-data seed, and post-change CI verification remain pending.**
+**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; production-only exit checks are deferred, not passed. Phase 3 Marketplace Core: schema implementation in progress. Country/Currency/Market, Seller/Store, Category/Brand taxonomy, Product/Variant/Media/Price, structured attributes, and localized search-synonym schema foundations are committed; domain workflows, reference-data seed, and post-change CI verification remain pending.**
 
 Implemented identity capabilities include registration, email verification, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter, and a fail-closed trusted-proxy IP resolver.
 
