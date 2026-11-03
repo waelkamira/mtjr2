@@ -164,3 +164,13 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Configurable store shipping rates and per-store quote selections are now implemented on the stacked branch `feat/store-shipping-options`; Prisma migration, seller workspace, buyer checkout UI, and APIs are connected. Verification is pending.
 - Tax, discounts, final checkout totals, order creation, payment, and shipment execution remain incomplete. No production database or Vercel environment was accessed.
 - Follow the detailed status and verification gate in [Phase 4 Buying Plan](docs/implementation/PHASE_04_BUYING_PLAN.md).
+
+
+## Buying Core — shipping and tax progress (2026-11-03)
+
+- Shipping configuration and per-seller checkout selection are implemented on `feat/store-shipping-options` (PR #4). The latest full CI attempt was cancelled; the earlier disposable PostgreSQL migration/integration run passed. Shipping remains marked pending final CI rather than being called verified.
+- Started the next vertical slice on `feat/checkout-tax-calculation` (PR #5): platform-managed market/region tax rules, quote-owned tax snapshots, admin configuration UI/API, and buyer checkout tax/estimated-total UI.
+- Tax uses explicitly configured basis-point rates and integer minor-unit arithmetic. It does not invent statutory rates. Missing configuration is reported instead of silently treating tax as zero.
+- Schema additions: `MarketTaxRate`, `CheckoutTaxSnapshot`; migration: `20261103230000_market_tax_rules`.
+- No discounts, order creation, or payment are claimed complete. No owner database or Vercel environment was accessed.
+- See `docs/implementation/PHASE_04_BUYING_PLAN.md` for boundaries and limitations.
