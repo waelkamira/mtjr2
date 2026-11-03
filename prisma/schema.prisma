@@ -46,6 +46,9 @@ model User {
   consents          UserConsent[]
   loginAttempts     LoginAttempt[]
   auditEvents       AuditLog[]             @relation("AuditActor")
+  sellerProfile     Seller?
+  storeMemberships  SellerStaff[]          @relation("SellerStaffUser")
+  sentStoreInvitations SellerStaff[]        @relation("SellerStaffInviter")
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -220,6 +223,27 @@ enum MarketStatus {
   SUSPENDED
 }
 
+enum SellerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum StoreStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum SellerStaffStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -231,6 +255,7 @@ model Country {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   markets          Market[]
+  storeLinks       StoreMarket[]
 
   @@index([isActive, name])
 }
@@ -276,4 +301,66 @@ model MarketCurrency {
 
   @@id([marketId, currencyCode])
   @@index([currencyCode, isEnabled])
+}
+
+
+model Seller {
+  id          String       @id @default(cuid())
+  ownerId     String       @unique
+  status      SellerStatus @default(PENDING)
+  legalName   String?
+  displayName String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  stores      Store[]
+
+  @@index([status, createdAt])
+}
+
+model Store {
+  id        String      @id @default(cuid())
+  sellerId  String
+  slug      String      @unique @db.VarChar(160)
+  name      String
+  status    StoreStatus @default(DRAFT)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  seller    Seller      @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  markets   StoreMarket[]
+  staff     SellerStaff[]
+
+  @@index([sellerId, status])
+  @@index([status, createdAt])
+}
+
+model StoreMarket {
+  storeId   String
+  marketId  String
+  isEnabled Boolean  @default(true)
+  createdAt DateTime @default(now())
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  market    Market   @relation(fields: [marketId], references: [id], onDelete: Restrict)
+
+  @@id([storeId, marketId])
+  @@index([marketId, isEnabled])
+}
+
+model SellerStaff {
+  id          String            @id @default(cuid())
+  storeId     String
+  userId      String
+  invitedById String?
+  status      SellerStaffStatus @default(INVITED)
+  invitedAt   DateTime          @default(now())
+  acceptedAt  DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user        User              @relation("SellerStaffUser", fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy   User?             @relation("SellerStaffInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@unique([storeId, userId])
+  @@index([userId, status])
+  @@index([storeId, status])
 }
