@@ -1354,3 +1354,12 @@ The project owner approved Resend as the transactional email provider. The serve
 - Connected product detail product/store review display, product review submission, delivered-order store review submission, customer product/store review history, seller review center with owner responses, and admin product/store moderation queue UIs.
 - All submissions are PENDING until moderation; unapproved content is not exposed publicly.
 - Store reviews, seller responses, media, reports/appeals remain incomplete. No expanded test matrix added.
+
+
+## 2026-11-03 — System 07 initial slice: customer wishlist
+
+- Added canonical `Favorite` model and migration `20261104002000_customer_favorites`.
+- Added authenticated, owner-scoped favorites list/status/add/remove services and APIs.
+- Connected product detail save/remove control and `/account/wishlist` UI.
+- Server validates product availability and enforces unique customer/product favorites.
+- Guest merge, named lists and recommendation logic remain incomplete. No expanded test matrix added.
