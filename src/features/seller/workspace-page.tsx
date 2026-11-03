@@ -40,7 +40,6 @@ export default function SellerWorkspacePage() {
   const [warehouseCode, setWarehouseCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [inventoryLoading, setInventoryLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -72,8 +71,7 @@ export default function SellerWorkspacePage() {
     fetch(`/api/seller/inventory?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
       .then((r) => readJson<InventoryRow[]>(r))
       .then((rows) => { if (active) setInventory(rows); })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Inventory could not be loaded."); })
-      .finally(() => { if (active) setInventoryLoading(false); });
+      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Inventory could not be loaded."); });
     return () => { active = false; };
   }, [selectedStoreId]);
 
@@ -152,7 +150,7 @@ export default function SellerWorkspacePage() {
                     </form>}
                     <div className="mt-7">
                       <h3 className="font-semibold">Inventory overview</h3>
-                      {inventoryLoading ? <p className="py-5 text-sm text-[var(--muted)]">Loading inventory…</p> : !inventory.length ? <p className="mt-3 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm text-[var(--muted)]">No stock records in this store yet.</p> : (
+                      {!inventory.length ? <p className="mt-3 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm text-[var(--muted)]">No stock records in this store yet.</p> : (
                         <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3 pr-3">Product / SKU</th><th className="py-3 pr-3">Warehouse</th><th className="py-3 pr-3">On hand</th><th className="py-3 pr-3">Reserved</th><th className="py-3">Available</th></tr></thead><tbody>{inventory.map((row) => <tr key={row.id} className="border-b border-[var(--border)] last:border-0"><td className="py-3 pr-3"><p className="font-medium">{row.variant.product.name}</p><p className="text-xs text-[var(--muted)]">{row.variant.sku ?? row.variant.name ?? "Variant"}</p></td><td className="py-3 pr-3">{row.warehouse.name}</td><td className="py-3 pr-3">{row.quantityOnHand}</td><td className="py-3 pr-3">{row.quantityReserved}</td><td className={`py-3 font-semibold ${row.isLowStock ? "text-amber-700" : ""}`}>{row.quantityAvailable}</td></tr>)}</tbody></table></div>
                       )}
                     </div>
