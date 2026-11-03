@@ -144,4 +144,67 @@ describe("identity PostgreSQL integration", () => {
       )
     ).resolves.toEqual({ blocked: false });
   });
+
+  it("authenticates a verified user, records attempts, and persists a digest-only session", async () => {
+    const loginEmail = `login-${suffix}@example.test`;
+    const trustedIpAddress = "2001:db8:abcd:1234::42";
+    const registration = await registerUser({
+      email: loginEmail,
+      password: "Correct-Horse-Battery-42!",
+      displayName: "Login Integration",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    });
+    createdUserIds.add(registration.userId);
+    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
+
+    const failed = await loginWithPassword({
+      email: loginEmail,
+      password: "Wrong-Password-000!",
+      trustedIpAddress
+    });
+    expect(failed).toMatchObject({
+      authenticated: false,
+      reason: "INVALID_CREDENTIALS"
+    });
+
+    const authenticated = await loginWithPassword({
+      email: loginEmail,
+      password: "Correct-Horse-Battery-42!",
+      trustedIpAddress,
+      userAgent: "mtjr2-postgres-integration"
+    });
+    expect(authenticated.authenticated).toBe(true);
+    if (!authenticated.authenticated) throw new Error("Expected successful login.");
+
+    expect(authenticated.userId).toBe(registration.userId);
+    const [attempts, sessions, audit] = await Promise.all([
+      prisma.loginAttempt.findMany({
+        where: { userId: registration.userId },
+        orderBy: { attemptedAt: "asc" }
+      }),
+      prisma.userSession.findMany({
+        where: { userId: registration.userId }
+      }),
+      prisma.auditLog.findMany({
+        where: {
+          actorId: registration.userId,
+          action: "identity.login.succeeded"
+        }
+      })
+    ]);
+
+    expect(attempts).toHaveLength(2);
+    expect(attempts.map((attempt) => attempt.succeeded)).toEqual([false, true]);
+    expect(attempts.every((attempt) => attempt.identifierHash !== loginEmail)).toBe(true);
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].tokenHash).not.toBe(authenticated.session.token);
+    expect(sessions[0].tokenHash).toHaveLength(64);
+    expect(audit).toHaveLength(1);
+
+    await expect(resolveUserSession(authenticated.session.token)).resolves.toMatchObject({
+      userId: registration.userId
+    });
+    await expect(revokeUserSession(authenticated.session.token)).resolves.toBe(true);
+  });
 });
