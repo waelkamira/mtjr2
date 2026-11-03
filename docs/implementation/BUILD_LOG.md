@@ -733,3 +733,29 @@ The project owner approved Resend as the transactional email provider. The serve
 1. Confirm Prisma validation and generated-client compatibility in General CI.
 2. Add a deterministic reference-data seed from an explicit, versioned ISO data source.
 3. Add one PostgreSQL integration check for ISO uniqueness, default-currency relation, and market-currency membership.
+
+
+## 2026-11-03 — Phase 3 seller and store schema foundation
+
+**Implemented**
+- Extended the canonical Prisma schema with `Seller`, `Store`, `StoreMarket`, and `SellerStaff`, plus seller/store/staff lifecycle enums.
+- Linked seller ownership and store staff membership to the existing `User` model.
+- Linked stores to markets through `StoreMarket`, allowing a store to opt into multiple markets without duplicating market or currency records.
+- Kept authorization roles canonical: store staff permissions are intended to use existing scoped `UserRoleAssignment` grants; no parallel role/permission tables were added.
+- Added additive migration `20261103020000_seller_store_foundation`.
+- Corrected the migration to contain only the four new tables, three enums, indexes, and foreign keys; no unrelated marker columns remain.
+
+**Schema inspection**
+- Current schema contains 21 model declarations.
+- Static scan found no duplicate model names and no unresolved Git conflict markers.
+- The old integrity warning in the blueprint (SNAP-01 through SNAP-05) does not describe the current `main` schema snapshot; the checked-in schema currently has no conflict markers or duplicate declarations. The schema is not yet Prisma-validated after these changes.
+
+**Verification and safety**
+- No Prisma CLI execution or PostgreSQL migration replay has been observed for this commit; validation remains pending.
+- Vercel status for the schema commit was pending; this is not evidence of a successful schema build.
+- No production/local owner database connection, environment mutation, or migration was performed.
+
+**Remaining**
+1. Run the existing General CI (Prisma validate/generate, typecheck, lint, unit tests, build).
+2. Run the existing PostgreSQL integration workflow against an isolated disposable database to replay both migrations.
+3. Complete the Market seed/repository/service slice and implement seller onboarding and scoped authorization before claiming either workflow complete.
