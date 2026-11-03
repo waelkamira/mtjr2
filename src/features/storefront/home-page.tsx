@@ -8,7 +8,7 @@ type Market = {
   id: string; code: string; name: string;
   defaultCurrency: Currency;
 };
-type Category = { id: string; slug: string; name: string; children: Category[] };
+type Category = { id: string; slug: string; name: string; imageUrl: string | null; children: Category[] };
 type Brand = { id: string; slug: string; name: string };
 type ProductPrice = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Product = {
@@ -173,8 +173,12 @@ export default function StorefrontHomePage() {
           <button type="button" onClick={() => { setCategoryId(""); setPage(1); }} className="text-sm text-[var(--color-forest-800)] underline underline-offset-4">View all</button>
         </div>
         {loadingReference ? <p className="text-sm text-[var(--muted)]">Loading categories…</p> : flatCategories.length ? (
-          <div className="flex gap-3 overflow-x-auto pb-3">
-            {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => { setCategoryId(category.id === categoryId ? "" : category.id); setPage(1); }} className={`whitespace-nowrap rounded-xl border px-5 py-3 text-sm transition ${categoryId === category.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] bg-white text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{category.name}</button>)}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => { setCategoryId(category.id === categoryId ? "" : category.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={categoryId === category.id} className={`group relative min-h-40 overflow-hidden rounded-2xl border text-left transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] ${categoryId === category.id ? "border-[var(--color-forest-800)] ring-2 ring-[var(--color-forest-800)]" : "border-[var(--border)]"}`}>
+              {category.imageUrl && <img src={category.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
+              <span className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)]/90 via-[var(--color-forest-950)]/20 to-transparent" />
+              <span className="absolute bottom-0 left-0 right-0 p-4 text-base font-semibold text-white">{category.name}<span className="ml-2 text-[var(--color-sage-200)]" aria-hidden="true">↗</span></span>
+            </button>)}
           </div>
         ) : <p className="rounded-xl bg-[var(--color-ivory-100)] px-5 py-4 text-sm text-[var(--muted)]">Categories will appear here as the marketplace catalog is activated.</p>}
       </section>
