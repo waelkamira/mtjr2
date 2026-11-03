@@ -1449,3 +1449,16 @@ The project owner approved Resend as the transactional email provider. The serve
 - Email preferences/delivery are intentionally not exposed until a verified sender, consent handling, outbox/retries and delivery status exist.
 - Updated the 49-system blueprint. No live database was accessed or migrated; only the committed Prisma schema and additive SQL migration were changed.
 - Verification policy: no routine test expansion or wait. Focus only on Prisma generation/type/build blockers or preference/notification persistence integrity.
+
+
+## 2026-11-04 — System 11: initial customer returns workflow
+
+- Added canonical `ReturnRequest` and `ReturnItem` models, status enum, ownership/reviewer relations, quantity constraint, indexes and additive migration `20261104040000_returns_workflow`.
+- Added `returns:manage` to the baseline permission seed and granted it to support agents, administrators and the break-glass super-admin role.
+- Added authenticated customer APIs for return-center listing, request creation and request detail; added permission-gated admin queue and status-review APIs.
+- Connected `/account/returns` to delivered order items and return history; added entry links from order history and delivered order detail. Added `/admin/returns` for approval, rejection and marking approved goods as received.
+- Data integrity: customer ownership comes from the verified session; only delivered vendor-order items are eligible; aggregate prior return quantities prevent over-returning; request creation uses a SERIALIZABLE transaction; admin transitions use conditional updates; all creation/review changes write audit events.
+- Financial boundary: this slice does not create a Refund or Payment record, calculate a refund, invoke a provider, or post to a ledger. Approval and receipt are workflow states only. No money is moved.
+- Known gaps: no approved market-specific return window; evidence upload, return shipping/labels, seller-side handling, customer notifications, refund calculation/execution and ledger reconciliation remain unimplemented. These are not silently assumed.
+- Added the new branch to CI base-branch allowlists and the PostgreSQL integration path filters. No owner/local/production database was accessed and no migration was applied.
+- Verification policy: no broad test expansion or routine-suite waiting. Inspect only Prisma validation/generation, typecheck/build blockers, and transactional quantity/status correctness; workflow results are not assumed.
