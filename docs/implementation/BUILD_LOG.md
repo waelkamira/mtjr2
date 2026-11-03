@@ -562,3 +562,21 @@
 - CSRF/Origin enforcement before public mutation routes.
 - A single critical public HTTP authentication journey, then focused security review.
 - Phase 3 remains blocked until these essentials pass.
+
+
+## 2026-11-03 — Reuse login throttling for password-reset requests
+
+**Implemented**
+- Added `requestPasswordReset(email, trustedIpAddress)` as the entry point for reset requests.
+- Reuses the existing persistent HMAC-keyed identifier/IP rate-limit buckets; no new throttle schema or duplicate rate-limit implementation was introduced.
+- A blocked request does not issue a reset token. Unknown, throttled, and eligible accounts must receive the same generic HTTP response from the future route.
+- Trusted IP resolution remains the responsibility of the configured trusted-proxy layer; arbitrary client-supplied forwarding headers must not be trusted.
+
+**Verification**
+- Existing PostgreSQL integration covers the underlying persistent throttle behavior.
+- The new wrapper has not yet been run through CI. Current main commit after this change and documentation is `64a25274b1981c53e407f826005f9b666c004187`.
+- No extra test suite was added: this reuses already-tested throttling behavior and will be covered by the single public HTTP auth journey.
+
+**Next**
+- Configure a real server-only transactional email adapter before exposing recovery routes.
+- Then add CSRF/Origin protection and one public HTTP authentication journey.
