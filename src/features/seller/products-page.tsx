@@ -93,7 +93,7 @@ export default function SellerProductsPage() {
   useEffect(() => {
     if (!storeId) return;
     let active = true;
-    loadProducts(storeId).catch((cause: unknown) => {
+    Promise.resolve().then(() => loadProducts(storeId)).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load products.");
     });
     return () => { active = false; };
