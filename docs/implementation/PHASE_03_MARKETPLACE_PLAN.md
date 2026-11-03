@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. The Country/Currency/Market Prisma models and first migration have been committed; Prisma/CI verification is pending. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
+**Status:** In implementation. Market reference models and Seller/Store foundation models plus additive migrations are committed; Prisma/CI verification is pending. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
 
 ## Goal
 
@@ -15,14 +15,14 @@ Do not copy legacy application code or add models without a defined workflow.
 ### 3.1 Market reference data
 - [x] Define canonical Country, Currency, Market, and market-currency availability models (commit `a84c4da`).
 - [x] Add the initial additive migration (commit `d120587`); CI migration verification is pending.
-- [ ] Define ISO codes, enabled/disabled states, default currency, and explicit decimal precision rules.
+- [x] Define ISO country/currency codes, enabled states, default currency relation, and explicit currency minor-unit precision constraint.
 - [ ] Add deterministic reference-data seed that is safe to run repeatedly.
 - [ ] Add repository/service read paths and a minimal admin-protected management API only where required.
 
 ### 3.2 Seller and store foundation
-- [ ] Define Seller, Store, seller/store status, ownership, and scoped staff membership.
-- [ ] Connect ownership to the existing User identity without duplicating user or role models.
-- [ ] Define seller onboarding state transitions and server-side authorization.
+- [x] Define Seller, Store, seller/store lifecycle enums, owner relation, and store-scoped staff membership schema.
+- [x] Connect seller ownership and staff membership to existing User identity; no duplicate User/Role/Permission models.
+- [ ] Implement seller onboarding transitions and server-side authorization; staff permissions must use scoped UserRoleAssignment grants.
 - [ ] Keep KYC documents and payout activation out of the first slice unless required to complete the onboarding workflow.
 
 ### 3.3 Catalog taxonomy
@@ -43,7 +43,7 @@ Do not copy legacy application code or add models without a defined workflow.
 
 ## Required first vertical slice
 
-The first implementation increment is **Country + Currency + Market**. Complete its schema, migration, repeatable seed, repository/service, and minimal tests before proceeding to Seller/Store.
+The first implementation increment is **Country + Currency + Market**. Its schema and migration are committed; seed, repository/service, and the focused PostgreSQL gate remain outstanding. Seller/Store schema foundations were added in parallel as the next dependency slice, but their workflows remain unimplemented.
 
 ## Minimal verification gates
 
