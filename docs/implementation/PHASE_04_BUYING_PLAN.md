@@ -80,11 +80,18 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Added store-scoped seller order listing API and seller orders UI. Staff access requires the exact `orders:manage` store permission; store owners and platform admins can view their allowed orders.
 - Orders remain `PENDING_PAYMENT`. No payment is captured and sellers are not authorized to fulfill until a real payment provider and verified webhook lifecycle exist.
 
-## 4.6 — Payment integration boundary
+## 4.6 — Payment lifecycle foundation
 
-- Integrate a real payment provider only after launch-country, currency, merchant-account, and payment-method requirements are approved.
-- Create payment intents with idempotency; verify signed provider webhooks; reconcile asynchronous success, failure, cancellation, refund, and dispute events.
-- Transition parent and vendor order states only from verified payment events. Never simulate successful payment.
+**Provider-neutral payment foundation implemented on `feat/payment-lifecycle-foundation`; no live provider is configured.**
+
+- Added canonical `PaymentStatus`, `Payment`, and `PaymentWebhookEvent` Prisma models with migration `20261103235000_payment_lifecycle_foundation`.
+- Added provider adapter contract and explicit registry. A provider must implement idempotent intent creation and cryptographic webhook verification before it can appear as an available checkout method.
+- Added `GET /api/payments/providers`, owner-scoped `POST /api/orders/[orderId]/payments`, and `POST /api/webhooks/payments/[provider]`.
+- Payment attempts are bound to the exact order total/currency, protected by order/provider advisory locking and idempotency. Uncertain provider responses retain the same attempt and provider idempotency key for safe retry.
+- Webhook events are normalized and validated after provider verification, deduplicated by provider event ID, and rejected if a provider reuses an event ID with a different payload hash.
+- Only a verified `succeeded` event can transition the parent order and vendor orders from `PENDING_PAYMENT` to `CONFIRMED`; the transition, status history, audit record and notifications are committed together.
+- Buyer order detail now loads configured payment methods and redirects to the provider checkout URL when available. When no provider is configured, the UI clearly explains that the order is awaiting payment and no charge has been made.
+- No provider, country, merchant account, payment method, credentials, refunds or disputes are assumed. A concrete provider adapter and launch-market approval remain required before live collection. Refund/dispute workflows and settlement reconciliation remain future work.
 
 ## Invariants and test policy
 
