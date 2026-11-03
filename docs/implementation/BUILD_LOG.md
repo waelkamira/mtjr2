@@ -784,3 +784,24 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Implement safe category tree reads with bounded depth/pagination and cycle prevention in the service layer.
 3. Implement market reference data seed/repository/service.
 4. Continue with Product, ProductVariant, ProductMedia, localized product data, attributes, identifiers, and prices only after the taxonomy and store authorization foundations are verified.
+
+
+## 2026-11-03 — Phase 3.4 product catalog schema foundation
+
+**Implemented**
+- Added `Product` with canonical Store ownership, optional Brand, store-unique slug, draft/active/archive status, approval status, and publication timestamps.
+- Added explicit product-category links, localized product content, media metadata, product variants, and typed external identifiers.
+- Added `ProductPrice` per variant + market + currency using integer `BigInt` minor units (not floating point).
+- Added database checks preventing negative prices and compare-at prices below the base amount.
+- Added additive migration `20261103040000_product_catalog_foundation`.
+
+**Static verification**
+- Canonical schema now declares 32 models and 10 enums.
+- No duplicate model/enum declarations or unresolved conflict markers were found.
+- Static relation inspection confirmed Product↔Store/Brand/Category, ProductPrice↔Variant/Market/Currency, and Category↔ProductCategory inverse relations.
+- Static inspection is not a substitute for `prisma validate`, generated-client compatibility, or migration replay.
+
+**Pending verification**
+- General CI and the Platform PostgreSQL Integration workflow must pass on the latest schema/migration commit. The integration workflow deploys all committed migrations against an isolated PostgreSQL 16 service before running the existing integration suite.
+- No production database access or Vercel environment changes were performed.
+- Product attributes/variant attribute definitions, publishability services, product write APIs, and storefront discovery remain unimplemented.
