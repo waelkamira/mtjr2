@@ -320,7 +320,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 100,
     select: {
-      id: true, name: true, slug: true, status: true, approvalStatus: true,
+      id: true, name: true, slug: true, description: true, status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
       media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
       variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
