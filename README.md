@@ -203,3 +203,11 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - New reviews enter moderation as `PENDING`; only published reviews appear publicly.
 - Connected product and store review display/submission, reviewable delivered purchases, customer review history, seller review center and owner responses, and separate admin product/store moderation queues/APIs.
 - Store reviews, seller responses, review media, reports/appeals and extended moderation workflows remain future work.
+
+
+## Customer wishlist and favorites
+
+- Added canonical `Favorite` model to `prisma/schema.prisma` with migration `20261104002000_customer_favorites`.
+- Added authenticated list, status, add and remove APIs. Favorites are unique per customer/product and only active approved products can be newly saved.
+- Connected the product-detail save control and the customer `/account/wishlist` page to the APIs.
+- Guest wishlist merge, named lists and recommendations remain future work.
