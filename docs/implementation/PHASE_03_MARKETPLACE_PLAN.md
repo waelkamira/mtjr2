@@ -1,112 +1,80 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation. Market, Seller/Store, Category/Brand, Product/Variant/Media/Price, structured attributes, and localized search synonym schema foundations plus additive migrations are committed; Prisma and the latest General CI/PostgreSQL migration verification passed for the committed schema baseline. No production database has been accessed. Production identity checks from Phase 2 remain deferred and are not marked passed. Marketplace development proceeds against disposable PostgreSQL in CI and local development only. Do not connect to or migrate the owner's production database without explicit approval.
+**Status:** In implementation. The canonical schema and first seller/catalog services are committed. Product discovery, inventory, and onboarding changes from the latest work are awaiting the consolidated CI and PostgreSQL verification gates. No production database has been accessed.
 
-## Goal
+## Architecture and constraints
 
-Build the first usable, multi-vendor marketplace foundation on the canonical `prisma/schema.prisma`. Keep the existing identity foundation and enforce the architecture:
+`UI → route/controller → authentication + validation → domain service → repository → Prisma`.
 
-`UI → route/controller → auth + validation → domain service → repository → Prisma`.
+- `prisma/schema.prisma` is the canonical data model and this plan follows `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`.
+- No direct Prisma access from UI components.
+- Resolve store ownership from trusted database relations; delegated permissions must match the exact STORE scope. A global SELLER grant is not proof of ownership.
+- Money uses integer minor units. Stock, order, payment, and payout writes require transactions, idempotency where retried, audit records for sensitive mutations, and concurrency-safe conditional updates.
+- Use only isolated/local/CI PostgreSQL. Do not connect to or migrate the owner's production database without explicit approval.
 
-Do not copy legacy application code or add models without a defined workflow.
+## 3.1 Market reference data
 
-## Delivery order
+- [x] Country, Currency, Market, and MarketCurrency schema and additive migration.
+- [x] Enforce currency minor-unit precision and default-market currency relations.
+- [ ] Add repeatable reference-data seed and read services.
+- [ ] Define supported launch markets with the owner before activating any market or seeding launch availability.
+- [ ] Add minimal admin management endpoints only where required.
 
-### 3.1 Market reference data
-- [x] Define canonical Country, Currency, Market, and market-currency availability models (commit `a84c4da`).
-- [x] Add the initial additive migration (commit `d120587`); schema validation and migration rehearsal passed in CI.
-- [x] Define ISO country/currency codes, enabled states, default currency relation, and explicit currency minor-unit precision constraint.
-- [ ] Add deterministic reference-data seed that is safe to run repeatedly.
-- [ ] Add repository/service read paths and a minimal admin-protected management API only where required.
+## 3.2 Seller and store foundation
 
-### 3.2 Seller and store foundation
-- [x] Define Seller, Store, seller/store lifecycle enums, owner relation, and store-scoped staff membership schema.
-- [x] Connect seller ownership and staff membership to existing User identity; no duplicate User/Role/Permission models.
-- [x] Add authenticated, email-verified seller application submission with atomic audit and idempotent pending retry.
-- [x] Add permission-protected approve/reject transitions; approval grants the seeded SELLER role atomically, and rejection requires a reason.
-- [x] Add approved-seller draft-store creation with active-market validation and an atomic audit event.
-- [x] Add store-scoped staff invitation and acceptance; grant STORE_MANAGER only in the exact store scope.
-- [x] Add owner/scoped-manager authorization for staff invitations and reject cross-user invitation acceptance.
-- [x] Expose staff revocation through a mutation-protected API route using the canonical scoped service.
-- [x] Add focused store-staff revocation test (CI execution pending); PostgreSQL integration remains pending.
-- [ ] Add store profile editing, seller suspension lifecycle, KYC documents, and payout activation in their dedicated systems.
+- [x] Seller, Store, StoreMarket, and SellerStaff schema.
+- [x] Verified-email seller application submission, idempotent pending retry, and atomic audit.
+- [x] Platform seller approval/rejection and approved-seller draft store creation.
+- [x] Store staff invitation, acceptance, revocation, and exact STORE-scoped delegation.
+- [ ] Store profile editing, seller suspension lifecycle, KYC documents, and payout activation in their dedicated blueprint systems.
 
-### 3.3 Catalog taxonomy
-- [x] Define hierarchical Category, CategoryTranslation, Brand, and BrandTranslation schema with draft/active/archive lifecycle.
-- [ ] Add deterministic seed data.
-- [x] Add bounded, cycle-safe active category-tree and active-brand read services with locale fallback and stable pagination.
-- [x] Enforce active-only visibility and bounded pagination on public category and brand read APIs.
+## 3.3 Catalog taxonomy
 
-### 3.4 Product catalog
-- [x] Define Product, ProductVariant, ProductMedia, ProductTranslation, ProductIdentifier, ProductCategory, ProductPrice, and store ownership schema. 
-- [x] Add product approval lifecycle fields (PENDING/APPROVED/REJECTED) and draft/active/archive status; publishability transition rules remain to be implemented in services.
-- [x] Store prices as integer minor units (BigInt) with explicit currency and market; add database checks for non-negative amounts and compare-at price consistency.
-- [x] Add atomic draft product creation with store-scope authorization, active category/brand checks, enabled store-market/currency checks, variants, media, minor-unit prices, and audit event.
-- [x] Add platform-permission product approval and store-scoped publishing with active store/seller, active variant, primary image, and per-market enabled-currency price checks.
-- [x] Add draft metadata update with review reset, platform rejection with required reason, and atomic audit; CI/PostgreSQL verification pending.
+- [x] Category/Brand and localized translation schema.
+- [x] Active category tree and brand read services/APIs with bounded pagination and cycle handling.
+- [ ] Deterministic taxonomy seed; no sample categories/brands are activated without an agreed catalog taxonomy.
 
-### 3.5 Discovery
-- [x] Add public active-product listing and slug detail APIs with category/brand/market/currency filters, bounded pagination, and stable sorting; storefront pages remain pending.
-- [x] Add localized search-synonym persistence and an active-market read query that rejects markets whose default currency is not enabled.\n- [ ] Add validated search, filtering, stable sorting, and pagination.
-- [ ] Add indexes only for demonstrated query patterns; defer external search infrastructure.
+## 3.4 Product catalog
 
-## Required first vertical slice
+- [x] Product, variants, media, identifiers, translations, category links, prices, and typed attribute schema.
+- [x] Atomic draft product creation with store, market, category, brand, variant, media, and price validation.
+- [x] Platform approval and store-scoped publication validation.
+- [x] Draft metadata update with review reset and platform rejection with mandatory reason.
+- [x] Persist rejection reason through additive migration.
+- [ ] Complete General CI for the latest lifecycle changes.
 
-The schema foundations for **Country + Currency + Market**, **Seller + Store**, **Category + Brand**, and **Product + Variant + Media + Price** are committed in additive migrations. Reference-data seed, product update/rejection, product discovery/search APIs, and post-change CI/PostgreSQL verification remain outstanding. Draft product creation and taxonomy read APIs are implemented but await CI verification.
+## 3.5 Discovery and search
+
+- [x] Public active-product listing and slug detail APIs.
+- [x] Category, brand, market, currency, and text filters; bounded pagination and stable sorting.
+- [x] Localized active search-synonym expansion.
+- [ ] Complete General CI for the latest discovery changes.
+- [ ] Add full-text/typo-tolerant ranking only after measuring baseline query behavior and catalog volume.
+- [ ] Storefront listing/detail pages follow the backend contracts.
+
+## 3.6 Inventory and warehouse foundation
+
+- [x] Add Warehouse, Inventory, InventoryMovement, InventoryReservation, StockTransfer, and StockTransferItem schema.
+- [x] Add database constraints for non-negative on-hand/reserved stock, reservation/transfer quantity, and distinct transfer warehouses.
+- [x] Add seller warehouse creation and inventory listing APIs.
+- [x] Add idempotent stock adjustments; negative adjustments cannot consume reserved stock.
+- [x] Add draft transfer creation, ship, and receive operations with transactional stock movements and audit events.
+- [x] Require store ownership or exact STORE-scoped `inventory:manage` permission; reject cross-store transfers.
+- [ ] Complete General CI and PostgreSQL migration replay for inventory.
+- [ ] Add reservation create/consume/release/expiry lifecycle when the cart/checkout system defines ownership and idempotency contracts.
+- [ ] Add reconciliation/stock-count workflow after movement ledger behavior is verified.
 
 ## Minimal verification gates
 
-- General CI: Prisma validate/generate, typecheck, lint, unit tests, production build.
-- One PostgreSQL integration workflow for migration deployment, repeatable seed, uniqueness, and market/currency invariants.
-- Add further tests only for a concrete security issue, regression, or distinct business invariant.
+1. General CI: Prisma validate/generate, TypeScript, lint, focused unit tests, production build.
+2. Existing PostgreSQL integration workflow: deploy all migrations to its disposable PostgreSQL service and run the integration suite.
+3. One deployed HTTP E2E journey after release configuration is approved.
+4. Additional tests only for a concrete security issue, regression, or distinct business invariant.
 
-Use only disposable/local/CI PostgreSQL for development verification. Production database connectivity and production migrations are a separate, explicitly approved release task.
+## Out of scope for Phase 3
 
-## Out of scope for this phase
-
-Cart, checkout, orders, payment processing, shipment, refunds, seller payouts, accounting, tax calculation, loyalty, reviews, messaging, and the separate property/booking domain. These remain in their later roadmap phases.
+Cart, checkout, orders, payments, refunds, shipments, seller payouts, accounting, tax, loyalty, reviews, messaging, and storefront visual implementation. They remain in later blueprint phases.
 
 ## Definition of done
 
-Marketplace Core is complete only when a seller can be represented by an authorized store, an approved product with variants and media can be published under that store, and customers can discover it through canonical category/product/search journeys with correct market currency and pagination. All writes must be validated, authorized, auditable where sensitive, and covered by the minimal CI/PostgreSQL gates.
-
-
-## 2026-11-03 — Taxonomy read APIs and first product write slice
-
-**Implemented**
-- Added active category and brand read services with locale fallback, bounded pagination, stable ordering, and active-only visibility.
-- Added public GET routes for categories and brands; category tree construction breaks orphan/cyclic parent edges rather than recursing indefinitely.
-- Added focused category-tree tests for hierarchy ordering, cycle/orphan handling, and localized labels.
-- Added the canonical store-staff revocation POST route; it uses the existing owner/exact-store-scope service and the identity mutation Origin/content-type checks.
-- Added atomic draft product creation with validated input, store-scoped `catalog:manage`, active brand/category checks, enabled store-market/currency checks, variant/media/price creation, integer minor-unit conversion, and an audit event.
-- Added POST `/api/products` for authenticated draft product creation.
-- Added focused product tests for atomic price creation and rejection of a market not enabled for the store.
-
-**Verification**
-- An earlier taxonomy CI run failed at lint because of one pre-existing explicit `any` in the seller test fixture; Prisma validation, generation, and typecheck had passed. The fixture was corrected to use Prisma's transaction type, and the unused tree state was removed.
-- Follow-up CI runs for the correction and the combined catalog/product changes are pending or were superseded by newer commits. No successful result is claimed yet.
-- PostgreSQL integration is still required for migration replay and market/currency invariants. No production database or Vercel environment was accessed or changed.
-
-**Remaining**
-- Deterministic ISO country/currency seed and read APIs.
-- Store-staff revocation tests and PostgreSQL integration coverage.
-- Product update, platform approval, publishability rules, product detail/listing, search/filter/sort/pagination.
-
-
-### Product lifecycle extension (2026-11-03)
-- [x] Approve pending draft products through a permission-protected admin API; approval and audit are atomic.
-- [x] Publish only approved drafts through a store-scoped API; validate active seller/store, active variants, primary image, and a valid price for every enabled active store market before the status transition.
-- [ ] Add product update and rejection-with-reason workflows, then validate lifecycle against PostgreSQL integration.
-
-
-### Product lifecycle and discovery follow-up (2026-11-03)
-- [x] Add product draft metadata updates. Every edit returns the item to PENDING review and clears prior approval/rejection metadata.
-- [x] Add platform rejection for pending drafts with a mandatory reason and atomic audit.
-- [x] Persist product rejection reason with additive migration `20261103070000_product_review_reason`.
-- [x] Add public product listing/detail APIs; only ACTIVE products belonging to ACTIVE stores and sellers are visible.
-- [x] Add category, brand, market, currency, text filters, stable sort options, and bounded pagination.
-- [x] Add focused tests for product edit/rejection and staff revocation.
-- [ ] Complete General CI and PostgreSQL integration for the combined changes.
-
-
-**Security follow-up:** Staff-manager authorization now uses exact STORE-scoped grants; global role grants cannot authorize management of arbitrary stores. A focused delegated-manager test was added. CI verification is pending.
+Marketplace Core is complete when authorized sellers can manage stores and warehouses, create and publish approved products with variants/media/prices, maintain stock safely, and customers can discover active products through canonical category/product/search journeys with market-aware prices. All sensitive writes must be validated, authorized, auditable, transactional, and pass the minimal CI/PostgreSQL gates.
