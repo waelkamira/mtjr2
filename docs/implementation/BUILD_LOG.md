@@ -502,3 +502,20 @@
 2. Add PostgreSQL-backed login service tests (session issuance, login-attempt persistence, inactive/unverified rejection).
 3. Add database-backed logout lifecycle/audit test.
 4. Implement password reset and trusted-proxy/CSRF/Origin boundary before adding public authentication routes.
+
+
+## 2026-11-03 — Phase 2 verification and PostgreSQL login coverage
+
+**Verified on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`**
+- General CI run [41580301822](https://github.com/waelkamira/mtjr2/actions/runs/41580301822) passed: Prisma validate/generate, TypeScript, ESLint, unit tests, and production build.
+- PostgreSQL integration run [41580301896](https://github.com/waelkamira/mtjr2/actions/runs/41580301896) passed: clean migration deployment, repeatable seed, and existing database-backed identity integration tests.
+- These runs include the permission guard and server-side logout primitive added in this commit.
+
+**Added next**
+- Extended the PostgreSQL integration suite with a real password-login journey: register and verify a user, reject a wrong password with the generic response, accept the correct password, persist both login attempts, verify audit event creation, verify only the token digest is stored, resolve the new session, and revoke it.
+- Expanded cleanup to remove every integration-created user.
+- Corrected Phase 2 plan checkboxes and attached exact CI evidence for the permission guard/logout work.
+
+**Verification boundary**
+- The new login integration test is committed but not yet run in CI. The previous PostgreSQL workflow did not exercise the login service directly.
+- The logout primitive passed unit tests; cookie-bound HTTP logout, CSRF/Origin checks, password reset, email delivery, and full HTTP E2E remain outstanding.

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
 import { registerUser, verifyUserEmail } from "@/server/identity/registration";
+import { loginWithPassword } from "@/server/identity/login";
 import {
   createUserSession,
   resolveUserSession,
@@ -16,11 +17,12 @@ import {
 const suffix = randomUUID();
 const email = `integration-${suffix}@example.test`;
 let userId: string | undefined;
+const createdUserIds = new Set<string>();
 
 describe("identity PostgreSQL integration", () => {
   afterAll(async () => {
-    if (userId) {
-      await prisma.user.deleteMany({ where: { id: userId } });
+    if (createdUserIds.size) {
+      await prisma.user.deleteMany({ where: { id: { in: [...createdUserIds] } } });
     }
     await prisma.$disconnect();
   });
@@ -34,6 +36,7 @@ describe("identity PostgreSQL integration", () => {
       acceptedPrivacy: true
     });
     userId = registration.userId;
+    createdUserIds.add(registration.userId);
 
     const pending = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
