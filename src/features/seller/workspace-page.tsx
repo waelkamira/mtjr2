@@ -67,7 +67,7 @@ export default function SellerWorkspacePage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedStoreId) { setInventory([]); return; }
+    if (!selectedStoreId) return;
     let active = true;
     fetch(`/api/seller/inventory?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
       .then((r) => readJson<InventoryRow[]>(r))
