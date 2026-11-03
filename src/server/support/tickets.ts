@@ -22,11 +22,13 @@ const updateSchema = z.object({
 
 const ticketSelect = {
   id: true, ticketNumber: true, subject: true, category: true, status: true, priority: true,
-  assignedToId: true, lastMessageAt: true, createdAt: true, updatedAt: true, resolvedAt: true, closedAt: true
+  assignedToId: true, lastMessageAt: true, createdAt: true, updatedAt: true, resolvedAt: true, closedAt: true,
+  customerReadAt: true, agentReadAt: true, firstResponseAt: true
 } as const;
 
 function serializeTicket<T extends { lastMessageAt: Date; createdAt: Date; updatedAt: Date; resolvedAt: Date | null; closedAt: Date | null }>(ticket: T) {
-  return { ...ticket, lastMessageAt: ticket.lastMessageAt.toISOString(), createdAt: ticket.createdAt.toISOString(), updatedAt: ticket.updatedAt.toISOString(), resolvedAt: ticket.resolvedAt?.toISOString() ?? null, closedAt: ticket.closedAt?.toISOString() ?? null };
+  return { ...ticket, lastMessageAt: ticket.lastMessageAt.toISOString(), createdAt: ticket.createdAt.toISOString(), updatedAt: ticket.updatedAt.toISOString(), resolvedAt: ticket.resolvedAt?.toISOString() ?? null, closedAt: ticket.closedAt?.toISOString() ?? null,
+    customerReadAt: ticket.customerReadAt?.toISOString() ?? null, agentReadAt: ticket.agentReadAt?.toISOString() ?? null, firstResponseAt: ticket.firstResponseAt?.toISOString() ?? null };
 }
 
 export async function createSupportTicket(input: unknown, now = new Date()) {
@@ -37,7 +39,7 @@ export async function createSupportTicket(input: unknown, now = new Date()) {
     const ticket = await tx.supportTicket.create({
       data: {
         ticketNumber, customerId: actor.userId, subject: data.subject, category: data.category,
-        status: SupportTicketStatus.OPEN, priority: SupportTicketPriority.NORMAL, lastMessageAt: now,
+        status: SupportTicketStatus.OPEN, priority: SupportTicketPriority.NORMAL, lastMessageAt: now, customerReadAt: now,
         messages: { create: { senderId: actor.userId, body: data.message } }
       },
       select: ticketSelect
@@ -68,6 +70,7 @@ export async function getMySupportTicket(ticketId: string, now = new Date()) {
     select: { ...ticketSelect, messages: { where: { isInternal: false }, orderBy: { createdAt: "asc" }, take: 200, select: { id: true, body: true, createdAt: true, senderId: true, sender: { select: { displayName: true } } } } }
   });
   if (!ticket) throw new Error("Support ticket not found.");
+  await prisma.supportTicket.updateMany({ where: { id, customerId: actor.userId }, data: { customerReadAt: now } });
   return { ...serializeTicket(ticket), messages: ticket.messages.map((message) => ({ id: message.id, body: message.body, createdAt: message.createdAt.toISOString(), senderId: message.senderId, author: message.sender.displayName || "Support" })) };
 }
 
@@ -81,7 +84,7 @@ export async function replyToMySupportTicket(ticketId: string, input: unknown, n
     if (!ticket) throw new Error("Support ticket not found.");
     if (ticket.status === SupportTicketStatus.CLOSED || ticket.status === SupportTicketStatus.RESOLVED) throw new Error("This ticket is closed. Open a new ticket for further help.");
     const message = await tx.supportMessage.create({ data: { ticketId: id, senderId: actor.userId, body: data.body }, select: { id: true, body: true, createdAt: true } });
-    await tx.supportTicket.update({ where: { id }, data: { status: SupportTicketStatus.OPEN, lastMessageAt: now } });
+    await tx.supportTicket.update({ where: { id }, data: { status: SupportTicketStatus.OPEN, lastMessageAt: now, customerReadAt: now } });
     await tx.auditLog.create({ data: { actorType: AuditActorType.USER, actorId: actor.userId, action: "support.ticket.customer_replied", resource: "support_ticket", resourceId: id, occurredAt: now } });
     return { ...message, createdAt: message.createdAt.toISOString() };
   });
@@ -104,6 +107,7 @@ export async function getAdminSupportTicket(ticketId: string, now = new Date()) 
     select: { ...ticketSelect, customer: { select: { id: true, displayName: true, email: true } }, messages: { orderBy: { createdAt: "asc" }, take: 300, select: { id: true, body: true, isInternal: true, createdAt: true, senderId: true, sender: { select: { displayName: true, email: true } } } } }
   });
   if (!ticket) throw new Error("Support ticket not found.");
+  await prisma.supportTicket.updateMany({ where: { id }, data: { agentReadAt: now } });
   return { ...serializeTicket(ticket), customer: ticket.customer, messages: ticket.messages.map((message) => ({ id: message.id, body: message.body, internal: message.isInternal, createdAt: message.createdAt.toISOString(), senderId: message.senderId, author: message.sender.displayName || message.sender.email })) };
 }
 
@@ -116,7 +120,7 @@ export async function adminReplyToSupportTicket(ticketId: string, input: unknown
     if (!ticket) throw new Error("Support ticket not found.");
     if (ticket.status === SupportTicketStatus.CLOSED) throw new Error("Closed tickets cannot receive replies.");
     const message = await tx.supportMessage.create({ data: { ticketId: id, senderId: actor.userId, body: data.body, isInternal: data.internal ?? false }, select: { id: true, body: true, isInternal: true, createdAt: true } });
-    await tx.supportTicket.update({ where: { id }, data: { status: data.internal ? ticket.status : SupportTicketStatus.WAITING_CUSTOMER, lastMessageAt: now } });
+    await tx.supportTicket.update({ where: { id }, data: { status: data.internal ? ticket.status : SupportTicketStatus.WAITING_CUSTOMER, lastMessageAt: now, agentReadAt: now, ...(!data.internal && !ticket.status ? { firstResponseAt: now } : {}) } });
     if (!data.internal) await tx.notification.create({ data: {
       userId: ticket.customerId, type: "SUPPORT_REPLY", title: "Support replied to your ticket",
       message: "There is a new response to your support request.", resourceType: "support_ticket",
