@@ -1049,3 +1049,30 @@ The project owner approved Resend as the transactional email provider. The serve
 - The current combined CI and PostgreSQL workflows are queued/running. Earlier CI run `41677499072` passed install, Prisma validate/generate, typecheck, and lint on an intermediate inventory commit, but was superseded before unit tests and build. It is not a complete pass.
 - Database Baseline and Platform PostgreSQL Integration for the inventory migration are not yet complete. No success is claimed for the latest migration or the current full commit.
 - No active markets/countries/currencies are seeded or activated because the owner has not defined launch geography. The new public APIs correctly return empty collections until approved reference data is configured.
+
+
+## 2026-11-03 — Buyer storefront connected to marketplace APIs
+
+**Implemented**
+- Replaced the initialization placeholder with a responsive storefront shell following the approved forest/sage/ivory/copper design tokens.
+- Connected the homepage to the public active-market, category-tree, and product-discovery APIs.
+- Added functional search, category filtering, market selection, product cards, and canonical product-detail navigation.
+- Added the product detail page backed by the public product-by-slug API. Cart/checkout controls are intentionally absent until the Buying Core APIs exist.
+- Fixed an API-boundary defect: Prisma `BigInt` price amounts are converted to JSON-safe minor-unit strings. Product price responses now include the currency's `minorUnit` precision so the UI formats currencies correctly.
+- Added a focused regression test for JSON-safe product price serialization.
+- Updated the Phase 3 plan and README to distinguish the implemented buyer storefront slice from seller-center/admin interfaces still pending.
+
+**Prisma decision**
+- No schema migration was needed for this UI slice: the canonical `ProductPrice` model already relates to `Currency`, stores integer minor units, and the `Currency` model already defines `minorUnit`. The API selection now exposes that existing relation; no duplicate schema fields were added.
+
+**Verification**
+- The preceding CI run `41678451013` found one stale test assertion for the permission-guard argument shape (102/103 tests passed); the assertion was corrected in commit `534cc530`.
+- Consolidated CI for the current storefront/API changes is running as run `41681739586`. No full pass is claimed until Prisma validation/generation, typecheck, lint, unit tests, and production build all complete successfully.
+- The earlier CI failure skipped production build; the current run is the required verification gate.
+- No production database was accessed, no migrations were run against the owner's database, and no Vercel environment variables were read or changed.
+
+**Next**
+1. Fix only concrete CI failures from the consolidated run.
+2. Verify the existing PostgreSQL migration/integration workflows against disposable CI PostgreSQL.
+3. Continue the Phase 3 vertical slice: seller-center UI wired to seller/store/catalog/inventory APIs, followed by remaining storefront catalog UX.
+4. Add deterministic reference data only after launch markets are approved.
