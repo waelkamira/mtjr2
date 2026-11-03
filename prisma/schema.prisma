@@ -255,7 +255,6 @@ model Country {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   markets          Market[]
-  storeLinks       StoreMarket[]
 
   @@index([isActive, name])
 }
@@ -286,6 +285,7 @@ model Market {
   country             Country         @relation(fields: [countryId], references: [id], onDelete: Restrict)
   defaultCurrency     Currency        @relation("MarketDefaultCurrency", fields: [defaultCurrencyCode], references: [code], onDelete: Restrict)
   currencies          MarketCurrency[]
+  storeLinks          StoreMarket[]
 
   @@index([countryId, status])
   @@index([defaultCurrencyCode])
