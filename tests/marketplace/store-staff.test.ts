@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireCurrentSession: vi.fn(),
-  userHasPermission: vi.fn(),
+  userHasScopedPermission: vi.fn(),
   transaction: vi.fn(),
   storeFind: vi.fn(),
   userFind: vi.fn(),
@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
-vi.mock("@/server/identity/permission-repository", () => ({ userHasPermission: mocks.userHasPermission }));
+vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
 
 import { acceptStoreStaffInvitation, inviteStoreStaff, revokeStoreStaff } from "@/server/marketplace/store-staff";
@@ -26,7 +26,7 @@ describe("store staff lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireCurrentSession.mockResolvedValue({ userId: "owner-1" });
-    mocks.userHasPermission.mockResolvedValue(false);
+    mocks.userHasScopedPermission.mockResolvedValue(false);
     mocks.storeFind.mockResolvedValue({ id: "store-1", seller: { ownerId: "owner-1", status: "ACTIVE" } });
     mocks.userFind.mockResolvedValue({ id: "staff-1", status: "ACTIVE" });
     mocks.membershipUpsert.mockResolvedValue({ id: "membership-1", status: "INVITED" });
@@ -82,6 +82,16 @@ describe("store staff lifecycle", () => {
       where: { userId: "staff-1", roleId: "manager-role", scopeType: "STORE", scopeId: "store-1" }
     });
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("accepts a delegated manager only through an exact store-scoped staff grant", async () => {
+    mocks.requireCurrentSession.mockResolvedValue({ userId: "manager-1" });
+    mocks.userHasScopedPermission.mockResolvedValue(true);
+    const result = await inviteStoreStaff({ storeId: "store-1", userId: "staff-1" });
+    expect(result.status).toBe("INVITED");
+    expect(mocks.userHasScopedPermission).toHaveBeenCalledWith("manager-1", expect.objectContaining({
+      permissionKey: "store:staff:manage", scope: { type: "STORE", id: "store-1" }
+    }));
   });
 
 });
