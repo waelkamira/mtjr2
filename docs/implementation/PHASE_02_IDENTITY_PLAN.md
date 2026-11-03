@@ -44,7 +44,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Consume verification tokens atomically and activate accounts only once.
 - [x] Require PENDING account state during activation; do not reactivate suspended/disabled accounts.
 - [x] Recheck ACTIVE account state atomically when accepting/touching an existing session.
-- [x] Implement server-only Resend transactional email adapter for verification and password-reset messages.\n- [ ] Configure a Resend API key and verified sender in deployment secrets; perform a real delivery smoke test.
+- [x] Implement server-only Resend transactional email adapter for verification and password-reset messages.
+- [ ] Configure a Resend API key and verified sender in deployment secrets; perform a real delivery smoke test.
 - [ ] Add resend-verification cooldown and anti-enumeration behavior.
 - [ ] Add HTTP registration and verification routes only after email delivery and abuse controls are ready.
 - [ ] Add end-to-end registration and verification tests through public HTTP endpoints.
