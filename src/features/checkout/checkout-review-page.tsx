@@ -28,6 +28,7 @@ export default function CheckoutReviewPage() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -58,6 +59,22 @@ export default function CheckoutReviewPage() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The reservation could not be released.");
     } finally { setBusy(false); }
+  }
+
+  async function placeOrder() {
+    if (!quote) return;
+    setPlacingOrder(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/checkout/quote/${encodeURIComponent(quote.id)}/place-order`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({})
+      });
+      const result = await response.json() as { order?: { id: string }; error?: string };
+      if (!response.ok || !result.order) throw new Error(result.error || "The order could not be placed.");
+      router.push(`/orders/${encodeURIComponent(result.order.id)}`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The order could not be placed.");
+    } finally { setPlacingOrder(false); }
   }
 
   const displayError = error || (!quoteId ? "A checkout quote is required. Return to your cart to review it." : "");
@@ -106,7 +123,8 @@ export default function CheckoutReviewPage() {
           <div className="mt-6"><CheckoutDeliveryAddress quoteId={quote.id} quoteStatus={quote.status} /></div>
           <div className="mt-4"><CheckoutShippingOptions quoteId={quote.id} currencyCode={quote.currency.code} minorUnit={quote.currency.minorUnit} quoteStatus={quote.status} /></div>
           <div className="mt-4"><CheckoutTaxSummary quoteId={quote.id} currencyCode={quote.currency.code} minorUnit={quote.currency.minorUnit} quoteStatus={quote.status} /></div>
-          <div className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--muted)]">Tax uses explicitly configured market rules. Discounts, final order creation and payment remain pending; this step does not create an order or charge a payment.</div></>
+          <div className="mt-4 rounded-3xl border border-[var(--border)] bg-white p-5"><p className="text-sm leading-6 text-[var(--muted)]">Placing the order creates one marketplace order and separate seller orders. Payment is not collected in this step.</p><button type="button" disabled={placingOrder || quote.status !== "ACTIVE"} onClick={() => void placeOrder()} className="mt-4 w-full rounded-xl bg-[var(--color-forest-900)] px-5 py-4 text-sm font-semibold text-white disabled:opacity-50">{placingOrder ? "Placing order…" : "Place order"}</button></div>
+          <div className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--muted)]">Order creation requires a delivery address, a shipping selection for each seller, and a configured tax calculation. Payment integration remains pending.</div></>
           : <div className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-8 text-center"><p className="font-semibold text-[var(--color-forest-950)]">Checkout quote unavailable</p><Link href="/cart" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Return to cart</Link></div>
         }
       </div>
