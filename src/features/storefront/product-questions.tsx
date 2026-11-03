@@ -13,12 +13,6 @@ export default function ProductQuestions({ productId }: { productId: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  async function load() {
-    const response = await fetch(`/api/products/${encodeURIComponent(productId)}/questions`, { cache: "no-store" });
-    const data = await response.json() as { items?: Question[] };
-    if (!response.ok) throw new Error("Product questions could not be loaded.");
-    setItems(data.items || []);
-  }
   useEffect(() => {
     let active = true;
     fetch(`/api/products/${encodeURIComponent(productId)}/questions`, { cache: "no-store" })
