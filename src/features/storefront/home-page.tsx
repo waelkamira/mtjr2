@@ -130,6 +130,7 @@ export default function StorefrontHomePage() {
               {markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}
             </select>
           </label>
+          <Link href="/cart" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Cart</Link>
         </div>
         <nav aria-label="Main navigation" className="mx-auto flex max-w-[1440px] gap-7 overflow-x-auto px-5 pb-3 text-sm text-[var(--color-ink-700)] lg:px-10">
           <a href="#discover" className="whitespace-nowrap font-medium text-[var(--color-forest-800)]">Discover</a>
