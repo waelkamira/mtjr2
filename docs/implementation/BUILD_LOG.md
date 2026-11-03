@@ -927,3 +927,26 @@ The project owner approved Resend as the transactional email provider. The serve
 - The seller application submission baseline passed General CI in run `41666232503`.
 - Latest consolidated service/API/test changes are committed; their General CI run is pending. Previous per-commit runs were cancelled by the workflow's intentional concurrency policy as newer commits arrived.
 - The PostgreSQL integration workflow was not rerun for these application-service changes. No production DB was accessed.
+
+
+## 2026-11-03 — Taxonomy read APIs and first product write slice
+
+**Implemented**
+- Added active category and brand read services with locale fallback, active-only visibility, bounded pagination, and stable ordering.
+- Added public category and brand GET endpoints and a cycle-safe category tree builder.
+- Added focused category-tree unit tests.
+- Exposed store-staff revocation through a POST route that reuses the canonical scoped authorization service and request-origin validation.
+- Added atomic draft product creation: validates store scope, seller/store state, active brand/categories, enabled store markets and currencies, duplicate variant-market-currency prices, compare-at price invariants, and a single primary media item. Creates variants/media/prices and audit event in one transaction.
+- Added the authenticated POST product endpoint and focused tests for successful minor-unit price persistence and rejection of a market not enabled for the store.
+
+**Verification**
+- The first taxonomy CI run reached Prisma validate/generate and TypeScript successfully, then failed lint on an explicit `any` in the existing seller-application test mock. That mock was changed to use `Prisma.TransactionClient`; the unused taxonomy tree state was also removed.
+- CI runs were superseded by subsequent commits before the full checks completed. Current combined changes are awaiting a full General CI result; no pass is claimed.
+- The latest completed failed run reported 23 npm audit vulnerabilities (17 moderate, 4 high, 2 critical). No forced dependency upgrades were applied because they could introduce breaking changes; dependency remediation should be a separate scoped task.
+- No production database was connected or migrated, and no Vercel environment values were read or changed.
+
+**Next**
+1. Obtain one completed General CI run for the combined catalog changes and fix only reported blockers.
+2. Add the focused staff-revocation test and run the existing PostgreSQL integration workflow once after the catalog slice stabilizes.
+3. Implement product update, platform approval, publishability validation, then discovery reads/search.
+4. Add deterministic country/currency reference data only after defining the intended supported launch scope; do not invent active markets.
