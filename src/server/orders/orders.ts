@@ -262,7 +262,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       include: {
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
-        vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+        vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
       }
     });
     return serializeOrder(saved);
@@ -284,7 +284,7 @@ export async function getOwnedOrder(guestToken: string, orderId: string, now = n
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
     }
   });
   if (!order) throw new Error("Order not found.");
@@ -300,7 +300,7 @@ export async function listCustomerOrders(now = new Date()) {
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
     }
   });
   return orders.map(serializeOrder);
