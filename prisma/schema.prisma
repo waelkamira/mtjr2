@@ -54,6 +54,7 @@ model User {
   addresses             UserAddress[]
   orders                Order[]
   notifications         Notification[]
+  notificationPreferences NotificationPreference[]
   productReviews        ProductReview[]
   productQuestions      ProductQuestion[]
   productAnswers        ProductAnswer[]
@@ -1364,6 +1365,19 @@ model Favorite {
   @@unique([userId, productId])
   @@index([userId, createdAt])
   @@index([productId, createdAt])
+}
+
+model NotificationPreference {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String   @db.VarChar(64)
+  inAppEnabled Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId])
 }
 
 model Notification {
