@@ -214,3 +214,26 @@
 - CI run for this commit is pending; no passing test/build result is claimed.
 - Previous CI runs exposed a Vitest alias resolution problem, now fixed in `df26102fcaba04288aab92b8cc38d08dbf505ff1`.
 - CI's PostgreSQL service was removed from the unit/build job because current tests mock Prisma and do not connect to a database. A dedicated PostgreSQL integration/migration job remains a mandatory Phase 2 exit gate.
+
+
+## 2026-11-03 — Identity lifecycle race hardening
+
+**Plan alignment**
+- Continued Phase 2 only; no Marketplace Core work was started.
+- Reviewed the registration and session services against the security requirements in the Phase 2 plan.
+
+**Changes**
+- Email verification now activates a user only through a conditional update requiring the account to remain `PENDING`. A valid token cannot reactivate a suspended or disabled account.
+- Session resolution now rechecks that the related user is still `ACTIVE` in the same atomic database update that refreshes `lastSeenAt`. This closes the gap where an account could be suspended after the initial read but before the session was accepted.
+- Expanded mocked lifecycle tests to assert both database predicates and the fail-closed result when the account state changes.
+
+**Verification**
+- The preceding commit `8177b9fd62d2c25212d030fc33bbb2c4863edec0` passed GitHub Actions run `41574008123`: Prisma validate/generate, TypeScript, ESLint, Vitest, and production build all completed successfully.
+- The race-hardening changes are committed separately; their own CI run must pass before they are treated as verified.
+- These are unit tests with mocked Prisma. PostgreSQL migration-backed integration tests remain a required Phase 2 gate.
+
+**Remaining Phase 2 work**
+- Login throttling and persistent abuse controls.
+- Transactional email provider adapter and resend anti-enumeration/cooldown.
+- Login/logout/password reset and server-side session/authorization guards.
+- Initial migration, deterministic role/permission seed, PostgreSQL integration tests, and end-to-end identity journey.

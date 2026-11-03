@@ -115,7 +115,9 @@ export async function resolveUserSession(
     where: {
       id: session.id,
       revokedAt: null,
-      expiresAt: { gt: now }
+      expiresAt: { gt: now },
+      // Recheck account state in the same write that accepts the session.
+      user: { is: { status: UserStatus.ACTIVE } }
     },
     data: { lastSeenAt: now }
   });

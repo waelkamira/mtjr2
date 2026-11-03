@@ -91,7 +91,12 @@ describe("database-backed session lifecycle", () => {
     );
     expect(prismaMock.userSession.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "session-1", revokedAt: null, expiresAt: { gt: fixedNow } }
+        where: {
+          id: "session-1",
+          revokedAt: null,
+          expiresAt: { gt: fixedNow },
+          user: { is: { status: UserStatus.ACTIVE } }
+        }
       })
     );
   });
@@ -130,7 +135,7 @@ describe("database-backed session lifecycle", () => {
     await expect(resolveUserSession("x".repeat(43), fixedNow)).resolves.toBeNull();
   });
 
-  it("fails closed when revocation wins the concurrent last-seen update", async () => {
+  it("fails closed when revocation or account suspension wins the last-seen update", async () => {
     prismaMock.userSession.findUnique.mockResolvedValue({
       id: "session-1",
       userId: "user-1",

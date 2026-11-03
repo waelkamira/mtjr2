@@ -166,14 +166,19 @@ export async function verifyUserEmail(
 
     if (consumed.count !== 1) return false;
 
-    await tx.user.update({
-      where: { id: challenge.userId },
+    // A valid token must not reactivate a suspended/disabled account. The
+    // status predicate also makes concurrent account-state changes fail closed.
+    const activated = await tx.user.updateMany({
+      where: {
+        id: challenge.userId,
+        status: UserStatus.PENDING
+      },
       data: {
         status: UserStatus.ACTIVE,
         emailVerifiedAt: now
       }
     });
 
-    return true;
+    return activated.count === 1;
   });
 }

@@ -38,6 +38,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Create pending accounts transactionally with hashed passwords.
 - [x] Store single-use, expiring email-verification token digests.
 - [x] Consume verification tokens atomically and activate accounts only once.
+- [x] Require PENDING account state during activation; do not reactivate suspended/disabled accounts.
+- [x] Recheck ACTIVE account state atomically when accepting/touching an existing session.
 - [ ] Connect a real transactional email provider through a server-only adapter.
 - [ ] Add resend-verification cooldown and anti-enumeration behavior.
 - [ ] Add HTTP registration and verification routes only after email delivery and abuse controls are ready.

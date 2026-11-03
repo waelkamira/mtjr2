@@ -3,7 +3,7 @@ import { ConsentType, UserStatus } from "@prisma/client";
 
 const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
-    user: { create: vi.fn(), update: vi.fn() },
+    user: { create: vi.fn(), updateMany: vi.fn() },
     verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     userConsent: { createMany: vi.fn() }
   };
@@ -95,7 +95,7 @@ describe("registration and email verification", () => {
       consumedAt: null
     });
     txMock.verificationToken.updateMany.mockResolvedValue({ count: 1 });
-    txMock.user.update.mockResolvedValue({});
+    txMock.user.updateMany.mockResolvedValue({ count: 1 });
 
     await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(true);
     expect(txMock.verificationToken.updateMany).toHaveBeenCalledWith(expect.objectContaining({
@@ -105,8 +105,8 @@ describe("registration and email verification", () => {
         expiresAt: { gt: now }
       })
     }));
-    expect(txMock.user.update).toHaveBeenCalledWith({
-      where: { id: "user-1" },
+    expect(txMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", status: UserStatus.PENDING },
       data: { status: UserStatus.ACTIVE, emailVerifiedAt: now }
     });
   });
@@ -132,7 +132,7 @@ describe("registration and email verification", () => {
       expiresAt: new Date(now.getTime() + 60_000), consumedAt: null
     });
     await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(false);
-    expect(txMock.user.update).not.toHaveBeenCalled();
+    expect(txMock.user.updateMany).not.toHaveBeenCalled();
   });
 
   it("does not activate an account if another request already consumed the token", async () => {
@@ -146,6 +146,24 @@ describe("registration and email verification", () => {
     txMock.verificationToken.updateMany.mockResolvedValue({ count: 0 });
 
     await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(false);
-    expect(txMock.user.update).not.toHaveBeenCalled();
+    expect(txMock.user.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not reactivate an account that is no longer pending", async () => {
+    txMock.verificationToken.findUnique.mockResolvedValue({
+      id: "verification-2",
+      userId: "user-suspended",
+      purpose: "EMAIL_VERIFICATION",
+      expiresAt: new Date(now.getTime() + 60_000),
+      consumedAt: null
+    });
+    txMock.verificationToken.updateMany.mockResolvedValue({ count: 1 });
+    txMock.user.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(verifyUserEmail("y".repeat(43), now)).resolves.toBe(false);
+    expect(txMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-suspended", status: UserStatus.PENDING },
+      data: { status: UserStatus.ACTIVE, emailVerifiedAt: now }
+    });
   });
 });
