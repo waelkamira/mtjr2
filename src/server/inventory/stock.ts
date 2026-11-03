@@ -283,3 +283,28 @@ export async function receiveStockTransfer(transferId: string, now = new Date())
     return { transferId: id, status: StockTransferStatus.RECEIVED };
   });
 }
+
+
+/** Lists recent stock transfers for a store after enforcing inventory scope. */
+export async function listStoreStockTransfers(storeIdInput: string, now = new Date()) {
+  const storeId = z.string().trim().min(1).parse(storeIdInput);
+  const actor = await requireCurrentSession(now);
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { id: true, seller: { select: { ownerId: true, status: true } } }
+  });
+  if (!store || store.seller.status !== "ACTIVE" || !(await canManageInventory(actor.userId, store.seller.ownerId, storeId, now))) {
+    throw new Error("You do not have inventory access to this store.");
+  }
+  return prisma.stockTransfer.findMany({
+    where: { storeId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 100,
+    select: {
+      id: true, reference: true, status: true, createdAt: true, shippedAt: true, receivedAt: true,
+      sourceWarehouse: { select: { id: true, name: true, code: true } },
+      destinationWarehouse: { select: { id: true, name: true, code: true } },
+      items: { select: { quantity: true, variant: { select: { id: true, sku: true, name: true, product: { select: { name: true } } } } }
+    }
+  });
+}
