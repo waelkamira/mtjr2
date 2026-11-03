@@ -357,6 +357,7 @@ model Market {
   productPrices       ProductPrice[]
   carts               Cart[]
   checkoutQuotes      CheckoutQuote[]
+  shippingRates       StoreShippingRate[]
 
   @@index([countryId, status])
   @@index([defaultCurrencyCode])
@@ -405,6 +406,7 @@ model Store {
   stockTransfers StockTransfer[]
   shippingRates StoreShippingRate[]
   checkoutShippingSelections CheckoutShippingSelection[]
+  checkoutQuoteLines CheckoutQuoteLine[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
