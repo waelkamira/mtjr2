@@ -1344,3 +1344,13 @@ The project owner approved Resend as the transactional email provider. The serve
 - Order placement emits buyer and store-owner notifications inside the same serializable transaction as order creation. Unique deduplication keys preserve retry safety.
 - Email, preferences, retry/outbox, and non-order event delivery remain pending.
 - Verification is pending with the existing General CI and disposable PostgreSQL integration workflows only.
+
+
+## 2026-11-03 — System 06 initial slice: verified product reviews
+
+- Added canonical `ReviewStatus` and `ProductReview` models; migration: `20261104001000_verified_product_reviews`.
+- Enforced delivered-order ownership at submission, one review per customer/product, and unique review per purchased order item.
+- Added public product review list/aggregate, authenticated reviewable-purchase lookup, customer review history, and audited platform moderation APIs.
+- Connected product detail review display/submission, customer review history, and admin moderation queue UI.
+- All submissions are PENDING until moderation; unapproved content is not exposed publicly.
+- Store reviews, seller responses, media, reports/appeals remain incomplete. No expanded test matrix added.
