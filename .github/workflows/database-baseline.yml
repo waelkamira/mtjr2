@@ -1,0 +1,64 @@
+name: Database Baseline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "prisma/schema.prisma"
+      - ".github/workflows/database-baseline.yml"
+
+concurrency:
+  group: database-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clean-postgres-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: mtjr2_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d mtjr2_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_ci?schema=public
+      AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx prisma validate
+      - run: npx prisma generate
+      - name: Generate initial migration from the canonical schema
+        shell: bash
+        run: |
+          mkdir -p prisma/migrations/20261103000000_identity_baseline
+          printf 'provider = "postgresql"\n' > prisma/migrations/migration_lock.toml
+          npx prisma migrate diff \
+            --from-empty \
+            --to-schema-datamodel prisma/schema.prisma \
+            --script > prisma/migrations/20261103000000_identity_baseline/migration.sql
+          test -s prisma/migrations/20261103000000_identity_baseline/migration.sql
+      - name: Apply migration to clean PostgreSQL
+        run: npx prisma migrate deploy
+      - name: Verify migration state
+        run: npx prisma migrate status
+      - uses: actions/upload-artifact@v4
+        with:
+          name: identity-baseline-migration
+          path: |
+            prisma/migrations/migration_lock.toml
+            prisma/migrations/20261103000000_identity_baseline/migration.sql
+          if-no-files-found: error
