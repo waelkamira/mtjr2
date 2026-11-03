@@ -22,6 +22,7 @@ const permissions = [
   { key: "payments:refund", description: "Initiate or approve refunds within the granted scope." },
   { key: "support:read", description: "Read customer support cases." },
   { key: "support:manage", description: "Manage customer support cases." },
+  { key: "messages:manage", description: "Read and reply to customer conversations within the granted store scope." },
   { key: "roles:read", description: "Read role and permission definitions." },
   { key: "roles:assign", description: "Assign roles within authorized scopes." },
   { key: "audit:read", description: "Read security and administrative audit events." },
@@ -41,7 +42,7 @@ const roles = [
     description: "Seller account with store-scoped catalog, inventory, and order capabilities.",
     permissions: [
       "account:read:own", "account:update:own", "store:read", "store:manage",
-      "catalog:read", "catalog:manage", "inventory:manage", "orders:read", "orders:manage",
+      "catalog:read", "catalog:manage", "inventory:manage", "orders:read", "orders:manage", "messages:manage",
     ],
   },
   {
@@ -50,7 +51,7 @@ const roles = [
     description: "Delegated store operations role; assignments must be store-scoped.",
     permissions: [
       "store:read", "store:manage", "store:staff:manage", "catalog:read",
-      "catalog:manage", "inventory:manage", "orders:read", "orders:manage",
+      "catalog:manage", "inventory:manage", "orders:read", "orders:manage", "messages:manage",
     ],
   },
   {
