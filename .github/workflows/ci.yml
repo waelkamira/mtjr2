@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets", "feat/storefront-demo-experience"]
+    branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets", "feat/storefront-demo-experience", "feat/storefront-search-state"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
