@@ -653,3 +653,17 @@ model VariantAttribute {
   @@unique([variantId, attributeDefinitionId])
   @@index([attributeDefinitionId])
 }
+
+
+model SearchSynonym {
+  id        String   @id @default(cuid())
+  locale    String   @db.VarChar(16)
+  term      String   @db.VarChar(160)
+  synonym   String   @db.VarChar(160)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([locale, term, synonym])
+  @@index([locale, term, isActive])
+}
