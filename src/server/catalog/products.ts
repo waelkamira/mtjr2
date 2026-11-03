@@ -315,7 +315,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
   if (!store || !(await canManageStoreCatalog(actor.userId, store.seller.ownerId, store.id, now))) {
     throw new Error("You do not have catalog access to this store.");
   }
-  return prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where: { storeId },
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 100,
@@ -326,4 +326,11 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
       variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
     }
   });
+  return products.map((product) => ({
+    ...product,
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() }))
+    }))
+  }));
 }
