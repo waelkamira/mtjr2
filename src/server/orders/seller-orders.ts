@@ -6,18 +6,16 @@ import { prisma } from "@/lib/db/prisma";
 
 export async function listSellerVendorOrders(now = new Date()) {
   const actor = await requireCurrentSession(now);
-  const [platformAdmin, stores] = await Promise.all([
-    userHasPermission(actor.userId, { permissionKey: "users:manage", now }),
-    prisma.store.findMany({
-      where: platformAdmin ? { seller: { status: "ACTIVE" } } : {
-        OR: [
-          { seller: { ownerId: actor.userId, status: "ACTIVE" } },
-          { staff: { some: { userId: actor.userId, status: "ACTIVE" } } }
-        ]
-      },
-      select: { id: true, name: true, seller: { select: { ownerId: true, status: true } } }
-    })
-  ]);
+  const platformAdmin = await userHasPermission(actor.userId, { permissionKey: "users:manage", now });
+  const stores = await prisma.store.findMany({
+    where: platformAdmin ? { seller: { status: "ACTIVE" } } : {
+      OR: [
+        { seller: { ownerId: actor.userId, status: "ACTIVE" } },
+        { staff: { some: { userId: actor.userId, status: "ACTIVE" } } }
+      ]
+    },
+    select: { id: true, name: true, seller: { select: { ownerId: true, status: true } } }
+  });
   const allowed = await Promise.all(stores.map(async (store) => {
     const isOwner = store.seller.ownerId === actor.userId;
     const delegated = await userHasScopedPermission(actor.userId, {
