@@ -169,7 +169,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `Warehouse`, `Inventory`, `InventoryMovement`, `InventoryReservation`, `StockTransfer`, `StockTransferItem`, `ProductVariant`.
 - **API:** `/api/seller/warehouses`, `/api/seller/inventory`, `/api/seller/inventory/adjustments`, `/api/seller/inventory/transfers`.
 - **Must include:** non-negative stock, reservation expiry, atomic decrement, transfer receive/ship, reconciliation, barcode support and audit.
-- **Current state:** **Schema-only.** Warehouse/inventory models exist; no complete seller stock workflow was identified.
+- **Current state (rechecked 2026-11-03):** Initial Warehouse/Inventory/Movement/Reservation/Transfer schema and seller warehouse, stock-adjustment, and transfer APIs/services are committed. Consolidated CI and PostgreSQL verification are pending; reservation lifecycle, expiry worker, reconciliation, and stock-count workflow remain incomplete.
 
 #### 17. Supplier and procurement management
 - **Purpose:** Supplier directory, purchase orders, receiving and supplier invoice reconciliation.
