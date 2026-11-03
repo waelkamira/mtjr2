@@ -3,7 +3,7 @@ name: Platform PostgreSQL Integration
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa"]
+    branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets"]
     paths:
       - "prisma/schema.prisma"
       - "prisma/migrations/**"
@@ -30,6 +30,11 @@ on:
       - "src/features/cart/**"
       - "src/features/storefront/**"
       - "src/server/catalog/product-qa.ts"
+      - "src/server/support/**"
+      - "src/app/api/support/**"
+      - "src/app/api/admin/support/**"
+      - "src/features/account/support-*.tsx"
+      - "src/features/admin/support-page.tsx"
       - "src/app/api/products/**/questions/**"
       - "src/app/api/questions/**"
       - "src/app/api/account/questions/**"
