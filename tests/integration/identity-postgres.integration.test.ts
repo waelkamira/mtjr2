@@ -3,6 +3,8 @@ import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
 import { registerUser, verifyUserEmail } from "@/server/identity/registration";
 import { loginWithPassword } from "@/server/identity/login";
+import { createPasswordResetChallenge, completePasswordReset } from "@/server/identity/password-reset";
+import { verifyPassword } from "@/server/identity/password";
 import {
   createUserSession,
   resolveUserSession,
@@ -207,4 +209,53 @@ describe("identity PostgreSQL integration", () => {
     });
     await expect(revokeUserSession(authenticated.session.token)).resolves.toBe(true);
   });
+
+  it("consumes a password reset token once, changes the password, and revokes sessions", async () => {
+    const resetEmail = `reset-${suffix}@example.test`;
+    const oldPassword = "Correct-Horse-Battery-42!";
+    const newPassword = "New-Correct-Horse-Battery-73!";
+    const registration = await registerUser({
+      email: resetEmail,
+      password: oldPassword,
+      displayName: "Password Reset Integration",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    });
+    createdUserIds.add(registration.userId);
+    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
+
+    const activeSession = await createUserSession(registration.userId);
+    const challenge = await createPasswordResetChallenge(resetEmail);
+    expect(challenge).not.toBeNull();
+    if (!challenge) throw new Error("Expected a password reset challenge.");
+
+    const storedToken = await prisma.passwordResetToken.findUniqueOrThrow({
+      where: { userId: registration.userId },
+      orderBy: { createdAt: "desc" }
+    });
+    expect(storedToken.tokenHash).not.toBe(challenge.token);
+    expect(storedToken.tokenHash).toHaveLength(64);
+
+    await expect(completePasswordReset(challenge.token, newPassword)).resolves.toBe(true);
+    await expect(completePasswordReset(challenge.token, newPassword)).resolves.toBe(false);
+    await expect(resolveUserSession(activeSession.token)).resolves.toBeNull();
+
+    const updatedUser = await prisma.user.findUniqueOrThrow({
+      where: { id: registration.userId },
+      select: { passwordHash: true }
+    });
+    expect(updatedUser.passwordHash).not.toBeNull();
+    await expect(verifyPassword(newPassword, updatedUser.passwordHash!)).resolves.toBe(true);
+    await expect(verifyPassword(oldPassword, updatedUser.passwordHash!)).resolves.toBe(false);
+
+    await expect(
+      prisma.auditLog.findFirst({
+        where: {
+          actorId: registration.userId,
+          action: "identity.password_reset.completed"
+        }
+      })
+    ).resolves.not.toBeNull();
+  });
+
 });
