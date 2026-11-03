@@ -14,6 +14,14 @@ on:
       - "tests/integration/**"
       - "vitest.integration.config.ts"
       - "package.json"
+      - "src/server/catalog/**"
+      - "src/server/marketplace/**"
+      - "src/server/inventory/**"
+      - "src/app/api/products/**"
+      - "src/app/api/brands/**"
+      - "src/app/api/categories/**"
+      - "src/app/api/markets/**"
+      - "src/features/storefront/**"
       - ".github/workflows/identity-integration.yml"
 
 concurrency:
