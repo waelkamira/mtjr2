@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductReviews from "@/features/storefront/product-reviews";
+import StoreReviews from "@/features/storefront/store-reviews";
 
 type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
-  brand: { name: string } | null; store: { name: string; slug: string };
+  brand: { name: string } | null; store: { id: string; name: string; slug: string };
   media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
   variants: Array<{ id: string; name: string | null; sku: string | null; optionValues: unknown; prices: Price[] }>;
 };
@@ -103,5 +104,6 @@ export default function ProductDetail({ slug }: { slug: string }) {
       </section>
     </div>
     <ProductReviews productId={product.id} />
+    <StoreReviews storeId={product.store.id} storeName={product.store.name} />
   </main>;
 }
