@@ -41,6 +41,8 @@ export async function listSellerVendorOrders(now = new Date()) {
   return {
     orders: vendorOrders.map((vendor) => ({
       id: vendor.id, status: vendor.status, store: vendor.store,
+      shippingServiceName: vendor.shippingServiceName, shippingDestinationRegion: vendor.shippingDestinationRegion,
+      minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
       order: vendor.order,
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
