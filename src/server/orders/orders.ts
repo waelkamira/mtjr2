@@ -112,6 +112,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
     if (!quote) throw new Error("Checkout quote is expired or unavailable.");
     if (!quote.deliveryAddress) throw new Error("A delivery address is required before placing an order.");
     if (!quote.taxSnapshot) throw new Error("Calculate tax using a configured market rule before placing an order.");
+    if (quote.taxSnapshot.destinationRegion !== (quote.deliveryAddress.region ?? null)) throw new Error("The delivery destination changed. Recalculate tax before placing the order.");
 
     const grouped = new Map<string, typeof quote.lines>();
     for (const line of quote.lines) grouped.set(line.storeId, [...(grouped.get(line.storeId) ?? []), line]);
