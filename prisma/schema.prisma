@@ -1162,6 +1162,7 @@ model VendorOrder {
   subtotalMinor   BigInt
   shippingMinor   BigInt
   taxMinor        BigInt
+  taxInclusive    Boolean
   shippingServiceName String    @db.VarChar(120)
   shippingRateId String?
   shippingDestinationRegion String? @db.VarChar(120)
