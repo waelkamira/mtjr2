@@ -334,3 +334,26 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     }))
   }));
 }
+
+
+/** Platform-only queue of products awaiting catalog review. */
+export async function listPendingProductReviews(now = new Date()) {
+  await requirePermission({ permissionKey: "users:manage", now });
+  return prisma.product.findMany({
+    where: { status: CatalogEntityStatus.DRAFT, approvalStatus: ProductApprovalStatus.PENDING },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    take: 100,
+    select: {
+      id: true, name: true, slug: true, description: true, createdAt: true,
+      store: { select: { id: true, name: true, seller: { select: { id: true, displayName: true, legalName: true } } } },
+      media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
+      variants: { where: { isActive: true }, select: { id: true, sku: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
+    }
+  }).then((products) => products.map((product) => ({
+    ...product,
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() }))
+    }))
+  })));
+}
