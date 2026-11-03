@@ -111,7 +111,7 @@ For every system below, the **Pages** and **API** entries describe the required 
 - **Models:** `StoreConversation`, `StoreMessage`, `SupportTicket`, `SupportMessage`, `Notification`, `User`, `Store`.
 - **API:** `/api/messages`, `/api/messages/[id]`, `/api/support/tickets`, `/api/support/tickets/[id]`.
 - **Must include:** participant authorization, read receipts, attachments, ticket priority/status, assignment, SLA and notifications.
-- **Current state:** **Partial.** Store messaging has service/repository slices and tests; central support ticket workflow is not demonstrated.
+- **Current state (2026-11-04):** **Initial central support-ticket slice implemented on `feat/customer-support-tickets`.** Added canonical `SupportTicket` and `SupportMessage` models with migration `20261104010000_customer_support_tickets`; customer-owned create/list/detail/reply APIs and `/account/support` ticket/conversation pages; permission-protected admin queue/detail/reply/internal-note/status/priority/self-assignment APIs and `/admin/support` UI. Customer responses exclude internal notes; admin operations and ticket creation are audited; customer-facing agent replies create in-app notifications transactionally. Store-to-customer conversations, attachments, read receipts, SLA/escalation, team routing and email remain incomplete.
 
 #### 10. Customer notifications
 - **Purpose:** In-app and email notifications for order, payment, delivery, messages and account events.
