@@ -112,3 +112,8 @@ Marketplace Core is complete when authorized sellers can manage stores and wareh
 - No live database, production migration, or Vercel environment was accessed.
 
 **Next implementation boundary:** do not add cart/checkout buttons or client-only cart persistence. Start Buying Core only with the server-owned cart, price revalidation, inventory reservation contract, idempotency, and order lifecycle APIs, then connect the buyer UI to those APIs.
+
+
+## Buying Core handoff — 2026-11-03
+
+Marketplace Core's buyer catalog now has a connected product detail journey. The next implementation slice is tracked separately in `docs/implementation/PHASE_04_BUYING_PLAN.md`. Cart/checkout must remain server-owned and connected end-to-end; launch market/taxonomy seed decisions remain owner-controlled. Do not describe Phase 3 as fully production-ready until the pending disposable PostgreSQL checkpoint and launch reference-data decisions are resolved.
