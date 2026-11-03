@@ -8,18 +8,12 @@ const marketCodeSchema = z.string().trim().min(2).max(32).regex(/^[a-zA-Z0-9_-]+
 export async function getActiveMarketByCode(input: string) {
   const code = marketCodeSchema.parse(input);
 
-  return prisma.market.findFirst({
+  const market = await prisma.market.findFirst({
     where: {
       code,
       status: "ACTIVE",
       country: { is: { isActive: true } },
       defaultCurrency: { is: { isActive: true } },
-      currencies: {
-        some: {
-          currencyCode: { equals: undefined },
-          isEnabled: true
-        }
-      }
     },
     select: {
       id: true,
@@ -38,4 +32,10 @@ export async function getActiveMarketByCode(input: string) {
       }
     }
   });
+
+  if (!market) return null;
+  const defaultCurrencyIsEnabled = market.currencies.some(
+    ({ currency }) => currency.code === market.defaultCurrency.code
+  );
+  return defaultCurrencyIsEnabled ? market : null;
 }
