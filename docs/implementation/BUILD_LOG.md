@@ -1307,3 +1307,17 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added workflow triggers for the stacked shipping PR and its Prisma/server/API paths.
 - **Verification update:** Prisma validate/generate and disposable PostgreSQL migration/integration passed in run 41708370004. General CI run 41708369901 exposed a TypeScript target issue with BigInt literals; fixed in commit 59a5155. Added focused shipping tests in commit 2667857. General CI must be rerun before this slice is marked verified. Do not treat this slice as complete until both workflows pass.
 - No owner database, production database, or Vercel environment was accessed.
+
+
+## 2026-11-03 — Buying Core 4.4: market tax rules and checkout calculation
+
+**Implemented on `feat/checkout-tax-calculation` (stacked on shipping PR #4)**
+
+- Added canonical Prisma models `MarketTaxRate` and `CheckoutTaxSnapshot` plus migration `20261103230000_market_tax_rules`.
+- Added platform-admin tax rule creation/listing at `/api/admin/tax-rates` and `/admin/tax-rates`. Rules are scoped to an active market and optional destination region, with basis-point rate, inclusive/exclusive behavior, shipping applicability, priority, and effective dates.
+- Added quote-owned tax calculation at `POST /api/checkout/quote/[quoteId]/tax`. It verifies quote ownership, active status, delivery address, and shipping selection for every seller before calculating.
+- Calculation uses integer minor units. Exact-region rules override market-wide rules. The rule and calculated amount are persisted as a quote snapshot. If no rule exists, the API reports missing configuration and does not invent a rate.
+- Connected the buyer checkout review UI to show tax and estimated total after the buyer requests calculation.
+- Scope limitation: this first rule engine applies one market/region rule to the full item subtotal and optionally shipping. Product/category exemptions, multiple overlapping jurisdictions, compound taxes, legal registration/nexus, and discounts remain future work and require launch-jurisdiction rules.
+- No new test matrix was added. One normal CI run and one disposable PostgreSQL migration/integration run are the only verification gates for this schema slice.
+- Verification pending. No owner database, production database, or Vercel environment was accessed.
