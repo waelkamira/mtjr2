@@ -1376,7 +1376,7 @@ The project owner approved Resend as the transactional email provider. The serve
 
 ## 2026-11-04 — System 09 initial slice: customer support tickets
 
-**Implemented on `feat/customer-support-tickets` (draft PR #11 planned):**
+**Implemented on `feat/customer-support-tickets` ([draft PR #11](https://github.com/waelkamira/mtjr2/pull/11)):**
 - Added canonical `SupportTicket` and `SupportMessage` Prisma models, status/priority enums, customer/assignee/sender relations, queue indexes, and migration `20261104010000_customer_support_tickets`.
 - Added transactional ticket creation with initial message and audit event; customer-owned list/detail/reply services; permission-protected admin queue/detail/reply/internal-note/status/priority/self-assignment operations.
 - Added customer APIs `/api/support/tickets` and `/api/support/tickets/[ticketId]`, admin APIs `/api/admin/support/tickets` and `/api/admin/support/tickets/[ticketId]`.
