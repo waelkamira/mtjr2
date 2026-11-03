@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/permission-guard";
-import { inviteStoreStaff } from "@/server/marketplace/store-lifecycle";
+import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { inviteStoreStaff } from "@/server/marketplace/store-staff";
 
 export const runtime = "nodejs";
 const bodySchema = z.object({ userId: z.string().trim().min(1).max(128) }).strict();
@@ -19,7 +19,6 @@ export async function POST(request: Request, context: { params: Promise<{ storeI
     return Response.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
-    if (error instanceof PermissionDeniedError) return Response.json({ error: "Permission denied." }, { status: 403 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to invite staff." }, { status: 400 });
   }
 }
