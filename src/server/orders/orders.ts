@@ -41,7 +41,7 @@ function serializeOrder(order: {
   placedAt: Date;
   address: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   vendorOrders: Array<{
-    id: string; status: VendorOrderStatus; store: { name: string; slug: string };
+    id: string; status: VendorOrderStatus; store: { id: string; name: string; slug: string };
     shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
     subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
     items: Array<{ id: string; productName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
@@ -90,7 +90,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       include: {
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
-        vendorOrders: { include: { store: { select: { name: true, slug: true } }, items: true } }
+        vendorOrders: { include: { store: { select: { id: true, name: true, slug: true } }, items: true } }
       }
     });
     if (existing) return serializeOrder(existing);
