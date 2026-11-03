@@ -805,3 +805,23 @@ The project owner approved Resend as the transactional email provider. The serve
 - General CI and the Platform PostgreSQL Integration workflow must pass on the latest schema/migration commit. The integration workflow deploys all committed migrations against an isolated PostgreSQL 16 service before running the existing integration suite.
 - No production database access or Vercel environment changes were performed.
 - Product attributes/variant attribute definitions, publishability services, product write APIs, and storefront discovery remain unimplemented.
+
+
+## 2026-11-03 — Phase 3.4 structured product attributes
+
+**Implemented**
+- Added `AttributeDefinition` with typed values (TEXT, NUMBER, BOOLEAN, SELECT, MULTI_SELECT), variant-level/filterable/required flags, and localized `AttributeTranslation`.
+- Added product-level `ProductAttribute` and ordered `ProductAttributeValue` records.
+- Added `VariantAttribute` for explicit variant option values rather than relying only on opaque JSON.
+- Added additive migration `20261103050000_product_attributes`.
+
+**Static verification**
+- Canonical schema now declares 37 models and 11 enums.
+- No duplicate model/enum declarations or unresolved conflict markers were found.
+- Prisma validation, generated-client compatibility, and full migration replay are still pending CI; static inspection does not substitute for those checks.
+
+**Remaining**
+1. Confirm general CI and the single Platform PostgreSQL Integration workflow pass on the latest schema.
+2. Implement typed attribute validation, variant-level enforcement, product publishability, and server-side store/market authorization in domain services.
+3. Implement market reference seed/repository/service and category-tree read service.
+4. Continue to discovery/search only after product write and read contracts are established.
