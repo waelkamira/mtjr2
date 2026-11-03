@@ -56,6 +56,14 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [ ] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes.
 - [ ] Negative tests: anonymous access, suspended user, expired/revoked session, cross-store access, replayed token, brute-force limits.
 
+## PostgreSQL integration work — initial slice
+
+- [x] Add a dedicated integration-test configuration so database tests never run in the mocked/unit CI job.
+- [x] Add a PostgreSQL 16 workflow that deploys committed migrations, seeds baseline roles/permissions, and executes real database tests.
+- [x] Add an initial real-database journey covering registration, consent persistence, email-token digest storage and single-use verification, store-scoped permission resolution, assignment uniqueness, session creation, and revocation.
+- [ ] Observe the first integration workflow run and fix any failures before marking this slice verified.
+- [ ] Extend real-database coverage to rollback behavior, password reset, and login-throttle concurrency.
+
 ## Exit gates — all required
 
 1. Prisma schema validates and a first migration deploys to a clean PostgreSQL database.
@@ -66,4 +74,4 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 6. CI passes Prisma validation/generation, typecheck, lint, all unit/integration tests, and production build.
 7. Security review and this plan/build log document evidence and remaining limitations.
 
-**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is implemented and verified for repeatability by two consecutive executions against the same clean PostgreSQL 16 database (CI run 41576588203). This phase is not complete. Email delivery, public routes, login/recovery, PostgreSQL-backed identity integration tests, and end-to-end verification remain outstanding.
+**Current position:** the identity baseline migration is committed and has been deployed successfully to a clean PostgreSQL 16 database in CI. The baseline seed is implemented and verified for repeatability by two consecutive executions against the same clean PostgreSQL 16 database (CI run 41576588203). The general CI and clean database baseline both passed on commit `eb30e3bd39caafa9c20f115589fc3983ec528f46` (runs 41576951370 and 41576951316). A first PostgreSQL-backed identity integration suite and dedicated workflow have now been added, but their first run is pending; they are not yet counted as verified. This phase is not complete, and Phase 3 remains blocked.

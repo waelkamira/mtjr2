@@ -342,3 +342,22 @@
 1. Verify the new full CI run after the lint correction.
 2. Add PostgreSQL-backed tests for authorization scope, registration/session transactions, and rate-limit concurrency.
 3. Continue the remaining Phase 2 authentication journey; Phase 3 remains blocked.
+
+
+## 2026-11-03 — First PostgreSQL-backed identity integration slice
+
+**Implemented**
+- Added a dedicated Vitest integration configuration and `npm run test:integration`; integration tests are excluded from the default mocked/unit test run.
+- Added `.github/workflows/identity-integration.yml`, which starts PostgreSQL 16, deploys only committed migrations, seeds baseline roles/permissions, and runs the integration suite.
+- Added a real-database journey test for registration, consent persistence, verification-token digest storage and single-use consumption, store-scoped permission resolution, scoped-assignment uniqueness, session creation, and revocation.
+- Updated the Phase 2 plan with this package and its verification boundary.
+
+**Verification boundary**
+- The test and workflow files have been authored and committed, but the new workflow has not yet completed. No PostgreSQL integration pass is claimed.
+- The test does not yet cover password reset, rollback fault injection, login-throttle concurrency, HTTP routes, cookies, or a full browser/API authentication journey.
+- Phase 3 remains blocked until every Phase 2 exit gate passes.
+
+**Next**
+1. Inspect the first Identity PostgreSQL Integration run and fix any failing test or workflow issue.
+2. Add real-database rollback and login-throttle concurrency coverage.
+3. Implement login, logout, password reset, trusted session resolution, and server-side authorization enforcement.

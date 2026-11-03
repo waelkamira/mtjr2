@@ -68,3 +68,10 @@ A system may be marked **Complete** only when:
 - [x] Deterministic baseline role/permission seed implemented; repeatability was verified by two consecutive executions on a clean PostgreSQL 16 database (run [41576588203](https://github.com/waelkamira/mtjr2/actions/runs/41576588203)).
 - [ ] PostgreSQL-backed identity integration tests and full authentication journey.
 - Phase 3 remains blocked until all Phase 2 exit gates in `docs/implementation/PHASE_02_IDENTITY_PLAN.md` pass.
+
+
+### Phase 2 — PostgreSQL integration checkpoint
+- [x] Added a dedicated PostgreSQL 16 identity integration workflow and isolated Vitest configuration.
+- [x] Added an initial real-database registration → verification → scoped authorization → session revocation test.
+- [ ] First integration workflow run must pass before this slice is considered verified.
+- Phase 3 remains blocked until all Phase 2 exit gates pass.
