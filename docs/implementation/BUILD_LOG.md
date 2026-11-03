@@ -58,3 +58,20 @@
 **Verification**
 - Workflow file update committed: `07e2c6e989bb6cb9daa2cc8be482e84236117929`.
 - The rerun has not yet been observed. Prisma validation, generation, typecheck, lint, tests, and build remain unverified.
+
+
+## 2026-11-03 — Identity schema review and ECC-informed workflow
+
+**Schema review**
+- Found that nullable `scopeType` and `scopeId` fields in the composite unique key for `UserRoleAssignment` would allow duplicate global/scoped assignments when PostgreSQL treats `NULL` values as distinct.
+- Changed both columns to non-null strings with the reserved `GLOBAL` default for unscoped grants. Scoped grants must supply a concrete pair; service-level validation is still required.
+- Updated the foundation decision record with this invariant. No migration has been generated, so this is still a pre-migration schema correction.
+
+**Engineering method**
+- Added `docs/quality/ENGINEERING_WORKFLOW.md` describing the research → plan → test → implement → review → verify → record loop, informed by ECC.
+- This does not claim that ECC's plugin, agents, or skills are installed in the repository.
+
+**CI**
+- Removed npm caching from setup-node because no lockfile exists yet.
+- Corrected workflow is triggering new runs; the final result is pending at this log entry.
+- No Prisma/typecheck/lint/test/build pass is claimed until a completed run is inspected.
