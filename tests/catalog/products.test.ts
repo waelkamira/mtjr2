@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   requirePermission: vi.fn(),
   requireCurrentSession: vi.fn(),
   userHasScopedPermission: vi.fn(),
+  userHasPermission: vi.fn(),
   storeFindUnique: vi.fn(),
   brandFindFirst: vi.fn(),
   categoryCount: vi.fn(),
@@ -19,7 +20,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/permission-guard", () => ({ requirePermission: mocks.requirePermission }));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
-vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission }));
+vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission, userHasPermission: mocks.userHasPermission }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { product: { findUnique: mocks.productFindUnique }, $transaction: mocks.transaction }
 }));
@@ -32,6 +33,7 @@ describe("product lifecycle", () => {
     mocks.requirePermission.mockResolvedValue({ userId: "admin-1" });
     mocks.requireCurrentSession.mockResolvedValue({ userId: "seller-1" });
     mocks.userHasScopedPermission.mockResolvedValue(false);
+    mocks.userHasPermission.mockResolvedValue(false);
     mocks.storeFindUnique.mockResolvedValue({
       id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" },
       markets: [{ marketId: "market-1" }]
