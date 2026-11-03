@@ -181,6 +181,6 @@ export async function listPendingSellerApplications(now = new Date()) {
     where: { status: SellerStatus.PENDING },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     take: 100,
-    select: { id: true, legalName: true, displayName: true, createdAt: true, owner: { select: { id: true, email: true, name: true } } }
+    select: { id: true, legalName: true, displayName: true, createdAt: true, owner: { select: { id: true, email: true, displayName: true } } }
   });
 }
