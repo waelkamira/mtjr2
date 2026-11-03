@@ -43,6 +43,20 @@ describe("public product discovery", () => {
     expect(mocks.productFindMany).not.toHaveBeenCalled();
   });
 
+  it("serializes BigInt product prices into JSON-safe minor-unit strings", async () => {
+    mocks.productFindFirst.mockResolvedValue({
+      translations: [],
+      name: "Sample product",
+      description: null,
+      variants: [{ prices: [{ amountMinor: 1299n, compareAtMinor: 1599n }] }]
+    });
+    const product = await getDiscoverableProduct("sample-product");
+    expect(product?.variants[0].prices[0]).toMatchObject({
+      amountMinor: "1299",
+      compareAtMinor: "1599"
+    });
+  });
+
   it("does not expose missing or non-public products through slug lookup", async () => {
     expect(await getDiscoverableProduct("hidden-draft")).toBeNull();
     expect(mocks.productFindFirst).toHaveBeenCalledWith(expect.objectContaining({
