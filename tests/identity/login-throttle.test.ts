@@ -5,8 +5,7 @@ const { prismaMock, txMock } = vi.hoisted(() => {
     loginRateLimitBucket: {
       upsert: vi.fn(),
       updateMany: vi.fn(),
-      findUnique: vi.fn(),
-      updateMany: vi.fn()
+      findUnique: vi.fn()
     }
   };
 
