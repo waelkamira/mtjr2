@@ -32,7 +32,7 @@ Business rules must not live in React components. Route handlers must authentica
 The initial schema establishes:
 - users and account status;
 - normalized unique email identifiers;
-- roles, permissions, and scoped role assignments;
+- roles, permissions, and scoped role assignments. Global assignments use the reserved `GLOBAL` scope pair; scoped grants must provide a concrete scope type and identifier. The scope columns are non-null so PostgreSQL's composite uniqueness constraint cannot be bypassed by multiple `NULL` values;
 - revocable sessions stored by token hash;
 - OAuth account linkage;
 - single-use password-reset and verification token records;
