@@ -25,7 +25,7 @@ async function ensureGuestSession(tx: Prisma.TransactionClient, token: string, n
   const tokenHash = hashGuestToken(token);
   const existing = await tx.guestSession.findUnique({ where: { tokenHash } });
   if (existing) {
-    if (existing.expiresAt <= now) {
+    if (existing.expiresAt <= now || existing.convertedAt) {
       return tx.guestSession.update({
         where: { id: existing.id },
         data: { expiresAt: new Date(now.getTime() + guestTtlMs), convertedAt: null }
