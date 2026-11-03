@@ -55,7 +55,12 @@ export async function startOrderPayment(input: {
   if (order.totalMinor <= BigInt(0)) throw new Error("A zero-value order does not require a payment.");
 
   const payment = await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${order.id}), hashtext(${provider.key}))`);
+    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${order.id}, 0))`);
+    const currentOrder = await tx.order.findFirst({
+      where: { id: order.id, ...ownerWhere(owner), status: OrderStatus.PENDING_PAYMENT },
+      select: { id: true }
+    });
+    if (!currentOrder) throw new Error("This order is no longer awaiting payment.");
     const existing = await tx.payment.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
     if (existing) {
       if (existing.orderId !== order.id || existing.provider !== provider.key) {
@@ -64,10 +69,13 @@ export async function startOrderPayment(input: {
       return existing;
     }
     const active = await tx.payment.findFirst({
-      where: { orderId: order.id, provider: provider.key, status: { in: [PaymentStatus.INITIATING, PaymentStatus.REQUIRES_ACTION, PaymentStatus.PROCESSING] } },
+      where: { orderId: order.id, status: { in: [PaymentStatus.INITIATING, PaymentStatus.REQUIRES_ACTION, PaymentStatus.PROCESSING] } },
       orderBy: { createdAt: "desc" }
     });
-    if (active) return active;
+    if (active) {
+      if (active.provider !== provider.key) throw new Error("A payment attempt is already active with another provider. Complete or cancel it before switching methods.");
+      return active;
+    }
     return tx.payment.create({
       data: {
         orderId: order.id, provider: provider.key, amountMinor: order.totalMinor,
@@ -115,8 +123,14 @@ export async function processVerifiedPaymentEvent(input: {
   const now = input.now ?? new Date();
   try {
     return await prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.findUnique({
+      const initialPayment = await tx.payment.findUnique({
         where: { provider_providerReference: { provider: input.providerKey, providerReference: input.event.providerReference } },
+        select: { id: true, orderId: true }
+      });
+      if (!initialPayment) throw new Error("Payment reference was not found.");
+      await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${initialPayment.orderId}, 0))`);
+      const payment = await tx.payment.findUnique({
+        where: { id: initialPayment.id },
         include: { order: { include: { vendorOrders: { include: { store: { include: { seller: { select: { ownerId: true } } } } } } } }
       });
       if (!payment) throw new Error("Payment reference was not found.");
@@ -141,20 +155,34 @@ export async function processVerifiedPaymentEvent(input: {
         }
       }
 
-      if (nextStatus === PaymentStatus.SUCCEEDED && payment.order.status !== OrderStatus.PENDING_PAYMENT && payment.order.status !== OrderStatus.CONFIRMED) {
-        throw new Error("The order is no longer eligible for payment confirmation.");
-      }
+      const duplicateSuccessfulPayment = isNewerEvent && nextStatus === PaymentStatus.SUCCEEDED
+        && payment.status !== PaymentStatus.SUCCEEDED && payment.order.status !== OrderStatus.PENDING_PAYMENT;
 
       await tx.payment.update({
         where: { id: payment.id },
         data: {
-          status: nextStatus,
+          status: duplicateSuccessfulPayment ? PaymentStatus.DISPUTED : nextStatus,
           succeededAt: nextStatus === PaymentStatus.SUCCEEDED ? (payment.succeededAt ?? input.event.occurredAt) : payment.succeededAt,
-          failureCode: nextStatus === PaymentStatus.FAILED ? "PROVIDER_PAYMENT_FAILED" : null,
-          failureMessage: nextStatus === PaymentStatus.FAILED ? "The payment provider reported a failed payment." : null,
+          failureCode: nextStatus === PaymentStatus.FAILED ? "PROVIDER_PAYMENT_FAILED" : duplicateSuccessfulPayment ? "ORDER_ALREADY_PAID" : null,
+          failureMessage: nextStatus === PaymentStatus.FAILED ? "The payment provider reported a failed payment." : duplicateSuccessfulPayment ? "A successful payment arrived after this order was already confirmed or cancelled. Manual reconciliation is required." : null,
           lastProviderEventAt: isNewerEvent ? input.event.occurredAt : payment.lastProviderEventAt
         }
       });
+
+      if (duplicateSuccessfulPayment) {
+        await tx.paymentWebhookEvent.update({
+          where: { id: recorded.id },
+          data: { processedAt: now, processingError: "Order already has a terminal state; duplicate successful collection requires manual reconciliation." }
+        });
+        await tx.auditLog.create({
+          data: {
+            actorType: "SYSTEM", action: "payment.duplicate_success_requires_reconciliation",
+            resource: "payment", resourceId: payment.id, scopeType: "ORDER", scopeId: payment.orderId,
+            occurredAt: now, metadata: { provider: input.providerKey, providerEventId: input.event.eventId, orderStatus: payment.order.status }
+          }
+        });
+        return { accepted: true, duplicate: false, paymentId: payment.id, status: PaymentStatus.DISPUTED, requiresReconciliation: true };
+      }
 
       if (isNewerEvent && nextStatus === PaymentStatus.SUCCEEDED && payment.order.status === OrderStatus.PENDING_PAYMENT) {
         await tx.order.update({ where: { id: payment.orderId }, data: { status: OrderStatus.CONFIRMED } });
