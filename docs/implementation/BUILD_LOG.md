@@ -635,3 +635,13 @@
 ## Resend decision — accepted
 
 The project owner approved Resend as the transactional email provider. The server-only adapter is implemented for verification and password-reset messages. Deployment configuration remains intentionally absent from source control: add `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL` as protected environment secrets. Until those are supplied and a real delivery smoke test succeeds, the provider integration is code-complete but operationally unconfigured; public email-dependent routes must remain closed.
+
+
+## Trusted proxy boundary — implemented, deployment configuration pending
+
+- Added `src/server/identity/trusted-client-ip.ts` to resolve client IPs only from an explicitly selected Cloudflare or Vercel proxy header.
+- The resolver validates IPv4/IPv6 values, handles the Vercel proxy chain, rejects ambiguous Cloudflare values, and never falls back to arbitrary `X-Forwarded-For`.
+- Added `TRUSTED_PROXY_IP_HEADER` environment validation and documented the deployment contract in `.env.example`.
+- Added focused tests for unset configuration, untrusted forwarding headers, valid IPv6, Vercel proxy chains, and malformed values.
+- **Deployment is not configured yet.** The operator must select the actual edge header, ensure the edge overwrites it, and block direct origin access. Until then, IP-dependent public identity routes must fail closed.
+- Public routes remain blocked pending verified Resend delivery, resend-verification throttling, and the trusted proxy deployment contract.

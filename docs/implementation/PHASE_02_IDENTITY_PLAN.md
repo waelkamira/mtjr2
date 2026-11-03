@@ -47,7 +47,9 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Implement server-only Resend transactional email adapter for verification and password-reset messages.
 - [ ] Configure a Resend API key and verified sender in deployment secrets; perform a real delivery smoke test.
 - [ ] Add resend-verification cooldown and anti-enumeration behavior.
+- [x] Add a fail-closed trusted-proxy IP resolver for explicitly configured Cloudflare/Vercel edge headers; arbitrary `X-Forwarded-For` is never trusted. Configure only after the edge overwrites the header and origin bypass is blocked.
 - [ ] Add HTTP registration and verification routes only after email delivery and abuse controls are ready.
+- [ ] Configure `TRUSTED_PROXY_IP_HEADER` for the actual deployment edge; keep IP-dependent endpoints closed until verified.
 - [ ] Add end-to-end registration and verification tests through public HTTP endpoints.
 
 ### 2.5 Login, logout, recovery, and enforcement
