@@ -35,7 +35,7 @@ Implement the buyer purchase journey as server-owned domain workflows. The brows
 
 ## 4.2a — Delivery address capture
 
-**Implemented on `feat/checkout-address-capture`; CI and disposable PostgreSQL verification pending.**
+**Implemented on `feat/checkout-address-capture` (PR #3); General CI and disposable PostgreSQL verification pending.**
 
 - Add `UserAddress` for authenticated customer address books and `CheckoutQuoteAddress` as a delivery snapshot attached to the quote.
 - Add authenticated `GET/POST /api/account/addresses` and quote-scoped `GET/POST /api/checkout/quote/[quoteId]/address`.
@@ -76,5 +76,5 @@ Not started. Build only after 4.2 is verified:
 
 - 4.1 schema, migration, service, APIs, product CTA, cart page, and focused unit tests are committed to `feat/buying-cart-core`.
 - Cart foundation is verified by General CI run 41702592022 and disposable PostgreSQL integration run 41702592323. Quote/reservation is verified by General CI run 41704221580 and disposable PostgreSQL integration run 41704221517. PR #1 and PR #2 remain separate reviewable changes; PR #2 depends on PR #1.
-- Current next action: verify address capture migration/service/UI on General CI and disposable PostgreSQL, fix only demonstrated failures, then record exact evidence before merge.
+- Current next action: verify address capture migration/service/UI on General CI and disposable PostgreSQL, fix only demonstrated failures, then record exact evidence before merge. PR #3 is stacked on PR #2.
 - 4.2 and 4.3 remain pending; checkout is intentionally not exposed yet.
