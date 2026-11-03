@@ -63,14 +63,14 @@ export async function assignRoleToUser(input: AssignRoleInput, now = new Date())
   });
 }
 
-export async function revokeRoleAssignment(assignmentId: string, now = new Date()): Promise<boolean> {
+export async function revokeRoleAssignment(assignmentId: string, targetUserId: string, now = new Date()): Promise<boolean> {
   const id = assignmentId.trim();
   if (!id) throw new Error("A role assignment ID is required.");
   const existing = await prisma.userRoleAssignment.findUnique({
     where: { id },
     select: { id: true, scopeType: true, scopeId: true, userId: true, role: { select: { key: true } } }
   });
-  if (!existing) return false;
+  if (!existing || existing.userId !== targetUserId) return false;
 
   const actor = await requirePermission({
     permissionKey: "roles:assign",
