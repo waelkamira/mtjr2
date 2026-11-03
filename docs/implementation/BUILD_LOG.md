@@ -1404,3 +1404,13 @@ The project owner approved Resend as the transactional email provider. The serve
 - `prisma/seed.cjs` seeds only roles and permissions. It does not create demo markets/currencies/catalog/store/products/variants/prices/media/inventory. An empty database therefore has no demo products and the search UI has nothing to find.
 - The implementation chain is stacked and unmerged. PR #11 is based on PR #10, not `main`; its pages will not appear in the main deployment until reviewed/merged in sequence.
 - Next separate delivery slice: deterministic demo catalog seed plus a materially complete homepage and a verified public browse/search/product/cart journey. No production DB seed or credentials will be used.
+
+
+## 2026-11-04 — System 09 hardening and build-blocker correction
+
+- Added authorized staff notification routing for customer-to-store conversations. Recipients are limited to the store owner and active store staff with the exact store-scoped `messages:manage` grant; the sender is excluded. No schema change was needed.
+- Fixed the order serializer typecheck blocker exposed by PR #11 CI: all three order read projections now select `VendorOrder.store.id` as required by the serializer contract.
+- Earlier PostgreSQL integration run `41722286425` passed on commit `24f68dd`. General CI run `41722286316` failed at typecheck on an order projection mismatch; this was corrected in commit `26f1ab4`.
+- Latest staff-routing and documentation commits triggered General CI run `41723375413` and PostgreSQL integration run `41723375356`; both were pending at the time of this entry. No claim of success is made.
+- System 09 still depends on an approved object-storage provider/upload policy for attachments, an agreed SLA policy plus worker, and a verified outbound-email sender. These are explicit decisions/operational dependencies, not hidden implementation claims.
+- No production database, local owner database, or Vercel environment was accessed. No pull request was merged.
