@@ -330,6 +330,18 @@ enum VendorOrderStatus {
   CANCELLED
 }
 
+enum PaymentStatus {
+  INITIATING
+  REQUIRES_ACTION
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  DISPUTED
+}
+
 model Country {
   id               String   @id @default(cuid())
   iso2             String   @unique @db.Char(2)
@@ -360,6 +372,7 @@ model Currency {
   carts         Cart[]
   checkoutQuotes CheckoutQuote[]
   orders Order[]
+  payments Payment[]
   shippingRates StoreShippingRate[]
 
   @@index([isActive, name])
@@ -1133,6 +1146,7 @@ model Order {
   address         OrderAddress?
   vendorOrders    VendorOrder[]
   statusHistory   OrderStatusHistory[]
+  payments        Payment[]
 
   @@index([userId, placedAt])
   @@index([guestSessionId, placedAt])
@@ -1228,6 +1242,48 @@ model VendorOrderStatusHistory {
   @@index([vendorOrderId, createdAt])
 }
 
+
+model Payment {
+  id                  String        @id @default(cuid())
+  orderId             String
+  provider            String        @db.VarChar(64)
+  status              PaymentStatus @default(INITIATING)
+  amountMinor         BigInt
+  currencyCode        String        @db.Char(3)
+  idempotencyKey      String        @unique @db.VarChar(180)
+  providerReference   String?       @db.VarChar(180)
+  checkoutUrl         String?       @db.VarChar(2000)
+  expiresAt           DateTime?
+  failureCode         String?       @db.VarChar(120)
+  failureMessage      String?       @db.VarChar(500)
+  succeededAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  currency            Currency      @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  events              PaymentWebhookEvent[]
+
+  @@unique([provider, providerReference])
+  @@index([orderId, createdAt])
+  @@index([status, createdAt])
+}
+
+model PaymentWebhookEvent {
+  id              String    @id @default(cuid())
+  provider        String    @db.VarChar(64)
+  providerEventId String    @db.VarChar(200)
+  eventType       String    @db.VarChar(120)
+  paymentId       String?
+  payloadHash     String    @db.Char(64)
+  receivedAt      DateTime  @default(now())
+  processedAt     DateTime?
+  processingError String?   @db.VarChar(500)
+  payment         Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerEventId])
+  @@index([paymentId, receivedAt])
+  @@index([processedAt, receivedAt])
+}
 
 model Notification {
   id                String   @id @default(cuid())
