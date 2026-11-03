@@ -950,3 +950,22 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Add the focused staff-revocation test and run the existing PostgreSQL integration workflow once after the catalog slice stabilizes.
 3. Implement product update, platform approval, publishability validation, then discovery reads/search.
 4. Add deterministic country/currency reference data only after defining the intended supported launch scope; do not invent active markets.
+
+
+## 2026-11-03 — Product approval and publication lifecycle
+
+**Implemented**
+- Added a platform-permission approval transition for pending draft products, with conditional update and atomic audit event.
+- Added store-scoped product publishing. Authorization scope is resolved from the product's trusted database storeId before permission evaluation; client-supplied scope is never trusted.
+- Publishing requires an approved draft, active seller and store, at least one active variant, a primary image, and a price in an enabled currency for every active market enabled on the store. The transition and audit event are atomic.
+- Added mutation-protected admin approval and product publish API routes.
+- Added focused product lifecycle tests for atomic draft price creation, rejecting prices for unenabled store markets, and exact store-scope authorization at publish.
+
+**Verification**
+- The combined catalog/product General CI run is still pending. Earlier commits in this sequence were intentionally cancelled by the workflow concurrency policy as subsequent changes landed; no CI pass is claimed for this slice yet.
+- No production database or Vercel environment settings were accessed or changed.
+
+**Remaining**
+- Product update and rejection-with-reason workflows.
+- Focused staff-revocation tests and PostgreSQL integration replay of the complete migration set.
+- Product listing/detail/discovery APIs, validated search, filtering, sorting, and pagination.
