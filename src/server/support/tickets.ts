@@ -91,7 +91,7 @@ export async function replyToMySupportTicket(ticketId: string, input: unknown, n
 }
 
 export async function listSupportQueue(now = new Date()) {
-  await requirePermission({ permissionKey: "users:manage", now });
+  await requirePermission({ permissionKey: "support:manage", now });
   const items = await prisma.supportTicket.findMany({
     orderBy: [{ priority: "desc" }, { lastMessageAt: "asc" }, { id: "asc" }], take: 200,
     select: { ...ticketSelect, customer: { select: { displayName: true, email: true } }, assignedTo: { select: { displayName: true, email: true } }, _count: { select: { messages: true } } }
@@ -101,7 +101,7 @@ export async function listSupportQueue(now = new Date()) {
 
 export async function getAdminSupportTicket(ticketId: string, now = new Date()) {
   const id = idSchema.parse(ticketId);
-  await requirePermission({ permissionKey: "users:manage", now });
+  await requirePermission({ permissionKey: "support:manage", now });
   const ticket = await prisma.supportTicket.findUnique({
     where: { id },
     select: { ...ticketSelect, customer: { select: { id: true, displayName: true, email: true } }, messages: { orderBy: { createdAt: "asc" }, take: 300, select: { id: true, body: true, isInternal: true, createdAt: true, senderId: true, sender: { select: { displayName: true, email: true } } } } }
@@ -114,7 +114,7 @@ export async function getAdminSupportTicket(ticketId: string, now = new Date()) 
 export async function adminReplyToSupportTicket(ticketId: string, input: unknown, now = new Date()) {
   const id = idSchema.parse(ticketId);
   const data = replySchema.parse(input);
-  const actor = await requirePermission({ permissionKey: "users:manage", now });
+  const actor = await requirePermission({ permissionKey: "support:manage", now });
   return prisma.$transaction(async (tx) => {
     const ticket = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, customerId: true, status: true, firstResponseAt: true } });
     if (!ticket) throw new Error("Support ticket not found.");
@@ -134,7 +134,7 @@ export async function adminReplyToSupportTicket(ticketId: string, input: unknown
 export async function updateSupportTicket(ticketId: string, input: unknown, now = new Date()) {
   const id = idSchema.parse(ticketId);
   const data = updateSchema.parse(input);
-  const actor = await requirePermission({ permissionKey: "users:manage", now });
+  const actor = await requirePermission({ permissionKey: "support:manage", now });
   return prisma.$transaction(async (tx) => {
     const current = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, status: true, priority: true, assignedToId: true } });
     if (!current) throw new Error("Support ticket not found.");
