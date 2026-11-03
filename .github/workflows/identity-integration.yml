@@ -2,6 +2,19 @@ name: Platform PostgreSQL Integration
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "prisma/schema.prisma"
+      - "prisma/migrations/**"
+      - "src/server/cart/**"
+      - "src/app/api/cart/**"
+      - "src/features/cart/**"
+      - "src/features/storefront/**"
+      - "tests/cart/**"
+      - "tests/integration/**"
+      - "vitest.integration.config.ts"
+      - "package.json"
   push:
     branches: [main]
     paths:
@@ -17,6 +30,10 @@ on:
       - "src/server/catalog/**"
       - "src/server/marketplace/**"
       - "src/server/inventory/**"
+      - "src/server/cart/**"
+      - "src/app/api/cart/**"
+      - "src/features/cart/**"
+      - "tests/cart/**"
       - "src/app/api/products/**"
       - "src/app/api/brands/**"
       - "src/app/api/categories/**"
