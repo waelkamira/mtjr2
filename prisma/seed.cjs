@@ -129,8 +129,11 @@ async function main() {
   });
 
 
-  // Demo catalog is deliberately opt-in. Never seed demo commerce data by default.
+  // Demo catalog requires two explicit opt-ins and is blocked in production.
   if (process.env.SEED_DEMO_CATALOG === "true") {
+    if (process.env.NODE_ENV === "production" || process.env.ALLOW_DEMO_CATALOG_SEED !== "true") {
+      throw new Error("Demo catalog seeding is blocked in production and requires ALLOW_DEMO_CATALOG_SEED=true.");
+    }
     await seedDemoCatalog();
   }
 
