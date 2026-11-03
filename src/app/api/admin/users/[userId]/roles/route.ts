@@ -61,7 +61,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
   }
 }
 
-export async function DELETE(request: Request): Promise<Response> {
+export async function DELETE(request: Request, context: RouteContext): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
 
@@ -73,7 +73,8 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "Invalid role assignment." }, { status: 400 });
 
   try {
-    const revoked = await revokeRoleAssignment(parsed.data.assignmentId);
+    const { userId } = await context.params;
+    const revoked = await revokeRoleAssignment(parsed.data.assignmentId, userId);
     return revoked
       ? Response.json({ revoked: true })
       : Response.json({ error: "Role assignment not found." }, { status: 404 });
