@@ -1100,3 +1100,27 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Run the existing disposable PostgreSQL baseline/integration workflows once against the latest schema.
 3. Continue seller product-management, staff, and stock-operation screens, then platform-admin moderation screens.
 4. Keep the Prisma schema aligned with the blueprint; add migrations only when a real domain workflow requires new persisted data.
+
+## 2026-11-03 — Seller catalog and platform moderation UI integration
+
+**Implemented**
+- Added a seller-scoped product listing query and GET /api/seller/products; access is resolved from the authenticated session and either store ownership or an exact STORE-scoped catalog permission.
+- Added /seller/products and linked it from the seller workspace. The page loads the seller's stores, enabled markets, categories, and brands from backend APIs; creates product drafts; edits draft metadata; displays review status/rejection reason; and publishes only approved drafts.
+- Product creation sends a price for every enabled store market and uses integer minor units. Primary image is required in the form because the publish lifecycle requires it.
+- Serialized Prisma BigInt price values to strings in seller catalog responses to keep JSON responses valid.
+- Added platform-only pending seller/product review queries and protected read APIs. Added /admin/review for seller and product approval/rejection, connected to the existing transactional review endpoints. Rejection reasons are required by the UI and server validation.
+- Corrected the seller catalog UI lint issues found by CI. TypeScript and Prisma validation/generation passed in the preceding run; ESLint found two actionable issues in the seller products page, now fixed.
+
+**Prisma decision**
+- No Prisma schema change or migration was required for these UI/API slices. The canonical schema already contains seller/store ownership, staff scope, product, variant, media, category/brand links, market-specific prices, and approval/rejection state. The new review queues are read queries over these existing models. This keeps prisma/schema.prisma aligned with the blueprint without duplicating persisted state.
+
+**Verification**
+- CI run 41686006206 confirmed Prisma validate, Prisma generate, and TypeScript passed; ESLint failed on two seller-products-page issues. Both have been corrected.
+- The later seller/admin changes are awaiting one consolidated General CI run. Earlier runs were cancelled by newer commits; no pass is claimed for the latest batch until all required jobs complete.
+- No owner PostgreSQL database was accessed and no Vercel environment variables were read or changed. Database verification remains limited to disposable CI PostgreSQL.
+
+**Next**
+1. Complete one consolidated General CI run on the latest code and fix only concrete failures.
+2. Run the existing PostgreSQL integration workflow against disposable CI PostgreSQL.
+3. Finish seller staff invitations and inventory adjustment/transfer screens.
+4. Continue the buyer catalog UX only after the seller/admin integration and verification gates are green.
