@@ -676,3 +676,14 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added transactional audit events for account registration, successful email verification, and verification-email resend. Each event is committed atomically with the corresponding account/token change; raw verification tokens are never included.
 - Failed login attempts remain recorded in the dedicated `LoginAttempt` table with keyed identifier/IP digests; no duplicate audit stream was added.
 - Keep the existing focused PostgreSQL integration suite and general CI as the only automated gates for this work. No new helper-level test suite is being introduced.
+
+
+## 2026-11-03 — Phase 2 identity implementation verification
+
+- Latest code/test commit: `f15d994e8504c89c981c0de04473799da66c4848`.
+- General CI passed on that exact commit ([run 41648336062](https://github.com/waelkamira/mtjr2/actions/runs/41648336062)): Prisma validate/generate, typecheck, lint, unit tests, and production build.
+- PostgreSQL identity integration passed on `0ffb3b4651b06d90c9eecb10eed960c87bae0348` ([run 41647984160](https://github.com/waelkamira/mtjr2/actions/runs/41647984160)).
+- The CI mock gap introduced by transactional registration/verification audit events was fixed by extending the existing test in `f15d994`; no separate test suite was added.
+- Role assignment/revocation, registration/verification/login/logout/password-reset audit coverage, scoped authorization, session lifecycle, and password-reset lifecycle are implemented and covered by the existing focused gates.
+- Remaining Phase 2 work is deployment-only: configure Resend credentials/sender, configure and secure the trusted edge IP header, smoke-test actual email delivery, then execute one deployed HTTP journey (register → verify → login → `/api/auth/me` → logout → anonymous denied).
+- No further helper-level tests or expanded test matrix are planned. Phase 3 remains gated only by that final operational HTTP journey.

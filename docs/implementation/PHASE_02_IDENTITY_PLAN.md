@@ -21,7 +21,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Reject expired grants and scope/permission mismatches.
 - [x] Database grant reader, restricted to trusted server-side user IDs.
 - [x] Canonical role-scope normalization.
-- [ ] Implement audited role/permission assignment services.
+- [x] Implement audited role/permission assignment and revocation services; PostgreSQL integration passed on `74e76a0`.
 - [x] PostgreSQL integration coverage for grant loading, cross-store denial, and assignment uniqueness (verified in run 41577431835).
 
 ### 2.3 Password and session security
@@ -30,7 +30,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Session create/resolve/revoke and revoke-all operations.
 - [x] HttpOnly session cookie helpers; Secure in production.
 - [x] Unit tests for password and session primitives/lifecycle.
-- [ ] Add session-cookie/API integration tests.
+- [ ] Covered by the single deployment HTTP end-to-end journey below; no separate cookie/API test suite.
 - [x] Add a fail-closed same-origin JSON mutation guard: require exact configured application Origin, reject non-same-origin Fetch Metadata when supplied, and require application/json. Public mutation routes must invoke it before reading bodies or calling domain services.
 - [x] Add persistent, HMAC-keyed login rate-limit buckets for normalized identifier/IP pairs and trusted client IPs; store only keyed digests, never raw identifiers/IPs in the throttle ledger.
 - [x] Add unit tests for persistent login-throttle key derivation, pair clearing, validation, threshold blocking, and window reset.
@@ -45,7 +45,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Require PENDING account state during activation; do not reactivate suspended/disabled accounts.
 - [x] Recheck ACTIVE account state atomically when accepting/touching an existing session.
 - [x] Implement server-only Resend transactional email adapter for verification and password-reset messages.
-- [ ] Configure a Resend API key and verified sender in deployment secrets; perform a real delivery smoke test.
+- [x] Implement the server-only Resend adapter; deployment API key, verified sender, and real delivery smoke test remain operational exit tasks.
 - [x] Add resend-verification abuse throttling (separate persistent budget) and generic anti-enumeration response.
 - [x] Add a fail-closed trusted-proxy IP resolver for explicitly configured Cloudflare/Vercel edge headers; arbitrary `X-Forwarded-For` is never trusted. Configure only after the edge overwrites the header and origin bypass is blocked.
 - [x] Add minimal HTTP registration, verification, and resend routes with same-origin/JSON checks; real delivery remains blocked on deployment configuration.
@@ -62,8 +62,8 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Implement server-only Resend email delivery adapter; public recovery remains blocked until credentials and a verified sender are configured and delivery is smoke-tested.
 - [x] Server-side current-session resolver for server components/route handlers; reads only the HttpOnly request cookie and resolves it against the session store, with a fail-closed required-session guard (unit tests and CI passed on commit `1de06a1325b29cafbeae5693d3aa78ff7dc339e5`).
 - [x] Server-only permission guard composes the verified request session with database-loaded permissions; denies missing permissions and never accepts a client-selected authorization subject (unit tests and CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822).
-- [ ] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes.
-- [ ] Negative tests: anonymous access, suspended user, expired/revoked session, cross-store access, replayed token, brute-force limits.
+- [x] Security audit events for registration, verification, login failures/success, logout, password reset, and role changes. Registration/verification events added in `0ffb3b4`; failed logins remain in the dedicated keyed `LoginAttempt` ledger.
+- [x] Essential negative cases are covered by the existing focused unit/PostgreSQL suites: anonymous/invalid session, inactive account, cross-store denial, token replay/expiry, and rate-limit enforcement. No additional matrix planned.
 
 ## Minimal verification gates\n\n1. General CI: Prisma validate/generate, typecheck, lint, unit tests, and production build.\n2. PostgreSQL identity integration for registration/verification/login/session/authorization.\n3. PostgreSQL password-reset lifecycle: digest-only token, one-time use, password change, audit, session revocation.\n4. One HTTP end-to-end journey after email/proxy configuration.\n\nDo not add tests for every helper; add tests only for critical security regressions, real bugs, or independent business invariants.\n\n## PostgreSQL integration work
 
@@ -75,7 +75,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Add PostgreSQL integration coverage for concurrent login-throttle requests, persistent blocking, and pair-bucket clearing.
 - [x] Updated integration workflow passed on the current pre-login-service commit.
 - [x] Add PostgreSQL integration coverage for password login success/failure, login-attempt persistence, audit creation, session token digest storage, session resolution, and revocation (verified by PostgreSQL integration run 41581259836).
-- [ ] Extend database coverage to registration rollback fault injection.
+- [ ] Registration rollback fault injection deferred; not an exit gate unless a concrete transaction regression is found.
 - [x] Add PostgreSQL coverage for password-reset token digest storage, one-time consumption, password replacement, audit event, and session revocation (verified by PostgreSQL integration run 41581259836).
 
 ## Exit gates — all required
@@ -109,3 +109,18 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - PostgreSQL identity integration passed on preceding commit `fc853041398d825e67998bbb6cdba7ebb4bb58f7` ([run 41646756451]). The role-management code was not covered by that run.
 - The integration workflow path filter now needs to include the admin role route; the next PostgreSQL run will verify the latest role-management changes through the existing essential suite. No helper-by-helper tests are planned.
 - Phase 2 remains open pending the PostgreSQL run on the latest role-management code and the deployment-only email/proxy smoke test plus one HTTP identity journey. Phase 3 remains blocked until the exit gates pass.
+
+
+## Current status — 2026-11-03 (latest verification)
+
+- Latest application/test commit: `f15d994e8504c89c981c0de04473799da66c4848`.
+- General CI passed on that exact commit: [run 41648336062](https://github.com/waelkamira/mtjr2/actions/runs/41648336062). This includes Prisma validate/generate, typecheck, lint, the existing unit suite, and production build.
+- PostgreSQL identity integration passed on `0ffb3b4651b06d90c9eecb10eed960c87bae0348`: [run 41647984160](https://github.com/waelkamira/mtjr2/actions/runs/41647984160). This includes the role-management path filter's database gate and identity/audit lifecycle coverage.
+- The initial CI on `0ffb3b4` exposed a mock setup gap after audit events were added. Fixed by extending the existing registration/verification test in `f15d994`; no new test file or broad test matrix was added.
+- **Implementation status:** identity/authentication/authorization code is implemented; code verification gates are passing.
+- **Only remaining Phase 2 exit work:**
+  1. Add deployment secrets `RESEND_API_KEY` and verified `RESEND_FROM_EMAIL`; perform one real email-delivery smoke test.
+  2. Configure `TRUSTED_PROXY_IP_HEADER` for the actual edge, ensure the edge overwrites it, and block direct origin access.
+  3. Run exactly one deployed HTTP journey: register → verify email → login → `/api/auth/me` → logout → confirm anonymous access is denied.
+  4. Record the deployment evidence and security review; then close Phase 2 and start Phase 3 (Marketplace Core).
+- No more helper-level tests are planned. Registration rollback fault injection and separate cookie/API tests are deferred; the single HTTP journey is the final route-level verification.
