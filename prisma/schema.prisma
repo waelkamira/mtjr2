@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum ConsentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_EMAIL
+  COOKIES
+}
+
+enum AuditActorType {
+  USER
+  SYSTEM
+  API
+}
+
+model User {
+  id                String                 @id @default(cuid())
+  email             String                 @unique
+  emailNormalized   String                 @unique
+  passwordHash      String?
+  displayName       String?
+  status            UserStatus             @default(PENDING)
+  emailVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  sessions          UserSession[]
+  oauthAccounts     OAuthAccount[]
+  roleAssignments   UserRoleAssignment[]
+  passwordResets    PasswordResetToken[]
+  verificationTokens VerificationToken[]
+  consents          UserConsent[]
+  loginAttempts     LoginAttempt[]
+  auditEvents       AuditLog[]             @relation("AuditActor")
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+model Role {
+  id          String               @id @default(cuid())
+  key         String               @unique
+  name        String
+  description String?
+  isSystem    Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  permissions RolePermission[]
+  assignments UserRoleAssignment[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model UserRoleAssignment {
+  id          String    @id @default(cuid())
+  userId      String
+  roleId      String
+  scopeType   String?
+  scopeId     String?
+  assignedAt  DateTime  @default(now())
+  expiresAt   DateTime?
+  assignedBy  String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, roleId, scopeType, scopeId])
+  @@index([userId, expiresAt])
+  @@index([roleId, scopeType, scopeId])
+}
+
+model UserSession {
+  id             String    @id @default(cuid())
+  userId         String
+  tokenHash      String    @unique
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime  @default(now())
+  lastSeenAt     DateTime  @default(now())
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model VerificationToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  purpose    String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, expiresAt])
+}
+
+model UserConsent {
+  id          String      @id @default(cuid())
+  userId      String
+  type        ConsentType
+  version     String
+  granted     Boolean
+  capturedAt  DateTime    @default(now())
+  source      String?
+  ipAddress   String?
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, capturedAt])
+}
+
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  userId      String?
+  identifier  String
+  ipAddress   String?
+  succeeded   Boolean
+  attemptedAt DateTime @default(now())
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([identifier, attemptedAt])
+  @@index([ipAddress, attemptedAt])
+  @@index([userId, attemptedAt])
+}
+
+model AuditLog {
+  id          String          @id @default(cuid())
+  actorType   AuditActorType
+  actorId     String?
+  action      String
+  resource    String
+  resourceId  String?
+  scopeType   String?
+  scopeId     String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  occurredAt  DateTime        @default(now())
+  actor       User?           @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, occurredAt])
+  @@index([resource, resourceId, occurredAt])
+  @@index([scopeType, scopeId, occurredAt])
+  @@index([occurredAt])
+}
