@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
   marketFindMany: vi.fn(),
   productCreate: vi.fn(),
   productFindUnique: vi.fn(),
+  productFindUniqueTx: vi.fn(),
+  categoryDeleteMany: vi.fn(),
+  categoryCreateMany: vi.fn(),
   productUpdateMany: vi.fn(),
   auditCreate: vi.fn(),
   transaction: vi.fn()
@@ -25,7 +28,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: { product: { findUnique: mocks.productFindUnique }, $transaction: mocks.transaction }
 }));
 
-import { createDraftProduct, publishProduct } from "@/server/catalog/products";
+import { createDraftProduct, publishProduct, rejectProduct, updateDraftProduct } from "@/server/catalog/products";
 
 describe("product lifecycle", () => {
   beforeEach(() => {
@@ -43,6 +46,7 @@ describe("product lifecycle", () => {
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
     mocks.transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
@@ -50,17 +54,10 @@ describe("product lifecycle", () => {
       brand: { findFirst: mocks.brandFindFirst },
       category: { count: mocks.categoryCount },
       market: { findMany: mocks.marketFindMany },
+      productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
       product: {
         create: mocks.productCreate,
-        findUnique: vi.fn().mockResolvedValue({
-          id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED",
-          store: {
-            status: "ACTIVE", seller: { status: "ACTIVE" },
-            markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }]
-          },
-          variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }],
-          media: [{ id: "media-1" }]
-        }),
+        findUnique: mocks.productFindUniqueTx,
         updateMany: mocks.productUpdateMany
       },
       auditLog: { create: mocks.auditCreate }
@@ -117,6 +114,24 @@ describe("product lifecycle", () => {
     expect(mocks.userHasScopedPermission).toHaveBeenCalledWith("seller-1", expect.objectContaining({
       permissionKey: "catalog:manage", scope: { type: "STORE", id: "store-1" }
     }));
+  });
+
+  it("updates draft metadata and resets review status for a fresh review", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
+    const result = await updateDraftProduct("product-1", { name: "Updated mug", categoryIds: ["category-1"] });
+    expect(result.approvalStatus).toBe("PENDING");
+    expect(mocks.productUpdateMany).toHaveBeenCalledOnce();
+    expect(mocks.categoryDeleteMany).toHaveBeenCalledOnce();
+    expect(mocks.categoryCreateMany).toHaveBeenCalledOnce();
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a pending draft with a required reason and audit event", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
+    const result = await rejectProduct({ productId: "product-1", reason: "Missing compliance details." });
+    expect(result.approvalStatus).toBe("REJECTED");
+    expect(mocks.productUpdateMany).toHaveBeenCalledOnce();
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
 });
