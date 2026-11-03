@@ -14,7 +14,7 @@ async function canAccessStore(userId: string, storeId: string, ownerId: string, 
   if (ownerId === userId) return true;
   const membership = await prisma.sellerStaff.findFirst({ where: { storeId, userId, status: SellerStaffStatus.ACTIVE }, select: { id: true } });
   if (!membership) return false;
-  return userHasScopedPermission(userId, { permissionKey: "orders:manage", scope: { type: "STORE", id: storeId }, now });
+  return userHasScopedPermission(userId, { permissionKey: "messages:manage", scope: { type: "STORE", id: storeId }, now });
 }
 
 function serializeMessage(message: { id:string; body:string; createdAt:Date; senderId:string; sender:{displayName:string|null} }) {
