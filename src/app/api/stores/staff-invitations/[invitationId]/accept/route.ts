@@ -1,6 +1,6 @@
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
-import { acceptStoreStaffInvitation } from "@/server/marketplace/store-lifecycle";
+import { acceptStoreStaffInvitation } from "@/server/marketplace/store-staff";
 
 export const runtime = "nodejs";
 
