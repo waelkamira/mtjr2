@@ -79,7 +79,7 @@ export default function StorefrontHomePage() {
     }
     if (categoryId) params.set("categoryId", categoryId);
     if (query) params.set("q", query);
-    setLoadingProducts(true);
+    Promise.resolve().then(() => { if (active) setLoadingProducts(true); });
     fetch(`/api/products?${params.toString()}`)
       .then(async (response) => {
         if (!response.ok) throw new Error("Products could not be loaded.");
