@@ -669,3 +669,10 @@ The project owner approved Resend as the transactional email provider. The serve
 - The PostgreSQL identity integration suite passed on `da19c57876e39d9564e0ca519726e3b6b2efcf0a` ([run 41643736067](https://github.com/waelkamira/mtjr2/actions/runs/41643736067)); the latest commit changed only UI pages and documentation.
 - Updated the integration workflow path filter to include `src/app/api/auth/**`. Future API-route changes now trigger the essential database suite.
 - No new test cases added. The only remaining Phase 2 exit work is real deployment configuration, a delivery smoke test, and one end-to-end HTTP journey. Keep Phase 3 blocked until that journey passes.
+
+
+## 2026-11-03 — Identity audit-event coverage
+
+- Added transactional audit events for account registration, successful email verification, and verification-email resend. Each event is committed atomically with the corresponding account/token change; raw verification tokens are never included.
+- Failed login attempts remain recorded in the dedicated `LoginAttempt` table with keyed identifier/IP digests; no duplicate audit stream was added.
+- Keep the existing focused PostgreSQL integration suite and general CI as the only automated gates for this work. No new helper-level test suite is being introduced.

@@ -1,5 +1,5 @@
 import { randomBytes, createHash } from "node:crypto";
-import { ConsentType, Prisma, UserStatus } from "@prisma/client";
+import { AuditActorType, ConsentType, Prisma, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/server/identity/password";
@@ -109,6 +109,8 @@ export async function registerUser(
         ]
       });
 
+      await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.registration.created", resource: "user", resourceId: createdUser.id, occurredAt: now, metadata: { emailVerificationRequired: true } } });
+
       return createdUser;
     });
 
@@ -179,6 +181,8 @@ export async function verifyUserEmail(
       }
     });
 
-    return activated.count === 1;
+    if (activated.count !== 1) return false;
+    await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.email_verification.completed", resource: "user", resourceId: challenge.userId, occurredAt: now } });
+    return true;
   });
 }

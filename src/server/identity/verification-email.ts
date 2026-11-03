@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { UserStatus } from "@prisma/client";
+import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 
@@ -43,6 +43,7 @@ export async function issueVerificationEmailChallenge(
         expiresAt
       }
     });
+    await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.email_verification.resent", resource: "user", resourceId: user.id, occurredAt: now } });
   });
 
   return { email: user.email, token };
