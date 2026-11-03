@@ -88,7 +88,7 @@ export async function listDiscoverableProducts(input: unknown = {}) {
           where: { isActive: true }, take: 20, orderBy: { createdAt: "asc" },
           select: { id: true, sku: true, name: true, prices: {
             where: { market: { status: "ACTIVE", country: { isActive: true } }, currency: { isActive: true }, ...(query.marketId ? { marketId: query.marketId } : {}), ...(query.currencyCode ? { currencyCode: query.currencyCode } : {}) },
-            select: { marketId: true, currencyCode: true, amountMinor: true, compareAtMinor: true }
+            select: { marketId: true, currencyCode: true, amountMinor: true, compareAtMinor: true, currency: { select: { minorUnit: true } } }
           } }
         }
       }
@@ -123,7 +123,7 @@ export async function getDiscoverableProduct(slug: string, locale = "en") {
       categories: { where: { category: { status: CatalogEntityStatus.ACTIVE } }, orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { category: { select: { id: true, name: true, slug: true } } } },
       variants: { where: { isActive: true }, orderBy: { createdAt: "asc" }, select: {
         id: true, sku: true, name: true, optionValues: true,
-        prices: { select: { marketId: true, currencyCode: true, amountMinor: true, compareAtMinor: true } }
+        prices: { select: { marketId: true, currencyCode: true, amountMinor: true, compareAtMinor: true, currency: { select: { minorUnit: true } } } }
       } }
     }
   });
