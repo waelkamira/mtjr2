@@ -776,6 +776,7 @@ model StockTransfer {
   destinationWarehouseId String
   status            StockTransferStatus @default(DRAFT)
   reference         String?            @db.VarChar(100)
+  idempotencyKey    String             @unique @db.VarChar(160)
   createdById       String?
   shippedAt         DateTime?
   receivedAt        DateTime?
