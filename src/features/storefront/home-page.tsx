@@ -204,6 +204,38 @@ export default function StorefrontHomePage() {
         </div>
       </section>
 
+      <section aria-labelledby="editorial-heading" className="mx-auto max-w-[1440px] px-5 py-8 lg:px-10 lg:py-12">
+        <div className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white">
+          <div className="grid lg:grid-cols-[.85fr_1.15fr]">
+            <div className="flex flex-col justify-center bg-[var(--color-ivory-100)] p-7 sm:p-10 lg:p-12">
+              <p className="text-xs font-semibold uppercase tracking-[.22em] text-[var(--color-copper-600)]">A better way to discover</p>
+              <h2 id="editorial-heading" className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-[var(--color-forest-950)] sm:text-4xl">Good things come from looking a little closer.</h2>
+              <p className="mt-4 max-w-md text-sm leading-7 text-[var(--color-ink-700)]">Explore independent stores, discover new brands and find pieces that feel like they were chosen just for you.</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a href="#discover" className="inline-flex items-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Browse products <span aria-hidden="true" className="ml-3">↗</span></a>
+                <Link href="/seller" className="inline-flex items-center rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-white">Meet the sellers</Link>
+              </div>
+            </div>
+            <div className="grid min-h-[340px] grid-cols-2 gap-3 bg-[var(--color-sage-100)] p-3 sm:gap-4 sm:p-5">
+              <a href="#categories" className="group relative flex min-h-40 flex-col justify-end overflow-hidden rounded-[1.5rem] bg-[var(--color-forest-800)] p-5 text-white transition hover:shadow-[var(--shadow-card)] sm:min-h-64 sm:p-7">
+                <span className="absolute -right-8 -top-8 h-36 w-36 rounded-full border border-white/20 transition duration-500 group-hover:scale-110 sm:h-52 sm:w-52" />
+                <span className="absolute right-5 top-5 font-serif text-5xl text-white/30 sm:right-8 sm:top-8 sm:text-7xl">01</span>
+                <span className="relative text-[10px] font-semibold uppercase tracking-[.2em] text-[var(--color-sage-200)]">Explore</span>
+                <span className="relative mt-2 text-xl font-semibold sm:text-2xl">Everyday finds</span>
+                <span className="relative mt-2 text-xs leading-5 text-white/70">Useful things, thoughtfully chosen</span>
+              </a>
+              <a href="#discover" className="group relative mt-8 flex min-h-40 flex-col justify-end overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--color-ivory-50)] p-5 transition hover:shadow-[var(--shadow-card)] sm:mt-12 sm:min-h-64 sm:p-7">
+                <span className="absolute -right-10 -top-10 h-40 w-40 rounded-full border border-[var(--color-copper-600)]/30 transition duration-500 group-hover:scale-110 sm:h-56 sm:w-56" />
+                <span className="absolute right-5 top-5 font-serif text-5xl text-[var(--color-copper-600)]/30 sm:right-8 sm:top-8 sm:text-7xl">02</span>
+                <span className="relative text-[10px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Discover</span>
+                <span className="relative mt-2 text-xl font-semibold text-[var(--color-forest-950)] sm:text-2xl">New perspectives</span>
+                <span className="relative mt-2 text-xs leading-5 text-[var(--color-ink-700)]">Meet the stores behind the products</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="categories" className="mx-auto max-w-[1440px] px-5 py-7 lg:px-10">
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Explore by interest</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Browse categories</h2></div>
