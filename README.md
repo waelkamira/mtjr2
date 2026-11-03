@@ -234,16 +234,28 @@ Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https:/
 - **Remaining external/operational dependencies:** attachment storage and malware scanning require an approved object-storage provider and upload policy; SLA targets/escalation require an agreed response policy and worker; outbound email requires a verified sender and delivery policy. These are not marked complete.
 - Verification: disposable PostgreSQL integration passed on earlier PR #11 commit `24f68dd`. CI on that commit exposed a pre-existing order serializer selection mismatch; the three store projections were corrected in commit `26f1ab4`. A further CI and PostgreSQL run is pending on the latest staff-routing update. No production DB or Vercel environment was accessed; no PR was merged.
 
-## Storefront readiness — known release blocker
+## Storefront demo experience — implementation branch
 
-The current storefront source has a search form, product-discovery API integration, category/brand/market filters, product-detail route, and cart entry point. However, `prisma/seed.cjs` currently seeds identity roles and permissions only; it does **not** seed an active market, currencies, categories, brands, seller/store, products, variants, prices, media, or stock. Therefore an empty disposable database produces an almost empty marketplace and does not provide a meaningful search/catalog demo.
+Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR #11. This work is not visible on `main` until the stacked PR chain is reviewed and merged in order.
 
-Also, PRs #1–#11 are a stacked, unmerged implementation chain. The newer customer/storefront pages and workflows on these branches are not part of `main` until the chain is reviewed and merged in order. Do not treat the current deployed/main experience as proof that the branch implementation is visible.
+- `prisma/seed.cjs` now supports an opt-in, repeatable demo marketplace fixture: Netherlands demo market (EUR), active demo seller/store, four illustrated categories, three brands, eight published products, product variants, EUR prices, product images, warehouse and on-hand stock.
+- Demo commerce data is seeded only when both `SEED_DEMO_CATALOG=true` and `ALLOW_DEMO_CATALOG_SEED=true` are supplied; it is explicitly blocked when `NODE_ENV=production`. The normal seed continues to create identity roles/permissions only.
+- On a disposable/local development database only, run in PowerShell:
+  ```powershell
+  $env:ALLOW_DEMO_CATALOG_SEED="true"
+  $env:SEED_DEMO_CATALOG="true"
+  npm run db:seed
+  Remove-Item Env:ALLOW_DEMO_CATALOG_SEED
+  Remove-Item Env:SEED_DEMO_CATALOG
+  ```
+- Storefront homepage now presents a visual category grid with imagery, featured-brand filters, visible sign-in/register, wishlist, order, cart, seller, messages and notification entry points. Existing product discovery search, market/category/brand filtering, sorting and pagination remain connected to the canonical APIs.
+- Product detail retains variant/market pricing, wishlist, store messaging and add-to-cart API actions.
+- No Prisma schema change was needed: all demo records use existing canonical models and constraints. No seed was run against any database during this implementation.
+- The demo market is a fixture to make the storefront demonstrable; it is **not** a launch-country decision or tax/legal configuration. Checkout tax and payment still require explicit market/provider policy.
 
-**Next storefront delivery priority (separate from System 09):**
-1. Add deterministic, repeatable demo seed data for one clearly labelled demo market, store, categories, brands, products, variants, media URLs and inventory; never run it against production.
-2. Rebuild the homepage as a complete marketplace landing page with visible category grid, featured/new products, brand strip, value propositions, search/filter/sort, pagination and working navigation.
-3. Verify the full public journey from home → search/category → product detail → cart → checkout, including empty/loading/error states.
-4. Add visible account, seller and admin entry points according to authentication and authorization.
+## Storefront release follow-up
 
-Until demo market/catalog data is seeded, search is connected in code but cannot return demo results from an empty database.
+1. Review and merge the stacked PRs in dependency order before expecting the changes on `main` or the deployment.
+2. Run the opt-in seed only against a disposable/local development database.
+3. Verify the public browse/search/product/cart path against that seeded database.
+4. Configure real shipping, tax, payment, and email providers only after the launch market and providers are approved.
