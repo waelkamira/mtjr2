@@ -1305,5 +1305,5 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added buyer quote shipping options and per-store selection APIs at `/api/checkout/quote/[quoteId]/shipping`; checkout UI displays and selects each seller's eligible services independently.
 - Server filters rates by active market/currency, active store/seller, destination region, and effective dates; selected rate values are copied into a quote snapshot. No carrier or shipping amount is fabricated.
 - Added workflow triggers for the stacked shipping PR and its Prisma/server/API paths.
-- **Not yet verified:** Prisma validation, typecheck, lint, unit tests, production build, and disposable PostgreSQL migration replay. Do not treat this slice as complete until both workflows pass.
+- **Verification update:** Prisma validate/generate and disposable PostgreSQL migration/integration passed in run 41708370004. General CI run 41708369901 exposed a TypeScript target issue with BigInt literals; fixed in commit 59a5155. Added focused shipping tests in commit 2667857. General CI must be rerun before this slice is marked verified. Do not treat this slice as complete until both workflows pass.
 - No owner database, production database, or Vercel environment was accessed.
