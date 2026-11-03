@@ -358,6 +358,7 @@ model Market {
   carts               Cart[]
   checkoutQuotes      CheckoutQuote[]
   shippingRates       StoreShippingRate[]
+  taxRates            MarketTaxRate[]
 
   @@index([countryId, status])
   @@index([defaultCurrencyCode])
@@ -955,6 +956,7 @@ model CheckoutQuote {
   lines          CheckoutQuoteLine[]
   deliveryAddress CheckoutQuoteAddress?
   shippingSelections CheckoutShippingSelection[]
+  taxSnapshot CheckoutTaxSnapshot?
 
   @@index([cartId, status, expiresAt])
   @@index([userId, status, expiresAt])
@@ -1024,4 +1026,47 @@ model CheckoutQuoteAddress {
   sourceAddress UserAddress? @relation(fields: [sourceAddressId], references: [id], onDelete: SetNull)
 
   @@index([sourceAddressId])
+}
+
+
+model MarketTaxRate {
+  id                String   @id @default(cuid())
+  marketId          String
+  name              String   @db.VarChar(120)
+  destinationRegion String?  @db.VarChar(120)
+  rateBasisPoints   Int
+  isInclusive       Boolean  @default(false)
+  appliesToShipping Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  effectiveFrom     DateTime?
+  effectiveUntil    DateTime?
+  priority          Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  market            Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  snapshots         CheckoutTaxSnapshot[]
+
+  @@index([marketId, isActive, priority])
+  @@index([marketId, destinationRegion, isActive])
+  @@index([effectiveFrom, effectiveUntil])
+}
+
+model CheckoutTaxSnapshot {
+  id                  String   @id @default(cuid())
+  quoteId             String   @unique
+  taxRateId           String?
+  ruleName            String   @db.VarChar(120)
+  rateBasisPoints     Int
+  taxableAmountMinor  BigInt
+  taxAmountMinor      BigInt
+  currencyCode        String   @db.Char(3)
+  isInclusive         Boolean
+  includesShipping    Boolean
+  destinationRegion   String?  @db.VarChar(120)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  quote               CheckoutQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  taxRate             MarketTaxRate? @relation(fields: [taxRateId], references: [id], onDelete: SetNull)
+
+  @@index([taxRateId])
 }
