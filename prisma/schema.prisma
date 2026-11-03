@@ -169,17 +169,27 @@ model UserConsent {
 }
 
 model LoginAttempt {
-  id          String   @id @default(cuid())
-  userId      String?
-  identifier  String
-  ipAddress   String?
-  succeeded   Boolean
-  attemptedAt DateTime @default(now())
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id             String   @id @default(cuid())
+  userId         String?
+  identifierHash String
+  ipHash         String?
+  succeeded      Boolean
+  attemptedAt    DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([identifier, attemptedAt])
-  @@index([ipAddress, attemptedAt])
+  @@index([identifierHash, attemptedAt])
+  @@index([ipHash, attemptedAt])
   @@index([userId, attemptedAt])
+}
+
+model LoginRateLimitBucket {
+  keyHash         String   @id
+  windowStartedAt DateTime
+  attemptCount    Int      @default(0)
+  blockedUntil    DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@index([blockedUntil])
 }
 
 model AuditLog {

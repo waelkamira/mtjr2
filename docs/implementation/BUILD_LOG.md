@@ -237,3 +237,26 @@
 - Transactional email provider adapter and resend anti-enumeration/cooldown.
 - Login/logout/password reset and server-side session/authorization guards.
 - Initial migration, deterministic role/permission seed, PostgreSQL integration tests, and end-to-end identity journey.
+
+
+## 2026-11-03 — Persistent login-abuse throttling foundation
+
+**Plan alignment**
+- Continued Phase 2 identity work; Marketplace Core remains blocked.
+- Implemented the persistent throttling primitive before exposing any login endpoint.
+
+**Design**
+- Added a dedicated `LoginRateLimitBucket` table with an atomic counter, fixed rolling-window start, and temporary block expiry.
+- Rate-limit keys are HMAC-SHA256 digests using the server-only `AUTH_SECRET`; raw email identifiers and IP addresses are not stored in throttle buckets.
+- Reworked the `LoginAttempt` schema to store keyed identifier/IP digests rather than raw values, preserving the future audit trail without retaining direct login identifiers or network addresses.
+- Current conservative defaults: 5 attempts per normalized identifier and 30 attempts per trusted client IP within 15 minutes; threshold crossing blocks that key for 15 minutes.
+- Client IP must be derived only from a correctly configured trusted-proxy boundary. Do not trust arbitrary `X-Forwarded-For` values from the public request.
+
+**Implementation boundary**
+- This commit provides the persistence model and reusable rate-limit service only. No public login route is exposed.
+- A future login service must consume a rate-limit slot before expensive password verification, record the final attempt outcome, use generic failure responses, and add abuse controls for distributed attacks.
+- The schema change has no migration yet. A clean PostgreSQL migration rehearsal and real concurrency/integration tests remain mandatory.
+
+**Verification**
+- The previous account-state hardening commit passed CI run `41574444085` in full.
+- This new schema/service/test change is pending its own CI run. No pass is claimed here.
