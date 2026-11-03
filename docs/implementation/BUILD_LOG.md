@@ -296,3 +296,30 @@
 **Boundary**
 - The successful CI run uses mocked Prisma for unit tests and a CI-only DATABASE_URL for CLI configuration; it does not prove a PostgreSQL connection or migration works.
 - Phase 2 remains in progress. Phase 3 is not authorized until every exit gate in `PHASE_02_IDENTITY_PLAN.md` is satisfied.
+
+
+## 2026-11-03 — Committed identity migration and repeatable baseline seed
+
+**Migration**
+- Generated the initial migration from the canonical `prisma/schema.prisma` using the pinned Prisma 6.19.0 CLI.
+- Reviewed the generated SQL structure: three PostgreSQL enums, 13 tables, primary/unique/index definitions, and foreign-key constraints for the identity/access foundation.
+- Applied the generated migration to a clean PostgreSQL 16 service and verified `prisma migrate status`.
+- Committed `prisma/migrations/migration_lock.toml` and `prisma/migrations/20261103000000_identity_baseline/migration.sql` as `5dcfc614840d96221394c29a670da43061eef1b1`.
+- The successful rehearsal run is [41576239995](https://github.com/waelkamira/mtjr2/actions/runs/41576239995). It completed every step, including committing the generated migration.
+
+**Repeatable seed**
+- Added `prisma/seed.cjs` and the `db:seed` package script.
+- Seed uses stable role/permission keys and Prisma upserts; it creates no user and assigns no privileged role to any user.
+- Baseline roles: CUSTOMER, SELLER, STORE_MANAGER, SUPPORT_AGENT, ADMIN, SUPER_ADMIN.
+- SUPER_ADMIN is a role definition only; it is never assigned automatically. Store-level roles still require scoped user-role assignments.
+- The database workflow now deploys the committed migration and runs the seed twice against the same clean database to verify idempotent execution.
+
+**Verification boundary**
+- The migration deployment is verified by run 41576239995.
+- The updated committed-migration + double-seed workflow and the package changes are being tested by the next CI runs; no seed pass is claimed until those runs finish.
+- PostgreSQL-backed tests for real authorization/session/registration/throttle operations remain open. A migration rehearsal is not a substitute for those integration tests.
+
+**Next**
+1. Verify the committed-migration workflow and two consecutive seed executions.
+2. Add database-backed integration tests for uniqueness, scoped grants, registration transactions, session lifecycle, and throttle concurrency.
+3. Continue login/recovery/session resolver work and close the Phase 2 exit gates. Phase 3 remains blocked.

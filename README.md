@@ -61,3 +61,10 @@ A system may be marked **Complete** only when:
 ## Current status
 
 **Status: Phase 1 foundation scaffolded; Phase 2 identity/access in progress.** The repository was verified empty before initialization. The Next.js/TypeScript application shell, environment validation, Prisma client singleton, identity/access schema, authorization policy, password hashing, session lifecycle, transactional registration/email-verification services, and persistent login-throttle foundation are committed. CI run [41575486446](https://github.com/waelkamira/mtjr2/actions/runs/41575486446) passed Prisma validation/generation, TypeScript, ESLint, all unit tests, and the production build for commit `021a8527a0be6c3dd819441b8d1e1cd4a7953543`. The throttle tests and pair-key consistency defect found in the preceding failed run were corrected. No migration has been generated or applied yet; PostgreSQL migration rehearsal, baseline role/permission seed, real database integration tests, email delivery, and public authentication routes remain outstanding. Phase 3 is blocked until all Phase 2 exit gates pass. See [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and the [build log](docs/implementation/BUILD_LOG.md).
+
+
+### Phase 2 checkpoint — identity database baseline
+- [x] Initial Prisma identity migration committed and deployed to a clean PostgreSQL 16 database in CI.
+- [x] Deterministic baseline role/permission seed implemented; repeatability is verified by running it twice in the database workflow.
+- [ ] PostgreSQL-backed identity integration tests and full authentication journey.
+- Phase 3 remains blocked until all Phase 2 exit gates in `docs/implementation/PHASE_02_IDENTITY_PLAN.md` pass.

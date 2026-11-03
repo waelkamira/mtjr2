@@ -1,14 +1,13 @@
 name: Database Baseline
 
-permissions:
-  contents: write
-
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - "prisma/schema.prisma"
+      - "prisma/migrations/**"
+      - "prisma/seed.cjs"
       - ".github/workflows/database-baseline.yml"
 
 concurrency:
@@ -44,35 +43,16 @@ jobs:
       - run: npm install
       - run: npx prisma validate
       - run: npx prisma generate
-      - name: Generate initial migration from the canonical schema
+      - name: Verify committed baseline migration exists
         shell: bash
         run: |
-          mkdir -p prisma/migrations/20261103000000_identity_baseline
-          printf 'provider = "postgresql"\n' > prisma/migrations/migration_lock.toml
-          npx prisma migrate diff \
-            --from-empty \
-            --to-schema-datamodel prisma/schema.prisma \
-            --script > prisma/migrations/20261103000000_identity_baseline/migration.sql
+          test -s prisma/migrations/migration_lock.toml
           test -s prisma/migrations/20261103000000_identity_baseline/migration.sql
-      - name: Apply migration to clean PostgreSQL
+      - name: Deploy committed migrations to clean PostgreSQL
         run: npx prisma migrate deploy
       - name: Verify migration state
         run: npx prisma migrate status
-      - uses: actions/upload-artifact@v4
-        with:
-          name: identity-baseline-migration
-          path: |
-            prisma/migrations/migration_lock.toml
-            prisma/migrations/20261103000000_identity_baseline/migration.sql
-          if-no-files-found: error
-      - name: Commit generated baseline migration
+      - name: Apply baseline roles and permissions twice
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add prisma/migrations/migration_lock.toml prisma/migrations/20261103000000_identity_baseline/migration.sql
-          if git diff --cached --quiet; then
-            echo "Baseline migration is already committed."
-          else
-            git commit -m "db(identity): add initial PostgreSQL baseline migration"
-            git push origin HEAD:main
-          fi
+          npm run db:seed
+          npm run db:seed

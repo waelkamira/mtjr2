@@ -12,6 +12,7 @@
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.cjs",
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -29,11 +30,11 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.25.0",
     "eslint-config-next": "16.4.2",
-    "prisma": "6.19.0",
     "typescript": "^5.8.2",
     "vitest": "^3.1.0",
     "tailwindcss": "^4.1.0",
-    "@tailwindcss/postcss": "^4.1.0"
+    "@tailwindcss/postcss": "^4.1.0",
+    "prisma": "6.19.0"
   },
   "engines": {
     "node": ">=22.0.0"
