@@ -259,3 +259,12 @@ Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR 
 2. Run the opt-in seed only against a disposable/local development database.
 3. Verify the public browse/search/product/cart path against that seeded database.
 4. Configure real shipping, tax, payment, and email providers only after the launch market and providers are approved.
+
+
+## Customer returns (System 11)
+
+- Signed-in customers can open **Returns** from their account/order detail pages at `/account/returns`. The first slice accepts return requests for items in delivered seller orders and tracks review status.
+- Platform support/admin users with the seeded `returns:manage` permission can review requests at `/admin/returns`.
+- The additive Prisma migration is `20261104040000_returns_workflow`; apply it only through the normal reviewed migration process on the intended environment.
+- This is a return-request workflow, **not a refund system**. Approving a request or marking goods received does not move money. Refund calculation, payment-provider execution and ledger postings are deliberately deferred until those systems are integrated.
+- Return-window policy is not configured yet. Eligibility currently requires a delivered vendor order; evidence upload and return shipping/label flows are also pending.
