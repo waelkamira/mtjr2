@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import CheckoutDeliveryAddress from "@/features/checkout/checkout-delivery-address";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Quote = {
@@ -97,9 +98,12 @@ export default function CheckoutReviewPage() {
               <div className="mt-5 flex justify-between gap-3 text-sm"><span className="text-[var(--muted)]">Items subtotal</span><span className="font-semibold tabular-nums">{money(quote.subtotalMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>
               <div className="mt-4 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">Reservation status</p><p className={`mt-1 font-semibold ${quote.status === "ACTIVE" ? "text-[var(--color-forest-900)]" : "text-[var(--color-danger)]"}`}>{quote.status}</p><p className="mt-2 text-xs leading-5 text-[var(--muted)]">{quote.status === "ACTIVE" ? `Stock held until ${new Date(quote.expiresAt).toLocaleString()}.` : "This quote is no longer holding inventory. Return to your cart to create a fresh quote."}</p></div>
               <button type="button" disabled={busy || quote.status !== "ACTIVE"} onClick={() => void releaseQuote()} className="mt-6 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{busy ? "Releasing…" : "Release reservation"}</button>
-              <p className="mt-4 text-xs leading-5 text-[var(--muted)]">Shipping, tax, discounts, address collection and payment are not included yet. No order has been created and no payment has been taken.</p>
+              <p className="mt-4 text-xs leading-5 text-[var(--muted)]">No order has been created and no payment has been taken.</p>
             </aside>
-          </div> : <div className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-8 text-center"><p className="font-semibold text-[var(--color-forest-950)]">Checkout quote unavailable</p><Link href="/cart" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Return to cart</Link></div>
+          </div>
+          <div className="mt-6"><CheckoutDeliveryAddress quoteId={quote.id} quoteStatus={quote.status} /></div>
+          <div className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--muted)]">Shipping rates, taxes, discounts and payment are not configured yet. The delivery address is stored as a quote snapshot; no shipping or tax amount is included.</div>
+          : <div className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-8 text-center"><p className="font-semibold text-[var(--color-forest-950)]">Checkout quote unavailable</p><Link href="/cart" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Return to cart</Link></div>
         }
       </div>
     </main>
