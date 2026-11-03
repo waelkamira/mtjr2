@@ -59,3 +59,10 @@ Before adding a model, document the capability, owning domain, write/read workfl
 ## Verification still required
 
 This repository bootstrap was written through GitHub. It has not yet been installed or executed in a local Node.js/PostgreSQL environment. Before calling the foundation operational, run dependency installation, Prisma validation/client generation, typecheck, lint, tests, and a clean-database migration rehearsal, then record exact output and commit SHA.
+
+
+## Runtime configuration
+
+- `src/lib/env.ts` validates required environment variables with Zod before the Prisma singleton is created.
+- The database URL must use PostgreSQL; the application URL must be valid; `AUTH_SECRET` must contain at least 32 characters.
+- Validation errors identify variable names and constraints but never echo secret values.
