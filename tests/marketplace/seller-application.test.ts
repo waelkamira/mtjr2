@@ -70,6 +70,6 @@ describe("marketplace seller lifecycle", () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
     const result = await createSellerStore({ name: "Shop", slug: "shop", marketIds: ["market-1"] });
     expect(result.status).toBe("DRAFT");
-    expect(requirePermission).toHaveBeenCalledWith(expect.objectContaining({ permissionKey: "store:manage" }), expect.any(Date));
+    expect(requirePermission).toHaveBeenCalledWith(expect.objectContaining({ permissionKey: "store:manage", now: expect.any(Date) }));
   });
 });
