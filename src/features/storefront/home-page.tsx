@@ -183,6 +183,15 @@ export default function StorefrontHomePage() {
         ) : <p className="rounded-xl bg-[var(--color-ivory-100)] px-5 py-4 text-sm text-[var(--muted)]">Categories will appear here as the marketplace catalog is activated.</p>}
       </section>
 
+      {brands.length > 0 && <section aria-label="Featured brands" className="mx-auto max-w-[1440px] px-5 py-5 lg:px-10">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white px-5 py-5">
+          <div><p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Independent labels</p><h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">Discover the brands</h2></div>
+          <div className="flex flex-wrap gap-2">
+            {brands.slice(0, 8).map((brand) => <button key={brand.id} type="button" onClick={() => { setBrandId(brand.id === brandId ? "" : brand.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={brandId === brand.id} className={`rounded-full border px-4 py-2 text-sm transition ${brandId === brand.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{brand.name}</button>)}
+          </div>
+        </div>
+      </section>}
+
       <section id="discover" className="mx-auto max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Selected for discovery</p><h2 className="mt-2 text-3xl font-semibold tracking-tight">Explore the marketplace</h2><p className="mt-2 text-sm text-[var(--muted)]">{selectedMarket ? `Prices for ${selectedMarket.name} · ${selectedMarket.defaultCurrency.code}` : "Discover products from active stores"}</p></div>
