@@ -16,7 +16,8 @@
 
 - [x] Country, Currency, Market, and MarketCurrency schema and additive migration.
 - [x] Enforce currency minor-unit precision and default-market currency relations.
-- [ ] Add repeatable reference-data seed and read services.
+- [x] Add public read APIs for active markets, individual market, active market currencies, and countries represented by active markets.
+- [ ] Add repeatable reference-data seed.
 - [ ] Define supported launch markets with the owner before activating any market or seeding launch availability.
 - [ ] Add minimal admin management endpoints only where required.
 
@@ -60,7 +61,8 @@
 - [x] Add idempotent stock adjustments; negative adjustments cannot consume reserved stock.
 - [x] Add draft transfer creation, ship, and receive operations with transactional stock movements and audit events.
 - [x] Require store ownership or exact STORE-scoped `inventory:manage` permission; reject cross-store transfers.
-- [ ] Complete General CI and PostgreSQL migration replay for inventory.
+- [x] Make stock-transfer creation idempotent with a required unique idempotency key and payload consistency check.
+- [ ] Complete General CI and PostgreSQL migration replay for inventory and market queries.
 - [ ] Add reservation create/consume/release/expiry lifecycle when the cart/checkout system defines ownership and idempotency contracts.
 - [ ] Add reconciliation/stock-count workflow after movement ledger behavior is verified.
 
