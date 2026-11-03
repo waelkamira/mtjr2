@@ -1344,3 +1344,16 @@ The project owner approved Resend as the transactional email provider. The serve
 - Order placement emits buyer and store-owner notifications inside the same serializable transaction as order creation. Unique deduplication keys preserve retry safety.
 - Email, preferences, retry/outbox, and non-order event delivery remain pending.
 - Verification is pending with the existing General CI and disposable PostgreSQL integration workflows only.
+
+
+## 2026-11-03 — Payment lifecycle foundation (System 14 / Buying Core 4.6)
+
+- Added `PaymentStatus`, `Payment`, and `PaymentWebhookEvent` to canonical `prisma/schema.prisma`; migration: `20261103235000_payment_lifecycle_foundation`.
+- Added provider adapter contract/registry; no provider is registered by default and no payment provider credentials are assumed.
+- Added provider discovery, owner-scoped payment-intent API, and provider webhook API.
+- Payment attempts use order/provider advisory locking and idempotency. Uncertain provider responses keep the attempt INITIATING so retries reuse the same provider idempotency key.
+- Webhook payloads are verified by the provider adapter, normalized, validated, hashed and deduplicated. Reuse of an event ID with a different payload hash is rejected.
+- Only a verified success event confirms parent/vendor orders, records status history and audit data, and notifies the buyer/store owners in the same transaction.
+- Connected buyer order detail to configured payment methods; if no provider is registered, payment is not initiated and the order remains safely pending.
+- No live charge, provider-specific SDK, refunds, disputes, or settlement process has been added. Launch-country/provider selection remains an explicit prerequisite.
+- Verification is intentionally limited to the existing General CI and disposable PostgreSQL migration workflow; no expanded test matrix. No owner database or Vercel environment accessed.
