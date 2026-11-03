@@ -115,14 +115,14 @@ Phase 3 execution plan: [Marketplace Core plan](docs/implementation/PHASE_03_MAR
 - Server validates active market/currency, published product, active variant, current price, and available inventory before adding or changing quantities.
 - Connected product detail's Add to cart action, homepage cart navigation, and the `/cart` buyer page to the real APIs.
 - Added focused tests for guest-token hashing, valid add, quantity bounds, and insufficient stock.
-- No checkout, payment, order, or stock reservation behavior is claimed complete. Cart additions do not reserve inventory.
+- Cart additions do not reserve inventory; stock is reserved only when the shopper creates a time-limited checkout quote. Shipping, taxes, discounts, payment and order creation remain pending.
 
 **Prisma decision**
 - Schema changes are required because the canonical blueprint calls for persistent guest/customer carts and the existing schema had no GuestSession, Cart, or CartItem models. The migration adds only those required records and their ownership/quantity constraints.
 
 **Verification and safety**
 - Latest main General CI before this feature passed: run [41699817283](https://github.com/waelkamira/mtjr2/actions/runs/41699817283), including Prisma validate/generate, typecheck, lint, unit tests, and production build.
-- The cart feature branch still requires its own General CI and one disposable PostgreSQL migration replay. No result is claimed yet.
+- Cart foundation verification passed: General CI run [41702592022](https://github.com/waelkamira/mtjr2/actions/runs/41702592022) and disposable PostgreSQL integration run [41702592323](https://github.com/waelkamira/mtjr2/actions/runs/41702592323).
 - No owner database was connected, no production migration was run, and no Vercel environment variable was read or changed.
 
 **Next**
