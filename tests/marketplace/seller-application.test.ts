@@ -32,7 +32,7 @@ describe("marketplace seller lifecycle", () => {
       auditLog: { create: auditCreate },
       market: { findMany: vi.fn().mockResolvedValue([{ id: "market-1", defaultCurrencyCode: "EUR", currencies: [{ currencyCode: "EUR" }] }]) },
       store: { create: vi.fn().mockResolvedValue({ id: "store-1", name: "Shop", slug: "shop", status: "DRAFT" }) }
-    }));
+    } as unknown as Prisma.TransactionClient));
   });
 
   it("submits one verified-user application and audits it atomically", async () => {
