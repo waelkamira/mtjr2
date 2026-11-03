@@ -33,7 +33,7 @@
 | **Needs verification** | The audit found a surface, but permissions, persistence, runtime behavior, or test coverage has not been proven. |
 | **Complete** | Reserved for a fully tested end-to-end capability. No system is promoted to this status by inference. |
 
-**Current baseline (verified against the repository on 2026-11-03):** `prisma/schema.prisma` currently contains the identity/access foundation only. Marketplace domain models, seller/store workflows, canonical catalog APIs, and storefront product journeys have not yet been implemented in this greenfield repository. This blueprint is the target specification, not evidence that its listed models or pages exist. Begin Phase 3 with Country + Currency + Market as defined in `docs/implementation/PHASE_03_MARKETPLACE_PLAN.md`.
+**Current baseline (rechecked against `main` on 2026-11-03):** `prisma/schema.prisma` contains the identity/access foundation, Country/Currency/Market reference models, and the initial Seller/Store/StoreMarket/SellerStaff schema foundation. These are schema-level capabilities only: market seed/services, seller onboarding, store-scoped authorization workflows, canonical catalog APIs, and storefront product journeys are not yet proven complete. This blueprint remains the target specification, not evidence that all listed models or pages exist. Continue in dependency order from `docs/implementation/PHASE_03_MARKETPLACE_PLAN.md`.
 
 ## 3. System inventory — 49 systems
 
@@ -614,31 +614,32 @@ When the model map or schema changes, regenerate/review `docs/architecture/prism
 
 **Copilot instruction:** Before implementing a system, read this blueprint, `docs/PROJECT_AUDIT.md`, `docs/architecture/prisma-model-usage-map.md`, and `prisma/schema.prisma`. Trace the existing route → service → repository → model path first. Reuse the canonical schema. Do not invent tables, routes, or completed functionality. Implement one dependency-ready vertical slice, test it, and document the result before moving on.
 
-## 11. Integrity re-check — 2026-11-03
+## 11. Integrity re-check — 2026-11-03 (supersedes the earlier static warning)
 
-A fresh static scan of the current default-branch files was performed while updating this blueprint. It found critical inconsistencies that must take precedence over older status statements in this document and in the companion model map.
+A fresh static inspection of `prisma/schema.prisma` on the current `main` branch after the market and seller/store schema commits found:
 
-| ID | Current finding | Evidence | Required response |
-|---|---|---|---|
-| SNAP-01 | The canonical Prisma schema contains unresolved Git conflict markers. | `prisma/schema.prisma`: line 1161 `<<<<<<< HEAD`; line 1471 `=======`; line 1472 `>>>>>>> wael-work-in-progress`. | Reconcile both versions intentionally before running migrations or adding models. |
-| SNAP-02 | The schema has 152 model declarations but only 138 unique model names. Fourteen model names are declared twice. | Static scan of `model <Name> {` declarations in the current `prisma/schema.prisma`. | Merge duplicate definitions and reconcile all fields, relations, indexes, mappings and migrations. |
-| SNAP-03 | Duplicate model names found: `Role`, `Permission`, `Country`, `City`, `Category`, `Product`, `ProductTranslation`, `Supplier`, `Property`, `PropertyWishlist`, `BookingRequest`, `Favorite`, `Review`, `StoreReview`. | Same static scan. | Do not choose one definition solely by position; compare both definitions and their callsites. |
-| SNAP-04 | README contains unresolved Git conflict markers. | `README.md`: line 248 `<<<<<<< HEAD`; line 687 `=======`; line 1682 `>>>>>>> wael-work-in-progress`. | Resolve the README conflict while preserving the execution roadmap and audit history. |
-| SNAP-05 | The model-usage map is not synchronized with the current schema snapshot. | `docs/architecture/prisma-model-usage-map.md` describes 136 models and references snapshot `c259e7cd68ed63ce239e3fdf9f9913296b74e87e`; current schema scan reports 138 unique names before duplicate reconciliation. | Regenerate the map only after the canonical schema is repaired and validated. |
+| Check | Current result |
+|---|---|
+| Prisma model declarations | 21 |
+| Duplicate model names | None found |
+| Unresolved Git conflict markers in Prisma schema | None found |
+| Seller/store ownership and market relations | Present at schema level |
+| Prisma validation / client generation after latest changes | Pending CI evidence |
+| Migration replay against clean isolated PostgreSQL | Pending |
 
-### Immediate P0 gate
+The earlier SNAP-01 through SNAP-05 findings described a prior repository snapshot and must not be treated as current defects without rechecking the exact file revision. The current schema scan does not reproduce the conflict-marker or duplicate-model findings. The earlier referenced companion paths `docs/PROJECT_AUDIT.md` and `docs/architecture/prisma-model-usage-map.md` were not found at those exact paths during this recheck; verify their current locations before relying on them or generating a replacement.
 
-Until SNAP-01 through SNAP-05 are resolved:
-- Do not add or rename Prisma models for any of the 49 systems.
-- Do not create a migration from the conflicted schema.
-- Do not treat prior validation, generation, migration, build or CI results as proof for the current default-branch snapshot.
-- Do not mark any system Complete based only on a page, API route, model declaration or older audit entry.
+### Current schema gate
 
-After reconciliation, run and record at minimum:
-1. `npx prisma validate --schema=prisma/schema.prisma`
-2. `npx prisma generate --schema=prisma/schema.prisma`
-3. Apply the committed migrations to a clean isolated PostgreSQL test database.
-4. Run the schema-to-migration drift check and the full automated test/lint/build suite.
-5. Regenerate `docs/architecture/prisma-model-usage-map.md` and review every changed model against its owning system in this blueprint.
+Until CI validates the latest schema and both committed migrations are replayed against a clean isolated PostgreSQL database:
+- Do not connect to or migrate the owner's production database.
+- Do not mark market or seller/store workflows Complete; only their schema foundations are committed.
+- Do not create additional marketplace models without the business capability, workflow, owner, API/service, authorization, migration, and test evidence required by Section 5.
 
-**Scope note:** this was a remote static file inspection, not a local runtime validation. No application code, Prisma schema, migration or test was changed or executed as part of this documentation update.
+After the current schema is validated:
+1. Complete the market seed/repository/service slice and its focused PostgreSQL integration gate.
+2. Implement seller onboarding and store-scoped authorization using existing identity and scoped role-assignment models.
+3. Continue with category/brand taxonomy, then product/variant/media/pricing according to the Phase 3 plan.
+4. Refresh the model-to-callsite map when its canonical location is confirmed.
+
+**Scope note:** this is a remote static inspection only. No local runtime validation, Prisma generation, database migration replay, or production database access was performed as part of this documentation update.
