@@ -60,7 +60,7 @@ export default function SellerProductsPage() {
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
 
   const loadProducts = useCallback(async (id: string) => {
-    if (!id) { setProducts([]); return; }
+    if (!id) return;
     const result = await json<{ items: Product[] }>(await fetch(`/api/seller/products?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }));
     setProducts(result.items);
   }, []);
@@ -91,6 +91,7 @@ export default function SellerProductsPage() {
   }, []);
 
   useEffect(() => {
+    if (!storeId) return;
     let active = true;
     loadProducts(storeId).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load products.");
@@ -153,7 +154,7 @@ export default function SellerProductsPage() {
     <div className="mx-auto max-w-6xl px-5 py-10">
       <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Catalog management</p>
       <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">Products</h1>
-      <p className="mt-2 text-sm text-[var(--muted)]">Create draft products using your store's enabled markets. Product review and publication are enforced by the backend.</p>
+      <p className="mt-2 text-sm text-[var(--muted)]">Create draft products using your store&apos;s enabled markets. Product review and publication are enforced by the backend.</p>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">Loading catalog…</p> : <div className="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
@@ -162,6 +163,7 @@ export default function SellerProductsPage() {
           <label className="mt-5 grid gap-2 text-sm font-medium">Store<select className={inputClass} value={storeId} onChange={(e) => {
             const nextId = e.target.value;
             setStoreId(nextId);
+            setProducts([]);
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
             setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
