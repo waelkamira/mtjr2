@@ -159,6 +159,8 @@ export async function selectCheckoutShipping(guestToken: string, quoteId: string
         minDeliveryDays: rate.minDeliveryDays, maxDeliveryDays: rate.maxDeliveryDays
       }
     });
+    // Any shipping price/service change invalidates the previously calculated tax snapshot.
+    await tx.checkoutTaxSnapshot.deleteMany({ where: { quoteId } });
     return { ...selection, amountMinor: selection.amountMinor.toString() };
   }, { isolationLevel: "Serializable" });
 }
