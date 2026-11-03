@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   cartItemFindUnique: vi.fn(),
   cartItemCreate: vi.fn(),
   cartItemUpdate: vi.fn(),
+  cartItemCount: vi.fn(),
   currentSession: vi.fn(),
   transaction: vi.fn()
 }));
@@ -21,7 +22,7 @@ const tx = {
   market: { findFirst: mocks.marketFindFirst },
   productVariant: { findFirst: mocks.variantFindFirst },
   inventory: { findMany: mocks.inventoryFindMany },
-  cartItem: { findUnique: mocks.cartItemFindUnique, create: mocks.cartItemCreate, update: mocks.cartItemUpdate }
+  cartItem: { findUnique: mocks.cartItemFindUnique, create: mocks.cartItemCreate, update: mocks.cartItemUpdate, count: mocks.cartItemCount }
 };
 
 vi.mock("server-only", () => ({}));
@@ -51,6 +52,7 @@ describe("guest and customer cart", () => {
     mocks.inventoryFindMany.mockResolvedValue([{ quantityOnHand: 5, quantityReserved: 1 }]);
     mocks.cartItemFindUnique.mockResolvedValue(null);
     mocks.cartItemCreate.mockResolvedValue({ id: "cart-item-1" });
+    mocks.cartItemCount.mockResolvedValue(1);
     mocks.transaction.mockImplementation(async (callback: (value: typeof tx) => unknown) => callback(tx));
   });
 
