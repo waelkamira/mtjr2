@@ -225,6 +225,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
     const saved = await tx.order.findUniqueOrThrow({
       where: { id: order.id },
       include: {
+        currency: { select: { minorUnit: true, symbol: true } },
         address: true,
         vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
       }
@@ -262,6 +263,7 @@ export async function listCustomerOrders(now = new Date()) {
     where: { userId: session.userId },
     orderBy: { placedAt: "desc" }, take: 50,
     include: {
+      currency: { select: { minorUnit: true, symbol: true } },
       address: true,
       vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
     }
