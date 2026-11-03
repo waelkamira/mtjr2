@@ -222,26 +222,17 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 - Staff-scoped answers, abuse reporting, attachments and richer answer history controls remain future work.
 
 
-## System 09 — Customer support tickets (initial slice)
+## System 09 — Customer messaging and support
 
-Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https://github.com/waelkamira/mtjr2/pull/11)
+Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https://github.com/waelkamira/mtjr2/pull/11), stacked on PR #10.
 
-- Added canonical `SupportTicket` and `SupportMessage` models and migration `20261104010000_customer_support_tickets`. Ticket ownership, optional agent assignment, priority/status, message visibility, and queue indexes are persisted in PostgreSQL.
-- Connected customer ticket creation/list/detail/reply APIs and the `/account/support` and `/account/support/[ticketId]` pages.
-- Connected the permission-protected admin queue, ticket detail, status/priority updates, self-assignment, public replies, and internal notes at `/admin/support`.
-- Customer queries are owner-scoped; internal notes are excluded from customer responses. Admin mutations are audited; customer-facing agent replies create deduplicated in-app notifications transactionally.
-- Still incomplete: customer-to-store conversations, attachments, read receipts, SLA timers/escalation, agent team routing, and outbound email. This is an initial support-ticket workflow, not full System 09 completion.
-- No production or owner database was accessed. No PR was merged.
-
-
-## System 09 — Customer messaging and support (core vertical slice)
-
-- Draft PR: [#11](https://github.com/waelkamira/mtjr2/pull/11), branch `feat/customer-support-tickets`, stacked on product Q&A PR #10.
-- Added canonical `StoreConversation`/`StoreMessage` and `SupportTicket`/`SupportMessage` persistence with migrations. Customer-to-store messaging is available from product detail and customer inbox; seller inbox is store-scoped.
-- Customer support tickets connect to customer pages and the admin support desk. Admin management uses dedicated `support:manage`; store messaging uses store-scoped `messages:manage`.
-- Customer/agent and customer/store read timestamps are persisted. Ticket first-response time is recorded. Ticket creation/admin changes are audited; public replies create in-app notifications. Internal support notes are never returned to customers.
-- **Not yet complete:** attachment upload/storage and security scanning (object-storage provider required), formal SLA targets and scheduled escalation, staff recipient routing, outbound email. Do not call System 09 fully complete until these dependencies and workflows are delivered.
-
+- Canonical persistence: `SupportTicket`, `SupportMessage`, `StoreConversation`, and `StoreMessage`; migrations `20261104010000_customer_support_tickets` and `20261104020000_store_conversations`.
+- Customer support: create/list/detail/reply at `/account/support` and `/account/support/[ticketId]`; admin queue at `/admin/support` with status/priority, self-assignment, internal notes and public replies.
+- Store messaging: customer inbox/detail at `/account/messages` and `/account/messages/[conversationId]`; seller inbox at `/seller/messages`; product detail starts a store conversation.
+- Server-side ownership and participant checks are enforced. Store owners and active staff with exact store-scoped `messages:manage` can access the inbox. Customer-to-store notifications now route to the owner and only authorized active staff.
+- Support uses `support:manage`; internal notes are excluded from customer responses. Ticket actions are audited; first-response timestamps and customer/agent read timestamps are persisted; public replies create deduplicated in-app notifications.
+- **Remaining external/operational dependencies:** attachment storage and malware scanning require an approved object-storage provider and upload policy; SLA targets/escalation require an agreed response policy and worker; outbound email requires a verified sender and delivery policy. These are not marked complete.
+- Verification: disposable PostgreSQL integration passed on earlier PR #11 commit `24f68dd`. CI on that commit exposed a pre-existing order serializer selection mismatch; the three store projections were corrected in commit `26f1ab4`. A further CI and PostgreSQL run is pending on the latest staff-routing update. No production DB or Vercel environment was accessed; no PR was merged.
 
 ## Storefront readiness — known release blocker
 
