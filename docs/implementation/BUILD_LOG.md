@@ -254,7 +254,7 @@
 
 **Implementation boundary**
 - This commit provides the persistence model and reusable rate-limit service only. No public login route is exposed.
-- A future login service must consume a rate-limit slot before expensive password verification, record the final attempt outcome, use generic failure responses, and add abuse controls for distributed attacks.
+- A future login service must consume a rate-limit slot before expensive password verification, clear the identifier bucket after successful authentication, record the final attempt outcome, use generic failure responses, and add abuse controls for distributed attacks.
 - The schema change has no migration yet. A clean PostgreSQL migration rehearsal and real concurrency/integration tests remain mandatory.
 
 **Verification**

@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/lib/env";
 import { normalizeEmail } from "@/server/identity/normalize-email";
@@ -28,7 +29,7 @@ function digestSubject(kind: "identifier" | "ip", value: string): string {
 }
 
 async function consumeBucket(
-  tx: any,
+  tx: Prisma.TransactionClient,
   keyHash: string,
   limit: number,
   now: Date
@@ -96,9 +97,31 @@ async function consumeBucket(
 }
 
 /**
+ * Clears the identifier bucket after a successful authentication so normal
+ * repeated sign-ins do not lock out a legitimate account. IP abuse counters
+ * are intentionally retained.
+ */
+export async function clearIdentifierLoginThrottle(
+  identifierInput: string
+): Promise<void> {
+  const identifier = normalizeEmail(identifierInput);
+  if (!identifier || identifier.length > 254) return;
+
+  await prisma.loginRateLimitBucket.updateMany({
+    where: { keyHash: digestSubject("identifier", identifier) },
+    data: {
+      windowStartedAt: new Date(),
+      attemptCount: 0,
+      blockedUntil: null
+    }
+  });
+}
+
+/**
  * Atomically consumes an attempt against identifier and (when supplied) IP
- * buckets. Call before password hashing/verification. The caller must pass
- * only a client IP resolved through trusted proxy configuration.
+ * buckets. Call before password hashing/verification. After successful
+ * authentication, clear the identifier bucket. The caller must pass only a
+ * client IP resolved through trusted proxy configuration.
  */
 export async function consumeLoginAttempt(
   input: LoginThrottleInput,
@@ -111,7 +134,10 @@ export async function consumeLoginAttempt(
 
   const identifierKey = digestSubject("identifier", identifier);
   const ip = input.trustedIpAddress?.trim();
-  const ipKey = ip ? digestSubject("ip", ip.slice(0, 64)) : null;
+  if (ip && ip.length > 64) {
+    throw new Error("The trusted client IP value is invalid.");
+  }
+  const ipKey = ip ? digestSubject("ip", ip) : null;
 
   return prisma.$transaction(async (tx) => {
     const identifierBlocked = await consumeBucket(

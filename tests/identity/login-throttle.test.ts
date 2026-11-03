@@ -5,7 +5,8 @@ const { prismaMock, txMock } = vi.hoisted(() => {
     loginRateLimitBucket: {
       upsert: vi.fn(),
       updateMany: vi.fn(),
-      findUnique: vi.fn()
+      findUnique: vi.fn(),
+      updateMany: vi.fn()
     }
   };
 
@@ -19,7 +20,10 @@ const { prismaMock, txMock } = vi.hoisted(() => {
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 
-import { consumeLoginAttempt } from "../../src/server/identity/login-throttle";
+import {
+  clearIdentifierLoginThrottle,
+  consumeLoginAttempt
+} from "../../src/server/identity/login-throttle";
 
 const now = new Date("2026-11-03T12:00:00.000Z");
 
@@ -61,6 +65,21 @@ describe("persistent login throttling", () => {
       expect(args.where.keyHash).not.toContain("buyer@example.com");
       expect(args.where.keyHash).not.toContain("203.0.113.8");
     }
+  });
+
+  it("clears only the normalized identifier bucket after successful authentication", async () => {
+    txMock.loginRateLimitBucket.updateMany.mockResolvedValue({ count: 1 });
+
+    await clearIdentifierLoginThrottle(" Buyer@Example.COM ");
+
+    expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith({
+      where: { keyHash: expect.stringMatching(/^[a-f0-9]{64}$/) },
+      data: {
+        windowStartedAt: expect.any(Date),
+        attemptCount: 0,
+        blockedUntil: null
+      }
+    });
   });
 
   it("rejects an empty or oversized identifier before database access", async () => {
