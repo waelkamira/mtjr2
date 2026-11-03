@@ -151,8 +151,13 @@ export async function approveProduct(productId: string, now = new Date()) {
 /** Publishes only approved products with a primary image and prices in every enabled active store market. */
 export async function publishProduct(productId: string, now = new Date()) {
   const id = z.string().trim().min(1).parse(productId);
-  const actor = await requirePermission({ permissionKey: "catalog:manage", scope: { type: "STORE", id: "pending" }, now }).catch(() => null);
-  if (!actor) throw new Error("Store-scoped catalog permission is required.");
+  const target = await prisma.product.findUnique({ where: { id }, select: { storeId: true } });
+  if (!target) throw new Error("Product was not found.");
+  const actor = await requirePermission({
+    permissionKey: "catalog:manage",
+    scope: { type: "STORE", id: target.storeId },
+    now
+  });
   return prisma.$transaction(async (tx) => {
     const product = await tx.product.findUnique({
       where: { id },
