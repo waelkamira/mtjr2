@@ -1335,3 +1335,12 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added buyer placement API, buyer order detail/history APIs and pages, plus store-scoped seller order API/page linked from seller workspace.
 - Payment is intentionally not initiated. Parent and vendor orders remain PENDING_PAYMENT; fulfillment is not authorized until provider-confirmed payment.
 - Verification pending. No additional test matrix added; the only gates are the existing General CI and disposable PostgreSQL integration workflow. No owner/production database or Vercel environment accessed.
+
+
+## 2026-11-03 — System 10 initial slice: in-app order notifications
+
+- Added canonical `Notification` model and migration `20261103234000_order_notifications`.
+- Added authenticated user-scoped notification listing and mark-read services/APIs, plus connected `/notifications` UI.
+- Order placement emits buyer and store-owner notifications inside the same serializable transaction as order creation. Unique deduplication keys preserve retry safety.
+- Email, preferences, retry/outbox, and non-order event delivery remain pending.
+- Verification is pending with the existing General CI and disposable PostgreSQL integration workflows only.
