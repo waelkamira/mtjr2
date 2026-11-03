@@ -22,7 +22,7 @@ Do not copy legacy application code or add models without a defined workflow.
 ### 3.2 Seller and store foundation
 - [x] Define Seller, Store, seller/store lifecycle enums, owner relation, and store-scoped staff membership schema.
 - [x] Connect seller ownership and staff membership to existing User identity; no duplicate User/Role/Permission models.
-- [ ] Implement seller onboarding transitions and server-side authorization; staff permissions must use scoped UserRoleAssignment grants.
+- [x] Add the first seller application submission service: authenticated, email-verified owner, pending state, atomic audit event, and idempotent pending resubmission. Approval transitions, seller-role assignment, store creation, and scoped staff authorization remain outstanding.
 - [ ] Keep KYC documents and payout activation out of the first slice unless required to complete the onboarding workflow.
 
 ### 3.3 Catalog taxonomy
