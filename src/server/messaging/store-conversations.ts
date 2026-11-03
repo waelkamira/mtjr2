@@ -10,6 +10,24 @@ const id = z.string().trim().min(1).max(128);
 const messageSchema = z.object({ body: z.string().trim().min(2).max(8000) }).strict();
 const startSchema = z.object({ storeId: id, subject: z.string().trim().min(5).max(180), body: z.string().trim().min(2).max(8000), orderId: id.optional() }).strict();
 
+async function storeMessageRecipientIds(storeId: string, ownerId: string, senderId: string, now: Date) {
+  const staff = await prisma.sellerStaff.findMany({
+    where: { storeId, status: SellerStaffStatus.ACTIVE },
+    select: { userId: true }
+  });
+  const candidates = [...new Set([ownerId, ...staff.map((member) => member.userId)])]
+    .filter((userId) => userId !== senderId);
+  const eligible = await Promise.all(candidates.map(async (userId) => ({
+    userId,
+    allowed: userId === ownerId || await userHasScopedPermission(userId, {
+      permissionKey: "messages:manage",
+      scope: { type: "STORE", id: storeId },
+      now
+    })
+  })));
+  return eligible.filter((entry) => entry.allowed).map((entry) => entry.userId);
+}
+
 async function canAccessStore(userId: string, storeId: string, ownerId: string, now: Date) {
   if (ownerId === userId) return true;
   const membership = await prisma.sellerStaff.findFirst({ where: { storeId, userId, status: SellerStaffStatus.ACTIVE }, select: { id: true } });
@@ -35,11 +53,14 @@ export async function startStoreConversation(input: unknown, now = new Date()) {
       customerId:actor.userId,storeId:store.id,orderId:data.orderId ?? null,subject:data.subject,lastMessageAt:now,customerReadAt:now,
       messages:{create:{senderId:actor.userId,body:data.body}}
     },select:{id:true,subject:true,storeId:true,createdAt:true,lastMessageAt:true}});
-    await tx.notification.create({data:{
-      userId:store.seller.ownerId,type:"STORE_MESSAGE",title:"New customer message",
-      message:"A customer has started a conversation with your store.",resourceType:"store_conversation",
-      resourceId:conversation.id,deduplicationKey:"store-message:"+conversation.id
-    }});
+    const recipients = await storeMessageRecipientIds(store.id, store.seller.ownerId, actor.userId, now);
+    for (const userId of recipients) {
+      await tx.notification.create({data:{
+        userId,type:"STORE_MESSAGE",title:"New customer message",
+        message:"A customer has started a conversation with your store.",resourceType:"store_conversation",
+        resourceId:conversation.id,deduplicationKey:"store-message:"+conversation.id+":"+userId
+      }});
+    }
     await tx.auditLog.create({data:{actorType:AuditActorType.USER,actorId:actor.userId,action:"store.conversation.created",resource:"store_conversation",resourceId:conversation.id,scopeType:"STORE",scopeId:store.id,occurredAt:now}});
     return {...conversation,createdAt:conversation.createdAt.toISOString(),lastMessageAt:conversation.lastMessageAt.toISOString(),storeName:store.name};
   });
@@ -67,7 +88,10 @@ export async function replyCustomerConversation(conversationId:string,input:unkn
   if(!c)throw new Error("Conversation not found.");
   const message=await tx.storeMessage.create({data:{conversationId:c.id,senderId:actor.userId,body:data.body},select:{id:true,body:true,createdAt:true}});
   await tx.storeConversation.update({where:{id:c.id},data:{lastMessageAt:now,customerReadAt:now}});
-  await tx.notification.create({data:{userId:c.store.seller.ownerId,type:"STORE_MESSAGE",title:"New customer message",message:"A customer replied to your store conversation.",resourceType:"store_conversation",resourceId:c.id,deduplicationKey:"store-message:"+message.id}});
+  const recipients = await storeMessageRecipientIds(c.storeId, c.store.seller.ownerId, actor.userId, now);
+  for (const userId of recipients) {
+   await tx.notification.create({data:{userId,type:"STORE_MESSAGE",title:"New customer message",message:"A customer replied to your store conversation.",resourceType:"store_conversation",resourceId:c.id,deduplicationKey:"store-message:"+message.id+":"+userId}});
+  }
   return {...message,createdAt:message.createdAt.toISOString()};
  });
 }
