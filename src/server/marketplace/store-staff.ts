@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AuditActorType, SellerStaffStatus, UserStatus } from "@prisma/client";
+import { AuditActorType, SellerStaffStatus, UserStatus, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
@@ -11,7 +11,7 @@ const inviteSchema = z.object({
   userId: z.string().trim().min(1)
 });
 
-async function requireStoreStaffManager(tx: any, storeId: string, userId: string, now: Date) {
+async function requireStoreStaffManager(tx: Prisma.TransactionClient, storeId: string, userId: string, now: Date) {
   const store = await tx.store.findUnique({
     where: { id: storeId },
     select: { id: true, seller: { select: { ownerId: true, status: true } } }
