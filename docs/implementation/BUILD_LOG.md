@@ -1462,3 +1462,10 @@ The project owner approved Resend as the transactional email provider. The serve
 - Known gaps: no approved market-specific return window; evidence upload, return shipping/labels, seller-side handling, customer notifications, refund calculation/execution and ledger reconciliation remain unimplemented. These are not silently assumed.
 - Added the new branch to CI base-branch allowlists and the PostgreSQL integration path filters. No owner/local/production database was accessed and no migration was applied.
 - Verification policy: no broad test expansion or routine-suite waiting. Inspect only Prisma validation/generation, typecheck/build blockers, and transactional quantity/status correctness; workflow results are not assumed.
+
+
+## 2026-11-04 — Existing CI lint blockers surfaced during System 11 review
+
+- Inspected the failed General CI run on the System 10 head. Prisma validation, Prisma Client generation and TypeScript typecheck had passed; lint failed on seven pre-existing React effect/state hydration patterns in tax rules, seller messages, wishlist, product/store review queues and product reviews. The build and unit-test steps were skipped by the workflow after lint failed.
+- Applied focused asynchronous effect-hydration changes to those existing pages on the returns branch. No domain behavior, API contracts or database behavior was changed by these lint corrections.
+- The System 10 disposable PostgreSQL integration job completed successfully. The initial System 11 CI attempt was cancelled when the branch received follow-up commits; a new run for the latest head has not yet been observed. No build/lint pass is claimed.
