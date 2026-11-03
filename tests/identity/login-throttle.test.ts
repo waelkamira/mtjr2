@@ -111,17 +111,14 @@ describe("persistent login throttling", () => {
     await expect(consumeLoginAttempt({ identifier: "buyer@example.com", trustedIpAddress: "203.0.113.8" }, now))
       .resolves.toEqual({ blocked: true });
 
-    expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          keyHash: "a".repeat(64),
-          attemptCount: { gte: 5 }
-        }),
-        data: expect.objectContaining({
-          blockedUntil: new Date(now.getTime() + 15 * 60 * 1000)
-        })
-      })
-    );
+    expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith({
+      where: {
+        keyHash: txMock.loginRateLimitBucket.upsert.mock.calls[0][0].where.keyHash,
+        blockedUntil: null,
+        attemptCount: { gte: 5 }
+      },
+      data: { blockedUntil: new Date(now.getTime() + 15 * 60 * 1000) }
+    });
   });
 
   it("resets an expired window using a conditional database update", async () => {
@@ -141,18 +138,18 @@ describe("persistent login throttling", () => {
     await expect(consumeLoginAttempt({ identifier: "buyer@example.com", trustedIpAddress: "203.0.113.8" }, now))
       .resolves.toEqual({ blocked: false });
 
-    expect(txMock.loginRateLimitBucket.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          keyHash: "b".repeat(64),
-          OR: expect.any(Array)
-        }),
-        data: {
-          windowStartedAt: now,
-          attemptCount: 1,
-          blockedUntil: null
-        }
-      })
+    const consumedKeys = txMock.loginRateLimitBucket.upsert.mock.calls.map(
+      ([args]) => args.where.keyHash
     );
+    const resetCalls = txMock.loginRateLimitBucket.updateMany.mock.calls.map(
+      ([args]) => args
+    );
+    expect(resetCalls).toHaveLength(2);
+    for (const keyHash of consumedKeys) {
+      expect(resetCalls).toContainEqual(expect.objectContaining({
+        where: expect.objectContaining({ keyHash, OR: expect.any(Array) }),
+        data: { windowStartedAt: now, attemptCount: 1, blockedUntil: null }
+      }));
+    }
   });
 });

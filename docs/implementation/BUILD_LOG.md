@@ -233,7 +233,7 @@
 - These are unit tests with mocked Prisma. PostgreSQL migration-backed integration tests remain a required Phase 2 gate.
 
 **Remaining Phase 2 work**
-- Login throttling and persistent abuse controls.
+- Login throttling integration/concurrency tests and telemetry-based threshold tuning.
 - Transactional email provider adapter and resend anti-enumeration/cooldown.
 - Login/logout/password reset and server-side session/authorization guards.
 - Initial migration, deterministic role/permission seed, PostgreSQL integration tests, and end-to-end identity journey.
@@ -255,9 +255,25 @@
 
 **Implementation boundary**
 - This commit provides the persistence model and reusable rate-limit service only. No public login route is exposed.
-- A future login service must consume a rate-limit slot before expensive password verification, clear the identifier bucket after successful authentication, record the final attempt outcome, use generic failure responses, and add abuse controls for distributed attacks.
+- A future login service must consume a rate-limit slot before expensive password verification, clear the identifier/IP pair bucket after successful authentication, record the final attempt outcome, use generic failure responses, and add abuse controls for distributed attacks.
 - The schema change has no migration yet. A clean PostgreSQL migration rehearsal and real concurrency/integration tests remain mandatory.
 
 **Verification**
 - The previous account-state hardening commit passed CI run `41574444085` in full.
 - This new schema/service/test change is pending its own CI run. No pass is claimed here.
+
+
+## 2026-11-03 — Login throttle CI failure diagnosis
+
+**Observed failure**
+- CI run [41575113522](https://github.com/waelkamira/mtjr2/actions/runs/41575113522) completed with failure. Prisma validation/generation, typecheck, and lint passed; Vitest reported 2 failures in `login-throttle.test.ts` (41 tests passed, 2 failed), so the production build was skipped.
+- The tests asserted hard-coded HMAC key values even though the service correctly derives per-input digests. Their expected database predicates therefore did not match the actual keys.
+- Reviewing the implementation also exposed a real consistency defect: successful-login clearing derived the pair key from JSON tuple serialization, while attempt consumption used a colon-delimited string. The clear operation could never target the same bucket.
+
+**Correction prepared**
+- Standardized both operations on the same JSON tuple serialization for the identifier/IP pair key.
+- Updated throttle tests to assert against the actual keys passed to Prisma, and to verify reset behavior for both pair and IP buckets.
+- Corrected the earlier log wording and synchronized the remaining-work list with the implemented throttle foundation.
+
+**Verification**
+- The correction is committed in the follow-up change. Its CI run must complete successfully before this fix is considered verified.

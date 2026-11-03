@@ -139,7 +139,7 @@ export async function consumeLoginAttempt(
   if (!ip || ip.length > 64) {
     throw new Error("A trusted client IP value is required.");
   }
-  const pairKey = digestSubject("identifier-ip", `${identifier}:${ip}`);
+  const pairKey = digestSubject("identifier-ip", JSON.stringify([identifier, ip]));
   const ipKey = digestSubject("ip", ip);
 
   return prisma.$transaction(async (tx) => {
