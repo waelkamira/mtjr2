@@ -29,11 +29,7 @@ export default function CheckoutReviewPage() {
 
   useEffect(() => {
     let active = true;
-    if (!quoteId) {
-      setError("A checkout quote is required. Return to your cart to review it.");
-      setLoading(false);
-      return;
-    }
+    if (!quoteId) return;
     fetch(`/api/checkout/quote/${encodeURIComponent(quoteId)}`, { cache: "no-store" })
       .then(async (response) => {
         const result = await response.json() as { quote?: Quote; error?: string };
@@ -61,6 +57,9 @@ export default function CheckoutReviewPage() {
     } finally { setBusy(false); }
   }
 
+  const displayError = error || (!quoteId ? "A checkout quote is required. Return to your cart to review it." : "");
+  const isLoading = Boolean(quoteId) && loading;
+
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <header className="border-b border-[var(--border)] bg-white/80 px-5 py-5">
@@ -73,8 +72,8 @@ export default function CheckoutReviewPage() {
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Buying core · Step 2</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">Review your order</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">This is a server-generated price quote. Available inventory is temporarily held while the quote is active.</p>
-        {error && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-[var(--color-danger)]">{error}</p>}
-        {loading ? <div className="mt-8 h-56 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> :
+        {displayError && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-[var(--color-danger)]">{displayError}</p>}
+        {isLoading ? <div className="mt-8 h-56 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> :
           quote ? <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
             <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
               <div className="border-b border-[var(--border)] bg-[var(--color-ivory-100)] px-5 py-4">
