@@ -88,3 +88,9 @@ Implemented identity capabilities include registration, email verification, logi
 These are production-release gates, not blockers for schema/domain development in Phase 3. Continue using only local/disposable/CI PostgreSQL until the owner explicitly approves production database access. No additional helper-level test suites are planned.
 
 Phase 3 execution plan: [Marketplace Core plan](docs/implementation/PHASE_03_MARKETPLACE_PLAN.md).
+
+**Latest Marketplace Core update (2026-11-03)**
+- Buyer storefront filters now connect brand, category, market/currency, search, sorting, and pagination to the existing catalog APIs.
+- General CI passed for the implementation commit [3bd744a](https://github.com/waelkamira/mtjr2/commit/3bd744a44f5265ab6e41b08168085b7e1b7cbe82) ([run 41693570451](https://github.com/waelkamira/mtjr2/actions/runs/41693570451)).
+- No Prisma migration was needed for these UI-only discovery capabilities; the canonical schema already contains the required brand/product and market-price relations.
+- Disposable PostgreSQL migration replay remains the next verification gate; no production database was accessed.
