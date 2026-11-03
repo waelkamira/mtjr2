@@ -1,0 +1,268 @@
+import "server-only";
+
+import { createHash, randomBytes } from "node:crypto";
+import { CartStatus, CheckoutQuoteStatus, InventoryMovementType, InventoryReservationStatus, OrderStatus, Prisma, VendorOrderStatus } from "@prisma/client";
+import { prisma } from "@/lib/db/prisma";
+import { getCurrentSession } from "@/server/identity/current-session";
+import { getCheckoutQuote } from "@/server/checkout/quotes";
+
+const reservationReference = "CHECKOUT_QUOTE";
+
+type Owner = { userId: string } | { guestSessionId: string };
+function ownerWhere(owner: Owner) {
+  return "userId" in owner ? { userId: owner.userId } : { guestSessionId: owner.guestSessionId };
+}
+function hashToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+function makeOrderNumber() {
+  return `MTJ-${Date.now().toString(36).toUpperCase()}-${randomBytes(4).toString("hex").toUpperCase()}`;
+}
+function allocateAmount(total: bigint, bases: Array<{ storeId: string; base: bigint }>) {
+  const positive = bases.filter((entry) => entry.base > BigInt(0)).sort((a, b) => a.storeId.localeCompare(b.storeId));
+  const denominator = positive.reduce((sum, entry) => sum + entry.base, BigInt(0));
+  if (total === BigInt(0)) return new Map(bases.map((entry) => [entry.storeId, BigInt(0)]));
+  if (denominator <= BigInt(0)) throw new Error("Tax allocation has no taxable vendor amount.");
+  const result = new Map<string, bigint>();
+  let allocated = BigInt(0);
+  positive.forEach((entry, index) => {
+    const share = index === positive.length - 1 ? total - allocated : (total * entry.base) / denominator;
+    result.set(entry.storeId, share);
+    allocated += share;
+  });
+  for (const entry of bases) if (!result.has(entry.storeId)) result.set(entry.storeId, BigInt(0));
+  return result;
+}
+
+function serializeOrder(order: {
+  id: string; orderNumber: string; status: OrderStatus; currencyCode: string;
+  subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
+  placedAt: Date;
+  address: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
+  vendorOrders: Array<{
+    id: string; status: VendorOrderStatus; store: { name: string; slug: string };
+    subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
+    items: Array<{ id: string; productName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
+  }>;
+}) {
+  return {
+    id: order.id, orderNumber: order.orderNumber, status: order.status, currencyCode: order.currencyCode,
+    subtotalMinor: order.subtotalMinor.toString(), shippingMinor: order.shippingMinor.toString(),
+    taxMinor: order.taxMinor.toString(), totalMinor: order.totalMinor.toString(), placedAt: order.placedAt.toISOString(),
+    address: order.address,
+    vendorOrders: order.vendorOrders.map((vendor) => ({
+      id: vendor.id, status: vendor.status, store: vendor.store,
+      subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
+      taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
+      items: vendor.items.map((item) => ({
+        id: item.id, productName: item.productName, sku: item.sku, variantName: item.variantName,
+        quantity: item.quantity, unitAmountMinor: item.unitAmountMinor.toString(), lineTotalMinor: item.lineTotalMinor.toString()
+      }))
+    }))
+  };
+}
+
+/**
+ * Converts an owned, fully configured checkout quote into one customer order and
+ * one vendor order per store. Stock consumption, reservation consumption, cart
+ * closure, quote conversion and immutable snapshots commit in one transaction.
+ * Payment remains PENDING_PAYMENT; this function never charges a buyer.
+ */
+export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: string, now = new Date()) {
+  const visibleQuote = await getCheckoutQuote(guestToken, quoteId, now);
+  const session = await getCurrentSession(now);
+  const owner: Owner = session
+    ? { userId: session.userId }
+    : await prisma.guestSession.findUnique({
+        where: { tokenHash: hashToken(guestToken) },
+        select: { id: true, expiresAt: true, convertedAt: true }
+      }).then((guest) => {
+        if (!guest || guest.expiresAt <= now || guest.convertedAt) throw new Error("Checkout session expired. Return to your cart and start again.");
+        return { guestSessionId: guest.id };
+      });
+
+  if (visibleQuote.status === CheckoutQuoteStatus.CONVERTED) {
+    const existing = await prisma.order.findFirst({
+      where: { quoteId, ...ownerWhere(owner) },
+      include: {
+        address: true,
+        vendorOrders: { include: { store: { select: { name: true, slug: true } }, items: true } }
+      }
+    });
+    if (existing) return serializeOrder(existing);
+    throw new Error("This checkout quote was converted but its order record is unavailable.");
+  }
+  if (visibleQuote.status !== CheckoutQuoteStatus.ACTIVE) throw new Error("This checkout quote is no longer active.");
+
+  return prisma.$transaction(async (tx) => {
+    const quote = await tx.checkoutQuote.findFirst({
+      where: { id: quoteId, ...ownerWhere(owner), status: CheckoutQuoteStatus.ACTIVE, expiresAt: { gt: now } },
+      include: {
+        deliveryAddress: true,
+        lines: { orderBy: { createdAt: "asc" } },
+        shippingSelections: true,
+        taxSnapshot: true,
+        cart: { select: { id: true, status: true } }
+      }
+    });
+    if (!quote) throw new Error("Checkout quote is expired or unavailable.");
+    if (!quote.deliveryAddress) throw new Error("A delivery address is required before placing an order.");
+    if (!quote.taxSnapshot) throw new Error("Calculate tax using a configured market rule before placing an order.");
+
+    const grouped = new Map<string, typeof quote.lines>();
+    for (const line of quote.lines) grouped.set(line.storeId, [...(grouped.get(line.storeId) ?? []), line]);
+    const storeIds = [...grouped.keys()].sort();
+    const selections = new Map(quote.shippingSelections.map((selection) => [selection.storeId, selection]));
+    if (selections.size !== storeIds.length || storeIds.some((storeId) => !selections.has(storeId))) {
+      throw new Error("Choose a shipping service for every seller before placing an order.");
+    }
+    if (quote.shippingSelections.some((selection) => selection.currencyCode !== quote.currencyCode || selection.destinationRegion !== (quote.deliveryAddress?.region ?? null))) {
+      throw new Error("A shipping selection no longer matches the checkout destination or currency.");
+    }
+
+    const shippingByStore = new Map(storeIds.map((storeId) => [storeId, selections.get(storeId)!.amountMinor]));
+    const subtotalByStore = new Map(storeIds.map((storeId) => [
+      storeId, grouped.get(storeId)!.reduce((sum, line) => sum + line.lineTotalMinor, BigInt(0))
+    ]));
+    const taxableBases = storeIds.map((storeId) => ({
+      storeId,
+      base: subtotalByStore.get(storeId)! + (quote.taxSnapshot!.includesShipping ? shippingByStore.get(storeId)! : BigInt(0))
+    }));
+    const allocatedTax = allocateAmount(quote.taxSnapshot.taxAmountMinor, taxableBases);
+    const subtotal = storeIds.reduce((sum, id) => sum + subtotalByStore.get(id)!, BigInt(0));
+    const shipping = storeIds.reduce((sum, id) => sum + shippingByStore.get(id)!, BigInt(0));
+    if (subtotal !== quote.subtotalMinor || quote.taxSnapshot.currencyCode !== quote.currencyCode) {
+      throw new Error("Checkout snapshots are inconsistent. Rebuild the quote before placing an order.");
+    }
+    const tax = quote.taxSnapshot.taxAmountMinor;
+    const total = subtotal + shipping + (quote.taxSnapshot.isInclusive ? BigInt(0) : tax);
+    const order = await tx.order.create({
+      data: {
+        orderNumber: makeOrderNumber(), quoteId, ...ownerWhere(owner),
+        marketId: quote.marketId, currencyCode: quote.currencyCode,
+        status: OrderStatus.PENDING_PAYMENT, subtotalMinor: subtotal, shippingMinor: shipping,
+        taxMinor: tax, totalMinor: total, idempotencyKey: `checkout:${quote.id}`,
+        placedAt: now,
+        address: { create: {
+          recipientName: quote.deliveryAddress.recipientName, phone: quote.deliveryAddress.phone,
+          countryCode: quote.deliveryAddress.countryCode, countryName: quote.deliveryAddress.countryName,
+          line1: quote.deliveryAddress.line1, line2: quote.deliveryAddress.line2,
+          city: quote.deliveryAddress.city, region: quote.deliveryAddress.region, postalCode: quote.deliveryAddress.postalCode
+        }},
+        statusHistory: { create: { status: OrderStatus.PENDING_PAYMENT, note: "Order created; payment has not been initiated." } }
+      }
+    });
+
+    const reservations = await tx.inventoryReservation.findMany({
+      where: { referenceType: reservationReference, referenceId: quote.id, status: InventoryReservationStatus.ACTIVE },
+      include: { inventory: { select: { id: true, variantId: true } } }
+    });
+    const reservedByVariant = new Map<string, number>();
+    for (const reservation of reservations) {
+      const changed = await tx.inventory.updateMany({
+        where: {
+          id: reservation.inventoryId,
+          quantityOnHand: { gte: reservation.quantity },
+          quantityReserved: { gte: reservation.quantity }
+        },
+        data: {
+          quantityOnHand: { decrement: reservation.quantity },
+          quantityReserved: { decrement: reservation.quantity }
+        }
+      });
+      if (changed.count !== 1) throw new Error("Reserved inventory changed. The order was not placed; support reconciliation is required.");
+      await tx.inventoryReservation.update({
+        where: { id: reservation.id },
+        data: { status: InventoryReservationStatus.CONSUMED, consumedAt: now }
+      });
+      await tx.inventoryMovement.create({
+        data: {
+          inventoryId: reservation.inventoryId, type: InventoryMovementType.SALE,
+          quantityDelta: -reservation.quantity, referenceType: "ORDER", referenceId: order.id,
+          idempotencyKey: `order:${order.id}:inventory:${reservation.inventoryId}`,
+          note: `Inventory consumed for ${order.orderNumber}`, createdAt: now
+        }
+      });
+      reservedByVariant.set(reservation.inventory.variantId, (reservedByVariant.get(reservation.inventory.variantId) ?? 0) + reservation.quantity);
+    }
+    for (const line of quote.lines) {
+      if ((reservedByVariant.get(line.variantId) ?? 0) < line.quantity) {
+        throw new Error("Inventory reservation does not cover every checkout line. The order was not placed.");
+      }
+    }
+
+    for (const storeId of storeIds) {
+      const lines = grouped.get(storeId)!;
+      const vendorSubtotal = subtotalByStore.get(storeId)!;
+      const vendorShipping = shippingByStore.get(storeId)!;
+      const vendorTax = allocatedTax.get(storeId) ?? BigInt(0);
+      const vendorTotal = vendorSubtotal + vendorShipping + (quote.taxSnapshot.isInclusive ? BigInt(0) : vendorTax);
+      await tx.vendorOrder.create({
+        data: {
+          orderId: order.id, storeId, status: VendorOrderStatus.PENDING_PAYMENT,
+          subtotalMinor: vendorSubtotal, shippingMinor: vendorShipping, taxMinor: vendorTax, totalMinor: vendorTotal,
+          statusHistory: { create: { status: VendorOrderStatus.PENDING_PAYMENT, note: "Awaiting payment; fulfillment is not yet authorized." } },
+          items: { create: lines.map((line) => ({
+            productId: null, variantId: line.variantId, productName: line.productName, sku: line.sku,
+            variantName: line.variantName, quantity: line.quantity,
+            unitAmountMinor: line.unitAmountMinor, lineTotalMinor: line.lineTotalMinor
+          })) }
+        }
+      });
+    }
+
+    await tx.checkoutQuote.update({ where: { id: quote.id }, data: { status: CheckoutQuoteStatus.CONVERTED } });
+    await tx.cart.update({ where: { id: quote.cartId }, data: { status: CartStatus.CHECKED_OUT } });
+    await tx.auditLog.create({
+      data: {
+        actorType: "SYSTEM", action: "order.created", resource: "order", resourceId: order.id,
+        scopeType: "ORDER", scopeId: order.id, occurredAt: now,
+        metadata: { orderNumber: order.orderNumber, vendorCount: storeIds.length, totalMinor: total.toString(), currencyCode: quote.currencyCode }
+      }
+    });
+
+    const saved = await tx.order.findUniqueOrThrow({
+      where: { id: order.id },
+      include: {
+        address: true,
+        vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      }
+    });
+    return serializeOrder(saved);
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+export async function getOwnedOrder(guestToken: string, orderId: string, now = new Date()) {
+  const session = await getCurrentSession(now);
+  const owner: Owner = session
+    ? { userId: session.userId }
+    : await prisma.guestSession.findUnique({
+        where: { tokenHash: hashToken(guestToken) }, select: { id: true }
+      }).then((guest) => {
+        if (!guest) throw new Error("Order not found.");
+        return { guestSessionId: guest.id };
+      });
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, ...ownerWhere(owner) },
+    include: {
+      address: true,
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+    }
+  });
+  if (!order) throw new Error("Order not found.");
+  return serializeOrder(order);
+}
+
+export async function listCustomerOrders(now = new Date()) {
+  const session = await getCurrentSession(now);
+  if (!session) throw new Error("Sign in to view your order history.");
+  const orders = await prisma.order.findMany({
+    where: { userId: session.userId },
+    orderBy: { placedAt: "desc" }, take: 50,
+    include: {
+      address: true,
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+    }
+  });
+  return orders.map(serializeOrder);
+}
