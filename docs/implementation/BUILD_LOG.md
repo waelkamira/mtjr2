@@ -1124,3 +1124,21 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Run the existing PostgreSQL integration workflow against disposable CI PostgreSQL.
 3. Finish seller staff invitations and inventory adjustment/transfer screens.
 4. Continue the buyer catalog UX only after the seller/admin integration and verification gates are green.
+## 2026-11-03 — Seller inventory operations UI
+
+**Implemented**
+- Added a scoped stock-transfer history query and exposed it through GET /api/seller/inventory/transfers; it returns only the authenticated user's permitted store transfers.
+- Added /seller/inventory with store selection, warehouse creation, current stock overview, integer stock adjustments using a fresh idempotency key, transfer creation, transfer history, and ship/receive actions.
+- Connected the page to the existing warehouse, inventory, adjustment, transfer, ship, and receive APIs. The UI does not calculate or mutate stock locally; all stock changes remain transactional and audited in the server service.
+- Linked inventory operations from the seller workspace and removed its unused inventory-loading state.
+- No schema change was required: warehouses, inventory, movements, transfers, transfer items, and transfer idempotency are already represented in prisma/schema.prisma and its committed migration.
+
+**Verification**
+- General CI remains the required gate for this latest seller/admin UI batch. Earlier runs were cancelled by newer commits; the consolidated run on the latest code must complete Prisma validation/generation, typecheck, lint, unit tests, and production build.
+- No user database was connected and no production migration was executed. PostgreSQL verification remains limited to disposable CI services.
+
+**Next**
+1. Complete the consolidated General CI and fix only concrete failures.
+2. Run the existing PostgreSQL integration workflow on the latest committed migrations and queries.
+3. Implement store staff invitation/acceptance/revocation UI, then return to remaining buyer catalog UX.
+4. Keep cart/checkout outside this phase until its backend domain is implemented.
