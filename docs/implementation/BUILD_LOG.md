@@ -1295,3 +1295,15 @@ The project owner approved Resend as the transactional email provider. The serve
 **Next**
 - Continue with configurable store/market shipping rules and quote-owned shipping selection. Do not assume carriers, prices, tax rates, or launch countries.
 - No owner database or Vercel environment was accessed or changed.
+
+
+## 2026-11-03 — Buying Core 4.3: configurable multi-vendor shipping (verification pending)
+
+- Added `StoreShippingRate` and `CheckoutShippingSelection` to the canonical Prisma schema, plus `CheckoutQuoteLine.storeId` to preserve seller ownership in quote snapshots.
+- Added migration `20261103223000_store_shipping_options` with store/market/currency foreign keys, non-negative money, valid delivery-day ranges, and effective-date constraints. Existing quote lines are backfilled through ProductVariant → Product before `storeId` becomes required.
+- Added seller rate create/list service and APIs at `/api/seller/shipping-rates`; the seller workspace now creates and lists store shipping services for markets the store serves.
+- Added buyer quote shipping options and per-store selection APIs at `/api/checkout/quote/[quoteId]/shipping`; checkout UI displays and selects each seller's eligible services independently.
+- Server filters rates by active market/currency, active store/seller, destination region, and effective dates; selected rate values are copied into a quote snapshot. No carrier or shipping amount is fabricated.
+- Added workflow triggers for the stacked shipping PR and its Prisma/server/API paths.
+- **Not yet verified:** Prisma validation, typecheck, lint, unit tests, production build, and disposable PostgreSQL migration replay. Do not treat this slice as complete until both workflows pass.
+- No owner database, production database, or Vercel environment was accessed.
