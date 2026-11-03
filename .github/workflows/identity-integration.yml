@@ -3,12 +3,14 @@ name: Platform PostgreSQL Integration
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main, "feat/buying-cart-core"]
+    branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations"]
     paths:
       - "prisma/schema.prisma"
       - "prisma/migrations/**"
       - "src/server/cart/**"
       - "src/server/checkout/**"
+      - "src/server/account/**"
+      - "src/app/api/account/addresses/**"
       - "src/app/api/checkout/**"
       - "src/features/checkout/**"
       - "tests/checkout/**"
