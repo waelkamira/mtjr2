@@ -472,6 +472,7 @@ model Product {
   description    String?
   status         CatalogEntityStatus   @default(DRAFT)
   approvalStatus ProductApprovalStatus @default(PENDING)
+  rejectionReason String?
   approvedAt     DateTime?
   publishedAt    DateTime?
   createdAt      DateTime              @default(now())
