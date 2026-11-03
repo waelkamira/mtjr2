@@ -1334,7 +1334,7 @@ The project owner approved Resend as the transactional email provider. The serve
 - Consumes inventory reservation rows and decrements both on-hand and reserved quantities atomically; writes SALE movements; marks quote CONVERTED and cart CHECKED_OUT.
 - Added buyer placement API, buyer order detail/history APIs and pages, plus store-scoped seller order API/page linked from seller workspace.
 - Payment is intentionally not initiated. Parent and vendor orders remain PENDING_PAYMENT; fulfillment is not authorized until provider-confirmed payment.
-- Verification pending. No additional test matrix added; the only gates are the existing General CI and disposable PostgreSQL integration workflow. No owner/production database or Vercel environment accessed.
+- Disposable PostgreSQL integration passed run 41713575100, including Prisma validation/generation, committed migration deployment, baseline seed, and the existing integration suite. General CI run 41713575137 passed Prisma validation/generation and TypeScript typecheck, then reported three lint blockers; the tax admin effect and two apostrophe-escaping issues were corrected in commits ec773e1, 9f52aa3, and 19fb10f. Fresh General CI run 41713964722 is pending. No additional test matrix added. No owner/production database or Vercel environment accessed.
 
 
 ## 2026-11-03 — System 10 initial slice: in-app order notifications
