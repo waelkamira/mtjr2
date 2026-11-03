@@ -48,6 +48,42 @@ export default function StorefrontHomePage() {
   const [loadingReference, setLoadingReference] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState("");
+  const [urlReady, setUrlReady] = useState(false);
+
+  // Restore shareable discovery state before the first catalog request.
+  useEffect(() => {
+    const restore = () => {
+      const params = new URLSearchParams(window.location.search);
+      const requestedSort = params.get("sort");
+      const requestedPage = Number(params.get("page") ?? "1");
+      setQuery((params.get("q") ?? "").slice(0, 120));
+      setDraftQuery((params.get("q") ?? "").slice(0, 120));
+      setMarketId(params.get("marketId") ?? "");
+      setCategoryId(params.get("categoryId") ?? "");
+      setBrandId(params.get("brandId") ?? "");
+      setSort(requestedSort === "name_asc" || requestedSort === "name_desc" ? requestedSort : "newest");
+      setPage(Number.isSafeInteger(requestedPage) && requestedPage > 0 && requestedPage <= 10000 ? requestedPage : 1);
+      setUrlReady(true);
+    };
+    restore();
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, []);
+
+  // Keep the active discovery filters in the URL so searches can be shared or reloaded.
+  useEffect(() => {
+    if (!urlReady) return;
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (marketId) params.set("marketId", marketId);
+    if (categoryId) params.set("categoryId", categoryId);
+    if (brandId) params.set("brandId", brandId);
+    if (sort !== "newest") params.set("sort", sort);
+    if (page > 1) params.set("page", String(page));
+    const search = params.toString();
+    const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`;
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, [urlReady, query, marketId, categoryId, brandId, sort, page]);
 
   useEffect(() => {
     let active = true;
@@ -78,6 +114,7 @@ export default function StorefrontHomePage() {
   }, []);
 
   useEffect(() => {
+    if (!urlReady) return;
     let active = true;
     const params = new URLSearchParams({ locale: "en", limit: "24", page: String(page), sort });
     if (marketId) {
@@ -100,7 +137,7 @@ export default function StorefrontHomePage() {
       })
       .finally(() => { if (active) setLoadingProducts(false); });
     return () => { active = false; };
-  }, [marketId, categoryId, brandId, query, markets, sort, page]);
+  }, [urlReady, marketId, categoryId, brandId, query, markets, sort, page]);
 
   const flatCategories = useMemo(() => flattenCategories(categories), [categories]);
   const selectedMarket = markets.find((market) => market.id === marketId);
