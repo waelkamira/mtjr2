@@ -80,7 +80,7 @@ export async function setCheckoutDeliveryAddress(guestToken: string, quoteId: st
   return prisma.$transaction(async (tx) => {
     const quote = await tx.checkoutQuote.findFirst({
       where: { id: quoteId, ...ownerWhere(owner), status: CheckoutQuoteStatus.ACTIVE, expiresAt: { gt: now } },
-      include: { market: { include: { country: { select: { id: true, iso2: true, name: true, isActive: true } } } }
+      include: { market: { include: { country: { select: { id: true, iso2: true, name: true, isActive: true } } } } }
     });
     if (!quote || !quote.market.country.isActive) throw new Error("This checkout quote is no longer active.");
 
