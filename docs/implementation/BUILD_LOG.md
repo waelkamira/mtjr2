@@ -1425,3 +1425,6 @@ The project owner approved Resend as the transactional email provider. The serve
 - Existing search/filter/sort/pagination and product detail/cart/favorite/messaging calls remain wired to canonical APIs. No Prisma schema change was necessary because the fixture uses existing models.
 - The Netherlands/EUR market is clearly a demo fixture only, not a launch market, tax rule or regulatory decision. Checkout still needs approved shipping/tax/payment configuration before an end-to-end paid order can be demonstrated.
 - Verification policy: no broad test matrix was added or awaited. No database seed, Prisma migration, production database, or Vercel environment was run/changed in this implementation. Focus next on only any typecheck/build/data-integrity blocker reported by CI.
+
+
+- CI trigger inspection found the new feature branch was missing from both workflow PR base-branch allowlists. Added `feat/storefront-demo-experience` to the General CI and disposable PostgreSQL integration workflow allowlists so PR #12 is eligible for those workflows. This is a workflow-trigger correction, not a test expansion.
