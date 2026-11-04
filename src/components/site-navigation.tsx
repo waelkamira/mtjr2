@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MarketplaceSearchBox from "@/features/storefront/marketplace-search-box";
 import { getCurrentSession } from "@/server/identity/current-session";
 
 export default async function SiteNavigation() {
@@ -18,19 +19,7 @@ export default async function SiteNavigation() {
           mtjr<span className="text-[var(--color-copper-600)]">.</span>
         </Link>
 
-        <form action="/search" method="get" role="search" className="order-3 flex min-w-0 w-full overflow-hidden rounded-xl border border-[var(--border)] bg-white sm:order-none sm:ml-3 sm:max-w-xl sm:flex-1">
-          <label htmlFor="site-search" className="sr-only">Search products</label>
-          <input
-            id="site-search"
-            name="q"
-            maxLength={120}
-            placeholder="Search products, brands and more"
-            className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm outline-none"
-          />
-          <button type="submit" className="bg-[var(--color-forest-800)] px-4 text-sm font-medium text-white transition hover:bg-[var(--color-forest-950)]">
-            Search
-          </button>
-        </form>
+        <MarketplaceSearchBox />
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <Link href="/cart" className="rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Cart</Link>
