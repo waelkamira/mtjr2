@@ -1484,3 +1484,12 @@ The project owner approved Resend as the transactional email provider. The serve
 - Each target row records the intended audience, owning system(s), API/domain service and Prisma data to verify, an explicitly provisional status, and known evidence/gaps. The registry distinguishes target pages from routes verified in code; no route-by-route filesystem audit is claimed by this documentation change.
 - Added the registry requirement to `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`: reconcile targets with actual App Router routes and track navigation, authorization, API wiring, loading/empty/error states and focused verification before marking pages complete.
 - Documentation-only change; no Prisma schema/migration, runtime code, database, or Vercel settings changed. No tests were run for this documentation-only change.
+
+
+## 2026-11-04 — End-to-end journey standard and plan correction
+
+- Added `docs/implementation/END_TO_END_JOURNEY_STANDARD.md` as the mandatory checklist for every visible action, route, API and persisted workflow across all 49 systems.
+- Updated the canonical 49-system blueprint to require vertical journey delivery, explicit authorization and state/error handling, a model-usage review before schema changes, and exact-commit evidence before a journey is marked verified.
+- Extended the page/route registry with a seller-application journey from the homepage CTA through identity gate, form submit, application status, admin review and draft-store creation, including API/persistence contracts and security/failure cases.
+- Updated the Phase 3 plan with an end-to-end seller-onboarding acceptance gate and focused test policy; linked the standard from README.
+- This change is documentation and acceptance-criteria only. No runtime code, Prisma schema, migration, database, or Vercel settings were changed. No tests were run; no CI pass is claimed. The seller journey remains implemented/unverified until its actual route-by-route and browser/HTTP evidence is recorded.
