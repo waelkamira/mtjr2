@@ -1817,3 +1817,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - PR #23 was squash-merged into `main` as `ffbf76897a9ee8d15ad3d14a18508efe6f0986a9`.
 - No provider is registered by default; no live charge is collected. Refunds, disputes, settlement reconciliation, concrete provider onboarding, and operational monitoring remain incomplete.
 - These checks establish build/test/database migration integrity; they do not establish a live browser journey or successful real-world provider payment.
+
+
+## 2026-11-04 — Main navigation: Shop route correction
+
+- Audited every destination currently rendered by `src/components/site-navigation.tsx`: Home, Shop, Categories, Brands, Stores, Sell on Mtjr, Cart, Sign in / Join or authenticated Account / Favorites / Orders / Messages / Notifications, Terms and Privacy. All corresponding route files exist on `main`; the search suggestion API and message/notification endpoints also exist. This is a source/route audit, not a live browser click-through.
+- Found one concrete navigation defect: `/products` (the Shop target and the empty-catalog “Browse all products” destination) rendered `StorefrontHomePage` again, duplicating the homepage instead of opening the dedicated catalog experience.
+- Changed `/products` to redirect to `/search`, which already implements server-side product discovery, category/brand filters, sorting, pagination, and the catalog product grid backed by `listDiscoverableProducts` / Prisma.
+- No Prisma schema or migration change is needed for this route correction. Exact-head CI is required before merge; browser verification remains separate.
