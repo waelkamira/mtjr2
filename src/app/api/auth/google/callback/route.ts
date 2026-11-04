@@ -99,7 +99,7 @@ export async function GET(request: Request): Promise<Response> {
           tx.userConsent.findFirst({ where: { userId, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true }, select: { id: true } }),
           tx.seller.findUnique({ where: { ownerId: userId }, select: { id: true } })
         ]);
-        const missing = [];
+        const missing: Array<{ userId: string; type: ConsentType; version: string; granted: boolean; capturedAt: Date; source: string }> = [];
         if (!terms) missing.push({ userId, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true, capturedAt: now, source: "google-registration" });
         if (!privacy) missing.push({ userId, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true, capturedAt: now, source: "google-registration" });
         if (missing.length) await tx.userConsent.createMany({ data: missing });
