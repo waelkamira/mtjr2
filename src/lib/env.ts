@@ -11,14 +11,14 @@ const environmentSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url(),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must contain at least 32 characters"),
   CRON_SECRET: z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional(),
-  PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).default("false"),
+  PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
   TRUSTED_PROXY_IP_HEADER: z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development")
 });
 
-export type ApplicationEnvironment = z.infer<typeof environmentSchema>;
+export type ApplicationEnvironment = Omit<z.infer<typeof environmentSchema>, "PUBLIC_REGISTRATION_ENABLED"> & { PUBLIC_REGISTRATION_ENABLED: "true" | "false" };
 
 /**
  * Parse an explicit environment source so configuration can be tested without
@@ -38,7 +38,7 @@ export function parseEnvironment(
     throw new Error(`Invalid application environment: ${details}`);
   }
 
-  return result.data;
+  return {\n    ...result.data,\n    PUBLIC_REGISTRATION_ENABLED: result.data.PUBLIC_REGISTRATION_ENABLED ?? (result.data.NODE_ENV === "production" ? "false" : "true")\n  };
 }
 
 export const env = parseEnvironment(process.env);
