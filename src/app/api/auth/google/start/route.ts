@@ -7,11 +7,8 @@ const COOKIE_OPTIONS = { httpOnly: true, secure: env.NODE_ENV === "production", 
 
 export async function GET(request: Request): Promise<Response> {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-<<<<<<< HEAD
-    return Response.redirect(new URL("/register?oauth=unavailable", env.NEXT_PUBLIC_APP_URL), 303);
-=======
     return Response.redirect(new URL("/register?oauth=unavailable", env.APP_URL), 303);
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
   }
   const url = new URL(request.url);
   const accountType = url.searchParams.get("accountType");
@@ -38,11 +35,8 @@ export async function GET(request: Request): Promise<Response> {
   store.set("mtjr_google_seller_legal", encodeURIComponent(sellerLegalName), COOKIE_OPTIONS);
   store.set("mtjr_google_seller_display", encodeURIComponent(sellerDisplayName), COOKIE_OPTIONS);
 
-<<<<<<< HEAD
-  const callback = new URL("/api/auth/google/callback", env.NEXT_PUBLIC_APP_URL).toString();
-=======
   const callback = new URL("/api/auth/google/callback", env.APP_URL).toString();
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
   const authorize = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   authorize.searchParams.set("client_id", env.GOOGLE_CLIENT_ID);
   authorize.searchParams.set("redirect_uri", callback);
