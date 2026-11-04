@@ -47,6 +47,11 @@ The 49-system blueprint defines business capabilities; it does not replace the r
 
 ## Global platform completeness specification
 
+## Independent system implementation specifications
+
+The 49 platform systems are split into individual build/verification contracts in [`docs/systems/README.md`](docs/systems/README.md). Use [`docs/systems/SYSTEM_INTEGRATION_MATRIX.md`](docs/systems/SYSTEM_INTEGRATION_MATRIX.md) for explicit upstream/downstream dependencies. Each system must be closed independently with its own UI-to-API-to-Prisma journey and P0/P1 acceptance evidence; see the global specification for cross-platform page and launch boundaries.
+
+
 Use [`docs/architecture/GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md`](docs/architecture/GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md) as the detailed page/dashboard/control specification: public storefront, buyer account, seller center, full admin domains, restricted finance/security/operations, sign-in/role routing/sign-out, global launch gates, and additional capabilities that must be explicitly accounted for beyond the 49-system inventory.
 
 ## Canonical page-to-system placement map
