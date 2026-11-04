@@ -1745,3 +1745,15 @@ The project owner approved Resend as the transactional email provider. The serve
 **Changes made:** Documentation-only audit record. No PR was merged, retargeted, rebased or otherwise modified. No application code, Prisma schema, migration, database, Vercel setting or deployment was changed.
 
 **Next:** Retrieve precise lint/typecheck diagnostics, reconcile the checkout stack, then verify complete buyer journeys before considering any merge. Do not start new systems until current work is audited and closed.
+
+## 2026-11-04 — Exact CI failure diagnostics retrieved
+
+Downloaded the failing GitHub Actions job logs for the inspected exact heads. The quality failures are concrete source defects, not unexplained infrastructure failures:
+
+- PR #2 quality lint: unescaped apostrophes in `src/features/checkout/checkout-shipping-options.tsx:47` and `src/features/seller/workspace-page.tsx:165` (`react/no-unescaped-entities`). PR #3 quality was green, so this particular issue was corrected by the time of the #3 head.
+- PR #4 quality lint: `src/app/admin/tax-rates/page.tsx:39` triggers `react-hooks/set-state-in-effect`; the job stops before tests/build.
+- PR #6 quality typecheck: `src/server/orders/orders.ts` lines 268, 291 and 306 have a result/type mismatch. The included Prisma selection returns `vendorOrders[].store` with `name, slug` but the declared mapper type requires `id, name, slug`. Correct the select/type contract together; do not cast away the mismatch.
+- PR #9, #11, #12, #13 and #14 quality lint: the same pre-existing admin tax page issue remains at line 39. Additional inherited failures include `src/app/seller/messages/page.tsx:1`, `src/features/account/wishlist-page.tsx:27`, `src/features/admin/reviews-page.tsx:27`, `src/features/admin/store-reviews-page.tsx:26`, `src/features/seller/reviews-page.tsx:26`, and `src/features/storefront/product-reviews.tsx:43`; all trigger `react-hooks/set-state-in-effect`.
+- The reviews pages call async loaders from effects; the lint rule detects synchronous state updates inside those loaders. Refactor the loading lifecycle rather than suppressing the rule.
+
+These diagnostics are from the exact job logs for #2, #3, #4, #6, #9, #11, #12, #13 and #14. They do not prove the current heads are unchanged; refresh each PR head before applying fixes.
