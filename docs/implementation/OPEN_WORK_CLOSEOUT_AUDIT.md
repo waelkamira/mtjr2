@@ -158,3 +158,10 @@ Closed the following PRs after confirming each recorded head was already an ance
 Each PR received a closeout comment explaining that its changes are already represented in main and that no merge was performed. This avoids re-merging stale stacked branches whose historical quality checks no longer describe the current main implementation.
 
 **Remaining open PRs:** #2, #4, #5, #6, #7, #16, #17. These still require exact file-level reconciliation and the appropriate verification gate. PR #6's source correction is not verified until exact-head CI and PostgreSQL integration evidence is available. No production database or migration was accessed.
+
+
+## 2026-11-04 — Checkout quote PR #2 marked superseded
+
+Closed PR #2 after comparing its current head to main. The checkout quote/reservation schema, migration, server service, routes and UI are already present on main. The only remaining tree differences were `.github/workflows/ci.yml` and `.github/workflows/identity-integration.yml`; the PR branch has narrower/older pull-request branch allowlists than main, so merging it would risk regressing workflow triggers. A closeout comment records this reason. No application code was removed or merged.
+
+**Remaining open PRs after stale-PR cleanup:** #4, #5, #6, #7, #16, #17.
