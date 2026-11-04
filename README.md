@@ -316,3 +316,8 @@ A provider-neutral payment foundation is being reconstructed on current `main`: 
 ## Seller order preparation — 2026-11-04
 
 System 15 has an initial seller-side preparation slice on `feat/seller-order-processing`: paid vendor orders can move through `CONFIRMED → PROCESSING → READY_TO_SHIP` using a store-scoped API and connected seller UI. Writes use the existing Prisma status/history/audit models in a serializable transaction; no schema migration was needed. Shipping labels, tracking, dispatch, delivery, cancellation and refunds are deliberately not exposed until their own workflows are implemented. Exact-head verification is pending.
+
+
+## Seller dispatch and buyer tracking — 2026-11-04
+
+The next fulfillment slice is being implemented on `feat/manual-shipment-tracking`. It adds a one-to-one `Shipment` record for each vendor order, seller-entered carrier/tracking details, a store-scoped dispatch API, and tracking visibility on the buyer-owned order detail. The dispatch mutation moves `READY_TO_SHIP → SHIPPED` and recalculates the parent order's partial/fulfilled state with history and audit in one serializable transaction. The tracking URL is HTTPS-only. This is manual data entry, not a carrier integration; live tracking, label purchase, delivery confirmation and proof of delivery remain out of scope. The additive migration is `20261104130000_manual_shipment_tracking`; apply only through the reviewed migration process.
