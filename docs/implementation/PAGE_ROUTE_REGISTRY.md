@@ -178,7 +178,7 @@ Do not add Prisma models merely to satisfy a page checklist. A page without a su
 | `/products/[slug]` | `src/app/products/[slug]/page.tsx` | Present; canonical slug route |
 | `/cart`, `/checkout` | `src/app/cart/page.tsx`, `src/app/checkout/page.tsx` | Present; buying journey verification remains |
 | `/orders/[orderId]` | `src/app/orders/[orderId]/page.tsx` | Present; ownership/payment/return actions require journey verification |
-| `/account/orders`, `/account/questions`, `/account/returns`, `/account/reviews`, `/account/wishlist` | matching `src/app/account/*/page.tsx` files | Present; each action remains unverified as a complete journey |
+| `/account/orders`, `/account/questions`, `/account/returns`, `/account/reviews`, `/account/wishlist`, `/account/favorites` | matching `src/app/account/*/page.tsx` files; favorites is an alias of the wishlist page | Present; protected by `src/app/account/layout.tsx`; each action remains unverified as a live browser journey |
 | `/account/messages`, `/account/messages/[conversationId]` | matching message page files | Present; participant scope and send/read journey need evidence |
 | `/account/support`, `/account/support/[ticketId]` | matching support page files | Present; customer-visible/staff-only message boundaries need evidence |
 | `/notifications` | `src/app/notifications/page.tsx` | Present; preference and read-state journey needs evidence |
@@ -208,7 +208,7 @@ This registry records route presence and route-level status only. It does **not*
 A route stays **Implemented / unverified** (or Partial) if any exposed critical action is unverified. A visible nonfunctional action must be removed, disabled or honestly labelled unavailable; do not count it as complete. Route existence alone never upgrades an action or system to Verified.
 
 
-**Identity UI follow-up (2026-11-04):** Added functional login, registration, password recovery and email verification pages plus a user-facing logout control. `/terms` and `/privacy` now exist as clearly marked v1 development drafts. Registration defaults on in development/test and is unconditionally blocked in production; consent is captured separately for both documents. The flow remains Implemented / unverified until exact-head CI and the configured HTTP/browser journey pass.
+**Identity UI follow-up (2026-11-04):** `/register` is a functional development form with explicit CUSTOMER/SELLER choice and separate v1 Terms/Privacy consent. CUSTOMER receives the seeded CUSTOMER role; SELLER creates a PENDING Seller with no SELLER role until approval. Production blocks password registration and new Google-backed account creation while existing linked Google accounts may still sign in. `/terms` and `/privacy` remain development drafts, not final approved legal documents. The account layout protects nested account pages; profile, address, favorites and orders APIs derive ownership from the current HttpOnly session. Google OIDC uses state/PKCE and tokeninfo checks, and same-email accounts are not silently linked. The flow remains Implemented / unverified pending exact-head CI/PostgreSQL, provider/email/proxy configuration and a live HTTP/browser journey.
 
 
 ## Shared global navigation — implementation slice (2026-11-04)
@@ -282,3 +282,17 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 | `/seller/products` | Search product name, slug, description, SKU and barcode within selected store | `listSellerStoreProducts` after catalog permission check | Implemented / pending verification |
 | `/seller/orders` | Search order number, store, product, SKU and variant across authorized stores | `listSellerVendorOrders` after permission-derived store scope | Implemented / pending verification |
 | `/seller/inventory` | Search product, SKU and warehouse name/code within selected store | `listStoreInventory` after inventory permission check | Implemented / pending verification |
+
+
+## Identity and customer-account route audit — 2026-11-04
+
+| Route | UI / API trace | Session, authorization and persistence | Status / remaining evidence |
+|---|---|---|---|
+| `/register` | `src/app/register/page.tsx` → `src/features/identity/register-form.tsx` → `POST /api/auth/register`; Google button → `GET /api/auth/google/start` | Requires explicit CUSTOMER/SELLER choice and separate Terms/Privacy consent. Email registration persists User, VerificationToken digest, UserConsent and CUSTOMER role or PENDING Seller. | Implemented / unverified. Production creation is blocked; v1 legal pages are drafts; real Resend delivery and Google provider configuration are external requirements. |
+| `/login`, `/verify-email`, `/forgot-password`, `/reset-password` | shared `src/features/identity/auth-page.tsx` → login, verify, resend and password-reset APIs | Session cookie is HttpOnly; tokens are one-time digests; login uses trusted-proxy IP resolution and persistent throttling. | Source and CI covered; deployed email/proxy HTTP journey remains unverified. |
+| `/account` and nested account routes | `src/app/account/layout.tsx` calls `getCurrentSession()`; profile, addresses, favorites and orders pages use their matching APIs | Anonymous requests redirect to login. APIs derive the owner from the current session; address API returns `countryCode`/`countryName`, and the page consumes that exact shape. | Implemented / unverified. Profile/address/favorite/order live journey and post-logout 401 check still require browser/HTTP evidence. |
+| `/account/favorites` and `/account/wishlist` | both routes render `src/features/account/wishlist-page.tsx` → `GET /api/favorites`, `POST/DELETE /api/favorites/[productId]` | Favorite queries and mutations use the authenticated session user ID. | Implemented / unverified; persistence/reload and anonymous denial need live route evidence. |
+| `/seller` | `src/features/seller/workspace-page.tsx` → `GET /api/seller/stores`, `POST /api/seller/applications`, `POST /api/seller/stores` | Application requires a verified current session. PENDING sellers see a pending state; store creation requires an ACTIVE seller and server-side `store:manage`. Only admin approval grants SELLER. | Source and focused PostgreSQL assertions cover pending/no-permission state; full browser/admin-review journey remains unverified. |
+| Google callback | `GET /api/auth/google/callback` | Checks state, PKCE code verifier, Google tokeninfo issuer/audience/verified email/expiry, OAuthAccount mapping and session issuance. New accounts obey the public-registration policy; existing email accounts are not silently linked. | Requires Google client credentials and exact `NEXT_PUBLIC_APP_URL/api/auth/google/callback` registration. No real provider test is claimed. |
+
+No browser runtime was attached during this audit. No production database, Vercel settings or environment secrets were accessed or changed.
