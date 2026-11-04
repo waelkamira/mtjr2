@@ -45,7 +45,7 @@ describe("public product discovery", () => {
     expect(filters.status).toBe("ACTIVE");
     expect(filters.approvalStatus).toBe("APPROVED");
     expect(filters.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
-    const relevanceQuery = mocks.queryRaw.mock.calls[0][0];
+    const relevanceQuery = mocks.queryRaw.mock.calls.map(([query]) => query).find((query) => query.sql.includes("WITH searchable"));
     expect(relevanceQuery.sql).toContain("searchable");
     expect(relevanceQuery.values).toEqual(expect.arrayContaining(["sneaker", "trainer"]));
     expect(mocks.synonymFindMany.mock.calls[0][0].where.OR).toHaveLength(2);
