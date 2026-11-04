@@ -44,8 +44,6 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setToken(params.get("token") || "");
-    setEmail(params.get("email") || "");
     if (params.has("token")) {
       params.delete("token");
       const query = params.toString();
