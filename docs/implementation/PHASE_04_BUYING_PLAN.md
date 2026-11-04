@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — cart, quote/reservation, and delivery-address capture are implemented. Shipping is implemented pending final CI; market tax configuration and quote calculation are now implemented on the next stacked branch. Discounts, order, and payment workflows remain.
+**Status:** In progress — cart, quote/reservation, delivery-address capture, and shipping are implemented and verified. Market tax configuration/calculation is implemented pending CI verification. Discounts, order creation, and payment remain.
 
 ## Objective
 
@@ -43,7 +43,7 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 ## 4.3 — Store shipping configuration and checkout options
 
-**Implemented on `feat/store-shipping-options`; verification pending.**
+**Implemented and verified on `feat/store-shipping-options` (2026-11-04).** General CI passed on commit `052c7cd141a673be45210439e8ad8b0b1428554e` (Prisma validate/generate, typecheck, lint, tests, build; run [41767833957](https://github.com/waelkamira/mtjr2/actions/runs/41767833957)). Disposable PostgreSQL migration/integration passed (run [41767834005](https://github.com/waelkamira/mtjr2/actions/runs/41767834005)). This verifies the shipping implementation slice only; it does not complete tax, discounts, final totals, order creation, payment, or shipment execution.
 
 - Added `StoreShippingRate` scoped to store, active market, currency, optional destination region, effective dates, delivery window, and integer minor-unit amount.
 - Added `CheckoutShippingSelection` as a quote-owned per-store immutable snapshot. Added `storeId` to `CheckoutQuoteLine` and backfilled it from the variant's product store so multi-vendor shipping cannot cross seller boundaries.
@@ -52,7 +52,7 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Added buyer shipping-options read/select APIs and connected the checkout UI. Options are filtered by quote market, currency, destination region, store-market activation, and effective dates.
 - No carrier integration, country list, tax, final order total, or default shipping amount is assumed. Unconfigured stores return no shipping options.
 
-**Verification:** Disposable PostgreSQL migration/integration passed (run 41708370004). General CI (run 41708369901) found a BigInt literal target mismatch, fixed in 59a5155; focused shipping tests were added in 2667857. Awaiting a fresh full General CI run; do not mark complete until it passes.
+**Verification:** General CI passed on commit `052c7cd141a673be45210439e8ad8b0b1428554e` (run [41767833957](https://github.com/waelkamira/mtjr2/actions/runs/41767833957)); disposable PostgreSQL migration/integration passed (run [41767834005](https://github.com/waelkamira/mtjr2/actions/runs/41767834005)).
 
 ## 4.4 — Market tax configuration and quote calculation
 
