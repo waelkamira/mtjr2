@@ -92,6 +92,24 @@ export async function GET(request: Request): Promise<Response> {
       });
       userId = created.id;
     }
+    if (linked) {
+      await prisma.$transaction(async (tx) => {
+        const [terms, privacy, seller] = await Promise.all([
+          tx.userConsent.findFirst({ where: { userId, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true }, select: { id: true } }),
+          tx.userConsent.findFirst({ where: { userId, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true }, select: { id: true } }),
+          tx.seller.findUnique({ where: { ownerId: userId }, select: { id: true } })
+        ]);
+        const missing = [];
+        if (!terms) missing.push({ userId, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true, capturedAt: now, source: "google-registration" });
+        if (!privacy) missing.push({ userId, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true, capturedAt: now, source: "google-registration" });
+        if (missing.length) await tx.userConsent.createMany({ data: missing });
+        if (accountType === "SELLER" && !seller) {
+          if (sellerLegalName.length < 2 || sellerDisplayName.length < 2) throw new Error("Seller application details missing.");
+          await tx.seller.create({ data: { ownerId: userId, legalName: sellerLegalName, displayName: sellerDisplayName, status: SellerStatus.PENDING } });
+        }
+        await tx.auditLog.create({ data: { actorType: AuditActorType.USER, actorId: userId, action: "identity.login.succeeded", resource: "user", resourceId: userId, occurredAt: now, metadata: { method: "google" } } });
+      });
+    }
     const session = await createUserSession(userId, { userAgent: request.headers.get("user-agent") }, now);
     await setSessionCookie(session.token, session.expiresAt);
     return redirectTo(accountType === "SELLER" ? "/seller" : "/account");
