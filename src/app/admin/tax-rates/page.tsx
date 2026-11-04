@@ -12,6 +12,17 @@ async function json(response: Response) {
   return data;
 }
 
+async function loadTaxData(): Promise<{ markets: Market[]; rates: TaxRate[] }> {
+  const [marketData, rateData] = await Promise.all([
+    json(await fetch("/api/markets", { cache: "no-store" })),
+    json(await fetch("/api/admin/tax-rates", { cache: "no-store" }))
+  ]);
+  return {
+    markets: marketData.markets || [],
+    rates: rateData.rates || []
+  };
+}
+
 export default function AdminTaxRatesPage() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [rates, setRates] = useState<TaxRate[]>([]);
@@ -25,20 +36,9 @@ export default function AdminTaxRatesPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  async function load(): Promise<{ markets: Market[]; rates: TaxRate[] }> {
-    const [marketData, rateData] = await Promise.all([
-      json(await fetch("/api/markets", { cache: "no-store" })),
-      json(await fetch("/api/admin/tax-rates", { cache: "no-store" }))
-    ]);
-    return {
-      markets: marketData.markets || [],
-      rates: rateData.rates || []
-    };
-  }
-
   useEffect(() => {
     let cancelled = false;
-    void load().then((data) => {
+    void loadTaxData().then((data) => {
       if (cancelled) return;
       setMarkets(data.markets);
       setRates(data.rates);
@@ -59,7 +59,7 @@ export default function AdminTaxRatesPage() {
         body: JSON.stringify({ marketId, name, destinationRegion: region || null, rateBasisPoints: Math.round(value * 100), isInclusive: inclusive, appliesToShipping: shipping })
       }));
       setMessage("Tax rule created."); setName(""); setRegion(""); setPercent("0");
-      const data = await load();
+      const data = await loadTaxData();
       setMarkets(data.markets);
       setRates(data.rates);
       setMarketId((current) => current || data.markets[0]?.id || "");
