@@ -1840,3 +1840,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 - PR #24 merged into `main` as `1e134e65e97f29b438f1d7f92dbf5f671091393d`. Exact-head General CI run [41830496456](https://github.com/waelkamira/mtjr2/actions/runs/41830496456) passed. The Vercel deployment check failed only because the Hobby daily deployment quota was exhausted; it is not an application CI failure.
 - PR #25 adds seller preparation transitions and is awaiting its exact-head General CI and PostgreSQL workflow results. Do not merge until those critical checks pass; no production DB or Vercel environment was accessed.
+
+
+## 2026-11-04 — Manual shipment tracking implementation
+
+- Added Prisma `Shipment` as a one-to-one relation from `VendorOrder`, with carrier name, tracking number, optional HTTPS tracking URL, dispatch timestamp and actor ID.
+- Added additive migration `20261104130000_manual_shipment_tracking` with uniqueness, non-empty carrier/tracking checks, HTTPS URL check and vendor-order FK.
+- Added store-scoped seller dispatch endpoint and connected the seller order UI. Only an active store owner or authorized active staff/global order manager can dispatch a `READY_TO_SHIP` order.
+- Dispatch, shipment record, vendor status/history, parent order `PARTIALLY_FULFILLED/FULFILLED` recalculation and audit event are committed in one serializable transaction. Repeating an identical dispatch request returns the existing shipment; conflicting second shipment data is rejected.
+- Buyer order detail and order history return tracking only through existing customer/guest ownership-scoped order reads.
+- Exact-head CI and disposable PostgreSQL migration/integration verification are pending. No live carrier integration or delivery confirmation is claimed.
