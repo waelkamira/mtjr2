@@ -1751,3 +1751,12 @@ The project owner approved Resend as the transactional email provider. The serve
 - This is distinct from the earlier Hobby cron restriction and deployment-rate limit. Do not weaken server environment validation or invent a production auth secret to make the build pass.
 - Owner action: configure the required values in the correct Vercel Production environment (and Preview separately as needed). Generate `AUTH_SECRET` privately; never paste it into chat or commit it. Then retry one deployment after checking the environment configuration.
 - No Vercel settings or environment variables were read or changed by this work.
+
+
+## 2026-11-04 — Exact-head verification: seller return visibility
+
+- Latest verified code/documentation head before this log correction: `6480a6ee80e54a28b659662c922bad23cd84d42d`.
+- General CI run #591 (`41763766625`): **success**.
+- Platform PostgreSQL Integration run #280 (`41763766734`): **success**.
+- These exact-head results supersede the earlier pending wording in the seller-return entry. They validate repository CI and the disposable PostgreSQL integration workflow; they do not replace a deployed browser journey or live-provider test.
+- PR #16 remains open and unmerged. Seller return visibility remains read-only. No production DB, production migration, Vercel environment, or secret was accessed or changed.
