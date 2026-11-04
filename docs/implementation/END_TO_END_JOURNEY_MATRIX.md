@@ -30,7 +30,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 08 | Product questions and answers | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 09 | Customer messaging and support | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 10 | Customer notifications | Not audited | Not mapped | Not audited | Not audited | Not verified |
-| 11 | Returns and refunds (customer journey) | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 11 | Returns and refunds (customer journey) | `/account/returns`, `/orders/[orderId]` | Customer return APIs/services and screens | ReturnRequest, ReturnItem, Order, OrderItem, VendorOrder | CI + PostgreSQL passed on merged implementation; deployed browser journey pending | Implemented / unverified; no refund execution |
 | 12 | Seller onboarding, verification and KYC | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 13 | Seller dashboard and analytics | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 14 | Seller product management | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -52,7 +52,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 30 | Commission management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 31 | Accounting and general ledger | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 32 | Payout administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
-| 33 | Returns, refunds and disputes administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 33 | Returns, refunds and disputes administration | `/admin/returns` | Admin return queue/review APIs and UI | ReturnRequest, ReturnItem, AuditLog | CI + PostgreSQL passed on merged implementation; admin browser journey pending | Implemented / unverified; workflow-only, no funds movement |
 | 34 | Shipping administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 35 | Tax and regulatory compliance | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 36 | Promotions, coupons, loyalty and gift cards | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -192,3 +192,12 @@ Audit shared dependencies once, then re-check them from each consumer journey: i
 | Seller inventory | `/seller/inventory` → `GET /api/seller/inventory?storeId=...&q=...` | Authorized store only; product/SKU/warehouse fields | Owner/staff authorization and cross-store isolation |
 
 Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL and browser journeys pass.
+
+
+## Seller return visibility — 2026-11-04
+
+| Journey | UI → API/service | Data and authorization boundary | Verification |
+|---|---|---|---|
+| Seller return visibility | `/seller/returns` → `GET /api/seller/returns` → `listSellerReturnRequests` | Verified session; active owned stores, exact-store `orders:manage` grants, or platform admin. Items are grouped by `VendorOrder.storeId`; client cannot supply store scope. | Exact-head General CI and disposable PostgreSQL integration passed on `797f8dd61ee5ec3591f8cc0d2abb46b85235a364`; merged as PR #19. Deployed browser journey remains pending. |
+
+**Boundary:** seller view is read-only. Parent ReturnRequest has one global status across vendors; seller decisions, receipt, shipping and refunds remain disabled until a per-vendor lifecycle is implemented.
