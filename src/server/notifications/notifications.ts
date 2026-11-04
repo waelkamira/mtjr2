@@ -39,10 +39,12 @@ export async function createInAppNotification(tx: Prisma.TransactionClient, inpu
   });
   const inAppEnabled = preference?.inAppEnabled ?? true;
   const emailEnabled = preference?.emailEnabled ?? false;
-  const [user, emailConsent] = emailEnabled ? await Promise.all([
-    tx.user.findFirst({ where: { id: data.userId, status: "ACTIVE", emailVerifiedAt: { not: null } }, select: { id: true } }),
-    tx.userConsent.findFirst({ where: { userId: data.userId, type: "NOTIFICATION_EMAIL" }, orderBy: { capturedAt: "desc" }, select: { granted: true } })
-  ]) : [null, null];
+  const user = emailEnabled
+    ? await tx.user.findFirst({ where: { id: data.userId, status: "ACTIVE", emailVerifiedAt: { not: null } }, select: { id: true } })
+    : null;
+  const emailConsent = emailEnabled
+    ? await tx.userConsent.findFirst({ where: { userId: data.userId, type: "NOTIFICATION_EMAIL" }, orderBy: { capturedAt: "desc" }, select: { granted: true } })
+    : null;
 
   let notification: { id: string } | null = null;
   if (inAppEnabled) {
