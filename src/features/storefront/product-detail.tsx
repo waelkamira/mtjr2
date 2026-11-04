@@ -6,6 +6,22 @@ import ProductReviews from "@/features/storefront/product-reviews";
 import StoreReviews from "@/features/storefront/store-reviews";
 import ProductQuestions from "@/features/storefront/product-questions";
 
+const GUEST_WISHLIST_KEY = "mtjr:guest-wishlist:v1";
+function readGuestWishlist(): string[] {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(GUEST_WISHLIST_KEY) ?? "[]");
+    return Array.isArray(value) ? [...new Set(value.filter((item): item is string => typeof item === "string" && item.length > 0))].slice(0, 100) : [];
+  } catch { return []; }
+}
+function writeGuestFavorite(productId: string, saved: boolean) {
+  const ids = readGuestWishlist().filter((id) => id !== productId);
+  if (saved) ids.unshift(productId);
+  try {
+    if (ids.length) window.localStorage.setItem(GUEST_WISHLIST_KEY, JSON.stringify(ids.slice(0, 100)));
+    else window.localStorage.removeItem(GUEST_WISHLIST_KEY);
+  } catch { /* Browser storage may be unavailable. */ }
+}
+
 type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type Product = {
@@ -26,7 +42,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);\n  const [guestMode, setGuestMode] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [favoriteError, setFavoriteError] = useState("");
   const [messageBusy, setMessageBusy] = useState(false);
@@ -50,9 +66,14 @@ export default function ProductDetail({ slug }: { slug: string }) {
         if (!active) return;
         setProduct(result);
         fetch(`/api/favorites/${encodeURIComponent(result.id)}`, { cache: "no-store" })
-          .then(async (response) => response.ok ? response.json() as Promise<{ isFavorite: boolean }> : { isFavorite: false })
-          .then((favorite) => { if (active) setIsFavorite(favorite.isFavorite); })
-          .catch(() => { if (active) setIsFavorite(false); });
+          .then(async (response) => {
+            if (response.status === 401) return { guest: true as const, isFavorite: readGuestWishlist().includes(result.id) };
+            if (!response.ok) return { guest: false as const, isFavorite: false };
+            const favorite = await response.json() as { isFavorite: boolean };
+            return { guest: false as const, isFavorite: favorite.isFavorite };
+          })
+          .then((favorite) => { if (active) { setGuestMode(favorite.guest); setIsFavorite(favorite.isFavorite); } })
+          .catch(() => { if (active) { setGuestMode(true); setIsFavorite(readGuestWishlist().includes(result.id)); } });
         setSelectedVariant(result.variants[0]?.id ?? "");
         setSelectedMarketId(result.variants[0]?.prices[0]?.marketId ?? "");
         setSelectedMediaIndex(Math.max(0, result.media.findIndex((item) => item.isPrimary)));
@@ -87,12 +108,23 @@ export default function ProductDetail({ slug }: { slug: string }) {
     if (!product) return;
     setFavoriteBusy(true); setFavoriteError("");
     try {
+      if (guestMode) {
+        writeGuestFavorite(product.id, !isFavorite);
+        setIsFavorite(!isFavorite);
+        return;
+      }
       const response = await fetch(`/api/favorites/${encodeURIComponent(product.id)}`, {
         method: isFavorite ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" }, body: "{}"
       });
       const result = await response.json() as { isFavorite?: boolean; error?: string };
-      if (!response.ok) throw new Error(result.error || "Sign in to save favorites.");
+      if (response.status === 401) {
+        setGuestMode(true);
+        writeGuestFavorite(product.id, !isFavorite);
+        setIsFavorite(!isFavorite);
+        return;
+      }
+      if (!response.ok) throw new Error(result.error || "Unable to save favorite.");
       setIsFavorite(Boolean(result.isFavorite));
     } catch (cause) {
       setFavoriteError(cause instanceof Error ? cause.message : "Unable to update your wishlist.");
