@@ -299,3 +299,11 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Route / action | UI | API / domain | Prisma | Status |
 |---|---|---|---|---|
 | Seller order preparation | `/seller/orders` | `PATCH /api/seller/orders/[vendorOrderId]/status` → `transitionSellerVendorOrder` | Existing VendorOrder and status-history records plus AuditLog; no schema change | Implemented on PR #25; exact-head CI/PostgreSQL verification pending. Only paid `CONFIRMED → PROCESSING → READY_TO_SHIP` is exposed. |
+
+
+## Seller dispatch and buyer tracking — 2026-11-04
+
+| Route / action | UI | API / domain | Prisma | Status |
+|---|---|---|---|---|
+| Seller records dispatch | `/seller/orders` | `POST /api/seller/orders/[vendorOrderId]/shipment` → `createSellerShipment` | Shipment + VendorOrder + VendorOrderStatusHistory + Order/OrderStatusHistory + AuditLog | Implemented on `feat/manual-shipment-tracking`; exact-head CI/PostgreSQL pending. Manual carrier details only. |
+| Buyer views tracking | `/orders/[orderId]` | `GET /api/orders/[orderId]` → `getOwnedOrder` | Shipment relation through VendorOrder | Owner-scoped response; live carrier integration not included. |
