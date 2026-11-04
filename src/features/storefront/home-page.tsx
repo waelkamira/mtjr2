@@ -171,7 +171,6 @@ export default function StorefrontHomePage() {
             <Link href="/account/wishlist" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Wishlist</Link>
             <Link href="/account/orders" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">Orders</Link>
             <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
-            <Link href="/register" className="hidden rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">Create account</Link>
             <Link href="/cart" className="rounded-lg bg-[var(--color-forest-800)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Cart</Link>
           </div>
         </div>
