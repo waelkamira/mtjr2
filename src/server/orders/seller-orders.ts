@@ -1,6 +1,6 @@
 import "server-only";
 
-import { OrderStatus, Prisma, VendorOrderStatus } from "@prisma/client";
+import { AuditActorType, OrderStatus, Prisma, VendorOrderStatus } from "@prisma/client";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
@@ -76,41 +76,49 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
   const actor = await requireCurrentSession(now);
   const id = z.string().trim().min(1).max(128).parse(vendorOrderId);
 
-  const visible = await prisma.vendorOrder.findUnique({
-    where: { id },
-    select: {
-      id: true, orderId: true, storeId: true, status: true,
-      order: { select: { status: true, orderNumber: true } },
-      store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
-    }
-  });
-  if (!visible) throw new Error("Seller order not found.");
-  if (visible.store.status !== "ACTIVE" || visible.store.seller.status !== "ACTIVE") {
-    throw new Error("This store is not active.");
-  }
-
-  const isOwner = visible.store.seller.ownerId === actor.userId;
-  const platformOrdersAdmin = await userHasPermission(actor.userId, {
-    permissionKey: "orders:manage", now
-  });
-  const activeStaff = isOwner ? null : await prisma.sellerStaff.findFirst({
-    where: { storeId: visible.storeId, userId: actor.userId, status: "ACTIVE" },
-    select: { id: true }
-  });
-  const delegated = activeStaff ? await userHasScopedPermission(actor.userId, {
-    permissionKey: "orders:manage", scope: { type: "STORE", id: visible.storeId }, now
-  }) : false;
-  if (!isOwner && !delegated && !platformOrdersAdmin) throw new PermissionDeniedError();
-
   const expected = data.status === "PROCESSING" ? VendorOrderStatus.CONFIRMED : VendorOrderStatus.PROCESSING;
   const note = data.note || (data.status === "PROCESSING" ? "Seller started order processing." : "Seller marked order ready to ship.");
 
   return prisma.$transaction(async (tx) => {
     const current = await tx.vendorOrder.findUnique({
       where: { id },
-      select: { id: true, orderId: true, storeId: true, status: true, order: { select: { status: true, orderNumber: true } } }
+      select: {
+        id: true, orderId: true, storeId: true, status: true,
+        order: { select: { status: true, orderNumber: true } },
+        store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
+      }
     });
     if (!current) throw new Error("Seller order not found.");
+    if (current.store.status !== "ACTIVE" || current.store.seller.status !== "ACTIVE") {
+      throw new Error("This store is not active.");
+    }
+
+    const isOwner = current.store.seller.ownerId === actor.userId;
+    if (!isOwner) {
+      const [activeStaff, assignments] = await Promise.all([
+        tx.sellerStaff.findFirst({
+          where: { storeId: current.storeId, userId: actor.userId, status: "ACTIVE" },
+          select: { id: true }
+        }),
+        tx.userRoleAssignment.findMany({
+          where: { userId: actor.userId, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+          select: {
+            scopeType: true, scopeId: true,
+            role: { select: { permissions: { select: { permission: { select: { key: true } } } } } }
+          }
+        })
+      ]);
+      const hasOrdersPermission = (assignment: typeof assignments[number]) =>
+        assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage");
+      const hasGlobalGrant = assignments.some((assignment) =>
+        assignment.scopeType === "GLOBAL" && assignment.scopeId === "GLOBAL" && hasOrdersPermission(assignment)
+      );
+      const hasStoreGrant = Boolean(activeStaff) && assignments.some((assignment) =>
+        assignment.scopeType === "STORE" && assignment.scopeId === current.storeId && hasOrdersPermission(assignment)
+      );
+      if (!hasGlobalGrant && !hasStoreGrant) throw new PermissionDeniedError();
+    }
+
     if (current.status === data.status) return { id, status: current.status, changed: false };
     if (current.status !== expected) {
       throw new Error("This seller order cannot move to the selected status. Refresh and try again.");
@@ -120,7 +128,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
     }
 
     const changed = await tx.vendorOrder.updateMany({
-      where: { id, storeId: visible.storeId, status: expected },
+      where: { id, storeId: current.storeId, status: expected },
       data: { status: data.status }
     });
     if (changed.count !== 1) throw new Error("The seller order changed. Refresh and try again.");
@@ -143,8 +151,8 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
 
     await tx.auditLog.create({
       data: {
-        actorType: "USER", actorId: actor.userId, action: "seller.vendor_order.status_changed",
-        resource: "vendor_order", resourceId: id, scopeType: "STORE", scopeId: visible.storeId,
+        actorType: AuditActorType.USER, actorId: actor.userId, action: "seller.vendor_order.status_changed",
+        resource: "vendor_order", resourceId: id, scopeType: "STORE", scopeId: current.storeId,
         occurredAt: now,
         metadata: { from: expected, to: data.status, orderId: current.orderId, orderNumber: current.order.orderNumber }
       }
@@ -152,4 +160,3 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
 
     return { id, status: data.status, changed: true };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
-}
