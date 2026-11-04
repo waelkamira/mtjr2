@@ -60,6 +60,8 @@ model User {
   productReviews        ProductReview[]
   productQuestions      ProductQuestion[]
   productAnswers        ProductAnswer[]
+  productQuestionReports ProductQuestionReport[] @relation("ProductQuestionReporter")
+  moderatedProductQuestionReports ProductQuestionReport[] @relation("ProductQuestionReportModerator")
   storeReviews          StoreReview[]
   favorites             Favorite[]
   supportTickets        SupportTicket[] @relation("SupportTicketCustomer")
@@ -382,6 +384,12 @@ enum ProductAnswerStatus {
   PUBLISHED
   REJECTED
   HIDDEN
+}
+
+enum ProductQuestionReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
 }
 
 model Country {
@@ -1397,6 +1405,7 @@ model ProductQuestion {
   product     Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
   user        User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
   answers     ProductAnswer[]
+  reports     ProductQuestionReport[]
 
   @@index([productId, status, createdAt])
   @@index([userId, createdAt])
@@ -1415,10 +1424,47 @@ model ProductAnswer {
   updatedAt   DateTime            @updatedAt
   question    ProductQuestion    @relation(fields: [questionId], references: [id], onDelete: Cascade)
   user        User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  revisions   ProductAnswerRevision[]
+  reports     ProductQuestionReport[]
 
   @@index([questionId, status, createdAt])
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+model ProductAnswerRevision {
+  id        String   @id @default(cuid())
+  answerId  String
+  editorId  String
+  body      String   @db.VarChar(4000)
+  createdAt DateTime @default(now())
+  answer    ProductAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  editor    User     @relation(fields: [editorId], references: [id], onDelete: Restrict)
+
+  @@index([answerId, createdAt])
+  @@index([editorId, createdAt])
+}
+
+model ProductQuestionReport {
+  id         String   @id @default(cuid())
+  questionId String
+  answerId   String?
+  reporterId String
+  reason     String   @db.VarChar(32)
+  details    String?  @db.VarChar(1000)
+  status     ProductQuestionReportStatus @default(OPEN)
+  reviewedAt DateTime?
+  reviewedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  question   ProductQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer     ProductAnswer? @relation(fields: [answerId], references: [id], onDelete: SetNull)
+  reporter   User @relation("ProductQuestionReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  moderator  User? @relation("ProductQuestionReportModerator", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@unique([questionId, reporterId])
+  @@index([status, createdAt])
+  @@index([answerId, status])
 }
 
 model Favorite {
