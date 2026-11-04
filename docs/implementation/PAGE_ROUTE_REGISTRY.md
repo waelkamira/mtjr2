@@ -36,11 +36,11 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 
 | Required route | Audience | Owning system(s) | API/service and data to confirm | Initial status | Evidence / gap |
 |---|---|---|---|---|---|
-| `/login` | Guest | 01 | auth/session service; User, UserSession | Partial / unverified | Verify rate limits, errors, redirect safety and session creation |
-| `/register` | Guest | 01 | registration service; User, verification records | Partial / unverified | Verify validation, duplicate account handling and email verification |
-| `/verify-email` or equivalent | Guest/customer | 01 | verification-token service | Not audited | Record actual canonical route; tokens must be single-use/expiring |
-| `/forgot-password` | Guest | 01 | password-recovery service | Not audited | Must not reveal whether an account exists |
-| `/reset-password` | Guest | 01 | recovery-token service | Not audited | Validate single-use token and revoke affected sessions as policy requires |
+| `/login` | Guest | 01 | `src/app/login/page.tsx` → `src/features/identity/auth-page.tsx`; `POST /api/auth/login`; login/session services; User, UserSession, LoginAttempt, AuditLog | Implemented / unverified | Form calls the real login API, handles server errors/loading, and validates same-origin return paths; verify unverified-account guidance, cookie behavior, HTTP/browser journey and logout continuation. |
+| `/register` | Guest | 01 | `src/app/register/page.tsx`; registration API/service remains available but UI is deliberately blocked | Conditional / unavailable | No published Terms of Service or Privacy Notice exists in the repository; registration must remain unavailable until owner-approved legal content is published and presented before consent. Do not mark registration complete. |
+| `/verify-email` | Guest/customer | 01 | `src/app/verify-email/page.tsx` → shared auth page; `POST /api/auth/verify-email`, `POST /api/auth/verification/resend`; verification service; User, VerificationToken, AuditLog | Implemented / unverified | Token submission and resend are wired; token is removed from visible URL after capture. Verify email delivery, expiry/replay, rate limits and deployed HTTP journey. |
+| `/forgot-password` | Guest | 01 | `src/app/forgot-password/page.tsx` → shared auth page; `POST /api/auth/password-reset/request`; password-reset service; PasswordResetToken, LoginRateLimitBucket, AuditLog | Implemented / unverified | Generic anti-enumeration response is rendered; verify email delivery, rate limiting and deployed HTTP journey. |
+| `/reset-password` | Guest | 01 | `src/app/reset-password/page.tsx` → shared auth page; `POST /api/auth/password-reset/complete`; password-reset service; PasswordResetToken, UserSession, AuditLog | Implemented / unverified | Password update API is wired; token removed from visible URL, sessions revoked by service. Verify expiry/replay and deployed HTTP journey. |
 | OAuth callback route(s) | Guest | 01 | configured OAuth adapter | Conditional | Only expose configured providers |
 | `/account` | Customer | 01, 05, 07, 09, 10 | account summary services | Not audited | Account landing/dashboard and useful links |
 | `/account/profile` | Customer | 01 | profile API; User | Not audited | Ownership, validation and save/error feedback |
@@ -164,7 +164,7 @@ Do not add Prisma models merely to satisfy a page checklist. A page without a su
 
 **Source:** recursive Git tree for `feat/returns-workflow`, head observed before the follow-up test/documentation commits. This is a static route-presence audit only; it does not prove runtime rendering, navigation reachability, authorization, API success, persistence, or browser completion.
 
-- Actual route files found: **30** `page.tsx` files.
+- Actual route files found in the first snapshot: **30** `page.tsx` files; the identity UI follow-up adds five routes (`/login`, `/register` unavailable, `/forgot-password`, `/reset-password`, `/verify-email`), for **35** route files at the current source state.
 - Actual API route handlers found: **86** `route.ts` files under `src/app/api/`.
 - Every route below is therefore **route-present / journey-unverified** unless a separate exact-commit test record says otherwise. Do not translate route presence into Verified.
 
@@ -185,7 +185,7 @@ Do not add Prisma models merely to satisfy a page checklist. A page without a su
 
 ### Required route targets absent from the audited tree
 
-The following dedicated page routes were **not found** in the audited `src/app/**/page.tsx` tree. Existing API handlers or embedded controls do not make these page routes exist:
+The following dedicated page routes were **not found** in the original 30-page filesystem snapshot; the five identity routes listed above were added afterward. Remaining missing dedicated page routes include: Existing API handlers or embedded controls do not make these page routes exist:
 
 - Identity/customer: `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/account`, `/account/profile`, `/account/security`, `/account/sessions`, `/account/addresses`.
 - Discovery/public store: `/search`, `/products`, `/categories/[slug]`, `/brands/[slug]`, `/stores/[slug]`, `/stores`.
@@ -204,3 +204,6 @@ The 86 API route handlers are present in the tree. Their mere presence is not a 
 This registry records route presence and route-level status only. It does **not** certify every button or action on a route. For every route, enumerate all visible controls (including navigation, cards, icon buttons, forms, filters, pagination, dialogs, empty states, seller/admin actions and mobile controls) in the [49-system End-to-End Journey Matrix](END_TO_END_JOURNEY_MATRIX.md) or a linked system-specific action trace. Each action must include its UI handler, API method/path, validation, session/permission/resource scope, domain service, Prisma model/migration or explicit no-schema-change decision, transaction/idempotency/audit behavior, final persisted state and visible outcome, meaningful failure states, and exact-commit test evidence.
 
 A route stays **Implemented / unverified** (or Partial) if any exposed critical action is unverified. A visible nonfunctional action must be removed, disabled or honestly labelled unavailable; do not count it as complete. Route existence alone never upgrades an action or system to Verified.
+
+
+**Identity UI follow-up (2026-11-04):** Added the four functional auth pages listed above plus a deliberately unavailable `/register` information page. Public registration is blocked because approved Terms of Service and Privacy Notice content is absent. A user-facing logout control is still missing even though the logout API exists. These pages are implemented in source but are not Verified until exact-head CI and the configured HTTP/browser journey pass.
