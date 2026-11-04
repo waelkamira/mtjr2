@@ -306,3 +306,7 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Google callback | `GET /api/auth/google/callback` | Checks state, PKCE code verifier, Google tokeninfo issuer/audience/verified email/expiry, OAuthAccount mapping and session issuance. New accounts obey the public-registration policy; existing email accounts are not silently linked. | Requires Google client credentials and exact `NEXT_PUBLIC_APP_URL/api/auth/google/callback` registration. No real provider test is claimed. |
 
 No browser runtime was attached during this audit. No production database, Vercel settings or environment secrets were accessed or changed.
+
+## Identity verification evidence recheck — 2026-11-04
+
+The audited pre-update PR #22 head was `5a24e38c4ae448108384438772f6c5d47a701c11`. GitHub Actions reported zero workflow runs and the Checks API zero check-runs for that SHA. Do not treat prior-head CI/PostgreSQL passes as current. The registration, account pages, seller pending state and Google callback are source-wired, but System 01 remains **Implemented / unverified** until exact-head Prisma validate/generate, typecheck, lint, identity tests, build and disposable PostgreSQL all pass. No live browser was available. Google client credentials/callback, Resend delivery configuration and trusted-proxy edge configuration remain external requirements; no values were read or changed. The Vercel rate-limit status is not a CI result.
