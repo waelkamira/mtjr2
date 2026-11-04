@@ -25,7 +25,7 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
     if (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim())) { setOauthError("Enter your applicant and store names before continuing."); return; }
     const params = new URLSearchParams({ accountType, acceptedTerms: "1", acceptedPrivacy: "1" });
     if (accountType === "SELLER") { params.set("sellerLegalName", sellerLegalName); params.set("sellerDisplayName", sellerDisplayName); }
-    window.location.assign("/api/auth/google/start?" + params.toString());
+    window.location.assign(new URL("/api/auth/google/start?" + params.toString(), window.location.origin).toString());
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -106,7 +106,12 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
             <div className="flex items-center gap-3 py-1 text-xs text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--border)]" />OR<span className="h-px flex-1 bg-[var(--border)]" /></div>
             <button type="button" onClick={continueWithGoogle} disabled={busy || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))} className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--color-ivory-100)] disabled:cursor-not-allowed disabled:opacity-50"><span className="text-base font-bold">G</span>Continue with Google</button>
           </form>
-          <p className="mt-6 border-t border-[var(--border)] pt-5 text-sm text-[var(--muted)]">Already have an account? <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</Link></p>
+          <div className="mt-6 flex flex-wrap gap-x-2 gap-y-1 border-t border-[var(--border)] pt-5 text-sm text-[var(--muted)]">
+            <span>Already have an account?</span>
+            <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</Link>
+            <span aria-hidden="true">·</span>
+            <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href={`/verify-email${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ""}`}>Verify/resend email</Link>
+          </div>
         </section>
       </div>
     </main>

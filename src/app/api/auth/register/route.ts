@@ -31,7 +31,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: "Account created. Check your email to verify your address." }, { status: 201 });
   } catch (error) {
     if (error instanceof IdentityConflictError) {
-      return Response.json({ message: "If eligible, an account verification message will be sent." }, { status: 202 });
+      return Response.json({ message: "If eligible, this account can be verified. Sign in or request another verification email." }, { status: 202 });
     }
     if (error instanceof ZodError) return Response.json({ error: "Invalid registration details." }, { status: 400 });
     return Response.json({ error: "Unable to complete registration." }, { status: 500 });

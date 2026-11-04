@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { requirePermission } from "@/server/identity/permission-guard";
+import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
 
 const priceSchema = z.object({
   marketId: z.string().trim().min(1),
@@ -24,7 +25,7 @@ const createSchema = z.object({
   brandId: z.string().trim().min(1).optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).default([]),
   media: z.array(z.object({
-    url: z.string().url().max(2048),
+    url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
     altText: z.string().trim().max(300).optional(),
     sortOrder: z.number().int().min(0).max(1000).default(0),
     isPrimary: z.boolean().default(false)

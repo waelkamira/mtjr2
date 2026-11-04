@@ -48,6 +48,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Implement the server-only Resend adapter; deployment API key, verified sender, and real delivery smoke test remain operational exit tasks.
 - [x] Add resend-verification abuse throttling (separate persistent budget) and generic anti-enumeration response.
 - [x] Add a fail-closed trusted-proxy IP resolver for explicitly configured Cloudflare/Vercel edge headers; arbitrary `X-Forwarded-For` is never trusted. Configure only after the edge overwrites the header and origin bypass is blocked.
+- [x] Use a fixed loopback rate-limit bucket only in local development when no trusted proxy is configured; test and production environments remain fail-closed.
 - [x] Add minimal HTTP registration, verification, and resend routes with same-origin/JSON checks; real delivery remains blocked on deployment configuration.
 - [x] Apply the public-registration gate to Google OAuth account creation as well as password registration; already-linked Google accounts remain eligible to sign in.
 - [x] Add authenticated password change with current-password verification, atomic hash replacement, revocation of other sessions and outstanding recovery links, and an audit event.

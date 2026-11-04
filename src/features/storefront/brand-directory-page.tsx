@@ -12,22 +12,24 @@ export default function BrandDirectoryPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/brands?locale=en&limit=100", { signal: controller.signal })
+    let active = true;
+    fetch("/api/brands?locale=en&limit=100")
       .then(async (response) => {
         if (!response.ok) throw new Error("Brands could not be loaded.");
         return response.json() as Promise<BrandResponse>;
       })
-      .then((result) => setItems(Array.isArray(result.items) ? result.items : []))
+      .then((result) => {
+        if (active) setItems(Array.isArray(result.items) ? result.items : []);
+      })
       .catch((cause: unknown) => {
-        if (!controller.signal.aborted) {
+        if (active) {
           setError(cause instanceof Error ? cause.message : "Brands are unavailable.");
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (active) setLoading(false);
       });
-    return () => controller.abort();
+    return () => { active = false; };
   }, []);
 
   return (

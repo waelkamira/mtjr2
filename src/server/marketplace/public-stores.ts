@@ -1,6 +1,6 @@
 import "server-only";
 
-import { CatalogEntityStatus, StoreStatus, SellerStatus } from "@prisma/client";
+import { CatalogEntityStatus, ProductApprovalStatus, StoreStatus, SellerStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 
@@ -13,7 +13,7 @@ export async function listDiscoverableStores(input: unknown = {}) {
   const where = {
     status: StoreStatus.ACTIVE,
     seller: { status: SellerStatus.ACTIVE },
-    products: { some: { status: CatalogEntityStatus.ACTIVE } },
+    products: { some: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } },
     ...(query.q ? { OR: [
       { name: { contains: query.q, mode: "insensitive" as const } },
       { slug: { contains: query.q, mode: "insensitive" as const } },
@@ -28,7 +28,7 @@ export async function listDiscoverableStores(input: unknown = {}) {
       select: {
         id: true, slug: true, name: true,
         seller: { select: { displayName: true } },
-        _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE } } } }
+        _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } } } }
       }
 
     }),
@@ -50,7 +50,7 @@ export async function getDiscoverableStoreBySlug(slug: string) {
     select: {
       id: true, slug: true, name: true, createdAt: true,
       seller: { select: { displayName: true } },
-      _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE } } } }
+      _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } } } }
     }
   });
   return store ? {

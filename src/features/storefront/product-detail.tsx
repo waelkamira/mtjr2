@@ -8,12 +8,21 @@ import ProductQuestions from "@/features/storefront/product-questions";
 
 type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
+type ProductAttribute = { key: string; name: string; valueType: string; values: unknown[] };
+type VariantAttribute = { key: string; name: string; valueType: string; value: unknown };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { id: string; name: string; slug: string };
   media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
-  variants: Array<{ id: string; name: string | null; sku: string | null; optionValues: unknown; prices: Price[] }>;
+  attributes: ProductAttribute[];
+  variants: Array<{ id: string; name: string | null; sku: string | null; optionValues: unknown; attributes: VariantAttribute[]; prices: Price[] }>;
 };
+
+function formatAttributeValue(value: unknown): string {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value === null) return "";
+  return JSON.stringify(value) ?? "";
+}
 
 export default function ProductDetail({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -66,10 +75,14 @@ export default function ProductDetail({ slug }: { slug: string }) {
   if (error || !product) return <main className="mx-auto min-h-screen max-w-3xl px-5 py-24 text-center"><p role="alert" className="text-lg">{error || "Product not found."}</p><Link href="/" className="mt-6 inline-block text-sm text-[var(--color-petrol-800)] underline">Back to marketplace</Link></main>;
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
-  const price = variant?.prices.find((item) => !selectedMarketId || item.marketId === selectedMarketId);
+  const selectedMarketInfo = markets.find((item) => item.id === selectedMarketId);
+  const price = variant?.prices.find((item) =>
+    item.marketId === selectedMarketId &&
+    (!selectedMarketInfo || item.currencyCode === selectedMarketInfo.defaultCurrency.code)
+  );
   const amount = price ? Number(price.amountMinor) / (10 ** (price.currency.minorUnit ?? 2)) : null;
   const selectedMedia = product.media[selectedMediaIndex] ?? product.media.find((item) => item.isPrimary) ?? product.media[0];
-  const selectedMarket = markets.find((item) => item.id === selectedMarketId);
+  const selectedMarket = selectedMarketInfo;
 
   async function contactStore() {
     if (!product) return;
@@ -135,7 +148,9 @@ export default function ProductDetail({ slug }: { slug: string }) {
         {markets.length > 0 && <label className="mt-5 block text-sm font-medium">Delivery market<select aria-label="Choose delivery market" value={selectedMarketId} onChange={(event) => setSelectedMarketId(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3"><option value="">Select a market</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}</select></label>}
         <p className="mt-7 text-3xl font-bold tracking-tight text-[var(--color-petrol-900)]">{price && amount !== null ? new Intl.NumberFormat(undefined, { style: "currency", currency: price.currencyCode }).format(amount) : "Price unavailable"}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
+        {product.attributes.some((attribute) => attribute.values.length > 0) && <dl className="mt-7 grid gap-3 border-t border-[var(--border)] pt-5 sm:grid-cols-2">{product.attributes.flatMap((attribute) => attribute.values.map((value, index) => <div key={`${attribute.key}-${index}`}><dt className="text-xs font-medium text-[var(--muted)]">{attribute.name}</dt><dd className="mt-1 text-sm text-[var(--color-ink-700)]">{formatAttributeValue(value)}</dd></div>))}</dl>}
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">Choose an option<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || "Variant"}</option>)}</select></label>}
+        {variant?.attributes.length ? <dl className="mt-5 grid gap-3 sm:grid-cols-2">{variant.attributes.map((attribute) => <div key={attribute.key}><dt className="text-xs font-medium text-[var(--muted)]">{attribute.name}</dt><dd className="mt-1 text-sm text-[var(--color-ink-700)]">{formatAttributeValue(attribute.value)}</dd></div>)}</dl> : null}
         <button type="button" onClick={() => void toggleFavorite()} disabled={favoriteBusy} aria-pressed={isFavorite} className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{favoriteBusy ? "Saving…" : isFavorite ? "♥ Saved to wishlist" : "♡ Save to wishlist"}</button>
 
         {favoriteError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{favoriteError} <Link href="/login" className="font-semibold underline">Sign in</Link></p>}

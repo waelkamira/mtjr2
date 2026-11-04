@@ -11,7 +11,7 @@ const RESPONSE = { message: "If an eligible account exists, password reset instr
 export async function POST(request: Request): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
-  const ip = resolveTrustedClientIp(request.headers, env.TRUSTED_PROXY_IP_HEADER);
+  const ip = resolveTrustedClientIp(request.headers, env.TRUSTED_PROXY_IP_HEADER, env.NODE_ENV);
   if (!ip) return Response.json({ error: "Identity service is not configured." }, { status: 503 });
   let body: unknown;
   try { body = await request.json(); } catch {

@@ -34,6 +34,7 @@ describe("public product discovery", () => {
     }));
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.status).toBe("ACTIVE");
+    expect(where.approvalStatus).toBe("APPROVED");
     expect(where.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
     expect(where.AND).toHaveLength(1);
     expect(where.AND[0].OR.length).toBeGreaterThan(8);
@@ -77,24 +78,88 @@ describe("public product discovery", () => {
     expect(mocks.productFindMany).not.toHaveBeenCalled();
   });
 
+  it("matches the selected currency only when it is enabled in the active market", async () => {
+    await listDiscoverableProducts({ marketId: "market-1", currencyCode: "EUR" });
+    const where = mocks.productFindMany.mock.calls[0][0].where;
+    expect(where.variants.some.prices.some).toMatchObject({
+      marketId: "market-1",
+      currencyCode: "EUR",
+      market: {
+        status: "ACTIVE",
+        country: { isActive: true },
+        currencies: { some: { isEnabled: true, currency: { isActive: true }, currencyCode: "EUR" } }
+      }
+    });
+  });
+
   it("serializes BigInt product prices into JSON-safe minor-unit strings", async () => {
     mocks.productFindFirst.mockResolvedValue({
-      translations: [],
+      id: "product-1",
+      slug: "sample-product",
+      translations: [{ name: "Localized product", description: "Localized description", seoTitle: "SEO title", seoDescription: "SEO description" }],
       name: "Sample product",
       description: null,
-      variants: [{ prices: [{ amountMinor: BigInt(1299), compareAtMinor: BigInt(1599) }] }]
+      publishedAt: new Date(),
+      brand: { id: "brand-1", name: "Brand", slug: "brand", status: "ACTIVE", translations: [{ name: "Localized brand" }] },
+      store: { id: "store-1", name: "Sample store", slug: "sample-store", markets: [{ marketId: "market-1" }] },
+      media: [
+        { url: "https://cdn.example.test/product.jpg", altText: "Product", isPrimary: true },
+        { url: "http://cdn.example.test/unsafe.jpg", altText: "Unsafe", isPrimary: false }
+      ],
+      categories: [{ category: { id: "category-1", name: "Category", slug: "category", translations: [{ name: "Localized category" }] } }],
+      attributes: [{
+        attribute: { key: "material", valueType: "TEXT", translations: [{ name: "Material" }] },
+        values: [{ value: "Cotton" }]
+      }],
+      variants: [{
+        id: "variant-1",
+        attributes: [{
+          value: "Blue",
+          attribute: { key: "color", valueType: "TEXT", translations: [{ name: "Color" }] }
+        }],
+        prices: [
+          {
+            marketId: "market-1", currencyCode: "EUR", amountMinor: BigInt(1299), compareAtMinor: BigInt(1599),
+            currency: { minorUnit: 2 },
+            market: { status: "ACTIVE", country: { isActive: true }, currencies: [{ currencyCode: "EUR" }] }
+          },
+          {
+            marketId: "market-2", currencyCode: "USD", amountMinor: BigInt(1299), compareAtMinor: null,
+            currency: { minorUnit: 2 },
+            market: { status: "ACTIVE", country: { isActive: true }, currencies: [{ currencyCode: "USD" }] }
+          }
+        ]
+      }]
     });
     const product = await getDiscoverableProduct("sample-product");
     expect(product?.variants[0].prices[0]).toMatchObject({
+      marketId: "market-1",
+      currencyCode: "EUR",
       amountMinor: "1299",
       compareAtMinor: "1599"
+    });
+    expect(product?.variants[0].prices).toHaveLength(1);
+    expect(product?.media).toHaveLength(1);
+    expect(product?.store).not.toHaveProperty("markets");
+    expect(product).toMatchObject({
+      name: "Localized product",
+      seoTitle: "SEO title",
+      seoDescription: "SEO description",
+      brand: { name: "Localized brand" },
+      categories: [{ name: "Localized category" }],
+      attributes: [{ name: "Material", values: ["Cotton"] }],
+      variants: [{ attributes: [{ name: "Color", value: "Blue" }] }]
     });
   });
 
   it("does not expose missing or non-public products through slug lookup", async () => {
     expect(await getDiscoverableProduct("hidden-draft")).toBeNull();
     expect(mocks.productFindFirst).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ slug: "hidden-draft", status: "ACTIVE" })
+      where: expect.objectContaining({
+        OR: [{ slug: "hidden-draft" }, { id: "hidden-draft" }],
+        status: "ACTIVE",
+        approvalStatus: "APPROVED"
+      })
     }));
   });
 });

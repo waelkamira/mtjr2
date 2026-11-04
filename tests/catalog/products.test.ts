@@ -87,6 +87,20 @@ describe("product lifecycle", () => {
     expect(mocks.productCreate).not.toHaveBeenCalled();
   });
 
+  it.each(["http://example.test/mug.jpg", "https://user:secret@example.test/mug.jpg"])(
+    "rejects unsafe product media URL %s",
+    async (url) => {
+      await expect(createDraftProduct({
+        storeId: "store-1",
+        name: "Travel Mug",
+        slug: "travel-mug",
+        media: [{ url, isPrimary: true }],
+        variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+      })).rejects.toThrow(/media URLs must use HTTPS/i);
+      expect(mocks.productCreate).not.toHaveBeenCalled();
+    }
+  );
+
   it("publishes only with the exact store-scoped catalog permission", async () => {
     const result = await publishProduct("product-1");
     expect(result).toMatchObject({ productId: "product-1", status: "ACTIVE" });

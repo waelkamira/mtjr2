@@ -56,6 +56,13 @@
 - [x] Product detail has an accessible selectable media gallery with primary-image default.
 - [x] Add server-rendered product SEO metadata (title, description, canonical, Open Graph, Twitter, and missing-product noindex) using the catalog domain service.
 - [ ] Add product structured data only after verifying all required fields and price/availability semantics in the canonical product DTO.
+- [x] Require approval for all public product discovery and include only approved products in public store eligibility/counts.
+- [x] Filter public prices by active market/country/currency and the store's enabled markets; serialize only JSON-safe minor-unit amounts.
+- [x] Reject non-HTTPS product media and omit unsafe media URLs from public product and taxonomy responses.
+- [x] Use localized product/category/brand/attribute SEO and display persisted product/variant attributes on product detail.
+- [x] Replace the `/products` redirect with a server-rendered, paginated catalog while retaining the shared `/search` discovery controls.
+
+The changes above have focused unit-test and TypeScript evidence only. PostgreSQL/browser verification remains open; seller-facing structured-attribute authoring is not implemented, launch taxonomy/market data remains owner-controlled, and product-offer structured data stays deferred pending verified stock/price semantics. The demo catalog seed was not run because this environment has no `DEMO_DATABASE_URL` or explicit seed-allow flag; it must never fall back to `DATABASE_URL`.
 
 ## 3.6 Inventory and warehouse foundation
 
@@ -167,4 +174,3 @@ Marketplace Core's buyer catalog now has a connected product detail journey. The
 
 
 **Verification evidence:** General CI [41837000589](https://github.com/waelkamira/mtjr2/actions/runs/41837000589) and disposable PostgreSQL [41836993780](https://github.com/waelkamira/mtjr2/actions/runs/41836993780) passed on exact head `d9686531b6638e28bb8f2b57cab8e82c1d505abe`; merged as `0ec09ed37492e6c71b27e545abac72893ce73749`. Public browser/API verification remains a separate follow-up.
-

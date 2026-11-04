@@ -11,9 +11,12 @@ export type TrustedProxyIpHeader =
  */
 export function resolveTrustedClientIp(
   headers: Headers,
-  trustedHeader: TrustedProxyIpHeader | undefined
+  trustedHeader: TrustedProxyIpHeader | undefined,
+  nodeEnv: "development" | "test" | "production" = "production"
 ): string | null {
-  if (!trustedHeader) return null;
+  if (!trustedHeader) {
+    return nodeEnv === "development" ? "127.0.0.1" : null;
+  }
 
   const rawValue = headers.get(trustedHeader);
   if (!rawValue) return null;

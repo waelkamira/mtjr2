@@ -4,6 +4,7 @@ export interface CategoryTreeRow {
   slug: string;
   name: string;
   description: string | null;
+  imageUrl?: string | null;
   sortOrder: number;
   translation?: {
     name: string;
@@ -13,9 +14,11 @@ export interface CategoryTreeRow {
 
 export interface CategoryTreeNode {
   id: string;
+  parentId: string | null;
   slug: string;
   name: string;
   description: string | null;
+  imageUrl: string | null;
   sortOrder: number;
   children: CategoryTreeNode[];
 }
@@ -76,9 +79,11 @@ export function buildCategoryTree(
     if (!valid.has(row.id)) continue;
     nodes.set(row.id, {
       id: row.id,
+      parentId: row.parentId,
       slug: row.slug,
       name: row.translation?.name ?? row.name,
       description: row.translation?.description ?? row.description,
+      imageUrl: row.imageUrl ?? null,
       sortOrder: row.sortOrder,
       children: []
     });
@@ -97,6 +102,16 @@ export function buildCategoryTree(
     const parent = nodes.get(row.parentId);
     if (parent) parent.children.push(node);
   }
+
+  const sortNodes = (items: CategoryTreeNode[]) => {
+    items.sort((left, right) =>
+      left.sortOrder - right.sortOrder ||
+      left.name.localeCompare(right.name) ||
+      left.id.localeCompare(right.id)
+    );
+    for (const item of items) sortNodes(item.children);
+  };
+  sortNodes(roots);
 
   return roots;
 }

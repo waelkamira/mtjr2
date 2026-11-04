@@ -3,6 +3,8 @@ import "server-only";
 import { CatalogEntityStatus, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { buildCategoryTree as buildBoundedCategoryTree, type CategoryTreeNode, type CategoryTreeRow } from "@/server/catalog/category-tree";
+import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
 
 const listSchema = z.object({
   locale: z.string().trim().min(2).max(16).default("en"),
@@ -10,49 +12,24 @@ const listSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(30)
 });
 
-export type CategoryTreeNode = {
-  id: string; parentId: string | null; slug: string; name: string;
-  description: string | null; imageUrl: string | null; sortOrder: number;
-  children: CategoryTreeNode[];
-};
-
 type CategoryRow = {
   id: string; parentId: string | null; slug: string; name: string;
   description: string | null; imageUrl: string | null; sortOrder: number;
   translations: Array<{ name: string; description: string | null }>;
 };
 
-export function buildCategoryTree(rows: CategoryRow[], _locale: string): CategoryTreeNode[] {
-  const nodes = new Map<string, CategoryTreeNode>();
-  for (const row of rows) {
-    const translation = row.translations.find((item) => item.name.trim().length > 0);
-    nodes.set(row.id, {
-      id: row.id, parentId: row.parentId, slug: row.slug,
-      name: translation?.name ?? row.name,
-      description: translation?.description ?? row.description,
-      imageUrl: row.imageUrl, sortOrder: row.sortOrder, children: []
-    });
-  }
-  const roots: CategoryTreeNode[] = [];
-  for (const node of nodes.values()) {
-    if (!node.parentId || !nodes.has(node.parentId) || node.parentId === node.id) { roots.push(node); continue; }
-    const parent = nodes.get(node.parentId)!;
-    let ancestor: CategoryTreeNode | undefined = parent;
-    const seen = new Set<string>([node.id]);
-    let cyclic = false;
-    while (ancestor) {
-      if (seen.has(ancestor.id)) { cyclic = true; break; }
-      seen.add(ancestor.id);
-      ancestor = ancestor.parentId ? nodes.get(ancestor.parentId) : undefined;
-    }
-    if (cyclic) roots.push(node); else parent.children.push(node);
-  }
-  const sort = (items: CategoryTreeNode[]) => {
-    items.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
-    for (const item of items) sort(item.children);
-  };
-  sort(roots);
-  return roots;
+export function buildCategoryTree(rows: CategoryRow[]): CategoryTreeNode[] {
+  const treeRows: CategoryTreeRow[] = rows.map((row) => ({
+    id: row.id,
+    parentId: row.parentId,
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    imageUrl: isSafeCatalogMediaUrl(row.imageUrl ?? "") ? row.imageUrl : null,
+    sortOrder: row.sortOrder,
+    translation: row.translations.find((item) => item.name.trim().length > 0) ?? null
+  }));
+  return buildBoundedCategoryTree(treeRows, 6);
 }
 
 export async function listActiveCategoryTree(input: unknown = {}) {
@@ -77,7 +54,8 @@ export async function listActiveCategoryTree(input: unknown = {}) {
   const rows: CategoryRow[] = [...roots];
   const visited = new Set(roots.map((item) => item.id));
   let frontier = roots.map((item) => item.id);
-  while (frontier.length > 0) {
+  let depth = 1;
+  while (frontier.length > 0 && depth < 6) {
     const children = await prisma.category.findMany({
       where: { status: CatalogEntityStatus.ACTIVE, parentId: { in: frontier } },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
@@ -89,10 +67,11 @@ export async function listActiveCategoryTree(input: unknown = {}) {
       rows.push(child);
     }
     frontier = next.map((item) => item.id);
+    depth += 1;
   }
 
   return {
-    items: buildCategoryTree(rows, query.locale),
+    items: buildCategoryTree(rows),
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
   };
 }
@@ -115,7 +94,8 @@ export async function listActiveBrands(input: unknown = {}) {
       id: brand.id, slug: brand.slug,
       name: brand.translations[0]?.name ?? brand.name,
       description: brand.translations[0]?.description ?? brand.description,
-      logoUrl: brand.logoUrl, websiteUrl: brand.websiteUrl
+      logoUrl: isSafeCatalogMediaUrl(brand.logoUrl ?? "") ? brand.logoUrl : null,
+      websiteUrl: brand.websiteUrl
     })),
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
   };
@@ -128,14 +108,16 @@ export async function getActiveCategoryBySlug(slug: string, locale = "en") {
     where: { slug: key, status: CatalogEntityStatus.ACTIVE },
     select: {
       id: true, slug: true, name: true, description: true, imageUrl: true,
-      translations: { where: { locale: language }, select: { name: true, description: true }, take: 1 }
+      translations: { where: { locale: language }, select: { name: true, description: true, seoTitle: true, seoDescription: true }, take: 1 }
     }
   });
   return item ? {
     id: item.id, slug: item.slug,
     name: item.translations[0]?.name ?? item.name,
     description: item.translations[0]?.description ?? item.description,
-    imageUrl: item.imageUrl
+    seoTitle: item.translations[0]?.seoTitle ?? item.translations[0]?.name ?? item.name,
+    seoDescription: item.translations[0]?.seoDescription ?? item.translations[0]?.description ?? item.description,
+    imageUrl: isSafeCatalogMediaUrl(item.imageUrl ?? "") ? item.imageUrl : null
   } : null;
 }
 
@@ -146,13 +128,16 @@ export async function getActiveBrandBySlug(slug: string, locale = "en") {
     where: { slug: key, status: CatalogEntityStatus.ACTIVE },
     select: {
       id: true, slug: true, name: true, description: true, logoUrl: true, websiteUrl: true,
-      translations: { where: { locale: language }, select: { name: true, description: true }, take: 1 }
+      translations: { where: { locale: language }, select: { name: true, description: true, seoTitle: true, seoDescription: true }, take: 1 }
     }
   });
   return item ? {
     id: item.id, slug: item.slug,
     name: item.translations[0]?.name ?? item.name,
     description: item.translations[0]?.description ?? item.description,
-    logoUrl: item.logoUrl, websiteUrl: item.websiteUrl
+    seoTitle: item.translations[0]?.seoTitle ?? item.translations[0]?.name ?? item.name,
+    seoDescription: item.translations[0]?.seoDescription ?? item.translations[0]?.description ?? item.description,
+    logoUrl: isSafeCatalogMediaUrl(item.logoUrl ?? "") ? item.logoUrl : null,
+    websiteUrl: item.websiteUrl
   } : null;
 }

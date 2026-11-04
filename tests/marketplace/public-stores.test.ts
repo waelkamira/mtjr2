@@ -39,6 +39,7 @@ describe("public store discovery", () => {
     const where = mocks.storeFindMany.mock.calls[0][0].where;
 
     expect(where).toMatchObject({ status: "ACTIVE", seller: { status: "ACTIVE" } });
+    expect(where.products.some).toEqual({ status: "ACTIVE", approvalStatus: "APPROVED" });
     expect(where.OR).toContainEqual({
       seller: { displayName: { contains: "northstar", mode: "insensitive" } }
     });
@@ -54,7 +55,10 @@ describe("public store discovery", () => {
     const result = await getDiscoverableStoreBySlug("northstar");
 
     expect(mocks.storeFindFirst).toHaveBeenCalledWith(expect.objectContaining({
-      where: { slug: "northstar", status: "ACTIVE", seller: { status: "ACTIVE" } }
+      where: { slug: "northstar", status: "ACTIVE", seller: { status: "ACTIVE" } },
+      select: expect.objectContaining({
+        _count: { select: { products: { where: { status: "ACTIVE", approvalStatus: "APPROVED" } } } }
+      })
     }));
     expect(result).toMatchObject({
       name: "Northstar Goods",

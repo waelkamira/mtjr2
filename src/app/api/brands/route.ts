@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { listActiveBrands } from "@/server/catalog/taxonomy";
 
 export const runtime = "nodejs";
@@ -12,7 +13,8 @@ export async function GET(request: NextRequest): Promise<Response> {
       limit: params.get("limit") ?? "30"
     });
     return Response.json(result, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
-  } catch {
-    return Response.json({ error: "Invalid brand query." }, { status: 400 });
+  } catch (error) {
+    if (error instanceof z.ZodError) return Response.json({ error: "Invalid brand query." }, { status: 400 });
+    return Response.json({ error: "Unable to load brands." }, { status: 500 });
   }
 }

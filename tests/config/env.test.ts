@@ -12,6 +12,20 @@ describe("parseEnvironment", () => {
   it("accepts a valid PostgreSQL and application configuration", () => {
     expect(parseEnvironment(validEnvironment)).toMatchObject(validEnvironment);
   });
+
+  it("supports the existing NEXT_PUBLIC_APP_URL local configuration", () => {
+    const { APP_URL, ...legacyEnvironment } = validEnvironment;
+    const parsed = parseEnvironment({ ...legacyEnvironment, NEXT_PUBLIC_APP_URL: APP_URL });
+    expect(parsed.APP_URL).toBe(APP_URL);
+  });
+
+  it("prefers APP_URL when both application URL variables are set", () => {
+    const parsed = parseEnvironment({
+      ...validEnvironment,
+      NEXT_PUBLIC_APP_URL: "https://legacy.example.com"
+    });
+    expect(parsed.APP_URL).toBe(validEnvironment.APP_URL);
+  });
   it("rejects a non-PostgreSQL database URL", () => {
     expect(() => parseEnvironment({ ...validEnvironment, DATABASE_URL: "https://example.com" })).toThrow(/DATABASE_URL.*PostgreSQL/);
   });
@@ -20,6 +34,15 @@ describe("parseEnvironment", () => {
   });
   it("rejects an invalid server application URL", () => {
     expect(() => parseEnvironment({ ...validEnvironment, APP_URL: "not-a-url" })).toThrow(/APP_URL/);
+  });
+
+  it("requires at least one valid application URL", () => {
+    const missingApplicationUrls = {
+      DATABASE_URL: validEnvironment.DATABASE_URL,
+      AUTH_SECRET: validEnvironment.AUTH_SECRET,
+      NODE_ENV: validEnvironment.NODE_ENV
+    };
+    expect(() => parseEnvironment(missingApplicationUrls)).toThrow(/APP_URL/);
   });
   it("enables registration by default in development and test only", () => {
     expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("true");

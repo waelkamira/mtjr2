@@ -23,22 +23,24 @@ export default function CategoryDirectoryPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/categories?locale=en&limit=100", { signal: controller.signal })
+    let active = true;
+    fetch("/api/categories?locale=en&limit=100")
       .then(async (response) => {
         if (!response.ok) throw new Error("Categories could not be loaded.");
         return response.json() as Promise<CategoryResponse>;
       })
-      .then((result) => setItems(Array.isArray(result.items) ? result.items : []))
+      .then((result) => {
+        if (active) setItems(Array.isArray(result.items) ? result.items : []);
+      })
       .catch((cause: unknown) => {
-        if (!controller.signal.aborted) {
+        if (active) {
           setError(cause instanceof Error ? cause.message : "Categories are unavailable.");
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (active) setLoading(false);
       });
-    return () => controller.abort();
+    return () => { active = false; };
   }, []);
 
   const categories = useMemo(() => flatten(items), [items]);

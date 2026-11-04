@@ -10,7 +10,11 @@ type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: st
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const item = await getActiveCategoryBySlug(slug);
-  return item ? { title: item.name, description: item.description ?? `Browse published ${item.name} products on Mtjr.`, alternates: { canonical: `/categories/${encodeURIComponent(item.slug)}` } } : { title: "Category not found", robots: { index: false, follow: false } };
+  return item ? {
+    title: item.seoTitle,
+    description: item.seoDescription ?? `Browse published ${item.name} products on Mtjr.`,
+    alternates: { canonical: `/categories/${encodeURIComponent(item.slug)}` }
+  } : { title: "Category not found", robots: { index: false, follow: false } };
 }
 export default async function CategoryDetailPage({ params, searchParams }: Props) {
   const [{ slug }, search] = await Promise.all([params, searchParams]);

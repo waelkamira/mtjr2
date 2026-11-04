@@ -7,6 +7,13 @@ describe("resolveTrustedClientIp", () => {
     expect(resolveTrustedClientIp(headers, undefined)).toBeNull();
   });
 
+  it("uses a loopback rate-limit bucket in local development only", () => {
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.10" });
+    expect(resolveTrustedClientIp(headers, undefined, "development")).toBe("127.0.0.1");
+    expect(resolveTrustedClientIp(headers, undefined, "test")).toBeNull();
+    expect(resolveTrustedClientIp(headers, undefined, "production")).toBeNull();
+  });
+
   it("does not fall back to a client-controlled forwarding header", () => {
     const headers = new Headers({
       "x-forwarded-for": "203.0.113.10",

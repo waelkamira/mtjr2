@@ -1,10 +1,19 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import CatalogDiscoveryPage from "@/features/storefront/catalog-discovery-page";
 
-/**
- * The Shop navigation entry must open the dedicated catalog/search experience,
- * not render the storefront homepage a second time.
- */
-export default function ProductsPage() {
-  redirect("/search");
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Browse products",
+  description: "Browse published products across active marketplace sellers."
+};
 
+type Props = { searchParams: Promise<{ q?: string; page?: string; categoryId?: string; brandId?: string; storeId?: string; marketId?: string; currencyCode?: string; sort?: string }> };
+
+export default function ProductsPage({ searchParams }: Props) {
+  return <CatalogDiscoveryPage
+    action="/products"
+    heading="Browse products"
+    description="Browse published products and filter by category, brand, store, market, currency or keyword."
+    searchParams={searchParams}
+  />;
 }
