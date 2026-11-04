@@ -1815,8 +1815,8 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Focused verification added in this follow-up**
 - Unit coverage for CUSTOMER role assignment, seller no-role behavior, Google registration policy, and the account-address request/response ownership contract.
-- PostgreSQL integration coverage for the persisted CUSTOMER role and a PENDING seller with no selling permission.
-- These follow-up changes require fresh exact-head General CI and PostgreSQL runs; no result is claimed until those runs complete.
+- PostgreSQL integration coverage for the persisted CUSTOMER role, a PENDING seller with no selling permission, and current-user scoping across profile, addresses, favorites and orders. Logout revocation remains covered by the existing logout unit tests.
+- The first follow-up head passed General CI and PostgreSQL; the buyer-account API coverage and PostgreSQL path-filter expansion in the next follow-up commit require fresh exact-head runs before final closure.
 
 **External and runtime boundaries**
 - Google provider sign-in remains an external test requirement: configure GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and the exact callback URI NEXT_PUBLIC_APP_URL + /api/auth/google/callback in the Google project. Values were not requested, read or committed. Existing email accounts are not silently linked; the callback returns link_required, and a separate manual linking journey is not implemented.
