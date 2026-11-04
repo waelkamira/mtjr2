@@ -1757,3 +1757,7 @@ Downloaded the failing GitHub Actions job logs for the inspected exact heads. Th
 - The reviews pages call async loaders from effects; the lint rule detects synchronous state updates inside those loaders. Refactor the loading lifecycle rather than suppressing the rule.
 
 These diagnostics are from the exact job logs for #2, #3, #4, #6, #9, #11, #12, #13 and #14. They do not prove the current heads are unchanged; refresh each PR head before applying fixes.
+
+## 2026-11-04 — CI failure ownership corrected
+
+A second pass against the job IDs corrected the PR-to-diagnostic mapping in the closeout audit: #4 owns the JSX apostrophe errors in checkout-shipping-options and seller workspace; #6 owns the admin tax-rates setState-in-effect lint error; #9 owns the orders.ts TypeScript selection/type mismatch; #11–#14 inherit the broader setState-in-effect errors in seller messages, wishlist and review screens. This correction is recorded in OPEN_WORK_CLOSEOUT_AUDIT.md. No source code or PR branch was changed.
