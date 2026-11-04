@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { AuthenticationRequiredError, getCurrentSession } from "@/server/identity/current-session";
+import { getCurrentSession } from "@/server/identity/current-session";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 
 export const runtime = "nodejs";
