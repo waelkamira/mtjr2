@@ -79,7 +79,7 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/seller/reviews` | Store owner | 06 | seller review API | Implemented / unverified | Verify store scoping |
 | `/seller/questions` | Store owner | 08 | seller Q&A API | Implemented / unverified | Verify product/store ownership and moderation |
 | `/seller/messages` | Store owner/authorized staff | 09 | seller messaging APIs | Implemented / unverified | Requires exact `messages:manage` scope |
-| `/seller/returns` | Store owner/authorized staff | 11 | seller return workflow | Missing / future | Not part of current initial returns slice |
+| `/seller/returns` | Active store owner / staff with exact-store `orders:manage` / platform admin | 11 | `src/app/seller/returns/page.tsx` → `src/features/seller/returns-page.tsx`; `GET /api/seller/returns` → `listSellerReturnRequests`; ReturnRequest, ReturnItem, OrderItem, VendorOrder, Store | Implemented / unverified | Read-only; grouped by authorized store. No seller state mutation, shipping, receipt or refund action. Exact-head CI/PostgreSQL passed; browser verification pending. |
 | `/seller/analytics`, `/seller/payouts`, `/seller/finance`, `/seller/settings` | Store owner | relevant finance/platform systems | analytics/ledger/payout/settings services | Not audited / conditional | Do not show fabricated values; expose only implemented workflows |
 
 ## C1. Mandatory vertical journey: apply to become a seller
@@ -282,6 +282,16 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 | `/seller/products` | Search product name, slug, description, SKU and barcode within selected store | `listSellerStoreProducts` after catalog permission check | Implemented / pending verification |
 | `/seller/orders` | Search order number, store, product, SKU and variant across authorized stores | `listSellerVendorOrders` after permission-derived store scope | Implemented / pending verification |
 | `/seller/inventory` | Search product, SKU and warehouse name/code within selected store | `listStoreInventory` after inventory permission check | Implemented / pending verification |
+
+
+## Seller return visibility — 2026-11-04
+
+| Route / action | UI | API / domain | Prisma mapping | Status |
+|---|---|---|---|---|
+| Seller return queue | `/seller/returns`, linked from `/seller` | `GET /api/seller/returns` → `listSellerReturnRequests` | ReturnRequest → ReturnItem → OrderItem → VendorOrder → Store | Implemented; read-only and grouped per authorized store. |
+| Seller scope | Current server session; active owned store or exact-store `orders:manage`; platform admin | Store scope derived in domain service; no client store ID accepted | Seller, Store, SellerStaff, UserRoleAssignment | Exact-head General CI and PostgreSQL passed on `797f8dd61ee5ec3591f8cc0d2abb46b85235a364`; PR #19 merged. Browser journey pending. |
+
+The parent ReturnRequest can span several stores but has a single global status. Do not add seller approval/rejection/receipt mutations until the per-vendor lifecycle design is implemented and verified.
 
 
 ## Identity and customer-account route audit — 2026-11-04
