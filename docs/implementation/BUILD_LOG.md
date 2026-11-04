@@ -1683,3 +1683,10 @@ The project owner approved Resend as the transactional email provider. The serve
 **Gaps before systems 02–03 are complete:** (1) category rows are paginated before tree construction, so parent/child splits can misrepresent hierarchy; (2) category, brand and store details return only first 48 products and store directory only first 48 stores; (3) `/`, `/products`, `/search` share full homepage composition; autocomplete/relevance ranking are missing; (4) cart/favorite/message/review/Q&A actions need end-to-end authorization, persistence and refresh verification.
 
 **Status:** Mapped / Partially wired, not Verified or Complete. Next: hierarchy-preserving category pagination, then directory/detail pagination. No database migration; no production DB or Vercel environment accessed.
+
+
+## 2026-11-04 — Preserve category hierarchy across pagination
+
+**Change:** `listActiveCategoryTree` now paginates top-level active categories and loads all active descendants for those roots before building the tree. Pagination totals count roots, matching the page unit. A visited set stops malformed cycles; inactive/orphaned parent branches are not exposed as public roots.
+
+**Focused tests added:** multi-level child loading across root-page boundaries and cycle termination. No Prisma schema change or migration was needed. Exact-head CI and PostgreSQL integration are pending.

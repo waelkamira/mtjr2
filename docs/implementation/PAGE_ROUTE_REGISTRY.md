@@ -265,3 +265,10 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 - Category service paginates raw rows before building its hierarchy. Parent/child rows split across pages can be misrepresented; fix hierarchy-preserving pagination before marking taxonomy complete.
 - Product detail wires add-to-cart, favorite, store-message, reviews and Q&A. Source wiring is not yet proof of authorization, retry/idempotency, persistence and refresh behavior.
 - Corrected homepage category “View all” to navigate to `/categories` instead of clearing the selected filter.
+
+
+## Category hierarchy pagination correction — 2026-11-04
+
+- `listActiveCategoryTree` now paginates top-level active categories only, then loads active descendants level-by-level before building the tree. Child nodes are no longer split away from their selected root by the page limit.
+- Pagination totals now describe top-level categories, which matches the returned page unit (a tree per root category). Malformed cycles cannot cause unbounded traversal; descendants of inactive or orphaned parents are not exposed as independent public roots.
+- Focused tests cover multi-level descendants across the page boundary and cycle termination. Exact-head CI/PostgreSQL result pending.

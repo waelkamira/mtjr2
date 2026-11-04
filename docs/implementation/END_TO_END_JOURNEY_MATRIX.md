@@ -177,3 +177,6 @@ Audit shared dependencies once, then re-check them from each consumer journey: i
 | Category/brand/store browse | Directory and slug services → product grid | Category/Translation, Brand/Translation, Store, Seller, Product | Pages exist but detail lists are fixed to first 48 and directory pagination is absent. Verify 404, empty state, hierarchy and full result coverage. |
 
 **Blocking gaps:** fix category hierarchy pagination; add bounded pagination to category/brand/store result lists and store directory; separate `/products` and `/search` layouts from homepage; run critical HTTP/browser journeys. Keep schema unchanged unless a real missing business entity/relation is demonstrated.
+
+
+**Taxonomy correction update — 2026-11-04:** Category tree retrieval now pages root categories and fetches descendants level-by-level before tree assembly. Pagination totals are root-category totals. Focused tests cover deep descendants and malformed-cycle termination. This closes the previously recorded parent/child page-split defect at source level; exact-head CI is pending.

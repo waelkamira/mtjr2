@@ -57,25 +57,45 @@ export function buildCategoryTree(rows: CategoryRow[], _locale: string): Categor
 
 export async function listActiveCategoryTree(input: unknown = {}) {
   const query = listSchema.parse(input);
-  const where: Prisma.CategoryWhereInput = { status: CatalogEntityStatus.ACTIVE };
-  const [rows, total] = await Promise.all([
+  const where: Prisma.CategoryWhereInput = { status: CatalogEntityStatus.ACTIVE, parentId: null };
+  const select = {
+    id: true, parentId: true, slug: true, name: true, description: true,
+    imageUrl: true, sortOrder: true,
+    translations: { where: { locale: query.locale }, select: { name: true, description: true }, take: 1 }
+  } as const;
+
+  // Paginate only root categories. Fetch descendants separately so a page boundary
+  // can never detach a child from its parent in the public category tree.
+  const [roots, total] = await Promise.all([
     prisma.category.findMany({
       where, orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-      skip: (query.page - 1) * query.limit, take: query.limit,
-      select: {
-        id: true, parentId: true, slug: true, name: true, description: true,
-        imageUrl: true, sortOrder: true,
-        translations: { where: { locale: query.locale }, select: { name: true, description: true }, take: 1 }
-      }
+      skip: (query.page - 1) * query.limit, take: query.limit, select
     }),
     prisma.category.count({ where })
   ]);
+
+  const rows: CategoryRow[] = [...roots];
+  const visited = new Set(roots.map((item) => item.id));
+  let frontier = roots.map((item) => item.id);
+  while (frontier.length > 0) {
+    const children = await prisma.category.findMany({
+      where: { status: CatalogEntityStatus.ACTIVE, parentId: { in: frontier } },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+      select
+    });
+    const next = children.filter((item) => !visited.has(item.id));
+    for (const child of next) {
+      visited.add(child.id);
+      rows.push(child);
+    }
+    frontier = next.map((item) => item.id);
+  }
+
   return {
     items: buildCategoryTree(rows, query.locale),
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
   };
 }
-
 export async function listActiveBrands(input: unknown = {}) {
   const query = listSchema.parse(input);
   const where: Prisma.BrandWhereInput = { status: CatalogEntityStatus.ACTIVE };
