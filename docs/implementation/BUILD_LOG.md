@@ -1319,5 +1319,6 @@ The project owner approved Resend as the transactional email provider. The serve
 - Calculation uses integer minor units. Exact-region rules override market-wide rules. The rule and calculated amount are persisted as a quote snapshot. If no rule exists, the API reports missing configuration and does not invent a rate.
 - Connected the buyer checkout review UI to show tax and estimated total after the buyer requests calculation.
 - Scope limitation: this first rule engine applies one market/region rule to the full item subtotal and optionally shipping. Product/category exemptions, multiple overlapping jurisdictions, compound taxes, legal registration/nexus, and discounts remain future work and require launch-jurisdiction rules.
-- No new test matrix was added. One normal CI run and one disposable PostgreSQL migration/integration run are the only verification gates for this schema slice.
+- Added `tests/tax/tax.test.ts` covering platform-admin authorization, active-market rule creation/audit, exclusive and inclusive integer arithmetic, required shipping selection for every quote store, rejection of selections for stores outside the quote, and missing tax configuration.
+- Verification is still pending: the stacked tax branch is behind its base branch and GitHub currently reports it as diverged/non-mergeable. Reconcile the branch before treating any CI result as valid.
 - Verification pending. No owner database, production database, or Vercel environment was accessed.
