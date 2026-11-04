@@ -93,9 +93,13 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
   const platformOrdersAdmin = await userHasPermission(actor.userId, {
     permissionKey: "orders:manage", now
   });
-  const delegated = isOwner ? false : await userHasScopedPermission(actor.userId, {
-    permissionKey: "orders:manage", scope: { type: "STORE", id: visible.storeId }, now
+  const activeStaff = isOwner ? null : await prisma.sellerStaff.findFirst({
+    where: { storeId: visible.storeId, userId: actor.userId, status: "ACTIVE" },
+    select: { id: true }
   });
+  const delegated = activeStaff ? await userHasScopedPermission(actor.userId, {
+    permissionKey: "orders:manage", scope: { type: "STORE", id: visible.storeId }, now
+  }) : false;
   if (!isOwner && !delegated && !platformOrdersAdmin) throw new PermissionDeniedError();
 
   const expected = data.status === "PROCESSING" ? VendorOrderStatus.CONFIRMED : VendorOrderStatus.PROCESSING;
