@@ -42,7 +42,7 @@ async function sendEmail(payload: ResendEmailPayload): Promise<void> {
 }
 
 function buildActionUrl(path: string, token: string): string {
-  const url = new URL(path, env.NEXT_PUBLIC_APP_URL);
+  const url = new URL(path, env.APP_URL);
   url.searchParams.set("token", token);
   return url.toString();
 }
