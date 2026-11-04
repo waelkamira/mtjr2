@@ -1840,3 +1840,23 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 - PR #24 merged into `main` as `1e134e65e97f29b438f1d7f92dbf5f671091393d`. Exact-head General CI run [41830496456](https://github.com/waelkamira/mtjr2/actions/runs/41830496456) passed. The Vercel deployment check failed only because the Hobby daily deployment quota was exhausted; it is not an application CI failure.
 - PR #25 adds seller preparation transitions and is awaiting its exact-head General CI and PostgreSQL workflow results. Do not merge until those critical checks pass; no production DB or Vercel environment was accessed.
+
+## 2026-11-04 — Isolated demo catalog seed
+
+**Implemented**
+- Repaired the existing `prisma/seed.cjs` demo path: the previous file called `seedDemoCatalog()` without defining it.
+- Added a guarded demo-only database override. Demo catalog seeding requires `SEED_DEMO_CATALOG=true`, `ALLOW_DEMO_CATALOG_SEED=true`, `DEMO_DATABASE_URL`, a non-production runtime, and a database name containing a `demo`, `test`, `ci`, or `dev` marker. It never silently falls back to `DATABASE_URL`.
+- Added 8 active bilingual categories and exactly 10 deterministic demo products per category (80 total), 8 brands, 4 active demo sellers/stores, a dedicated `DEMO-US` market with USD, product translations/media/variants/prices, warehouse stock, and search synonyms.
+- Seed uses stable slugs/SKUs and upserts. Initial inventory receipts are recorded only when the inventory row is first created, so reruns do not replenish or overwrite stock.
+- No customer reviews, orders, payments, or fake verified-purchase signals are fabricated.
+- No Prisma schema change or migration was introduced.
+
+**Verification status**
+- Source and Prisma relation compatibility reviewed against `prisma/schema.prisma` and the public discovery service.
+- The seed has not yet been executed against a disposable PostgreSQL database in this session. Exact-head CI and a disposable PostgreSQL seed/re-run check are required before calling the catalog verified.
+- No production database, live credentials, or Vercel environment was accessed.
+
+**Next**
+1. Run migrations against a disposable database named with a `demo` marker.
+2. Run the demo seed twice and confirm counts remain 80 products / 8 categories / 4 stores with unchanged stock on the second run.
+3. Verify the public market/category/product/search APIs return the seeded catalog.
