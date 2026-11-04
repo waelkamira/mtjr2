@@ -1725,3 +1725,12 @@ The project owner approved Resend as the transactional email provider. The serve
 **Commits**
 - Remove Hobby-incompatible Vercel Cron: `3a8f04f7cda7c02ca07c210988c847b3ec77dd93`.
 - Add external scheduler runbook: `20de5bd0daa3c87bd03990f2ea517fbc83ea4a4e`.
+
+
+## 2026-11-04 — Existing-work closeout audit
+
+**Policy:** Freeze new feature scope until the currently open work is reconciled, verified and closed. Audited 14 open PRs (#2–#14, #16–#17), the merged buying-cart predecessor (#1), the current main baseline, dependency bases and exact-head workflow summaries. The detailed inventory, stack risks, CI evidence and required closeout order are recorded in `docs/implementation/OPEN_WORK_CLOSEOUT_AUDIT.md`.
+
+**Findings:** PRs #2–#14 are stacked across checkout/order and customer-engagement branches; #16–#17 form a separate returns stack. Several downstream base SHAs are stale, #5 reports non-mergeable, and multiple exact-head quality jobs fail before tests/build. PostgreSQL integration passes on several heads but does not override quality failures. No PR was merged or modified. No application/schema/database/production/deployment change was made.
+
+**Next:** Retrieve the specific lint/typecheck diagnostics and reconcile the checkout stack before any merge consideration. No new system work until the current backlog is verified.
