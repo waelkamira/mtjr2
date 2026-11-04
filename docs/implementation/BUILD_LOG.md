@@ -1552,3 +1552,23 @@ The project owner approved Resend as the transactional email provider. The serve
 
 
 **Identity journey follow-up:** Added a real Sign out control to the customer order-history header. It posts to `/api/auth/logout`, prevents duplicate clicks, reports failures, and redirects to `/login` only after the server confirms success. Removed the homepage Create account CTA while registration is unavailable, so the storefront no longer advertises an unavailable signup action. Added `no-referrer` and `noindex` metadata to verification/reset token pages. These changes are in source but await fresh exact-head CI and browser/HTTP verification.
+
+
+## 2026-11-04 — Identity policy pages and development registration
+
+**Implemented**
+- Fixed the exact-head CI lint failure in `src/features/identity/auth-page.tsx`: query values are initialized from server-provided page props; the effect now only removes the one-time token from the browser URL and does not synchronously set React state.
+- Added `/terms` and `/privacy` as version `v1` development drafts. Both clearly disclose that Mtjr2 is under development and its operating company has not yet been incorporated. Unknown operator identity, contact details, retention schedule, provider regions and final legal disclosures are not invented.
+- Replaced the unavailable registration information page with a real registration form. It calls `POST /api/auth/register`, requires separate unchecked Terms and Privacy checkboxes, and handles loading, errors and the server response.
+- Added a Create account link to the sign-in page.
+- Registration defaults to enabled in development/test and disabled in production. The server-side policy helper blocks production even if `PUBLIC_REGISTRATION_ENABLED=true`; development can explicitly disable registration with `PUBLIC_REGISTRATION_ENABLED=false`.
+- Reused existing `UserConsent` records and version `v1` in the registration transaction. No Prisma schema change or migration was necessary.
+
+**Verification**
+- Previous head: PostgreSQL integration passed; CI failed only on the synchronous state update lint rule described above.
+- The lint issue has been corrected. CI and PostgreSQL integration for the latest commit are awaiting GitHub Actions results.
+- No live database was accessed, no migration was applied, and no Vercel environment variables were changed.
+- No deployed HTTP/browser registration journey has been executed in this session. Do not mark identity complete until exact-head CI and an actual development deployment journey (registration → verification email → verification → login → logout) pass.
+
+**Important boundary**
+- These pages are development drafts, not final approved legal policies. Production registration remains disabled. Public launch still requires completion/review of the operator and policy details.
