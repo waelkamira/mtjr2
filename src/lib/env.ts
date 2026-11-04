@@ -11,6 +11,7 @@ const environmentSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url(),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must contain at least 32 characters"),
   CRON_SECRET: z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional(),
+  PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).default("false"),
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
   TRUSTED_PROXY_IP_HEADER: z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional(),
