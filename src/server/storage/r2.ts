@@ -67,7 +67,7 @@ export function createR2DownloadUrl(objectKey: string, now = new Date()) {
   return createPresignedUrl("GET", objectKey, undefined, now);
 }
 
-function createPresignedUrl(method: "GET" | "PUT", objectKey: string, contentType?: string, now = new Date()) {
+function createPresignedUrl(method: "GET" | "PUT" | "HEAD" | "DELETE", objectKey: string, contentType?: string, now = new Date()) {
   const cfg = config();
   const { host, path } = endpoint(cfg, objectKey);
   const date = timestamp(now);
@@ -89,4 +89,33 @@ function createPresignedUrl(method: "GET" | "PUT", objectKey: string, contentTyp
   const signature = hmac(signingKey(cfg.secretAccessKey, day), stringToSign, "hex");
   const url = `https://${host}${path}?${canonicalQuery}&X-Amz-Signature=${signature}`;
   return { url, method, headers: contentType ? { "Content-Type": contentType } : {}, expiresInSeconds: 600 };
+}
+
+export async function inspectR2Object(objectKey: string) {
+  const signed = createPresignedUrl("HEAD", objectKey);
+  const response = await fetch(signed.url, { method: "HEAD", cache: "no-store" });
+  if (!response.ok) throw new Error("Uploaded object could not be verified in R2.");
+  return {
+    sizeBytes: Number(response.headers.get("content-length") ?? 0),
+    contentType: response.headers.get("content-type") ?? ""
+  };
+}
+
+export async function scanR2Object(objectKey: string, metadata: { contentType: string; sizeBytes: number }) {
+  const scannerUrl = process.env.ATTACHMENT_SCANNER_URL?.trim();
+  const scannerToken = process.env.ATTACHMENT_SCANNER_TOKEN?.trim();
+  if (!scannerUrl || !scannerToken) throw new Error("Attachment malware scanner is not configured; the file remains quarantined.");
+  const response = await fetch(scannerUrl, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${scannerToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ provider: "cloudflare-r2", bucket: config().bucket, objectKey, ...metadata }),
+    cache: "no-store",
+    signal: AbortSignal.timeout(30_000)
+  });
+  if (!response.ok) throw new Error("Attachment malware scan failed.");
+  const result: unknown = await response.json();
+  if (!result || typeof result !== "object" || !("clean" in result) || typeof result.clean !== "boolean") {
+    throw new Error("Attachment scanner returned an invalid response.");
+  }
+  return result.clean;
 }
