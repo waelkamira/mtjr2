@@ -1625,3 +1625,18 @@ The project owner approved Resend as the transactional email provider. The serve
 - Baseline CI and disposable PostgreSQL integration passed on parent commit `c8ecf1bb3751112249f4b190e5aac4af68ddc464`.
 - The new navigation commit must pass CI and PostgreSQL integration before this slice is considered validated.
 - Live browser/mobile navigation and authenticated/guest rendering have not yet been exercised; do not mark this slice Verified until those journeys are run.
+
+
+## 2026-11-04 — Search, category and brand navigation destinations
+
+**Implemented**
+- Added a dedicated `/search` route using the existing URL-backed catalog discovery state; the global search form now submits to it.
+- Added `/categories` and `/brands` directory pages. Both read active taxonomy data from the existing public APIs and show loading, error and empty states.
+- Category and brand selections link to `/products` with the corresponding existing filter IDs, so the product discovery API remains the source of truth.
+- Updated the shared navigation destinations and route/action documentation.
+
+**Prisma decision**
+- No schema change: Category and Brand entities and their existing listing APIs already support these directories. No new persistent business state is introduced.
+
+**Verification**
+- These route additions are awaiting exact-commit CI, Prisma/PostgreSQL integration and build results. Browser interaction, filter handoff and responsive checks remain outstanding.

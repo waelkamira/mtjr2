@@ -18,7 +18,7 @@ export default async function SiteNavigation() {
           mtjr<span className="text-[var(--color-copper-600)]">.</span>
         </Link>
 
-        <form action="/" method="get" role="search" className="order-3 flex min-w-0 w-full overflow-hidden rounded-xl border border-[var(--border)] bg-white sm:order-none sm:ml-3 sm:max-w-xl sm:flex-1">
+        <form action="/search" method="get" role="search" className="order-3 flex min-w-0 w-full overflow-hidden rounded-xl border border-[var(--border)] bg-white sm:order-none sm:ml-3 sm:max-w-xl sm:flex-1">
           <label htmlFor="site-search" className="sr-only">Search products</label>
           <input
             id="site-search"
@@ -52,8 +52,8 @@ export default async function SiteNavigation() {
       <nav aria-label="Main navigation" className="mx-auto flex max-w-[1440px] gap-6 overflow-x-auto px-4 pb-3 text-sm text-[var(--color-ink-700)] sm:px-5 lg:px-10">
         <Link href="/" className="whitespace-nowrap font-medium text-[var(--color-forest-800)]">Home</Link>
         <Link href="/products" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Shop</Link>
-        <Link href="/#categories" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Categories</Link>
-        <Link href="/#brands" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Brands</Link>
+        <Link href="/categories" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Categories</Link>
+        <Link href="/brands" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Brands</Link>
         <Link href="/seller" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Sell on Mtjr</Link>
         {session && (
           <>

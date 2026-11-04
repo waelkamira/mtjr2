@@ -26,9 +26,11 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/` | Everyone | 02, 03, shared market/catalog | markets, categories, brands, product discovery APIs | Partial / unverified | Confirm visible navigation, live API data, loading/error/empty states, market/currency and responsive layout |
 | `/products` | Everyone | 02, 03 | `src/app/products/page.tsx` reuses `StorefrontHomePage`; `GET /api/products`; Product, ProductPrice, ProductVariant | Implemented / unverified | Shared global navigation now links here; discovery API supports query, market, category, brand, sorting and pagination. Reused home composition is an initial bridge, not the final dedicated catalog layout; run route/browser journey. |
 | `/products/[id]` or canonical slug | Everyone | 02, 06–08 | product detail, reviews, Q&A, favorites, cart APIs | Partial / unverified | Confirm route convention, variants, seller, stock, price and all actions |
-| `/search` | Everyone | 03 | search/discovery API | Partial / unverified | Storefront search state exists; dedicated route/autocomplete need audit |
-| `/categories/[slug]` | Everyone | 02, 03 | category and product APIs | Not audited | Confirm route and empty/invalid category states |
-| `/brands/[slug]` | Everyone | 02, 03 | brand and product APIs | Not audited | Confirm route and filtered listing |
+| `/search` | Everyone | 03 | `src/app/search/page.tsx` reuses `StorefrontHomePage`; header GET form submits `q`; `GET /api/products` | Implemented / unverified | Search route exists and reads the query from URL state; verify search journey, result states and browser navigation. Autocomplete is not implemented. |
+| `/categories` | Everyone | 02, 03 | `src/app/categories/page.tsx` → `src/features/storefront/category-directory-page.tsx`; `GET /api/categories`; Category | Implemented / unverified | Active category directory links to `/products?categoryId=...`; verify API error/empty states and filter journey. |
+| `/categories/[slug]` | Everyone | 02, 03 | category and product APIs | Not audited | Dynamic category detail route remains a later slice. |
+| `/brands` | Everyone | 02, 03 | `src/app/brands/page.tsx` → `src/features/storefront/brand-directory-page.tsx`; `GET /api/brands`; Brand | Implemented / unverified | Active brand directory links to `/products?brandId=...`; verify API error/empty states and filter journey. |
+| `/brands/[slug]` | Everyone | 02, 03 | brand and product APIs | Not audited | Dynamic brand detail route remains a later slice. |
 | `/stores/[slug]` | Everyone | seller/store system | public store and catalog services | Not audited | Public storefront profile is distinct from seller workspace |
 | `/terms`, `/privacy` | Everyone | 01 / shared platform | Static versioned pages `src/app/terms/page.tsx` and `src/app/privacy/page.tsx` | Development draft / unverified | Version v1 drafts disclose that the operator company is not yet incorporated; not final legal policies. `/help`, `/contact`, `/cookies` remain unaudited. |
 
@@ -224,3 +226,14 @@ A route stays **Implemented / unverified** (or Partial) if any exposed critical 
 | Messages / Notifications | Existing authenticated routes | Shown when a current session resolves | Existing messaging/notification APIs and Prisma entities | Implemented / unverified; ownership and unread-state behavior remain to be tested. |
 
 **Navigation rule:** every shared navigation destination must resolve to a real route. Do not add links for missing destination pages until the route and its backend journey are implemented. The header is global; page-specific actions remain in their owning page and must follow the same UI → API → validation/auth → domain service → Prisma contract.
+
+
+## Navigation directories and search routes (2026-11-04)
+
+| Route | Entry point | API / persistence | Status |
+|---|---|---|---|
+| `/search?q=...` | Shared header search form | `GET /api/products` via the existing discovery page state | Implemented / unverified; no autocomplete yet. |
+| `/categories` | Shared header Categories link | `GET /api/categories`; existing Category hierarchy | Implemented / unverified; category cards route to the existing product filter query. |
+| `/brands` | Shared header Brands link | `GET /api/brands`; existing Brand records | Implemented / unverified; brand cards route to the existing product filter query. |
+
+Dynamic `/categories/[slug]` and `/brands/[slug]` detail routes are intentionally not linked yet. They must be added only with a real category/brand lookup and filtered product journey; the directory pages currently provide working entry points into the existing catalog filters.
