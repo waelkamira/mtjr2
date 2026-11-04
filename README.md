@@ -161,16 +161,16 @@ See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation bo
 ### Buying Core — latest implementation slice
 
 - Cart, checkout quote/reservations, and delivery-address capture are implemented; address slice General CI and disposable PostgreSQL runs passed ([41706908024](https://github.com/waelkamira/mtjr2/actions/runs/41706908024), [41706907994](https://github.com/waelkamira/mtjr2/actions/runs/41706907994)).
-- Configurable store shipping rates and per-store quote selections are now implemented on the stacked branch `feat/store-shipping-options`; Prisma migration, seller workspace, buyer checkout UI, and APIs are connected. Verification is pending.
+- Configurable store shipping rates and per-store quote selections are implemented and verified on `feat/store-shipping-options`: General CI (Prisma validate/generate, typecheck, lint, tests, build) passed on `052c7cd141a673be45210439e8ad8b0b1428554e` ([41767833957](https://github.com/waelkamira/mtjr2/actions/runs/41767833957)); disposable PostgreSQL migration/integration passed ([41767834005](https://github.com/waelkamira/mtjr2/actions/runs/41767834005)). This closes only the shipping slice; tax, discounts, final totals, order creation, payment, and shipment execution remain.
 - Tax, discounts, final checkout totals, order creation, payment, and shipment execution remain incomplete. No production database or Vercel environment was accessed.
 - Follow the detailed status and verification gate in [Phase 4 Buying Plan](docs/implementation/PHASE_04_BUYING_PLAN.md).
 
-
 ## Buying Core — shipping and tax progress (2026-11-03)
 
-- Shipping configuration and per-seller checkout selection are implemented on `feat/store-shipping-options` (PR #4). The latest full CI attempt was cancelled; the earlier disposable PostgreSQL migration/integration run passed. Shipping remains marked pending final CI rather than being called verified.
+- Shipping configuration and per-seller checkout selection are implemented and verified on `feat/store-shipping-options` (PR #4). General CI passed on `052c7cd141a673be45210439e8ad8b0b1428554e` ([41767833957](https://github.com/waelkamira/mtjr2/actions/runs/41767833957)); disposable PostgreSQL migration/integration passed ([41767834005](https://github.com/waelkamira/mtjr2/actions/runs/41767834005)).
 - Started the next vertical slice on `feat/checkout-tax-calculation` (PR #5): platform-managed market/region tax rules, quote-owned tax snapshots, admin configuration UI/API, and buyer checkout tax/estimated-total UI.
 - Tax uses explicitly configured basis-point rates and integer minor-unit arithmetic. It does not invent statutory rates. Missing configuration is reported instead of silently treating tax as zero.
 - Schema additions: `MarketTaxRate`, `CheckoutTaxSnapshot`; migration: `20261103230000_market_tax_rules`.
 - No discounts, order creation, or payment are claimed complete. No owner database or Vercel environment was accessed.
+- Added focused tax tests for admin authorization, tax-rule creation, inclusive/exclusive arithmetic, missing seller shipping, out-of-quote shipping selections, and missing tax configuration. They are awaiting CI execution.
 - See `docs/implementation/PHASE_04_BUYING_PLAN.md` for boundaries and limitations.
