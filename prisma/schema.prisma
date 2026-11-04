@@ -1559,6 +1559,11 @@ model SupportTicket {
   customerReadAt DateTime?
   agentReadAt    DateTime?
   firstResponseAt DateTime?
+  firstResponseDueAt DateTime?
+  resolutionDueAt DateTime?
+  firstResponseBreachedAt DateTime?
+  resolutionBreachedAt DateTime?
+  escalatedAt DateTime?
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
   customer       User                  @relation("SupportTicketCustomer", fields: [customerId], references: [id], onDelete: Restrict)
@@ -1582,6 +1587,15 @@ model SupportMessage {
 
   @@index([ticketId, isInternal, createdAt])
   @@index([senderId, createdAt])
+}
+
+model SupportSlaPolicy {
+  priority             SupportTicketPriority @id
+  firstResponseMinutes Int
+  resolutionMinutes    Int
+  enabled              Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 }
 
 
