@@ -198,6 +198,6 @@ Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL
 
 | Journey | UI → API/service | Data and authorization boundary | Verification |
 |---|---|---|---|
-| Seller return visibility | `/seller/returns` → `GET /api/seller/returns` → `listSellerReturnRequests` | Verified session; active owned stores, exact-store `orders:manage` grants, or platform admin. Return items are filtered and grouped by VendorOrder.storeId; no client-provided store scope. | Focused tests cover owned/delegated scope, cross-store grouping and no-authorized-store behavior. Exact-head CI/PostgreSQL and browser journey pending. |
+| Seller return visibility | `/seller/returns` → `GET /api/seller/returns` → `listSellerReturnRequests` | Verified session; active owned stores, exact-store `orders:manage` grants, or platform admin. Return items are filtered and grouped by VendorOrder.storeId; no client-provided store scope. | Focused tests cover owned/delegated scope, cross-store grouping and no-authorized-store behavior. Exact-head CI #591 and PostgreSQL Integration #280 passed on `6480a6ee80e54a28b659662c922bad23cd84d42d`; deployed browser journey remains pending. |
 
 **Boundary:** seller page is read-only. A customer ReturnRequest may include several vendors while carrying one parent status. Seller-specific approve/reject/receipt transitions must wait for a per-vendor return state model; no payment or refund action is exposed.
