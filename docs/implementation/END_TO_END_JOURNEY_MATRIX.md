@@ -20,7 +20,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 
 | # | System | Journey audit | Entry points mapped | Action-to-API trace | Prisma impact reviewed | Exact-commit evidence |
 |---:|---|---|---|---|---|---|
-| 01 | Identity, authentication and customer account | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 01 | Identity, authentication and customer account | Partial — source-traced login, verify/resend and password recovery UI/API; registration deliberately blocked; logout UI absent | `/login`, `/verify-email`, `/forgot-password`, `/reset-password`, `/register` (unavailable) | Partial — exact API traces recorded in route registry; logout control not wired | Existing User/session/token/consent/audit models reviewed; no schema change for these pages | Not verified on current head; earlier exact app head CI + disposable PostgreSQL passed, newer UI commits pending CI and deployed HTTP/browser journey |
 | 02 | Product catalog and discovery | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 03 | Search, filtering and sorting | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 04 | Cart and checkout | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -123,3 +123,16 @@ Audit shared dependencies once, then re-check them from each consumer journey: i
 ## Change log
 
 - 2026-11-04: Created the all-49 system ledger. All rows start as Not audited; this intentionally avoids converting route/model presence into completion claims.
+
+
+## System 01 initial action trace — source implementation, not yet verified
+
+| User action | UI → API | Server/domain/persistence | Final outcome and remaining gate |
+|---|---|---|---|
+| Sign in | `/login` submit → `POST /api/auth/login` | same-origin JSON guard → trusted-proxy IP resolution → `loginWithPassword` → session cookie, LoginAttempt, lastLoginAt, AuditLog | Server sets HttpOnly session cookie; client redirects only to same-origin local return path or `/account/orders`. Needs deployed proxy config and HTTP/browser test. |
+| Verify email | `/verify-email` submit → `POST /api/auth/verify-email` | same-origin guard → `verifyUserEmail`; consumes one-time token and activates only PENDING user; AuditLog | Shows server message; token removed from visible URL. Needs real email delivery and HTTP/browser proof. |
+| Resend verification | `/verify-email` resend → `POST /api/auth/verification/resend` | IP throttle → issue new single-use token digest → Resend adapter | Generic anti-enumeration response; needs configured sender and delivery smoke test. |
+| Request reset | `/forgot-password` submit → `POST /api/auth/password-reset/request` | trusted IP + separate reset throttle → eligible account challenge, token digest, AuditLog → Resend adapter | Generic response regardless of account existence; needs delivery smoke test. |
+| Complete reset | `/reset-password` submit → `POST /api/auth/password-reset/complete` | consume token once → hash new password → revoke all sessions → AuditLog | User can sign in with new password; service has PostgreSQL coverage on earlier commit; current UI requires exact-head CI/HTTP proof. |
+| Register | `/register` displays unavailable state; no submit control | Registration API/service exists; consent stored in UserConsent; legal documents are absent | Deliberately blocked until approved Terms and Privacy Notice are published. No false success. |
+| Logout | No user-facing action currently wired | `POST /api/auth/logout` and logout service exist | Not complete as a user journey; add account navigation control and verify session denial after logout before claiming completion. |
