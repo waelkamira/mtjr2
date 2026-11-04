@@ -6,10 +6,8 @@ on:
     branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets", "feat/storefront-demo-experience", "feat/storefront-search-state", "feat/notification-preferences", "feat/returns-workflow"]
     paths:
       - "prisma/schema.prisma"
-<<<<<<< HEAD
-=======
       - "prisma/seed.cjs"
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
       - "prisma/migrations/**"
       - "src/server/cart/**"
       - "src/server/checkout/**"
