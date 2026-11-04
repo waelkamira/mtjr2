@@ -1,4 +1,4 @@
-CREATE TYPE "NotificationDeliveryStatus" AS ENUM ('PENDING', 'PROCESSING', 'RETRY', 'SENT', 'FAILED');
+CREATE TYPE "NotificationDeliveryStatus" AS ENUM ('PENDING', 'PROCESSING', 'RETRY', 'SENT', 'FAILED', 'CANCELLED');
 
 ALTER TABLE "NotificationPreference"
 ADD COLUMN "emailEnabled" BOOLEAN NOT NULL DEFAULT false;
