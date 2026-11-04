@@ -54,6 +54,7 @@ export default async function SiteNavigation() {
         <Link href="/products" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Shop</Link>
         <Link href="/categories" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Categories</Link>
         <Link href="/brands" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Brands</Link>
+        <Link href="/stores" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Stores</Link>
         <Link href="/seller" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Sell on Mtjr</Link>
         {session && (
           <>

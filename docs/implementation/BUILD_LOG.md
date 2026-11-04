@@ -1640,3 +1640,20 @@ The project owner approved Resend as the transactional email provider. The serve
 
 **Verification**
 - These route additions are awaiting exact-commit CI, Prisma/PostgreSQL integration and build results. Browser interaction, filter handoff and responsive checks remain outstanding.
+
+
+## 2026-11-04 — Public category, brand and store detail journeys
+
+**Implemented**
+- Added active category and brand slug resolvers with locale-aware names and descriptions.
+- Added category and brand detail routes showing products filtered by the resolved entity.
+- Added a public store directory and store detail route. The directory includes only ACTIVE stores owned by ACTIVE/approved sellers and having ACTIVE products.
+- Extended product discovery with a validated optional `storeId` filter. Product discovery continues to require active products, active stores and active sellers.
+- Added a reusable product grid with product links, primary images, price display and empty state.
+- Connected category and brand directory cards to slug detail routes, product seller links to public store pages, and added Stores to global navigation.
+- No Prisma migration was needed; existing domain models cover these read journeys.
+
+**Verification**
+- Parent commit `74168a860e608101578cd4c02dde13cf07d84422` passed CI and disposable PostgreSQL integration.
+- This implementation slice is pending exact-commit CI and PostgreSQL integration.
+- Browser journeys, slug 404 handling, seller visibility and mobile layout remain unverified.

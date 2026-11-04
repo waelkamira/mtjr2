@@ -45,7 +45,7 @@ export default function BrandDirectoryPage() {
           {items.map((brand) => (
             <Link
               key={brand.id}
-              href={`/products?brandId=${encodeURIComponent(brand.id)}#discover`}
+              href={`/brands/${encodeURIComponent(brand.slug)}`}
               className="flex min-h-28 items-center justify-between rounded-2xl border border-[var(--border)] bg-white px-5 py-4 text-sm font-semibold text-[var(--color-forest-950)] transition hover:-translate-y-0.5 hover:border-[var(--color-sage-500)] hover:shadow-[var(--shadow-card)]"
             >
               <span>{brand.name}</span><span aria-hidden="true" className="text-[var(--color-copper-600)]">↗</span>

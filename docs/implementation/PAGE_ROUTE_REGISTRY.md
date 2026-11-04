@@ -237,3 +237,15 @@ A route stays **Implemented / unverified** (or Partial) if any exposed critical 
 | `/brands` | Shared header Brands link | `GET /api/brands`; existing Brand records | Implemented / unverified; brand cards route to the existing product filter query. |
 
 Dynamic `/categories/[slug]` and `/brands/[slug]` detail routes are intentionally not linked yet. They must be added only with a real category/brand lookup and filtered product journey; the directory pages currently provide working entry points into the existing catalog filters.
+
+
+## Public catalog and store detail routes — 2026-11-04
+
+| Route | Access | Backend / Prisma source | Status |
+|---|---|---|---|
+| `/categories/[slug]` | Public | `getActiveCategoryBySlug`; `listDiscoverableProducts({ categoryId })`; Category, CategoryTranslation, ProductCategory, Product | Implemented / unverified. Active categories only; matching published products; inactive/missing slug returns 404. |
+| `/brands/[slug]` | Public | `getActiveBrandBySlug`; `listDiscoverableProducts({ brandId })`; Brand, BrandTranslation, Product | Implemented / unverified. Active brands only; matching published products; inactive/missing slug returns 404. |
+| `/stores` | Public | `listDiscoverableStores`; Store, Seller, Product | Implemented / unverified. Lists active stores of approved sellers with active products. |
+| `/stores/[slug]` | Public | `getDiscoverableStoreBySlug`; `listDiscoverableProducts({ storeId })`; Store, Seller, Product | Implemented / unverified. Hides inactive stores and unapproved sellers; shows products scoped to that store. |
+
+No Prisma schema change was needed. Existing Category, Brand, Store, Seller and Product relations cover these read journeys. Public queries enforce active/approved visibility and do not expose drafts or seller workspace data.

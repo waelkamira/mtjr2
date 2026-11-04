@@ -58,7 +58,7 @@ export default function CategoryDirectoryPage() {
           {categories.map((category) => (
             <Link
               key={category.id}
-              href={`/products?categoryId=${encodeURIComponent(category.id)}#discover`}
+              href={`/categories/${encodeURIComponent(category.slug)}`}
               className="group relative flex min-h-44 items-end overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--color-sage-100)] p-5 transition hover:-translate-y-1 hover:shadow-[var(--shadow-card)]"
             >
               {category.imageUrl && <img src={category.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
