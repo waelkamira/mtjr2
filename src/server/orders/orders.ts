@@ -46,6 +46,7 @@ function serializeOrder(order: {
     shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
     subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
     items: Array<{ id: string; productName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
+    shipment: { carrierName: string; trackingNumber: string; trackingUrl: string | null; shippedAt: Date } | null;
   }>;
 }) {
   return {
@@ -58,6 +59,7 @@ function serializeOrder(order: {
       shippingServiceName: vendor.shippingServiceName, shippingDestinationRegion: vendor.shippingDestinationRegion, minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
+      shipment: vendor.shipment ? { carrierName: vendor.shipment.carrierName, trackingNumber: vendor.shipment.trackingNumber, trackingUrl: vendor.shipment.trackingUrl, shippedAt: vendor.shipment.shippedAt.toISOString() } : null,
       items: vendor.items.map((item) => ({
         id: item.id, productName: item.productName, sku: item.sku, variantName: item.variantName,
         quantity: item.quantity, unitAmountMinor: item.unitAmountMinor.toString(), lineTotalMinor: item.lineTotalMinor.toString()
@@ -91,7 +93,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       include: {
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
-        vendorOrders: { include: { store: { select: { id: true, name: true, slug: true } }, items: true } }
+        vendorOrders: { include: { store: { select: { id: true, name: true, slug: true } }, items: true, shipment: true } }
       }
     });
     if (existing) return serializeOrder(existing);
@@ -263,7 +265,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       include: {
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
-        vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+        vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } }, shipment: true } }
       }
     });
     return serializeOrder(saved);
