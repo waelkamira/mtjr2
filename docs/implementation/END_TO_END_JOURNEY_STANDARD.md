@@ -2,18 +2,19 @@
 
 **Applies to:** all 49 platform systems, every page/route, button, link, form, menu action, API, background action, and persisted business workflow.  
 **Canonical plan:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
+**All-49 action matrix:** `docs/implementation/END_TO_END_JOURNEY_MATRIX.md`  
 **Route inventory:** `docs/implementation/PAGE_ROUTE_REGISTRY.md`  
 **Page target inventory:** `docs/architecture/PLATFORM_PAGE_INVENTORY.md`
 
 ## Non-negotiable rule
 
-Build and review features as user journeys, not isolated components. Every visible action must lead to a defined, permission-checked outcome or be explicitly disabled/labelled as unavailable. Do not ship inert buttons, fake success messages, client-only business writes, fabricated metrics, or UI controls whose backend is not implemented.
+Build and review features as user journeys, not isolated components. This is a hard release gate for every one of the 49 systems, not an optional testing suggestion. Do not proceed to broaden a system while its currently exposed critical actions have known dead ends or unverified business writes; first fix, safely disable, or explicitly scope out those actions. Every visible action must lead to a defined, permission-checked outcome or be explicitly disabled/labelled as unavailable. Do not ship inert buttons, fake success messages, client-only business writes, fabricated metrics, or UI controls whose backend is not implemented.
 
 A route, component, API handler, Prisma model, migration, or passing unit test alone does not prove the journey works.
 
 ## Required trace for every action
 
-For each button/link/form/menu item/API-triggered action, record the following in the journey matrix or the route registry:
+For each button/link/form/menu item/API-triggered action, create a separate action trace in `END_TO_END_JOURNEY_MATRIX.md` (or a linked system-specific trace) and record the following. Route-level status in the registry does not substitute for action-level evidence:
 
 1. **Entry point:** exact route, component, action label, audience and required state.
 2. **Preconditions:** authentication, verified email, role, exact resource scope, current business status, market/policy/provider requirements.
@@ -59,6 +60,12 @@ Follow the actual implementation and record evidence for each step; do not mark 
 8. **After approval:** the applicant sees the persisted status and the allowed next action. Store creation is server-authorized and begins in the correct draft state; inspect whether retries can create duplicate stores and add idempotency or a database-enforced business uniqueness rule where the workflow requires it. Market links and staff grants use exact store scope.
 9. **Journey verification:** test guest redirect, verified and unverified user, valid application, duplicate/retry, wrong user/scope, admin approve/reject, stale transition, and approved seller store creation. Verify schema migration replay in disposable PostgreSQL if persistence changed, then record the actual CI/HTTP evidence.
 10. **Registry:** list all touched pages, buttons, APIs, services, Prisma models/migrations and states; mark each route/action Verified only after evidence exists. Record known exclusions such as KYC document upload or payout activation separately instead of implying they are included.
+
+## No-incomplete-controls release rule
+
+Before a route/system slice is called ready, inspect every visible interactive control on every touched page, including header/footer navigation, cards, icon-only buttons, filters, pagination, dialogs, empty-state CTAs, seller/admin tables, bulk actions and mobile layouts. For each control, prove the destination or handler exists and the final action works. Remove or disable unsupported controls and label deferred capabilities honestly. If a workflow depends on a later system/provider/policy decision, stop before the irreversible action and show the real prerequisite; never simulate success.
+
+A route may remain in the codebase as a partial/internal implementation, but it must not be presented to users as a finished capability. Every known incomplete action must be listed with an owner and a blocking/defer decision. This is a release-readiness gate, not a demand for hundreds of shallow tests: test distinct business, security, concurrency and data-integrity invariants.
 
 ## Completion levels
 
