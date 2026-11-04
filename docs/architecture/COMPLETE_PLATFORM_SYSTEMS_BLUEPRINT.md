@@ -13,6 +13,22 @@
 
 ## 1. Rules for using this blueprint
 
+
+### Mandatory end-to-end acceptance for every system and control
+
+The action-level completion rule applies to **all 49 systems** and every visible button, link, form, filter, menu action, bulk action, page transition, API mutation, scheduled/background operation, and admin action. The canonical artifacts are:
+
+- `docs/implementation/END_TO_END_JOURNEY_STANDARD.md` — required implementation and verification contract.
+- `docs/implementation/END_TO_END_JOURNEY_MATRIX.md` — one audit ledger row per system plus action-trace evidence requirements.
+- `docs/implementation/PAGE_ROUTE_REGISTRY.md` — actual routes and route-level evidence.
+- `docs/architecture/PRISMA_MODEL_USAGE_MAP.md` — schema ownership and impact analysis.
+
+No system may be called complete because its UI, API, Prisma model, or migration exists. Each exposed action must be traced from user interaction through client handler, API validation, session/permission/scope checks, domain service, transaction and persistence (or a documented no-schema-change decision), audit/event/provider/job behavior, and server-confirmed final UI state. Test meaningful failure, retry, duplicate, stale/concurrent, and cross-user/scope cases. Every claim must cite evidence from the exact commit being reviewed.
+
+**No dead controls:** a visible action must work end to end or be removed/disabled and clearly labelled unavailable. Never show fake success, fake live data, or provider/payment/refund/payout completion that did not occur. A system remains incomplete while an active user-facing action is known to be nonfunctional. Provider/policy/market decisions must block the dependent action safely, not be bypassed with mocks.
+
+The 49-system matrix starts with all systems **Not audited** until each has been individually traced and supported by evidence. This is deliberate: the blueprint is a target scope, not a completion report.
+
 1. **Deliver vertical user journeys, not isolated pages.** Every visible button, link, form, menu action and service-triggered operation must map to an explicit outcome and be traced from the user's click through frontend, API, validation/auth, domain service, repository, Prisma/database, response and persisted UI state.
 2. **Do not add a Prisma model/table just to create a page.** First identify the business capability, user journey, owning domain, API/service, and existing model/relation that will use it.
 3. Treat `prisma/schema.prisma` as the canonical database contract. Do not add legacy compatibility fields merely to silence old queries.
