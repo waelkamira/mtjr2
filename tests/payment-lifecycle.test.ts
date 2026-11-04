@@ -1,0 +1,152 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
+
+const mocks = vi.hoisted(() => ({
+  getCurrentSession: vi.fn(),
+  getPaymentProvider: vi.fn(),
+  guestFindUnique: vi.fn(),
+  orderFindFirst: vi.fn(),
+  paymentFindUnique: vi.fn(),
+  paymentFindFirst: vi.fn(),
+  paymentCreate: vi.fn(),
+  paymentUpdate: vi.fn(),
+  paymentUpdateMany: vi.fn(),
+  transaction: vi.fn(),
+  txQueryRaw: vi.fn(),
+  txOrderFindFirst: vi.fn(),
+  txPaymentFindUnique: vi.fn(),
+  txPaymentFindFirst: vi.fn(),
+  txPaymentCreate: vi.fn(),
+  txWebhookEventCreate: vi.fn()
+}));
+
+vi.mock("server-only", () => ({}));
+vi.mock("@/server/identity/current-session", () => ({ getCurrentSession: mocks.getCurrentSession }));
+vi.mock("@/server/payments/providers/registry", () => ({ getPaymentProvider: mocks.getPaymentProvider }));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    guestSession: { findUnique: mocks.guestFindUnique },
+    order: { findFirst: mocks.orderFindFirst },
+    payment: {
+      findUnique: mocks.paymentFindUnique,
+      findFirst: mocks.paymentFindFirst,
+      create: mocks.paymentCreate,
+      update: mocks.paymentUpdate,
+      updateMany: mocks.paymentUpdateMany
+    },
+    $transaction: mocks.transaction
+  }
+}));
+
+import { processVerifiedPaymentEvent, startOrderPayment } from "@/server/payments/payments";
+
+const tx = {
+  $queryRaw: mocks.txQueryRaw,
+  order: { findFirst: mocks.txOrderFindFirst },
+  payment: {
+    findUnique: mocks.txPaymentFindUnique,
+    findFirst: mocks.txPaymentFindFirst,
+    create: mocks.txPaymentCreate,
+    update: vi.fn()
+  },
+  paymentWebhookEvent: { create: mocks.txWebhookEventCreate },
+  auditLog: { create: vi.fn() },
+  orderStatusHistory: { create: vi.fn() },
+  vendorOrder: { update: vi.fn() },
+  vendorOrderStatusHistory: { create: vi.fn() },
+  notification: { create: vi.fn() }
+};
+
+describe("payment lifecycle safety", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getCurrentSession.mockResolvedValue({ userId: "buyer-1" });
+    mocks.getPaymentProvider.mockReturnValue({
+      key: "test_provider",
+      displayName: "Test provider",
+      createIntent: vi.fn().mockResolvedValue({
+        providerReference: "provider-ref-1",
+        checkoutUrl: "https://payments.example.test/checkout/session-1",
+        expiresAt: null
+      }),
+      verifyWebhook: vi.fn()
+    });
+    mocks.orderFindFirst.mockResolvedValue({
+      id: "order-1", orderNumber: "ORD-1", status: OrderStatus.PENDING_PAYMENT,
+      totalMinor: BigInt("1500"), currencyCode: "EUR"
+    });
+    mocks.txOrderFindFirst.mockResolvedValue({ id: "order-1" });
+    mocks.txPaymentFindUnique.mockResolvedValue(null);
+    mocks.txPaymentFindFirst.mockResolvedValue(null);
+    mocks.txPaymentCreate.mockResolvedValue({
+      id: "payment-1", orderId: "order-1", provider: "test_provider",
+      status: PaymentStatus.INITIATING, amountMinor: BigInt("1500"), currencyCode: "EUR",
+      checkoutUrl: null, expiresAt: null, idempotencyKey: "idempotency-key-1"
+    });
+    mocks.paymentUpdate.mockResolvedValue({
+      id: "payment-1", orderId: "order-1", provider: "test_provider",
+      status: PaymentStatus.REQUIRES_ACTION, amountMinor: BigInt("1500"), currencyCode: "EUR",
+      checkoutUrl: "https://payments.example.test/checkout/session-1", expiresAt: null
+    });
+    mocks.transaction.mockImplementation(async (callback: (transaction: typeof tx) => unknown) => callback(tx));
+  });
+
+  it("requires an explicitly configured provider before reading or mutating an order", async () => {
+    mocks.getPaymentProvider.mockReturnValue(null);
+    await expect(startOrderPayment({
+      guestToken: "guest-token", orderId: "order-1", providerKey: "missing_provider",
+      idempotencyKey: "idempotency-key-1"
+    })).rejects.toThrow("not configured");
+    expect(mocks.orderFindFirst).not.toHaveBeenCalled();
+    expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+
+  it("scopes order lookup to the authenticated buyer and binds the intent to the server total/currency", async () => {
+    const provider = mocks.getPaymentProvider();
+    const result = await startOrderPayment({
+      guestToken: "", orderId: "order-1", providerKey: "test_provider",
+      idempotencyKey: "idempotency-key-1"
+    });
+    expect(mocks.orderFindFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "order-1", userId: "buyer-1" }
+    }));
+    expect(provider.createIntent).toHaveBeenCalledWith(expect.objectContaining({
+      amountMinor: "1500", currencyCode: "EUR", idempotencyKey: "idempotency-key-1"
+    }));
+    expect(result.checkoutUrl).toBe("https://payments.example.test/checkout/session-1");
+  });
+
+  it("does not allow switching provider while another payment attempt is active", async () => {
+    mocks.txPaymentFindFirst.mockResolvedValue({
+      id: "payment-active", orderId: "order-1", provider: "another_provider",
+      status: PaymentStatus.REQUIRES_ACTION, amountMinor: BigInt("1500"), currencyCode: "EUR",
+      checkoutUrl: "https://payments.example.test/active", expiresAt: null
+    });
+    await expect(startOrderPayment({
+      guestToken: "", orderId: "order-1", providerKey: "test_provider",
+      idempotencyKey: "idempotency-key-2"
+    })).rejects.toThrow("already active with another provider");
+    expect(mocks.txPaymentCreate).not.toHaveBeenCalled();
+    expect(mocks.getPaymentProvider().createIntent).not.toHaveBeenCalled();
+  });
+
+  it("rejects a verified webhook whose amount or currency does not match the stored payment", async () => {
+    mocks.txPaymentFindUnique
+      .mockResolvedValueOnce({ id: "payment-1", orderId: "order-1" })
+      .mockResolvedValueOnce({
+        id: "payment-1", orderId: "order-1", provider: "test_provider",
+        providerReference: "provider-ref-1", amountMinor: BigInt("1500"), currencyCode: "EUR",
+        status: PaymentStatus.REQUIRES_ACTION, lastProviderEventAt: null, succeededAt: null,
+        order: { status: OrderStatus.PENDING_PAYMENT, orderNumber: "ORD-1", userId: "buyer-1", vendorOrders: [] }
+      });
+    await expect(processVerifiedPaymentEvent({
+      providerKey: "test_provider",
+      event: {
+        eventId: "evt-1", eventType: "succeeded", providerReference: "provider-ref-1",
+        amountMinor: "1499", currencyCode: "EUR", occurredAt: new Date("2026-11-04T10:00:00.000Z")
+      },
+      payloadHash: "a".repeat(64)
+    })).rejects.toThrow("amount or currency does not match");
+    expect(mocks.txWebhookEventCreate).not.toHaveBeenCalled();
+  });
+});

@@ -1805,3 +1805,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Applied the first visual adoption slice to global navigation actions, storefront hero/category selection, product cards, marketplace search, and product detail accents. Existing category layout, routes, and data behavior were preserved in the changed components.
 - Exact merged head `0bd03c8de90bb7c98883d2d73020ef4132b559b3` passed General CI run `41825949762` and disposable PostgreSQL integration run `41825949635`.
 - Browser-based visual comparison against the owner reference images remains outstanding; these checks establish code/build/database integrity, not pixel parity or a complete site-wide redesign.
+
+
+## 2026-11-04 — Payment lifecycle reconstruction (verification pending)
+
+- Rebuilt the payment foundation on a fresh branch based on current `main` instead of attempting to merge stale stacked history.
+- Added canonical `PaymentStatus`, `Payment`, and `PaymentWebhookEvent` schema additions and a migration ordered after the migrations already on main.
+- Added provider adapter contract/registry, owner-scoped idempotent payment-intent API, provider discovery API, and verified webhook processing.
+- Corrected webhook response handling: invalid signatures or normalized payloads return 4xx; event ID/hash conflicts return 409; unclassified processing/database failures return retryable 500 with `Retry-After`.
+- Added focused webhook-route tests for signature rejection, malformed events, transient processing failure, event-ID payload conflicts, and successful acknowledgement.
+- Connected payment options to the current-main order detail page while preserving its store review and returns functionality.
+- No provider is registered, no live payment is collected, and no production database or deployment configuration was accessed.
+- **Status: not verified / not merged yet.** General CI and disposable PostgreSQL integration must pass on the final exact PR head before this work can be considered complete.
