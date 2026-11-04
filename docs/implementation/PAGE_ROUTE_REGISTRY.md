@@ -158,3 +158,42 @@ A route may be marked **Verified** only if:
 6. has current evidence recorded here and in the build log.
 
 Do not add Prisma models merely to satisfy a page checklist. A page without a supported backend must state that the capability is unavailable or pending configuration. Do not claim production readiness from route presence alone.
+
+
+## Actual App Router filesystem audit — 2026-11-04
+
+**Source:** recursive Git tree for `feat/returns-workflow`, head observed before the follow-up test/documentation commits. This is a static route-presence audit only; it does not prove runtime rendering, navigation reachability, authorization, API success, persistence, or browser completion.
+
+- Actual route files found: **30** `page.tsx` files.
+- Actual API route handlers found: **86** `route.ts` files under `src/app/api/`.
+- Every route below is therefore **route-present / journey-unverified** unless a separate exact-commit test record says otherwise. Do not translate route presence into Verified.
+
+### Routes present in the audited App Router tree
+
+| Route | Source file | Initial audit result |
+|---|---|---|
+| `/` | `src/app/page.tsx` | Present; buyer discovery and homepage action audit still required |
+| `/products/[slug]` | `src/app/products/[slug]/page.tsx` | Present; canonical slug route |
+| `/cart`, `/checkout` | `src/app/cart/page.tsx`, `src/app/checkout/page.tsx` | Present; buying journey verification remains |
+| `/orders/[orderId]` | `src/app/orders/[orderId]/page.tsx` | Present; ownership/payment/return actions require journey verification |
+| `/account/orders`, `/account/questions`, `/account/returns`, `/account/reviews`, `/account/wishlist` | matching `src/app/account/*/page.tsx` files | Present; each action remains unverified as a complete journey |
+| `/account/messages`, `/account/messages/[conversationId]` | matching message page files | Present; participant scope and send/read journey need evidence |
+| `/account/support`, `/account/support/[ticketId]` | matching support page files | Present; customer-visible/staff-only message boundaries need evidence |
+| `/notifications` | `src/app/notifications/page.tsx` | Present; preference and read-state journey needs evidence |
+| `/seller`, `/seller/products`, `/seller/inventory`, `/seller/orders`, `/seller/staff`, `/seller/reviews`, `/seller/questions`, `/seller/messages` | matching `src/app/seller/**/page.tsx` files | Present; store-scoped actions and complete seller journey remain unverified |
+| `/admin/review`, `/admin/tax-rates`, `/admin/returns`, `/admin/reviews`, `/admin/store-reviews`, `/admin/questions`, `/admin/support` | matching `src/app/admin/**/page.tsx` files | Present; permission and state-transition evidence remains required |
+
+### Required route targets absent from the audited tree
+
+The following dedicated page routes were **not found** in the audited `src/app/**/page.tsx` tree. Existing API handlers or embedded controls do not make these page routes exist:
+
+- Identity/customer: `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/account`, `/account/profile`, `/account/security`, `/account/sessions`, `/account/addresses`.
+- Discovery/public store: `/search`, `/products`, `/categories/[slug]`, `/brands/[slug]`, `/stores/[slug]`, `/stores`.
+- Seller: `/sell`, `/seller/apply`, `/seller/application`, `/seller/dashboard`, `/seller/store`, `/seller/store/settings`, `/seller/warehouses`, `/seller/shipping`, `/seller/returns`, `/seller/orders/[orderId]`, `/seller/products/new`, `/seller/products/[productId]/edit`.
+- Admin: dedicated `/admin/sellers` and user/role management pages; some moderation actions may be embedded in existing admin screens or API-only at present.
+
+Some absent targets may be intentionally implemented as sections or embedded workflows on an existing route. Before creating new pages, inspect the actual navigation and component behavior; do not duplicate a working embedded workflow just to satisfy a route name. Authentication APIs exist, but the absence of dedicated auth pages must be resolved or explicitly documented as an approved embedded/modal design before release.
+
+### API route audit boundary
+
+The 86 API route handlers are present in the tree. Their mere presence is not a pass. For each route touched by a feature, record request method/path, schema, session and permission guard, domain service, Prisma models, error mapping, and focused tests in the feature's journey trace. Prioritize auth, seller application/store creation, checkout/order, returns/refunds, inventory, and admin mutations. A complete endpoint-by-endpoint behavioral audit has not yet been performed.
