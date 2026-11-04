@@ -27,12 +27,12 @@ export default async function SiteNavigation() {
             <>
               <Link href="/account/favorites" className="hidden rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] md:inline-flex">Favorites</Link>
               <Link href="/account/orders" className="hidden rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] md:inline-flex">Orders</Link>
-              <Link href="/account" className="rounded-lg bg-[var(--color-forest-800)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">{accountLabel}</Link>
+              <Link href="/account" className="rounded-lg bg-[var(--color-violet-600)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-violet-700)]">{accountLabel}</Link>
             </>
           ) : (
             <>
               <Link href="/login" className="rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
-              <Link href="/register" className="rounded-lg bg-[var(--color-forest-800)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Join</Link>
+              <Link href="/register" className="rounded-lg bg-[var(--color-violet-600)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-violet-700)]">Join</Link>
             </>
           )}
         </div>
