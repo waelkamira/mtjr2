@@ -1602,3 +1602,26 @@ The project owner approved Resend as the transactional email provider. The serve
 - Added audit events for session revocation. 2FA is visibly marked unavailable rather than exposing a non-functional enrollment control.
 - Added tests for blank optional Google credentials and seller-registration business-name validation.
 - Exact-head CI and PostgreSQL integration remain the final code gates.
+
+
+## 2026-11-04 — Shared global storefront navigation (initial slice)
+
+**Observed**
+- The navigation header was embedded inside `src/features/storefront/home-page.tsx`, while `src/app/layout.tsx` rendered only `children`. Other routes therefore did not receive the same primary navigation.
+- The existing homepage already loaded active markets, categories, brands and discoverable products through catalog APIs.
+
+**Implemented**
+- Added `src/components/site-navigation.tsx` as a shared server-rendered header and mounted it in the root layout so it appears across application routes.
+- The header resolves the current session server-side, shows guest or authenticated account actions accordingly, and never trusts a client-supplied user ID.
+- Added a GET search form that submits to the existing homepage discovery query contract.
+- Moved the homepage-only header out of the home page and exposed the existing brands section with a stable anchor.
+- Added `/products` as an initial route reusing the existing discovery experience and API-backed filters/pagination.
+- Updated the route registry with implementation status and remaining verification gates.
+
+**Prisma decision**
+- No schema change: navigation reads the existing authenticated session and links to already-owned account/catalog entities. No new business fact or persistent state is introduced by navigation itself.
+
+**Verification**
+- Baseline CI and disposable PostgreSQL integration passed on parent commit `c8ecf1bb3751112249f4b190e5aac4af68ddc464`.
+- The new navigation commit must pass CI and PostgreSQL integration before this slice is considered validated.
+- Live browser/mobile navigation and authenticated/guest rendering have not yet been exercised; do not mark this slice Verified until those journeys are run.

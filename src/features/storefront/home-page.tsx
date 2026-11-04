@@ -153,37 +153,6 @@ export default function StorefrontHomePage() {
       <div className="border-b border-[var(--border)] bg-[var(--color-forest-950)] text-center text-xs tracking-wide text-white/85">
         A considered marketplace for the things worth keeping
       </div>
-      <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--color-ivory-50)]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-4 px-5 py-4 lg:px-10">
-          <Link href="/" className="mr-2 text-2xl font-semibold tracking-tight text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
-          <form onSubmit={submitSearch} className="order-3 flex w-full overflow-hidden rounded-xl border border-[var(--border)] bg-white md:order-none md:ml-5 md:max-w-xl md:flex-1">
-            <input aria-label="Search products" value={draftQuery} onChange={(event) => setDraftQuery(event.target.value)} placeholder="Search products, brands and more" className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none" />
-            <button className="bg-[var(--color-forest-800)] px-5 text-sm font-medium text-white transition hover:bg-[var(--color-forest-950)]" type="submit">Search</button>
-          </form>
-          <label className="ml-auto flex items-center gap-2 text-xs text-[var(--muted)]">
-            <span>Ship to</span>
-            <select aria-label="Choose market" value={marketId} onChange={(event) => { setMarketId(event.target.value); setPage(1); }} className="max-w-40 rounded-lg border border-[var(--border)] bg-white px-2 py-2 text-sm text-[var(--foreground)]">
-              <option value="">All markets</option>
-              {markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}
-            </select>
-          </label>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Link href="/account/wishlist" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Wishlist</Link>
-            <Link href="/account/orders" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">Orders</Link>
-            <Link href="/account" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">My account</Link>
-            <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
-            <Link href="/cart" className="rounded-lg bg-[var(--color-forest-800)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Cart</Link>
-          </div>
-        </div>
-        <nav aria-label="Main navigation" className="mx-auto flex max-w-[1440px] gap-7 overflow-x-auto px-5 pb-3 text-sm text-[var(--color-ink-700)] lg:px-10">
-          <a href="#discover" className="whitespace-nowrap font-medium text-[var(--color-forest-800)]">Discover</a>
-          <a href="#categories" className="whitespace-nowrap">Categories</a>
-          <a href="#about" className="whitespace-nowrap">Our marketplace</a>
-          <Link href="/seller" className="whitespace-nowrap">Sell on Mtjr</Link>
-          <Link href="/account/messages" className="whitespace-nowrap">Messages</Link>
-          <Link href="/notifications" className="whitespace-nowrap">Notifications</Link>
-        </nav>
-      </header>
 
       <section className="mx-auto grid max-w-[1440px] gap-8 px-5 py-10 lg:grid-cols-[1.15fr_.85fr] lg:px-10 lg:py-16">
         <div className="flex flex-col justify-center rounded-[2rem] bg-[var(--color-forest-950)] px-8 py-12 text-white sm:px-12 lg:min-h-[390px]">
@@ -252,7 +221,7 @@ export default function StorefrontHomePage() {
         ) : <p className="rounded-xl bg-[var(--color-ivory-100)] px-5 py-4 text-sm text-[var(--muted)]">Categories will appear here as the marketplace catalog is activated.</p>}
       </section>
 
-      {brands.length > 0 && <section aria-label="Featured brands" className="mx-auto max-w-[1440px] px-5 py-5 lg:px-10">
+      {brands.length > 0 && <section id="brands" aria-label="Featured brands" className="mx-auto max-w-[1440px] px-5 py-5 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white px-5 py-5">
           <div><p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Independent labels</p><h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">Discover the brands</h2></div>
           <div className="flex flex-wrap gap-2">

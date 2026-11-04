@@ -24,7 +24,7 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | Required route | Audience | Owning system(s) | API/service and data to confirm | Initial status | Evidence / gap |
 |---|---|---|---|---|---|
 | `/` | Everyone | 02, 03, shared market/catalog | markets, categories, brands, product discovery APIs | Partial / unverified | Confirm visible navigation, live API data, loading/error/empty states, market/currency and responsive layout |
-| `/products` | Everyone | 02, 03 | product discovery/list API; Product, ProductPrice, ProductVariant | Not audited | Confirm filters, sorting, pagination and market context |
+| `/products` | Everyone | 02, 03 | `src/app/products/page.tsx` reuses `StorefrontHomePage`; `GET /api/products`; Product, ProductPrice, ProductVariant | Implemented / unverified | Shared global navigation now links here; discovery API supports query, market, category, brand, sorting and pagination. Reused home composition is an initial bridge, not the final dedicated catalog layout; run route/browser journey. |
 | `/products/[id]` or canonical slug | Everyone | 02, 06–08 | product detail, reviews, Q&A, favorites, cart APIs | Partial / unverified | Confirm route convention, variants, seller, stock, price and all actions |
 | `/search` | Everyone | 03 | search/discovery API | Partial / unverified | Storefront search state exists; dedicated route/autocomplete need audit |
 | `/categories/[slug]` | Everyone | 02, 03 | category and product APIs | Not audited | Confirm route and empty/invalid category states |
@@ -207,3 +207,20 @@ A route stays **Implemented / unverified** (or Partial) if any exposed critical 
 
 
 **Identity UI follow-up (2026-11-04):** Added functional login, registration, password recovery and email verification pages plus a user-facing logout control. `/terms` and `/privacy` now exist as clearly marked v1 development drafts. Registration defaults on in development/test and is unconditionally blocked in production; consent is captured separately for both documents. The flow remains Implemented / unverified until exact-head CI and the configured HTTP/browser journey pass.
+
+
+## Shared global navigation — implementation slice (2026-11-04)
+
+| Surface | Route / action | Implementation | Backend / data | Status and verification |
+|---|---|---|---|---|
+| Global header | All application pages | `src/components/site-navigation.tsx`, mounted by `src/app/layout.tsx` | Server-resolved current session via `getCurrentSession()`; no client-supplied identity | Implemented / unverified. Public navigation remains renderable if identity lookup is temporarily unavailable. |
+| Brand/home | `/` | Shared header brand link | Existing storefront home | Route exists; navigation/browser verification pending. |
+| Shop | `/products` | `src/app/products/page.tsx` reuses the current discovery experience | `GET /api/products`, backed by catalog discovery and existing Prisma catalog entities | Implemented / unverified; dedicated listing composition is a later refinement. |
+| Categories | `/#categories` | Anchor to existing category section | Existing `GET /api/categories` data on home | Implemented / unverified; verify anchor behavior on mobile and from other routes. |
+| Brands | `/#brands` | Anchor to existing brand section | Existing `GET /api/brands` data on home | Implemented / unverified; section appears only when active brands exist. |
+| Cart | `/cart` | Shared header link | Existing cart API and guest cart cookie | Implemented / unverified; verify guest and signed-in cart journey. |
+| Favorites / Orders / Account | Existing protected account routes | Shown when a current session resolves | Existing account APIs and User/Favorite/Order models | Implemented / unverified; server-side account layout remains the authorization boundary. |
+| Seller workspace | `/seller` | Shared header link | Existing seller application/store APIs and Seller/Store models | Implemented / unverified; route must enforce pending/approved seller permissions. |
+| Messages / Notifications | Existing authenticated routes | Shown when a current session resolves | Existing messaging/notification APIs and Prisma entities | Implemented / unverified; ownership and unread-state behavior remain to be tested. |
+
+**Navigation rule:** every shared navigation destination must resolve to a real route. Do not add links for missing destination pages until the route and its backend journey are implemented. The header is global; page-specific actions remain in their owning page and must follow the same UI → API → validation/auth → domain service → Prisma contract.
