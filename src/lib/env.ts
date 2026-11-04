@@ -41,4 +41,4 @@ export function parseEnvironment(
   return {\n    ...result.data,\n    PUBLIC_REGISTRATION_ENABLED: result.data.PUBLIC_REGISTRATION_ENABLED ?? (result.data.NODE_ENV === "production" ? "false" : "true")\n  };
 }
 
-export const env = parseEnvironment(process.env);
+export function isPublicRegistrationEnabled(environment: ApplicationEnvironment): boolean {\n  return environment.NODE_ENV !== "production" && environment.PUBLIC_REGISTRATION_ENABLED === "true";\n}\n\nexport const env = parseEnvironment(process.env);
