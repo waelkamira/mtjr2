@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — cart, quote/reservation, address, shipping configuration, initial market-tax calculation, transactional order/vendor-order creation, and buyer/seller order views are implemented across stacked branches. The latest observed PostgreSQL integration run passed on the 2026-11-04 audit head; General CI exposed one unit-test fixture failure that has been corrected in a follow-up commit and is awaiting a fresh run. Payment, discounts, and fulfillment transitions remain.
+**Status:** In progress — cart, quote/reservation, address, shipping configuration, initial market-tax calculation, transactional order/vendor-order creation, provider-neutral payment foundation, seller preparation and initial manual dispatch/tracking are implemented in merged/current work. Exact-head CI and disposable PostgreSQL passed for seller preparation PR #25. Manual shipment tracking is in progress on `feat/manual-shipment-tracking`; no live carrier integration, delivery confirmation, refunds or discounts are claimed.
 
 ## Objective
 
