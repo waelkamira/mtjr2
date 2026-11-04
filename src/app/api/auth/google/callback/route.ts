@@ -36,7 +36,7 @@ export async function GET(request: Request): Promise<Response> {
       (accountType !== "CUSTOMER" && accountType !== "SELLER") || termsVersion !== "v1" || privacyVersion !== "v1") {
     return redirectTo("/register?oauth=invalid");
   }
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return redirectTo("/register?oauth=unavailable");
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return redirectTo("/register?oauth=registration_disabled");
 
   try {
     const callback = new URL("/api/auth/google/callback", env.NEXT_PUBLIC_APP_URL).toString();
