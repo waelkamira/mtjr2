@@ -136,7 +136,7 @@ export default function AddressesPage() {
               </label>
               <label className="block text-sm">
                 Phone number
-                <input className="mt-1 w-full rounded-xl border p-3" type="tel" placeholder="+33612345678" pattern="\\+[1-9][0-9]{7,14}" value={phone} onChange={event => setPhone(event.target.value)} required maxLength={32} />
+                <input className="mt-1 w-full rounded-xl border p-3" type="tel" placeholder="+33612345678" pattern="\+[1-9][0-9]{7,14}" value={phone} onChange={event => setPhone(event.target.value)} required maxLength={32} />
                 <span className="mt-1 block text-xs text-[var(--muted)]">Use international format, including the + country code.</span>
               </label>
               <label className="block text-sm">
