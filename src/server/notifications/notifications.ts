@@ -39,15 +39,16 @@ export async function createInAppNotification(tx: Prisma.TransactionClient, inpu
   });
   const inAppEnabled = preference?.inAppEnabled ?? true;
   const emailEnabled = preference?.emailEnabled ?? false;
-  const user = emailEnabled
-    ? await tx.user.findFirst({ where: { id: data.userId, status: "ACTIVE", emailVerifiedAt: { not: null } }, select: { id: true } })
-    : null;
+  const [user, emailConsent] = emailEnabled ? await Promise.all([
+    tx.user.findFirst({ where: { id: data.userId, status: "ACTIVE", emailVerifiedAt: { not: null } }, select: { id: true } }),
+    tx.userConsent.findFirst({ where: { userId: data.userId, type: "NOTIFICATION_EMAIL" }, orderBy: { capturedAt: "desc" }, select: { granted: true } })
+  ]) : [null, null];
 
   let notification: { id: string } | null = null;
   if (inAppEnabled) {
     notification = await tx.notification.create({ data, select: { id: true } });
   }
-  if (emailEnabled && user) {
+  if (emailEnabled && user && emailConsent?.granted) {
     await tx.notificationDelivery.createMany({
       data: [{
         userId: data.userId,
@@ -82,11 +83,23 @@ export async function getMyNotificationPreferences(now = new Date()) {
 export async function updateMyNotificationPreferences(input: unknown, now = new Date()) {
   const session = await requireCurrentSession(now);
   const data = preferenceUpdateSchema.parse(input);
-  await prisma.$transaction(data.preferences.map((item) => prisma.notificationPreference.upsert({
-    where: { userId_type: { userId: session.userId, type: item.type } },
-    create: { userId: session.userId, type: item.type, inAppEnabled: item.inAppEnabled, emailEnabled: item.emailEnabled },
-    update: { inAppEnabled: item.inAppEnabled, emailEnabled: item.emailEnabled }
-  })));
+  await prisma.$transaction(async (tx) => {
+    await Promise.all(data.preferences.map((item) => tx.notificationPreference.upsert({
+      where: { userId_type: { userId: session.userId, type: item.type } },
+      create: { userId: session.userId, type: item.type, inAppEnabled: item.inAppEnabled, emailEnabled: item.emailEnabled },
+      update: { inAppEnabled: item.inAppEnabled, emailEnabled: item.emailEnabled }
+    })));
+    await tx.userConsent.create({
+      data: {
+        userId: session.userId,
+        type: "NOTIFICATION_EMAIL",
+        version: "notification-email-v1",
+        granted: data.preferences.some((item) => item.emailEnabled),
+        source: "notification-preferences",
+        capturedAt: now
+      }
+    });
+  });
   return getMyNotificationPreferences(now);
 }
 
