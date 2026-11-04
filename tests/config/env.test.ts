@@ -30,4 +30,13 @@ describe("parseEnvironment", () => {
       parseEnvironment({ ...validEnvironment, NEXT_PUBLIC_APP_URL: "not-a-url" })
     ).toThrow(/NEXT_PUBLIC_APP_URL/);
   });
+  it("keeps public registration disabled unless explicitly enabled", () => {
+    expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("false");
+    expect(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "true" }).PUBLIC_REGISTRATION_ENABLED).toBe("true");
+  });
+
+  it("rejects an invalid public registration flag", () => {
+    expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
+  });
+
 });
