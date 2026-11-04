@@ -1882,3 +1882,20 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Supabase, Cloudinary, OpenAI, and EmailJS were not found in the active environment schema or integration code paths in this review; their credentials are not required to browse the current storefront.
 - Verification of this change is pending exact-head CI. The local database and browser journey have not been run on the owner's PC from this session.
 
+
+
+## 2026-11-04 — System 07 wishlist guest merge and recommendations
+
+**Implemented**
+- Preserved the existing Favorite ownership boundary and added a bounded guest wishlist in browser storage (maximum 100 unique product IDs).
+- Added authenticated POST /api/favorites/merge. The server resolves the owner from the session, filters to active/approved products in active stores with active sellers, deduplicates input, and uses PostgreSQL createMany(skipDuplicates) against the unique (userId, productId) key. Client cache is cleared only after a successful merge response.
+- Added Recommendation product-to-product relations and forward-only migration 20261104100000_product_recommendations.
+- Added authenticated GET /api/recommendations: active curated links are preferred; category similarity is the bounded fallback. The query uses only the current user's own favorites, excludes saved products, and returns only public approved products. Responses are private/no-store and no cross-customer behavioral profile is created.
+- Connected the wishlist page to merge guest saves before refreshing server state and display recommendations. Product detail supports guest save/remove locally and reconciles against the server after authentication.
+- Added focused tests for guest ID deduplication, unavailable product filtering, duplicate-safe merge, user scoping, and privacy-safe recommendation fallback.
+
+**Verification status**
+- Source changes and migration authored on feat/wishlist-guest-recommendations.
+- Exact-head Prisma validate/generate, typecheck, lint, unit tests, production build, and disposable PostgreSQL migration/integration have not yet run. Do not merge until the CI result is green and the recommendation migration is applied in the disposable PostgreSQL workflow.
+- Browser-level guest-save → sign-in → merge → wishlist refresh and cross-user isolation remain to be verified.
+- Named user-created lists and cross-tab storage event synchronization remain outside this slice.
