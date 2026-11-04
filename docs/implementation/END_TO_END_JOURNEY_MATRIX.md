@@ -34,7 +34,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 12 | Seller onboarding, verification and KYC | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 13 | Seller dashboard and analytics | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 14 | Seller product management | Not audited | Not mapped | Not audited | Not audited | Not verified |
-| 15 | Seller order management | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 15 | Seller order management | Partial — seller preparation actions added; shipment lifecycle remains unavailable | `/seller/orders`, `PATCH /api/seller/orders/[vendorOrderId]/status` | `transitionSellerVendorOrder`; session-derived store ownership / exact `orders:manage`; `CONFIRMED → PROCESSING → READY_TO_SHIP` | Existing `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, `AuditLog`; no schema change | Exact-head CI and focused PostgreSQL authorization/concurrency verification pending; no shipment label/tracking or delivered transition |
 | 16 | Seller inventory and warehouse management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 17 | Supplier and procurement management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 18 | Shipping and fulfillment (seller) | Not audited | Not mapped | Not audited | Not audited | Not verified |
