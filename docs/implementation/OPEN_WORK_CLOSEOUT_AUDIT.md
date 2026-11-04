@@ -85,3 +85,58 @@ On the exact heads inspected on 2026-11-04:
 - New branch head after the change: `c37d10982a71850c5f65222f087073ea2eaf082e`. The checkout copy fix is the only source change; seller workspace copy remained unchanged.
 - Fresh exact-head workflows are running: Quality job `126369311696`; PostgreSQL job `126369312055`. Logs were not yet downloadable at the time of this note. This change is **not verified** until both jobs finish successfully.
 - No merge or PR retarget/rebase was performed.
+
+
+## 2026-11-04 — Live branch reconciliation after checkout lint review
+
+**Main baseline:** `d1b974c8d610af8264be06e6c80b4999585d80a4` (`docs: log checkout lint correction`).  
+**Policy:** This is a reconciliation snapshot, not permission to merge every open PR. Compare exact trees and checks before changing PR state.
+
+### Fresh PR inventory
+
+The repository still has 14 open PRs: #2–#14 and #16–#17. Current heads at the time of this check:
+
+- #2 `6a7cd009c26a1c2d8736805bcabe7ca895e54544`
+- #3 `e76c27ea26af984bb077e80fd443d75d8007c045`
+- #4 `f47e4e208b09ded89b00aa7a41af76e3a4e8e11a`
+- #5 `3b62e3819b0c630ccaad1a8bd0581189f19be043`
+- #6 `249e9e744fc5625802a041babbe39ae694f77638`
+- #7 `b8b2b416ef6e10400de0c23adcd76933cfded068`
+- #8 `6abf694f66475a15036c62f0d73b68e285b76868`
+- #9 `8c9f003205754cb1029436b7569c5a814baeb1df`
+- #10 `3c89f19a7e49934e2ab901a9a7a0b0d4506a2cb0`
+- #11 `87bfa7e07e3c162078cc26e4f048fab7f5dc3b31`
+- #12 `533e11085253a884cb5e0d3cf651525295e67ac1`
+- #13 `b96151d7c14af0d9770bb1a93e2a147982129440`
+- #14 `03183b1e1d421f881f02f420f8ffeb126f353aa8`
+- #16 `95023400dc1b7ee3e7d69dc1ca75ffc0f572d452`
+- #17 `7a56176b3fb23095526b449088d1929477747cc0`
+
+### Findings that change the previous audit
+
+- #2’s comparison with main shows only the two CI workflow files as unique changed files; the checkout quote migration, service and route files are already present on main. Do not merge the full stacked branch blindly.
+- #3’s current head is an ancestor of main. Its delivery-address implementation is present in main; treat the open PR as a stale/superseded candidate and confirm its PR diff before closing.
+- #4 and #5 have fresh successful General CI and PostgreSQL integration runs on their current heads. Their remaining diffs relative to main are narrower than their stacked PR descriptions suggest; review those exact files before deciding whether to retarget/merge.
+- #6’s previous exact-head CI failed at `src/app/admin/tax-rates/page.tsx` because its effect called a state-updating loader synchronously. The prior diagnosis of an `orders.ts` projection mismatch was not supported by that exact job log.
+- On #6, the tax page was updated twice and now uses the same file blob as main (`8a0eb0e0f7bae35f323903b2cc75a3a490a928b5`); final branch commit is `249e9e744fc5625802a041babbe39ae694f77638`. This is a source correction only. No GitHub Actions quality or PostgreSQL run was found for that exact new head, so it is **not yet verified**.
+- #8–#14 heads compare as ancestors of main (zero commits ahead in the main comparison), although several old branch-head quality checks fail. Do not merge those stale heads into main; inspect their current PR diffs and close only when the included functionality is confirmed in main.
+- #7 (payment lifecycle) and #16 (seller return visibility) still have unique implementation scope to review. #17 is stacked on #16 and includes that dependency in its branch history; do not treat it as an independent docs-only diff against main.
+
+### Exact-head verification snapshot
+
+- #2 and #3: General CI and PostgreSQL integration passed on their recorded current heads.
+- #4 and #5: General CI and PostgreSQL integration passed on their recorded current heads.
+- #6: previous General CI failed at lint; tax-page source was corrected as noted above, but exact-head CI and PostgreSQL integration remain unverified.
+- #9, #11, #12, #13 and #14: current recorded heads still have failed quality checks; because these heads are behind main, inspect main's newer fixes rather than reapplying old fixes to stale branches.
+- #16: quality passed on its recorded head; newer documentation-only changes still need exact-head verification according to its PR description.
+- #7, #8, #10 and #17: no successful exact-head quality result was confirmed in this recheck.
+
+### Next closeout order
+
+1. Reconcile #2–#5 against main by reviewing only unique file changes; preserve already-integrated checkout code and avoid duplicate migrations.
+2. Confirm the #6 tax-page correction with exact-head CI and PostgreSQL integration when a workflow can be run for that commit. Do not mark #6 verified from the main branch's older green run.
+3. Identify and close stale/superseded PRs only after confirming their unique diff is empty or already represented on main.
+4. Review #7 payment lifecycle and #16/#17 returns scope after the checkout stack is reconciled.
+5. Keep Phase 2 operational gates explicitly pending until their required real-world evidence exists. Do not claim deployment-only steps passed from source inspection alone.
+
+**No PR was merged or closed during this recheck.** No database migration or production data operation was performed.
