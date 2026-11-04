@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
 vi.mock("@/lib/env", () => ({
   env: {
-    NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+    APP_URL: "http://localhost:3000",
     GOOGLE_CLIENT_ID: "google-client",
     GOOGLE_CLIENT_SECRET: "google-secret",
     NODE_ENV: "production"
