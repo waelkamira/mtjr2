@@ -42,7 +42,7 @@
   --color-forest-700: var(--color-petrol-700);
   --color-sage-600: #4c8f91;
   --color-sage-500: #6db9b5;
-  --color-sage-300: #b5e8e3;
+  --color-sage-300: var(--color-cyan-300);
   --color-sage-200: var(--color-cyan-300);
   --color-sage-100: var(--color-cyan-100);
 
