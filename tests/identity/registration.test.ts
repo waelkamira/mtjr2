@@ -94,7 +94,17 @@ describe("registration and email verification", () => {
     }, now);
     expect(txMock.seller.create).toHaveBeenCalledWith({ data: { ownerId: "seller-user-1", legalName: "Example Applicant", displayName: "Example Store", status: "PENDING" } });
   });
-  it("requires business details when seller is selected", async () => {\n    await expect(registerUser({\n      email: "seller@example.com",\n      password: "correct horse battery staple 2026",\n      accountType: "SELLER",\n      acceptedTerms: true,\n      acceptedPrivacy: true\n    } as never, now)).rejects.toThrow();\n    expect(prismaMock.$transaction).not.toHaveBeenCalled();\n  });\n  it("rejects registration without explicit terms and privacy consent", async () => {
+  it("requires business details when seller is selected", async () => {
+    await expect(registerUser({
+      email: "seller@example.com",
+      password: "correct horse battery staple 2026",
+      accountType: "SELLER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    } as never, now)).rejects.toThrow();
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+  it("rejects registration without explicit terms and privacy consent", async () => {
     await expect(registerUser({
       email: "buyer@example.com",
       password: "correct horse battery staple 2026",
