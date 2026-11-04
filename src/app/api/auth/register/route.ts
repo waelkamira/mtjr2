@@ -7,7 +7,7 @@ import { validateIdentityMutationRequest } from "@/server/identity/request-secur
 export const runtime = "nodejs";
 
 export async function POST(request: Request): Promise<Response> {
-  if (env.PUBLIC_REGISTRATION_ENABLED !== "true") {
+  if (env.NODE_ENV === "production" || env.PUBLIC_REGISTRATION_ENABLED !== "true") {
     return Response.json({ error: "Account registration is temporarily unavailable." }, { status: 503 });
   }
   const rejected = validateIdentityMutationRequest(request);
