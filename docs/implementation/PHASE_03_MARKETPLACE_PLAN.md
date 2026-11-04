@@ -146,3 +146,12 @@ Marketplace Core's buyer catalog now has a connected product detail journey. The
 - [x] Reuse the canonical `/api/products` query contract; no duplicate search endpoint or Prisma model was added.
 - [ ] Typo-tolerant ranking, autocomplete and richer facets remain deferred.
 - Verification policy: focused code review only for this UI state slice; no database, Prisma migration, or broad routine test run.
+
+## 3.8 — Isolated demo catalog data
+
+- [x] Implement a repeatable, opt-in demo seed using the canonical category, product, store, market, price, media, variant, warehouse, and inventory models.
+- [x] Seed 8 bilingual demo categories and 10 active products per category (80 products), with 4 demo seller/store accounts and a dedicated DEMO-US/USD market.
+- [x] Require a separate `DEMO_DATABASE_URL`, explicit opt-in flags, a demo/test/dev database-name marker, and a non-production runtime; never fall back to production `DATABASE_URL`.
+- [x] Use stable identifiers/upserts; do not reset existing stock on reruns or fabricate reviews/orders/payments.
+- [ ] Execute against disposable PostgreSQL, rerun to prove idempotency, and verify public market/category/product/search API results at the exact commit.
+- No Prisma migration is required by this data-only slice.
