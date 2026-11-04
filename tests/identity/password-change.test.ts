@@ -8,8 +8,7 @@ const { prismaMock, txMock, hashPasswordMock, verifyPasswordMock } = vi.hoisted(
     auditLog: { create: vi.fn() },
     notificationPreference: { findUnique: vi.fn() },
     notification: { create: vi.fn() },
-    notificationDelivery: { createMany: vi.fn() },
-    user: { updateMany: vi.fn() }
+    notificationDelivery: { createMany: vi.fn() }
   };
   return {
     txMock: tx,
