@@ -302,12 +302,6 @@ The 49-system blueprint is paired with a unified page-by-page target and audit r
 
 ## Current implementation audit (2026-11-04)
 
-<<<<<<< HEAD
-The active implementation branch is `feat/returns-workflow` (draft PR #15, stacked on earlier work; not merged). The static App Router audit found 30 page routes and 86 API route handlers. This confirms substantial frontend/backend surface area, but does not mean all routes or user journeys are complete. The route registry records actual paths and missing dedicated targets; the Phase 3 seller acceptance gate and Phase 4 buying verification remain open. See [Build Log](docs/implementation/BUILD_LOG.md) for the exact-head CI results and current blockers. Continue from [Phase 4 Buying Core](docs/implementation/PHASE_04_BUYING_PLAN.md), not by restarting the cart/quote work.
-## End-to-end completion rule for all 49 systems
-
-Every visible control must be followed from click/submit through frontend handler, API, validation, authentication and authorization, domain service, Prisma persistence (or documented no-schema-change decision), transaction/idempotency/audit behavior, and final server-confirmed UI result. No dead buttons, fake success, or unfinished capability presented as working. The all-system audit ledger is [`END_TO_END_JOURNEY_MATRIX.md`](docs/implementation/END_TO_END_JOURNEY_MATRIX.md); the required contract is [`END_TO_END_JOURNEY_STANDARD.md`](docs/implementation/END_TO_END_JOURNEY_STANDARD.md). All 49 systems start as Not audited until exact-commit evidence supports their status.
-=======
 The active baseline is `main`. Seller-return lifecycle work is tracked separately in draft PR #22; the visual design foundation was merged in PR #21. The static App Router audit found 30 page routes and 86 API route handlers at the time of that audit. This confirms substantial frontend/backend surface area, but does not mean all routes or user journeys are complete. The route registry records actual paths and missing dedicated targets; the Phase 3 seller acceptance gate and Phase 4 buying verification remain open. See [Build Log](docs/implementation/BUILD_LOG.md) for exact-head CI evidence and current blockers. Continue from [Phase 4 Buying Core](docs/implementation/PHASE_04_BUYING_PLAN.md), not by restarting cart/quote work.
 ## End-to-end completion rule for all 49 systems
 
@@ -334,4 +328,4 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 
 - Windows/PowerShell local setup using an isolated PostgreSQL `mtjr2_demo` database and the 80-product demo catalog: [Local development guide](docs/development/LOCAL_WINDOWS_SETUP.md).
 - The canonical application URL is server-only `APP_URL`; do not use a `NEXT_PUBLIC_*` prefix for server-side configuration.
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
