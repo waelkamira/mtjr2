@@ -110,7 +110,7 @@ export async function listMyNotifications(now = new Date()) {
       where: { userId: session.userId },
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: { id: true, type: true, title: true, message: true, resourceType: true, resourceId: true, readAt: true, createdAt: true }
+      select: { id: true, type: true, title: true, message: true, resourceType: true, resourceId: true, readAt: true, createdAt: true, deliveries: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true, attempts: true, sentAt: true, lastError: true } } }
     }),
     prisma.notification.count({ where: { userId: session.userId, readAt: null } })
   ]);
