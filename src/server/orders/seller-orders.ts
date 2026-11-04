@@ -212,7 +212,7 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
       return { id: current.shipment.id, carrierName: current.shipment.carrierName, trackingNumber: current.shipment.trackingNumber, trackingUrl: current.shipment.trackingUrl, shippedAt: current.shipment.shippedAt.toISOString(), vendorOrderStatus: VendorOrderStatus.SHIPPED, changed: false };
     }
     if (current.status !== VendorOrderStatus.READY_TO_SHIP) throw new Error("Only a ready-to-ship seller order can be dispatched.");
-    if (![OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED].includes(current.order.status)) {
+    if (!( [OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED] as OrderStatus[]).includes(current.order.status)) {
       throw new Error("The parent order is not eligible for dispatch.");
     }
 
