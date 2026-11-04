@@ -24,6 +24,7 @@ const createdUserIds = new Set<string>();
 describe("identity PostgreSQL integration", () => {
   afterAll(async () => {
     if (createdUserIds.size) {
+      await prisma.seller.deleteMany({ where: { ownerId: { in: [...createdUserIds] } } });
       await prisma.user.deleteMany({ where: { id: { in: [...createdUserIds] } } });
     }
     await prisma.$disconnect();
@@ -50,6 +51,18 @@ describe("identity PostgreSQL integration", () => {
     expect(pending.consents).toHaveLength(2);
     expect(pending.verificationTokens).toHaveLength(1);
     expect(pending.verificationTokens[0].tokenHash).not.toBe(registration.verificationToken);
+    const customerRole = await prisma.role.findUniqueOrThrow({ where: { key: "CUSTOMER" } });
+    const customerAssignment = await prisma.userRoleAssignment.findUnique({
+      where: {
+        userId_roleId_scopeType_scopeId: {
+          userId,
+          roleId: customerRole.id,
+          scopeType: "GLOBAL",
+          scopeId: "GLOBAL"
+        }
+      }
+    });
+    expect(customerAssignment).not.toBeNull();
 
     // Concurrent consumers must not both activate the same verification challenge.
     const verificationResults = await Promise.all([
@@ -112,6 +125,33 @@ describe("identity PostgreSQL integration", () => {
 
     await expect(revokeUserSession(createdSession.token)).resolves.toBe(true);
     await expect(resolveUserSession(createdSession.token)).resolves.toBeNull();
+  });
+
+  it("keeps seller registration pending without granting seller permissions", async () => {
+    const sellerRegistration = await registerUser({
+      email: "seller-" + suffix + "@example.test",
+      password: "Correct-Horse-Battery-42!",
+      displayName: "Integration Seller",
+      accountType: "SELLER",
+      sellerLegalName: "Integration Seller Company",
+      sellerDisplayName: "Integration Seller Store",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    });
+    createdUserIds.add(sellerRegistration.userId);
+
+    const seller = await prisma.seller.findUniqueOrThrow({
+      where: { ownerId: sellerRegistration.userId }
+    });
+    expect(seller.status).toBe("PENDING");
+
+    const assignments = await prisma.userRoleAssignment.findMany({
+      where: { userId: sellerRegistration.userId }
+    });
+    expect(assignments).toHaveLength(0);
+    await expect(
+      userHasPermission(sellerRegistration.userId, { permissionKey: "store:manage" })
+    ).resolves.toBe(false);
   });
 
   it("enforces persistent login throttling under concurrent PostgreSQL requests", async () => {
