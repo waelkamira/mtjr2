@@ -1944,12 +1944,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - PR #32 added persisted support response/resolution targets, priority-based escalation, audit events, assigned-agent notifications, and a protected scheduled worker.
 - Exact-head CI and PostgreSQL integration passed for commit `afd2dafeed81c197d21b2dfd8bde8550cef79548`; merge commit: `edaff23d824caa33037343113dbf79816eaac7e5`.
 
-**In review — PR #33**
+**Merged — PR #33**
 - Added private Cloudflare R2 SigV4 presigned URL generation, attachment persistence for support tickets and store conversations, strict metadata validation (10 MB / MIME allowlist), and a support-ticket upload-init/finalize API.
-- Finalization verifies the R2 object metadata and fails closed unless an external malware scanner returns an explicit `{ "clean": true|false }` result.
-- Required server-only configuration: R2 account/access/bucket credentials and `ATTACHMENT_SCANNER_URL` + `ATTACHMENT_SCANNER_TOKEN`.
+- Finalization verifies R2 object metadata and fails closed unless an external malware scanner returns an explicit `{ "clean": true|false }` result.
+- Exact-head CI and PostgreSQL integration passed for `7000ea4c29e20659487b94c61fcd4924bcff6ad8`; merge commit: `d45fcad7ed5f95165c7eaaf917f3972ed6751dad`.
 - PR: https://github.com/waelkamira/mtjr2/pull/33
-- Current branch head: `332f2414317a6c330e9c795e5cd7634d03fa9247`; exact-head CI and PostgreSQL integration are pending.
+- Required server-only configuration: R2 account/access/bucket credentials and `ATTACHMENT_SCANNER_URL` + `ATTACHMENT_SCANNER_TOKEN`.
+
 
 **Not complete / rollout blocked**
 - No real R2 credentials or bucket CORS configuration have been supplied or tested.
