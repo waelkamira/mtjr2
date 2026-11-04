@@ -204,3 +204,22 @@ Owner asked to merge only work that has been verified. PR #4 and #5 were retarge
 **Merge outcome:** no PR was merged in this pass. This is deliberate: every candidate with passing checks is currently reported non-mergeable against main, and the other candidates lack exact-head checks. No merge was forced. #4 and #5 now target main so the remaining unique deltas are visible for clean reconstruction.
 
 **Next safe action:** rebuild the unique #4/#5/#16 deltas on fresh branches from current main, preserving only the reviewed changes, then require fresh General CI and disposable PostgreSQL checks and merge only when GitHub reports mergeable. Do not merge old stacked history.
+
+## 2026-11-04 — Verified merge batch and remaining open work
+
+### Merged on current main
+- PR #18 `fix(tax): validate shipping selections and harden admin loading` — reconstructed on current main, exact-head General CI and disposable PostgreSQL passed, merged by squash as `32b519b4f65f586d713268aad13be5c123af3283`.
+- PR #19 `feat(returns): add store-scoped seller return visibility` — reconstructed on current main, exact-head General CI and disposable PostgreSQL passed, merged by squash as `c9314efa66af92fd524f65c553d751927c778694`.
+- PR #20 `docs(returns): document per-vendor lifecycle and verified return scope` — documentation-only reconstruction, General CI passed on exact head `19ce7272bc5cc2f7774ebff1cba9234e1a802bcc`, merged by squash as `846aec464408700c486aa40bbfc27b44dc9cd40c`.
+
+### Historical PR cleanup
+- Closed #4, #5, #16 after their unique changes were already present on main or were reconstructed and merged through clean PRs.
+- Closed #6 after retargeting to main showed its only remaining diff was an older admin tax-page loading effect, superseded by the stronger merged #18 implementation.
+- Closed #17 after preserving its unique lifecycle design and documentation in merged #20; its seller-return code duplicated merged #19.
+- Only #7 remains open. It is now targeted at main and contains a substantial provider-neutral payment foundation (Prisma schema/migration, payment services, provider registry, order payment API, webhook API, and order detail UI). No General CI or PostgreSQL checks exist on its exact head `b8b2b416ef6e10400de0c23adcd76933cfded068`; do not merge until reviewed, reconstructed if needed, and freshly verified.
+
+### Current boundaries
+- Seller return visibility is merged and read-only. Seller decisions, receipt, shipping, refunds, and ledger movements are not implemented.
+- The per-vendor return lifecycle is design-only; no schema migration or runtime transitions are claimed.
+- Phase 2 identity operational gates remain open as recorded in `PHASE_02_IDENTITY_PLAN.md`; this merge batch does not close them or authorize Phase 3.
+- No production database, secrets, or deployment configuration was changed. No live browser journey or live payment/refund flow is claimed verified.
