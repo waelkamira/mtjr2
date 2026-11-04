@@ -73,19 +73,19 @@ describe("payment lifecycle safety", () => {
     });
     mocks.orderFindFirst.mockResolvedValue({
       id: "order-1", orderNumber: "ORD-1", status: OrderStatus.PENDING_PAYMENT,
-      totalMinor: 1500n, currencyCode: "EUR"
+      totalMinor: BigInt("1500"), currencyCode: "EUR"
     });
     mocks.txOrderFindFirst.mockResolvedValue({ id: "order-1" });
     mocks.txPaymentFindUnique.mockResolvedValue(null);
     mocks.txPaymentFindFirst.mockResolvedValue(null);
     mocks.txPaymentCreate.mockResolvedValue({
       id: "payment-1", orderId: "order-1", provider: "test_provider",
-      status: PaymentStatus.INITIATING, amountMinor: 1500n, currencyCode: "EUR",
+      status: PaymentStatus.INITIATING, amountMinor: BigInt("1500"), currencyCode: "EUR",
       checkoutUrl: null, expiresAt: null, idempotencyKey: "idempotency-key-1"
     });
     mocks.paymentUpdate.mockResolvedValue({
       id: "payment-1", orderId: "order-1", provider: "test_provider",
-      status: PaymentStatus.REQUIRES_ACTION, amountMinor: 1500n, currencyCode: "EUR",
+      status: PaymentStatus.REQUIRES_ACTION, amountMinor: BigInt("1500"), currencyCode: "EUR",
       checkoutUrl: "https://payments.example.test/checkout/session-1", expiresAt: null
     });
     mocks.transaction.mockImplementation(async (callback: (transaction: typeof tx) => unknown) => callback(tx));
@@ -119,7 +119,7 @@ describe("payment lifecycle safety", () => {
   it("does not allow switching provider while another payment attempt is active", async () => {
     mocks.txPaymentFindFirst.mockResolvedValue({
       id: "payment-active", orderId: "order-1", provider: "another_provider",
-      status: PaymentStatus.REQUIRES_ACTION, amountMinor: 1500n, currencyCode: "EUR",
+      status: PaymentStatus.REQUIRES_ACTION, amountMinor: BigInt("1500"), currencyCode: "EUR",
       checkoutUrl: "https://payments.example.test/active", expiresAt: null
     });
     await expect(startOrderPayment({
@@ -135,7 +135,7 @@ describe("payment lifecycle safety", () => {
       .mockResolvedValueOnce({ id: "payment-1", orderId: "order-1" })
       .mockResolvedValueOnce({
         id: "payment-1", orderId: "order-1", provider: "test_provider",
-        providerReference: "provider-ref-1", amountMinor: 1500n, currencyCode: "EUR",
+        providerReference: "provider-ref-1", amountMinor: BigInt("1500"), currencyCode: "EUR",
         status: PaymentStatus.REQUIRES_ACTION, lastProviderEventAt: null, succeededAt: null,
         order: { status: OrderStatus.PENDING_PAYMENT, orderNumber: "ORD-1", userId: "buyer-1", vendorOrders: [] }
       });
