@@ -147,7 +147,6 @@ Marketplace Core's buyer catalog now has a connected product detail journey. The
 - [ ] Typo-tolerant ranking, autocomplete and richer facets remain deferred.
 - Verification policy: focused code review only for this UI state slice; no database, Prisma migration, or broad routine test run.
 
-<<<<<<< HEAD
 ## 3.5b — Vendor-aware catalog integration — 2026-11-04
 
 - Global product search now filters by active store/vendor as well as category and brand. Search terms also match the seller's public display name.
@@ -156,7 +155,7 @@ Marketplace Core's buyer catalog now has a connected product detail journey. The
 - The homepage, global search, store/category/brand pages, and product detail were exercised against the local PostgreSQL demo catalog. Store-filtered search returned all eight published demo products, and the browser completed a store-filter → product-detail journey with the correct EUR price.
 - Full unit suite passed (131 tests), as did typecheck, repository lint (existing warnings only), and Prisma schema validation.
 - This verifies local catalog integration only. It does not complete the payment-backed purchase journey or replace the disposable PostgreSQL integration checkpoint. Payment and launch-market gates remain in `PHASE_04_BUYING_PLAN.md`.
-=======
+
 ## 3.8 — Isolated demo catalog data
 
 - [x] Implement a repeatable, opt-in demo seed using the canonical category, product, store, market, price, media, variant, warehouse, and inventory models.
@@ -168,4 +167,4 @@ Marketplace Core's buyer catalog now has a connected product detail journey. The
 
 
 **Verification evidence:** General CI [41837000589](https://github.com/waelkamira/mtjr2/actions/runs/41837000589) and disposable PostgreSQL [41836993780](https://github.com/waelkamira/mtjr2/actions/runs/41836993780) passed on exact head `d9686531b6638e28bb8f2b57cab8e82c1d505abe`; merged as `0ec09ed37492e6c71b27e545abac72893ce73749`. Public browser/API verification remains a separate follow-up.
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
