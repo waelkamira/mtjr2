@@ -88,7 +88,7 @@ export async function startOrderPayment(input: {
   if (payment.status !== PaymentStatus.INITIATING || payment.checkoutUrl) return serializePayment(payment);
 
   try {
-    const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.NEXT_PUBLIC_APP_URL).toString();
+    const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.APP_URL).toString();
     const intent = await provider.createIntent({
       paymentId: payment.id, orderNumber: order.orderNumber, amountMinor: order.totalMinor.toString(),
       currencyCode: order.currencyCode, idempotencyKey: payment.idempotencyKey, returnUrl,
