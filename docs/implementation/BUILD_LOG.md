@@ -1740,7 +1740,7 @@ The project owner approved Resend as the transactional email provider. The serve
 - This is intentionally read-only. Seller approval/rejection, return authorization, shipping labels/tracking, item receipt, refund calculation/execution and ledger posting are not exposed. The current parent request has one global status and can contain items from multiple vendors; seller-specific state transitions require a separate per-vendor return lifecycle design before any mutation is added.
 
 **Verification**
-- Source and focused unit test have been committed to this branch. Exact-head General CI, Prisma validation/generation, and disposable PostgreSQL integration are pending; no pass is claimed yet.
+- Exact-head General CI passed (run #590) and Platform PostgreSQL Integration passed (run #279) on commit `44ac8891e2c297b74160d0284887ecda71c49579`. The integration workflow validates/generates Prisma and runs migrations/seed plus the focused PostgreSQL suite; the general workflow covers the repository quality checks. No failure is reported by either workflow.
 - No owner/local/production database was accessed. No production migration, Vercel setting, or secret was changed.
 
 
