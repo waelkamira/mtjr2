@@ -1,6 +1,6 @@
 # Phase 3 — Marketplace Core execution plan
 
-**Status:** In implementation, approaching exit review. Canonical schema, seller/catalog services, inventory foundation, buyer storefront, and seller/admin workspaces are committed. General CI and disposable PostgreSQL integration passed on `3a9369bf`; latest General CI passed on `dd725732`. No production database has been accessed.
+**Status:** Historical execution plan for Phase 3. Marketplace Core implementation is present on the stacked feature branches, but Phase 3 is not marked release-complete: seller onboarding and catalog/inventory journeys still require exact-commit evidence, owner-approved launch reference data, and the consolidated verification gate. Phase 4 (Buying Core) is the active implementation phase. No production database has been accessed.
 
 ## Architecture and constraints
 
@@ -100,25 +100,7 @@ The seller/store implementation has application submission, platform review, dra
 - loading, validation, forbidden, unavailable-market and recoverable-error UI;
 - required focused CI and disposable PostgreSQL replay if schema/transaction code changed.
 
-Do not add a new Prisma table just because a status page or form is missing. First compare current Seller/application models and relations against the required durable lifecycle. Any genuine schema gap needs an additive migration and a recorded reason; do not apply it to the owner's database. Keep KYC document uploads, tax registration, store profile editing, and payout activation as separate incomplete scopes unless implemented end-to-end.
-
-For all other Phase 3 buttons and forms, use the same standard: a real verified action, an explicitly conditional/disabled control with explanation, or remove the control until its backend exists. Tests stay focused on distinct security and business invariants; do not create hundreds of per-control tests. Follow [END_TO_END_JOURNEY_STANDARD.md](END_TO_END_JOURNEY_STANDARD.md) and update [PAGE_ROUTE_REGISTRY.md](PAGE_ROUTE_REGISTRY.md).
-
-## End-to-end acceptance gate — seller onboarding and Marketplace Core
-
-Before calling the seller foundation complete, walk the actual experience as a new seller from the homepage seller CTA through identity gating, application form, submission, status refresh, admin review, approval/rejection, draft-store creation, and the first store setup action. Trace each visible control to its request, server validation/authorization, domain service, canonical Prisma records, persisted status, and returned UI state.
-
-Static source review on the current branch found that the application form is embedded in `/seller` rather than a dedicated onboarding route. The form calls `POST /api/seller/applications`; the service requires a current session and verified email, derives applicant identity from the session, creates a PENDING Seller and AuditLog transactionally, and treats an existing PENDING application as an idempotent replay. Admin review requires `users:manage`, a rejection reason, a conditional pending-state transition and audit. These are source observations only; they do not prove a browser journey or a passing test run.
-
-**Outstanding acceptance evidence and gaps:**
-- verify guest/expired-session, verified/unverified email and safe redirect behavior from the actual seller CTA;
-- verify valid submission, duplicate/retry and existing non-pending application states;
-- verify applicant status remains correct after reload and another user's application cannot be read;
-- verify admin permission enforcement, rejection reason, stale/double review prevention and audit;
-- inspect store creation retries: the reviewed service creates a store and does not demonstrate an idempotency key or duplicate-store guard;
-- review broad API error mapping so validation/auth/conflict/server failures are not all misreported as generic client errors;
-- verify approval-to-draft-store flow, active-market constraints, loading/validation/forbidden/unavailable-market/error UI;
-- run the required focused CI and disposable PostgreSQL replay if schema/transaction code changes.
+**Current source-review findings (static inspection on `feat/returns-workflow`):** The seller form is embedded in `/seller`; `POST /api/seller/applications` requires a current session and verified email, derives the applicant from the session, and transactionally creates a PENDING Seller plus AuditLog. Existing PENDING applications replay idempotently. Admin review requires `users:manage`, a rejection reason, a conditional PENDING transition, seller-role assignment on approval, and an audit record. However, the reviewed `createSellerStore` service creates a new store on each successful call and has no demonstrated idempotency key or seller-level duplicate-store guard. Route/API error handlers also map several business failures to generic 400 responses. These are code observations, not proof of a browser journey.
 
 Do not add a new Prisma table just because a status page or form is missing. First compare current Seller/application models and relations against the required durable lifecycle. Any genuine schema gap needs an additive migration and a recorded reason; do not apply it to the owner's database. Keep KYC document uploads, tax registration, store profile editing, and payout activation as separate incomplete scopes unless implemented end-to-end.
 
@@ -148,7 +130,7 @@ Marketplace Core is complete when authorized sellers can manage stores and wareh
 - Remaining Phase 3 dependencies: owner-approved launch markets/currencies and initial taxonomy seed; optional structured data after DTO verification; one consolidated disposable PostgreSQL integration run; final responsive/browser journey review.
 - No live database, production migration, or Vercel environment was accessed.
 
-**Next implementation boundary:** do not add cart/checkout buttons or client-only cart persistence. Start Buying Core only with the server-owned cart, price revalidation, inventory reservation contract, idempotency, and order lifecycle APIs, then connect the buyer UI to those APIs.
+**Phase handoff:** Buying Core is already tracked in `PHASE_04_BUYING_PLAN.md`; do not restart or duplicate the cart/quote work from this historical plan. Finish its exact-head verification and documented payment-provider decision gates there. Return to Phase 3 only for the explicitly outstanding seller/catalog acceptance evidence and launch reference-data decisions.
 
 
 ## Buying Core handoff — 2026-11-03
