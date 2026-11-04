@@ -316,3 +316,9 @@ A provider-neutral payment foundation is being reconstructed on current `main`: 
 ## Seller order preparation — 2026-11-04
 
 System 15 has an initial seller-side preparation slice on `feat/seller-order-processing`: paid vendor orders can move through `CONFIRMED → PROCESSING → READY_TO_SHIP` using a store-scoped API and connected seller UI. Writes use the existing Prisma status/history/audit models in a serializable transaction; no schema migration was needed. Shipping labels, tracking, dispatch, delivery, cancellation and refunds are deliberately not exposed until their own workflows are implemented. Exact-head verification is pending.
+
+## Demo catalog database
+
+A guarded, repeatable demo catalog seed is available for isolated development databases. It creates 8 active storefront categories and 80 bilingual demo products (10 per category), with demo sellers/stores, USD market pricing, product images, variants, and initial stock. It does not create fabricated customer reviews or orders.
+
+Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEMO_CATALOG_SEED.md). Demo seeding requires `SEED_DEMO_CATALOG=true`, `ALLOW_DEMO_CATALOG_SEED=true`, and a separate `DEMO_DATABASE_URL` whose database name includes `demo`, `test`, `ci`, or `dev`; it is blocked in production. No Prisma schema change is needed.
