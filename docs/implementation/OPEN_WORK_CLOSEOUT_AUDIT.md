@@ -140,3 +140,21 @@ The repository still has 14 open PRs: #2–#14 and #16–#17. Current heads at t
 5. Keep Phase 2 operational gates explicitly pending until their required real-world evidence exists. Do not claim deployment-only steps passed from source inspection alone.
 
 **No PR was merged or closed during this recheck.** No database migration or production data operation was performed.
+
+
+## 2026-11-04 — Stale stacked PRs closed after main ancestry check
+
+Closed the following PRs after confirming each recorded head was already an ancestor of current main (zero commits ahead in the main comparison):
+
+- #3 — delivery address capture
+- #8 — verified product reviews and moderation
+- #9 — customer favorites and wishlist
+- #10 — product Q&A
+- #11 — customer support and store messaging
+- #12 — demo catalog and homepage
+- #13 — shareable storefront search state
+- #14 — notification preferences
+
+Each PR received a closeout comment explaining that its changes are already represented in main and that no merge was performed. This avoids re-merging stale stacked branches whose historical quality checks no longer describe the current main implementation.
+
+**Remaining open PRs:** #2, #4, #5, #6, #7, #16, #17. These still require exact file-level reconciliation and the appropriate verification gate. PR #6's source correction is not verified until exact-head CI and PostgreSQL integration evidence is available. No production database or migration was accessed.
