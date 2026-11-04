@@ -8,6 +8,10 @@
 
 The 49 systems now have separate implementation contracts under [`docs/systems/`](../systems/README.md). Start with [`docs/systems/README.md`](../systems/README.md). Each file defines system boundaries, target pages and source presence, UI-to-API-to-Prisma flow, integration contracts, critical tests and closeout gates. This global document remains the cross-platform page/control and global-launch reference; it does not replace system-level specifications.
 
+## Integration dependency contract
+
+Use [`docs/systems/SYSTEM_INTEGRATION_MATRIX.md`](../systems/SYSTEM_INTEGRATION_MATRIX.md) for explicit upstream/downstream dependencies and shared high-risk contracts across all 49 systems. The matrix is a dependency design, not evidence that integrations are already wired.
+
 ## 1. Is the 49-system scope sufficient?
 
 The 49 systems are a strong business capability inventory, but **the number 49 alone is not proof of global-marketplace completeness**. Several global, financial, regulatory, operational and governance capabilities need to be explicit acceptance domains rather than being hidden inside broad labels. The following are mandatory capabilities for a serious international multi-vendor marketplace; implement them as modules under existing systems where boundaries are clear, or split them into separately tracked systems if their ownership, data lifecycle or risk justifies it:

@@ -61,6 +61,10 @@ For each system implement one vertical slice: page/control → handler → API/Z
 | 48 | newsletter and lifecycle email | [Open](48-newsletter-and-lifecycle-email.md) |
 | 49 | property listings and booking domain separate bounded context | [Open](49-property-listings-and-booking-domain-separate-bounded-context.md) |
 
+## Explicit integration dependencies
+
+See [SYSTEM_INTEGRATION_MATRIX.md](SYSTEM_INTEGRATION_MATRIX.md) for upstream/downstream dependencies for each of the 49 systems and the high-risk shared contracts. Every system must pass its own P0/P1 gates plus the direct integration contracts listed there.
+
 ## Cross-cutting global capabilities
 Merchant KYB, product compliance, customs/landed cost, tax determination, payment orchestration, seller treasury/settlement, privacy/data governance, fraud/marketplace integrity, lifecycle communications, reliability/incident operations and multi-region localization must each have an explicit owner and acceptance criteria. Assign to an existing system or approve a bounded-context split; do not duplicate data stores/pages.
 
