@@ -33,6 +33,7 @@ export default function CartPage() {
   const [busyItem, setBusyItem] = useState("");
   const [error, setError] = useState("");
   const [checkingOutCartId, setCheckingOutCartId] = useState("");
+  const [couponCodes, setCouponCodes] = useState<Record<string, string>>({});
   const router = useRouter();
 
   const refresh = useCallback(async () => {
@@ -92,7 +93,11 @@ export default function CartPage() {
       const response = await fetch("/api/checkout/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cartId: cart.id, idempotencyKey: crypto.randomUUID() })
+        body: JSON.stringify({
+          cartId: cart.id,
+          idempotencyKey: crypto.randomUUID(),
+          couponCode: couponCodes[cart.id]?.trim() || undefined
+        })
       });
       const result = await response.json() as { quote?: { id: string }; error?: string };
       if (!response.ok || !result.quote) throw new Error(result.error || "Unable to prepare checkout.");
@@ -159,10 +164,20 @@ export default function CartPage() {
                 </section>
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-white p-5">
                   <div><p className="font-semibold text-[var(--color-forest-950)]">Ready to review?</p><p className="mt-1 text-xs text-[var(--muted)]">We will recheck prices and temporarily reserve available stock.</p></div>
+                  <label className="grid gap-1 text-xs font-medium">Coupon code
+                    <input
+                      value={couponCodes[cart.id] ?? ""}
+                      onChange={(event) => setCouponCodes((current) => ({ ...current, [cart.id]: event.target.value.toUpperCase() }))}
+                      maxLength={40}
+                      autoComplete="off"
+                      placeholder="Optional"
+                      className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm uppercase"
+                    />
+                  </label>
                   <button type="button" disabled={Boolean(checkingOutCartId) || cart.items.some((item) => !item.price || item.availableQuantity < item.quantity)} onClick={() => void beginCheckout(cart)} className="rounded-xl bg-[var(--color-forest-900)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{checkingOutCartId === cart.id ? "Preparing…" : "Review checkout"}</button>
                 </div></>;
               })}
-              <p className="rounded-xl bg-[var(--color-sage-100)] p-4 text-sm leading-6 text-[var(--color-forest-950)]">The checkout quote is calculated by the server and reserves stock for ten minutes. Shipping, tax, discounts and payment are not included yet.</p>
+              <p className="rounded-xl bg-[var(--color-sage-100)] p-4 text-sm leading-6 text-[var(--color-forest-950)]">The checkout quote is calculated by the server and reserves stock for ten minutes. Shipping and configured tax are calculated during checkout; payment is not collected when placing the order.</p>
             </div>
         }
       </div>

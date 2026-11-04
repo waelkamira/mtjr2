@@ -66,6 +66,7 @@ describe("market tax configuration and checkout calculation", () => {
       id: "quote-1", status: CheckoutQuoteStatus.ACTIVE,
       expiresAt: new Date("2026-11-04T12:10:00.000Z"),
       marketId: "market-1", currencyCode: "EUR", subtotalMinor: BigInt(10000),
+      discountMinor: BigInt(0), couponCode: null,
       deliveryAddress: { region: "CA" },
       lines: [{ storeId: "store-1" }],
       shippingSelections: [{ storeId: "store-1", amountMinor: BigInt(500), currencyCode: "EUR" }],
@@ -113,6 +114,26 @@ describe("market tax configuration and checkout calculation", () => {
       currencyCode: "EUR"
     });
     expect(mocks.snapshotUpsert).toHaveBeenCalledOnce();
+  });
+
+  it("calculates tax and amount due after a coupon discount", async () => {
+    mocks.checkoutQuoteFindFirst.mockResolvedValue({
+      id: "quote-1", status: CheckoutQuoteStatus.ACTIVE,
+      expiresAt: new Date("2026-11-04T12:10:00.000Z"),
+      marketId: "market-1", currencyCode: "EUR", subtotalMinor: BigInt(10000),
+      discountMinor: BigInt(1000), couponCode: "SAVE10",
+      deliveryAddress: { region: "CA" },
+      lines: [{ storeId: "store-1" }],
+      shippingSelections: [{ storeId: "store-1", amountMinor: BigInt(500), currencyCode: "EUR" }],
+      currency: { minorUnit: 2 }
+    });
+
+    const result = await calculateCheckoutTax("guest-token", "quote-1", now);
+
+    expect(result).toMatchObject({
+      subtotalMinor: "10000", couponCode: "SAVE10", discountMinor: "1000",
+      taxableAmountMinor: "9500", taxAmountMinor: "1900", amountDueMinor: "11400"
+    });
   });
 
   it("returns a configuration-required result when any seller has no shipping selection", async () => {

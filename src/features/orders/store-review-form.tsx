@@ -6,6 +6,7 @@ export default function StoreReviewForm({ storeId, vendorOrderId, storeName }: {
   const [rating, setRating] = useState("5");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [mediaUrls, setMediaUrls] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -14,11 +15,11 @@ export default function StoreReviewForm({ storeId, vendorOrderId, storeName }: {
     try {
       const response = await fetch(`/api/stores/${encodeURIComponent(storeId)}/reviews`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vendorOrderId, rating: Number(rating), title, body })
+        body: JSON.stringify({ vendorOrderId, rating: Number(rating), title, body, mediaUrls: mediaUrls.split(/\r?\n/).map((url) => url.trim()).filter(Boolean) })
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Store review could not be submitted.");
-      setMessage("Your store review is awaiting moderation."); setTitle(""); setBody("");
+      setMessage("Your store review is awaiting moderation."); setTitle(""); setBody(""); setMediaUrls("");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Store review could not be submitted."); }
     finally { setBusy(false); }
   }
@@ -29,6 +30,7 @@ export default function StoreReviewForm({ storeId, vendorOrderId, storeName }: {
       <label className="text-sm font-medium">Rating<select value={rating} onChange={(event) => setRating(event.target.value)} className="mt-1 block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2">{[5,4,3,2,1].map((value) => <option key={value} value={value}>{value} out of 5</option>)}</select></label>
       <label className="text-sm font-medium">Title<input required minLength={3} maxLength={120} value={title} onChange={(event) => setTitle(event.target.value)} className="mt-1 block w-full rounded-xl border border-[var(--border)] px-3 py-2" /></label>
       <label className="text-sm font-medium sm:col-span-2">Your experience<textarea required minLength={20} maxLength={4000} rows={3} value={body} onChange={(event) => setBody(event.target.value)} className="mt-1 block w-full rounded-xl border border-[var(--border)] px-3 py-2" /></label>
+      <label className="text-sm font-medium sm:col-span-2">Image URLs (optional)<textarea value={mediaUrls} onChange={(event) => setMediaUrls(event.target.value)} maxLength={11000} rows={3} placeholder="One HTTPS image URL per line" className="mt-1 block w-full rounded-xl border border-[var(--border)] px-3 py-2" /><span className="text-xs font-normal text-[var(--muted)]">Up to 5 public HTTPS JPG, PNG, GIF, WebP or AVIF URLs. This attaches existing images; it does not upload files.</span></label>
       <button disabled={busy} className="rounded-xl bg-[var(--color-forest-900)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50 sm:col-span-2">{busy ? "Submitting…" : "Submit store review"}</button>
     </form>}
   </div>;

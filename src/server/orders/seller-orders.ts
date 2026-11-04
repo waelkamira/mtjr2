@@ -1,12 +1,89 @@
 import "server-only";
 
-import { AuditActorType, OrderStatus, Prisma, VendorOrderStatus } from "@prisma/client";
+import { AuditActorType, OrderStatus, Prisma, ShipmentTrackingStatus, VendorOrderStatus } from "@prisma/client";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
 
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
+
+const shipmentInputSchema = z.object({
+  carrierName: z.string().trim().min(2).max(120),
+  trackingNumber: z.string().trim().min(2).max(120),
+  trackingUrl: z.string().trim().url().max(2000).optional().nullable()
+    .refine((value) => {
+      if (!value) return true;
+      const url = new URL(value);
+      return url.protocol === "https:" && !url.username && !url.password;
+    }, "Tracking links must use HTTPS and cannot include credentials.")
+}).strict();
+
+const trackingEventInputSchema = z.object({
+  status: z.enum(["IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED", "EXCEPTION"]),
+  description: z.string().trim().max(500).optional(),
+  location: z.string().trim().max(160).optional()
+}).strict();
+
+async function authorizeStoreOrder(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  storeId: string,
+  ownerId: string,
+  now: Date
+) {
+  if (ownerId === userId) return;
+  const [activeStaff, assignments] = await Promise.all([
+    tx.sellerStaff.findFirst({
+      where: { storeId, userId, status: "ACTIVE" },
+      select: { id: true }
+    }),
+    tx.userRoleAssignment.findMany({
+      where: { userId, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      select: {
+        scopeType: true, scopeId: true,
+        role: { select: { permissions: { select: { permission: { select: { key: true } } } } } }
+      }
+    })
+  ]);
+  const hasGlobalGrant = assignments.some((assignment) =>
+    assignment.scopeType === "GLOBAL" && assignment.scopeId === "GLOBAL"
+    && assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage")
+  );
+  const hasStoreGrant = Boolean(activeStaff) && assignments.some((assignment) =>
+    assignment.scopeType === "STORE" && assignment.scopeId === storeId
+    && assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage")
+  );
+  if (!hasGlobalGrant && !hasStoreGrant) throw new PermissionDeniedError();
+}
+
+async function updateParentFulfillmentStatus(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+  actorId: string,
+  now: Date
+) {
+  const [order, vendorOrders] = await Promise.all([
+    tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } }),
+    tx.vendorOrder.findMany({ where: { orderId }, select: { status: true } })
+  ]);
+  const shipped = vendorOrders.filter((vendor) =>
+    vendor.status === VendorOrderStatus.SHIPPED || vendor.status === VendorOrderStatus.DELIVERED
+  ).length;
+  const nextStatus = vendorOrders.length > 0 && shipped === vendorOrders.length
+    ? vendorOrders.every((vendor) => vendor.status === VendorOrderStatus.DELIVERED)
+      ? OrderStatus.COMPLETED : OrderStatus.FULFILLED
+    : shipped > 0 ? OrderStatus.PARTIALLY_FULFILLED : null;
+  if (!nextStatus || nextStatus === order.status) return;
+  const changed = await tx.order.updateMany({
+    where: { id: orderId, status: order.status },
+    data: { status: nextStatus }
+  });
+  if (changed.count !== 1) throw new Error("Parent order changed while updating shipment status.");
+  await tx.orderStatusHistory.create({
+    data: { orderId, status: nextStatus, note: "Seller updated shipment progress.", actorId, createdAt: now }
+  });
+}
 
 export async function listSellerVendorOrders(now = new Date(), searchInput: unknown = {}) {
   const { q } = z.object({ q: z.string().trim().max(120).optional() }).strict().parse(searchInput);
@@ -42,6 +119,7 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
     include: {
       store: { select: { id: true, name: true, slug: true } },
       order: { select: { id: true, orderNumber: true, status: true, currencyCode: true, placedAt: true, currency: { select: { minorUnit: true } } } },
+      shipment: { include: { events: { orderBy: { occurredAt: "asc" } } } },
       items: { orderBy: { createdAt: "asc" }, select: { id: true, productName: true, sku: true, variantName: true, quantity: true, unitAmountMinor: true, lineTotalMinor: true } }
     }
   });
@@ -50,6 +128,14 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
       id: vendor.id, status: vendor.status, store: vendor.store,
       shippingServiceName: vendor.shippingServiceName, shippingDestinationRegion: vendor.shippingDestinationRegion,
       minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
+      shipment: vendor.shipment ? {
+        carrierName: vendor.shipment.carrierName, trackingNumber: vendor.shipment.trackingNumber,
+        trackingUrl: vendor.shipment.trackingUrl, status: vendor.shipment.status,
+        events: vendor.shipment.events.map((event) => ({
+          status: event.status, description: event.description, location: event.location,
+          occurredAt: event.occurredAt.toISOString()
+        }))
+      } : null,
       order: vendor.order,
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
@@ -66,12 +152,7 @@ const sellerOrderTransitionSchema = z.object({
   note: z.string().trim().max(500).optional()
 }).strict();
 
-/**
- * Seller-side preparation only. Shipment labels, carrier handoff, delivery
- * confirmation and cancellation are intentionally separate workflows.
- * A seller cannot process an order until a verified payment webhook has moved
- * its vendor order out of PENDING_PAYMENT.
- */
+/** A seller cannot process an order until a verified payment webhook confirms payment. */
 export async function transitionSellerVendorOrder(vendorOrderId: string, input: unknown, now = new Date()) {
   const data = sellerOrderTransitionSchema.parse(input);
   const actor = await requireCurrentSession(now);
@@ -94,31 +175,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
       throw new Error("This store is not active.");
     }
 
-    const isOwner = current.store.seller.ownerId === actor.userId;
-    if (!isOwner) {
-      const [activeStaff, assignments] = await Promise.all([
-        tx.sellerStaff.findFirst({
-          where: { storeId: current.storeId, userId: actor.userId, status: "ACTIVE" },
-          select: { id: true }
-        }),
-        tx.userRoleAssignment.findMany({
-          where: { userId: actor.userId, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
-          select: {
-            scopeType: true, scopeId: true,
-            role: { select: { permissions: { select: { permission: { select: { key: true } } } } } }
-          }
-        })
-      ]);
-      const hasGlobalGrant = assignments.some((assignment) =>
-        assignment.scopeType === "GLOBAL" && assignment.scopeId === "GLOBAL"
-        && assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage")
-      );
-      const hasStoreGrant = Boolean(activeStaff) && assignments.some((assignment) =>
-        assignment.scopeType === "STORE" && assignment.scopeId === current.storeId
-        && assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage")
-      );
-      if (!hasGlobalGrant && !hasStoreGrant) throw new PermissionDeniedError();
-    }
+    await authorizeStoreOrder(tx, actor.userId, current.storeId, current.store.seller.ownerId, now);
 
     if (current.status === data.status) return { id, status: current.status, changed: false };
     if (current.status !== expected) {
@@ -163,3 +220,167 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
+export async function createSellerShipment(vendorOrderId: string, input: unknown, now = new Date()) {
+  const data = shipmentInputSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  const id = z.string().trim().min(1).max(128).parse(vendorOrderId);
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.vendorOrder.findUnique({
+      where: { id },
+      select: {
+        id: true, orderId: true, storeId: true, status: true,
+        shipment: { select: { id: true, carrierName: true, trackingNumber: true, status: true } },
+        order: { select: { orderNumber: true, userId: true } },
+        store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
+      }
+    });
+    if (!current) throw new Error("Seller order not found.");
+    if (current.store.status !== "ACTIVE" || current.store.seller.status !== "ACTIVE") {
+      throw new Error("This store is not active.");
+    }
+    await authorizeStoreOrder(tx, actor.userId, current.storeId, current.store.seller.ownerId, now);
+    if (current.shipment) {
+      if (current.shipment.carrierName === data.carrierName && current.shipment.trackingNumber === data.trackingNumber) {
+        return { id: current.shipment.id, status: current.shipment.status, changed: false };
+      }
+      throw new Error("A shipment already exists for this seller order.");
+    }
+    if (current.status !== VendorOrderStatus.READY_TO_SHIP) {
+      throw new Error("Only seller orders marked ready to ship can be shipped.");
+    }
+
+    const shipment = await tx.shipment.create({
+      data: {
+        vendorOrderId: id, carrierName: data.carrierName, trackingNumber: data.trackingNumber,
+        trackingUrl: data.trackingUrl ?? null, status: ShipmentTrackingStatus.SHIPPED, shippedAt: now,
+        events: { create: {
+          status: ShipmentTrackingStatus.SHIPPED, description: "Shipment handed to carrier.",
+          actorId: actor.userId, occurredAt: now
+        } }
+      },
+      select: { id: true, status: true }
+    });
+    const updated = await tx.vendorOrder.updateMany({
+      where: { id, status: VendorOrderStatus.READY_TO_SHIP },
+      data: { status: VendorOrderStatus.SHIPPED }
+    });
+    if (updated.count !== 1) throw new Error("Seller order changed while creating the shipment.");
+    await tx.vendorOrderStatusHistory.create({
+      data: {
+        vendorOrderId: id, status: VendorOrderStatus.SHIPPED,
+        note: `Shipment created with ${data.carrierName}.`, actorId: actor.userId, createdAt: now
+      }
+    });
+    await updateParentFulfillmentStatus(tx, current.orderId, actor.userId, now);
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId,
+        action: "seller.shipment.created", resource: "shipment", resourceId: shipment.id,
+        scopeType: "STORE", scopeId: current.storeId, occurredAt: now,
+        metadata: { vendorOrderId: id, orderNumber: current.order.orderNumber, carrierName: data.carrierName }
+      }
+    });
+    if (current.order.userId) {
+      await tx.notification.create({
+        data: {
+          userId: current.order.userId, type: "SHIPMENT_UPDATED", title: "Your order has shipped",
+          message: `Seller shipment for order ${current.order.orderNumber} is on its way.`,
+          resourceType: "ORDER", resourceId: current.orderId,
+          deduplicationKey: `shipment:${shipment.id}:shipped`
+        }
+      });
+    }
+    return { ...shipment, changed: true };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+function isAllowedTrackingTransition(current: ShipmentTrackingStatus, next: ShipmentTrackingStatus) {
+  const allowed: Record<ShipmentTrackingStatus, ShipmentTrackingStatus[]> = {
+    SHIPPED: [ShipmentTrackingStatus.IN_TRANSIT, ShipmentTrackingStatus.EXCEPTION],
+    IN_TRANSIT: [ShipmentTrackingStatus.OUT_FOR_DELIVERY, ShipmentTrackingStatus.DELIVERED, ShipmentTrackingStatus.EXCEPTION],
+    OUT_FOR_DELIVERY: [ShipmentTrackingStatus.DELIVERED, ShipmentTrackingStatus.EXCEPTION],
+    DELIVERED: [],
+    EXCEPTION: [ShipmentTrackingStatus.IN_TRANSIT, ShipmentTrackingStatus.OUT_FOR_DELIVERY, ShipmentTrackingStatus.DELIVERED]
+  };
+  return allowed[current].includes(next);
+}
+
+export async function addSellerShipmentTrackingEvent(vendorOrderId: string, input: unknown, now = new Date()) {
+  const data = trackingEventInputSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  const id = z.string().trim().min(1).max(128).parse(vendorOrderId);
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.vendorOrder.findUnique({
+      where: { id },
+      select: {
+        id: true, orderId: true, storeId: true, status: true,
+        shipment: { select: { id: true, status: true } },
+        order: { select: { orderNumber: true, userId: true } },
+        store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
+      }
+    });
+    if (!current) throw new Error("Seller order not found.");
+    if (!current.shipment) throw new Error("Create a shipment before adding tracking updates.");
+    if (current.store.status !== "ACTIVE" || current.store.seller.status !== "ACTIVE") {
+      throw new Error("This store is not active.");
+    }
+    await authorizeStoreOrder(tx, actor.userId, current.storeId, current.store.seller.ownerId, now);
+    const nextStatus = data.status as ShipmentTrackingStatus;
+    if (current.shipment.status === nextStatus) {
+      return { id: current.shipment.id, status: current.shipment.status, changed: false };
+    }
+    if (!isAllowedTrackingTransition(current.shipment.status, nextStatus)) {
+      throw new Error("Shipment status cannot move to the selected stage.");
+    }
+    await tx.shipment.update({
+      where: { id: current.shipment.id },
+      data: {
+        status: nextStatus,
+        ...(nextStatus === ShipmentTrackingStatus.DELIVERED ? { deliveredAt: now } : {})
+      }
+    });
+    await tx.shipmentTrackingEvent.create({
+      data: {
+        shipmentId: current.shipment.id, status: nextStatus,
+        description: data.description || null, location: data.location || null,
+        actorId: actor.userId, occurredAt: now
+      }
+    });
+
+    if (nextStatus === ShipmentTrackingStatus.DELIVERED) {
+      const changed = await tx.vendorOrder.updateMany({
+        where: { id, status: VendorOrderStatus.SHIPPED },
+        data: { status: VendorOrderStatus.DELIVERED }
+      });
+      if (changed.count !== 1) throw new Error("Seller order changed while recording delivery.");
+      await tx.vendorOrderStatusHistory.create({
+        data: {
+          vendorOrderId: id, status: VendorOrderStatus.DELIVERED,
+          note: "Seller recorded delivery.", actorId: actor.userId, createdAt: now
+        }
+      });
+      await updateParentFulfillmentStatus(tx, current.orderId, actor.userId, now);
+    }
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId,
+        action: "seller.shipment.tracking_updated", resource: "shipment", resourceId: current.shipment.id,
+        scopeType: "STORE", scopeId: current.storeId, occurredAt: now,
+        metadata: { vendorOrderId: id, orderNumber: current.order.orderNumber, status: nextStatus }
+      }
+    });
+    if (current.order.userId) {
+      await tx.notification.create({
+        data: {
+          userId: current.order.userId,
+          type: nextStatus === ShipmentTrackingStatus.DELIVERED ? "ORDER_DELIVERED" : "SHIPMENT_UPDATED",
+          title: nextStatus === ShipmentTrackingStatus.DELIVERED ? "Your order was delivered" : "Shipment tracking updated",
+          message: `Seller shipment for order ${current.order.orderNumber} is ${nextStatus.replaceAll("_", " ").toLowerCase()}.`,
+          resourceType: "ORDER", resourceId: current.orderId,
+          deduplicationKey: `shipment:${current.shipment.id}:${nextStatus}:${now.toISOString()}`
+        }
+      });
+    }
+    return { id: current.shipment.id, status: nextStatus, changed: true };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}

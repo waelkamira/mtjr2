@@ -41,17 +41,18 @@
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
 | `GuestSession`, `Cart`, `CartItem` | `src/server/cart/cart.ts`, `guest-cookie.ts`; cart APIs | Guest/customer cart ownership, merge, and market/currency partition. |
-| `CheckoutQuote`, `CheckoutQuoteLine`, `CheckoutQuoteAddress` | `src/server/checkout/quotes.ts`, `delivery-address.ts` | Time-bounded quote, item and address snapshots. Address changes invalidate dependent shipping/tax snapshots. |
+| `CheckoutQuote`, `CheckoutQuoteLine`, `CheckoutQuoteAddress` | `src/server/checkout/quotes.ts`, `delivery-address.ts` | Time-bounded quote, item, coupon-discount and address snapshots. Address changes invalidate dependent shipping/tax snapshots. |
+| `Coupon`, `CouponRedemption` | `src/server/checkout/coupons.ts`, `quotes.ts`, `orders.ts`; admin coupon APIs | Admin-managed percentage or currency-specific fixed coupon, quote snapshot and one redemption per created order. Redemption caps are checked in serializable order creation. |
 | `UserAddress` | `src/server/account/addresses.ts`, checkout delivery-address service | Customer address book and market-country constraints. |
 | `MarketTaxRate`, `CheckoutTaxSnapshot` | `src/server/tax/tax.ts`; admin tax and checkout tax APIs | Initial configurable market/region tax rule and immutable quote calculation; not a complete jurisdictional tax engine. |
-| `Order`, `OrderAddress`, `VendorOrder`, `OrderItem`, `OrderStatusHistory`, `VendorOrderStatusHistory` | `src/server/orders/orders.ts`, `seller-orders.ts` | Parent order and store-specific vendor orders. Current order state is pending payment until verified provider events exist. |
+| `Order`, `OrderAddress`, `VendorOrder`, `OrderItem`, `OrderStatusHistory`, `VendorOrderStatusHistory`, `Shipment`, `ShipmentTrackingEvent` | `src/server/orders/orders.ts`, `seller-orders.ts` | Buyer-owned order timelines, safe pre-payment cancellation and all-or-nothing reorder. Seller shipment records and manually entered tracking events are store-scoped and audited; cancellation restores SALE ledger quantities through idempotent `ORDER_CANCELLATION` movements. Paid-order refunds and invoices are not implemented. |
 
 ## 6. Returns, trust, engagement, and support — Systems 06–11
 
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
 | `ReturnRequest`, `ReturnItem` | `src/server/returns/returns.ts`; customer/admin return APIs | Return eligibility and review workflow. Current slice does not execute refunds or move money. |
-| `ProductReview`, `StoreReview` | `src/server/reviews/product-reviews.ts`; review APIs | Verified-purchase review lifecycle and moderation. |
+| `ProductReview`, `StoreReview`, `ReviewMedia`, `ReviewReport`, `ReviewAppeal` | `src/server/reviews/product-reviews.ts`; customer, seller, and admin review APIs | Verified-purchase reviews, URL-validated media references, one-report/one-appeal constraints, moderated report/appeal decisions, aggregates, and audited seller responses. Review image bytes are not uploaded or remotely fetched. |
 | `ProductQuestion`, `ProductAnswer` | `src/server/catalog/product-qa.ts`; customer/seller/admin Q&A APIs | Product questions, seller answers, moderation. |
 | `Favorite`, `Recommendation` | `src/server/wishlist/favorites.ts`, `src/server/wishlist/recommendations.ts`; favorites and recommendations APIs | Owner-scoped saved products; curated product-to-product links plus per-user category similarity. Recommendation responses are private/no-store and exclude non-public products. |
 | `Notification`, `NotificationPreference` | `src/server/notifications/notifications.ts`; notifications APIs | In-app notifications and event preferences. Email delivery preferences are not implied. |

@@ -1336,6 +1336,34 @@ The project owner approved Resend as the transactional email provider. The serve
 - Payment is intentionally not initiated. Parent and vendor orders remain PENDING_PAYMENT; fulfillment is not authorized until provider-confirmed payment.
 - Disposable PostgreSQL integration passed run 41713575100, including Prisma validation/generation, committed migration deployment, baseline seed, and the existing integration suite. General CI run 41713575137 passed Prisma validation/generation and TypeScript typecheck, then reported three lint blockers; the tax admin effect and two apostrophe-escaping issues were corrected in commits ec773e1, 9f52aa3, and 19fb10f. Fresh General CI run 41713964722 is pending. No additional test matrix added. No owner/production database or Vercel environment accessed.
 
+## 2026-11-04 — Checkout coupons and order-total integrity
+
+**Implemented at source level**
+- Added marketplace-wide percentage coupons and fixed-amount coupons bound to one currency, with active schedule, optional total-redemption cap, audited `users:manage` CRUD APIs, and migration `20261104235500_checkout_coupons`.
+- Added coupon input to each cart; checkout quotes normalize and validate codes, calculate discounts from server-priced merchandise subtotal, and snapshot coupon/discount with the quote.
+- Tax uses the discounted taxable base. Order and vendor-order totals preserve the merchandise subtotal, allocate discounts and tax by store, record one coupon redemption, and consume stock inside the existing serializable order transaction.
+- Same-key quote replay rejects a different coupon; order placement returns a committed order after recognized unique/serialization conflicts.
+- Added tests for guest-cart merge, coupon eligibility/calculation, tax-after-discount, vendor discount allocation, redemption caps, and order retry behavior.
+
+**Verification boundary**
+- 25 focused tests across cart, checkout quotes/coupons, order placement, and tax pass; Prisma schema validation and TypeScript typecheck pass; changed checkout files pass ESLint with one existing cart `<img>` warning.
+- With user approval, migration `20261104235500_checkout_coupons` was applied to local `mtjr2_demo`; Prisma reported all migrations up to date and a PostgreSQL coupon-persistence smoke test passed. No production migration was run. Full browser checkout journey and payment-provider configuration remain unverified.
+
+
+## 2026-11-05 — System 05 order history and tracking
+
+**Implemented at source level; migration/runtime verification pending**
+- Buyer order detail now returns and renders parent and vendor-order status histories, shipment details, and tracking events. Customer order history continues to link to owned order detail pages.
+- Buyer cancellation is limited to PENDING_PAYMENT orders with no payment attempt. It shares the payment subsystem's per-order advisory lock, restores every SALE movement with an idempotent `ORDER_CANCELLATION` ledger entry, cancels vendor orders, records status/audit history, and releases coupon redemption in one serializable transaction.
+- Reorder validates every linked original variant against current active listing, market, currency, price, quantity, and stock, then adds all lines to the current cart atomically or none.
+- Sellers may record one carrier/tracking entry per READY_TO_SHIP vendor order and add forward-only manual tracking events. Tracking links must use HTTPS. Shipment creation/delivery update vendor and aggregate order status histories and notify the buyer. Carrier integrations, invoices, and paid-order cancellation/refunds are deferred.
+- Added migration `20261105003800_order_tracking_cancellation` for cancellation inventory movement type and shipment/tracking models.
+- Added focused tests for atomic reorder, pre-payment cancellation/restock, payment-attempt cancellation rejection, manual shipment creation, forward tracking transitions, and delivered parent status.
+
+**Verification boundary**
+- 50 focused cart/checkout/order/tax/shipping/payment tests pass; Prisma schema validation, TypeScript typecheck, and targeted ESLint pass.
+- With user approval, migration `20261105003800_order_tracking_cancellation` was applied to local `mtjr2_demo`; Prisma reports the schema is current, and Prisma queries confirm the shipment tables and cancellation movement enum are available. The existing PostgreSQL integration suite passes (4 tests). End-to-end PostgreSQL cancellation/shipment mutation and browser journeys remain pending. No production database was accessed.
+
 
 ## 2026-11-03 — System 10 initial slice: in-app order notifications
 
@@ -1912,3 +1940,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact-head Prisma validate/generate, typecheck, lint, unit tests, production build, and disposable PostgreSQL migration/integration have not yet run. Do not merge until the CI result is green and the recommendation migration is applied in the disposable PostgreSQL workflow.
 - Browser-level guest-save → sign-in → merge → wishlist refresh and cross-user isolation remain to be verified.
 - Named user-created lists and cross-tab storage event synchronization remain outside this slice.
+
+## 2026-11-05 — System 06 review media, reports, and appeals
+
+**Implemented**
+- Added `ReviewMedia`, `ReviewReport`, and `ReviewAppeal` persistence with one-parent checks, per-user report uniqueness, and one appeal per review. Migration: `20261105014200_review_media_reports_appeals`.
+- Verified-purchase product and store review submissions accept up to five unique HTTPS image URLs with supported image extensions; references are stored in the same transaction as the review. This does not upload files or fetch remote content to verify MIME types.
+- Added authenticated report submission for published product/store reviews and author-only appeals for rejected/hidden reviews. Both paths are audited and reject duplicate attempts.
+- Added permission-protected admin queues and resolution workflows: reports may be dismissed or cause a review to be hidden; appeals may uphold the decision or restore the review. Conditional updates reject stale decisions and record moderator notes.
+- Extended the customer review history with appeal status, added report controls to public review panels, connected store reviews to store pages, and allowed active staff with exact-store `reviews:manage` permission to answer published store reviews.
+
+**Verification**
+- `npx vitest run tests/reviews/reviews.test.ts`: 10 tests passed.
+- Prisma schema validation passed. TypeScript typecheck passed against a generated client in a temporary output directory; the normal generated client could not be refreshed because the active Next.js dev server holds its Windows engine DLL.
+- Targeted ESLint passed with no errors (six informational `@next/next/no-img-element` warnings for user-supplied external review images).
+- `git diff --check` passed. The new migration has not been applied to any database; PostgreSQL migration replay and browser journeys remain pending.

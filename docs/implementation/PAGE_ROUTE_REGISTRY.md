@@ -33,7 +33,7 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/brands` | Everyone | 02, 03 | `src/app/brands/page.tsx` → `src/features/storefront/brand-directory-page.tsx`; `GET /api/brands`; Brand | Implemented / unverified | Active brand directory links to `/brands/[slug]`; verify API error/empty states and browser journey. |
 | `/brands/[slug]` | Everyone | 02, 03 | `src/app/brands/[slug]/page.tsx`; `getActiveBrandBySlug`; `listDiscoverableProducts({ brandId })`; Brand, BrandTranslation, Product | Implemented / unverified | Active brand resolves to localized details/SEO and approved active products; inactive/missing slug returns 404. Product pagination remains to audit. |
 | `/stores` | Everyone | 02, 12, 23 | `src/app/stores/page.tsx`; `listDiscoverableStores`; Store, Seller, Product | Implemented / unverified | Lists active stores/sellers with active, approved products. First 48 only; search/pagination remain. |
-| `/stores/[slug]` | Everyone | 02, 12, 23 | `src/app/stores/[slug]/page.tsx`; `getDiscoverableStoreBySlug`; `listDiscoverableProducts({ storeId })`; Store, Seller, Product | Implemented / unverified | Hides inactive stores/sellers and scopes approved products to the store. Profile completeness and pagination remain. |
+| `/stores/[slug]` | Everyone | 02, 06, 12, 23 | `src/app/stores/[slug]/page.tsx`; `getDiscoverableStoreBySlug`; `listDiscoverableProducts({ storeId })`; `StoreReviews`; Store, StoreReview, StoreReview media, Seller, Product | Implemented / unverified | Hides inactive stores/sellers, scopes approved products to the store, and loads published review aggregates/list from the store review API. Profile completeness and journey verification remain. |
 | `/terms`, `/privacy` | Everyone | 01 / shared platform | Static versioned pages `src/app/terms/page.tsx` and `src/app/privacy/page.tsx` | Development draft / unverified | Version v1 drafts disclose that the operator company is not yet incorporated; not final legal policies. `/help`, `/contact`, `/cookies` remain unaudited. |
 
 ## B. Identity and customer account
@@ -51,13 +51,13 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/account/security` | Customer | 01 | `src/app/account/security/page.tsx`; links to password reset and session management | Implemented / unverified | 2FA is explicitly marked unavailable; no fake enrollment control. |
 | `/account/sessions` | Customer | 01 | `src/app/account/sessions/page.tsx`; `GET/DELETE /api/account/sessions`; UserSession, AuditLog | Implemented / unverified | Lists only own active sessions and revokes an owned session; current-session revocation clears cookie. Verify with browser and concurrent requests. |
 | `/account/addresses` | Customer | 01, 04 | `src/app/account/addresses/page.tsx`; `GET/POST /api/account/addresses`; UserAddress, Country | Implemented / unverified | List and create address are connected; edit/delete are not exposed yet. Verify country selection and validation. |
-| `/account/orders` | Customer | 05 | customer-owned orders API; Order, VendorOrder | Partial / unverified | Existing order page; ownership and HTTP/browser journey still require verification. |
-| `/orders/[orderId]` | Customer | 05, 11 | order detail/payment APIs | Partial / unverified | Confirm ownership, status, payment-unavailable state and return entry |
-| `/cart` | Guest/customer | 04 | cart APIs; Cart, CartItem | Implemented / unverified | Confirm guest/customer behavior and stock/price errors |
-| `/checkout` and its steps | Guest/customer | 04, 05, 07 | quote, address, shipping, tax, order and payment services | Partial / unverified | Payment provider is not configured by default; do not imply checkout is production-ready |
+| `/account/orders` | Customer | 05 | `GET /api/orders`; Order, VendorOrder | Implemented / journey verification pending | Lists the signed-in customer's own orders and links each order to its detail/timeline. |
+| `/orders/[orderId]` | Customer | 05, 11 | order detail, payment, cancel and reorder APIs; ShipmentTrackingEvent | Implemented / journey verification pending | Owner-scoped status timelines, shipment tracking, pre-payment cancellation, safe reorder and return entry; invoice generation and paid cancellation/refunds are deferred. |
+| `/cart` | Guest/customer | 04 | cart APIs; Cart, CartItem; coupon applied when creating a quote | Implemented / unverified | Guest/customer merge, variant/stock checks and checkout quote are wired; verify exact-head HTTP/browser behavior |
+| `/checkout` and its steps | Guest/customer | 04, 05, 07 | quote, address, shipping, coupon, tax, order and payment services | Implemented / unverified | Requires an active tax rule and seller shipping rates; order remains PENDING_PAYMENT and no charge is implied. Coupon migration is applied to local `mtjr2_demo`; checkout-specific PostgreSQL/browser journey remains pending. |
 | Order confirmation route | Customer | 05, 07 | order detail/payment status API | Partial / unverified | Must reflect server-side order/payment status |
 | `/account/wishlist`, `/account/favorites` | Customer | 07 | wishlist page; favorites APIs; Favorite | Implemented / unverified | Both route names resolve to the same persisted wishlist experience. |\n| `/account/store` | Seller/applicant | 12, 23 | alias to `src/features/seller/workspace-page.tsx`; seller/store APIs; Seller, Store | Implemented / unverified | Reuses the same seller workspace and server-side permissions as `/seller`. |
-| `/account/reviews` | Customer | 06 | customer review API; ProductReview, StoreReview | Implemented / unverified | Verify delivered-purchase eligibility and moderation messaging |
+| `/account/reviews` | Customer | 06 | `GET /api/account/reviews`, `POST /api/account/reviews/[reviewId]/appeal`; ProductReview, StoreReview, ReviewMedia, ReviewAppeal | Implemented / unverified | Lists the customer's submitted reviews and appeal status; author-only appeal is allowed once for rejected/hidden reviews. Verify delivered-purchase, appeal, and refresh journeys. |
 | `/account/questions` | Customer | 08 | customer Q&A API; ProductQuestion | Implemented / unverified | Verify ownership and moderation states |
 | `/account/returns` | Customer | 11 | returns API; ReturnRequest, ReturnItem | Implemented / unverified | No refund/payment movement in current return slice |
 | `/account/messages`, `/account/messages/[conversationId]` | Customer | 09 | messaging APIs; StoreConversation, StoreMessage | Implemented / unverified | Participant isolation and read states |
@@ -75,10 +75,10 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/seller/products` | Store owner/authorized staff | 02 | seller catalog APIs; Product, ProductVariant, ProductPrice | Not audited | List/status filters and store isolation |
 | `/seller/products/new`, `/seller/products/[productId]/edit` | Store owner/authorized staff | 02 | product create/update/media services | Not audited | Create/edit journey, validation and ownership |
 | `/seller/inventory` | Store owner/authorized staff | inventory | inventory APIs; Warehouse, Inventory, InventoryMovement | Implemented / unverified | Verify adjustments, transfers and scope checks |
-| `/seller/orders`, `/seller/orders/[orderId]` | Store owner/authorized staff | 05, 07 | seller order APIs; VendorOrder, OrderItem | Partial / unverified | Payment-confirmed fulfillment transitions only |
+| `/seller/orders` | Store owner/authorized staff | 05, 07 | seller order/status/shipment/tracking APIs; VendorOrder, OrderItem, Shipment, ShipmentTrackingEvent | Implemented / journey verification pending | Payment-confirmed preparation; one seller-entered shipment and forward-only manual tracking updates per vendor order. |
 | `/seller/shipping` or documented equivalent | Store owner | 04 | seller shipping-rate APIs; StoreShippingRate | Implemented / unverified | Confirm route and quote invalidation behavior |
 | `/seller/staff` | Store owner/authorized staff | seller access control | staff APIs; SellerStaff/invitation models | Implemented / unverified | Exact store-scoped permissions and invitation lifecycle |
-| `/seller/reviews` | Store owner | 06 | seller review API | Implemented / unverified | Verify store scoping |
+| `/seller/reviews` | Store owner or active staff with exact-store `reviews:manage` | 06 | `GET /api/seller/reviews`, `POST /api/seller/reviews/[reviewId]/response`; StoreReview, ReviewMedia, AuditLog | Implemented / unverified | Lists reviews only for stores owned or explicitly authorized; response mutations require published review and owner or active exact-store staff grant. Verify scope and response refresh journeys. |
 | `/seller/questions` | Store owner | 08 | seller Q&A API | Implemented / unverified | Verify product/store ownership and moderation |
 | `/seller/messages` | Store owner/authorized staff | 09 | seller messaging APIs | Implemented / unverified | Requires exact `messages:manage` scope |
 | `/seller/returns` | Active store owner / staff with exact-store `orders:manage` / platform admin | 11 | `src/app/seller/returns/page.tsx` → `src/features/seller/returns-page.tsx`; `GET /api/seller/returns` → `listSellerReturnRequests`; ReturnRequest, ReturnItem, OrderItem, VendorOrder, Store | Implemented / unverified | Read-only; grouped by authorized store. No seller state mutation, shipping, receipt or refund action. Exact-head CI/PostgreSQL passed; browser verification pending. |
@@ -122,10 +122,11 @@ For every page added or modified, inventory all interactive controls (including 
 | `/admin/orders` | Authorized admin | 05 | order administration service | Not audited | Audited interventions and immutable history |
 | `/admin/returns` | Returns manager | 11 | returns admin API | Implemented / unverified | Current status workflow only; no refund execution |
 | `/admin/refunds` | Finance-authorized admin | refund/payment system | refund/payment/ledger service | Conditional / future | Must not appear actionable until refund implementation exists |
-| `/admin/reviews`, `/admin/store-reviews` | Moderator | 06 | moderation APIs | Implemented / unverified | Separate queues and audit |
+| `/admin/reviews`, `/admin/store-reviews` | Moderator | 06 | Product/store moderation, `GET /api/admin/reviews/reports`, `POST /api/admin/reviews/reports/[reportId]/resolve`, `GET /api/admin/reviews/appeals`, `POST /api/admin/reviews/appeals/[appealId]/resolve`; ProductReview, StoreReview, ReviewReport, ReviewAppeal, AuditLog | Implemented / unverified | Product and store queues plus report/appeal queues require `users:manage`. Decisions are conditional, audited, and stale/duplicate actions fail. Verify the moderation journey and PostgreSQL migration. |
 | `/admin/questions` | Moderator | 08 | Q&A moderation API | Implemented / unverified | Verify moderation transitions |
 | `/admin/support` | Support staff | 09 | ticket administration APIs | Implemented / unverified | Internal notes restricted to staff |
 | `/admin/search-synonyms` | Catalog admin | 03 | audited synonym management API; SearchSynonym | Implemented / unverified | Requires `users:manage`; verify permissions and PostgreSQL migration/runtime |
+| Coupon management API | Platform admin | 04 | `GET/POST /api/admin/coupons`, `PATCH /api/admin/coupons/[couponId]`; Coupon, CouponRedemption, AuditLog | Implemented / unverified | Requires `users:manage`; fixed coupons are currency-specific; migration and authorization/runtime checks pending |
 | `/admin/tax-rates` | Tax admin | 04 | tax rules APIs; MarketTaxRate | Implemented / unverified | Rules require market/legal configuration |
 | `/admin/shipping` or documented equivalent | Shipping admin | 04 | shipping configuration service | Not audited | Identify global vs seller configuration |
 | `/admin/roles`, `/admin/permissions` | Security admin | 01/shared RBAC | RBAC service; Role, Permission, mappings | Not audited | Changes must be audited and protected against privilege escalation |
@@ -170,7 +171,7 @@ Do not add Prisma models merely to satisfy a page checklist. A page without a su
 **Source:** recursive Git tree for `feat/returns-workflow`, head observed before the follow-up test/documentation commits. This is a static route-presence audit only; it does not prove runtime rendering, navigation reachability, authorization, API success, persistence, or browser completion.
 
 - Actual route files found in the first snapshot: **30** `page.tsx` files; the identity UI follow-up adds five routes (`/login`, `/register` unavailable, `/forgot-password`, `/reset-password`, `/verify-email`), for **35** route files at the current source state.
-- Actual API route handlers found: **86** `route.ts` files under `src/app/api/`.
+- Actual API route handlers found: **115** `route.ts` files under `src/app/api/`.
 - Every route below is therefore **route-present / journey-unverified** unless a separate exact-commit test record says otherwise. Do not translate route presence into Verified.
 
 ### Routes present in the audited App Router tree
@@ -201,7 +202,9 @@ Some absent targets may be intentionally implemented as sections or embedded wor
 
 ### API route audit boundary
 
-The 86 API route handlers are present in the tree. Their mere presence is not a pass. For each route touched by a feature, record request method/path, schema, session and permission guard, domain service, Prisma models, error mapping, and focused tests in the feature's journey trace. Prioritize auth, seller application/store creation, checkout/order, returns/refunds, inventory, and admin mutations. A complete endpoint-by-endpoint behavioral audit has not yet been performed.
+API route handlers are present in the tree. Their mere presence is not a pass. For each route touched by a feature, record request method/path, schema, session and permission guard, domain service, Prisma models, error mapping, transaction/idempotency/audit behavior, and focused tests in the feature's journey trace. Prioritize auth, seller application/store creation, checkout/order, returns/refunds, inventory, and admin mutations. A complete endpoint-by-endpoint behavioral audit has not yet been performed.
+
+Review additions on 2026-11-05: product/store report submission requires a verified session and same-origin mutation check; account appeals are author-only; admin report/appeal queues and resolution APIs require `users:manage`; seller responses are limited to store owners or active staff with exact-store `reviews:manage`. See the System 06 matrix row for remaining verification gates.
 
 
 ## Mandatory action-level trace requirement
@@ -302,3 +305,13 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Route / action | UI | API / domain | Prisma | Status |
 |---|---|---|---|---|
 | Seller order preparation | `/seller/orders` | `PATCH /api/seller/orders/[vendorOrderId]/status` → `transitionSellerVendorOrder` | Existing VendorOrder and status-history records plus AuditLog; no schema change | Implemented on PR #25; exact-head CI/PostgreSQL verification pending. Only paid `CONFIRMED → PROCESSING → READY_TO_SHIP` is exposed. |
+
+## Buyer order management and seller tracking — 2026-11-05
+
+| Route / action | UI | API / domain | Prisma | Status |
+|---|---|---|---|---|
+| Buyer cancellation | `/orders/[orderId]` | `POST /api/orders/[orderId]/cancel` → `cancelOwnedOrder` | Order histories, vendor-order histories, `InventoryMovement.ORDER_CANCELLATION`, CouponRedemption, AuditLog | Only PENDING_PAYMENT orders with no payment attempt can be canceled; per-order payment lock, inventory restoration and coupon release are transactional. Migration applied locally; lifecycle/browser verification pending. |
+| Reorder | `/orders/[orderId]` | `POST /api/orders/[orderId]/reorder` → `reorderOwnedOrder` → `addCartItems` | Existing Order/OrderItem and Cart/CartItem | Adds all still-purchasable variants at current market/currency prices, or adds none; stock and quantity limits are revalidated. |
+| Seller shipment | `/seller/orders` | `POST /api/seller/orders/[vendorOrderId]/shipment` → `createSellerShipment` | Shipment, ShipmentTrackingEvent, VendorOrder history, Order history, AuditLog | One manual shipment per READY_TO_SHIP vendor order; HTTPS tracking links only. Migration applied locally; no carrier integration. |
+| Seller tracking updates | `/seller/orders` | `POST /api/seller/orders/[vendorOrderId]/tracking-events` → `addSellerShipmentTrackingEvent` | ShipmentTrackingEvent, Shipment, VendorOrder/Order histories, AuditLog | Forward-only manual events; seller scope is checked server-side; parent order status aggregates vendor shipments. Database/browser lifecycle verification pending. |
+| Invoices and paid cancellation | Not exposed | Not implemented | Future Invoice/InvoiceItem and payment refund workflow | Deferred pending tax/legal invoice requirements and refund/payment policy. |

@@ -4,6 +4,7 @@ import { getDiscoverableStoreBySlug } from "@/server/marketplace/public-stores";
 import { listDiscoverableProducts } from "@/server/catalog/discovery";
 import CatalogProductGrid from "@/features/storefront/catalog-product-grid";
 import CatalogListControls from "@/features/storefront/catalog-list-controls";
+import StoreReviews from "@/features/storefront/store-reviews";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; sort?: string }> };
 
@@ -30,6 +31,6 @@ export default async function StoreDetailPage({ params, searchParams }: Props) {
     <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} />
     <CatalogProductGrid products={result.items} />
     <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} />
-
+    <StoreReviews storeId={store.id} storeName={store.name} />
   </main>;
 }

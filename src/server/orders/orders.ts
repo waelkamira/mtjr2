@@ -1,11 +1,13 @@
 import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
-import { CartStatus, CheckoutQuoteStatus, InventoryMovementType, InventoryReservationStatus, OrderStatus, Prisma, VendorOrderStatus } from "@prisma/client";
+import { CartStatus, CheckoutQuoteStatus, InventoryMovementType, InventoryReservationStatus, OrderStatus, Prisma, ShipmentTrackingStatus, VendorOrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { getCheckoutQuote } from "@/server/checkout/quotes";
 import { createInAppNotification } from "@/server/notifications/notifications";
+import { addCartItems } from "@/server/cart/cart";
+import { z } from "zod";
 
 const reservationReference = "CHECKOUT_QUOTE";
 
@@ -37,27 +39,52 @@ function allocateAmount(total: bigint, bases: Array<{ storeId: string; base: big
 
 function serializeOrder(order: {
   id: string; orderNumber: string; status: OrderStatus; currencyCode: string; currency: { minorUnit: number; symbol: string | null };
-  subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
+  subtotalMinor: bigint; couponCode: string | null; discountMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
   taxRuleName: string; taxRateBasisPoints: number; taxInclusive: boolean; taxIncludesShipping: boolean; taxDestinationRegion: string | null;
   placedAt: Date;
+  statusHistory?: Array<{ status: OrderStatus; note: string | null; createdAt: Date }>;
+  payments?: Array<{ id: string }>;
   address: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   vendorOrders: Array<{
     id: string; status: VendorOrderStatus; store: { id: string; name: string; slug: string };
     shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
-    subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
+    subtotalMinor: bigint; discountMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
     items: Array<{ id: string; productName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
+    statusHistory?: Array<{ status: VendorOrderStatus; note: string | null; createdAt: Date }>;
+    shipment?: {
+      carrierName: string; trackingNumber: string; trackingUrl: string | null; status: ShipmentTrackingStatus; shippedAt: Date;
+      events: Array<{ status: ShipmentTrackingStatus; description: string | null; location: string | null; occurredAt: Date }>;
+    } | null;
   }>;
 }) {
   return {
     id: order.id, orderNumber: order.orderNumber, status: order.status, currencyCode: order.currencyCode, currency: order.currency,
-    subtotalMinor: order.subtotalMinor.toString(), shippingMinor: order.shippingMinor.toString(),
+    subtotalMinor: order.subtotalMinor.toString(), couponCode: order.couponCode,
+    discountMinor: order.discountMinor.toString(), shippingMinor: order.shippingMinor.toString(),
     taxMinor: order.taxMinor.toString(), totalMinor: order.totalMinor.toString(), tax: { ruleName: order.taxRuleName, rateBasisPoints: order.taxRateBasisPoints, inclusive: order.taxInclusive, includesShipping: order.taxIncludesShipping, destinationRegion: order.taxDestinationRegion }, placedAt: order.placedAt.toISOString(),
+    canCancel: order.status === OrderStatus.PENDING_PAYMENT && (order.payments?.length ?? 0) === 0,
+    statusHistory: (order.statusHistory ?? []).map((event) => ({
+      status: event.status, note: event.note, createdAt: event.createdAt.toISOString()
+    })),
     address: order.address,
     vendorOrders: order.vendorOrders.map((vendor) => ({
       id: vendor.id, status: vendor.status, store: vendor.store,
       shippingServiceName: vendor.shippingServiceName, shippingDestinationRegion: vendor.shippingDestinationRegion, minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
-      subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
+      subtotalMinor: vendor.subtotalMinor.toString(), discountMinor: vendor.discountMinor.toString(),
+      shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
+      statusHistory: (vendor.statusHistory ?? []).map((event) => ({
+        status: event.status, note: event.note, createdAt: event.createdAt.toISOString()
+      })),
+      shipment: vendor.shipment ? {
+        carrierName: vendor.shipment.carrierName, trackingNumber: vendor.shipment.trackingNumber,
+        trackingUrl: vendor.shipment.trackingUrl, status: vendor.shipment.status,
+        shippedAt: vendor.shipment.shippedAt.toISOString(),
+        events: vendor.shipment.events.map((event) => ({
+          status: event.status, description: event.description, location: event.location,
+          occurredAt: event.occurredAt.toISOString()
+        }))
+      } : null,
       items: vendor.items.map((item) => ({
         id: item.id, productName: item.productName, sku: item.sku, variantName: item.variantName,
         quantity: item.quantity, unitAmountMinor: item.unitAmountMinor.toString(), lineTotalMinor: item.lineTotalMinor.toString()
@@ -91,7 +118,13 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       include: {
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
-        vendorOrders: { include: { store: { select: { id: true, name: true, slug: true } }, items: true } }
+        statusHistory: { orderBy: { createdAt: "asc" } },
+        payments: { select: { id: true } },
+        vendorOrders: { include: {
+          store: { select: { id: true, name: true, slug: true } }, items: true,
+          statusHistory: { orderBy: { createdAt: "asc" } },
+          shipment: { include: { events: { orderBy: { occurredAt: "asc" } } } }
+        } }
       }
     });
     if (existing) return serializeOrder(existing);
@@ -99,7 +132,8 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
   }
   if (visibleQuote.status !== CheckoutQuoteStatus.ACTIVE) throw new Error("This checkout quote is no longer active.");
 
-  return prisma.$transaction(async (tx) => {
+  try {
+    return await prisma.$transaction(async (tx) => {
     const quote = await tx.checkoutQuote.findFirst({
       where: { id: quoteId, ...ownerWhere(owner), status: CheckoutQuoteStatus.ACTIVE, expiresAt: { gt: now } },
       include: {
@@ -107,6 +141,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         lines: { orderBy: { createdAt: "asc" }, include: { variant: { select: { productId: true } } } },
         shippingSelections: true,
         taxSnapshot: true,
+        coupon: { select: { id: true, isActive: true, startsAt: true, expiresAt: true, maxRedemptions: true } },
         cart: { select: { id: true, status: true } }
       }
     });
@@ -114,6 +149,21 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
     if (!quote.deliveryAddress) throw new Error("A delivery address is required before placing an order.");
     if (!quote.taxSnapshot) throw new Error("Calculate tax using a configured market rule before placing an order.");
     if (quote.taxSnapshot.destinationRegion !== (quote.deliveryAddress.region ?? null)) throw new Error("The delivery destination changed. Recalculate tax before placing the order.");
+    if (quote.discountMinor < BigInt(0) || quote.discountMinor > quote.subtotalMinor) {
+      throw new Error("Checkout coupon snapshot is invalid. Rebuild the quote before placing the order.");
+    }
+    if (quote.couponId) {
+      const coupon = quote.coupon;
+      if (!coupon || !coupon.isActive || (coupon.startsAt && coupon.startsAt > now) || (coupon.expiresAt && coupon.expiresAt <= now)) {
+        throw new Error("This coupon is no longer valid. Rebuild checkout without it.");
+      }
+      if (coupon.maxRedemptions !== null) {
+        const redemptionCount = await tx.couponRedemption.count({ where: { couponId: coupon.id } });
+        if (redemptionCount >= coupon.maxRedemptions) throw new Error("This coupon has reached its redemption limit.");
+      }
+    } else if (quote.discountMinor !== BigInt(0) || quote.couponCode) {
+      throw new Error("Checkout coupon snapshot is inconsistent. Rebuild the quote before placing the order.");
+    }
 
     const grouped = new Map<string, typeof quote.lines>();
     for (const line of quote.lines) grouped.set(line.storeId, [...(grouped.get(line.storeId) ?? []), line]);
@@ -130,23 +180,32 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
     const subtotalByStore = new Map(storeIds.map((storeId) => [
       storeId, grouped.get(storeId)!.reduce((sum, line) => sum + line.lineTotalMinor, BigInt(0))
     ]));
+    const discountByStore = allocateAmount(quote.discountMinor, storeIds.map((storeId) => ({
+      storeId, base: subtotalByStore.get(storeId)!
+    })));
     const taxableBases = storeIds.map((storeId) => ({
       storeId,
-      base: subtotalByStore.get(storeId)! + (quote.taxSnapshot!.includesShipping ? shippingByStore.get(storeId)! : BigInt(0))
+      base: subtotalByStore.get(storeId)! - (discountByStore.get(storeId) ?? BigInt(0)) +
+        (quote.taxSnapshot!.includesShipping ? shippingByStore.get(storeId)! : BigInt(0))
     }));
     const allocatedTax = allocateAmount(quote.taxSnapshot.taxAmountMinor, taxableBases);
     const subtotal = storeIds.reduce((sum, id) => sum + subtotalByStore.get(id)!, BigInt(0));
     const shipping = storeIds.reduce((sum, id) => sum + shippingByStore.get(id)!, BigInt(0));
-    if (subtotal !== quote.subtotalMinor || quote.taxSnapshot.currencyCode !== quote.currencyCode) {
+    const discountedSubtotal = subtotal - quote.discountMinor;
+    const expectedTaxableAmount = discountedSubtotal +
+      (quote.taxSnapshot.includesShipping ? shipping : BigInt(0));
+    if (subtotal !== quote.subtotalMinor || quote.taxSnapshot.currencyCode !== quote.currencyCode ||
+        quote.taxSnapshot.taxableAmountMinor !== expectedTaxableAmount) {
       throw new Error("Checkout snapshots are inconsistent. Rebuild the quote before placing an order.");
     }
     const tax = quote.taxSnapshot.taxAmountMinor;
-    const total = subtotal + shipping + (quote.taxSnapshot.isInclusive ? BigInt(0) : tax);
+    const total = discountedSubtotal + shipping + (quote.taxSnapshot.isInclusive ? BigInt(0) : tax);
     const order = await tx.order.create({
       data: {
         orderNumber: makeOrderNumber(), quoteId, ...ownerWhere(owner),
         marketId: quote.marketId, currencyCode: quote.currencyCode,
-        status: OrderStatus.PENDING_PAYMENT, subtotalMinor: subtotal, shippingMinor: shipping,
+        status: OrderStatus.PENDING_PAYMENT, subtotalMinor: subtotal, couponId: quote.couponId,
+        couponCode: quote.couponCode, discountMinor: quote.discountMinor, shippingMinor: shipping,
         taxMinor: tax, taxRuleName: quote.taxSnapshot.ruleName, taxRateBasisPoints: quote.taxSnapshot.rateBasisPoints,
         taxInclusive: quote.taxSnapshot.isInclusive, taxIncludesShipping: quote.taxSnapshot.includesShipping,
         taxDestinationRegion: quote.taxSnapshot.destinationRegion, totalMinor: total, idempotencyKey: `checkout:${quote.id}`,
@@ -160,6 +219,14 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         statusHistory: { create: { status: OrderStatus.PENDING_PAYMENT, note: "Order created; payment has not been initiated." } }
       }
     });
+    if (quote.couponId) {
+      await tx.couponRedemption.create({
+        data: {
+          couponId: quote.couponId, orderId: order.id,
+          userId: "userId" in owner ? owner.userId : null
+        }
+      });
+    }
 
     if ("userId" in owner) {
       await createInAppNotification(tx, {
@@ -212,13 +279,14 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
     for (const storeId of storeIds) {
       const lines = grouped.get(storeId)!;
       const vendorSubtotal = subtotalByStore.get(storeId)!;
+      const vendorDiscount = discountByStore.get(storeId) ?? BigInt(0);
       const vendorShipping = shippingByStore.get(storeId)!;
       const vendorTax = allocatedTax.get(storeId) ?? BigInt(0);
-      const vendorTotal = vendorSubtotal + vendorShipping + (quote.taxSnapshot.isInclusive ? BigInt(0) : vendorTax);
+      const vendorTotal = vendorSubtotal - vendorDiscount + vendorShipping + (quote.taxSnapshot.isInclusive ? BigInt(0) : vendorTax);
       const vendorOrder = await tx.vendorOrder.create({
         data: {
           orderId: order.id, storeId, status: VendorOrderStatus.PENDING_PAYMENT,
-          subtotalMinor: vendorSubtotal, shippingMinor: vendorShipping, taxMinor: vendorTax,
+          subtotalMinor: vendorSubtotal, discountMinor: vendorDiscount, shippingMinor: vendorShipping, taxMinor: vendorTax,
           taxInclusive: quote.taxSnapshot.isInclusive,
           shippingServiceName: selections.get(storeId)!.serviceName, shippingRateId: selections.get(storeId)!.shippingRateId,
           shippingDestinationRegion: selections.get(storeId)!.destinationRegion,
@@ -263,11 +331,38 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       include: {
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
-        vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+        statusHistory: { orderBy: { createdAt: "asc" } },
+        payments: { select: { id: true } },
+        vendorOrders: { orderBy: { createdAt: "asc" }, include: {
+          store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } },
+          statusHistory: { orderBy: { createdAt: "asc" } },
+          shipment: { include: { events: { orderBy: { occurredAt: "asc" } } } }
+        } }
       }
     });
     return serializeOrder(saved);
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === "P2034" || error.code === "P2002")) {
+      const committedOrder = await prisma.order.findFirst({
+        where: { quoteId, ...ownerWhere(owner) },
+        include: {
+          currency: { select: { minorUnit: true, symbol: true } },
+          address: true,
+          statusHistory: { orderBy: { createdAt: "asc" } },
+          payments: { select: { id: true } },
+          vendorOrders: { include: {
+            store: { select: { id: true, name: true, slug: true } }, items: true,
+            statusHistory: { orderBy: { createdAt: "asc" } },
+            shipment: { include: { events: { orderBy: { occurredAt: "asc" } } } }
+          } }
+        }
+      });
+      if (committedOrder) return serializeOrder(committedOrder);
+      if (error.code === "P2034") throw new Error("Checkout changed concurrently. Retry placing the order.");
+    }
+    throw error;
+  }
 }
 
 export async function getOwnedOrder(guestToken: string, orderId: string, now = new Date()) {
@@ -285,7 +380,13 @@ export async function getOwnedOrder(guestToken: string, orderId: string, now = n
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      statusHistory: { orderBy: { createdAt: "asc" } },
+      payments: { select: { id: true } },
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: {
+        store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } },
+        statusHistory: { orderBy: { createdAt: "asc" } },
+        shipment: { include: { events: { orderBy: { occurredAt: "asc" } } } }
+      } }
     }
   });
   if (!order) throw new Error("Order not found.");
@@ -301,8 +402,146 @@ export async function listCustomerOrders(now = new Date()) {
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      statusHistory: { orderBy: { createdAt: "asc" } },
+      payments: { select: { id: true } },
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: {
+        store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } },
+        statusHistory: { orderBy: { createdAt: "asc" } },
+        shipment: { include: { events: { orderBy: { occurredAt: "asc" } } } }
+      } }
     }
   });
   return orders.map(serializeOrder);
+}
+
+async function getOrderOwner(guestToken: string, now: Date): Promise<Owner> {
+  const session = await getCurrentSession(now);
+  if (session) return { userId: session.userId };
+  const guest = await prisma.guestSession.findUnique({
+    where: { tokenHash: hashToken(guestToken) },
+    select: { id: true, expiresAt: true, convertedAt: true }
+  });
+  if (!guest || guest.expiresAt <= now || guest.convertedAt) throw new Error("Order not found.");
+  return { guestSessionId: guest.id };
+}
+
+export async function cancelOwnedOrder(guestToken: string, orderId: string, now = new Date()) {
+  const id = z.string().trim().min(1).max(128).parse(orderId);
+  const owner = await getOrderOwner(guestToken, now);
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${id}, 0))`);
+    const order = await tx.order.findFirst({
+      where: { id, ...ownerWhere(owner) },
+      select: {
+        id: true, orderNumber: true, status: true, userId: true,
+        payments: { select: { id: true } },
+        vendorOrders: { select: { id: true, status: true } }
+      }
+    });
+    if (!order) throw new Error("Order not found.");
+    if (order.status === OrderStatus.CANCELLED) return { id, status: OrderStatus.CANCELLED, changed: false };
+    if (order.status !== OrderStatus.PENDING_PAYMENT) {
+      throw new Error("Only orders awaiting payment can be canceled.");
+    }
+    if (order.payments.length) {
+      throw new Error("A payment attempt exists for this order. Contact support to cancel it safely.");
+    }
+    if (order.vendorOrders.some((vendor) => vendor.status !== VendorOrderStatus.PENDING_PAYMENT)) {
+      throw new Error("This order is no longer eligible for cancellation.");
+    }
+
+    const sales = await tx.inventoryMovement.findMany({
+      where: { referenceType: "ORDER", referenceId: order.id, type: InventoryMovementType.SALE },
+      select: { inventoryId: true, quantityDelta: true }
+    });
+    if (!sales.length || sales.some((sale) => sale.quantityDelta >= 0)) {
+      throw new Error("Order inventory ledger is incomplete; contact support before canceling.");
+    }
+    for (const sale of sales) {
+      const quantity = -sale.quantityDelta;
+      const restored = await tx.inventory.updateMany({
+        where: { id: sale.inventoryId },
+        data: { quantityOnHand: { increment: quantity } }
+      });
+      if (restored.count !== 1) throw new Error("Order inventory could not be restored; contact support.");
+      await tx.inventoryMovement.create({
+        data: {
+          inventoryId: sale.inventoryId, type: InventoryMovementType.ORDER_CANCELLATION,
+          quantityDelta: quantity, referenceType: "ORDER_CANCELLATION", referenceId: order.id,
+          idempotencyKey: `order-cancellation:${order.id}:${sale.inventoryId}`,
+          note: `Inventory restored for canceled order ${order.orderNumber}`,
+          createdById: "userId" in owner ? owner.userId : null, createdAt: now
+        }
+      });
+    }
+
+    const changed = await tx.order.updateMany({
+      where: { id: order.id, status: OrderStatus.PENDING_PAYMENT },
+      data: { status: OrderStatus.CANCELLED }
+    });
+    if (changed.count !== 1) throw new Error("Order status changed concurrently; refresh and try again.");
+    const canceledVendorOrders = await tx.vendorOrder.updateMany({
+      where: { orderId: order.id, status: VendorOrderStatus.PENDING_PAYMENT },
+      data: { status: VendorOrderStatus.CANCELLED }
+    });
+    if (canceledVendorOrders.count !== order.vendorOrders.length) {
+      throw new Error("Seller order status changed while canceling; refresh and try again.");
+    }
+    await tx.orderStatusHistory.create({
+      data: {
+        orderId: order.id, status: OrderStatus.CANCELLED,
+        note: "Customer canceled before starting payment; inventory was restored.",
+        actorId: "userId" in owner ? owner.userId : null, createdAt: now
+      }
+    });
+    for (const vendor of order.vendorOrders) {
+      await tx.vendorOrderStatusHistory.create({
+        data: {
+          vendorOrderId: vendor.id, status: VendorOrderStatus.CANCELLED,
+          note: "Parent order canceled before payment.", actorId: "userId" in owner ? owner.userId : null,
+          createdAt: now
+        }
+      });
+    }
+    await tx.couponRedemption.deleteMany({ where: { orderId: order.id } });
+    if (order.userId) {
+      await createInAppNotification(tx, {
+        data: {
+          userId: order.userId, type: "ORDER_CANCELLED", title: "Order canceled",
+          message: `Order ${order.orderNumber} was canceled and its inventory was released.`,
+          resourceType: "ORDER", resourceId: order.id,
+          deduplicationKey: `order:${order.id}:buyer:cancelled`
+        }
+      });
+    }
+    await tx.auditLog.create({
+      data: {
+        actorType: "userId" in owner ? "USER" : "SYSTEM",
+        actorId: "userId" in owner ? owner.userId : null,
+        action: "order.cancelled", resource: "order", resourceId: order.id,
+        scopeType: "ORDER", scopeId: order.id, occurredAt: now,
+        metadata: { orderNumber: order.orderNumber, inventoryMovementsReversed: sales.length }
+      }
+    });
+    return { id, status: OrderStatus.CANCELLED, changed: true };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+export async function reorderOwnedOrder(guestToken: string, orderId: string, now = new Date()) {
+  const id = z.string().trim().min(1).max(128).parse(orderId);
+  const owner = await getOrderOwner(guestToken, now);
+  const order = await prisma.order.findFirst({
+    where: { id, ...ownerWhere(owner) },
+    select: {
+      marketId: true, currencyCode: true,
+      vendorOrders: { select: { items: { select: { variantId: true, quantity: true } } } }
+    }
+  });
+  if (!order) throw new Error("Order not found.");
+  const items = order.vendorOrders.flatMap((vendor) => vendor.items)
+    .filter((item): item is { variantId: string; quantity: number } => item.variantId !== null);
+  if (!items.length) throw new Error("None of this order's product options are currently available to reorder.");
+  return addCartItems(guestToken, {
+    marketId: order.marketId, currencyCode: order.currencyCode, items
+  }, now);
 }

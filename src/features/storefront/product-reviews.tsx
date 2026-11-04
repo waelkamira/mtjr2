@@ -3,8 +3,12 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
-type Review = { id: string; rating: number; title: string; body: string; author: string; createdAt: string; verifiedPurchase: true };
+type Review = {
+  id: string; rating: number; title: string; body: string; author: string; createdAt: string; verifiedPurchase: true;
+  media: Array<{ id: string; url: string; altText: string | null; position: number }>;
+};
 type ReviewableItem = { id: string; productName: string; sku: string; quantity: number; orderNumber: string; purchasedAt: string };
+const reportReasons = ["INAPPROPRIATE", "SPAM", "FAKE", "CONFLICT_OF_INTEREST", "PERSONAL_INFORMATION", "OTHER"] as const;
 
 export default function ProductReviews({ productId }: { productId: string }) {
   const [items, setItems] = useState<Review[]>([]);
@@ -15,6 +19,12 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const [orderItemId, setOrderItemId] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [mediaUrls, setMediaUrls] = useState("");
+  const [reportId, setReportId] = useState("");
+  const [reportReason, setReportReason] = useState<(typeof reportReasons)[number]>("INAPPROPRIATE");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportMessage, setReportMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -53,15 +63,31 @@ export default function ProductReviews({ productId }: { productId: string }) {
     try {
       const response = await fetch(`/api/products/${encodeURIComponent(productId)}/reviews`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderItemId, rating: Number(rating), title, body })
+        body: JSON.stringify({ orderItemId, rating: Number(rating), title, body, mediaUrls: mediaUrls.split(/\r?\n/).map((url) => url.trim()).filter(Boolean) })
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Review could not be submitted.");
       setMessage("Your review was submitted and is awaiting moderation.");
-      setTitle(""); setBody("");
+      setTitle(""); setBody(""); setMediaUrls("");
       await Promise.all([loadReviews(), loadEligible()]);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Review could not be submitted."); }
     finally { setBusy(false); }
+  }
+
+  async function reportReview(reviewId: string) {
+    setReportBusy(true); setError(""); setReportMessage("");
+    try {
+      const response = await fetch(`/api/products/${encodeURIComponent(productId)}/reviews/${encodeURIComponent(reviewId)}/reports`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reportReason, details: reportDetails })
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error || "Review report could not be submitted.");
+      setReportMessage("Thank you. The review was sent to moderation.");
+      setReportId(""); setReportDetails("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Review report could not be submitted.");
+    } finally { setReportBusy(false); }
   }
 
   return <section className="mx-auto max-w-6xl px-5 pb-16">
@@ -77,8 +103,16 @@ export default function ProductReviews({ productId }: { productId: string }) {
           {loading ? <div className="h-36 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : items.length ? items.map((review) => <article key={review.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold text-[var(--color-forest-950)]">{review.title}</h3><span aria-label={`${review.rating} out of 5 stars`} className="text-sm tracking-wider text-[var(--color-copper-600)]">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</span></div>
             <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[var(--muted)]">{review.body}</p>
+            {review.media.length > 0 && <div className="mt-4 flex flex-wrap gap-3">{review.media.map((image) => <a key={image.id} href={image.url} target="_blank" rel="noreferrer" aria-label="Open customer review image"><img src={image.url} alt={image.altText || "Customer review image"} loading="lazy" referrerPolicy="no-referrer" className="h-20 w-20 rounded-xl border border-[var(--border)] object-cover" /></a>)}</div>}
             <p className="mt-4 text-xs text-[var(--muted)]">{review.author} · Verified purchase · {new Date(review.createdAt).toLocaleDateString()}</p>
-          </article>) : <div className="rounded-2xl border border-dashed border-[var(--border)] p-7 text-center text-sm text-[var(--muted)]">No published reviews yet. Be the first verified buyer to share feedback.</div>}
+            <button type="button" onClick={() => { setReportId(reportId === review.id ? "" : review.id); setReportMessage(""); }} className="mt-3 text-xs font-medium text-[var(--color-forest-900)] underline">Report review</button>
+            {reportId === review.id && <div className="mt-3 grid gap-2 rounded-xl bg-[var(--color-ivory-100)] p-3">
+              <label className="text-xs font-medium">Reason<select value={reportReason} onChange={(event) => setReportReason(event.target.value as (typeof reportReasons)[number])} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-2 py-2">{reportReasons.map((reason) => <option key={reason} value={reason}>{reason.replaceAll("_", " ").toLowerCase()}</option>)}</select></label>
+              <label className="text-xs font-medium">Details (optional)<textarea value={reportDetails} onChange={(event) => setReportDetails(event.target.value)} maxLength={1000} rows={2} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-2 py-2" /></label>
+              <button type="button" disabled={reportBusy} onClick={() => void reportReview(review.id)} className="justify-self-start rounded-lg bg-[var(--color-forest-900)] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{reportBusy ? "Sending…" : "Send report"}</button>
+            </div>}
+          </article>) : !error ? <div className="rounded-2xl border border-dashed border-[var(--border)] p-7 text-center text-sm text-[var(--muted)]">No published reviews yet. Be the first verified buyer to share feedback.</div> : null}
+          {reportMessage && <p role="status" className="text-sm text-[var(--color-forest-900)]">{reportMessage}</p>}
         </div>
         <aside className="h-fit rounded-2xl border border-[var(--border)] bg-white p-5">
           <h3 className="font-semibold text-[var(--color-forest-950)]">Write a review</h3>
@@ -88,6 +122,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
               <label className="block text-sm font-medium">Rating<select value={rating} onChange={(event) => setRating(event.target.value)} className="mt-1 block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2">{[5,4,3,2,1].map((value) => <option key={value} value={value}>{value} out of 5</option>)}</select></label>
               <label className="block text-sm font-medium">Title<input required minLength={3} maxLength={120} value={title} onChange={(event) => setTitle(event.target.value)} className="mt-1 block w-full rounded-xl border border-[var(--border)] px-3 py-2" /></label>
               <label className="block text-sm font-medium">Your experience<textarea required minLength={20} maxLength={4000} rows={5} value={body} onChange={(event) => setBody(event.target.value)} className="mt-1 block w-full rounded-xl border border-[var(--border)] px-3 py-2" /></label>
+              <label className="block text-sm font-medium">Image URLs (optional)<textarea value={mediaUrls} onChange={(event) => setMediaUrls(event.target.value)} maxLength={11000} rows={3} placeholder="One HTTPS image URL per line" className="mt-1 block w-full rounded-xl border border-[var(--border)] px-3 py-2" /><span className="mt-1 block text-xs text-[var(--muted)]">Up to 5 public HTTPS JPG, PNG, GIF, WebP or AVIF URLs. This attaches existing images; it does not upload files.</span></label>
               <button disabled={busy || !orderItemId} className="w-full rounded-xl bg-[var(--color-forest-900)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Submitting…" : "Submit review"}</button>
             </form> : <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Only customers with a delivered purchase can review this product. Reviews are limited to one per customer and product.</p>}
           {needsSignIn && <Link href="/login" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white">Sign in</Link>}

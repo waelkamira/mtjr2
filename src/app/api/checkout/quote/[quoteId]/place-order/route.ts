@@ -15,7 +15,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     return Response.json({ order }, { status: 201, headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to place this order.";
-    const status = /expired|no longer active|stock|reservation|already placed/i.test(message) ? 409 : 400;
+    const status = /expired|no longer active|stock|reservation|already placed|coupon.*(limit|no longer valid)|snapshot is inconsistent|changed concurrently/i.test(message) ? 409 : 400;
     return Response.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
   }
 }

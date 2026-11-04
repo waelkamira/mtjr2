@@ -8,6 +8,8 @@ type TaxResult = {
   message?: string;
   rule?: { name: string; rateBasisPoints: number; isInclusive: boolean; includesShipping: boolean };
   subtotalMinor?: string;
+  couponCode?: string | null;
+  discountMinor?: string;
   shippingMinor?: string;
   taxableAmountMinor?: string;
   taxAmountMinor?: string;
@@ -43,6 +45,7 @@ export default function CheckoutTaxSummary({ quoteId, quoteStatus, currencyCode,
       {!result.configured ? <p className="text-sm text-[var(--muted)]">{result.message}</p> : <>
         <p className="text-sm text-[var(--muted)]">{result.rule?.name} · {(Number(result.rule?.rateBasisPoints || 0) / 100).toFixed(2)}% · {result.rule?.isInclusive ? "Tax inclusive" : "Tax exclusive"}</p>
         <div className="mt-3 space-y-2 text-sm">
+          {Number(result.discountMinor || "0") > 0 && <div className="flex justify-between"><span>Coupon{result.couponCode ? ` · ${result.couponCode}` : ""}</span><strong>−{money(result.discountMinor)}</strong></div>}
           <div className="flex justify-between"><span>Shipping</span><strong>{money(result.shippingMinor)}</strong></div>
           <div className="flex justify-between"><span>Tax</span><strong>{money(result.taxAmountMinor)}</strong></div>
           <div className="flex justify-between border-t border-[var(--border)] pt-3 text-base"><span className="font-semibold">Estimated total</span><strong>{money(result.amountDueMinor)}</strong></div>

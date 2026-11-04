@@ -13,6 +13,8 @@ type Quote = {
   market: { code: string; name: string };
   currency: { code: string; symbol: string | null; minorUnit: number };
   subtotalMinor: string;
+  couponCode: string | null;
+  discountMinor: string;
   expiresAt: string;
   lines: Array<{ id: string; productName: string; storeName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: string; lineTotalMinor: string }>;
 };
@@ -115,6 +117,7 @@ export default function CheckoutReviewPage() {
             <aside className="h-fit rounded-3xl border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-card)]">
               <p className="text-sm font-semibold text-[var(--color-forest-950)]">Quote summary</p>
               <div className="mt-5 flex justify-between gap-3 text-sm"><span className="text-[var(--muted)]">Items subtotal</span><span className="font-semibold tabular-nums">{money(quote.subtotalMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>
+              {BigInt(quote.discountMinor) > BigInt(0) && <div className="mt-3 flex justify-between gap-3 text-sm"><span className="text-[var(--muted)]">Coupon{quote.couponCode ? ` · ${quote.couponCode}` : ""}</span><span className="font-semibold tabular-nums">−{money(quote.discountMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>}
               <div className="mt-4 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">Reservation status</p><p className={`mt-1 font-semibold ${quote.status === "ACTIVE" ? "text-[var(--color-forest-900)]" : "text-[var(--color-danger)]"}`}>{quote.status}</p><p className="mt-2 text-xs leading-5 text-[var(--muted)]">{quote.status === "ACTIVE" ? `Stock held until ${new Date(quote.expiresAt).toLocaleString()}.` : "This quote is no longer holding inventory. Return to your cart to create a fresh quote."}</p></div>
               <button type="button" disabled={busy || quote.status !== "ACTIVE"} onClick={() => void releaseQuote()} className="mt-6 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{busy ? "Releasing…" : "Release reservation"}</button>
               <p className="mt-4 text-xs leading-5 text-[var(--muted)]">No order has been created and no payment has been taken.</p>
