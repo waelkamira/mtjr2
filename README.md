@@ -322,3 +322,9 @@ System 15 has an initial seller-side preparation slice on `feat/seller-order-pro
 A guarded, repeatable demo catalog seed is available for isolated development databases. It creates 8 active storefront categories and 80 bilingual demo products (10 per category), with demo sellers/stores, USD market pricing, product images, variants, and initial stock. It does not create fabricated customer reviews or orders.
 
 Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEMO_CATALOG_SEED.md). Demo seeding requires `SEED_DEMO_CATALOG=true`, `ALLOW_DEMO_CATALOG_SEED=true`, and a separate `DEMO_DATABASE_URL` whose database name includes `demo`, `test`, `ci`, or `dev`; it is blocked in production. No Prisma schema change is needed. Exact-head General CI and disposable PostgreSQL migration/integration plus two consecutive seed runs passed before PR #27 was merged as `0ec09ed`.
+
+
+## Local product and storefront testing
+
+- Windows/PowerShell local setup using an isolated PostgreSQL `mtjr2_demo` database and the 80-product demo catalog: [Local development guide](docs/development/LOCAL_WINDOWS_SETUP.md).
+- The canonical application URL is server-only `APP_URL`; do not use a `NEXT_PUBLIC_*` prefix for server-side configuration.
