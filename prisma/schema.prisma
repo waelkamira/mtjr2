@@ -56,8 +56,8 @@ model User {
   returnRequests        ReturnRequest[] @relation("ReturnRequestCustomer")
   reviewedReturnRequests ReturnRequest[] @relation("ReturnRequestReviewer")
   notifications         Notification[]
-  supportAttachments    SupportAttachment[]
-  storeMessageAttachments StoreMessageAttachment[]
+  supportAttachments    SupportAttachment[] @relation("SupportAttachmentUploader")
+  storeMessageAttachments StoreMessageAttachment[] @relation("StoreMessageAttachmentUploader")
   notificationPreferences NotificationPreference[]
   productReviews        ProductReview[]
   productQuestions      ProductQuestion[]
@@ -1599,6 +1599,27 @@ model SupportMessage {
   @@index([senderId, createdAt])
 }
 
+model SupportAttachment {
+  id           String                  @id @default(cuid())
+  ticketId     String
+  messageId    String?
+  uploadedById String
+  objectKey    String                  @unique @db.VarChar(512)
+  fileName     String                  @db.VarChar(255)
+  contentType  String                  @db.VarChar(120)
+  sizeBytes    Int
+  status       MessageAttachmentStatus @default(PENDING_SCAN)
+  scanError    String?                 @db.VarChar(500)
+  createdAt    DateTime                @default(now())
+  scannedAt    DateTime?
+  ticket       SupportTicket           @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message      SupportMessage?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  uploadedBy   User                    @relation("SupportAttachmentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, status, createdAt])
+  @@index([messageId])
+}
+
 model SupportSlaPolicy {
   priority             SupportTicketPriority @id
   firstResponseMinutes Int
@@ -1645,6 +1666,27 @@ model StoreMessage {
   @@index([senderId, createdAt])
 }
 
+
+model StoreMessageAttachment {
+  id             String                  @id @default(cuid())
+  conversationId String
+  messageId      String?
+  uploadedById   String
+  objectKey      String                  @unique @db.VarChar(512)
+  fileName       String                  @db.VarChar(255)
+  contentType    String                  @db.VarChar(120)
+  sizeBytes      Int
+  status         MessageAttachmentStatus @default(PENDING_SCAN)
+  scanError      String?                 @db.VarChar(500)
+  createdAt      DateTime                @default(now())
+  scannedAt      DateTime?
+  conversation   StoreConversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message        StoreMessage?           @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  uploadedBy     User                    @relation("StoreMessageAttachmentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([conversationId, status, createdAt])
+  @@index([messageId])
+}
 
 model Payment {
   id                  String        @id @default(cuid())
