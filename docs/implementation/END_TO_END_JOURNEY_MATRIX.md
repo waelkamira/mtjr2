@@ -180,3 +180,15 @@ Audit shared dependencies once, then re-check them from each consumer journey: i
 
 
 **Taxonomy correction update — 2026-11-04:** Category tree retrieval now pages root categories and fetches descendants level-by-level before tree assembly. Pagination totals are root-category totals. Focused tests cover deep descendants and malformed-cycle termination. This closes the previously recorded parent/child page-split defect at source level; exact-head CI is pending.
+
+## Search journeys — 2026-11-04
+
+| Action | UI → API/service | Data boundary | Verification gate |
+|---|---|---|---|
+| Public search | Global search → `/search?q=...` → discovery service | Active products/sellers/stores; tokens across localized fields, identifiers, variants, brands, categories and store; active synonyms | Exact-head CI, filter/pagination, empty/error and browser verification |
+| Autocomplete | Header combobox → `GET /api/search/suggestions?q=...` | Maximum six products and four active stores; bounded query | Debounce/abort, stale response, keyboard and screen-reader checks |
+| Seller catalog | `/seller/products` → `GET /api/seller/products?storeId=...&q=...` | Authorized store only; name/slug/description/SKU/barcode | Owner/staff authorization and cross-store isolation |
+| Seller orders | `/seller/orders` → `GET /api/seller/orders?q=...` | Store IDs derived from authenticated owner/staff permissions; order number, store and item fields | Multi-store isolation and result correctness |
+| Seller inventory | `/seller/inventory` → `GET /api/seller/inventory?storeId=...&q=...` | Authorized store only; product/SKU/warehouse fields | Owner/staff authorization and cross-store isolation |
+
+Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL and browser journeys pass.

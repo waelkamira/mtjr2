@@ -1690,3 +1690,16 @@ The project owner approved Resend as the transactional email provider. The serve
 **Change:** `listActiveCategoryTree` now paginates top-level active categories and loads all active descendants for those roots before building the tree. Pagination totals count roots, matching the page unit. A visited set stops malformed cycles; inactive/orphaned parent branches are not exposed as public roots.
 
 **Focused tests added:** multi-level child loading across root-page boundaries and cycle termination. No Prisma schema change or migration was needed. Exact-head CI and PostgreSQL integration are pending.
+
+## 2026-11-04 — Search foundation and seller operations search
+
+**Implemented**
+- Public product search now tokenizes bounded Unicode queries and requires each query token to match at least one supported field. Search terms cover product names/slugs/descriptions, localized names, identifiers, variant SKU/barcode, brand, category and store. Active locale synonyms expand matching terms.
+- Added bounded product/store suggestions through `GET /api/search/suggestions`; the global navigation uses a debounced, abortable autocomplete.
+- Replaced the homepage reuse at `/search` with a dedicated result page, category/brand filters, sort options and filter-preserving pagination.
+- Added seller-scoped search for products/SKU/barcode, vendor orders/order number/items and inventory/product/SKU/warehouse. Existing permission checks and store scoping remain before the filtered queries.
+- No Prisma schema change: existing SearchSynonym, ProductIdentifier, ProductVariant, Product, Brand, Category, Store, VendorOrder and Inventory models cover the current search fields.
+
+**Verification boundary**
+- Focused query-token and multi-token matching tests added.
+- Exact-head CI and PostgreSQL integration are required before this slice is validated. Search ranking, typo tolerance, richer filters, browser accessibility testing and performance under production-scale catalog volumes remain future work. Do not label the search system complete.

@@ -272,3 +272,13 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 - `listActiveCategoryTree` now paginates top-level active categories only, then loads active descendants level-by-level before building the tree. Child nodes are no longer split away from their selected root by the page limit.
 - Pagination totals now describe top-level categories, which matches the returned page unit (a tree per root category). Malformed cycles cannot cause unbounded traversal; descendants of inactive or orphaned parents are not exposed as independent public roots.
 - Focused tests cover multi-level descendants across the page boundary and cycle termination. Exact-head CI/PostgreSQL result pending.
+
+## Search surface update — 2026-11-04
+
+| Route / surface | Search behavior | Backend source | Status |
+|---|---|---|---|
+| Global navigation | Debounced product and store autocomplete; submit to results | `GET /api/search/suggestions`, discovery and public-store services | Implemented / pending verification |
+| `/search` | Dedicated result page with keyword, category, brand and sort filters; pagination | `listDiscoverableProducts`, taxonomy services | Implemented / pending verification |
+| `/seller/products` | Search product name, slug, description, SKU and barcode within selected store | `listSellerStoreProducts` after catalog permission check | Implemented / pending verification |
+| `/seller/orders` | Search order number, store, product, SKU and variant across authorized stores | `listSellerVendorOrders` after permission-derived store scope | Implemented / pending verification |
+| `/seller/inventory` | Search product, SKU and warehouse name/code within selected store | `listStoreInventory` after inventory permission check | Implemented / pending verification |
