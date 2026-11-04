@@ -28,10 +28,16 @@ export default function SellerOrdersPage() {
       });
       const data = await response.json() as { vendorOrder?: { id: string; status: string }; error?: string };
       if (!response.ok || !data.vendorOrder) throw new Error(data.error || "Order status could not be updated.");
-      setOrders((current) => current.map((order) => order.id === vendorOrderId ? {
-        ...order, status: data.vendorOrder!.status,
-        order: { ...order.order, status: status === "PROCESSING" ? "PROCESSING" : order.order.status }
-      } : order));
+      setOrders((current) => {
+        const selected = current.find((order) => order.id === vendorOrderId);
+        return current.map((order) => ({
+          ...order,
+          ...(order.id === vendorOrderId ? { status: data.vendorOrder!.status } : {}),
+          order: selected && order.order.id === selected.order.id && status === "PROCESSING"
+            ? { ...order.order, status: "PROCESSING" }
+            : order.order
+        }));
+      });
     } catch (cause) {
       setActionError(cause instanceof Error ? cause.message : "Order status could not be updated.");
     } finally {
@@ -57,7 +63,7 @@ export default function SellerOrdersPage() {
       {loading ? <div className="mt-6 h-48 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /> : orders.length ? <div className="mt-6 space-y-4">{orders.map((vendor) => <article key={vendor.id} className="rounded-3xl border border-[var(--border)] bg-white p-6">
         <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs text-[var(--muted)]">{vendor.order.orderNumber} · {new Date(vendor.order.placedAt).toLocaleString()}</p><h2 className="mt-1 text-lg font-semibold">{vendor.store.name}</h2></div><div className="text-right"><p className="font-semibold">{vendor.status.replaceAll("_", " ")}</p><p className="mt-1 text-xs text-[var(--muted)]">{vendor.shippingServiceName}</p><p className="mt-1 text-sm tabular-nums">{money(vendor.totalMinor, vendor.order.currencyCode, vendor.order.currency.minorUnit)}</p></div></div>
         <div className="mt-4 divide-y divide-[var(--border)]">{vendor.items.map((item) => <div key={item.id} className="flex justify-between gap-4 py-3 text-sm"><div><p className="font-medium">{item.productName}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.sku}{item.variantName ? ` · ${item.variantName}` : ""} · Qty {item.quantity}</p></div><strong className="tabular-nums">{money(item.lineTotalMinor, vendor.order.currencyCode, vendor.order.currency.minorUnit)}</strong></div>)}</div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">Marketplace payment state: {vendor.order.status.replaceAll("_", " ")}.</p><div className="flex flex-wrap gap-2">{vendor.status === "CONFIRMED" && <button type="button" disabled={savingOrderId === vendor.id} onClick={() => updateOrderStatus(vendor.id, "PROCESSING")} className="rounded-xl bg-[var(--color-forest-950)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{savingOrderId === vendor.id ? "Saving..." : "Start processing"}</button>}{vendor.status === "PROCESSING" && <button type="button" disabled={savingOrderId === vendor.id} onClick={() => updateOrderStatus(vendor.id, "READY_TO_SHIP")} className="rounded-xl bg-[var(--color-forest-950)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{savingOrderId === vendor.id ? "Saving..." : "Mark ready to ship"}</button>}{vendor.status === "PENDING_PAYMENT" && <span className="text-xs text-[var(--muted)]">Waiting for verified payment.</span>}{vendor.status === "READY_TO_SHIP" && <span className="text-xs text-[var(--muted)]">Shipment labels and tracking are not configured yet.</span>}</div></div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">Marketplace payment state: {vendor.order.status.replaceAll("_", " ")}.</p><div className="flex flex-wrap gap-2">{vendor.status === "CONFIRMED" && <button type="button" disabled={Boolean(savingOrderId)} onClick={() => updateOrderStatus(vendor.id, "PROCESSING")} className="rounded-xl bg-[var(--color-forest-950)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{savingOrderId === vendor.id ? "Saving..." : "Start processing"}</button>}{vendor.status === "PROCESSING" && <button type="button" disabled={savingOrderId === vendor.id} onClick={() => updateOrderStatus(vendor.id, "READY_TO_SHIP")} className="rounded-xl bg-[var(--color-forest-950)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{savingOrderId === vendor.id ? "Saving..." : "Mark ready to ship"}</button>}{vendor.status === "PENDING_PAYMENT" && <span className="text-xs text-[var(--muted)]">Waiting for verified payment.</span>}{vendor.status === "READY_TO_SHIP" && <span className="text-xs text-[var(--muted)]">Shipment labels and tracking are not configured yet.</span>}</div></div>
       </article>)}</div> : !error ? <div className="mt-6 rounded-3xl border border-[var(--border)] bg-white p-8 text-center text-sm text-[var(--muted)]">{query ? "No orders match this search." : "No seller orders yet."}</div> : null}
     </div>
   </main>;
