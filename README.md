@@ -37,6 +37,10 @@ Exact dependency versions and deployment choices will be pinned during the found
 
 This sequence is dependency-aware. The 49 systems will be mapped to these delivery slices and implemented incrementally; it is not a promise to create all systems in one pass.
 
+## Prisma model map
+
+Use [`docs/architecture/PRISMA_MODEL_USAGE_MAP.md`](docs/architecture/PRISMA_MODEL_USAGE_MAP.md) with `prisma/schema.prisma` before every schema change. The map identifies the owning domain/service and known implementation boundaries; it is an impact-analysis aid, not evidence that a model's workflow is complete.
+
 ## Required page inventory
 
 The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the companion inventory for public storefront, authentication, customer account, seller center, admin, global operations, property/booking, and legal/system pages. Treat routes there as required targets, not as proof that they already exist. Every page must be connected to the owning API/domain service and have access control, loading/empty/error states, and verified key actions. Implement in dependency order and record evidence in the build log.
@@ -285,3 +289,8 @@ Every button, link, form, page, API and business service must be traced as one u
 ## Page and route inventory
 
 The 49-system blueprint is paired with a unified page-by-page target and audit registry: [`docs/implementation/PAGE_ROUTE_REGISTRY.md`](docs/implementation/PAGE_ROUTE_REGISTRY.md). Use it to reconcile required pages against the active App Router tree and record each route's audience, owning system, API/service, Prisma entities, implementation status and verification evidence. The registry's initial statuses are provisional; it does not claim every target route already exists or is complete.
+
+
+## Current implementation audit (2026-11-04)
+
+The active implementation branch is `feat/returns-workflow` (draft PR #15, stacked on earlier work; not merged). The static App Router audit found 30 page routes and 86 API route handlers. This confirms substantial frontend/backend surface area, but does not mean all routes or user journeys are complete. The route registry records actual paths and missing dedicated targets; the Phase 3 seller acceptance gate and Phase 4 buying verification remain open. See [Build Log](docs/implementation/BUILD_LOG.md) for the exact-head CI results and current blockers. Continue from [Phase 4 Buying Core](docs/implementation/PHASE_04_BUYING_PLAN.md), not by restarting the cart/quote work.
