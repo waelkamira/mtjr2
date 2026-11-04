@@ -4,6 +4,8 @@
 
 **Status rule:** Listed routes are required targets, not a claim that they currently exist or work. Before marking a route complete, verify the page, access policy, API/service integration, loading/empty/error states, responsive behavior, and its critical user journey. Keep implementation status in the build log and project audit.
 
+**System placement:** See [`PLATFORM_PAGE_SYSTEM_MAP.md`](PLATFORM_PAGE_SYSTEM_MAP.md) for the owning page and audience for each of the 49 systems, recommended navigation, and dependency-aware delivery order. This file remains the route checklist; it does not certify route presence or workflow completion.
+
 ## 1. Shared application shell
 
 - [ ] Global storefront header: logo/home, search, category navigation, market/currency selector, account, wishlist, cart.
