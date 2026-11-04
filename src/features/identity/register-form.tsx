@@ -10,6 +10,9 @@ export default function RegisterForm() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accountType, setAccountType] = useState<"CUSTOMER" | "SELLER">("CUSTOMER");
+  const [sellerLegalName, setSellerLegalName] = useState("");
+  const [sellerDisplayName, setSellerDisplayName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -26,7 +29,7 @@ export default function RegisterForm() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName, email, password, acceptedTerms, acceptedPrivacy }),
+        body: JSON.stringify({ displayName, email, password, accountType, sellerLegalName: accountType === "SELLER" ? sellerLegalName : undefined, sellerDisplayName: accountType === "SELLER" ? sellerDisplayName : undefined, acceptedTerms, acceptedPrivacy }),
         cache: "no-store"
       });
       const result = await response.json() as { message?: string; error?: string };
@@ -55,6 +58,22 @@ export default function RegisterForm() {
           {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
           {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">{notice}</p>}
           <form onSubmit={submit} className="mt-6 space-y-4">
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-semibold">How will you use Mtjr2?</legend>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] p-4">
+                <input type="radio" name="accountType" value="CUSTOMER" checked={accountType === "CUSTOMER"} onChange={() => setAccountType("CUSTOMER")} className="mt-1" />
+                <span><strong className="block text-sm">Customer / buyer</strong><span className="text-xs text-[var(--muted)]">Discover products, save favorites and manage your orders.</span></span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] p-4">
+                <input type="radio" name="accountType" value="SELLER" checked={accountType === "SELLER"} onChange={() => setAccountType("SELLER")} className="mt-1" />
+                <span><strong className="block text-sm">Seller</strong><span className="text-xs text-[var(--muted)]">Apply to open a store. Selling permissions are granted only after review.</span></span>
+              </label>
+            </fieldset>
+            {accountType === "SELLER" && <div className="space-y-4 rounded-xl bg-[var(--color-ivory-100)] p-4">
+              <label className="block text-sm font-medium">Legal business / applicant name<input className={fieldClass} value={sellerLegalName} onChange={event => setSellerLegalName(event.target.value)} required minLength={2} maxLength={160} /></label>
+              <label className="block text-sm font-medium">Public store name<input className={fieldClass} value={sellerDisplayName} onChange={event => setSellerDisplayName(event.target.value)} required minLength={2} maxLength={80} /></label>
+              <p className="text-xs leading-5 text-[var(--muted)]">This creates a pending seller application. Your store cannot publish products until the marketplace approves it.</p>
+            </div>}
             <label className="block text-sm font-medium">Display name <span className="font-normal text-[var(--muted)]">(optional)</span>
               <input className={fieldClass} value={displayName} onChange={event => setDisplayName(event.target.value)} maxLength={80} autoComplete="name" />
             </label>
