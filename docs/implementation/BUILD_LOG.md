@@ -1524,3 +1524,28 @@ The project owner approved Resend as the transactional email provider. The serve
 - No owner/local/production database or Vercel environment was accessed.
 - No pull request was merged.
 - Next: inspect fresh General CI on the corrected head; continue a focused checkout → order → payment boundary journey review; only start provider-specific payment implementation after owner decisions. Keep Phase 3 seller onboarding and public-route gaps visible rather than marking them complete.
+
+
+## 2026-11-04 — Enforced all-49 action tracing and began Identity UI completion
+
+**Platform-wide plan change**
+- Added `docs/implementation/END_TO_END_JOURNEY_MATRIX.md` with one ledger row for each of the 49 systems and a required action trace from first interaction through server-confirmed outcome, persistence, recovery, and evidence. All systems begin Not audited; no prior UI/API/model presence was promoted to complete.
+- Strengthened `END_TO_END_JOURNEY_STANDARD.md`, `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`, `PAGE_ROUTE_REGISTRY.md`, and README: every visible control must work end to end or be disabled/removed and honestly marked unavailable. Every schema decision must reuse a canonical model or explain the missing durable business fact and migration.
+
+**Identity implementation slice (System 01)**
+- Added `/login`, `/forgot-password`, `/reset-password`, and `/verify-email` pages in `src/app/**/page.tsx`, sharing `src/features/identity/auth-page.tsx`. They call the existing same-origin auth APIs; login return paths are restricted to same-origin local paths; verification tokens are removed from the visible URL after capture.
+- Added `/register` as an explicit unavailable information page, not an active registration form. The repository has no published Terms of Service or Privacy Notice, so exposing an account-creation form without owner-approved consent documents would be unsafe. Registration API/service and `UserConsent` persistence exist, but public registration remains blocked until those documents are supplied and published.
+- The logout API/service exists but there is still no user-facing logout control. The full identity journey is therefore not complete.
+- Updated Phase 2, the route registry and System 01 matrix trace with these exact facts and remaining blockers.
+- Current source tree: 35 page routes and 86 API route handlers. These are inventory counts, not verified workflow counts.
+
+**Verification**
+- General CI and disposable PostgreSQL integration both passed on exact application/test commit `455d13e6d5c5070aa3ba1fdf0b4679794bb0f0f8`: [CI 41747802067](https://github.com/waelkamira/mtjr2/actions/runs/41747802067) and [PostgreSQL 41747801967](https://github.com/waelkamira/mtjr2/actions/runs/41747801967). CI included Prisma validate/generate, typecheck, lint, unit tests and production build; PostgreSQL deployed committed migrations, seeded roles/permissions and ran the existing integration suite.
+- That successful run predates the new identity pages. The identity UI and later plan edits are awaiting fresh exact-head CI/PostgreSQL workflows; no pass is claimed for the new pages yet.
+- No Prisma schema or migration changed in this slice. No owner/local/production DB or Vercel settings were accessed. No PR was merged.
+
+**Next blocking work**
+1. Obtain fresh exact-head CI and PostgreSQL results for the new pages.
+2. Add a real user-facing logout control and verify cookie/session revocation through `/api/auth/me` after logout.
+3. Owner must supply approved Terms of Service and Privacy Notice before public registration can be enabled.
+4. Configure the real trusted proxy header and Resend sender/key, then run one deployed HTTP journey: register → verify → login → authenticated request → logout → denied request. Until then Phase 2 remains open and downstream launch claims remain blocked.
