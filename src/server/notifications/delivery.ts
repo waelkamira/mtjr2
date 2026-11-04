@@ -23,7 +23,7 @@ export async function processNotificationDeliveries(now = new Date()) {
     },
     orderBy: [{ nextAttemptAt: "asc" }, { createdAt: "asc" }],
     take: BATCH_SIZE,
-    select: { id: true, status: true, lockedAt: true }
+    select: { id: true, type: true, status: true, lockedAt: true }
   });
 
   let sent = 0;
@@ -42,11 +42,25 @@ export async function processNotificationDeliveries(now = new Date()) {
     const delivery = await prisma.notificationDelivery.findUnique({
       where: { id: candidate.id },
       select: {
-        id: true, title: true, message: true, attempts: true, maxAttempts: true,
-        user: { select: { email: true, status: true, emailVerifiedAt: true } }
+        id: true, type: true, title: true, message: true, attempts: true, maxAttempts: true,
+        user: {
+          select: {
+            email: true, status: true, emailVerifiedAt: true,
+            consents: { where: { type: "NOTIFICATION_EMAIL" }, orderBy: { capturedAt: "desc" }, take: 1, select: { granted: true } },
+            notificationPreferences: { where: { type: candidate.type }, select: { emailEnabled: true } }
+          }
+        }
       }
     });
     if (!delivery) continue;
+
+    if (!delivery.user.notificationPreferences[0]?.emailEnabled || !delivery.user.consents[0]?.granted) {
+      await prisma.notificationDelivery.update({
+        where: { id: delivery.id },
+        data: { status: NotificationDeliveryStatus.CANCELLED, lockedAt: null, lastError: "Email preference or consent was withdrawn before delivery." }
+      });
+      continue;
+    }
 
     try {
       if (delivery.user.status !== "ACTIVE" || !delivery.user.emailVerifiedAt) {
