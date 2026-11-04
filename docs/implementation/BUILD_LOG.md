@@ -1776,3 +1776,15 @@ The project owner approved Resend as the transactional email provider. The serve
 **Not implemented / gates:** model enum and transitions are not finalized; migration generation/backfill, customer/admin read-path cutover, seller decision API/UI, exact-store `returns:manage` grants, and PostgreSQL tests remain pending. No shipping, receipt evidence, refund, ledger, production DB, Vercel settings or secrets touched.
 
 **Verification:** documentation-only change; no code tests claimed for this design commit. The baseline workflow results above apply to PR #16 head, not to a future runtime implementation.
+
+
+## 2026-11-04 — Return lifecycle implementation preflight
+
+- Audited canonical schema, the existing `20261104040000_returns_workflow` migration, permission seed, customer return eligibility calculation, admin mutation service, and exact-store authorization helpers.
+- Confirmed deterministic backfill key: `(ReturnRequest.id, OrderItem.vendorOrderId)`. Every ReturnItem must be assigned once, with strict validation that the VendorOrder belongs to the parent Order.
+- Confirmed `returns:manage` exists but is not included in SELLER / STORE_MANAGER role permissions. Delegated return mutations must require an exact STORE-scoped grant; the current seller read queue still uses `orders:manage` and must be migrated deliberately.
+- Found a required customer-side change: available return quantity is currently calculated using the parent ReturnRequest status. After per-vendor state cutover, this must use the assigned VendorReturn state to avoid one vendor's rejection affecting another vendor's items.
+- Found admin compatibility issue: current admin PATCH mutates the global parent status. It must become a selected-vendor-case action or an explicitly platform-wide override with separate audit semantics.
+- Historical parent reviewer/note fields cannot be copied to each vendor case as seller-visible data. Backfill must preserve legacy state without inventing seller actors/timestamps.
+- Updated `VENDOR_RETURN_LIFECYCLE_DESIGN.md` with these invariants. No schema, migration, API, UI or production data changed; no code tests claimed.
+- PR #16 exact latest head `95023400dc1b7ee3e7d69dc1ca75ffc0f572d452`: CI #593 and PostgreSQL Integration #282 both passed. PR #17 is based on earlier PR #16 head `0a72ae0...` and currently reports not mergeable; refresh branch ancestry before merging.
