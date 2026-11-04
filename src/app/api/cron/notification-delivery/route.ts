@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 function authorized(request: Request) {
   const secret = process.env.CRON_SECRET;
-  const supplied = request.headers.get("authorization")?.replace(/^Bearer\\s+/i, "") ?? "";
+  const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!secret || !supplied) return false;
   const expectedBuffer = Buffer.from(secret);
   const suppliedBuffer = Buffer.from(supplied);
