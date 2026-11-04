@@ -3,15 +3,9 @@ import "server-only";
 import { NotificationDeliveryStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { sendNotificationEmail } from "@/server/email/resend";
+import { notificationRetryDelayMs } from "@/server/notifications/delivery-policy";
 
 const BATCH_SIZE = 25;
-const MAX_RETRY_DELAY_MS = 6 * 60 * 60 * 1000;
-
-export function notificationRetryDelayMs(attempt: number) {
-  const safeAttempt = Math.max(1, Math.min(16, Math.trunc(attempt)));
-  return Math.min(MAX_RETRY_DELAY_MS, 60_000 * (2 ** (safeAttempt - 1)));
-}
-
 export async function processNotificationDeliveries(now = new Date()) {
   const staleLock = new Date(now.getTime() - 5 * 60 * 1000);
   const candidates = await prisma.notificationDelivery.findMany({
