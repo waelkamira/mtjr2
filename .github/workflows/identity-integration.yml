@@ -60,7 +60,7 @@ on:
       - "vitest.integration.config.ts"
       - "package.json"
   push:
-    branches: [main, "feat/demo-catalog-seed"]
+    branches: [main]
     paths:
       - "src/server/identity/**"
       - "src/app/api/auth/**"
