@@ -5,6 +5,8 @@ const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
     user: { create: vi.fn(), updateMany: vi.fn() },
     seller: { create: vi.fn() },
+    role: { findUnique: vi.fn() },
+    userRoleAssignment: { create: vi.fn() },
     verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     userConsent: { createMany: vi.fn() },
     auditLog: { create: vi.fn() }
@@ -29,6 +31,7 @@ const now = new Date("2026-11-03T12:00:00.000Z");
 describe("registration and email verification", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    txMock.role.findUnique.mockResolvedValue({ id: "customer-role-1" });
     prismaMock.$transaction.mockImplementation(
       (callback: (client: typeof txMock) => unknown) => callback(txMock)
     );
@@ -76,6 +79,10 @@ describe("registration and email verification", () => {
         expect.objectContaining({ type: ConsentType.PRIVACY_POLICY, granted: true })
       ])
     });
+    expect(txMock.role.findUnique).toHaveBeenCalledWith({ where: { key: "CUSTOMER" }, select: { id: true } });
+    expect(txMock.userRoleAssignment.create).toHaveBeenCalledWith({
+      data: { userId: "user-1", roleId: "customer-role-1", scopeType: "GLOBAL", scopeId: "GLOBAL" }
+    });
   });
 
   it("creates a pending seller application when the user selects seller", async () => {
@@ -93,6 +100,8 @@ describe("registration and email verification", () => {
       acceptedPrivacy: true
     }, now);
     expect(txMock.seller.create).toHaveBeenCalledWith({ data: { ownerId: "seller-user-1", legalName: "Example Applicant", displayName: "Example Store", status: "PENDING" } });
+    expect(txMock.role.findUnique).not.toHaveBeenCalled();
+    expect(txMock.userRoleAssignment.create).not.toHaveBeenCalled();
   });
   it("requires business details when seller is selected", async () => {
     await expect(registerUser({
