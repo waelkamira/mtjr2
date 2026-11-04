@@ -1,0 +1,24 @@
+name: Support SLA escalation
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  escalate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process overdue support tickets
+        if: ${{ vars.APP_URL != '' && secrets.CRON_SECRET != '' }}
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl --fail --silent --show-error --retry 2 --retry-delay 5 \
+            --request POST "${APP_URL%/}/api/cron/support-sla" \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            --header "Content-Type: application/json"
