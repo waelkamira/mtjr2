@@ -8,7 +8,7 @@ import { setSessionCookie } from "@/server/identity/session-cookie";
 export const runtime = "nodejs";
 
 function redirectTo(path: string): Response {
-  return Response.redirect(new URL(path, env.NEXT_PUBLIC_APP_URL), 303);
+  return Response.redirect(new URL(path, env.APP_URL), 303);
 }
 
 function clearOAuthCookies(store: Awaited<ReturnType<typeof cookies>>) {
@@ -38,7 +38,7 @@ export async function GET(request: Request): Promise<Response> {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return redirectTo("/register?oauth=unavailable");
 
   try {
-    const callback = new URL("/api/auth/google/callback", env.NEXT_PUBLIC_APP_URL).toString();
+    const callback = new URL("/api/auth/google/callback", env.APP_URL).toString();
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
