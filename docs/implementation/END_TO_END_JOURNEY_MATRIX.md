@@ -48,7 +48,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 26 | Seller administration and KYC review | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 27 | Catalog administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 28 | Central order operations | Not audited | Not mapped | Not audited | Not audited | Not verified |
-| 29 | Payment administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 29 | Payment administration | Provider-neutral buyer payment entry implemented; admin lifecycle remains incomplete / unverified | Buyer order detail; `POST /api/orders/[orderId]/payments`; provider discovery; provider webhook endpoint | Order owner → server-derived amount/currency → idempotent payment intent → provider adapter; only cryptographically verified, deduplicated success webhook may confirm parent/vendor orders and write history/audit/notifications transactionally. No provider is registered by default. | `PaymentStatus`, `Payment`, `PaymentWebhookEvent` and forward-only migration; `Order`/`Currency` relations. Refunds/disputes/reconciliation/settlement models and admin UI remain future work. | PR #23 exact head `d918c51103728d87ba130d07c678c5bfbbe890f1`: General CI job `126571637955` and PostgreSQL job `126571637984` passed; merged as `ffbf76897a9ee8d15ad3d14a18508efe6f0986a9`. No live provider/browser payment verified. |
 | 30 | Commission management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 31 | Accounting and general ledger | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 32 | Payout administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
