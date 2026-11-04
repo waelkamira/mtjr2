@@ -1501,3 +1501,26 @@ The project owner approved Resend as the transactional email provider. The serve
 - Inspected admin review service behavior: `users:manage` authorization, required rejection reason, conditional PENDING-state update, seller role assignment on approval and audit logging.
 - Corrected the registry so it does not imply a dedicated onboarding/status page exists. Added explicit gaps for store-creation idempotency (not demonstrated by the reviewed service), API error classification, and full browser journey evidence.
 - This is static source inspection only. No runtime journey, CI run, Prisma validation, migration replay, database access, or Vercel action was performed as part of this documentation review. No test pass is claimed.
+
+
+## 2026-11-04 — Plan and implementation audit before resuming Phase 4
+
+**Branch and scope**
+- Audited PR #15 (`feat/returns-workflow`) and its stacked implementation state; PR #15 remains open/draft and is not merged.
+- Confirmed the canonical schema contains 79 Prisma models and 25 enums. Added `docs/architecture/PRISMA_MODEL_USAGE_MAP.md` to map model groups to their owning systems and current service/API entry points. Corrected the blueprint and journey-standard links to this real file; the previously referenced lowercase filename did not exist.
+- Reconciled Phase 3: removed the duplicated seller-onboarding acceptance gate, changed its status from “approaching exit review” to a historical handoff with outstanding evidence, and pointed active Buying Core work to Phase 4 rather than restarting it.
+- Added an actual App Router filesystem snapshot to `PAGE_ROUTE_REGISTRY.md`: 30 page files and 86 API route files were found. Recorded existing page paths and important missing dedicated targets. This is static route presence only, not proof of runtime or end-to-end behavior.
+- Phase 4 remains active. Payment provider work is explicitly blocked until launch markets, currencies, merchant account and payment methods are approved; no provider or fake payment behavior is assumed.
+
+**Exact-head verification reviewed**
+- On head `56e51199e604fab5ed14921b38ac6f9030fac0e9`, disposable PostgreSQL workflow [41745430005](https://github.com/waelkamira/mtjr2/actions/runs/41745430005) passed, including Prisma validate/generate, migration deployment, baseline seed, and the existing PostgreSQL integration suite.
+- General CI [41745430118](https://github.com/waelkamira/mtjr2/actions/runs/41745430118) failed in one existing delivery-address unit test: 25 files passed; 116 of 117 tests passed. Prisma validate/generate, typecheck and lint passed; build was skipped because tests failed.
+- Root cause was an outdated test transaction fixture: production code correctly invalidates checkout shipping and tax snapshots after address changes, but the mock transaction omitted those two Prisma delegates.
+- Follow-up commit `6f614928c255d3beeeb46af79d41849c24894f46` updates the fixture and asserts both invalidation calls. Fresh General CI on the corrected/newer head is pending; no pass is claimed yet.
+- PostgreSQL success above is tied to the exact `56e5119` head and remains valid for that head; it is not a substitute for General CI and is not automatically evidence for later schema changes.
+
+**Boundaries**
+- No Prisma schema or migration was changed during this audit.
+- No owner/local/production database or Vercel environment was accessed.
+- No pull request was merged.
+- Next: inspect fresh General CI on the corrected head; continue a focused checkout → order → payment boundary journey review; only start provider-specific payment implementation after owner decisions. Keep Phase 3 seller onboarding and public-route gaps visible rather than marking them complete.
