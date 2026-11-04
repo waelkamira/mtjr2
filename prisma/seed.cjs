@@ -1,4 +1,5 @@
 // CommonJS is intentional: Prisma's seed command executes this file directly with Node.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require("@prisma/client");
 
 const demoCatalogRequested = process.env.SEED_DEMO_CATALOG === "true";
@@ -357,21 +358,22 @@ async function seedDemoCatalog() {
         update: { amountMinor, compareAtMinor: amountMinor + amountMinor / 5n },
       });
 
-      const inventory = await prisma.inventory.findUnique({
-        where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: variant.id } },
-      });
-      if (!inventory) {
-        const createdInventory = await prisma.inventory.create({
+      await prisma.$transaction(async (tx) => {
+        const inventory = await tx.inventory.findUnique({
+          where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: variant.id } },
+        });
+        if (inventory) return;
+        const createdInventory = await tx.inventory.create({
           data: { warehouseId: warehouse.id, variantId: variant.id, quantityOnHand: 25, quantityReserved: 0, reorderPoint: 5 },
         });
-        await prisma.inventoryMovement.create({
+        await tx.inventoryMovement.create({
           data: {
             inventoryId: createdInventory.id, type: "RECEIPT", quantityDelta: 25,
             referenceType: "DEMO_SEED", referenceId: sku,
             idempotencyKey: `demo-seed:initial-stock:${sku}`, note: "Initial demo catalog stock",
           },
         });
-      }
+      });
     }
   }
 
