@@ -20,7 +20,10 @@ export default async function StoresPage({ searchParams }: Props) {
     {result.items.length ? <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {result.items.map((store) => <Link key={store.id} href={`/stores/${encodeURIComponent(store.slug)}`} className="rounded-2xl border border-[var(--border)] bg-white p-6 transition hover:-translate-y-1 hover:shadow-[var(--shadow-card)]">
         <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{store.name}</h2>
+<<<<<<< HEAD
         {store.sellerDisplayName && <p className="mt-1 text-sm text-[var(--muted)]">Seller: {store.sellerDisplayName}</p>}
+=======
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
         <p className="mt-2 text-sm text-[var(--muted)]">{store.productCount} published products</p>
         <span className="mt-5 inline-flex text-sm font-semibold text-[var(--color-forest-800)]">Visit store ↗</span>
       </Link>)}

@@ -25,7 +25,7 @@ Set these for Production (and Preview only when using isolated preview resources
 | Variable | Required value |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string for the production database. Use the provider's runtime-compatible connection string. |
-| `NEXT_PUBLIC_APP_URL` | Exact canonical HTTPS production URL, with no trailing slash. |
+| `APP_URL` | Exact canonical HTTPS production URL, with no trailing slash. |
 | `AUTH_SECRET` | Random secret of at least 32 characters; generate a unique value for each environment. |
 | `RESEND_API_KEY` | Resend API key with permission to send from the verified domain. |
 | `RESEND_FROM_EMAIL` | Sender address verified by Resend, e.g. `no-reply@example.com` (the current environment schema requires a plain email address). |

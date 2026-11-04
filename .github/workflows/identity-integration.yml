@@ -6,6 +6,10 @@ on:
     branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets", "feat/storefront-demo-experience", "feat/storefront-search-state", "feat/notification-preferences", "feat/returns-workflow"]
     paths:
       - "prisma/schema.prisma"
+<<<<<<< HEAD
+=======
+      - "prisma/seed.cjs"
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
       - "prisma/migrations/**"
       - "src/server/cart/**"
       - "src/server/checkout/**"
@@ -108,7 +112,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_platform_test?schema=public
       AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      APP_URL: http://localhost:3000
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
@@ -124,3 +128,15 @@ jobs:
         run: npm run db:seed
       - name: Run the existing PostgreSQL integration suite
         run: npm run test:integration
+      - name: Seed demo catalog in disposable PostgreSQL
+        run: npm run db:seed
+        env:
+          SEED_DEMO_CATALOG: "true"
+          ALLOW_DEMO_CATALOG_SEED: "true"
+          DEMO_DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_platform_test?schema=public
+      - name: Verify demo seed is repeatable
+        run: npm run db:seed
+        env:
+          SEED_DEMO_CATALOG: "true"
+          ALLOW_DEMO_CATALOG_SEED: "true"
+          DEMO_DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_platform_test?schema=public

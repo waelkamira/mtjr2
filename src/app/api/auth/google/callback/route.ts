@@ -1,14 +1,22 @@
 import { cookies } from "next/headers";
 import { AuditActorType, ConsentType, SellerStatus, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+<<<<<<< HEAD
 import { env, isPublicRegistrationEnabled } from "@/lib/env";
+=======
+import { env } from "@/lib/env";
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 import { createUserSession } from "@/server/identity/session";
 import { setSessionCookie } from "@/server/identity/session-cookie";
 
 export const runtime = "nodejs";
 
 function redirectTo(path: string): Response {
+<<<<<<< HEAD
   return Response.redirect(new URL(path, env.NEXT_PUBLIC_APP_URL), 303);
+=======
+  return Response.redirect(new URL(path, env.APP_URL), 303);
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 }
 
 function clearOAuthCookies(store: Awaited<ReturnType<typeof cookies>>) {
@@ -17,6 +25,7 @@ function clearOAuthCookies(store: Awaited<ReturnType<typeof cookies>>) {
   }
 }
 
+<<<<<<< HEAD
 function decodeCookieValue(value: string | undefined): string {
   if (!value) return "";
   try {
@@ -26,6 +35,8 @@ function decodeCookieValue(value: string | undefined): string {
   }
 }
 
+=======
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 export async function GET(request: Request): Promise<Response> {
   const store = await cookies();
   const url = new URL(request.url);
@@ -36,8 +47,13 @@ export async function GET(request: Request): Promise<Response> {
   const accountType = store.get("mtjr_google_account_type")?.value;
   const termsVersion = store.get("mtjr_google_terms")?.value;
   const privacyVersion = store.get("mtjr_google_privacy")?.value;
+<<<<<<< HEAD
   const sellerLegalName = decodeCookieValue(store.get("mtjr_google_seller_legal")?.value);
   const sellerDisplayName = decodeCookieValue(store.get("mtjr_google_seller_display")?.value);
+=======
+  const sellerLegalName = decodeURIComponent(store.get("mtjr_google_seller_legal")?.value ?? "");
+  const sellerDisplayName = decodeURIComponent(store.get("mtjr_google_seller_display")?.value ?? "");
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
   clearOAuthCookies(store);
 
   if (!code || !state || !expectedState || state !== expectedState || !verifier ||
@@ -47,7 +63,11 @@ export async function GET(request: Request): Promise<Response> {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return redirectTo("/register?oauth=unavailable");
 
   try {
+<<<<<<< HEAD
     const callback = new URL("/api/auth/google/callback", env.NEXT_PUBLIC_APP_URL).toString();
+=======
+    const callback = new URL("/api/auth/google/callback", env.APP_URL).toString();
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -82,9 +102,12 @@ export async function GET(request: Request): Promise<Response> {
     } else {
       const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
       if (existing) return redirectTo("/register?oauth=link_required");
+<<<<<<< HEAD
       if (!isPublicRegistrationEnabled(env)) {
         return redirectTo("/register?oauth=registration_unavailable");
       }
+=======
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
       const created = await prisma.$transaction(async tx => {
         const user = await tx.user.create({
           data: { email, emailNormalized: email, displayName: identity.name?.slice(0,80) ?? null, passwordHash: null, status: UserStatus.ACTIVE, emailVerifiedAt: now },

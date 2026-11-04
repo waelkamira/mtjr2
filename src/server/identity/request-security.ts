@@ -20,7 +20,7 @@ export function validateIdentityMutationRequest(
 
   let expectedOrigin: string;
   try {
-    expectedOrigin = new URL(env.NEXT_PUBLIC_APP_URL).origin;
+    expectedOrigin = new URL(env.APP_URL).origin;
   } catch {
     return Response.json(
       { error: "Request origin could not be verified." },

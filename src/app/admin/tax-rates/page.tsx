@@ -30,14 +30,30 @@ export default function AdminTaxRatesPage() {
       json(await fetch("/api/markets", { cache: "no-store" })),
       json(await fetch("/api/admin/tax-rates", { cache: "no-store" }))
     ]);
+<<<<<<< HEAD
     setMarkets(marketData.markets || []);
     setRates(rateData.rates || []);
     setMarketId((current) => current || marketData.markets?.[0]?.id || "");
+=======
+    return {
+      markets: (marketData.markets || []) as Market[],
+      rates: (rateData.rates || []) as TaxRate[]
+    };
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
   }, []);
 
   useEffect(() => {
     let active = true;
+<<<<<<< HEAD
     void Promise.resolve().then(load).catch((cause) => {
+=======
+    void load().then((data) => {
+      if (!active) return;
+      setMarkets(data.markets);
+      setRates(data.rates);
+      setMarketId((current) => current || data.markets[0]?.id || "");
+    }).catch((cause) => {
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load tax rules.");
     });
     return () => { active = false; };
@@ -53,7 +69,14 @@ export default function AdminTaxRatesPage() {
         body: JSON.stringify({ marketId, name, destinationRegion: region || null, rateBasisPoints: Math.round(value * 100), isInclusive: inclusive, appliesToShipping: shipping })
       }));
       setMessage("Tax rule created."); setName(""); setRegion(""); setPercent("0");
+<<<<<<< HEAD
       await load();
+=======
+      const data = await load();
+      setMarkets(data.markets);
+      setRates(data.rates);
+      setMarketId((current) => current || data.markets[0]?.id || "");
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to create tax rule."); }
     finally { setBusy(false); }
   }

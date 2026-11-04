@@ -296,10 +296,10 @@ For every system below, the **Pages** and **API** entries describe the required 
 #### 29. Payment administration
 - **Purpose:** Monitor provider transactions, attempts, refunds, reconciliation and payment failures.
 - **Pages:** `/admin/payments`, payment detail, provider health and reconciliation queue.
-- **Models:** `PaymentProvider`, `Payment`, `PaymentAttempt`, `PaymentReconciliation`, `Refund`, `Dispute`, `DisputeEvidence`, `Order`, `AuditLog`.
+- **Models:** `Payment`, `PaymentWebhookEvent`, plus future `Refund`, `Dispute`, `PaymentAttempt`, `PaymentReconciliation`, and `AuditLog`.
 - **API:** `/api/admin/payments`, `/api/admin/payments/[id]`, `/api/admin/payment-reconciliation`.
 - **Must include:** verified provider events, idempotent updates, attempt history, refund controls and settlement matching.
-- **Current state:** **Partial / legacy-incompatible.** Admin payment and Stripe surfaces exist, but audit records legacy persistence assumptions.
+- **Current state (2026-11-04):** **Provider-neutral foundation under verification.** The current-main reconstruction adds canonical `Payment` / `PaymentWebhookEvent` persistence, owner-scoped idempotent intent creation, a provider adapter contract, webhook verification/deduplication, and buyer order-detail payment UI. No provider is registered by default and no live charge is enabled. Admin monitoring, credentials/configuration, refunds, disputes, reconciliation, settlement, and concrete provider integration remain incomplete.
 
 #### 30. Commission management
 - **Purpose:** Configure category/store/seller commission rules and calculate immutable transaction-level fees.

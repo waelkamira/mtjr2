@@ -1725,3 +1725,162 @@ The project owner approved Resend as the transactional email provider. The serve
 **Commits**
 - Remove Hobby-incompatible Vercel Cron: `3a8f04f7cda7c02ca07c210988c847b3ec77dd93`.
 - Add external scheduler runbook: `20de5bd0daa3c87bd03990f2ea517fbc83ea4a4e`.
+<<<<<<< HEAD
+=======
+
+
+## 2026-11-04 — Existing-work closeout audit
+
+**Policy:** Freeze new feature scope until the currently open work is reconciled, verified and closed. Audited 14 open PRs (#2–#14, #16–#17), the merged buying-cart predecessor (#1), the current main baseline, dependency bases and exact-head workflow summaries. The detailed inventory, stack risks, CI evidence and required closeout order are recorded in `docs/implementation/OPEN_WORK_CLOSEOUT_AUDIT.md`.
+
+**Findings:** PRs #2–#14 are stacked across checkout/order and customer-engagement branches; #16–#17 form a separate returns stack. Several downstream base SHAs are stale, #5 reports non-mergeable, and multiple exact-head quality jobs fail before tests/build. PostgreSQL integration passes on several heads but does not override quality failures. No PR was merged or modified. No application/schema/database/production/deployment change was made.
+
+**Next:** Retrieve the specific lint/typecheck diagnostics and reconcile the checkout stack before any merge consideration. No new system work until the current backlog is verified.
+
+
+## 2026-11-04 — Existing-work closeout audit
+
+**Policy:** Freeze new feature scope until the currently open work is reconciled, verified and closed. Audited the current main baseline, all open PR metadata, dependency bases and exact-head workflow summaries. A detailed snapshot is recorded in `docs/implementation/OPEN_WORK_CLOSEOUT_AUDIT.md`.
+
+**Findings:** PR #1 and #15 are merged; 14 PRs remain open (#2–#14, #16–#17). PRs #2–#14 are stacked across checkout/order and customer-engagement branches; #16–#17 form a separate returns stack. Downstream base SHAs are stale for #3, #6 and #17; #5 reports `mergeable=false`. Quality checks fail on exact inspected heads for #4, #6, #9, #11, #12, #13 and #14; PostgreSQL integration passes on several of those heads but does not override quality failures. Exact-head workflow runs were not found for #5, #7, #8, #10 and #17.
+
+**Changes made:** Documentation-only audit record. No PR was merged, retargeted, rebased or otherwise modified. No application code, Prisma schema, migration, database, Vercel setting or deployment was changed.
+
+**Next:** Retrieve precise lint/typecheck diagnostics, reconcile the checkout stack, then verify complete buyer journeys before considering any merge. Do not start new systems until current work is audited and closed.
+
+## 2026-11-04 — Exact CI failure diagnostics retrieved
+
+Downloaded the failing GitHub Actions job logs for the inspected exact heads. The quality failures are concrete source defects, not unexplained infrastructure failures:
+
+- PR #2 quality lint: unescaped apostrophes in `src/features/checkout/checkout-shipping-options.tsx:47` and `src/features/seller/workspace-page.tsx:165` (`react/no-unescaped-entities`). PR #3 quality was green, so this particular issue was corrected by the time of the #3 head.
+- PR #4 quality lint: `src/app/admin/tax-rates/page.tsx:39` triggers `react-hooks/set-state-in-effect`; the job stops before tests/build.
+- PR #6 quality typecheck: `src/server/orders/orders.ts` lines 268, 291 and 306 have a result/type mismatch. The included Prisma selection returns `vendorOrders[].store` with `name, slug` but the declared mapper type requires `id, name, slug`. Correct the select/type contract together; do not cast away the mismatch.
+- PR #9, #11, #12, #13 and #14 quality lint: the same pre-existing admin tax page issue remains at line 39. Additional inherited failures include `src/app/seller/messages/page.tsx:1`, `src/features/account/wishlist-page.tsx:27`, `src/features/admin/reviews-page.tsx:27`, `src/features/admin/store-reviews-page.tsx:26`, `src/features/seller/reviews-page.tsx:26`, and `src/features/storefront/product-reviews.tsx:43`; all trigger `react-hooks/set-state-in-effect`.
+- The reviews pages call async loaders from effects; the lint rule detects synchronous state updates inside those loaders. Refactor the loading lifecycle rather than suppressing the rule.
+
+These diagnostics are from the exact job logs for #2, #3, #4, #6, #9, #11, #12, #13 and #14. They do not prove the current heads are unchanged; refresh each PR head before applying fixes.
+
+## 2026-11-04 — CI failure ownership corrected
+
+A second pass against the job IDs corrected the PR-to-diagnostic mapping in the closeout audit: #4 owns the JSX apostrophe errors in checkout-shipping-options and seller workspace; #6 owns the admin tax-rates setState-in-effect lint error; #9 owns the orders.ts TypeScript selection/type mismatch; #11–#14 inherit the broader setState-in-effect errors in seller messages, wishlist and review screens. This correction is recorded in OPEN_WORK_CLOSEOUT_AUDIT.md. No source code or PR branch was changed.
+
+## 2026-11-04 — PR #4 checkout copy lint correction
+
+Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` on `feat/store-shipping-options` to address the exact-head `react/no-unescaped-entities` lint finding. New head: `c37d10982a71850c5f65222f087073ea2eaf082e`. Fresh Quality and PostgreSQL workflows are running (jobs `126369311696` and `126369312055`); not marked verified until both pass. No PR was merged or retargeted.
+
+
+## 2026-11-04 — Phase 2 gate recheck (current repository snapshot)
+
+**Reviewed**
+- Re-read `docs/implementation/PHASE_02_IDENTITY_PLAN.md`, the root README, the build log and the open-work audit on the current `main` snapshot.
+- Confirmed the public registration UI remains intentionally unavailable and `PUBLIC_REGISTRATION_ENABLED` defaults to `false` until owner-approved Terms of Service and Privacy Notice content, versioning and consent presentation exist.
+- Confirmed the identity frontend slice (login, forgot/reset password, email verification and account sign-out) has a successful General CI check on exact commit `7a30994e62de079839c8778f3d1f1a368097c2bc` (run [41645257014](https://github.com/waelkamira/mtjr2/actions/runs/41645257014)).
+- Confirmed the latest documentation commit on `main`, `539c1aabd3358987f99c0e7ddf1d54198ab2bb27`, has a Quality check currently **in progress** (run [41822329109](https://github.com/waelkamira/mtjr2/actions/runs/41822329109)); it is not recorded as passed.
+- Refreshed the open pull-request inventory: #4, #5, #6, #7, #16 and #17 remain open. No PR was merged as part of this Phase 2 recheck.
+
+**Phase 2 decision**
+- Code-level identity work and its recorded unit/PostgreSQL checks are substantially implemented; do not add helper-level tests without a concrete defect.
+- Phase 2 is **not closed**. Remaining required evidence is: (1) owner-approved legal documents and consent versions before public registration can be enabled; (2) real Resend delivery smoke test using owner-configured credentials/sender; (3) trusted-edge header overwrite and origin-bypass protection verification before setting `TRUSTED_PROXY_IP_HEADER`; (4) one HTTP journey covering register → verify → login → `/api/auth/me` → logout → denial after logout; and (5) security review plus evidence record.
+- Production telemetry is required before tuning login thresholds for public launch; do not enable public login or loosen limits without that evidence.
+- These remaining checks require owner-approved content, external service/edge configuration and a reachable configured runtime. They cannot be truthfully completed by source edits or GitHub CI alone.
+
+**Actions and boundaries**
+- No application source, Prisma schema, migration, production database, deployment setting or secret was changed or accessed.
+- No new system work was started. Phase 3 remains blocked until the Phase 2 exit gates are evidenced.
+- Next action: preserve the current freeze, obtain the required owner-approved legal/service/edge prerequisites, then execute the single HTTP journey and record exact runtime evidence. Continue auditing existing PRs separately without merging them absent explicit approval.
+
+
+## 2026-11-04 — Verified reconstruction and merge batch
+
+- Reconstructed tax safety fixes from the historical stacked PR #5 onto current `main` as PR #18. The exact PR head `077cb6caf965015ddc09fd8e982a20e9f6527e5e` passed General CI (run `41823483435`: Prisma validate/generate, typecheck, lint, tests and build) and disposable PostgreSQL integration (run `41823483440`). Merged by squash as `32b519b4f65f586d713268aad13be5c123af3283`.
+- Reconstructed seller return visibility from historical PR #16 onto current `main` as PR #19. Exact head `797f8dd61ee5ec3591f8cc0d2abb46b85235a364` passed General CI (run `41823605855`: Prisma validate/generate, typecheck, lint, tests and build) and disposable PostgreSQL integration (run `41823605797`). Merged by squash as `c9314efa66af92fd524f65c553d751927c778694`.
+- Seller returns remains read-only. The implementation derives store scope from the verified session and exact permissions, and separates multi-store parent requests by store. Seller approval/rejection, receipt, shipping and refunds are not enabled.
+- Closed historical PRs #4, #5 and #16 after their unique deltas were either already present on main or reconstructed and merged through clean PRs. No changes to Prisma schema/migrations were needed in these two clean reconstructions.
+- Historical PR #17 was retargeted to main. Its code portion duplicates the now-merged PR #19; its remaining unique contribution is the per-vendor return lifecycle design and related route/verification documentation. This documentation is being reconstructed separately; no runtime lifecycle or schema migration is claimed complete.
+- No production database, secrets or deployment configuration were changed. No live browser journey or live payment/refund flow is claimed verified.
+
+
+## 2026-11-04 — Marketplace design-system foundation merged
+
+- PR #21 merged by squash as `292fd83929eae765064f59a10d4bb868fda14fed`.
+- Added the petrol / warm-ivory / violet-blue / mint / orange / cyan token palette and retained legacy token aliases to avoid breaking existing components.
+- Applied the first visual adoption slice to global navigation actions, storefront hero/category selection, product cards, marketplace search, and product detail accents. Existing category layout, routes, and data behavior were preserved in the changed components.
+- Exact merged head `0bd03c8de90bb7c98883d2d73020ef4132b559b3` passed General CI run `41825949762` and disposable PostgreSQL integration run `41825949635`.
+- Browser-based visual comparison against the owner reference images remains outstanding; these checks establish code/build/database integrity, not pixel parity or a complete site-wide redesign.
+
+
+## 2026-11-04 — Provider-neutral payment lifecycle merged
+
+- Reconstructed the payment foundation on a clean branch based on current `main` as PR #23, avoiding stale stacked history.
+- Added canonical `PaymentStatus`, `Payment`, and `PaymentWebhookEvent` schema additions and a forward-only PostgreSQL migration.
+- Added provider adapter contract/registry, owner-scoped idempotent payment-intent API, provider discovery API, and verified webhook processing with deduplication and retry-safe error classification.
+- Connected payment choices to the buyer order-detail page while preserving store reviews and return links. Added focused webhook and ownership/amount/currency tests.
+- Exact PR head `d918c51103728d87ba130d07c678c5bfbbe890f1` passed General CI job `126571637955` and disposable PostgreSQL integration job `126571637984`.
+- PR #23 was squash-merged into `main` as `ffbf76897a9ee8d15ad3d14a18508efe6f0986a9`.
+- No provider is registered by default; no live charge is collected. Refunds, disputes, settlement reconciliation, concrete provider onboarding, and operational monitoring remain incomplete.
+- These checks establish build/test/database migration integrity; they do not establish a live browser journey or successful real-world provider payment.
+
+
+## 2026-11-04 — Main navigation: Shop route correction
+
+- Audited every destination currently rendered by `src/components/site-navigation.tsx`: Home, Shop, Categories, Brands, Stores, Sell on Mtjr, Cart, Sign in / Join or authenticated Account / Favorites / Orders / Messages / Notifications, Terms and Privacy. All corresponding route files exist on `main`; the search suggestion API and message/notification endpoints also exist. This is a source/route audit, not a live browser click-through.
+- Found one concrete navigation defect: `/products` (the Shop target and the empty-catalog “Browse all products” destination) rendered `StorefrontHomePage` again, duplicating the homepage instead of opening the dedicated catalog experience.
+- Changed `/products` to redirect to `/search`, which already implements server-side product discovery, category/brand filters, sorting, pagination, and the catalog product grid backed by `listDiscoverableProducts` / Prisma.
+- No Prisma schema or migration change is needed for this route correction. Exact-head CI is required before merge; browser verification remains separate.
+
+
+## 2026-11-04 — Seller order preparation (System 15 initial slice)
+
+- Added the authenticated, store-scoped seller status API and connected seller order actions for `CONFIRMED → PROCESSING → READY_TO_SHIP`.
+- Payment confirmation remains a hard precondition. The service uses the verified session, active seller/store checks, exact store permission or owner scope, compare-and-set status updates, a serializable transaction, status history and audit logging.
+- No Prisma schema change or migration was required; the existing vendor-order and parent-order status/history models cover the bounded preparation states.
+- Shipment labels/tracking, shipped/delivered transitions, cancellation and refunds remain out of scope and are not exposed as working actions.
+- Exact-head General CI and focused PostgreSQL authorization/concurrency verification are pending; no production database or deployment configuration was accessed.
+
+
+## 2026-11-04 — Shop navigation merge and seller-order verification handoff
+
+- PR #24 merged into `main` as `1e134e65e97f29b438f1d7f92dbf5f671091393d`. Exact-head General CI run [41830496456](https://github.com/waelkamira/mtjr2/actions/runs/41830496456) passed. The Vercel deployment check failed only because the Hobby daily deployment quota was exhausted; it is not an application CI failure.
+- PR #25 adds seller preparation transitions and is awaiting its exact-head General CI and PostgreSQL workflow results. Do not merge until those critical checks pass; no production DB or Vercel environment was accessed.
+
+## 2026-11-04 — Isolated demo catalog seed
+
+**Implemented**
+- Repaired the existing `prisma/seed.cjs` demo path: the previous file called `seedDemoCatalog()` without defining it.
+- Added a guarded demo-only database override. Demo catalog seeding requires `SEED_DEMO_CATALOG=true`, `ALLOW_DEMO_CATALOG_SEED=true`, `DEMO_DATABASE_URL`, a non-production runtime, and a database name containing a `demo`, `test`, `ci`, or `dev` marker. It never silently falls back to `DATABASE_URL`.
+- Added 8 active bilingual categories and exactly 10 deterministic demo products per category (80 total), 8 brands, 4 active demo sellers/stores, a dedicated `DEMO-US` market with USD, product translations/media/variants/prices, warehouse stock, and search synonyms.
+- Seed uses stable slugs/SKUs and upserts. Initial inventory receipts are recorded only when the inventory row is first created, so reruns do not replenish or overwrite stock.
+- No customer reviews, orders, payments, or fake verified-purchase signals are fabricated.
+- No Prisma schema change or migration was introduced.
+
+**Verification status**
+- Source and Prisma relation compatibility reviewed against `prisma/schema.prisma` and the public discovery service.
+- The seed has not yet been executed against a disposable PostgreSQL database in this session. Exact-head CI and a disposable PostgreSQL seed/re-run check are required before calling the catalog verified.
+- No production database, live credentials, or Vercel environment was accessed.
+
+**Next**
+1. Run migrations against a disposable database named with a `demo` marker.
+2. Run the demo seed twice and confirm counts remain 80 products / 8 categories / 4 stores with unchanged stock on the second run.
+3. Verify the public market/category/product/search APIs return the seeded catalog.
+
+
+## 2026-11-04 — Demo catalog seed verification and merge
+
+- PR [#27](https://github.com/waelkamira/mtjr2/pull/27) merged into `main` as `0ec09ed37492e6c71b27e545abac72893ce73749`.
+- Exact-head General CI passed on `d9686531b6638e28bb8f2b57cab8e82c1d505abe`: [run 41837000589](https://github.com/waelkamira/mtjr2/actions/runs/41837000589). Prisma validate/generate, typecheck, lint, unit tests, and production build all passed.
+- Disposable PostgreSQL migration/integration passed on the same exact head: [run 41836993780](https://github.com/waelkamira/mtjr2/actions/runs/41836993780). The existing integration suite passed; the demo seed ran twice and both executions reported exactly 80 products, 8 categories, 4 stores, and 80 inventory rows.
+- This verifies repeatable seeding and the canonical Prisma relations in disposable PostgreSQL. It does not yet verify the rendered storefront in a deployed browser or create a persistent local database on the owner's machine.
+- No Prisma schema change/migration was needed. No production database or Vercel environment was accessed.
+- The Vercel preview status was blocked by the Hobby daily deployment quota; this is separate from the passing General CI and PostgreSQL workflows.
+
+
+## 2026-11-04 — local environment and storefront setup
+
+- Renamed the server-only canonical URL setting from `NEXT_PUBLIC_APP_URL` to `APP_URL` across the environment schema, Google OAuth routes, origin validation, transactional email links, payment return URLs, CI workflows, tests, and deployment documentation.
+- Marked the environment module as server-only so server credentials/configuration cannot be imported into client components accidentally.
+- Optional Google and Resend credentials now accept empty strings in local environment files as unset values; this avoids invalid local configuration when external providers are not configured.
+- Updated `.env.example` for a dedicated local `mtjr2_demo` database and explicit demo seed opt-ins. It contains placeholders only; no credentials were copied from chat.
+- Added [Windows local setup guide](../development/LOCAL_WINDOWS_SETUP.md): install, create database, configure `.env`, migrate, seed 80 products, and run the site.
+- Supabase, Cloudinary, OpenAI, and EmailJS were not found in the active environment schema or integration code paths in this review; their credentials are not required to browse the current storefront.
+- Verification of this change is pending exact-head CI. The local database and browser journey have not been run on the owner's PC from this session.
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade

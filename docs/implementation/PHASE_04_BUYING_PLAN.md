@@ -80,12 +80,26 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Added store-scoped seller order listing API and seller orders UI. Staff access requires the exact `orders:manage` store permission; store owners and platform admins can view their allowed orders.
 - Orders remain `PENDING_PAYMENT`. No payment is captured and sellers are not authorized to fulfill until a real payment provider and verified webhook lifecycle exist.
 
+<<<<<<< HEAD
 ## 4.6 — Payment integration boundary
 
 - Integrate a real payment provider only after launch-country, currency, merchant-account, and payment-method requirements are approved.
 - Create payment intents with idempotency; verify signed provider webhooks; reconcile asynchronous success, failure, cancellation, refund, and dispute events.
 - Transition parent and vendor order states only from verified payment events. Never simulate successful payment.
 - **Provider restriction:** Stripe's current [restricted-businesses policy](https://stripe.com/legal/restricted-businesses#high-risk-jurisdictions-and-persons) prohibits direct or indirect dealings with Syria, including persons located in, resident in, or citizens of Syria and products or services originating there. Do not integrate or enable Stripe for a Syria market, and do not route around this restriction. Choose a provider and market only after the provider confirms eligibility and appropriate legal/compliance review.
+=======
+## 4.6 — Provider-neutral payment lifecycle foundation
+
+The provider-neutral foundation is implemented on a clean branch based on current `main`; it is not considered complete until exact-head CI and disposable PostgreSQL checks pass.
+
+- Canonical `PaymentStatus`, `Payment`, and `PaymentWebhookEvent` models with a forward-only migration.
+- Owner-scoped payment intent creation bound to the exact order total and currency, protected by idempotency and order-level advisory locking.
+- Provider adapter contract requires idempotent intent creation and cryptographic webhook verification. No provider is registered by default.
+- Webhook events are normalized, validated, hashed, and deduplicated. Invalid signatures/payloads return 4xx; unexpected processing failures return retryable 5xx responses.
+- Only verified success events may confirm parent/vendor orders, and order history, audit, and notifications are committed in the same transaction.
+- Buyer order detail exposes configured providers and explains safely when no provider is configured. No live payment is simulated.
+- Concrete provider/market approval, refunds, disputes, settlement reconciliation, and operational monitoring remain incomplete.
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 
 ## Invariants and test policy
 
@@ -101,7 +115,11 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 - PR #1 cart and PR #2 quote/reservations are stacked predecessors.
 - PR #3 delivery address is implemented and its General CI/PostgreSQL workflows pass; it remains a draft stacked on PR #2 pending review/merge.
+<<<<<<< HEAD
 - The next technical gate is the fresh General CI result and a focused buyer checkout/order journey review. Payment intent/provider lifecycle and verified webhook handling may begin only after launch-market, currency, merchant-account and payment-method decisions are approved. Discount rules and fulfillment transitions remain separate follow-up slices.
+=======
+- The next technical gate is fresh exact-head General CI plus disposable PostgreSQL verification for the reconstructed payment branch, followed by a focused buyer checkout/order journey review. A concrete provider may be enabled only after launch-market, currency, merchant-account, and payment-method decisions are approved. Discount rules, refunds/disputes, and fulfillment transitions remain separate follow-up slices.
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 
 
 ## Exact-head audit — 2026-11-04
@@ -113,3 +131,19 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - No migration was applied to the owner's database and no production configuration was accessed.
 
 **Next gate:** obtain a passing General CI on the corrected head, then review the buyer checkout/order journey against the current browser/API states. Payment provider implementation remains conditional on owner-approved launch markets, currencies, merchant account and payment methods. Until those decisions exist, do not choose a provider, create provider-specific schema, simulate payment success, or enable fulfillment for pending-payment orders.
+<<<<<<< HEAD
+=======
+
+
+## 4.7 — Seller order preparation (System 15 initial slice)
+
+**Implemented on `feat/seller-order-processing`; verification pending.**
+
+- Added a store-scoped seller status mutation at `PATCH /api/seller/orders/[vendorOrderId]/status` and connected actions to the seller orders page.
+- The only enabled transitions are `CONFIRMED → PROCESSING → READY_TO_SHIP`. The first transition is available only after a verified payment webhook has confirmed the vendor order; unpaid orders remain locked.
+- The server derives the store from the vendor-order record, checks active seller/store status, and authorizes the store owner, exact store-scoped `orders:manage` staff, or a global `orders:manage` administrator.
+- Vendor-order status, status history, parent-order processing state/history, and audit event are written in one serializable transaction with compare-and-set protection against stale or concurrent updates.
+- Repeating the current target status is idempotent. The seller cannot change another store's order or regress a status.
+- **No Prisma schema change:** `VendorOrderStatus`, `VendorOrderStatusHistory`, `OrderStatus`, `OrderStatusHistory`, and `AuditLog` already cover this bounded workflow.
+- Shipment creation, carrier labels/tracking, shipped/delivered transitions, cancellation, and refunds remain disabled until their own policy/provider and inventory/payment reversal rules are implemented. No shipment or delivery success is simulated.
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade

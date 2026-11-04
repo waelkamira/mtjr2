@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 import SecurityPage from "@/features/identity/security-page";
 
 export default function AccountSecurityPage() {
   return <SecurityPage />;
 }
+=======
+import Link from "next/link";
+
+export default function AccountSecurityPage(){return <main className="min-h-screen bg-[var(--background)] px-5 py-8"><div className="mx-auto max-w-3xl"><Link href="/account" className="text-sm text-[var(--color-forest-800)]">← My account</Link><h1 className="mt-5 text-3xl font-semibold">Security</h1><p className="mt-2 text-sm text-[var(--muted)]">Protect your account and review signed-in devices.</p><div className="mt-7 space-y-3"><Link href="/forgot-password" className="block rounded-2xl border border-[var(--border)] bg-white p-5"><b>Reset password</b><p className="mt-1 text-sm text-[var(--muted)]">Request a secure password reset link by email.</p></Link><Link href="/account/sessions" className="block rounded-2xl border border-[var(--border)] bg-white p-5"><b>Active sessions</b><p className="mt-1 text-sm text-[var(--muted)]">Review and revoke sessions on devices you no longer use.</p></Link><div className="rounded-2xl border border-dashed border-[var(--border)] bg-white p-5"><b>Two-factor authentication</b><p className="mt-1 text-sm text-[var(--muted)]">Not enabled yet. This control will appear when the full 2FA enrollment and recovery flow is implemented.</p></div></div></div></main>}
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade

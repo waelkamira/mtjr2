@@ -30,11 +30,19 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 08 | Product questions and answers | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 09 | Customer messaging and support | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 10 | Customer notifications | Not audited | Not mapped | Not audited | Not audited | Not verified |
+<<<<<<< HEAD
 | 11 | Returns and refunds (customer journey) | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 12 | Seller onboarding, verification and KYC | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 13 | Seller dashboard and analytics | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 14 | Seller product management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 15 | Seller order management | Not audited | Not mapped | Not audited | Not audited | Not verified |
+=======
+| 11 | Returns and refunds (customer journey) | `/account/returns`, `/orders/[orderId]` | Customer return APIs/services and screens | ReturnRequest, ReturnItem, Order, OrderItem, VendorOrder | CI + PostgreSQL passed on merged implementation; deployed browser journey pending | Implemented / unverified; no refund execution |
+| 12 | Seller onboarding, verification and KYC | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 13 | Seller dashboard and analytics | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 14 | Seller product management | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 15 | Seller order management | Partial — seller preparation actions added; shipment lifecycle remains unavailable | `/seller/orders`, `PATCH /api/seller/orders/[vendorOrderId]/status` | `transitionSellerVendorOrder`; session-derived store ownership / exact `orders:manage`; `CONFIRMED → PROCESSING → READY_TO_SHIP` | Existing `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, `AuditLog`; no schema change | Exact-head CI and focused PostgreSQL authorization/concurrency verification pending; no shipment label/tracking or delivered transition |
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 | 16 | Seller inventory and warehouse management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 17 | Supplier and procurement management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 18 | Shipping and fulfillment (seller) | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -48,11 +56,19 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 26 | Seller administration and KYC review | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 27 | Catalog administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 28 | Central order operations | Not audited | Not mapped | Not audited | Not audited | Not verified |
+<<<<<<< HEAD
 | 29 | Payment administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 30 | Commission management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 31 | Accounting and general ledger | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 32 | Payout administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 33 | Returns, refunds and disputes administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
+=======
+| 29 | Payment administration | Provider-neutral buyer payment entry implemented; admin lifecycle remains incomplete / unverified | Buyer order detail; `POST /api/orders/[orderId]/payments`; provider discovery; provider webhook endpoint | Order owner → server-derived amount/currency → idempotent payment intent → provider adapter; only cryptographically verified, deduplicated success webhook may confirm parent/vendor orders and write history/audit/notifications transactionally. No provider is registered by default. | `PaymentStatus`, `Payment`, `PaymentWebhookEvent` and forward-only migration; `Order`/`Currency` relations. Refunds/disputes/reconciliation/settlement models and admin UI remain future work. | PR #23 exact head `d918c51103728d87ba130d07c678c5bfbbe890f1`: General CI job `126571637955` and PostgreSQL job `126571637984` passed; merged as `ffbf76897a9ee8d15ad3d14a18508efe6f0986a9`. No live provider/browser payment verified. |
+| 30 | Commission management | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 31 | Accounting and general ledger | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 32 | Payout administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 33 | Returns, refunds and disputes administration | `/admin/returns` | Admin return queue/review APIs and UI | ReturnRequest, ReturnItem, AuditLog | CI + PostgreSQL passed on merged implementation; admin browser journey pending | Implemented / unverified; workflow-only, no funds movement |
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 | 34 | Shipping administration | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 35 | Tax and regulatory compliance | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 36 | Promotions, coupons, loyalty and gift cards | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -192,3 +208,25 @@ Audit shared dependencies once, then re-check them from each consumer journey: i
 | Seller inventory | `/seller/inventory` → `GET /api/seller/inventory?storeId=...&q=...` | Authorized store only; product/SKU/warehouse fields | Owner/staff authorization and cross-store isolation |
 
 Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL and browser journeys pass.
+<<<<<<< HEAD
+=======
+
+
+## Seller return visibility — 2026-11-04
+
+| Journey | UI → API/service | Data and authorization boundary | Verification |
+|---|---|---|---|
+| Seller return visibility | `/seller/returns` → `GET /api/seller/returns` → `listSellerReturnRequests` | Verified session; active owned stores, exact-store `orders:manage` grants, or platform admin. Items are grouped by `VendorOrder.storeId`; client cannot supply store scope. | Exact-head General CI and disposable PostgreSQL integration passed on `797f8dd61ee5ec3591f8cc0d2abb46b85235a364`; merged as PR #19. Deployed browser journey remains pending. |
+
+**Boundary:** seller view is read-only. Parent ReturnRequest has one global status across vendors; seller decisions, receipt, shipping and refunds remain disabled until a per-vendor lifecycle is implemented.
+
+
+## System 15 — seller order preparation action trace (initial slice)
+
+| Actor action | UI → API | Authorization and domain | Persistence / final outcome | Boundary |
+|---|---|---|---|---|
+| Start processing | `/seller/orders` → `PATCH /api/seller/orders/[vendorOrderId]/status` with `PROCESSING` | HttpOnly session; server resolves vendor order and store; active store/seller; owner, active staff with exact store `orders:manage`, or global `orders:manage`; current vendor status must be `CONFIRMED` and parent order confirmed/processing | Compare-and-set in serializable transaction; vendor status history, parent order status/history (when first seller starts), and audit log commit atomically; UI updates only after server response | Unpaid `PENDING_PAYMENT` orders cannot advance; cross-store and stale requests are denied |
+| Mark ready to ship | `/seller/orders` → same PATCH endpoint with `READY_TO_SHIP` | Same server-derived store and permission checks; current vendor status must be `PROCESSING` | Vendor status and audit/history commit atomically; repeated target request is idempotent | Shipment, label, tracking, dispatch, delivered, cancellation and refund actions remain unavailable |
+
+This is an initial System 15 slice, not completion of seller order management or System 18 shipping/fulfillment. Browser verification is still pending.
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade

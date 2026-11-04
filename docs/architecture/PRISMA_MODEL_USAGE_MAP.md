@@ -74,3 +74,12 @@ Before adding or changing a model:
 ## 8. Known boundaries and unmapped future domains
 
 This schema snapshot does not yet provide a complete implementation for all 49 systems. Payment provider intents/webhooks/refunds/disputes, payout and double-entry accounting, customs/tax compliance, supplier/procurement, loyalty/promotions, invoices, CMS/legal content, feature flags, webhooks/outbox, logistics/carrier integrations, KYC documents, and the separate property/booking domain require their own reviewed data contracts and workflows. Do not invent models or claim these systems are implemented merely because they appear in the 49-system blueprint.
+<<<<<<< HEAD
+=======
+
+
+## Seller order preparation — 2026-11-04
+
+- `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, and `AuditLog` are consumed by `src/server/orders/seller-orders.ts` for the initial seller preparation transitions.
+- No Prisma change is required for `CONFIRMED → PROCESSING → READY_TO_SHIP`; shipment labels/tracking and later delivery states are not implemented by this slice.
+>>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade

@@ -34,7 +34,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_ci?schema=public
       AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      APP_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
