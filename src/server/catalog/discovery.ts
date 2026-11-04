@@ -57,6 +57,9 @@ function buildWhere(query: z.output<typeof querySchema>, searchGroups: Prisma.Pr
 export async function listDiscoverableProducts(input: unknown = {}) {
   const query = querySchema.parse(input);
   const tokens = query.q ? tokenizeSearchQuery(query.q) : [];
+  if (query.q && tokens.length === 0) {
+    return { items: [], pagination: { page: query.page, limit: query.limit, total: 0, totalPages: 0 } };
+  }
   const synonyms = tokens.length ? await prisma.searchSynonym.findMany({
     where: { locale: query.locale, isActive: true, OR: tokens.flatMap((token) => [
       { term: { equals: token, mode: "insensitive" as const } },
