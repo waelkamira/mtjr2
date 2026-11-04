@@ -2,6 +2,7 @@ import AuthPage from "@/features/identity/auth-page";
 
 export const metadata = { title: "Reset password", referrer: "no-referrer" as const, robots: { index: false, follow: false } };
 
-export default function ResetPasswordPage() {
-  return <AuthPage mode="reset" />;
+export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  const params = await searchParams;
+  return <AuthPage mode="reset" initialToken={params.token ?? ""} />;
 }
