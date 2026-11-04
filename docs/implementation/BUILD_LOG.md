@@ -1860,3 +1860,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 1. Run migrations against a disposable database named with a `demo` marker.
 2. Run the demo seed twice and confirm counts remain 80 products / 8 categories / 4 stores with unchanged stock on the second run.
 3. Verify the public market/category/product/search APIs return the seeded catalog.
+
+
+## 2026-11-04 — Demo catalog seed verification and merge
+
+- PR [#27](https://github.com/waelkamira/mtjr2/pull/27) merged into `main` as `0ec09ed37492e6c71b27e545abac72893ce73749`.
+- Exact-head General CI passed on `d9686531b6638e28bb8f2b57cab8e82c1d505abe`: [run 41837000589](https://github.com/waelkamira/mtjr2/actions/runs/41837000589). Prisma validate/generate, typecheck, lint, unit tests, and production build all passed.
+- Disposable PostgreSQL migration/integration passed on the same exact head: [run 41836993780](https://github.com/waelkamira/mtjr2/actions/runs/41836993780). The existing integration suite passed; the demo seed ran twice and both executions reported exactly 80 products, 8 categories, 4 stores, and 80 inventory rows.
+- This verifies repeatable seeding and the canonical Prisma relations in disposable PostgreSQL. It does not yet verify the rendered storefront in a deployed browser or create a persistent local database on the owner's machine.
+- No Prisma schema change/migration was needed. No production database or Vercel environment was accessed.
+- The Vercel preview status was blocked by the Hobby daily deployment quota; this is separate from the passing General CI and PostgreSQL workflows.
