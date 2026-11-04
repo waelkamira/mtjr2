@@ -56,3 +56,97 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
     }))
   };
 }
+
+
+const sellerOrderTransitionSchema = z.object({
+  status: z.enum(["PROCESSING", "READY_TO_SHIP"]),
+  note: z.string().trim().max(500).optional()
+}).strict();
+
+/**
+ * Seller-side preparation only. Shipment labels, carrier handoff, delivery
+ * confirmation and cancellation are intentionally separate workflows.
+ * A seller cannot process an order until a verified payment webhook has moved
+ * its vendor order out of PENDING_PAYMENT.
+ */
+export async function transitionSellerVendorOrder(vendorOrderId: string, input: unknown, now = new Date()) {
+  const data = sellerOrderTransitionSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  const id = z.string().trim().min(1).max(128).parse(vendorOrderId);
+
+  const visible = await prisma.vendorOrder.findUnique({
+    where: { id },
+    select: {
+      id: true, orderId: true, storeId: true, status: true,
+      order: { select: { status: true, orderNumber: true } },
+      store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
+    }
+  });
+  if (!visible) throw new Error("Seller order not found.");
+  if (visible.store.status !== "ACTIVE" || visible.store.seller.status !== "ACTIVE") {
+    throw new Error("This store is not active.");
+  }
+
+  const isOwner = visible.store.seller.ownerId === actor.userId;
+  const platformOrdersAdmin = await userHasPermission(actor.userId, {
+    permissionKey: "orders:manage", now
+  });
+  const delegated = isOwner ? false : await userHasScopedPermission(actor.userId, {
+    permissionKey: "orders:manage", scope: { type: "STORE", id: visible.storeId }, now
+  });
+  if (!isOwner && !delegated && !platformOrdersAdmin) {
+    const { PermissionDeniedError } = await import("@/server/identity/permission-guard");
+    throw new PermissionDeniedError();
+  }
+
+  const expected = data.status === "PROCESSING" ? VendorOrderStatus.CONFIRMED : VendorOrderStatus.PROCESSING;
+  const note = data.note || (data.status === "PROCESSING" ? "Seller started order processing." : "Seller marked order ready to ship.");
+
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.vendorOrder.findUnique({
+      where: { id },
+      select: { id: true, orderId: true, storeId: true, status: true, order: { select: { status: true, orderNumber: true } } }
+    });
+    if (!current) throw new Error("Seller order not found.");
+    if (current.status === data.status) return { id, status: current.status, changed: false };
+    if (current.status !== expected) {
+      throw new Error("This seller order cannot move to the selected status. Refresh and try again.");
+    }
+    if (current.order.status !== OrderStatus.CONFIRMED && current.order.status !== OrderStatus.PROCESSING) {
+      throw new Error("The parent order is not confirmed for seller processing.");
+    }
+
+    const changed = await tx.vendorOrder.updateMany({
+      where: { id, storeId: visible.storeId, status: expected },
+      data: { status: data.status }
+    });
+    if (changed.count !== 1) throw new Error("The seller order changed. Refresh and try again.");
+
+    await tx.vendorOrderStatusHistory.create({
+      data: { vendorOrderId: id, status: data.status, note, actorId: actor.userId, createdAt: now }
+    });
+
+    if (data.status === "PROCESSING" && current.order.status === OrderStatus.CONFIRMED) {
+      const parentChanged = await tx.order.updateMany({
+        where: { id: current.orderId, status: OrderStatus.CONFIRMED },
+        data: { status: OrderStatus.PROCESSING }
+      });
+      if (parentChanged.count === 1) {
+        await tx.orderStatusHistory.create({
+          data: { orderId: current.orderId, status: OrderStatus.PROCESSING, note: "Seller processing started.", actorId: actor.userId, createdAt: now }
+        });
+      }
+    }
+
+    await tx.auditLog.create({
+      data: {
+        actorType: "USER", actorId: actor.userId, action: "seller.vendor_order.status_changed",
+        resource: "vendor_order", resourceId: id, scopeType: "STORE", scopeId: visible.storeId,
+        occurredAt: now,
+        metadata: { from: expected, to: data.status, orderId: current.orderId, orderNumber: current.order.orderNumber }
+      }
+    });
+
+    return { id, status: data.status, changed: true };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
