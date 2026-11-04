@@ -1,3 +1,5 @@
+import "server-only";
+
 import { z } from "zod";
 
 const environmentSchema = z.object({
@@ -8,12 +10,12 @@ const environmentSchema = z.object({
       (value) => value.startsWith("postgresql://") || value.startsWith("postgres://"),
       "DATABASE_URL must use the PostgreSQL protocol"
     ),
-  NEXT_PUBLIC_APP_URL: z.string().url(),
+  APP_URL: z.string().url(),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must contain at least 32 characters"),
   CRON_SECRET: z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional(),
   PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
-  RESEND_API_KEY: z.string().min(1).optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
+  RESEND_API_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  RESEND_FROM_EMAIL: z.preprocess((value) => value === "" ? undefined : value, z.string().email().optional()),
   GOOGLE_CLIENT_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   TRUSTED_PROXY_IP_HEADER: z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional(),
