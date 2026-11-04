@@ -6,6 +6,10 @@
 
 > This is the target information architecture, not a claim that all routes or workflows are implemented. Use the route registry and journey matrix for actual source presence and verification status. A system can span several surfaces; it must still have one owning domain/service and one permission policy.
 
+## Detailed page and control specification
+
+This map is the concise system-to-route ownership index. For the complete page-by-page contents, root-admin/domain-admin controls, role boundaries, global-marketplace gaps, sign-in/session/logout flow and release gates, see [`GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md`](GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md).
+
 ## 1. Product and navigation architecture
 
 ### Public storefront (anonymous and signed-in buyers)
