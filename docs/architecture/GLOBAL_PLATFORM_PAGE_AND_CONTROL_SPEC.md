@@ -4,6 +4,10 @@
 **Applies to:** Public storefront, customer account, seller center, platform administration, restricted finance/security/operations, and the separate property domain.  
 **Companion documents:** [49-system blueprint](COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md) · [Page-to-system map](PLATFORM_PAGE_SYSTEM_MAP.md) · [Route inventory](PLATFORM_PAGE_INVENTORY.md) · [Journey matrix](../implementation/END_TO_END_JOURNEY_MATRIX.md) · [Prisma model map](PRISMA_MODEL_USAGE_MAP.md)
 
+## Independent implementation specification for every system
+
+The 49 systems now have separate implementation contracts under [`docs/systems/`](../systems/README.md). Start with [`docs/systems/README.md`](../systems/README.md). Each file defines system boundaries, target pages and source presence, UI-to-API-to-Prisma flow, integration contracts, critical tests and closeout gates. This global document remains the cross-platform page/control and global-launch reference; it does not replace system-level specifications.
+
 ## 1. Is the 49-system scope sufficient?
 
 The 49 systems are a strong business capability inventory, but **the number 49 alone is not proof of global-marketplace completeness**. Several global, financial, regulatory, operational and governance capabilities need to be explicit acceptance domains rather than being hidden inside broad labels. The following are mandatory capabilities for a serious international multi-vendor marketplace; implement them as modules under existing systems where boundaries are clear, or split them into separately tracked systems if their ownership, data lifecycle or risk justifies it:
