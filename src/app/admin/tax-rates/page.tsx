@@ -25,17 +25,29 @@ export default function AdminTaxRatesPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  async function load() {
+  async function load(): Promise<{ markets: Market[]; rates: TaxRate[] }> {
     const [marketData, rateData] = await Promise.all([
       json(await fetch("/api/markets", { cache: "no-store" })),
       json(await fetch("/api/admin/tax-rates", { cache: "no-store" }))
     ]);
-    setMarkets(marketData.markets || []);
-    setRates(rateData.rates || []);
-    if (!marketId && marketData.markets?.[0]) setMarketId(marketData.markets[0].id);
+    return {
+      markets: marketData.markets || [],
+      rates: rateData.rates || []
+    };
   }
 
-  useEffect(() => { void load().catch((cause) => setError(cause instanceof Error ? cause.message : "Unable to load tax rules.")); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    void load().then((data) => {
+      if (cancelled) return;
+      setMarkets(data.markets);
+      setRates(data.rates);
+      setMarketId((current) => current || data.markets[0]?.id || "");
+    }).catch((cause) => {
+      if (!cancelled) setError(cause instanceof Error ? cause.message : "Unable to load tax rules.");
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(""); setMessage("");
@@ -47,7 +59,10 @@ export default function AdminTaxRatesPage() {
         body: JSON.stringify({ marketId, name, destinationRegion: region || null, rateBasisPoints: Math.round(value * 100), isInclusive: inclusive, appliesToShipping: shipping })
       }));
       setMessage("Tax rule created."); setName(""); setRegion(""); setPercent("0");
-      await load();
+      const data = await load();
+      setMarkets(data.markets);
+      setRates(data.rates);
+      setMarketId((current) => current || data.markets[0]?.id || "");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to create tax rule."); }
     finally { setBusy(false); }
   }
