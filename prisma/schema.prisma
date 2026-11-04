@@ -59,6 +59,7 @@ model User {
   supportAttachments    SupportAttachment[] @relation("SupportAttachmentUploader")
   storeMessageAttachments StoreMessageAttachment[] @relation("StoreMessageAttachmentUploader")
   notificationPreferences NotificationPreference[]
+  notificationDeliveries NotificationDelivery[]
   productReviews        ProductReview[]
   productQuestions      ProductQuestion[]
   productAnswers        ProductAnswer[]
@@ -1500,17 +1501,53 @@ model Recommendation {
   @@index([recommendedProductId, isActive])
 }
 
+enum NotificationDeliveryStatus {
+  PENDING
+  PROCESSING
+  RETRY
+  SENT
+  FAILED
+}
+
 model NotificationPreference {
   id           String   @id @default(cuid())
   userId       String
   type         String   @db.VarChar(64)
   inAppEnabled Boolean  @default(true)
+  emailEnabled Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, type])
   @@index([userId])
+}
+
+model NotificationDelivery {
+  id                String                    @id @default(cuid())
+  userId            String
+  notificationId    String?
+  type              String                    @db.VarChar(64)
+  title             String                    @db.VarChar(160)
+  message           String                    @db.VarChar(500)
+  resourceType      String?                   @db.VarChar(40)
+  resourceId        String?                   @db.VarChar(128)
+  deduplicationKey  String                    @unique @db.VarChar(200)
+  status            NotificationDeliveryStatus @default(PENDING)
+  attempts          Int                       @default(0)
+  maxAttempts       Int                       @default(8)
+  nextAttemptAt     DateTime                  @default(now())
+  lockedAt          DateTime?
+  sentAt            DateTime?
+  providerMessageId String?                   @db.VarChar(180)
+  lastError         String?                   @db.VarChar(500)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification     Notification?             @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  @@index([status, nextAttemptAt])
+  @@index([userId, createdAt])
 }
 
 model Notification {
@@ -1525,6 +1562,7 @@ model Notification {
   readAt            DateTime?
   createdAt         DateTime @default(now())
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries        NotificationDelivery[]
 
   @@index([userId, readAt, createdAt])
   @@index([userId, createdAt])
