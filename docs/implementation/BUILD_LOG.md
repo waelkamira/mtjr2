@@ -1507,7 +1507,7 @@ The project owner approved Resend as the transactional email provider. The serve
 
 **Branch and scope**
 - Audited PR #15 (`feat/returns-workflow`) and its stacked implementation state; PR #15 remains open/draft and is not merged.
-- Confirmed the canonical schema contains 79 Prisma models and 25 enums. Added `docs/architecture/PRISMA_MODEL_USAGE_MAP.md` to map model groups to their owning systems and current service/API entry points. Corrected the blueprint and journey-standard links to this real file; the previously referenced lowercase filename did not exist.
+- Confirmed the canonical schema contains 74 Prisma models and 24 enums. Added `docs/architecture/PRISMA_MODEL_USAGE_MAP.md` to map model groups to their owning systems and current service/API entry points. Corrected the blueprint and journey-standard links to this real file; the previously referenced lowercase filename did not exist.
 - Reconciled Phase 3: removed the duplicated seller-onboarding acceptance gate, changed its status from “approaching exit review” to a historical handoff with outstanding evidence, and pointed active Buying Core work to Phase 4 rather than restarting it.
 - Added an actual App Router filesystem snapshot to `PAGE_ROUTE_REGISTRY.md`: 30 page files and 86 API route files were found. Recorded existing page paths and important missing dedicated targets. This is static route presence only, not proof of runtime or end-to-end behavior.
 - Phase 4 remains active. Payment provider work is explicitly blocked until launch markets, currencies, merchant account and payment methods are approved; no provider or fake payment behavior is assumed.
