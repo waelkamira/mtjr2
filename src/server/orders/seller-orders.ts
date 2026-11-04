@@ -1,6 +1,8 @@
 import "server-only";
 
+import { OrderStatus, Prisma, VendorOrderStatus } from "@prisma/client";
 import { requireCurrentSession } from "@/server/identity/current-session";
+import { PermissionDeniedError } from "@/server/identity/permission-guard";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
@@ -94,10 +96,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
   const delegated = isOwner ? false : await userHasScopedPermission(actor.userId, {
     permissionKey: "orders:manage", scope: { type: "STORE", id: visible.storeId }, now
   });
-  if (!isOwner && !delegated && !platformOrdersAdmin) {
-    const { PermissionDeniedError } = await import("@/server/identity/permission-guard");
-    throw new PermissionDeniedError();
-  }
+  if (!isOwner && !delegated && !platformOrdersAdmin) throw new PermissionDeniedError();
 
   const expected = data.status === "PROCESSING" ? VendorOrderStatus.CONFIRMED : VendorOrderStatus.PROCESSING;
   const note = data.note || (data.status === "PROCESSING" ? "Seller started order processing." : "Seller marked order ready to ship.");
