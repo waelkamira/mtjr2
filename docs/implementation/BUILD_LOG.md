@@ -1870,3 +1870,14 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - This verifies repeatable seeding and the canonical Prisma relations in disposable PostgreSQL. It does not yet verify the rendered storefront in a deployed browser or create a persistent local database on the owner's machine.
 - No Prisma schema change/migration was needed. No production database or Vercel environment was accessed.
 - The Vercel preview status was blocked by the Hobby daily deployment quota; this is separate from the passing General CI and PostgreSQL workflows.
+
+
+## 2026-11-04 — local environment and storefront setup
+
+- Renamed the server-only canonical URL setting from `NEXT_PUBLIC_APP_URL` to `APP_URL` across the environment schema, Google OAuth routes, origin validation, transactional email links, payment return URLs, CI workflows, tests, and deployment documentation.
+- Marked the environment module as server-only so server credentials/configuration cannot be imported into client components accidentally.
+- Optional Google and Resend credentials now accept empty strings in local environment files as unset values; this avoids invalid local configuration when external providers are not configured.
+- Updated `.env.example` for a dedicated local `mtjr2_demo` database and explicit demo seed opt-ins. It contains placeholders only; no credentials were copied from chat.
+- Added [Windows local setup guide](../development/LOCAL_WINDOWS_SETUP.md): install, create database, configure `.env`, migrate, seed 80 products, and run the site.
+- Supabase, Cloudinary, OpenAI, and EmailJS were not found in the active environment schema or integration code paths in this review; their credentials are not required to browse the current storefront.
+- Verification of this change is pending exact-head CI. The local database and browser journey have not been run on the owner's PC from this session.
