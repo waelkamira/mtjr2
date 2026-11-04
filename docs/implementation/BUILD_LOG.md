@@ -1807,13 +1807,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Browser-based visual comparison against the owner reference images remains outstanding; these checks establish code/build/database integrity, not pixel parity or a complete site-wide redesign.
 
 
-## 2026-11-04 — Payment lifecycle reconstruction (verification pending)
+## 2026-11-04 — Provider-neutral payment lifecycle merged
 
-- Rebuilt the payment foundation on a fresh branch based on current `main` instead of attempting to merge stale stacked history.
-- Added canonical `PaymentStatus`, `Payment`, and `PaymentWebhookEvent` schema additions and a migration ordered after the migrations already on main.
-- Added provider adapter contract/registry, owner-scoped idempotent payment-intent API, provider discovery API, and verified webhook processing.
-- Corrected webhook response handling: invalid signatures or normalized payloads return 4xx; event ID/hash conflicts return 409; unclassified processing/database failures return retryable 500 with `Retry-After`.
-- Added focused webhook-route tests for signature rejection, malformed events, transient processing failure, event-ID payload conflicts, and successful acknowledgement.
-- Connected payment options to the current-main order detail page while preserving its store review and returns functionality.
-- No provider is registered, no live payment is collected, and no production database or deployment configuration was accessed.
-- **Status: not verified / not merged yet.** General CI and disposable PostgreSQL integration must pass on the final exact PR head before this work can be considered complete.
+- Reconstructed the payment foundation on a clean branch based on current `main` as PR #23, avoiding stale stacked history.
+- Added canonical `PaymentStatus`, `Payment`, and `PaymentWebhookEvent` schema additions and a forward-only PostgreSQL migration.
+- Added provider adapter contract/registry, owner-scoped idempotent payment-intent API, provider discovery API, and verified webhook processing with deduplication and retry-safe error classification.
+- Connected payment choices to the buyer order-detail page while preserving store reviews and return links. Added focused webhook and ownership/amount/currency tests.
+- Exact PR head `d918c51103728d87ba130d07c678c5bfbbe890f1` passed General CI job `126571637955` and disposable PostgreSQL integration job `126571637984`.
+- PR #23 was squash-merged into `main` as `ffbf76897a9ee8d15ad3d14a18508efe6f0986a9`.
+- No provider is registered by default; no live charge is collected. Refunds, disputes, settlement reconciliation, concrete provider onboarding, and operational monitoring remain incomplete.
+- These checks establish build/test/database migration integrity; they do not establish a live browser journey or successful real-world provider payment.
