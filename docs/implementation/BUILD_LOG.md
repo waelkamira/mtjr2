@@ -1477,3 +1477,10 @@ The project owner approved Resend as the transactional email provider. The serve
 - Wired the primary CTA to the existing product discovery section, the category tile to the live category section, and the seller CTA to `/seller`.
 - No fabricated product cards, stock, pricing, reviews, or sales figures were introduced. Actual products/categories remain API-backed; if the database has no active catalog data, the existing honest empty states remain.
 - UI-only change; no Prisma schema/migration required. No test suite was added or awaited.
+
+## 2026-11-04 — Unified page/route registry
+
+- Added `docs/implementation/PAGE_ROUTE_REGISTRY.md` as the shared target inventory for public storefront, authentication/customer account, seller workspace, platform administration, and property/booking pages.
+- Each target row records the intended audience, owning system(s), API/domain service and Prisma data to verify, an explicitly provisional status, and known evidence/gaps. The registry distinguishes target pages from routes verified in code; no route-by-route filesystem audit is claimed by this documentation change.
+- Added the registry requirement to `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`: reconcile targets with actual App Router routes and track navigation, authorization, API wiring, loading/empty/error states and focused verification before marking pages complete.
+- Documentation-only change; no Prisma schema/migration, runtime code, database, or Vercel settings changed. No tests were run for this documentation-only change.
