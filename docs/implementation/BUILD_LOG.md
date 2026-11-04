@@ -1734,3 +1734,14 @@ The project owner approved Resend as the transactional email provider. The serve
 **Findings:** PRs #2–#14 are stacked across checkout/order and customer-engagement branches; #16–#17 form a separate returns stack. Several downstream base SHAs are stale, #5 reports non-mergeable, and multiple exact-head quality jobs fail before tests/build. PostgreSQL integration passes on several heads but does not override quality failures. No PR was merged or modified. No application/schema/database/production/deployment change was made.
 
 **Next:** Retrieve the specific lint/typecheck diagnostics and reconcile the checkout stack before any merge consideration. No new system work until the current backlog is verified.
+
+
+## 2026-11-04 — Existing-work closeout audit
+
+**Policy:** Freeze new feature scope until the currently open work is reconciled, verified and closed. Audited the current main baseline, all open PR metadata, dependency bases and exact-head workflow summaries. A detailed snapshot is recorded in `docs/implementation/OPEN_WORK_CLOSEOUT_AUDIT.md`.
+
+**Findings:** PR #1 and #15 are merged; 14 PRs remain open (#2–#14, #16–#17). PRs #2–#14 are stacked across checkout/order and customer-engagement branches; #16–#17 form a separate returns stack. Downstream base SHAs are stale for #3, #6 and #17; #5 reports `mergeable=false`. Quality checks fail on exact inspected heads for #4, #6, #9, #11, #12, #13 and #14; PostgreSQL integration passes on several of those heads but does not override quality failures. Exact-head workflow runs were not found for #5, #7, #8, #10 and #17.
+
+**Changes made:** Documentation-only audit record. No PR was merged, retargeted, rebased or otherwise modified. No application code, Prisma schema, migration, database, Vercel setting or deployment was changed.
+
+**Next:** Retrieve precise lint/typecheck diagnostics, reconcile the checkout stack, then verify complete buyer journeys before considering any merge. Do not start new systems until current work is audited and closed.
