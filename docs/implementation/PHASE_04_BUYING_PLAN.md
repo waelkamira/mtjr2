@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — cart, quote/reservation, address, shipping configuration, and initial market-tax calculation are implemented across stacked branches. Transactional order/vendor-order creation and buyer/seller order views are now implemented on this branch; final verification is pending. Payment, discounts, and fulfillment transitions remain.
+**Status:** In progress — cart, quote/reservation, address, shipping configuration, initial market-tax calculation, transactional order/vendor-order creation, and buyer/seller order views are implemented across stacked branches. The latest observed PostgreSQL integration run passed on the 2026-11-04 audit head; General CI exposed one unit-test fixture failure that has been corrected in a follow-up commit and is awaiting a fresh run. Payment, discounts, and fulfillment transitions remain.
 
 ## Objective
 
@@ -100,4 +100,15 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 - PR #1 cart and PR #2 quote/reservations are stacked predecessors.
 - PR #3 delivery address is implemented and its General CI/PostgreSQL workflows pass; it remains a draft stacked on PR #2 pending review/merge.
-- Next implementation slice is payment intent/provider lifecycle and verified webhook handling. Discount rules and fulfillment transitions remain separate follow-up slices.
+- The next technical gate is the fresh General CI result and a focused buyer checkout/order journey review. Payment intent/provider lifecycle and verified webhook handling may begin only after launch-market, currency, merchant-account and payment-method decisions are approved. Discount rules and fulfillment transitions remain separate follow-up slices.
+
+
+## Exact-head audit — 2026-11-04
+
+- Audited PR #15 head `56e51199e604fab5ed14921b38ac6f9030fac0e9` before continuing implementation.
+- Disposable PostgreSQL workflow [41745430005](https://github.com/waelkamira/mtjr2/actions/runs/41745430005) passed: Prisma validate/generate, committed migration deployment, baseline role/permission seed, and the existing PostgreSQL integration suite all succeeded on that head.
+- General CI [41745430118](https://github.com/waelkamira/mtjr2/actions/runs/41745430118) failed in the unit suite: 25 test files passed and one failed (116/117 tests). The failure was the delivery-address test fixture missing mocks for the existing shipping-selection and tax-snapshot invalidation calls; Prisma validate/generate, typecheck and lint had passed, while build was skipped after the test failure.
+- Corrected the focused fixture on the follow-up commit by mocking and asserting both invalidations. This is a test-contract correction; it does not change application runtime or Prisma schema. A fresh General CI result for the follow-up head is required before claiming the fix verified.
+- No migration was applied to the owner's database and no production configuration was accessed.
+
+**Next gate:** obtain a passing General CI on the corrected head, then review the buyer checkout/order journey against the current browser/API states. Payment provider implementation remains conditional on owner-approved launch markets, currencies, merchant account and payment methods. Until those decisions exist, do not choose a provider, create provider-specific schema, simulate payment success, or enable fulfillment for pending-payment orders.
