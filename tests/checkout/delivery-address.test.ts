@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
   transaction: vi.fn(),
   quoteFindFirst: vi.fn(),
   addressUpsert: vi.fn(),
+  shippingSelectionDeleteMany: vi.fn(),
+  taxSnapshotDeleteMany: vi.fn(),
   savedAddressFindFirst: vi.fn(),
   savedAddressCreate: vi.fn(),
   getCurrentSession: vi.fn(),
@@ -14,6 +16,8 @@ const mocks = vi.hoisted(() => ({
 const tx = {
   checkoutQuote: { findFirst: mocks.quoteFindFirst },
   checkoutQuoteAddress: { upsert: mocks.addressUpsert },
+  checkoutShippingSelection: { deleteMany: mocks.shippingSelectionDeleteMany },
+  checkoutTaxSnapshot: { deleteMany: mocks.taxSnapshotDeleteMany },
   userAddress: { findFirst: mocks.savedAddressFindFirst, create: mocks.savedAddressCreate }
 };
 
@@ -42,7 +46,7 @@ describe("checkout delivery address", () => {
     mocks.transaction.mockImplementation(async (callback: (value: typeof tx) => unknown) => callback(tx));
   });
 
-  it("stores a guest address snapshot using the quote market country", async () => {
+  it("stores a guest address snapshot using the quote market country and invalidates dependent selections", async () => {
     const result = await setCheckoutDeliveryAddress("guest-token", "quote-1", {
       recipientName: "Alex Example", phone: "+31612345678",
       line1: "Main Street 10", city: "Amsterdam"
@@ -52,6 +56,8 @@ describe("checkout delivery address", () => {
       where: { quoteId: "quote-1" },
       create: expect.objectContaining({ countryCode: "NL", countryName: "Netherlands", sourceAddressId: null })
     }));
+    expect(mocks.shippingSelectionDeleteMany).toHaveBeenCalledWith({ where: { quoteId: "quote-1" } });
+    expect(mocks.taxSnapshotDeleteMany).toHaveBeenCalledWith({ where: { quoteId: "quote-1" } });
   });
 
   it("does not allow a buyer to override the market country", async () => {
