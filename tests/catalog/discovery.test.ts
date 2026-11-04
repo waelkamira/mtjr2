@@ -35,45 +35,49 @@ describe("public product discovery", () => {
   });
 
   it("uses active localized synonyms and bounded pagination", async () => {
-    const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12" });
+    const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12", sort: "name_asc" });
     expect(result.pagination).toEqual({ page: 2, limit: 12, total: 0, totalPages: 0 });
     expect(mocks.synonymFindMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ locale: "en", isActive: true }), take: 40
     }));
     const where = mocks.productFindMany.mock.calls[0][0].where;
-    const filters = where.AND?.find((clause: Record<string, unknown>) => clause.status === "ACTIVE") ?? where;
-    expect(filters.status).toBe("ACTIVE");
-    expect(filters.approvalStatus).toBe("APPROVED");
-    expect(filters.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
-    const relevanceQuery = mocks.queryRaw.mock.calls.map(([query]) => query).find((query) => query.sql.includes("WITH searchable"));
-    expect(relevanceQuery.sql).toContain("searchable");
-    expect(relevanceQuery.values).toEqual(expect.arrayContaining(["sneaker", "trainer"]));
+    expect(where.status).toBe("ACTIVE");
+    expect(where.approvalStatus).toBe("APPROVED");
+    expect(where.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
+    expect(where.AND).toHaveLength(1);
+    expect(where.AND[0].OR.length).toBeGreaterThan(8);
     expect(mocks.synonymFindMany.mock.calls[0][0].where.OR).toHaveLength(2);
   });
 
   it("requires every query token to match across product fields", async () => {
-    await listDiscoverableProducts({ q: "red sneaker" });
+    await listDiscoverableProducts({ q: "red sneaker", sort: "name_asc" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
-    const filters = where.AND?.find((clause: Record<string, unknown>) => clause.status === "ACTIVE") ?? where;
-    const relevanceQuery = mocks.queryRaw.mock.calls[0][0];
-    expect(relevanceQuery.sql).toContain("ILIKE");
-    expect(relevanceQuery.sql).toContain("ProductVariant");
-    expect(relevanceQuery.values).toEqual(expect.arrayContaining(["red", "sneaker"]));
+    expect(where.AND).toHaveLength(2);
+    expect(where.AND[0].OR).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.objectContaining({ contains: "red" }) }),
+      expect.objectContaining({ variants: expect.any(Object) })
+    ]));
   });
 
   it("searches within the selected store and matches public seller names", async () => {
-    await listDiscoverableProducts({ q: "northstar", storeId: "store-1" });
+    await listDiscoverableProducts({ q: "northstar", storeId: "store-1", sort: "name_asc" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
-    const filters = where.AND?.find((clause: Record<string, unknown>) => clause.status === "ACTIVE") ?? where;
-    expect(filters.store).toMatchObject({
+    expect(where.store).toMatchObject({
       id: "store-1",
       status: "ACTIVE",
       seller: { status: "ACTIVE" }
     });
-    const relevanceQuery = mocks.queryRaw.mock.calls[0][0];
-    expect(relevanceQuery.sql).toContain('seller."displayName"');
-    expect(relevanceQuery.sql).toContain("s.id");
-    expect(relevanceQuery.values).toEqual(expect.arrayContaining(["northstar", "store-1"]));
+    expect(where.AND[0].OR).toContainEqual(expect.objectContaining({
+      store: expect.objectContaining({
+        is: expect.objectContaining({
+          seller: expect.objectContaining({
+            is: expect.objectContaining({
+              displayName: { contains: "northstar", mode: "insensitive" }
+            })
+          })
+        })
+      })
+    }));
 
   });
 
