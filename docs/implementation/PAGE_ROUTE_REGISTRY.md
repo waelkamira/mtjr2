@@ -28,10 +28,10 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/products/[id]` or canonical slug | Everyone | 02, 06–08 | product detail, reviews, Q&A, favorites, cart APIs | Partial / unverified | Confirm route convention, variants, seller, stock, price and all actions |
 | `/search` | Everyone | 03 | `src/app/search/page.tsx` reuses `StorefrontHomePage`; header GET form submits `q`; `GET /api/products` | Implemented / unverified | Search route exists and reads the query from URL state; verify search journey, result states and browser navigation. Autocomplete is not implemented. |
 | `/categories` | Everyone | 02, 03 | `src/app/categories/page.tsx` → `src/features/storefront/category-directory-page.tsx`; `GET /api/categories`; Category | Implemented / unverified | Active category directory links to `/products?categoryId=...`; verify API error/empty states and filter journey. |
-| `/categories/[slug]` | Everyone | 02, 03 | category and product APIs | Not audited | Dynamic category detail route remains a later slice. |
+| `/categories/[slug]` | Everyone | 02, 03 | `src/app/categories/[slug]/page.tsx`; `getActiveCategoryBySlug`; `listDiscoverableProducts({ categoryId })`; Category, CategoryTranslation, ProductCategory, Product | Implemented / unverified | Active category resolves to details and active products; inactive/missing slug returns 404. Pagination and child-category semantics remain to audit. |
 | `/brands` | Everyone | 02, 03 | `src/app/brands/page.tsx` → `src/features/storefront/brand-directory-page.tsx`; `GET /api/brands`; Brand | Implemented / unverified | Active brand directory links to `/products?brandId=...`; verify API error/empty states and filter journey. |
-| `/brands/[slug]` | Everyone | 02, 03 | brand and product APIs | Not audited | Dynamic brand detail route remains a later slice. |
-| `/stores/[slug]` | Everyone | seller/store system | public store and catalog services | Not audited | Public storefront profile is distinct from seller workspace |
+| `/brands/[slug]` | Everyone | 02, 03 | `src/app/brands/[slug]/page.tsx`; `getActiveBrandBySlug`; `listDiscoverableProducts({ brandId })`; Brand, BrandTranslation, Product | Implemented / unverified | Active brand resolves to details and active products; inactive/missing slug returns 404. Pagination remains to audit. |
+| `/stores` | Everyone | 02, 12, 23 | `src/app/stores/page.tsx`; `listDiscoverableStores`; Store, Seller, Product | Implemented / unverified | Lists only ACTIVE stores, ACTIVE sellers and stores with active products. First 48 only; search/pagination remain. |\n| `/stores/[slug]` | Everyone | 02, 12, 23 | `src/app/stores/[slug]/page.tsx`; `getDiscoverableStoreBySlug`; `listDiscoverableProducts({ storeId })`; Store, Seller, Product | Implemented / unverified | Hides inactive stores/unapproved sellers and scopes products to the store. Profile completeness and pagination remain. |
 | `/terms`, `/privacy` | Everyone | 01 / shared platform | Static versioned pages `src/app/terms/page.tsx` and `src/app/privacy/page.tsx` | Development draft / unverified | Version v1 drafts disclose that the operator company is not yet incorporated; not final legal policies. `/help`, `/contact`, `/cookies` remain unaudited. |
 
 ## B. Identity and customer account
@@ -254,3 +254,14 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 ## Build-time rendering note — 2026-11-04
 
 - `/stores` uses request-time rendering because it reads live approved-store data through Prisma. Static build must not require an application database connection. Exact-head build verification is pending after this correction.
+
+
+## First source-level catalog/discovery audit — 2026-11-04
+
+- Public discovery uses Product, ProductCategory, ProductVariant, ProductPrice, ProductTranslation, SearchSynonym, Store, Seller, Market and Currency. It filters to active products/stores/sellers; market queries require enabled StoreMarket links and active market/country/currency prices.
+- Taxonomy uses Category/CategoryTranslation and Brand/BrandTranslation. Public store routes use Store/Seller. No new Prisma table is justified for these read-only routes.
+- `/`, `/products` and `/search` currently reuse the same full `StorefrontHomePage`; this is functional reuse but not a finished page-specific experience. Search autocomplete and relevance ranking are not implemented.
+- Category, brand and store detail routes currently request only the first 48 products; store directory requests only the first 48 stores, with no pagination controls.
+- Category service paginates raw rows before building its hierarchy. Parent/child rows split across pages can be misrepresented; fix hierarchy-preserving pagination before marking taxonomy complete.
+- Product detail wires add-to-cart, favorite, store-message, reviews and Q&A. Source wiring is not yet proof of authorization, retry/idempotency, persistence and refresh behavior.
+- Corrected homepage category “View all” to navigate to `/categories` instead of clearing the selected filter.

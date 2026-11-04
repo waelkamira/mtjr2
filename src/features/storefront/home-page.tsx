@@ -208,7 +208,7 @@ export default function StorefrontHomePage() {
       <section id="categories" className="mx-auto max-w-[1440px] px-5 py-7 lg:px-10">
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Explore by interest</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Browse categories</h2></div>
-          <button type="button" onClick={() => { setCategoryId(""); setPage(1); }} className="text-sm text-[var(--color-forest-800)] underline underline-offset-4">View all</button>
+          <Link href="/categories" className="text-sm text-[var(--color-forest-800)] underline underline-offset-4">View all</Link>
         </div>
         {loadingReference ? <p className="text-sm text-[var(--muted)]">Loading categories…</p> : flatCategories.length ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

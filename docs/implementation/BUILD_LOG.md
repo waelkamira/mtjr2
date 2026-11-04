@@ -1670,3 +1670,16 @@ The project owner approved Resend as the transactional email provider. The serve
 
 **Verification boundary**
 - A new exact-head CI build is required to confirm the correction. No production database, owner database, migration, or Vercel setting was accessed.
+
+
+## 2026-11-04 — First source-level catalog/discovery audit (systems 02–03)
+
+**Baseline:** `d205a6a3248054da4ec049dfd36d79898c7b08b` (CI and Platform PostgreSQL Integration both passed).
+
+**Implemented:** homepage category “View all” now navigates to `/categories`. Route registry and 49-system matrix updated with actual route/service/model wiring and unverified gaps.
+
+**Source findings:** active product/store/seller filtering and market/currency checks exist; taxonomy uses Category/CategoryTranslation and Brand/BrandTranslation; public stores use Store/Seller; BigInt prices serialize to minor-unit strings. Existing schema covers current read paths; no new model/migration justified.
+
+**Gaps before systems 02–03 are complete:** (1) category rows are paginated before tree construction, so parent/child splits can misrepresent hierarchy; (2) category, brand and store details return only first 48 products and store directory only first 48 stores; (3) `/`, `/products`, `/search` share full homepage composition; autocomplete/relevance ranking are missing; (4) cart/favorite/message/review/Q&A actions need end-to-end authorization, persistence and refresh verification.
+
+**Status:** Mapped / Partially wired, not Verified or Complete. Next: hierarchy-preserving category pagination, then directory/detail pagination. No database migration; no production DB or Vercel environment accessed.
