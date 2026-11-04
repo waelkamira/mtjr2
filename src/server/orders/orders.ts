@@ -287,7 +287,7 @@ export async function getOwnedOrder(guestToken: string, orderId: string, now = n
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } }, shipment: true } }
     }
   });
   if (!order) throw new Error("Order not found.");
