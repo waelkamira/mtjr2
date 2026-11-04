@@ -30,7 +30,7 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/categories/[slug]` | Everyone | 02, 03 | category and product APIs | Not audited | Confirm route and empty/invalid category states |
 | `/brands/[slug]` | Everyone | 02, 03 | brand and product APIs | Not audited | Confirm route and filtered listing |
 | `/stores/[slug]` | Everyone | seller/store system | public store and catalog services | Not audited | Public storefront profile is distinct from seller workspace |
-| `/help`, `/contact`, `/terms`, `/privacy`, `/cookies`, policy pages | Everyone | shared platform/compliance | CMS/static content and consent service as applicable | Not audited / conditional | Approve legal and market-specific content before launch |
+| `/terms`, `/privacy` | Everyone | 01 / shared platform | Static versioned pages `src/app/terms/page.tsx` and `src/app/privacy/page.tsx` | Development draft / unverified | Version v1 drafts disclose that the operator company is not yet incorporated; not final legal policies. `/help`, `/contact`, `/cookies` remain unaudited. |
 
 ## B. Identity and customer account
 
@@ -206,4 +206,4 @@ This registry records route presence and route-level status only. It does **not*
 A route stays **Implemented / unverified** (or Partial) if any exposed critical action is unverified. A visible nonfunctional action must be removed, disabled or honestly labelled unavailable; do not count it as complete. Route existence alone never upgrades an action or system to Verified.
 
 
-**Identity UI follow-up (2026-11-04):** Added the four functional auth pages listed above plus a deliberately unavailable `/register` information page. Public registration is blocked because approved Terms of Service and Privacy Notice content is absent. A user-facing logout control is still missing even though the logout API exists. These pages are implemented in source but are not Verified until exact-head CI and the configured HTTP/browser journey pass.
+**Identity UI follow-up (2026-11-04):** Added functional login, registration, password recovery and email verification pages plus a user-facing logout control. `/terms` and `/privacy` now exist as clearly marked v1 development drafts. Registration defaults on in development/test and is unconditionally blocked in production; consent is captured separately for both documents. The flow remains Implemented / unverified until exact-head CI and the configured HTTP/browser journey pass.
