@@ -30,7 +30,7 @@ describe("public product discovery", () => {
     const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12" });
     expect(result.pagination).toEqual({ page: 2, limit: 12, total: 0, totalPages: 0 });
     expect(mocks.synonymFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ locale: "en", isActive: true }), take: 30
+      where: expect.objectContaining({ locale: "en", isActive: true }), take: 40
     }));
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.status).toBe("ACTIVE");
