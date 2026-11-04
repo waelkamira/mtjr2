@@ -214,3 +214,16 @@ export async function consumeVerificationEmailAttempt(
     return { blocked: pairBlocked || ipBlocked };
   });
 }
+
+/** Persistent per-IP budget for public search and autocomplete requests. */
+export async function consumeSearchAttempt(
+  trustedIpAddress: string,
+  now = new Date()
+): Promise<{ blocked: boolean }> {
+  const ip = trustedIpAddress.trim();
+  if (!ip || ip.length > 64) throw new Error("A trusted client IP value is required.");
+  const key = digestSubject("search-ip", ip);
+  return prisma.$transaction(async (tx) => ({
+    blocked: await consumeBucket(tx, key, 300, now)
+  }));
+}
