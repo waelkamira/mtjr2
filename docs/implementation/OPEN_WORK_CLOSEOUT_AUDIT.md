@@ -8,7 +8,7 @@
 ## Executive result
 
 - PR #1 (buying cart core) and PR #15 are merged.
-- 14 PRs remain open: #2–#14 and #16–#17.
+- 15 PRs remain open: #2–#14 and #16–#17.
 - No PR was merged, retargeted or rebased during this audit.
 - No application code, Prisma schema, migration, database, Vercel setting or deployment was changed.
 - PRs #2–#14 are stacked; they are not 13 independent changes. PRs #16–#17 form a separate returns stack.
@@ -94,7 +94,7 @@ On the exact heads inspected on 2026-11-04:
 
 ### Fresh PR inventory
 
-The repository still has 14 open PRs: #2–#14 and #16–#17. Current heads at the time of this check:
+The repository had 15 open PRs at the live recheck: #2–#14 and #16–#17. Current heads at the time of this check:
 
 - #2 `6a7cd009c26a1c2d8736805bcabe7ca895e54544`
 - #3 `e76c27ea26af984bb077e80fd443d75d8007c045`
