@@ -45,6 +45,10 @@ Use [`docs/architecture/PRISMA_MODEL_USAGE_MAP.md`](docs/architecture/PRISMA_MOD
 
 The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the companion inventory for public storefront, authentication, customer account, seller center, admin, global operations, property/booking, and legal/system pages. Treat routes there as required targets, not as proof that they already exist. Every page must be connected to the owning API/domain service and have access control, loading/empty/error states, and verified key actions. Implement in dependency order and record evidence in the build log.
 
+## Canonical page-to-system placement map
+
+Use [`docs/architecture/PLATFORM_PAGE_SYSTEM_MAP.md`](docs/architecture/PLATFORM_PAGE_SYSTEM_MAP.md) to determine which public, buyer, seller, admin, finance/operations, and property pages own each of the 49 systems. This is the cross-system information architecture; `PLATFORM_PAGE_INVENTORY.md` remains the route checklist, `PAGE_ROUTE_REGISTRY.md` records actual source routes, and `END_TO_END_JOURNEY_MATRIX.md` records action-level evidence. Do not treat target routes as implemented or verified.
+
 ## Definition of done
 
 A system may be marked **Complete** only when:
