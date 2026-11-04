@@ -1703,3 +1703,25 @@ The project owner approved Resend as the transactional email provider. The serve
 **Verification boundary**
 - Focused query-token and multi-token matching tests added.
 - Exact-head CI and PostgreSQL integration are required before this slice is validated. Search ranking, typo tolerance, richer filters, browser accessibility testing and performance under production-scale catalog volumes remain future work. Do not label the search system complete.
+
+
+## 2026-11-04 — Vercel Hobby-compatible checkout expiry scheduling
+
+**Finding**
+- The latest inspected Vercel Preview failure reported that `vercel.json` scheduled `/api/cron/checkout-expiry` every minute, which is not permitted on the project's Hobby plan.
+- The endpoint is security-protected by `Authorization: Bearer CRON_SECRET` and releases expired checkout quote inventory holds. Reducing this to once daily would leave expired holds unreleased for too long.
+
+**Implemented**
+- Removed the Vercel Cron declaration so Vercel no longer rejects the deployment due to the Hobby-incompatible schedule.
+- Added `docs/operations/checkout-expiry-scheduler.md` documenting an external HTTPS scheduler (cron-job.org) calling the existing protected endpoint every five minutes with a custom Authorization header.
+- No application route, reservation business logic, Prisma schema, or migration was changed.
+
+**Not yet configured / verified**
+- The external cron-job.org job has not been created; it requires the project owner's scheduler account.
+- The owner must set a fresh `CRON_SECRET` in the Vercel Preview environment and enter the same value in the scheduler's custom header. Do not share the secret in chat or commit it.
+- The Preview deployment must become READY before the endpoint can be exercised.
+- No production environment or database was touched.
+
+**Commits**
+- Remove Hobby-incompatible Vercel Cron: `3a8f04f7cda7c02ca07c210988c847b3ec77dd93`.
+- Add external scheduler runbook: `20de5bd0daa3c87bd03990f2ea517fbc83ea4a4e`.
