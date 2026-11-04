@@ -5,7 +5,7 @@ import Link from "next/link";
 
 type NotificationItem = {
   id: string; type: string; title: string; message: string;
-  resourceType: string | null; resourceId: string | null; readAt: string | null; createdAt: string; deliveries?: { status: string; attempts: number; sentAt: string | null; lastError: string | null }[];
+  resourceType: string | null; resourceId: string | null; readAt: string | null; createdAt: string; deliveries?: { status: string; attempts: number; sentAt: string | null }[];
 };
 type NotificationPreference = {
   type: string; label: string; description: string; inAppEnabled: boolean; emailEnabled: boolean;
@@ -44,7 +44,7 @@ export default function NotificationsPage() {
     let active = true;
     Promise.all([
       fetch("/api/notifications", { cache: "no-store" }).then(async (response) => {
-        const data = await response.json() as { items?: NotificationItem[]; unreadCount?: number; error?: string };
+        const data = await response.json() as { items?: NotificationItem[]; unreadCount?: number; emailDeliveries?: EmailDeliveryItem[]; error?: string };
         if (!response.ok) throw new Error(data.error || "Notifications could not be loaded.");
         if (active) { setItems(data.items || []); setUnreadCount(data.unreadCount || 0); setEmailDeliveries(data.emailDeliveries || []); }
       }),
