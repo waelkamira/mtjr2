@@ -289,6 +289,6 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 | Route / action | UI | API / domain | Prisma mapping | Status |
 |---|---|---|---|---|
 | Seller return queue | `/seller/returns`, linked from `/seller` | `GET /api/seller/returns` → `listSellerReturnRequests` | ReturnRequest → ReturnItem → OrderItem → VendorOrder → Store | Implemented / unverified; read-only and grouped per authorized store. |
-| Seller scope | Current server session; active owned store or exact-store `orders:manage`; platform admin | Store scope derived in domain service; no client store ID accepted | Seller, Store, SellerStaff, UserRoleAssignment | Focused unit tests added; exact-head CI and browser checks pending. |
+| Seller scope | Current server session; active owned store or exact-store `orders:manage`; platform admin | Store scope derived in domain service; no client store ID accepted | Seller, Store, SellerStaff, UserRoleAssignment | Focused unit tests added; exact-head CI #591 and PostgreSQL Integration #280 passed on `6480a6ee80e54a28b659662c922bad23cd84d42d`; deployed browser journey pending. |
 
 The parent ReturnRequest can span several stores but has a single global status. Do not add seller approval/rejection/receipt mutations to this route. Design and verify a per-vendor return lifecycle first.
