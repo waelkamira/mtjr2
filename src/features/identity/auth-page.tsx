@@ -34,10 +34,10 @@ function safeReturnPath(): string {
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
 const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
-export default function AuthPage({ mode }: { mode: AuthMode }) {
-  const [email, setEmail] = useState("");
+export default function AuthPage({ mode, initialToken = "", initialEmail = "" }: { mode: AuthMode; initialToken?: string; initialEmail?: string }) {
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState(initialToken);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
