@@ -1,11 +1,9 @@
-import type { Metadata } from "next";
-import StorefrontHomePage from "@/features/storefront/home-page";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Shop",
-  description: "Discover products from independent stores on Mtjr."
-};
-
+/**
+ * The Shop navigation entry must open the dedicated catalog/search experience,
+ * not render the storefront homepage a second time.
+ */
 export default function ProductsPage() {
-  return <StorefrontHomePage />;
+  redirect("/search");
 }
