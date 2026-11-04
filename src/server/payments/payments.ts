@@ -131,7 +131,21 @@ export async function processVerifiedPaymentEvent(input: {
       await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${initialPayment.orderId}, 0))`);
       const payment = await tx.payment.findUnique({
         where: { id: initialPayment.id },
-        include: { order: { include: { vendorOrders: { include: { store: { include: { seller: { select: { ownerId: true } } } } } } } }
+        include: {
+          order: {
+            include: {
+              vendorOrders: {
+                include: {
+                  store: {
+                    include: {
+                      seller: { select: { ownerId: true } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       });
       if (!payment) throw new Error("Payment reference was not found.");
       if (payment.amountMinor.toString() !== input.event.amountMinor || payment.currencyCode !== input.event.currencyCode) {
