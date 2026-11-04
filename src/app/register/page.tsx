@@ -4,10 +4,8 @@ export default async function RegistrationPage({ searchParams }: { searchParams:
   const { oauth } = await searchParams;
   const errors: Record<string, string> = {
     unavailable: "Google sign-in is not configured in this environment yet.",
-<<<<<<< HEAD
     registration_unavailable: "New account registration is currently unavailable.",
-=======
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
     invalid: "Google sign-in could not be verified. Please try again.",
     failed: "Google sign-in failed. Please try again or use email and password.",
     inactive: "This Google account is not active. Contact support.",

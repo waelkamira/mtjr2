@@ -1725,8 +1725,6 @@ The project owner approved Resend as the transactional email provider. The serve
 **Commits**
 - Remove Hobby-incompatible Vercel Cron: `3a8f04f7cda7c02ca07c210988c847b3ec77dd93`.
 - Add external scheduler runbook: `20de5bd0daa3c87bd03990f2ea517fbc83ea4a4e`.
-<<<<<<< HEAD
-=======
 
 
 ## 2026-11-04 — Existing-work closeout audit
@@ -1883,4 +1881,4 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added [Windows local setup guide](../development/LOCAL_WINDOWS_SETUP.md): install, create database, configure `.env`, migrate, seed 80 products, and run the site.
 - Supabase, Cloudinary, OpenAI, and EmailJS were not found in the active environment schema or integration code paths in this review; their credentials are not required to browse the current storefront.
 - Verification of this change is pending exact-head CI. The local database and browser journey have not been run on the owner's PC from this session.
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+

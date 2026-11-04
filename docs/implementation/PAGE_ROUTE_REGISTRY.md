@@ -24,11 +24,8 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | Required route | Audience | Owning system(s) | API/service and data to confirm | Initial status | Evidence / gap |
 |---|---|---|---|---|---|
 | `/` | Everyone | 02, 03, shared market/catalog | markets, categories, brands, product discovery APIs | Partial / unverified | Confirm visible navigation, live API data, loading/error/empty states, market/currency and responsive layout |
-<<<<<<< HEAD
-| `/products` | Everyone | 02, 03 | `src/app/products/page.tsx` reuses `StorefrontHomePage`; `GET /api/products`; Product, ProductPrice, ProductVariant | Implemented / unverified | Shared global navigation now links here; discovery API supports query, market, category, brand, sorting and pagination. Reused home composition is an initial bridge, not the final dedicated catalog layout; run route/browser journey. |
-=======
 | `/products` | Everyone | 02, 03 | `src/app/products/page.tsx` redirects to `/search`; `src/app/search/page.tsx` → `listDiscoverableProducts`; `GET /api/products`; Product, ProductPrice, ProductVariant, Category, Brand | Implemented / pending CI | Shop navigation now lands in the dedicated catalog/search experience instead of rendering a duplicate homepage. Query, category, brand and sort filters plus pagination are available; verify exact-head CI and browser navigation. |
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
 | `/products/[id]` or canonical slug | Everyone | 02, 06–08 | product detail, reviews, Q&A, favorites, cart APIs | Partial / unverified | Confirm route convention, variants, seller, stock, price and all actions |
 | `/search` | Everyone | 03 | `src/app/search/page.tsx` reuses `StorefrontHomePage`; header GET form submits `q`; `GET /api/products` | Implemented / unverified | Search route exists and reads the query from URL state; verify search journey, result states and browser navigation. Autocomplete is not implemented. |
 | `/categories` | Everyone | 02, 03 | `src/app/categories/page.tsx` → `src/features/storefront/category-directory-page.tsx`; `GET /api/categories`; Category | Implemented / unverified | Active category directory links to `/products?categoryId=...`; verify API error/empty states and filter journey. |
@@ -83,11 +80,8 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/seller/reviews` | Store owner | 06 | seller review API | Implemented / unverified | Verify store scoping |
 | `/seller/questions` | Store owner | 08 | seller Q&A API | Implemented / unverified | Verify product/store ownership and moderation |
 | `/seller/messages` | Store owner/authorized staff | 09 | seller messaging APIs | Implemented / unverified | Requires exact `messages:manage` scope |
-<<<<<<< HEAD
-| `/seller/returns` | Store owner/authorized staff | 11 | seller return workflow | Missing / future | Not part of current initial returns slice |
-=======
 | `/seller/returns` | Active store owner / staff with exact-store `orders:manage` / platform admin | 11 | `src/app/seller/returns/page.tsx` → `src/features/seller/returns-page.tsx`; `GET /api/seller/returns` → `listSellerReturnRequests`; ReturnRequest, ReturnItem, OrderItem, VendorOrder, Store | Implemented / unverified | Read-only; grouped by authorized store. No seller state mutation, shipping, receipt or refund action. Exact-head CI/PostgreSQL passed; browser verification pending. |
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
 | `/seller/analytics`, `/seller/payouts`, `/seller/finance`, `/seller/settings` | Store owner | relevant finance/platform systems | analytics/ledger/payout/settings services | Not audited / conditional | Do not show fabricated values; expose only implemented workflows |
 
 ## C1. Mandatory vertical journey: apply to become a seller
@@ -290,8 +284,6 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 | `/seller/products` | Search product name, slug, description, SKU and barcode within selected store | `listSellerStoreProducts` after catalog permission check | Implemented / pending verification |
 | `/seller/orders` | Search order number, store, product, SKU and variant across authorized stores | `listSellerVendorOrders` after permission-derived store scope | Implemented / pending verification |
 | `/seller/inventory` | Search product, SKU and warehouse name/code within selected store | `listStoreInventory` after inventory permission check | Implemented / pending verification |
-<<<<<<< HEAD
-=======
 
 
 ## Seller return visibility — 2026-11-04
@@ -309,4 +301,4 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Route / action | UI | API / domain | Prisma | Status |
 |---|---|---|---|---|
 | Seller order preparation | `/seller/orders` | `PATCH /api/seller/orders/[vendorOrderId]/status` → `transitionSellerVendorOrder` | Existing VendorOrder and status-history records plus AuditLog; no schema change | Implemented on PR #25; exact-head CI/PostgreSQL verification pending. Only paid `CONFIRMED → PROCESSING → READY_TO_SHIP` is exposed. |
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+

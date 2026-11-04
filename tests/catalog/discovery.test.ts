@@ -48,7 +48,6 @@ describe("public product discovery", () => {
       expect.objectContaining({ name: expect.objectContaining({ contains: "red" }) }),
       expect.objectContaining({ variants: expect.any(Object) })
     ]));
-<<<<<<< HEAD
   });
 
   it("searches within the selected store and matches public seller names", async () => {
@@ -70,8 +69,7 @@ describe("public product discovery", () => {
         })
       })
     }));
-=======
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
   });
 
   it("requires a market when a currency filter is supplied", async () => {

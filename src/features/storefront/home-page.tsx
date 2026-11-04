@@ -181,11 +181,8 @@ export default function StorefrontHomePage() {
               <h2 id="editorial-heading" className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-[var(--color-forest-950)] sm:text-4xl">Good things come from looking a little closer.</h2>
               <p className="mt-4 max-w-md text-sm leading-7 text-[var(--color-ink-700)]">Explore independent stores, discover new brands and find pieces that feel like they were chosen just for you.</p>
               <div className="mt-7 flex flex-wrap gap-3">
-<<<<<<< HEAD
                 <a href="#discover" className="inline-flex items-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Browse products <span aria-hidden="true" className="ml-3">↗</span></a>
-=======
-                <a href="#discover" className="inline-flex items-center rounded-xl bg-[var(--color-violet-600)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-violet-700)]">Browse products <span aria-hidden="true" className="ml-3">↗</span></a>
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
                 <Link href="/seller" className="inline-flex items-center rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-white">Meet the sellers</Link>
               </div>
             </div>
@@ -216,11 +213,8 @@ export default function StorefrontHomePage() {
         </div>
         {loadingReference ? <p className="text-sm text-[var(--muted)]">Loading categories…</p> : flatCategories.length ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-<<<<<<< HEAD
             {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => { setCategoryId(category.id === categoryId ? "" : category.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={categoryId === category.id} className={`group relative min-h-40 overflow-hidden rounded-2xl border text-left transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] ${categoryId === category.id ? "border-[var(--color-forest-800)] ring-2 ring-[var(--color-forest-800)]" : "border-[var(--border)]"}`}>
-=======
-            {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => { setCategoryId(category.id === categoryId ? "" : category.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={categoryId === category.id} className={`group relative min-h-40 overflow-hidden rounded-2xl border text-left transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] ${categoryId === category.id ? "border-[var(--color-violet-600)] ring-2 ring-[var(--color-violet-600)]" : "border-[var(--border)]"}`}>
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
               {category.imageUrl && <img src={category.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
               <span className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)]/90 via-[var(--color-forest-950)]/20 to-transparent" />
               <span className="absolute bottom-0 left-0 right-0 p-4 text-base font-semibold text-white">{category.name}<span className="ml-2 text-[var(--color-sage-200)]" aria-hidden="true">↗</span></span>
@@ -233,11 +227,8 @@ export default function StorefrontHomePage() {
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white px-5 py-5">
           <div><p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Independent labels</p><h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">Discover the brands</h2></div>
           <div className="flex flex-wrap gap-2">
-<<<<<<< HEAD
             {brands.slice(0, 8).map((brand) => <button key={brand.id} type="button" onClick={() => { setBrandId(brand.id === brandId ? "" : brand.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={brandId === brand.id} className={`rounded-full border px-4 py-2 text-sm transition ${brandId === brand.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{brand.name}</button>)}
-=======
-            {brands.slice(0, 8).map((brand) => <button key={brand.id} type="button" onClick={() => { setBrandId(brand.id === brandId ? "" : brand.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={brandId === brand.id} className={`rounded-full border px-4 py-2 text-sm transition ${brandId === brand.id ? "border-[var(--color-violet-600)] bg-[var(--color-violet-600)] text-white" : "border-[var(--border)] text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{brand.name}</button>)}
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
           </div>
         </div>
       </section>}

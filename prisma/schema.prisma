@@ -333,8 +333,6 @@ enum OrderStatus {
   COMPLETED
 }
 
-<<<<<<< HEAD
-=======
 enum PaymentStatus {
   INITIATING
   REQUIRES_ACTION
@@ -347,7 +345,6 @@ enum PaymentStatus {
   DISPUTED
 }
 
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
 enum VendorOrderStatus {
   PENDING_PAYMENT
   CONFIRMED
@@ -417,10 +414,8 @@ model Currency {
   carts         Cart[]
   checkoutQuotes CheckoutQuote[]
   orders Order[]
-<<<<<<< HEAD
-=======
   payments Payment[]
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
   shippingRates StoreShippingRate[]
 
   @@index([isActive, name])
@@ -1200,10 +1195,8 @@ model Order {
   vendorOrders    VendorOrder[]
   returnRequests  ReturnRequest[]
   statusHistory   OrderStatusHistory[]
-<<<<<<< HEAD
-=======
   payments        Payment[]
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
   conversations StoreConversation[]
 
   @@index([userId, placedAt])
@@ -1559,8 +1552,6 @@ model StoreMessage {
   @@index([conversationId, createdAt])
   @@index([senderId, createdAt])
 }
-<<<<<<< HEAD
-=======
 
 
 model Payment {
@@ -1605,4 +1596,4 @@ model PaymentWebhookEvent {
   @@index([paymentId, receivedAt])
   @@index([processedAt, receivedAt])
 }
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+

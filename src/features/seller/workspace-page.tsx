@@ -110,11 +110,8 @@ export default function SellerWorkspacePage() {
       <header className="border-b border-[var(--border)] bg-[var(--color-ivory-50)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
           <Link href="/" className="text-2xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
-<<<<<<< HEAD
           <div className="flex items-center gap-4"><Link href="/notifications" className="text-xs font-semibold text-[var(--color-forest-800)]">Notifications</Link><Link href="/seller/reviews" className="text-xs font-semibold text-[var(--color-forest-800)]">Reviews</Link><Link href="/seller/questions" className="text-xs font-semibold text-[var(--color-forest-800)]">Product Q&A</Link><span className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Seller workspace</span></div>
-=======
-          <div className="flex items-center gap-4"><Link href="/notifications" className="text-xs font-semibold text-[var(--color-forest-800)]">Notifications</Link><Link href="/seller/reviews" className="text-xs font-semibold text-[var(--color-forest-800)]">Reviews</Link><Link href="/seller/returns" className="text-xs font-semibold text-[var(--color-forest-800)]">Returns</Link><Link href="/seller/questions" className="text-xs font-semibold text-[var(--color-forest-800)]">Product Q&A</Link><span className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Seller workspace</span></div>
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-5 py-10">
