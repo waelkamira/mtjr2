@@ -31,7 +31,7 @@ export async function processSupportSlaEscalations(now = new Date(), limit = 100
         where: { id: candidate.id },
         select: { status: true, priority: true, assignedToId: true, firstResponseAt: true, firstResponseDueAt: true, firstResponseBreachedAt: true, resolutionDueAt: true, resolutionBreachedAt: true, escalatedAt: true }
       });
-      if (!current || !activeStatuses.includes(current.status)) return null;
+      if (!current || current.status === SupportTicketStatus.RESOLVED || current.status === SupportTicketStatus.CLOSED) return null;
 
       const firstBreach = !current.firstResponseAt && !current.firstResponseBreachedAt && !!current.firstResponseDueAt && current.firstResponseDueAt <= now;
       const resolutionBreach = !current.resolutionBreachedAt && !!current.resolutionDueAt && current.resolutionDueAt <= now;
