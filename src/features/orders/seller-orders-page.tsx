@@ -47,7 +47,10 @@ export default function SellerOrdersPage() {
   }
 
   function updateShipmentDraft(vendorOrderId: string, field: "carrierName" | "trackingNumber" | "trackingUrl", value: string) {
-    setShipmentDrafts((current) => ({ ...current, [vendorOrderId]: { carrierName: "", trackingNumber: "", trackingUrl: "", ...current[vendorOrderId], [field]: value } }));
+    setShipmentDrafts((current) => {
+      const draft = current[vendorOrderId] ?? { carrierName: "", trackingNumber: "", trackingUrl: "" };
+      return { ...current, [vendorOrderId]: { ...draft, [field]: value } };
+    });
   }
   async function dispatchOrder(vendorOrderId: string) {
     const draft = shipmentDrafts[vendorOrderId];
