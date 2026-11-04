@@ -6,6 +6,8 @@
 
 **System placement:** See [`PLATFORM_PAGE_SYSTEM_MAP.md`](PLATFORM_PAGE_SYSTEM_MAP.md) for the owning page and audience for each of the 49 systems, recommended navigation, and dependency-aware delivery order. This file remains the route checklist; it does not certify route presence or workflow completion.
 
+**Detailed functional contents:** See [`GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md`](GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md) for required contents and actions inside every storefront, buyer, seller, admin, finance/operations and property workspace, including the complete admin control center and logout journey.
+
 ## 1. Shared application shell
 
 - [ ] Global storefront header: logo/home, search, category navigation, market/currency selector, account, wishlist, cart.
