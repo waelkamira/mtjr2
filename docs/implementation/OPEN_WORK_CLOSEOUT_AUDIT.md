@@ -191,3 +191,16 @@ Closed PR #2 after comparing its current head to main. The checkout quote/reserv
 - The latest main documentation Quality check for `69e4d58020b49d08ff7de6d8c641ec35321401ae` was still in progress at the time of inspection (run [41822578873](https://github.com/waelkamira/mtjr2/actions/runs/41822578873)); no pass is claimed.
 
 **Decision:** keep all six PRs open and do not merge. Continue with the dependency-safe reconciliation of #4/#5/#6, while Phase 2 remains blocked on its real operational evidence. No production database, migration, deployment configuration or secret was accessed.
+## 2026-11-04 — Merge request after explicit owner authorization
+
+Owner asked to merge only work that has been verified. PR #4 and #5 were retargeted to `main` to expose their true delta against the current branch tip; this was a review step, not a merge.
+
+- #4 shipping: exact-head General CI and disposable PostgreSQL checks are green, but GitHub reports `mergeable=false` after retargeting. The current diff against main is limited to workflow trigger/path updates, status documentation, and JSX apostrophe escaping; the underlying shipping schema/service/API/migration is already present on main. Do not merge a conflicted PR or duplicate shipping implementation.
+- #5 tax: exact-head General CI and disposable PostgreSQL checks are green, but GitHub reports `mergeable=false` after retargeting to main. The current delta includes tax admin UI loading, a tax-service guard requiring complete and quote-owned shipping selections, focused tax tests, workflow trigger/path updates and docs. The historical PR includes 24 commits and is 437 commits behind main; do not force-merge or use a stale merge base. It needs a clean branch based on current main and fresh CI before merge.
+- #16 seller return visibility: exact-head General CI and disposable PostgreSQL checks are green, but GitHub previously reported `mergeable=false`; its diff includes new seller-return API/UI/service/tests and workspace navigation. It requires conflict reconciliation and a fresh exact-head verification before merge.
+- #6 order creation has no General CI/PostgreSQL checks on its exact current head; its compared tax-rates page blob is identical to main. Not mergeable as verified work.
+- #7 payment lifecycle and #17 return lifecycle design have no check runs on their exact current heads. Not mergeable as verified work.
+
+**Merge outcome:** no PR was merged in this pass. This is deliberate: every candidate with passing checks is currently reported non-mergeable against main, and the other candidates lack exact-head checks. No merge was forced. #4 and #5 now target main so the remaining unique deltas are visible for clean reconstruction.
+
+**Next safe action:** rebuild the unique #4/#5/#16 deltas on fresh branches from current main, preserving only the reviewed changes, then require fresh General CI and disposable PostgreSQL checks and merge only when GitHub reports mergeable. Do not merge old stacked history.
