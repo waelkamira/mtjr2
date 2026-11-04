@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { hashPassword } from "@/server/identity/password";
 import { consumePasswordResetAttempt } from "@/server/identity/login-throttle";
+import { createInAppNotification } from "@/server/notifications/notifications";
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 
@@ -157,6 +158,13 @@ export async function completePasswordReset(
         occurredAt: now
       }
     });
+    await createInAppNotification(tx, { data: {
+      userId: challenge.userId, type: "ACCOUNT_SECURITY",
+      title: "Your password was reset",
+      message: "Your Mtjr account password was reset successfully. All previous sessions were revoked.",
+      resourceType: "ACCOUNT", resourceId: challenge.userId,
+      deduplicationKey: `account-security:password-reset:${challenge.userId}:${now.toISOString()}`
+    }});
 
     return true;
   });
