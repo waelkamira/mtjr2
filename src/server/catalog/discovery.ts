@@ -9,6 +9,7 @@ const querySchema = z.object({
   q: z.string().trim().min(1).max(120).optional(),
   categoryId: z.string().trim().min(1).optional(),
   brandId: z.string().trim().min(1).optional(),
+  storeId: z.string().trim().min(1).optional(),
   marketId: z.string().trim().min(1).optional(),
   currencyCode: z.string().trim().length(3).toUpperCase().optional(),
   page: z.coerce.number().int().min(1).max(10000).default(1),
@@ -19,20 +20,15 @@ const querySchema = z.object({
 });
 
 export type ProductDiscoveryInput = z.input<typeof querySchema>;
+type ProductWithPrices = { variants: Array<{ prices: Array<{ amountMinor: bigint; compareAtMinor: bigint | null }> }> };
 
-type ProductWithPrices = {
-  variants: Array<{ prices: Array<{ amountMinor: bigint; compareAtMinor: bigint | null }> }>;
-};
-
-/** Convert Prisma BigInt minor-unit amounts to JSON-safe decimal strings at the API boundary. */
 function serializeProductPrices<T extends ProductWithPrices>(product: T) {
   return {
     ...product,
     variants: product.variants.map((variant) => ({
       ...variant,
       prices: variant.prices.map((price) => ({
-        ...price,
-        amountMinor: price.amountMinor.toString(),
+        ...price, amountMinor: price.amountMinor.toString(),
         compareAtMinor: price.compareAtMinor?.toString() ?? null
       }))
     }))
@@ -42,7 +38,11 @@ function serializeProductPrices<T extends ProductWithPrices>(product: T) {
 function buildWhere(query: z.output<typeof querySchema>, searchTerms: string[]): Prisma.ProductWhereInput {
   return {
     status: CatalogEntityStatus.ACTIVE,
-    store: { status: "ACTIVE", seller: { status: "ACTIVE" }, ...(query.marketId ? { markets: { some: { marketId: query.marketId, isEnabled: true, market: { status: "ACTIVE" } } } } : {}) },
+    store: {
+      ...(query.storeId ? { id: query.storeId } : {}),
+      status: "ACTIVE", seller: { status: "ACTIVE" },
+      ...(query.marketId ? { markets: { some: { marketId: query.marketId, isEnabled: true, market: { status: "ACTIVE" } } } } : {})
+    },
     ...(query.brandId ? { brandId: query.brandId } : {}),
     ...(query.categoryId ? { categories: { some: { categoryId: query.categoryId, category: { status: CatalogEntityStatus.ACTIVE } } } } : {}),
     ...(searchTerms.length ? { OR: searchTerms.flatMap((term) => [
@@ -58,7 +58,6 @@ function buildWhere(query: z.output<typeof querySchema>, searchTerms: string[]):
   };
 }
 
-/** Public discovery only returns active products from active sellers and stores. */
 export async function listDiscoverableProducts(input: unknown = {}) {
   const query = querySchema.parse(input);
   let searchTerms = query.q ? [query.q] : [];
@@ -105,15 +104,11 @@ export async function listDiscoverableProducts(input: unknown = {}) {
   };
 }
 
-/** Public product detail is resolved by its canonical slug and never exposes drafts. */
 export async function getDiscoverableProduct(slug: string, locale = "en") {
   const key = z.string().trim().min(1).max(180).parse(slug);
   const language = z.string().trim().min(2).max(16).parse(locale);
   const product = await prisma.product.findFirst({
-    where: {
-      slug: key, status: CatalogEntityStatus.ACTIVE,
-      store: { status: "ACTIVE", seller: { status: "ACTIVE" } }
-    },
+    where: { slug: key, status: CatalogEntityStatus.ACTIVE, store: { status: "ACTIVE", seller: { status: "ACTIVE" } } },
     select: {
       id: true, slug: true, name: true, description: true, publishedAt: true,
       translations: { where: { locale: language }, select: { name: true, description: true }, take: 1 },

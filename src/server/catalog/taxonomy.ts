@@ -11,13 +11,8 @@ const listSchema = z.object({
 });
 
 export type CategoryTreeNode = {
-  id: string;
-  parentId: string | null;
-  slug: string;
-  name: string;
-  description: string | null;
-  imageUrl: string | null;
-  sortOrder: number;
+  id: string; parentId: string | null; slug: string; name: string;
+  description: string | null; imageUrl: string | null; sortOrder: number;
   children: CategoryTreeNode[];
 };
 
@@ -38,15 +33,10 @@ export function buildCategoryTree(rows: CategoryRow[], _locale: string): Categor
       imageUrl: row.imageUrl, sortOrder: row.sortOrder, children: []
     });
   }
-
   const roots: CategoryTreeNode[] = [];
   for (const node of nodes.values()) {
-    if (!node.parentId || !nodes.has(node.parentId) || node.parentId === node.id) {
-      roots.push(node);
-      continue;
-    }
+    if (!node.parentId || !nodes.has(node.parentId) || node.parentId === node.id) { roots.push(node); continue; }
     const parent = nodes.get(node.parentId)!;
-    // Reject cyclic edges rather than allowing recursion or dropping the entire branch.
     let ancestor: CategoryTreeNode | undefined = parent;
     const seen = new Set<string>([node.id]);
     let cyclic = false;
@@ -55,10 +45,8 @@ export function buildCategoryTree(rows: CategoryRow[], _locale: string): Categor
       seen.add(ancestor.id);
       ancestor = ancestor.parentId ? nodes.get(ancestor.parentId) : undefined;
     }
-    if (cyclic) roots.push(node);
-    else parent.children.push(node);
+    if (cyclic) roots.push(node); else parent.children.push(node);
   }
-
   const sort = (items: CategoryTreeNode[]) => {
     items.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
     for (const item of items) sort(item.children);
@@ -67,16 +55,13 @@ export function buildCategoryTree(rows: CategoryRow[], _locale: string): Categor
   return roots;
 }
 
-/** Public category tree; only active categories and translations are exposed. */
 export async function listActiveCategoryTree(input: unknown = {}) {
   const query = listSchema.parse(input);
   const where: Prisma.CategoryWhereInput = { status: CatalogEntityStatus.ACTIVE };
   const [rows, total] = await Promise.all([
     prisma.category.findMany({
-      where,
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-      skip: (query.page - 1) * query.limit,
-      take: query.limit,
+      where, orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+      skip: (query.page - 1) * query.limit, take: query.limit,
       select: {
         id: true, parentId: true, slug: true, name: true, description: true,
         imageUrl: true, sortOrder: true,
@@ -91,16 +76,13 @@ export async function listActiveCategoryTree(input: unknown = {}) {
   };
 }
 
-/** Public active brand directory with locale fallback and stable pagination. */
 export async function listActiveBrands(input: unknown = {}) {
   const query = listSchema.parse(input);
   const where: Prisma.BrandWhereInput = { status: CatalogEntityStatus.ACTIVE };
   const [items, total] = await Promise.all([
     prisma.brand.findMany({
-      where,
-      orderBy: [{ name: "asc" }, { id: "asc" }],
-      skip: (query.page - 1) * query.limit,
-      take: query.limit,
+      where, orderBy: [{ name: "asc" }, { id: "asc" }],
+      skip: (query.page - 1) * query.limit, take: query.limit,
       select: {
         id: true, slug: true, name: true, description: true, logoUrl: true, websiteUrl: true,
         translations: { where: { locale: query.locale }, select: { name: true, description: true }, take: 1 }
@@ -117,4 +99,40 @@ export async function listActiveBrands(input: unknown = {}) {
     })),
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
   };
+}
+
+export async function getActiveCategoryBySlug(slug: string, locale = "en") {
+  const key = z.string().trim().min(1).max(180).parse(slug);
+  const language = z.string().trim().min(2).max(16).parse(locale);
+  const item = await prisma.category.findFirst({
+    where: { slug: key, status: CatalogEntityStatus.ACTIVE },
+    select: {
+      id: true, slug: true, name: true, description: true, imageUrl: true,
+      translations: { where: { locale: language }, select: { name: true, description: true }, take: 1 }
+    }
+  });
+  return item ? {
+    id: item.id, slug: item.slug,
+    name: item.translations[0]?.name ?? item.name,
+    description: item.translations[0]?.description ?? item.description,
+    imageUrl: item.imageUrl
+  } : null;
+}
+
+export async function getActiveBrandBySlug(slug: string, locale = "en") {
+  const key = z.string().trim().min(1).max(180).parse(slug);
+  const language = z.string().trim().min(2).max(16).parse(locale);
+  const item = await prisma.brand.findFirst({
+    where: { slug: key, status: CatalogEntityStatus.ACTIVE },
+    select: {
+      id: true, slug: true, name: true, description: true, logoUrl: true, websiteUrl: true,
+      translations: { where: { locale: language }, select: { name: true, description: true }, take: 1 }
+    }
+  });
+  return item ? {
+    id: item.id, slug: item.slug,
+    name: item.translations[0]?.name ?? item.name,
+    description: item.translations[0]?.description ?? item.description,
+    logoUrl: item.logoUrl, websiteUrl: item.websiteUrl
+  } : null;
 }
