@@ -1493,3 +1493,11 @@ The project owner approved Resend as the transactional email provider. The serve
 - Extended the page/route registry with a seller-application journey from the homepage CTA through identity gate, form submit, application status, admin review and draft-store creation, including API/persistence contracts and security/failure cases.
 - Updated the Phase 3 plan with an end-to-end seller-onboarding acceptance gate and focused test policy; linked the standard from README.
 - This change is documentation and acceptance-criteria only. No runtime code, Prisma schema, migration, database, or Vercel settings were changed. No tests were run; no CI pass is claimed. The seller journey remains implemented/unverified until its actual route-by-route and browser/HTTP evidence is recorded.
+
+
+### Source-review addendum — seller onboarding journey
+
+- Inspected the actual seller page, application API and domain service on `feat/returns-workflow`. The form is embedded in `/seller`, requires a verified session/email, persists a PENDING Seller and audit event transactionally, and treats an existing PENDING application as a replay.
+- Inspected admin review service behavior: `users:manage` authorization, required rejection reason, conditional PENDING-state update, seller role assignment on approval and audit logging.
+- Corrected the registry so it does not imply a dedicated onboarding/status page exists. Added explicit gaps for store-creation idempotency (not demonstrated by the reviewed service), API error classification, and full browser journey evidence.
+- This is static source inspection only. No runtime journey, CI run, Prisma validation, migration replay, database access, or Vercel action was performed as part of this documentation review. No test pass is claimed.
