@@ -658,3 +658,7 @@ The current implementation status is tracked in `docs/implementation/PHASE_04_BU
 - Market tax configuration is now implemented on the next stacked branch with `MarketTaxRate` and `CheckoutTaxSnapshot`, admin configuration API/UI, and buyer quote tax calculation API/UI.
 - The current tax slice supports explicit market-wide or exact-region rules, inclusive/exclusive basis-point calculation, optional shipping taxation, and quote snapshots. It intentionally does not infer statutory rates or claim complete jurisdictional compliance.
 - The next buying milestone is server-side final quote validation and order/vendor-order creation. Discounts and payment remain incomplete.
+
+## Unified page registry requirement
+
+The 49-system inventory is a business-capability plan, not a substitute for the full page/route checklist. The canonical page-by-page inventory and audit template now lives at [`docs/implementation/PAGE_ROUTE_REGISTRY.md`](../implementation/PAGE_ROUTE_REGISTRY.md). Before marking any system complete, reconcile this registry against the actual App Router tree, record audience/role, owning system, page component, API/domain service, Prisma entities, status and verification evidence. The registry intentionally distinguishes target routes from verified existing routes; its initial statuses must be updated only after inspecting the active branch. Do not add duplicate systems or Prisma models solely to satisfy the page inventory.
