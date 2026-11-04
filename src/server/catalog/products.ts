@@ -305,8 +305,9 @@ export async function rejectProduct(input: { productId: string; reason: string }
 
 
 /** Lists a seller's own store catalog; delegated staff must hold exact STORE scope. */
-export async function listSellerStoreProducts(storeIdInput: string, now = new Date()) {
+export async function listSellerStoreProducts(storeIdInput: string, now = new Date(), searchInput: unknown = {}) {
   const storeId = z.string().trim().min(1).parse(storeIdInput);
+  const { q } = z.object({ q: z.string().trim().max(120).optional() }).strict().parse(searchInput);
   const actor = await requireCurrentSession(now);
   const store = await prisma.store.findUnique({
     where: { id: storeId },
@@ -316,7 +317,11 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     throw new Error("You do not have catalog access to this store.");
   }
   const products = await prisma.product.findMany({
-    where: { storeId },
+    where: { storeId, ...(q ? { OR: [
+      { name: { contains: q, mode: "insensitive" as const } }, { slug: { contains: q, mode: "insensitive" as const } },
+      { description: { contains: q, mode: "insensitive" as const } },
+      { variants: { some: { OR: [{ sku: { contains: q, mode: "insensitive" as const } }, { barcode: { contains: q, mode: "insensitive" as const } }] } } }
+    ] } : {}) },
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 100,
     select: {

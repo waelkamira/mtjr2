@@ -3,8 +3,10 @@ import "server-only";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { prisma } from "@/lib/db/prisma";
+import { z } from "zod";
 
-export async function listSellerVendorOrders(now = new Date()) {
+export async function listSellerVendorOrders(now = new Date(), searchInput: unknown = {}) {
+  const { q } = z.object({ q: z.string().trim().max(120).optional() }).strict().parse(searchInput);
   const actor = await requireCurrentSession(now);
   const platformAdmin = await userHasPermission(actor.userId, { permissionKey: "users:manage", now });
   const stores = await prisma.store.findMany({
@@ -27,7 +29,11 @@ export async function listSellerVendorOrders(now = new Date()) {
   if (!storeIds.length) return { orders: [] };
 
   const vendorOrders = await prisma.vendorOrder.findMany({
-    where: { storeId: { in: storeIds } },
+    where: { storeId: { in: storeIds }, ...(q ? { OR: [
+      { order: { orderNumber: { contains: q, mode: "insensitive" as const } } },
+      { store: { name: { contains: q, mode: "insensitive" as const } } },
+      { items: { some: { OR: [{ productName: { contains: q, mode: "insensitive" as const } }, { sku: { contains: q, mode: "insensitive" as const } }, { variantName: { contains: q, mode: "insensitive" as const } }] } } }
+    ] } : {}) },
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {
