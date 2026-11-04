@@ -6,22 +6,28 @@
 **Companion audit:** `docs/PROJECT_AUDIT.md`
 **Companion page inventory:** `docs/architecture/PLATFORM_PAGE_INVENTORY.md` (required user-facing and operational routes; route presence is not proof of workflow completion)  
 **Model map:** `docs/architecture/prisma-model-usage-map.md`  
+**End-to-end delivery standard:** `docs/implementation/END_TO_END_JOURNEY_STANDARD.md`  
 **Imported as baseline:** 2026-11-03
 
 > This document is the functional blueprint for the 49 platform systems. It defines what each system must do, the expected screens, the canonical data models, the API surface, and the implementation state evidenced by the current repository audit. It is not a claim that every listed feature already works.
 
 ## 1. Rules for using this blueprint
 
-1. **Do not add a Prisma model/table just to create a page.** First identify the business capability, user journey, owning domain, API/service, and existing model/relation that will use it.
-2. Treat `prisma/schema.prisma` as the canonical database contract. Do not add legacy compatibility fields merely to silence old queries.
-3. Before proposing a schema change, inspect the model map and answer: what exact workflow is missing, why existing models/relations cannot support it, which service/API will write and read it, who owns it, and what migration/test proves it.
-4. A page, route, model, or button is not proof of a working feature. A system is **Complete** only after authorization, persistence, validation, error handling, tests, and an end-to-end workflow pass.
-5. Implement in dependency order. Preserve user changes and existing customer-facing layout unless a scoped redesign is explicitly approved.
-6. Keep the real-estate/property and booking domain separate from product commerce while allowing shared identity and platform services.
-7. Financial, stock, order, refund, payout, and webhook operations require database transactions, idempotency, auditability, and concurrency tests.
-8. Keep business logic out of UI components. Target flow: UI → page/API route → auth + validation → domain service → repository → Prisma → PostgreSQL.
-9. Use pagination, filtering, stable sorting, server-side authorization, and bounded inputs for all management lists.
-10. Record implementation evidence and test results in `docs/PROJECT_AUDIT.md` and the relevant domain docs.
+1. **Deliver vertical user journeys, not isolated pages.** Every visible button, link, form, menu action and service-triggered operation must map to an explicit outcome and be traced from the user's click through frontend, API, validation/auth, domain service, repository, Prisma/database, response and persisted UI state.
+2. **Do not add a Prisma model/table just to create a page.** First identify the business capability, user journey, owning domain, API/service, and existing model/relation that will use it.
+3. Treat `prisma/schema.prisma` as the canonical database contract. Do not add legacy compatibility fields merely to silence old queries.
+4. Before proposing a schema change, inspect `docs/architecture/prisma-model-usage-map.md` and answer: what exact business fact/state/relation is missing, why existing models/relations cannot support it, which service/API will write and read it, who owns it, and what migration/test proves it. Document the schema decision; prefer additive, forward-safe migrations.
+5. A page, route, model, migration, button, mock response, or passing unit test alone is not proof of a working feature. A system is **Complete** only after its agreed end-to-end journey, authorization, persistence, validation, relevant failure states, and focused verification pass.
+6. Implement in dependency order. Preserve user changes and existing customer-facing layout unless a scoped redesign is explicitly approved.
+7. Keep the real-estate/property and booking domain separate from product commerce while allowing shared identity and platform services.
+8. Financial, stock, order, refund, payout, and webhook operations require database transactions, idempotency, auditability, and concurrency-safe state transitions.
+9. Keep business logic out of UI components. Target flow: UI → page/component action → API route → authentication + validation → domain service/use case → repository → Prisma → PostgreSQL → safe response and refreshed UI.
+10. Every interactive action must implement relevant loading, disabled/double-submit, validation, success, empty, forbidden, not-found, stale/conflict, network and server-error behavior. Test relevant states and security boundaries, not every trivial helper branch.
+11. Resolve identity, ownership and delegated permission on the server. Never trust a client-supplied user/store/tenant ID as proof of ownership; enforce exact resource scope and reject cross-user/store/tenant access.
+12. Use pagination, filtering, stable sorting, and bounded inputs for all management lists.
+13. For each slice, reconcile actual routes and actions against `docs/implementation/PAGE_ROUTE_REGISTRY.md`; record commit, endpoint/service, Prisma entities/migration decision, and exact verification evidence in `docs/implementation/BUILD_LOG.md` and `docs/PROJECT_AUDIT.md` or the relevant phase plan.
+14. Use `docs/implementation/END_TO_END_JOURNEY_STANDARD.md` as the required implementation and review checklist. Mark a journey **Verified** only against evidence for the exact commit/branch; cancelled, pending, stale or unrelated CI is not evidence.
+15. Use only isolated/local/CI PostgreSQL for development verification. Do not connect to or migrate the owner's database, production database, or production configuration without explicit approval.
 
 ## 2. Status definitions
 
