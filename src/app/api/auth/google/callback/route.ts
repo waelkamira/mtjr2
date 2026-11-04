@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { AuditActorType, ConsentType, SellerStatus, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/lib/env";
+import { canCreateOAuthAccount } from "@/server/identity/oauth-registration-policy";
 import { createUserSession } from "@/server/identity/session";
 import { setSessionCookie } from "@/server/identity/session-cookie";
 
@@ -66,6 +67,7 @@ export async function GET(request: Request): Promise<Response> {
       where: { provider_providerAccountId: { provider: "google", providerAccountId: identity.sub } },
       select: { userId: true, user: { select: { id: true, status: true, emailVerifiedAt: true } } }
     });
+    if (!canCreateOAuthAccount(env, Boolean(linked))) return redirectTo("/register?oauth=unavailable");
     let userId: string;
     if (linked) {
       if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) return redirectTo("/login?oauth=inactive");
@@ -79,6 +81,21 @@ export async function GET(request: Request): Promise<Response> {
           select: { id: true }
         });
         await tx.oAuthAccount.create({ data: { userId: user.id, provider: "google", providerAccountId: identity.sub! } });
+        if (accountType === "CUSTOMER") {
+          const customerRole = await tx.role.findUnique({
+            where: { key: "CUSTOMER" },
+            select: { id: true }
+          });
+          if (!customerRole) throw new Error("CUSTOMER role is missing; run the identity seed before registering customers.");
+          await tx.userRoleAssignment.create({
+            data: {
+              userId: user.id,
+              roleId: customerRole.id,
+              scopeType: "GLOBAL",
+              scopeId: "GLOBAL"
+            }
+          });
+        }
         await tx.userConsent.createMany({ data: [
           { userId: user.id, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion, granted: true, capturedAt: now, source: "google-registration" },
           { userId: user.id, type: ConsentType.PRIVACY_POLICY, version: privacyVersion, granted: true, capturedAt: now, source: "google-registration" }
