@@ -1,12 +1,9 @@
 import "server-only";
 
-<<<<<<< HEAD
-import { requireCurrentSession } from "@/server/identity/current-session";
-=======
 import { AuditActorType, OrderStatus, Prisma, VendorOrderStatus } from "@prisma/client";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
@@ -62,8 +59,6 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
     }))
   };
 }
-<<<<<<< HEAD
-=======
 
 
 const sellerOrderTransitionSchema = z.object({
@@ -167,4 +162,4 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
     return { id, status: data.status, changed: true };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
