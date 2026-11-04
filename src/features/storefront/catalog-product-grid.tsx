@@ -4,7 +4,7 @@ type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { id: string; name: string; slug: string };
   media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
-  variants: Array<{ prices: Array<{ amountMinor: string; currencyCode: string; currency: { minorUnit: number } }> }>;
+  variants: Array<{ prices: Array<{ amountMinor: string | bigint; currencyCode: string; currency: { minorUnit: number } }> }>;
 };
 
 function productPrice(product: Product) {
