@@ -1760,3 +1760,19 @@ The project owner approved Resend as the transactional email provider. The serve
 - Platform PostgreSQL Integration run #280 (`41763766734`): **success**.
 - These exact-head results supersede the earlier pending wording in the seller-return entry. They validate repository CI and the disposable PostgreSQL integration workflow; they do not replace a deployed browser journey or live-provider test.
 - PR #16 remains open and unmerged. Seller return visibility remains read-only. No production DB, production migration, Vercel environment, or secret was accessed or changed.
+
+
+
+## 2026-11-04 — Per-vendor return lifecycle design
+
+**Baseline:** PR #16 head `0a72ae0442e24f0269ed7319b5d89a8007ef22cb`; exact-head CI #592 and Platform PostgreSQL Integration #281 both passed.
+
+**Design artifact:** `docs/architecture/VENDOR_RETURN_LIFECYCLE_DESIGN.md` on `feat/vendor-return-lifecycle-design`, stacked on `feat/seller-return-visibility`. It defines a per-`VendorOrder` case, item assignment to existing `ReturnItem` rows, exact-store `returns:manage` authorization, audit transitions, concurrency/idempotency rules, parent-request compatibility, and migration/backfill gates.
+
+**Key finding:** the existing `ReturnRequest` parent has one global status even when its items span multiple VendorOrders. Current admin review also mutates that parent status. Therefore adding seller mutation buttons alone would be unsafe; customer and admin read/write paths must be reconciled with per-vendor cases before enabling seller decisions.
+
+**Schema decision:** design only in this slice; no Prisma schema or migration changed. A separate case model is justified for independent per-vendor state. Existing `AuditLog` should be reused. A unique assignment from each `ReturnItem` to one vendor case plus transactional verification that its OrderItem belongs to that case's VendorOrder is required.
+
+**Not implemented / gates:** model enum and transitions are not finalized; migration generation/backfill, customer/admin read-path cutover, seller decision API/UI, exact-store `returns:manage` grants, and PostgreSQL tests remain pending. No shipping, receipt evidence, refund, ledger, production DB, Vercel settings or secrets touched.
+
+**Verification:** documentation-only change; no code tests claimed for this design commit. The baseline workflow results above apply to PR #16 head, not to a future runtime implementation.
