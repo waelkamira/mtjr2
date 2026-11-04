@@ -72,7 +72,7 @@ export async function GET(request: Request): Promise<Response> {
       userId = linked.userId;
     } else {
       const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
-      if (existing) return redirectTo("/login?oauth=link_required");
+      if (existing) return redirectTo("/register?oauth=link_required");
       const created = await prisma.$transaction(async tx => {
         const user = await tx.user.create({
           data: { email, emailNormalized: email, displayName: identity.name?.slice(0,80) ?? null, passwordHash: null, status: UserStatus.ACTIVE, emailVerifiedAt: now },
