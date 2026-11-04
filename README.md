@@ -278,6 +278,10 @@ Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR 
 
 The storefront homepage includes a responsive editorial discovery feature between the hero and live catalog sections. Its browse actions connect to the existing category and product discovery sections; the seller action opens the seller entry page. The editorial tiles are presentation content, not fake inventory or fabricated product listings. Actual catalog cards still come from the products API.
 
+## End-to-end journey implementation rule
+
+Every button, link, form, page, API and business service must be traced as one user journey from the actual interaction through frontend request handling, authentication/validation, domain rules, repository/Prisma persistence, response, and refreshed UI state. See [End-to-End Journey Standard](docs/implementation/END_TO_END_JOURNEY_STANDARD.md). The seller application is the first explicit cross-page acceptance trace in the [Page Route Registry](docs/implementation/PAGE_ROUTE_REGISTRY.md). A Prisma table is added only for a demonstrated missing business state/relation, not simply to support a new page. Journey statuses stay unverified until evidence is recorded for the exact commit.
+
 ## Page and route inventory
 
 The 49-system blueprint is paired with a unified page-by-page target and audit registry: [`docs/implementation/PAGE_ROUTE_REGISTRY.md`](docs/implementation/PAGE_ROUTE_REGISTRY.md). Use it to reconcile required pages against the active App Router tree and record each route's audience, owning system, API/service, Prisma entities, implementation status and verification evidence. The registry's initial statuses are provisional; it does not claim every target route already exists or is complete.
