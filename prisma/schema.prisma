@@ -18,6 +18,7 @@ enum ConsentType {
   TERMS_OF_SERVICE
   PRIVACY_POLICY
   MARKETING_EMAIL
+  NOTIFICATION_EMAIL
   COOKIES
 }
 
@@ -1507,6 +1508,7 @@ enum NotificationDeliveryStatus {
   RETRY
   SENT
   FAILED
+  CANCELLED
 }
 
 model NotificationPreference {
