@@ -153,5 +153,8 @@ Marketplace Core's buyer catalog now has a connected product detail journey. The
 - [x] Seed 8 bilingual demo categories and 10 active products per category (80 products), with 4 demo seller/store accounts and a dedicated DEMO-US/USD market.
 - [x] Require a separate `DEMO_DATABASE_URL`, explicit opt-in flags, a demo/test/dev database-name marker, and a non-production runtime; never fall back to production `DATABASE_URL`.
 - [x] Use stable identifiers/upserts; do not reset existing stock on reruns or fabricate reviews/orders/payments.
-- [ ] Execute against disposable PostgreSQL, rerun to prove idempotency, and verify public market/category/product/search API results at the exact commit.
+- [x] Execute against disposable PostgreSQL and rerun to prove seed idempotency: migration replay and integration suite passed; both seed runs reported 80 products / 8 categories / 4 stores / 80 inventory rows.
 - No Prisma migration is required by this data-only slice.
+
+
+**Verification evidence:** General CI [41837000589](https://github.com/waelkamira/mtjr2/actions/runs/41837000589) and disposable PostgreSQL [41836993780](https://github.com/waelkamira/mtjr2/actions/runs/41836993780) passed on exact head `d9686531b6638e28bb8f2b57cab8e82c1d505abe`; merged as `0ec09ed37492e6c71b27e545abac72893ce73749`. Public browser/API verification remains a separate follow-up.
