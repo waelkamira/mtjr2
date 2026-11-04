@@ -5,7 +5,7 @@
 **Canonical schema target:** `prisma/schema.prisma` (new implementation; schema is being designed)  
 **Companion audit:** `docs/PROJECT_AUDIT.md`
 **Companion page inventory:** `docs/architecture/PLATFORM_PAGE_INVENTORY.md` (required user-facing and operational routes; route presence is not proof of workflow completion)  
-**Model map:** `docs/architecture/prisma-model-usage-map.md`  
+**Model map:** `docs/architecture/PRISMA_MODEL_USAGE_MAP.md`  
 **End-to-end delivery standard:** `docs/implementation/END_TO_END_JOURNEY_STANDARD.md`  
 **Imported as baseline:** 2026-11-03
 
@@ -16,7 +16,7 @@
 1. **Deliver vertical user journeys, not isolated pages.** Every visible button, link, form, menu action and service-triggered operation must map to an explicit outcome and be traced from the user's click through frontend, API, validation/auth, domain service, repository, Prisma/database, response and persisted UI state.
 2. **Do not add a Prisma model/table just to create a page.** First identify the business capability, user journey, owning domain, API/service, and existing model/relation that will use it.
 3. Treat `prisma/schema.prisma` as the canonical database contract. Do not add legacy compatibility fields merely to silence old queries.
-4. Before proposing a schema change, inspect `docs/architecture/prisma-model-usage-map.md` and answer: what exact business fact/state/relation is missing, why existing models/relations cannot support it, which service/API will write and read it, who owns it, and what migration/test proves it. Document the schema decision; prefer additive, forward-safe migrations.
+4. Before proposing a schema change, inspect `docs/architecture/PRISMA_MODEL_USAGE_MAP.md` and answer: what exact business fact/state/relation is missing, why existing models/relations cannot support it, which service/API will write and read it, who owns it, and what migration/test proves it. Document the schema decision; prefer additive, forward-safe migrations.
 5. A page, route, model, migration, button, mock response, or passing unit test alone is not proof of a working feature. A system is **Complete** only after its agreed end-to-end journey, authorization, persistence, validation, relevant failure states, and focused verification pass.
 6. Implement in dependency order. Preserve user changes and existing customer-facing layout unless a scoped redesign is explicitly approved.
 7. Keep the real-estate/property and booking domain separate from product commerce while allowing shared identity and platform services.
@@ -40,7 +40,7 @@
 | **Needs verification** | The audit found a surface, but permissions, persistence, runtime behavior, or test coverage has not been proven. |
 | **Complete** | Reserved for a fully tested end-to-end capability. No system is promoted to this status by inference. |
 
-**Current baseline (rechecked against `main` on 2026-11-03):** `prisma/schema.prisma` contains the identity/access foundation, Country/Currency/Market reference models, and the initial Seller/Store/StoreMarket/SellerStaff schema foundation. These are schema-level capabilities only: market seed/services, seller onboarding, store-scoped authorization workflows, canonical catalog APIs, and storefront product journeys are not yet proven complete. This blueprint remains the target specification, not evidence that all listed models or pages exist. Continue in dependency order from `docs/implementation/PHASE_03_MARKETPLACE_PLAN.md`.
+**Implementation snapshot (branch `feat/returns-workflow`, audited 2026-11-04):** The canonical schema now contains identity/access, market reference data, seller/store/staff, catalog/discovery, inventory/warehouse, cart/checkout/address/shipping/tax, order/vendor-order, returns, reviews/Q&A, favorites, notifications, support, and store messaging models. Corresponding services, APIs, and selected UI routes exist in the repository, but model/route presence is not proof of a verified end-to-end workflow. Phase 3 remains subject to seller/catalog acceptance evidence and owner-approved reference data; Phase 4 Buying Core is active with payment-provider integration still blocked on launch-market/provider decisions. Use `docs/implementation/PHASE_03_MARKETPLACE_PLAN.md` for its remaining exit gaps and `docs/implementation/PHASE_04_BUYING_PLAN.md` for the active handoff.
 
 ## 3. System inventory — 49 systems
 
