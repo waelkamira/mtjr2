@@ -86,6 +86,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
       where: { id },
       select: {
         id: true, orderId: true, storeId: true, status: true,
+        shipment: { select: { id: true, carrierName: true, trackingNumber: true, trackingUrl: true, shippedAt: true } },
         order: { select: { status: true, orderNumber: true } },
         store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
       }
@@ -168,7 +169,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
 const sellerShipmentSchema = z.object({
   carrierName: z.string().trim().min(2).max(120),
   trackingNumber: z.string().trim().min(3).max(160),
-  trackingUrl: z.string().trim().url().max(2048).refine((value) => new URL(value).protocol === "https:", "Tracking URL must use HTTPS.").optional()
+  trackingUrl: z.string().trim().url().max(2048).refine((value) => { const url = new URL(value); return url.protocol === "https:" && !url.username && !url.password; }, "Tracking URL must use HTTPS and cannot contain credentials.").optional()
 }).strict();
 
 /** Seller-entered dispatch details; this does not claim carrier API verification. */
@@ -203,6 +204,12 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
       if (!globalGrant && !storeGrant) throw new PermissionDeniedError();
     }
 
+    if (current.status === VendorOrderStatus.SHIPPED && current.shipment
+      && current.shipment.carrierName === data.carrierName
+      && current.shipment.trackingNumber === data.trackingNumber
+      && current.shipment.trackingUrl === (data.trackingUrl || null)) {
+      return { id: current.shipment.id, carrierName: current.shipment.carrierName, trackingNumber: current.shipment.trackingNumber, trackingUrl: current.shipment.trackingUrl, shippedAt: current.shipment.shippedAt.toISOString(), vendorOrderStatus: VendorOrderStatus.SHIPPED, changed: false };
+    }
     if (current.status !== VendorOrderStatus.READY_TO_SHIP) throw new Error("Only a ready-to-ship seller order can be dispatched.");
     if (![OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED].includes(current.order.status)) {
       throw new Error("The parent order is not eligible for dispatch.");
@@ -243,6 +250,6 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
         occurredAt: now, metadata: { vendorOrderId: id, orderNumber: current.order.orderNumber, carrierName: data.carrierName, trackingNumber: data.trackingNumber }
       }
     });
-    return { id: shipment.id, carrierName: shipment.carrierName, trackingNumber: shipment.trackingNumber, trackingUrl: shipment.trackingUrl, shippedAt: shipment.shippedAt.toISOString(), vendorOrderStatus: VendorOrderStatus.SHIPPED };
+    return { id: shipment.id, carrierName: shipment.carrierName, trackingNumber: shipment.trackingNumber, trackingUrl: shipment.trackingUrl, shippedAt: shipment.shippedAt.toISOString(), vendorOrderStatus: VendorOrderStatus.SHIPPED, changed: true };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
