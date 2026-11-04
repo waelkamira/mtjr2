@@ -80,3 +80,10 @@ This schema snapshot does not yet provide a complete implementation for all 49 s
 
 - `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, and `AuditLog` are consumed by `src/server/orders/seller-orders.ts` for the initial seller preparation transitions.
 - No Prisma change is required for `CONFIRMED → PROCESSING → READY_TO_SHIP`; shipment labels/tracking and later delivery states are not implemented by this slice.
+
+
+## Shipment — System 18 initial manual dispatch slice
+
+| Prisma model | Primary code ownership | Notes |
+|---|---|---|
+| `Shipment` | `src/server/orders/seller-orders.ts`, `src/server/orders/orders.ts`; seller shipment API and buyer order detail | One shipment per vendor order. Seller-entered carrier, tracking number, optional HTTPS tracking URL and dispatch timestamp. Shipment creation, vendor status/history, parent-order fulfillment state and audit event are committed atomically. This is not carrier API integration or delivery confirmation. |
