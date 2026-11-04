@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listDiscoverableStores } from "@/server/marketplace/public-stores";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Stores", description: "Discover active stores from approved marketplace sellers." };
 
 export default async function StoresPage() {

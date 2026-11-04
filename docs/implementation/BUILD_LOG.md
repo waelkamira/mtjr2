@@ -1657,3 +1657,16 @@ The project owner approved Resend as the transactional email provider. The serve
 - Parent commit `74168a860e608101578cd4c02dde13cf07d84422` passed CI and disposable PostgreSQL integration.
 - This implementation slice is pending exact-commit CI and PostgreSQL integration.
 - Browser journeys, slug 404 handling, seller visibility and mobile layout remain unverified.
+
+
+## 2026-11-04 — Store directory build-time database boundary
+
+**Finding**
+- Exact-head CI on `18534904b96d021e6a45b26d9a8da22c9129d5a3`: Prisma validation/generation, typecheck, lint and all 123 tests (26 files) passed; production build failed while prerendering `/stores` because the store directory queried PostgreSQL during static generation, when the CI build job has no database server.
+- The dedicated PostgreSQL integration workflow passed on the same exact head.
+
+**Correction**
+- Marked the database-backed `/stores` directory as dynamically rendered so its approved-store query executes at request time, not during static prerendering. This preserves real database-backed results and does not introduce mock data or a schema change.
+
+**Verification boundary**
+- A new exact-head CI build is required to confirm the correction. No production database, owner database, migration, or Vercel setting was accessed.

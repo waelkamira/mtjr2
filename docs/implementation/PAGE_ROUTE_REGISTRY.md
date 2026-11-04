@@ -249,3 +249,8 @@ Dynamic `/categories/[slug]` and `/brands/[slug]` detail routes are intentionall
 | `/stores/[slug]` | Public | `getDiscoverableStoreBySlug`; `listDiscoverableProducts({ storeId })`; Store, Seller, Product | Implemented / unverified. Hides inactive stores and unapproved sellers; shows products scoped to that store. |
 
 No Prisma schema change was needed. Existing Category, Brand, Store, Seller and Product relations cover these read journeys. Public queries enforce active/approved visibility and do not expose drafts or seller workspace data.
+
+
+## Build-time rendering note — 2026-11-04
+
+- `/stores` uses request-time rendering because it reads live approved-store data through Prisma. Static build must not require an application database connection. Exact-head build verification is pending after this correction.
