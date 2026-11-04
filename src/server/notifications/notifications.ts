@@ -9,10 +9,11 @@ const preferenceDefinitions = [
   { type: "ORDER_PLACED", label: "Order updates", description: "Confirmation when your order is placed." },
   { type: "SELLER_ORDER_RECEIVED", label: "Seller order alerts", description: "New orders received by your store." },
   { type: "STORE_MESSAGE", label: "Store messages", description: "New messages in customer and seller conversations." },
-  { type: "SUPPORT_REPLY", label: "Support replies", description: "Responses from the customer support team." }
+  { type: "SUPPORT_REPLY", label: "Support replies", description: "Responses from the customer support team." },
+  { type: "SUPPORT_SLA_ESCALATION", label: "Support SLA escalations", description: "Alerts when an assigned ticket breaches its response or resolution target." }
 ] as const;
 
-const preferenceType = z.enum(["ORDER_PLACED", "SELLER_ORDER_RECEIVED", "STORE_MESSAGE", "SUPPORT_REPLY"]);
+const preferenceType = z.enum(["ORDER_PLACED", "SELLER_ORDER_RECEIVED", "STORE_MESSAGE", "SUPPORT_REPLY", "SUPPORT_SLA_ESCALATION"]);
 const preferenceUpdateSchema = z.object({
   preferences: z.array(z.object({
     type: preferenceType,
