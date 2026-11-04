@@ -7,7 +7,7 @@ const COOKIE_OPTIONS = { httpOnly: true, secure: env.NODE_ENV === "production", 
 
 export async function GET(request: Request): Promise<Response> {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    return Response.json({ error: "Google sign-in is not configured for this environment yet." }, { status: 503 });
+    return Response.redirect(new URL("/register?oauth=unavailable", env.NEXT_PUBLIC_APP_URL), 303);
   }
   const url = new URL(request.url);
   const accountType = url.searchParams.get("accountType");
