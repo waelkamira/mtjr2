@@ -1725,3 +1725,20 @@ The project owner approved Resend as the transactional email provider. The serve
 **Commits**
 - Remove Hobby-incompatible Vercel Cron: `3a8f04f7cda7c02ca07c210988c847b3ec77dd93`.
 - Add external scheduler runbook: `20de5bd0daa3c87bd03990f2ea517fbc83ea4a4e`.
+
+
+## 2026-11-04 — Seller return visibility (read-only first slice)
+
+**Implemented on `feat/seller-return-visibility`**
+- Added `GET /api/seller/returns` and `/seller/returns`.
+- Return rows are derived from canonical `ReturnRequest` / `ReturnItem` → `OrderItem` → `VendorOrder` → `Store` relations; the response groups each parent request by the seller's own store so a multi-store customer request cannot expose another store's products.
+- Access is derived from the verified session: active store owners, staff with the existing exact-store `orders:manage` grant, and platform administrators. Client-supplied store IDs are not accepted.
+- Added a seller workspace link and focused tests for owned/delegated store scoping, multi-store grouping and empty unauthorized scope.
+- **Prisma decision:** no schema change or migration. Existing relations fully represent the read-only queue; a new table would be unjustified for this view.
+
+**Explicit workflow boundary**
+- This is intentionally read-only. Seller approval/rejection, return authorization, shipping labels/tracking, item receipt, refund calculation/execution and ledger posting are not exposed. The current parent request has one global status and can contain items from multiple vendors; seller-specific state transitions require a separate per-vendor return lifecycle design before any mutation is added.
+
+**Verification**
+- Source and focused unit test have been committed to this branch. Exact-head General CI, Prisma validation/generation, and disposable PostgreSQL integration are pending; no pass is claimed yet.
+- No owner/local/production database was accessed. No production migration, Vercel setting, or secret was changed.
