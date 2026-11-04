@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { getPaymentProvider } from "./providers/registry";
 import type { VerifiedPaymentEvent } from "./providers/types";
+import { createInAppNotification } from "@/server/notifications/notifications";
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -208,9 +209,9 @@ export async function processVerifiedPaymentEvent(input: {
           await tx.vendorOrderStatusHistory.create({
             data: { vendorOrderId: vendor.id, status: VendorOrderStatus.CONFIRMED, note: "Payment confirmed by a verified provider event.", createdAt: now }
           });
-          await tx.notification.create({
+          await createInAppNotification(tx, {
             data: {
-              userId: vendor.store.seller.ownerId, type: "SELLER_PAYMENT_CONFIRMED",
+              userId: vendor.store.seller.ownerId, type: "PAYMENT_CONFIRMED",
               title: "Payment confirmed for a new order",
               message: `Payment for order ${payment.order.orderNumber} is confirmed. Your store can begin order processing.`,
               resourceType: "VENDOR_ORDER", resourceId: vendor.id,
@@ -219,9 +220,9 @@ export async function processVerifiedPaymentEvent(input: {
           });
         }
         if (payment.order.userId) {
-          await tx.notification.create({
+          await createInAppNotification(tx, {
             data: {
-              userId: payment.order.userId, type: "ORDER_PAYMENT_CONFIRMED",
+              userId: payment.order.userId, type: "PAYMENT_CONFIRMED",
               title: "Your payment is confirmed",
               message: `Payment for order ${payment.order.orderNumber} was confirmed.`,
               resourceType: "ORDER", resourceId: payment.orderId,
@@ -234,6 +235,19 @@ export async function processVerifiedPaymentEvent(input: {
             actorType: "SYSTEM", action: "payment.confirmed", resource: "payment", resourceId: payment.id,
             scopeType: "ORDER", scopeId: payment.orderId, occurredAt: now,
             metadata: { provider: input.providerKey, providerEventId: input.event.eventId, amountMinor: payment.amountMinor.toString(), currencyCode: payment.currencyCode }
+          }
+        });
+      }
+
+
+      if (isNewerEvent && nextStatus === PaymentStatus.FAILED && payment.order.userId) {
+        await createInAppNotification(tx, {
+          data: {
+            userId: payment.order.userId, type: "PAYMENT_FAILED",
+            title: "Payment was not completed",
+            message: `Payment for order ${payment.order.orderNumber} failed. You can review the order and try another payment method.`,
+            resourceType: "ORDER", resourceId: payment.orderId,
+            deduplicationKey: `payment:${payment.id}:order:${payment.orderId}:failed`
           }
         });
       }
