@@ -128,24 +128,16 @@ export default function ProductDetail({ slug }: { slug: string }) {
         {product.media.length > 1 && <div aria-label="Product images" className="grid grid-cols-5 gap-3">{product.media.map((media, index) => <button key={media.url} type="button" onClick={() => setSelectedMediaIndex(index)} aria-label={`View product image ${index + 1}`} aria-pressed={selectedMediaIndex === index} className={`overflow-hidden rounded-xl border-2 ${selectedMediaIndex === index ? "border-[var(--color-violet-600)]" : "border-transparent"} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-violet-600)]`}><img src={media.url} alt="" className="aspect-square w-full object-cover" /></button>)}</div>}
       </div>
       <section className="flex flex-col pt-2">
-<<<<<<< HEAD
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{product.brand?.name ?? "Marketplace selection"}</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)] sm:text-4xl">{product.name}</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">Sold by <Link href={`/stores/${encodeURIComponent(product.store.slug)}`} className="font-semibold text-[var(--color-forest-800)] underline">{product.store.name}</Link></p>
-=======
-        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-orange-600)]">{product.brand?.name ?? "Marketplace selection"}</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-petrol-900)] sm:text-4xl">{product.name}</h1>
-        <p className="mt-3 text-sm text-[var(--muted)]">Sold by <Link href={`/stores/${encodeURIComponent(product.store.slug)}`} className="font-semibold text-[var(--color-petrol-800)] underline">{product.store.name}</Link></p>
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
         {markets.length > 0 && <label className="mt-5 block text-sm font-medium">Delivery market<select aria-label="Choose delivery market" value={selectedMarketId} onChange={(event) => setSelectedMarketId(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3"><option value="">Select a market</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}</select></label>}
         <p className="mt-7 text-3xl font-bold tracking-tight text-[var(--color-petrol-900)]">{price && amount !== null ? new Intl.NumberFormat(undefined, { style: "currency", currency: price.currencyCode }).format(amount) : "Price unavailable"}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">Choose an option<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || "Variant"}</option>)}</select></label>}
-<<<<<<< HEAD
         <button type="button" onClick={() => void toggleFavorite()} disabled={favoriteBusy} aria-pressed={isFavorite} className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{favoriteBusy ? "Saving…" : isFavorite ? "♥ Saved to wishlist" : "♡ Save to wishlist"}</button>
-=======
-        <button type="button" onClick={() => void toggleFavorite()} disabled={favoriteBusy} aria-pressed={isFavorite} className="mt-6 inline-flex w-fit items-center gap-2 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--color-petrol-900)] transition hover:border-[var(--color-violet-600)] disabled:cursor-not-allowed disabled:opacity-50">{favoriteBusy ? "Saving…" : isFavorite ? "♥ Saved to wishlist" : "♡ Save to wishlist"}</button>
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
         {favoriteError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{favoriteError} <Link href="/login" className="font-semibold underline">Sign in</Link></p>}
         {messageError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{messageError}</p>}
         <button type="button" onClick={contactStore} disabled={messageBusy} className="mt-3 rounded-xl border border-[var(--border)] px-6 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{messageBusy ? "Opening…" : "Message this store"}</button>
