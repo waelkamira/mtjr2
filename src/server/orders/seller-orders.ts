@@ -183,6 +183,7 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
       where: { id },
       select: {
         id: true, orderId: true, storeId: true, status: true,
+        shipment: { select: { id: true, carrierName: true, trackingNumber: true, trackingUrl: true, shippedAt: true } },
         order: { select: { status: true, orderNumber: true } },
         store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
       }
