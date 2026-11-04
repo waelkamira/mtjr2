@@ -24,11 +24,11 @@ async function postJson(path: string, payload: unknown): Promise<ApiResult> {
 function safeReturnPath(): string {
   if (typeof window === "undefined") return "/account/orders";
   const candidate = new URLSearchParams(window.location.search).get("returnTo");
-  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/account";
+  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/account/orders";
   try {
     const parsed = new URL(candidate, window.location.origin);
     return parsed.origin === window.location.origin ? parsed.pathname + parsed.search + parsed.hash : "/account/orders";
-  } catch { return "/account"; }
+  } catch { return "/account/orders"; }
 }
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
@@ -46,6 +46,11 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     const params = new URLSearchParams(window.location.search);
     setToken(params.get("token") || "");
     setEmail(params.get("email") || "");
+    if (params.has("token")) {
+      params.delete("token");
+      const query = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""));
+    }
   }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -144,7 +149,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           )}
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5 text-sm">
-            {mode === "login" && <Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link>}
+            {mode === "login" && <><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/verify-email">Verify email</Link></>}
             {(mode === "forgot" || mode === "reset" || mode === "verify") && <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Back to sign in</Link>}
           </div>
         </section>
