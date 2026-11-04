@@ -30,12 +30,24 @@ describe("public product discovery", () => {
     const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12" });
     expect(result.pagination).toEqual({ page: 2, limit: 12, total: 0, totalPages: 0 });
     expect(mocks.synonymFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ locale: "en", isActive: true }), take: 30
+      where: expect.objectContaining({ locale: "en", isActive: true }), take: 40
     }));
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.status).toBe("ACTIVE");
     expect(where.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
-    expect(where.OR.length).toBeGreaterThan(4);
+    expect(where.AND).toHaveLength(1);
+    expect(where.AND[0].OR.length).toBeGreaterThan(8);
+    expect(mocks.synonymFindMany.mock.calls[0][0].where.OR).toHaveLength(2);
+  });
+
+  it("requires every query token to match across product fields", async () => {
+    await listDiscoverableProducts({ q: "red sneaker" });
+    const where = mocks.productFindMany.mock.calls[0][0].where;
+    expect(where.AND).toHaveLength(2);
+    expect(where.AND[0].OR).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.objectContaining({ contains: "red" }) }),
+      expect.objectContaining({ variants: expect.any(Object) })
+    ]));
   });
 
   it("requires a market when a currency filter is supplied", async () => {

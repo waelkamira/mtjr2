@@ -37,6 +37,14 @@ Exact dependency versions and deployment choices will be pinned during the found
 
 This sequence is dependency-aware. The 49 systems will be mapped to these delivery slices and implemented incrementally; it is not a promise to create all systems in one pass.
 
+## Prisma model map
+
+Use [`docs/architecture/PRISMA_MODEL_USAGE_MAP.md`](docs/architecture/PRISMA_MODEL_USAGE_MAP.md) with `prisma/schema.prisma` before every schema change. The map identifies the owning domain/service and known implementation boundaries; it is an impact-analysis aid, not evidence that a model's workflow is complete.
+
+## Required page inventory
+
+The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the companion inventory for public storefront, authentication, customer account, seller center, admin, global operations, property/booking, and legal/system pages. Treat routes there as required targets, not as proof that they already exist. Every page must be connected to the owning API/domain service and have access control, loading/empty/error states, and verified key actions. Implement in dependency order and record evidence in the build log.
+
 ## Definition of done
 
 A system may be marked **Complete** only when:
@@ -68,9 +76,18 @@ A system may be marked **Complete** only when:
 - `docs/design/` — visual design system, component rules, and accessibility standards.
 - `prisma/` — canonical Prisma schema, migrations, and seed data.
 
+## Identity development status — 4 November 2026
+
+- `/terms` and `/privacy` are published in the application as clearly labelled v1 development drafts. They disclose that the operating company has not yet been incorporated and do not invent an operator identity or contact address.
+- `/register` asks the visitor to choose Customer/Buyer or Seller. Seller registration creates a `PENDING` seller application but does not grant seller permissions before approval. Separate unchecked Terms and Privacy consents are recorded as exact version `v1`.
+- Google OpenID Connect authorization-code flow with state and PKCE is implemented at `/api/auth/google/start` and `/api/auth/google/callback`; it requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` plus the registered callback URL. Existing email accounts are never silently linked to Google.
+- Added `/account` dashboard, `/account/profile`, `/account/addresses`, `/account/favorites`, and `/account/store` aliases, connecting profile/address reads and writes to authenticated APIs and existing Prisma entities. Existing order, wishlist, return, review, question, messaging, support, notification and seller pages remain available.
+- Registration defaults to enabled in development/test and is unconditionally blocked in production, even if the environment flag is true. Set `PUBLIC_REGISTRATION_ENABLED=false` to disable it in development.
+- No Prisma schema change or migration was required for this slice. The policy documents remain development drafts. Identity is not marked complete until exact-head CI, PostgreSQL integration, Google credentials/provider journey, and registration → email verification → login/logout HTTP/browser verification pass.
+
 ## Current status
 
-**Phase 1 foundation: scaffolded. Phase 2 identity/access: implementation and code verification complete; production-only exit checks are deferred, not passed. Phase 3 Marketplace Core: in progress; seller/store, taxonomy, product lifecycle, discovery, inventory foundations, and the connected buyer/seller/admin workspaces are implemented. Buyer product SEO metadata is now server-generated from the catalog service. Market reference data, seller/store workflows, taxonomy, product lifecycle, public discovery APIs, and warehouse/inventory foundations are implemented. The buyer storefront consumes the live market/category/product APIs, including product detail and currency-aware price display. The seller workspace supports seller applications, store/warehouse management, inventory viewing, and API-connected product draft creation/editing/publication. A platform moderation workspace is connected to protected seller/product review queues. Seller team and invitation/acceptance/revocation screens are now connected to scoped staff APIs. Reference-data activation and inventory reservation lifecycle remain pending. General CI and disposable PostgreSQL migration/integration verification passed on commit `3a9369bf`; the buyer product detail now includes an accessible media gallery. Warehouse, stock adjustment, and stock transfer screens are connected to the existing backend APIs.**
+**Phase 1 foundation: scaffolded. Phase 2 identity/access: core services and UI implemented; development/test registration is enabled by default, production registration is hard-blocked; exact-head CI and deployed browser journey remain pending, and production exit checks are not passed. Phase 3 Marketplace Core: in progress; seller/store, taxonomy, product lifecycle, discovery, inventory foundations, and the connected buyer/seller/admin workspaces are implemented. Buyer product SEO metadata is now server-generated from the catalog service. Market reference data, seller/store workflows, taxonomy, product lifecycle, public discovery APIs, and warehouse/inventory foundations are implemented. The buyer storefront consumes the live market/category/product APIs, including product detail and currency-aware price display. The seller workspace supports seller applications, store/warehouse management, inventory viewing, and API-connected product draft creation/editing/publication. A platform moderation workspace is connected to protected seller/product review queues. Seller team and invitation/acceptance/revocation screens are now connected to scoped staff APIs. Reference-data activation remains pending. Buying Core is now in progress: persistent cart, checkout quote/reservation, and delivery-address capture are implemented and verified by General CI and disposable PostgreSQL workflows (runs 41702592022/41702592323, 41704221580/41704221517, and 41706908024/41706907994). General CI and disposable PostgreSQL migration/integration verification passed on commit `3a9369bf`; the buyer product detail now includes an accessible media gallery. Warehouse, stock adjustment, and stock transfer screens are connected to the existing backend APIs.**
 
 Implemented identity capabilities include registration, email verification, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter, and a fail-closed trusted-proxy IP resolver.
 
@@ -102,3 +119,190 @@ Phase 3 execution plan: [Marketplace Core plan](docs/implementation/PHASE_03_MAR
 - General CI passed on this exact commit: [run 41698547547](https://github.com/waelkamira/mtjr2/actions/runs/41698547547). All quality steps passed, including Prisma validate/generate, typecheck, lint, unit tests, and production build.
 - No Prisma change was required: metadata is derived from existing product, translation, store, and media records. No production database or Vercel environment was accessed.
 - Remaining Phase 3 blockers are deliberate reference-data decisions (launch markets and taxonomy seed); do not fabricate countries, currencies, categories, or brands. Continue with structured product data/SEO only if the existing product DTO supports it without duplicating domain logic, then close Phase 3 verification and hand off to Buying Core.
+
+
+## 2026-11-03 — Buying Core 4.1: persistent cart foundation
+
+**Implemented and verified on `feat/buying-cart-core`**
+
+- Added canonical `GuestSession`, `Cart`, and `CartItem` models plus migration `20261103193000_cart_foundation`.
+- Enforced exactly one cart owner (customer or guest), unique active carts per owner/market/currency, and cart-line quantity bounds in PostgreSQL.
+- Guest sessions use an opaque HttpOnly cookie; only a SHA-256 token hash is persisted. Guest carts merge transactionally into the signed-in customer's matching market/currency carts.
+- Added `GET /api/cart`, `POST /api/cart/items`, `PATCH /api/cart/items/[itemId]`, and `DELETE /api/cart/items/[itemId]`.
+- Server validates active market/currency, published product, active variant, current price, and available inventory before adding or changing quantities.
+- Connected product detail's Add to cart action, homepage cart navigation, and the `/cart` buyer page to the real APIs.
+- Added focused tests for guest-token hashing, valid add, quantity bounds, and insufficient stock.
+- Cart additions do not reserve inventory; stock is reserved only when the shopper creates a time-limited checkout quote. Shipping, taxes, discounts, payment and order creation remain pending.
+
+**Prisma decision**
+- Schema changes are required because the canonical blueprint calls for persistent guest/customer carts and the existing schema had no GuestSession, Cart, or CartItem models. The migration adds only those required records and their ownership/quantity constraints.
+
+**Verification and safety**
+- Latest main General CI before this feature passed: run [41699817283](https://github.com/waelkamira/mtjr2/actions/runs/41699817283), including Prisma validate/generate, typecheck, lint, unit tests, and production build.
+- Cart foundation verification passed: General CI run [41702592022](https://github.com/waelkamira/mtjr2/actions/runs/41702592022) and disposable PostgreSQL integration run [41702592323](https://github.com/waelkamira/mtjr2/actions/runs/41702592323).
+- No owner database was connected, no production migration was run, and no Vercel environment variable was read or changed.
+
+**Next**
+1. Complete General CI for `feat/buying-cart-core` and fix only actual failures.
+2. Run one disposable PostgreSQL migration/integration check.
+3. Record exact results, review, and merge the cart foundation.
+4. Continue with checkout quote and reservation lifecycle per `PHASE_04_BUYING_PLAN.md`.
+
+## Buying Core progress — 2026-11-03
+
+### 4.2 Checkout quote and inventory reservation
+- Implemented on `feat/checkout-quote-reservations`; PR #2 depends on PR #1.
+- Added Prisma `CheckoutQuote` and `CheckoutQuoteLine` plus migration `20261103200000_checkout_quote_reservations`.
+- Server calculates item prices from active market product prices, snapshots line details in minor units, and reserves available stock transactionally for ten minutes.
+- Added quote create/read/release APIs, idempotency, expiry/release handling, and a connected `/checkout` review page.
+- General CI passed: [run 41704221580](https://github.com/waelkamira/mtjr2/actions/runs/41704221580). Disposable PostgreSQL integration passed: [run 41704221517](https://github.com/waelkamira/mtjr2/actions/runs/41704221517).
+
+### 4.2a Delivery address capture
+- Implemented on `feat/checkout-address-capture`; PR #3 is stacked on PR #2.
+- Added Prisma `UserAddress` and `CheckoutQuoteAddress` plus migration `20261103210000_checkout_address_capture`.
+- Added authenticated account address-book APIs and quote-scoped delivery address APIs for guest and signed-in checkout.
+- Delivery country is derived from the selected market on the server; the connected checkout UI supports new and saved addresses.
+- General CI and disposable PostgreSQL integration are pending for this slice: [PR #3](https://github.com/waelkamira/mtjr2/pull/3).
+- Shipping prices, tax, discounts, payments, and order creation are not implemented in this slice. No totals are fabricated.
+- No owner database or Vercel environment has been accessed.
+
+See `docs/implementation/PHASE_04_BUYING_PLAN.md` for the next implementation boundary and `docs/implementation/BUILD_LOG.md` for exact evidence.
+
+**Latest Buying Core verification (2026-11-03)**
+- Delivery-address capture on the stacked PR #3 branch passed General CI [41706908024](https://github.com/waelkamira/mtjr2/actions/runs/41706908024) and disposable PostgreSQL integration [41706907994](https://github.com/waelkamira/mtjr2/actions/runs/41706907994).
+- The quote read/idempotent replay path was also corrected to return its persisted delivery-address snapshot. This is part of the current PR branch and is being re-verified.
+- Next: configurable store/market shipping rules and buyer quote shipping selection. No shipping rates, carrier, tax rates, or launch geography are assumed.
+- PR #3 remains a draft stacked on PR #2; no PR was merged and no owner database or Vercel environment was accessed.
+
+
+### Buying Core — latest implementation slice
+
+- Cart, checkout quote/reservations, and delivery-address capture are implemented; address slice General CI and disposable PostgreSQL runs passed ([41706908024](https://github.com/waelkamira/mtjr2/actions/runs/41706908024), [41706907994](https://github.com/waelkamira/mtjr2/actions/runs/41706907994)).
+- Configurable store shipping rates and per-store quote selections are now implemented on the stacked branch `feat/store-shipping-options`; Prisma migration, seller workspace, buyer checkout UI, and APIs are connected. Verification is pending.
+- Tax, discounts, final checkout totals, order creation, payment, and shipment execution remain incomplete. No production database or Vercel environment was accessed.
+- Follow the detailed status and verification gate in [Phase 4 Buying Plan](docs/implementation/PHASE_04_BUYING_PLAN.md).
+
+
+## Buying Core — shipping and tax progress (2026-11-03)
+
+- Shipping configuration and per-seller checkout selection are implemented on `feat/store-shipping-options` (PR #4). The latest full CI attempt was cancelled; the earlier disposable PostgreSQL migration/integration run passed. Shipping remains marked pending final CI rather than being called verified.
+- Started the next vertical slice on `feat/checkout-tax-calculation` (PR #5): platform-managed market/region tax rules, quote-owned tax snapshots, admin configuration UI/API, and buyer checkout tax/estimated-total UI.
+- Tax uses explicitly configured basis-point rates and integer minor-unit arithmetic. It does not invent statutory rates. Missing configuration is reported instead of silently treating tax as zero.
+- Schema additions: `MarketTaxRate`, `CheckoutTaxSnapshot`; migration: `20261103230000_market_tax_rules`.
+- No discounts, order creation, or payment are claimed complete. No owner database or Vercel environment was accessed.
+- See `docs/implementation/PHASE_04_BUYING_PLAN.md` for boundaries and limitations.
+
+
+## Buying Core — order creation and seller split (2026-11-03)
+
+- Implemented on `feat/order-vendor-order-creation` (draft PR #6, stacked on tax PR #5): canonical Order/OrderAddress/VendorOrder/OrderItem and status history models, with migration `20261103233000_order_vendor_order_creation`.
+- Checkout confirmation now calls `POST /api/checkout/quote/[quoteId]/place-order`. The server requires a live owned quote, saved delivery snapshot, one shipping selection per store, and a persisted tax snapshot.
+- In one serializable transaction, the platform creates one parent order and one vendor order per store, copies immutable item/address/tax/shipping values, consumes inventory reservations and on-hand stock, records SALE inventory movements, converts the quote, and closes the cart.
+- Buyer order confirmation/detail and signed-in order history are connected to APIs. Seller workspace now links to a store-scoped seller orders page and API.
+- Orders intentionally remain `PENDING_PAYMENT`; no payment or seller fulfillment is simulated. Payment provider and signed webhook lifecycle are next.
+- Verification is pending. Only the normal CI and disposable PostgreSQL migration/integration workflows are used; no expanding test matrix. No owner database or Vercel environment was accessed.
+- See `docs/implementation/PHASE_04_BUYING_PLAN.md` for workflow boundaries and payment follow-up.
+
+
+## In-app order notifications (2026-11-03)
+
+- Added `Notification` to the canonical Prisma schema and migration `20261103234000_order_notifications`.
+- Added authenticated, user-scoped `GET /api/notifications` and `POST /api/notifications/[notificationId]/read`.
+- Added connected `/notifications` page with unread count, open-resource links, and mark-as-read action.
+- Order placement now creates buyer and store-owner notifications in the same transaction as order/vendor-order creation. Unique deduplication keys prevent duplicate events on retries.
+- This is the in-app order-event foundation only. Email delivery, preferences, retries/outbox, and other event categories remain incomplete.
+
+
+## Verified product reviews
+
+- Added canonical `ProductReview`, `StoreReview` and `ReviewStatus` models in `prisma/schema.prisma`, with migration `20261104001000_verified_product_reviews`.
+- Customers can submit a review only for a delivered order item they own. A unique customer/product constraint enforces one review per customer and product.
+- New reviews enter moderation as `PENDING`; only published reviews appear publicly.
+- Connected product and store review display/submission, reviewable delivered purchases, customer review history, seller review center and owner responses, and separate admin product/store moderation queues/APIs.
+- Store reviews, seller responses, review media, reports/appeals and extended moderation workflows remain future work.
+
+
+## Customer wishlist and favorites
+
+- Added canonical `Favorite` model to `prisma/schema.prisma` with migration `20261104002000_customer_favorites`.
+- Added authenticated list, status, add and remove APIs. Favorites are unique per customer/product and only active approved products can be newly saved.
+- Connected the product-detail save control and the customer `/account/wishlist` page to the APIs.
+- Guest wishlist merge, named lists and recommendations remain future work.
+
+
+## Product questions and answers
+
+- Added `ProductQuestion` and `ProductAnswer` models with separate moderation states in `prisma/schema.prisma`; migration: `20261104003000_product_questions_answers`.
+- Authenticated customers can submit product questions. Only published questions and answers are publicly visible.
+- Active store owners can answer published questions. Admin moderation is permission-protected, audited and sends in-app notifications when questions/answers are published.
+- Connected product detail Q&A, `/account/questions`, `/seller/questions` and `/admin/questions` to the APIs.
+- Staff-scoped answers, abuse reporting, attachments and richer answer history controls remain future work.
+
+
+## System 09 — Customer messaging and support
+
+Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https://github.com/waelkamira/mtjr2/pull/11), stacked on PR #10.
+
+- Canonical persistence: `SupportTicket`, `SupportMessage`, `StoreConversation`, and `StoreMessage`; migrations `20261104010000_customer_support_tickets` and `20261104020000_store_conversations`.
+- Customer support: create/list/detail/reply at `/account/support` and `/account/support/[ticketId]`; admin queue at `/admin/support` with status/priority, self-assignment, internal notes and public replies.
+- Store messaging: customer inbox/detail at `/account/messages` and `/account/messages/[conversationId]`; seller inbox at `/seller/messages`; product detail starts a store conversation.
+- Server-side ownership and participant checks are enforced. Store owners and active staff with exact store-scoped `messages:manage` can access the inbox. Customer-to-store notifications now route to the owner and only authorized active staff.
+- Support uses `support:manage`; internal notes are excluded from customer responses. Ticket actions are audited; first-response timestamps and customer/agent read timestamps are persisted; public replies create deduplicated in-app notifications.
+- **Remaining external/operational dependencies:** attachment storage and malware scanning require an approved object-storage provider and upload policy; SLA targets/escalation require an agreed response policy and worker; outbound email requires a verified sender and delivery policy. These are not marked complete.
+- Verification: disposable PostgreSQL integration passed on earlier PR #11 commit `24f68dd`. CI on that commit exposed a pre-existing order serializer selection mismatch; the three store projections were corrected in commit `26f1ab4`. A further CI and PostgreSQL run is pending on the latest staff-routing update. No production DB or Vercel environment was accessed; no PR was merged.
+
+## Storefront demo experience — implementation branch
+
+Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR #11. This work is not visible on `main` until the stacked PR chain is reviewed and merged in order.
+
+- `prisma/seed.cjs` now supports an opt-in, repeatable demo marketplace fixture: Netherlands demo market (EUR), active demo seller/store, four illustrated categories, three brands, eight published products, product variants, EUR prices, product images, warehouse and on-hand stock.
+- Demo commerce data is seeded only when both `SEED_DEMO_CATALOG=true` and `ALLOW_DEMO_CATALOG_SEED=true` are supplied; it is explicitly blocked when `NODE_ENV=production`. The normal seed continues to create identity roles/permissions only.
+- On a disposable/local development database only, run in PowerShell:
+  ```powershell
+  $env:ALLOW_DEMO_CATALOG_SEED="true"
+  $env:SEED_DEMO_CATALOG="true"
+  npm run db:seed
+  Remove-Item Env:ALLOW_DEMO_CATALOG_SEED
+  Remove-Item Env:SEED_DEMO_CATALOG
+  ```
+- Storefront homepage now presents a visual category grid with imagery, featured-brand filters, visible sign-in/register, wishlist, order, cart, seller, messages and notification entry points. Existing product discovery search, market/category/brand filtering, sorting and pagination remain connected to the canonical APIs.
+- Product detail retains variant/market pricing, wishlist, store messaging and add-to-cart API actions.
+- No Prisma schema change was needed: all demo records use existing canonical models and constraints. No seed was run against any database during this implementation.
+- The demo market is a fixture to make the storefront demonstrable; it is **not** a launch-country decision or tax/legal configuration. Checkout tax and payment still require explicit market/provider policy.
+
+## Storefront release follow-up
+
+1. Review and merge the stacked PRs in dependency order before expecting the changes on `main` or the deployment.
+2. Run the opt-in seed only against a disposable/local development database.
+3. Verify the public browse/search/product/cart path against that seeded database.
+4. Configure real shipping, tax, payment, and email providers only after the launch market and providers are approved.
+
+
+## Customer returns (System 11)
+
+- Signed-in customers can open **Returns** from their account/order detail pages at `/account/returns`. The first slice accepts return requests for items in delivered seller orders and tracks review status.
+- Platform support/admin users with the seeded `returns:manage` permission can review requests at `/admin/returns`.
+- The additive Prisma migration is `20261104040000_returns_workflow`; apply it only through the normal reviewed migration process on the intended environment.
+- This is a return-request workflow, **not a refund system**. Approving a request or marking goods received does not move money. Refund calculation, payment-provider execution and ledger postings are deliberately deferred until those systems are integrated.
+- Return-window policy is not configured yet. Eligibility currently requires a delivered vendor order; evidence upload and return shipping/label flows are also pending.
+
+
+## Homepage discovery experience
+
+The storefront homepage includes a responsive editorial discovery feature between the hero and live catalog sections. Its browse actions connect to the existing category and product discovery sections; the seller action opens the seller entry page. The editorial tiles are presentation content, not fake inventory or fabricated product listings. Actual catalog cards still come from the products API.
+
+## End-to-end journey implementation rule
+
+Every button, link, form, page, API and business service must be traced as one user journey from the actual interaction through frontend request handling, authentication/validation, domain rules, repository/Prisma persistence, response, and refreshed UI state. See [End-to-End Journey Standard](docs/implementation/END_TO_END_JOURNEY_STANDARD.md). The seller application is the first explicit cross-page acceptance trace in the [Page Route Registry](docs/implementation/PAGE_ROUTE_REGISTRY.md). A Prisma table is added only for a demonstrated missing business state/relation, not simply to support a new page. Journey statuses stay unverified until evidence is recorded for the exact commit.
+
+## Page and route inventory
+
+The 49-system blueprint is paired with a unified page-by-page target and audit registry: [`docs/implementation/PAGE_ROUTE_REGISTRY.md`](docs/implementation/PAGE_ROUTE_REGISTRY.md). Use it to reconcile required pages against the active App Router tree and record each route's audience, owning system, API/service, Prisma entities, implementation status and verification evidence. The registry's initial statuses are provisional; it does not claim every target route already exists or is complete.
+
+
+## Current implementation audit (2026-11-04)
+
+The active implementation branch is `feat/returns-workflow` (draft PR #15, stacked on earlier work; not merged). The static App Router audit found 30 page routes and 86 API route handlers. This confirms substantial frontend/backend surface area, but does not mean all routes or user journeys are complete. The route registry records actual paths and missing dedicated targets; the Phase 3 seller acceptance gate and Phase 4 buying verification remain open. See [Build Log](docs/implementation/BUILD_LOG.md) for the exact-head CI results and current blockers. Continue from [Phase 4 Buying Core](docs/implementation/PHASE_04_BUYING_PLAN.md), not by restarting the cart/quote work.
+## End-to-end completion rule for all 49 systems
+
+Every visible control must be followed from click/submit through frontend handler, API, validation, authentication and authorization, domain service, Prisma persistence (or documented no-schema-change decision), transaction/idempotency/audit behavior, and final server-confirmed UI result. No dead buttons, fake success, or unfinished capability presented as working. The all-system audit ledger is [`END_TO_END_JOURNEY_MATRIX.md`](docs/implementation/END_TO_END_JOURNEY_MATRIX.md); the required contract is [`END_TO_END_JOURNEY_STANDARD.md`](docs/implementation/END_TO_END_JOURNEY_STANDARD.md). All 49 systems start as Not audited until exact-commit evidence supports their status.

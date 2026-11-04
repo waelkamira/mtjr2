@@ -4,6 +4,7 @@ import { ConsentType, UserStatus } from "@prisma/client";
 const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
     user: { create: vi.fn(), updateMany: vi.fn() },
+    seller: { create: vi.fn() },
     verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     userConsent: { createMany: vi.fn() },
     auditLog: { create: vi.fn() }
@@ -42,6 +43,7 @@ describe("registration and email verification", () => {
       email: "  Buyer@Example.COM ",
       password: "correct horse battery staple 2026",
       displayName: " Buyer ",
+      accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
     }, now);
@@ -76,10 +78,37 @@ describe("registration and email verification", () => {
     });
   });
 
+  it("creates a pending seller application when the user selects seller", async () => {
+    txMock.user.create.mockResolvedValue({ id: "seller-user-1" });
+    txMock.verificationToken.create.mockResolvedValue({});
+    txMock.seller.create.mockResolvedValue({ id: "seller-1" });
+    txMock.userConsent.createMany.mockResolvedValue({ count: 2 });
+    await registerUser({
+      email: "seller@example.com",
+      password: "correct horse battery staple 2026",
+      accountType: "SELLER",
+      sellerLegalName: "Example Applicant",
+      sellerDisplayName: "Example Store",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    }, now);
+    expect(txMock.seller.create).toHaveBeenCalledWith({ data: { ownerId: "seller-user-1", legalName: "Example Applicant", displayName: "Example Store", status: "PENDING" } });
+  });
+  it("requires business details when seller is selected", async () => {
+    await expect(registerUser({
+      email: "seller@example.com",
+      password: "correct horse battery staple 2026",
+      accountType: "SELLER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    } as never, now)).rejects.toThrow();
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
   it("rejects registration without explicit terms and privacy consent", async () => {
     await expect(registerUser({
       email: "buyer@example.com",
       password: "correct horse battery staple 2026",
+      accountType: "CUSTOMER",
       acceptedTerms: false,
       acceptedPrivacy: true
     } as never, now)).rejects.toThrow();

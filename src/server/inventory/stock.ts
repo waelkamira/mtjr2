@@ -86,8 +86,9 @@ export async function createWarehouse(input: unknown, now = new Date()) {
   });
 }
 
-export async function listStoreInventory(storeId: string, now = new Date()) {
+export async function listStoreInventory(storeId: string, now = new Date(), searchInput: unknown = {}) {
   const id = z.string().trim().min(1).parse(storeId);
+  const { q } = z.object({ q: z.string().trim().max(120).optional() }).strict().parse(searchInput);
   const actor = await requireCurrentSession(now);
   const store = await prisma.store.findUnique({
     where: { id },
@@ -97,7 +98,11 @@ export async function listStoreInventory(storeId: string, now = new Date()) {
     throw new Error("You do not have inventory access to this store.");
   }
   const rows = await prisma.inventory.findMany({
-    where: { warehouse: { storeId: id, isActive: true } },
+    where: { warehouse: { storeId: id, isActive: true }, ...(q ? { OR: [
+      { warehouse: { name: { contains: q, mode: "insensitive" as const } } }, { warehouse: { code: { contains: q, mode: "insensitive" as const } } },
+      { variant: { sku: { contains: q, mode: "insensitive" as const } } }, { variant: { name: { contains: q, mode: "insensitive" as const } } },
+      { variant: { product: { name: { contains: q, mode: "insensitive" as const } } } }, { variant: { product: { slug: { contains: q, mode: "insensitive" as const } } } }
+    ] } : {}) },
     orderBy: [{ warehouse: { name: "asc" } }, { variant: { sku: "asc" } }],
     take: 500,
     select: {

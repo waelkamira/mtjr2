@@ -8,7 +8,7 @@ type Market = {
   id: string; code: string; name: string;
   defaultCurrency: Currency;
 };
-type Category = { id: string; slug: string; name: string; children: Category[] };
+type Category = { id: string; slug: string; name: string; imageUrl: string | null; children: Category[] };
 type Brand = { id: string; slug: string; name: string };
 type ProductPrice = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
 type Product = {
@@ -48,6 +48,42 @@ export default function StorefrontHomePage() {
   const [loadingReference, setLoadingReference] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState("");
+  const [urlReady, setUrlReady] = useState(false);
+
+  // Restore shareable discovery state before the first catalog request.
+  useEffect(() => {
+    const restore = () => {
+      const params = new URLSearchParams(window.location.search);
+      const requestedSort = params.get("sort");
+      const requestedPage = Number(params.get("page") ?? "1");
+      setQuery((params.get("q") ?? "").slice(0, 120));
+      setDraftQuery((params.get("q") ?? "").slice(0, 120));
+      setMarketId(params.get("marketId") ?? "");
+      setCategoryId(params.get("categoryId") ?? "");
+      setBrandId(params.get("brandId") ?? "");
+      setSort(requestedSort === "name_asc" || requestedSort === "name_desc" ? requestedSort : "newest");
+      setPage(Number.isSafeInteger(requestedPage) && requestedPage > 0 && requestedPage <= 10000 ? requestedPage : 1);
+      setUrlReady(true);
+    };
+    restore();
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, []);
+
+  // Keep the active discovery filters in the URL so searches can be shared or reloaded.
+  useEffect(() => {
+    if (!urlReady) return;
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (marketId) params.set("marketId", marketId);
+    if (categoryId) params.set("categoryId", categoryId);
+    if (brandId) params.set("brandId", brandId);
+    if (sort !== "newest") params.set("sort", sort);
+    if (page > 1) params.set("page", String(page));
+    const search = params.toString();
+    const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`;
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, [urlReady, query, marketId, categoryId, brandId, sort, page]);
 
   useEffect(() => {
     let active = true;
@@ -78,6 +114,7 @@ export default function StorefrontHomePage() {
   }, []);
 
   useEffect(() => {
+    if (!urlReady) return;
     let active = true;
     const params = new URLSearchParams({ locale: "en", limit: "24", page: String(page), sort });
     if (marketId) {
@@ -100,7 +137,7 @@ export default function StorefrontHomePage() {
       })
       .finally(() => { if (active) setLoadingProducts(false); });
     return () => { active = false; };
-  }, [marketId, categoryId, brandId, query, markets, sort, page]);
+  }, [urlReady, marketId, categoryId, brandId, query, markets, sort, page]);
 
   const flatCategories = useMemo(() => flattenCategories(categories), [categories]);
   const selectedMarket = markets.find((market) => market.id === marketId);
@@ -116,27 +153,6 @@ export default function StorefrontHomePage() {
       <div className="border-b border-[var(--border)] bg-[var(--color-forest-950)] text-center text-xs tracking-wide text-white/85">
         A considered marketplace for the things worth keeping
       </div>
-      <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--color-ivory-50)]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-4 px-5 py-4 lg:px-10">
-          <Link href="/" className="mr-2 text-2xl font-semibold tracking-tight text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
-          <form onSubmit={submitSearch} className="order-3 flex w-full overflow-hidden rounded-xl border border-[var(--border)] bg-white md:order-none md:ml-5 md:max-w-xl md:flex-1">
-            <input aria-label="Search products" value={draftQuery} onChange={(event) => setDraftQuery(event.target.value)} placeholder="Search products, brands and more" className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none" />
-            <button className="bg-[var(--color-forest-800)] px-5 text-sm font-medium text-white transition hover:bg-[var(--color-forest-950)]" type="submit">Search</button>
-          </form>
-          <label className="ml-auto flex items-center gap-2 text-xs text-[var(--muted)]">
-            <span>Ship to</span>
-            <select aria-label="Choose market" value={marketId} onChange={(event) => { setMarketId(event.target.value); setPage(1); }} className="max-w-40 rounded-lg border border-[var(--border)] bg-white px-2 py-2 text-sm text-[var(--foreground)]">
-              <option value="">All markets</option>
-              {markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}
-            </select>
-          </label>
-        </div>
-        <nav aria-label="Main navigation" className="mx-auto flex max-w-[1440px] gap-7 overflow-x-auto px-5 pb-3 text-sm text-[var(--color-ink-700)] lg:px-10">
-          <a href="#discover" className="whitespace-nowrap font-medium text-[var(--color-forest-800)]">Discover</a>
-          <a href="#categories" className="whitespace-nowrap">Categories</a>
-          <a href="#about" className="whitespace-nowrap">Our marketplace</a>
-        </nav>
-      </header>
 
       <section className="mx-auto grid max-w-[1440px] gap-8 px-5 py-10 lg:grid-cols-[1.15fr_.85fr] lg:px-10 lg:py-16">
         <div className="flex flex-col justify-center rounded-[2rem] bg-[var(--color-forest-950)] px-8 py-12 text-white sm:px-12 lg:min-h-[390px]">
@@ -157,17 +173,62 @@ export default function StorefrontHomePage() {
         </div>
       </section>
 
+      <section aria-labelledby="editorial-heading" className="mx-auto max-w-[1440px] px-5 py-8 lg:px-10 lg:py-12">
+        <div className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white">
+          <div className="grid lg:grid-cols-[.85fr_1.15fr]">
+            <div className="flex flex-col justify-center bg-[var(--color-ivory-100)] p-7 sm:p-10 lg:p-12">
+              <p className="text-xs font-semibold uppercase tracking-[.22em] text-[var(--color-copper-600)]">A better way to discover</p>
+              <h2 id="editorial-heading" className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-[var(--color-forest-950)] sm:text-4xl">Good things come from looking a little closer.</h2>
+              <p className="mt-4 max-w-md text-sm leading-7 text-[var(--color-ink-700)]">Explore independent stores, discover new brands and find pieces that feel like they were chosen just for you.</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a href="#discover" className="inline-flex items-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Browse products <span aria-hidden="true" className="ml-3">↗</span></a>
+                <Link href="/seller" className="inline-flex items-center rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-white">Meet the sellers</Link>
+              </div>
+            </div>
+            <div className="grid min-h-[340px] grid-cols-2 gap-3 bg-[var(--color-sage-100)] p-3 sm:gap-4 sm:p-5">
+              <a href="#categories" className="group relative flex min-h-40 flex-col justify-end overflow-hidden rounded-[1.5rem] bg-[var(--color-forest-800)] p-5 text-white transition hover:shadow-[var(--shadow-card)] sm:min-h-64 sm:p-7">
+                <span className="absolute -right-8 -top-8 h-36 w-36 rounded-full border border-white/20 transition duration-500 group-hover:scale-110 sm:h-52 sm:w-52" />
+                <span className="absolute right-5 top-5 font-serif text-5xl text-white/30 sm:right-8 sm:top-8 sm:text-7xl">01</span>
+                <span className="relative text-[10px] font-semibold uppercase tracking-[.2em] text-[var(--color-sage-200)]">Explore</span>
+                <span className="relative mt-2 text-xl font-semibold sm:text-2xl">Everyday finds</span>
+                <span className="relative mt-2 text-xs leading-5 text-white/70">Useful things, thoughtfully chosen</span>
+              </a>
+              <a href="#discover" className="group relative mt-8 flex min-h-40 flex-col justify-end overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--color-ivory-50)] p-5 transition hover:shadow-[var(--shadow-card)] sm:mt-12 sm:min-h-64 sm:p-7">
+                <span className="absolute -right-10 -top-10 h-40 w-40 rounded-full border border-[var(--color-copper-600)]/30 transition duration-500 group-hover:scale-110 sm:h-56 sm:w-56" />
+                <span className="absolute right-5 top-5 font-serif text-5xl text-[var(--color-copper-600)]/30 sm:right-8 sm:top-8 sm:text-7xl">02</span>
+                <span className="relative text-[10px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Discover</span>
+                <span className="relative mt-2 text-xl font-semibold text-[var(--color-forest-950)] sm:text-2xl">New perspectives</span>
+                <span className="relative mt-2 text-xs leading-5 text-[var(--color-ink-700)]">Meet the stores behind the products</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="categories" className="mx-auto max-w-[1440px] px-5 py-7 lg:px-10">
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Explore by interest</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Browse categories</h2></div>
-          <button type="button" onClick={() => { setCategoryId(""); setPage(1); }} className="text-sm text-[var(--color-forest-800)] underline underline-offset-4">View all</button>
+          <Link href="/categories" className="text-sm text-[var(--color-forest-800)] underline underline-offset-4">View all</Link>
         </div>
         {loadingReference ? <p className="text-sm text-[var(--muted)]">Loading categories…</p> : flatCategories.length ? (
-          <div className="flex gap-3 overflow-x-auto pb-3">
-            {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => { setCategoryId(category.id === categoryId ? "" : category.id); setPage(1); }} className={`whitespace-nowrap rounded-xl border px-5 py-3 text-sm transition ${categoryId === category.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] bg-white text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{category.name}</button>)}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {flatCategories.map((category) => <button key={category.id} type="button" onClick={() => { setCategoryId(category.id === categoryId ? "" : category.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={categoryId === category.id} className={`group relative min-h-40 overflow-hidden rounded-2xl border text-left transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] ${categoryId === category.id ? "border-[var(--color-forest-800)] ring-2 ring-[var(--color-forest-800)]" : "border-[var(--border)]"}`}>
+              {category.imageUrl && <img src={category.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
+              <span className="absolute inset-0 bg-gradient-to-t from-[var(--color-forest-950)]/90 via-[var(--color-forest-950)]/20 to-transparent" />
+              <span className="absolute bottom-0 left-0 right-0 p-4 text-base font-semibold text-white">{category.name}<span className="ml-2 text-[var(--color-sage-200)]" aria-hidden="true">↗</span></span>
+            </button>)}
           </div>
         ) : <p className="rounded-xl bg-[var(--color-ivory-100)] px-5 py-4 text-sm text-[var(--muted)]">Categories will appear here as the marketplace catalog is activated.</p>}
       </section>
+
+      {brands.length > 0 && <section id="brands" aria-label="Featured brands" className="mx-auto max-w-[1440px] px-5 py-5 lg:px-10">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white px-5 py-5">
+          <div><p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Independent labels</p><h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">Discover the brands</h2></div>
+          <div className="flex flex-wrap gap-2">
+            {brands.slice(0, 8).map((brand) => <button key={brand.id} type="button" onClick={() => { setBrandId(brand.id === brandId ? "" : brand.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={brandId === brand.id} className={`rounded-full border px-4 py-2 text-sm transition ${brandId === brand.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{brand.name}</button>)}
+          </div>
+        </div>
+      </section>}
 
       <section id="discover" className="mx-auto max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
@@ -201,6 +262,7 @@ export default function StorefrontHomePage() {
         <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-10 text-sm text-white/70 lg:flex-row lg:items-center lg:justify-between lg:px-10">
           <span className="text-xl font-semibold tracking-tight text-white">mtjr<span className="text-[var(--color-copper-500)]">.</span></span>
           <p>A global marketplace built around discovery, trust and independent stores.</p>
+          <nav aria-label="Legal and account links" className="flex flex-wrap gap-4 text-xs text-white/80"><Link href="/terms" className="hover:text-white">Terms of Use</Link><Link href="/privacy" className="hover:text-white">Privacy Notice</Link><Link href="/account" className="hover:text-white">My account</Link><Link href="/seller" className="hover:text-white">Sell on Mtjr</Link></nav>
           <span>© {new Date().getFullYear()} Mtjr</span>
         </div>
       </footer>

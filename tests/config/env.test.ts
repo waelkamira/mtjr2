@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEnvironment } from "../../src/lib/env";
+import { isPublicRegistrationEnabled, parseEnvironment } from "../../src/lib/env";
 
 const validEnvironment = {
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mtjr2_test?schema=public",
@@ -29,5 +29,25 @@ describe("parseEnvironment", () => {
     expect(() =>
       parseEnvironment({ ...validEnvironment, NEXT_PUBLIC_APP_URL: "not-a-url" })
     ).toThrow(/NEXT_PUBLIC_APP_URL/);
+  });
+
+  it("enables registration by default in development and test only", () => {
+    expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("true");
+    expect(isPublicRegistrationEnabled(parseEnvironment(validEnvironment))).toBe(true);
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "development" }))).toBe(true);
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production" }))).toBe(false);
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production", PUBLIC_REGISTRATION_ENABLED: "true" }))).toBe(false);
+  });
+
+  it("allows registration to be explicitly disabled outside production", () => {
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "false" }))).toBe(false);
+  });
+
+  it("accepts blank optional Google OAuth credentials in local env files", () => {
+    expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "" })).toMatchObject(validEnvironment);
+  });
+
+  it("rejects an invalid public registration flag", () => {
+    expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
 });

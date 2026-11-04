@@ -34,6 +34,7 @@ describe("identity PostgreSQL integration", () => {
       email,
       password: "Correct-Horse-Battery-42!",
       displayName: "Integration Buyer",
+      accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
     });
@@ -154,6 +155,7 @@ describe("identity PostgreSQL integration", () => {
       email: loginEmail,
       password: "Correct-Horse-Battery-42!",
       displayName: "Login Integration",
+      accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
     });
@@ -218,6 +220,7 @@ describe("identity PostgreSQL integration", () => {
       email: resetEmail,
       password: oldPassword,
       displayName: "Password Reset Integration",
+      accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
     });

@@ -124,3 +124,12 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
   3. Run exactly one deployed HTTP journey: register → verify email → login → `/api/auth/me` → logout → confirm anonymous access is denied.
   4. Record the deployment evidence and security review; then close Phase 2 and start Phase 3 (Marketplace Core).
 - No more helper-level tests are planned. Registration rollback fault injection and separate cookie/API tests are deferred; the single HTTP journey is the final route-level verification.
+
+
+## Current frontend journey update — 2026-11-04
+
+- Added dedicated `/login`, `/forgot-password`, `/reset-password`, and `/verify-email` pages wired to the existing same-origin JSON APIs. The shared client flow handles pending, server errors, generic anti-enumeration responses, and a same-origin-only post-login return path.
+- Verification tokens are removed from the visible URL immediately after being read into page state. Reset and verification tokens are submitted only to their matching API endpoints.
+- `/register` is intentionally an unavailable information page, not an active form. The repository has no published Terms of Service or Privacy Notice pages/content, while the registration API requires affirmative consent. Do not expose account creation until the owner supplies and approves the legal documents and the UI can present them before consent. The registration API/service and Prisma consent persistence remain implemented, but public registration is not considered complete. The registration API is also server-side gated by `PUBLIC_REGISTRATION_ENABLED`, which defaults to `false`; do not enable it until the approved policy pages and consent versions are implemented.
+- Added a user-facing Sign out button to `/account/orders`; it posts to `/api/auth/logout`, disables while pending, displays errors, and redirects only after server success. Still requires deployed verification that the cookie is cleared and `/api/auth/me` denies the revoked session.
+- These new pages are source-implemented but await exact-head CI and deployed HTTP/browser verification. They do not close Phase 2. Real email delivery and trusted proxy configuration remain deployment-only gates.
