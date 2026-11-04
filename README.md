@@ -79,9 +79,11 @@ A system may be marked **Complete** only when:
 ## Identity development status — 4 November 2026
 
 - `/terms` and `/privacy` are published in the application as clearly labelled v1 development drafts. They disclose that the operating company has not yet been incorporated and do not invent an operator identity or contact address.
-- `/register` now has a working form with separate, unchecked Terms and Privacy consent checkboxes. The registration transaction records the exact `v1` consent types using the existing `UserConsent` model.
-- Registration defaults to enabled in development/test and is unconditionally blocked in production, even if the environment flag is set to true. Set `PUBLIC_REGISTRATION_ENABLED=false` to disable it in a development environment.
-- No Prisma schema change or migration was required. These drafts are not final launch policies; identity is not marked complete until exact-head CI and the registration → email verification → login → logout browser journey pass.
+- `/register` asks the visitor to choose Customer/Buyer or Seller. Seller registration creates a `PENDING` seller application but does not grant seller permissions before approval. Separate unchecked Terms and Privacy consents are recorded as exact version `v1`.
+- Google OpenID Connect authorization-code flow with state and PKCE is implemented at `/api/auth/google/start` and `/api/auth/google/callback`; it requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` plus the registered callback URL. Existing email accounts are never silently linked to Google.
+- Added `/account` dashboard, `/account/profile`, `/account/addresses`, `/account/favorites`, and `/account/store` aliases, connecting profile/address reads and writes to authenticated APIs and existing Prisma entities. Existing order, wishlist, return, review, question, messaging, support, notification and seller pages remain available.
+- Registration defaults to enabled in development/test and is unconditionally blocked in production, even if the environment flag is true. Set `PUBLIC_REGISTRATION_ENABLED=false` to disable it in development.
+- No Prisma schema change or migration was required for this slice. The policy documents remain development drafts. Identity is not marked complete until exact-head CI, PostgreSQL integration, Google credentials/provider journey, and registration → email verification → login/logout HTTP/browser verification pass.
 
 ## Current status
 
