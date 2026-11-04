@@ -189,7 +189,26 @@ export async function listSellerAnswerHistory(answerId: string, now = new Date()
   const actor = await requireCurrentSession(now);
   const answer = await prisma.productAnswer.findFirst({
     where: { id },
-    select: { id: true, userId: true, body: true, question: { select: { product: { select: { storeId: true, store: { select: { seller: { select: { ownerId: true } } } } } } }, revisions: { orderBy: { createdAt: "desc" }, take: 20, select: { id: true, body: true, createdAt: true } } }
+    select: {
+      id: true,
+      userId: true,
+      body: true,
+      question: {
+        select: {
+          product: {
+            select: {
+              storeId: true,
+              store: { select: { seller: { select: { ownerId: true } } } }
+            }
+          }
+        }
+      },
+      revisions: {
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: { id: true, body: true, createdAt: true }
+      }
+    }
   });
   if (!answer) throw new Error("Answer not found.");
   const allowed = answer.userId === actor.userId || await canManageStoreQa(actor.userId, answer.question.product.storeId, answer.question.product.store.seller.ownerId, now);
