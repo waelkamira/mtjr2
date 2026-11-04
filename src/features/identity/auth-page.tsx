@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 
-type AuthMode = "login" | "register" | "forgot" | "reset" | "verify";
+type AuthMode = "login" | "forgot" | "reset" | "verify";
 
 type ApiResult = { message?: string; error?: string };
 
@@ -37,9 +37,6 @@ const buttonClass = "inline-flex w-full items-center justify-center rounded-xl b
 export default function AuthPage({ mode }: { mode: AuthMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -60,12 +57,6 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         const result = await postJson("/api/auth/login", { email, password });
         setNotice(result.message || "Signed in. Redirecting…");
         window.location.assign(safeReturnPath());
-      } else if (mode === "register") {
-        const result = await postJson("/api/auth/register", {
-          email, password, displayName: displayName.trim() || undefined,
-          acceptedTerms, acceptedPrivacy
-        });
-        setNotice(result.message || "Account request received. Check your email.");
       } else if (mode === "forgot") {
         const result = await postJson("/api/auth/password-reset/request", { email });
         setNotice(result.message || "If an eligible account exists, reset instructions will be sent.");
@@ -95,14 +86,12 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
 
   const title = {
     login: "Welcome back",
-    register: "Create your account",
     forgot: "Reset your password",
     reset: "Choose a new password",
     verify: "Verify your email"
   }[mode];
   const description = {
     login: "Sign in to continue to your marketplace account.",
-    register: "Create an account to shop and manage your marketplace activity.",
     forgot: "Enter your email and we’ll send instructions if an eligible account exists.",
     reset: "Choose a new password. Your other active sessions will be signed out.",
     verify: "Confirm your email address to activate your account."
@@ -140,30 +129,22 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
             </div>
           ) : (
             <form onSubmit={submit} className="mt-7 space-y-5">
-              {mode === "register" && <label className="block text-sm font-medium">Display name <span className="font-normal text-[var(--muted)]">(optional)</span>
-                <input className={fieldClass} value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={80} autoComplete="name" />
-              </label>}
               {mode !== "reset" && <label className="block text-sm font-medium">Email address
                 <input className={fieldClass} type="email" value={email} onChange={e => setEmail(e.target.value)} required maxLength={254} autoComplete="email" />
               </label>}
-              {(mode === "login" || mode === "register" || mode === "reset") && <label className="block text-sm font-medium">{mode === "reset" ? "New password" : "Password"}
+              {(mode === "login" || mode === "reset") && <label className="block text-sm font-medium">{mode === "reset" ? "New password" : "Password"}
                 <input className={fieldClass} type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={mode === "login" ? 1 : 12} maxLength={128} autoComplete={mode === "login" ? "current-password" : "new-password"} />
                 {mode !== "login" && <span className="mt-1 block text-xs font-normal text-[var(--muted)]">Use 12–128 characters.</span>}
               </label>}
               {mode === "reset" && <label className="block text-sm font-medium">Reset token
                 <input className={fieldClass} value={token} onChange={e => setToken(e.target.value)} required minLength={43} maxLength={43} autoComplete="one-time-code" />
               </label>}
-              {mode === "register" && <div className="space-y-3 rounded-xl bg-[var(--surface-soft)] p-4">
-                <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} required className="mt-1 accent-[var(--color-forest-900)]" /><span>I accept the <Link className="font-semibold underline" href="/terms">Terms of Service</Link>.</span></label>
-                <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={acceptedPrivacy} onChange={e => setAcceptedPrivacy(e.target.checked)} required className="mt-1 accent-[var(--color-forest-900)]" /><span>I acknowledge the <Link className="font-semibold underline" href="/privacy">Privacy Policy</Link>.</span></label>
-              </div>}
-              <button className={buttonClass} disabled={busy || (mode === "register" && (!acceptedTerms || !acceptedPrivacy)) || (mode === "reset" && token.length !== 43)}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : mode === "forgot" ? "Send reset instructions" : "Update password"}</button>
+              <button className={buttonClass} disabled={busy || (mode === "reset" && token.length !== 43)}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "forgot" ? "Send reset instructions" : "Update password"}</button>
             </form>
           )}
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5 text-sm">
             {mode === "login" && <Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link>}
-            {mode === "register" && <><span className="text-[var(--muted)]">Already registered?</span><Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</Link></>}
             {(mode === "forgot" || mode === "reset" || mode === "verify") && <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Back to sign in</Link>}
           </div>
         </section>
