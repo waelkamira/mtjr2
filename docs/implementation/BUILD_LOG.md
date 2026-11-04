@@ -1834,3 +1834,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No Prisma schema change or migration was required; the existing vendor-order and parent-order status/history models cover the bounded preparation states.
 - Shipment labels/tracking, shipped/delivered transitions, cancellation and refunds remain out of scope and are not exposed as working actions.
 - Exact-head General CI and focused PostgreSQL authorization/concurrency verification are pending; no production database or deployment configuration was accessed.
+
+
+## 2026-11-04 — Shop navigation merge and seller-order verification handoff
+
+- PR #24 merged into `main` as `1e134e65e97f29b438f1d7f92dbf5f671091393d`. Exact-head General CI run [41830496456](https://github.com/waelkamira/mtjr2/actions/runs/41830496456) passed. The Vercel deployment check failed only because the Hobby daily deployment quota was exhausted; it is not an application CI failure.
+- PR #25 adds seller preparation transitions and is awaiting its exact-head General CI and PostgreSQL workflow results. Do not merge until those critical checks pass; no production DB or Vercel environment was accessed.
