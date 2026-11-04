@@ -12,6 +12,8 @@
 
 > This document is the functional blueprint for the 49 platform systems. It defines what each system must do, the expected screens, the canonical data models, the API surface, and the implementation state evidenced by the current repository audit. It is not a claim that every listed feature already works.
 
+**Global completeness extension:** [`GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md`](GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md) identifies additional mandatory global capabilities (KYB, product compliance, customs/landed cost, tax determination, payment orchestration, settlement, privacy, fraud, communications and reliability) and defines page-level acceptance and launch gates. The 49-system inventory remains the canonical numbered capability list; do not interpret the count as proof that these global concerns are fully implemented.
+
 ## 1. Rules for using this blueprint
 
 
