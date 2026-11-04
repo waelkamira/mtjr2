@@ -118,3 +118,16 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - No migration was applied to the owner's database and no production configuration was accessed.
 
 **Next gate:** obtain a passing General CI on the corrected head, then review the buyer checkout/order journey against the current browser/API states. Payment provider implementation remains conditional on owner-approved launch markets, currencies, merchant account and payment methods. Until those decisions exist, do not choose a provider, create provider-specific schema, simulate payment success, or enable fulfillment for pending-payment orders.
+
+
+## 4.7 — Seller order preparation (System 15 initial slice)
+
+**Implemented on `feat/seller-order-processing`; verification pending.**
+
+- Added a store-scoped seller status mutation at `PATCH /api/seller/orders/[vendorOrderId]/status` and connected actions to the seller orders page.
+- The only enabled transitions are `CONFIRMED → PROCESSING → READY_TO_SHIP`. The first transition is available only after a verified payment webhook has confirmed the vendor order; unpaid orders remain locked.
+- The server derives the store from the vendor-order record, checks active seller/store status, and authorizes the store owner, exact store-scoped `orders:manage` staff, or a global `orders:manage` administrator.
+- Vendor-order status, status history, parent-order processing state/history, and audit event are written in one serializable transaction with compare-and-set protection against stale or concurrent updates.
+- Repeating the current target status is idempotent. The seller cannot change another store's order or regress a status.
+- **No Prisma schema change:** `VendorOrderStatus`, `VendorOrderStatusHistory`, `OrderStatus`, `OrderStatusHistory`, and `AuditLog` already cover this bounded workflow.
+- Shipment creation, carrier labels/tracking, shipped/delivered transitions, cancellation, and refunds remain disabled until their own policy/provider and inventory/payment reversal rules are implemented. No shipment or delivery success is simulated.
