@@ -1,3 +1,5 @@
+ALTER TYPE "ConsentType" ADD VALUE IF NOT EXISTS 'NOTIFICATION_EMAIL';
+
 CREATE TYPE "NotificationDeliveryStatus" AS ENUM ('PENDING', 'PROCESSING', 'RETRY', 'SENT', 'FAILED', 'CANCELLED');
 
 ALTER TABLE "NotificationPreference"
