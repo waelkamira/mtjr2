@@ -1572,3 +1572,25 @@ The project owner approved Resend as the transactional email provider. The serve
 
 **Important boundary**
 - These pages are development drafts, not final approved legal policies. Production registration remains disabled. Public launch still requires completion/review of the operator and policy details.
+
+
+## 2026-11-04 — Identity expansion and customer account entry points
+
+**Implemented**
+- Registration now explicitly requires a choice between Customer/Buyer and Seller.
+- Seller registration requires applicant/legal name and public store name, creates a `Seller` record with `PENDING` status in the same transaction, and does not assign seller permissions before approval.
+- Added Google OpenID Connect authorization-code flow with state and PKCE. Callback validates the Google token issuer, audience, verified email and expiry; persists `OAuthAccount`, policy consents and audit event; and creates a normal server-side session. Existing email accounts are not silently linked to a Google identity.
+- Added optional `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` environment settings and documented them in `.env.example`. Google sign-in remains unavailable until credentials and the callback URL are configured.
+- Added account dashboard, profile read/update API and page, saved-address page, and account route aliases for favorites, store and notifications. Homepage now links to the account dashboard.
+- Reused existing `User`, `Seller`, `OAuthAccount`, `UserConsent`, `UserSession`, `UserAddress` and `Favorite` models. No Prisma schema change or migration was required.
+- Corrected two ESLint errors caused by unescaped apostrophes in the development policy pages.
+
+**Verification**
+- Previous exact head `208dc9d`: PostgreSQL integration passed; CI failed on exactly two `react/no-unescaped-entities` errors in the policy pages. Both errors were corrected.
+- New registration tests cover both Customer registration and pending Seller application creation.
+- Exact-head CI/typecheck/lint/unit tests/build and PostgreSQL integration have not yet completed for the expanded implementation.
+- No Google OAuth credentials were supplied, so the provider redirect/callback could not be exercised against a real Google project.
+- No deployed HTTP/browser journey has been run. No user database was accessed and no migration was applied.
+
+**Identity completion gate**
+- Keep System 01 at Implemented / unverified until exact-head CI and PostgreSQL integration pass, Google credentials are configured and provider sign-in is tested, and the full account lifecycle is exercised in a running deployment.
