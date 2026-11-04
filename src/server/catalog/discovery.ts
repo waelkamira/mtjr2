@@ -80,10 +80,8 @@ export async function listDiscoverableProducts(input: unknown = {}) {
       { variants: { some: { isActive: true, OR: [{ sku: { contains: term, mode: "insensitive" as const } }, { barcode: { contains: term, mode: "insensitive" as const } }] } } },
       { brand: { is: { name: { contains: term, mode: "insensitive" as const } } } },
       { store: { is: { name: { contains: term, mode: "insensitive" as const } } } },
-<<<<<<< HEAD
       { store: { is: { seller: { is: { displayName: { contains: term, mode: "insensitive" as const } } } } } },
-=======
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
       { categories: { some: { category: { status: CatalogEntityStatus.ACTIVE, name: { contains: term, mode: "insensitive" as const } } } } }
     ]);
   });
