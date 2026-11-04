@@ -201,3 +201,13 @@ Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL
 | Seller return visibility | `/seller/returns` → `GET /api/seller/returns` → `listSellerReturnRequests` | Verified session; active owned stores, exact-store `orders:manage` grants, or platform admin. Items are grouped by `VendorOrder.storeId`; client cannot supply store scope. | Exact-head General CI and disposable PostgreSQL integration passed on `797f8dd61ee5ec3591f8cc0d2abb46b85235a364`; merged as PR #19. Deployed browser journey remains pending. |
 
 **Boundary:** seller view is read-only. Parent ReturnRequest has one global status across vendors; seller decisions, receipt, shipping and refunds remain disabled until a per-vendor lifecycle is implemented.
+
+
+## System 15 — seller order preparation action trace (initial slice)
+
+| Actor action | UI → API | Authorization and domain | Persistence / final outcome | Boundary |
+|---|---|---|---|---|
+| Start processing | `/seller/orders` → `PATCH /api/seller/orders/[vendorOrderId]/status` with `PROCESSING` | HttpOnly session; server resolves vendor order and store; active store/seller; owner, active staff with exact store `orders:manage`, or global `orders:manage`; current vendor status must be `CONFIRMED` and parent order confirmed/processing | Compare-and-set in serializable transaction; vendor status history, parent order status/history (when first seller starts), and audit log commit atomically; UI updates only after server response | Unpaid `PENDING_PAYMENT` orders cannot advance; cross-store and stale requests are denied |
+| Mark ready to ship | `/seller/orders` → same PATCH endpoint with `READY_TO_SHIP` | Same server-derived store and permission checks; current vendor status must be `PROCESSING` | Vendor status and audit/history commit atomically; repeated target request is idempotent | Shipment, label, tracking, dispatch, delivered, cancellation and refund actions remain unavailable |
+
+This is an initial System 15 slice, not completion of seller order management or System 18 shipping/fulfillment. Browser verification is still pending.
