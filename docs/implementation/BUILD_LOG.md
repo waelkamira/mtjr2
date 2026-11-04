@@ -1915,3 +1915,24 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No local npm/Prisma commands were run in this session.
 - No production database or Vercel deployment was accessed.
 - Browser end-to-end journeys and dedicated feature-level integration tests remain to be verified.
+
+
+## 2026-11-05 — Support SLA targets and escalation
+
+**Implemented on** `feat/support-sla-escalation`:
+- Added persisted per-priority SLA policy rows and first-response/resolution deadlines to support tickets.
+- Default 24/7 elapsed-time targets: LOW 24h/5d, NORMAL 8h/72h, HIGH 4h/24h, URGENT 1h/4h (first response/resolution).
+- Added an idempotent protected SLA worker that records breaches, escalates priority by one level on resolution breach, writes audit events, and notifies the assigned agent.
+- Added a GitHub Actions 15-minute scheduler, admin queue SLA indicators, and a notification preference for SLA escalation.
+- Backfilled deadlines for existing tickets in the migration.
+
+**Operational configuration**
+- Set repository variable `APP_URL` and repository secret `CRON_SECRET` to enable the scheduled worker. No Vercel cron or deployment is used.
+- Targets use elapsed 24/7 hours, not business-hour calendars; policy administration UI is not included in this slice.
+- Attachments still require an approved S3-compatible storage endpoint and malware-scanning integration. No provider credentials are available in this task, so uploads are not represented as complete.
+- Outbound email remains dependent on a verified sender and delivery provider.
+
+**Verification**
+- Added focused SLA policy unit tests.
+- Prisma validation, typecheck, lint, unit tests, build and disposable PostgreSQL migration checks must pass on this exact PR head before merge.
+- No production database or Vercel deployment accessed.

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { requirePermission } from "@/server/identity/permission-guard";
 import { createInAppNotification } from "@/server/notifications/notifications";
+import { defaultSupportSlaMinutes } from "@/server/support/sla-policy";
 
 const idSchema = z.string().trim().min(1).max(128);
 const createSchema = z.object({
@@ -24,12 +25,13 @@ const updateSchema = z.object({
 const ticketSelect = {
   id: true, ticketNumber: true, subject: true, category: true, status: true, priority: true,
   assignedToId: true, lastMessageAt: true, createdAt: true, updatedAt: true, resolvedAt: true, closedAt: true,
-  customerReadAt: true, agentReadAt: true, firstResponseAt: true
+  customerReadAt: true, agentReadAt: true, firstResponseAt: true,
+  firstResponseDueAt: true, resolutionDueAt: true, firstResponseBreachedAt: true, resolutionBreachedAt: true, escalatedAt: true
 } as const;
 
-function serializeTicket<T extends { lastMessageAt: Date; createdAt: Date; updatedAt: Date; resolvedAt: Date | null; closedAt: Date | null; customerReadAt: Date | null; agentReadAt: Date | null; firstResponseAt: Date | null }>(ticket: T) {
+function serializeTicket<T extends { lastMessageAt: Date; createdAt: Date; updatedAt: Date; resolvedAt: Date | null; closedAt: Date | null; customerReadAt: Date | null; agentReadAt: Date | null; firstResponseAt: Date | null; firstResponseDueAt: Date | null; resolutionDueAt: Date | null; firstResponseBreachedAt: Date | null; resolutionBreachedAt: Date | null; escalatedAt: Date | null }>(ticket: T) {
   return { ...ticket, lastMessageAt: ticket.lastMessageAt.toISOString(), createdAt: ticket.createdAt.toISOString(), updatedAt: ticket.updatedAt.toISOString(), resolvedAt: ticket.resolvedAt?.toISOString() ?? null, closedAt: ticket.closedAt?.toISOString() ?? null,
-    customerReadAt: ticket.customerReadAt?.toISOString() ?? null, agentReadAt: ticket.agentReadAt?.toISOString() ?? null, firstResponseAt: ticket.firstResponseAt?.toISOString() ?? null };
+    customerReadAt: ticket.customerReadAt?.toISOString() ?? null, agentReadAt: ticket.agentReadAt?.toISOString() ?? null, firstResponseAt: ticket.firstResponseAt?.toISOString() ?? null, firstResponseDueAt: ticket.firstResponseDueAt?.toISOString() ?? null, resolutionDueAt: ticket.resolutionDueAt?.toISOString() ?? null, firstResponseBreachedAt: ticket.firstResponseBreachedAt?.toISOString() ?? null, resolutionBreachedAt: ticket.resolutionBreachedAt?.toISOString() ?? null, escalatedAt: ticket.escalatedAt?.toISOString() ?? null };
 }
 
 export async function createSupportTicket(input: unknown, now = new Date()) {
@@ -37,10 +39,14 @@ export async function createSupportTicket(input: unknown, now = new Date()) {
   const actor = await requireCurrentSession(now);
   const ticketNumber = `SUP-${now.toISOString().slice(0, 10).replaceAll("-", "")}-${randomBytes(4).toString("hex").toUpperCase()}`;
   return prisma.$transaction(async (tx) => {
+    const policy = await tx.supportSlaPolicy.findFirst({ where: { priority: SupportTicketPriority.NORMAL, enabled: true } });
+    const sla = policy ?? defaultSupportSlaMinutes.NORMAL;
     const ticket = await tx.supportTicket.create({
       data: {
         ticketNumber, customerId: actor.userId, subject: data.subject, category: data.category,
         status: SupportTicketStatus.OPEN, priority: SupportTicketPriority.NORMAL, lastMessageAt: now, customerReadAt: now,
+        firstResponseDueAt: new Date(now.getTime() + sla.firstResponseMinutes * 60_000),
+        resolutionDueAt: new Date(now.getTime() + sla.resolutionMinutes * 60_000),
         messages: { create: { senderId: actor.userId, body: data.message } }
       },
       select: ticketSelect
@@ -117,11 +123,11 @@ export async function adminReplyToSupportTicket(ticketId: string, input: unknown
   const data = replySchema.parse(input);
   const actor = await requirePermission({ permissionKey: "support:manage", now });
   return prisma.$transaction(async (tx) => {
-    const ticket = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, customerId: true, status: true, firstResponseAt: true } });
+    const ticket = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, customerId: true, status: true, firstResponseAt: true, firstResponseDueAt: true } });
     if (!ticket) throw new Error("Support ticket not found.");
     if (ticket.status === SupportTicketStatus.CLOSED) throw new Error("Closed tickets cannot receive replies.");
     const message = await tx.supportMessage.create({ data: { ticketId: id, senderId: actor.userId, body: data.body, isInternal: data.internal ?? false }, select: { id: true, body: true, isInternal: true, createdAt: true } });
-    await tx.supportTicket.update({ where: { id }, data: { status: data.internal ? ticket.status : SupportTicketStatus.WAITING_CUSTOMER, lastMessageAt: now, agentReadAt: now, ...(!data.internal && !ticket.firstResponseAt ? { firstResponseAt: now } : {}) } });
+    await tx.supportTicket.update({ where: { id }, data: { status: data.internal ? ticket.status : SupportTicketStatus.WAITING_CUSTOMER, lastMessageAt: now, agentReadAt: now, ...(!data.internal && !ticket.firstResponseAt ? { firstResponseAt: now, ...(ticket.firstResponseDueAt && now > ticket.firstResponseDueAt ? { firstResponseBreachedAt: now } : {}) } : {}) } });
     if (!data.internal) await createInAppNotification(tx, { data: {
       userId: ticket.customerId, type: "SUPPORT_REPLY", title: "Support replied to your ticket",
       message: "There is a new response to your support request.", resourceType: "support_ticket",
@@ -137,15 +143,18 @@ export async function updateSupportTicket(ticketId: string, input: unknown, now 
   const data = updateSchema.parse(input);
   const actor = await requirePermission({ permissionKey: "support:manage", now });
   return prisma.$transaction(async (tx) => {
-    const current = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, status: true, priority: true, assignedToId: true } });
+    const current = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, status: true, priority: true, assignedToId: true, createdAt: true, firstResponseAt: true } });
     if (!current) throw new Error("Support ticket not found.");
     const status = data.status ?? current.status;
+    const nextPriority = data.priority ?? current.priority;
+    const slaPolicy = data.priority ? await tx.supportSlaPolicy.findFirst({ where: { priority: nextPriority, enabled: true } }) : null;
+    const sla = slaPolicy ?? defaultSupportSlaMinutes[nextPriority];
     const assignedToId = data.assignToMe ? actor.userId : current.assignedToId;
     const changed = await tx.supportTicket.updateMany({
       where: { id, status: current.status, priority: current.priority, assignedToId: current.assignedToId },
       data: {
         ...(data.status ? { status, resolvedAt: status === SupportTicketStatus.RESOLVED ? now : status === SupportTicketStatus.CLOSED ? current.status === SupportTicketStatus.RESOLVED ? now : null : null, closedAt: status === SupportTicketStatus.CLOSED ? now : null } : {}),
-        ...(data.priority ? { priority: data.priority } : {}),
+        ...(data.priority ? { priority: data.priority, ...(!current.firstResponseAt ? { firstResponseDueAt: new Date(current.createdAt.getTime() + sla.firstResponseMinutes * 60_000) } : {}), resolutionDueAt: new Date(current.createdAt.getTime() + sla.resolutionMinutes * 60_000) } : {}),
         ...(data.assignToMe ? { assignedToId } : {})
       }
     });
