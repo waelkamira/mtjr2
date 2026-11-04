@@ -2,7 +2,7 @@
 
 **Canonical schema:** `prisma/schema.prisma`  
 **Purpose:** A navigation and change-impact index for schema review. It does not replace reading the model definitions, migrations, service implementation, or tests before changing persistence.  
-**Audit baseline:** branch `feat/returns-workflow`, 2026-11-04.  
+**Audit baseline:** branch `feat/returns-workflow`, 2026-11-04; 74 Prisma models and 24 enums in the audited schema snapshot.  
 **Rule:** A model is not proof that its workflow is implemented. Every schema change must name the missing business fact/relation, owning service, API/page consumers, migration, and focused verification.
 
 ## 1. Identity, authorization, and audit — System 01 / shared platform
