@@ -70,7 +70,13 @@ export async function calculateCheckoutTax(guestToken: string, quoteId: string, 
     });
     if (!quote?.deliveryAddress) throw new Error("A delivery address is required before tax can be calculated.");
     const storeIds = [...new Set(quote.lines.map((line) => line.storeId))];
-    if (quote.shippingSelections.length !== storeIds.length) {
+    const representedStores = new Set(storeIds);
+    const selectedStores = new Set(quote.shippingSelections.map((selection) => selection.storeId));
+    const hasCompleteShipping = storeIds.every((storeId) => selectedStores.has(storeId))
+      && quote.shippingSelections.every((selection) =>
+        representedStores.has(selection.storeId) && selection.currencyCode === quote.currencyCode
+      );
+    if (!hasCompleteShipping) {
       return { configured: false, requiresShippingSelection: true, message: "Choose a shipping service for every seller before calculating tax." };
     }
     const region = quote.deliveryAddress.region?.trim() || null;
