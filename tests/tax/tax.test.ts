@@ -68,7 +68,7 @@ describe("market tax configuration and checkout calculation", () => {
       marketId: "market-1", currencyCode: "EUR", subtotalMinor: BigInt(10000),
       deliveryAddress: { region: "CA" },
       lines: [{ storeId: "store-1" }],
-      shippingSelections: [{ storeId: "store-1", amountMinor: BigInt(500) }],
+      shippingSelections: [{ storeId: "store-1", amountMinor: BigInt(500), currencyCode: "EUR" }],
       currency: { minorUnit: 2 }
     });
     mocks.marketTaxRateFindMany.mockResolvedValue([{
@@ -120,7 +120,24 @@ describe("market tax configuration and checkout calculation", () => {
       ...mocks.checkoutQuoteFindFirst.mock.results[0]?.value,
       deliveryAddress: { region: "CA" },
       lines: [{ storeId: "store-1" }, { storeId: "store-2" }],
-      shippingSelections: [{ storeId: "store-1", amountMinor: BigInt(500) }]
+      shippingSelections: [{ storeId: "store-1", amountMinor: BigInt(500), currencyCode: "EUR" }]
+    });
+
+    const result = await calculateCheckoutTax("guest-token", "quote-1", now);
+
+    expect(result).toMatchObject({ configured: false, requiresShippingSelection: true });
+    expect(mocks.marketTaxRateFindMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects a shipping selection for a store outside the quote", async () => {
+    mocks.checkoutQuoteFindFirst.mockResolvedValue({
+      id: "quote-1", status: CheckoutQuoteStatus.ACTIVE,
+      expiresAt: new Date("2026-11-04T12:10:00.000Z"),
+      marketId: "market-1", currencyCode: "EUR", subtotalMinor: BigInt(10000),
+      deliveryAddress: { region: "CA" },
+      lines: [{ storeId: "store-1" }],
+      shippingSelections: [{ storeId: "store-other", amountMinor: BigInt(500), currencyCode: "EUR" }],
+      currency: { minorUnit: 2 }
     });
 
     const result = await calculateCheckoutTax("guest-token", "quote-1", now);
