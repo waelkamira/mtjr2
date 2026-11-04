@@ -22,12 +22,12 @@ async function postJson(path: string, payload: unknown): Promise<ApiResult> {
 }
 
 function safeReturnPath(): string {
-  if (typeof window === "undefined") return "/account";
+  if (typeof window === "undefined") return "/account/orders";
   const candidate = new URLSearchParams(window.location.search).get("returnTo");
   if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/account";
   try {
     const parsed = new URL(candidate, window.location.origin);
-    return parsed.origin === window.location.origin ? parsed.pathname + parsed.search + parsed.hash : "/account";
+    return parsed.origin === window.location.origin ? parsed.pathname + parsed.search + parsed.hash : "/account/orders";
   } catch { return "/account"; }
 }
 
@@ -162,7 +162,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           )}
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5 text-sm">
-            {mode === "login" && <><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/register">Create account</Link></>}
+            {mode === "login" && <Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link>}
             {mode === "register" && <><span className="text-[var(--muted)]">Already registered?</span><Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</Link></>}
             {(mode === "forgot" || mode === "reset" || mode === "verify") && <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Back to sign in</Link>}
           </div>
