@@ -1899,3 +1899,19 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact-head Prisma validate/generate, typecheck, lint, unit tests, production build, and disposable PostgreSQL migration/integration have not yet run. Do not merge until the CI result is green and the recommendation migration is applied in the disposable PostgreSQL workflow.
 - Browser-level guest-save → sign-in → merge → wishlist refresh and cross-user isolation remain to be verified.
 - Named user-created lists and cross-tab storage event synchronization remain outside this slice.
+
+
+## 2026-11-04 — Product Q&A governance extension
+
+**Implemented on** `feat/product-qa-reports-history-staff` (PR #31):
+- Added `ProductQuestionReport` with one report per reporter/question, supported reasons, open/reviewed/dismissed states, and audit events.
+- Added authenticated report submission and admin review/dismiss APIs plus a dedicated moderation page.
+- Added `ProductAnswerRevision`; edits preserve the prior answer and return the new text to pending moderation.
+- Added seller answer editing/history controls.
+- Extended seller Q&A access to active store staff only when an exact STORE-scoped `messages:manage` grant exists; store owners retain access.
+
+**Verification**
+- CI and PostgreSQL migration/integration workflows were triggered for exact head `85314f2ec5ff080ec5f213a98a415417bb00fae7`; results are pending at this log entry.
+- No local npm/Prisma commands were run in this session.
+- No production database or Vercel deployment was accessed.
+- Browser end-to-end journeys and dedicated feature-level integration tests remain to be verified.

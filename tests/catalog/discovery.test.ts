@@ -4,14 +4,19 @@ const mocks = vi.hoisted(() => ({
   productFindMany: vi.fn(),
   productCount: vi.fn(),
   productFindFirst: vi.fn(),
-  synonymFindMany: vi.fn()
+  productGroupBy: vi.fn(),
+  productCategoryGroupBy: vi.fn(),
+  synonymFindMany: vi.fn(),
+  queryRaw: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    product: { findMany: mocks.productFindMany, count: mocks.productCount, findFirst: mocks.productFindFirst },
-    searchSynonym: { findMany: mocks.synonymFindMany }
+    product: { findMany: mocks.productFindMany, count: mocks.productCount, findFirst: mocks.productFindFirst, groupBy: mocks.productGroupBy },
+    productCategory: { groupBy: mocks.productCategoryGroupBy },
+    searchSynonym: { findMany: mocks.synonymFindMany },
+    $queryRaw: mocks.queryRaw
   }
 }));
 
@@ -23,11 +28,14 @@ describe("public product discovery", () => {
     mocks.productFindMany.mockResolvedValue([]);
     mocks.productCount.mockResolvedValue(0);
     mocks.productFindFirst.mockResolvedValue(null);
+    mocks.productGroupBy.mockResolvedValue([]);
+    mocks.productCategoryGroupBy.mockResolvedValue([]);
     mocks.synonymFindMany.mockResolvedValue([{ term: "sneaker", synonym: "trainer" }]);
+    mocks.queryRaw.mockResolvedValue([]);
   });
 
   it("uses active localized synonyms and bounded pagination", async () => {
-    const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12" });
+    const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12", sort: "name_asc" });
     expect(result.pagination).toEqual({ page: 2, limit: 12, total: 0, totalPages: 0 });
     expect(mocks.synonymFindMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ locale: "en", isActive: true }), take: 40
@@ -42,7 +50,7 @@ describe("public product discovery", () => {
   });
 
   it("requires every query token to match across product fields", async () => {
-    await listDiscoverableProducts({ q: "red sneaker" });
+    await listDiscoverableProducts({ q: "red sneaker", sort: "name_asc" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.AND).toHaveLength(2);
     expect(where.AND[0].OR).toEqual(expect.arrayContaining([
@@ -52,7 +60,7 @@ describe("public product discovery", () => {
   });
 
   it("searches within the selected store and matches public seller names", async () => {
-    await listDiscoverableProducts({ q: "northstar", storeId: "store-1" });
+    await listDiscoverableProducts({ q: "northstar", storeId: "store-1", sort: "name_asc" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.store).toMatchObject({
       id: "store-1",
