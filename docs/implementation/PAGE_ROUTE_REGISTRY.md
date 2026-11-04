@@ -3,6 +3,7 @@
 **Project:** Mtjr2 global multi-vendor marketplace  
 **Status:** Initial required-page inventory; not yet a verified inventory of every route in the codebase  
 **Canonical plan:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
+**Required journey standard:** `docs/implementation/END_TO_END_JOURNEY_STANDARD.md`  
 **Rule:** A listed target route is not proof that the route exists or works. Actual filesystem route, API/service, schema usage, authorization, and evidence must be filled in during route-by-route audit.
 
 ## Status vocabulary
@@ -16,7 +17,7 @@
 
 ## Required registry fields
 
-For each route record: **Route | Audience/role | Owning system(s) (1–49) | Page/component | API/domain service | Prisma entities | Status | Verification evidence / gaps**.
+For each route record: **Route | Audience/role | Owning system(s) (1–49) | Page/component | API/domain service | Prisma entities | Status | Verification evidence / gaps**. For each interactive action on that route, also trace the exact entry button/link, handler/request, input and response contracts, authorization, domain rules, persistence/state transition, relevant failure states, and test evidence per END_TO_END_JOURNEY_STANDARD.md.
 
 ## A. Public storefront and discovery
 
@@ -78,6 +79,28 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/seller/messages` | Store owner/authorized staff | 09 | seller messaging APIs | Implemented / unverified | Requires exact `messages:manage` scope |
 | `/seller/returns` | Store owner/authorized staff | 11 | seller return workflow | Missing / future | Not part of current initial returns slice |
 | `/seller/analytics`, `/seller/payouts`, `/seller/finance`, `/seller/settings` | Store owner | relevant finance/platform systems | analytics/ledger/payout/settings services | Not audited / conditional | Do not show fabricated values; expose only implemented workflows |
+
+## C1. Mandatory vertical journey: apply to become a seller
+
+This is a cross-page acceptance trace, not a claim that every step has already been verified. Reconcile each row against the actual files and update the status/evidence only after inspection and verification.
+
+| Step | User-visible entry/action | Required route/UI behavior | Backend and persistence contract | Required failure/security coverage | Initial status |
+|---|---|---|---|---|---|
+| 1. Discover | Homepage/header/footer seller CTA | Navigate to the real seller entry/application route; never a dead link | No write; route must explain prerequisites | CTA target exists; unavailable onboarding is not advertised as working | Partial / unverified |
+| 2. Identity gate | Continue/apply while signed out | Sign in/register, then safely return to the application; verified-email requirement is explained | Session/auth service and verified identity | No open redirect; expired session and unverified email handled | Partial / unverified |
+| 3. Form | Enter business/applicant details | Required fields, labels, client validation, loading/disabled submit and accessible errors | Server schema validates same contract; only policy-approved fields collected | Missing/malformed fields, excessive payload, duplicate click, sensitive-document handling | Partial / unverified |
+| 4. Submit | Submit application | Calls the real API; no client-side fake success | POST /api/seller/applications; identity comes from session; service validates account/email/status and writes application + audit atomically | Forged applicant ID, unauthenticated request, duplicate/retry, already-pending/approved/rejected state | Implemented / unverified |
+| 5. Track status | Applicant opens status page | Show persisted pending/approved/rejected/needs-action state and allowed next step | Read API uses the same canonical seller/application records | Other user's application cannot be read; status remains correct after reload | Partial / unverified |
+| 6. Review | Admin opens seller queue, approves/rejects | Permission-gated queue; rejection requires reason where policy says so; clear confirmation/result | Admin review API, valid state transition, audit log, concurrency-safe update | Non-admin, stale status, double decision, missing rejection reason | Implemented / unverified |
+| 7. Create store | Approved seller starts store setup | Only approved applicants can proceed; show draft state and missing setup tasks | Authorized/idempotent store creation; Store, StoreMarket and exact owner/staff scope | Unapproved applicant, repeated create, cross-user/store IDs, no active market configuration | Implemented / unverified |
+| 8. Finish setup | Configure store and first operational steps | Show only actions supported by backend; profile/market/catalog prerequisites explicit | Store settings and market APIs; later product/warehouse services as scoped | Save errors, unavailable market, partial setup, reload and persisted state | Partial / unverified |
+| 9. Verify journey | Exercise from first CTA to approved draft store | Test with real browser/HTTP flow in configured test environment | Disposable PostgreSQL for schema/transaction changes; focused auth/permission tests | Guest, verified/unverified user, duplicate submit, forbidden reviewer, approve/reject, stale transition, idempotent store creation | Not yet evidenced as one complete journey |
+
+**Schema decision gate:** inspect prisma/schema.prisma and docs/architecture/prisma-model-usage-map.md before changing persistence. Reuse the current Seller/application representation if it covers the lifecycle. Add a model/table only if a missing durable business state or relationship is demonstrated; any change needs an additive migration and disposable-PostgreSQL verification. KYC documents, seller tax records and payout activation are separate scopes and must not be implied by basic application approval.
+
+## C1a. Cross-cutting action audit
+
+For every page added or modified, inventory all interactive controls (including header/footer controls, row menus, pagination, retry and destructive actions). Each control must have one of: a real verified action, an explicitly conditional/disabled state with reason, or be removed until implemented. Check UI → API → auth/validation → service → repository/Prisma → response/refresh. Keep the test set focused on distinct business invariants and security boundaries; do not create a test per helper or visual control.
 
 ## D. Platform administration
 
