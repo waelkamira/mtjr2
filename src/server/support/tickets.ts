@@ -8,6 +8,7 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 import { requirePermission } from "@/server/identity/permission-guard";
 import { createInAppNotification } from "@/server/notifications/notifications";
 import { defaultSupportSlaMinutes } from "@/server/support/sla-policy";
+import { createR2DownloadUrl } from "@/server/storage/r2";
 
 const idSchema = z.string().trim().min(1).max(128);
 const createSchema = z.object({
@@ -74,11 +75,11 @@ export async function getMySupportTicket(ticketId: string, now = new Date()) {
   const actor = await requireCurrentSession(now);
   const ticket = await prisma.supportTicket.findFirst({
     where: { id, customerId: actor.userId },
-    select: { ...ticketSelect, messages: { where: { isInternal: false }, orderBy: { createdAt: "asc" }, take: 200, select: { id: true, body: true, createdAt: true, senderId: true, sender: { select: { displayName: true } } } } }
+    select: { ...ticketSelect, attachments: { where: { status: "CLEAN" }, orderBy: { createdAt: "asc" }, select: { id: true, fileName: true, contentType: true, sizeBytes: true, objectKey: true } }, messages: { where: { isInternal: false }, orderBy: { createdAt: "asc" }, take: 200, select: { id: true, body: true, createdAt: true, senderId: true, sender: { select: { displayName: true } } } } }
   });
   if (!ticket) throw new Error("Support ticket not found.");
   await prisma.supportTicket.updateMany({ where: { id, customerId: actor.userId }, data: { customerReadAt: now } });
-  return { ...serializeTicket(ticket), messages: ticket.messages.map((message) => ({ id: message.id, body: message.body, createdAt: message.createdAt.toISOString(), senderId: message.senderId, author: message.sender.displayName || "Support" })) };
+  return { ...serializeTicket(ticket), attachments: ticket.attachments.map(({ objectKey, ...attachment }) => ({ ...attachment, downloadUrl: createR2DownloadUrl(objectKey).url })), messages: ticket.messages.map((message) => ({ id: message.id, body: message.body, createdAt: message.createdAt.toISOString(), senderId: message.senderId, author: message.sender.displayName || "Support" })) };
 }
 
 export async function replyToMySupportTicket(ticketId: string, input: unknown, now = new Date()) {
