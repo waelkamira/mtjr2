@@ -16,38 +16,29 @@ export async function listDiscoverableStores(input: unknown = {}) {
     products: { some: { status: CatalogEntityStatus.ACTIVE } },
     ...(query.q ? { OR: [
       { name: { contains: query.q, mode: "insensitive" as const } },
-<<<<<<< HEAD
       { slug: { contains: query.q, mode: "insensitive" as const } },
       { seller: { displayName: { contains: query.q, mode: "insensitive" as const } } }
-=======
-      { slug: { contains: query.q, mode: "insensitive" as const } }
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
     ] } : {})
   };
   const [items, total] = await Promise.all([
     prisma.store.findMany({
       where, orderBy: [{ createdAt: "desc" }, { id: "asc" }],
       skip: (query.page - 1) * query.limit, take: query.limit,
-<<<<<<< HEAD
       select: {
         id: true, slug: true, name: true,
         seller: { select: { displayName: true } },
         _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE } } } }
       }
-=======
-      select: { id: true, slug: true, name: true, _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE } } } } }
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
     }),
     prisma.store.count({ where })
   ]);
   return {
-<<<<<<< HEAD
     items: items.map(({ _count, seller, ...store }) => ({
       ...store, sellerDisplayName: seller.displayName, productCount: _count.products
     })),
-=======
-    items: items.map(({ _count, ...store }) => ({ ...store, productCount: _count.products })),
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
     pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
   };
 }
@@ -56,7 +47,6 @@ export async function getDiscoverableStoreBySlug(slug: string) {
   const key = z.string().trim().min(1).max(160).parse(slug);
   const store = await prisma.store.findFirst({
     where: { slug: key, status: StoreStatus.ACTIVE, seller: { status: SellerStatus.ACTIVE } },
-<<<<<<< HEAD
     select: {
       id: true, slug: true, name: true, createdAt: true,
       seller: { select: { displayName: true } },
@@ -68,9 +58,5 @@ export async function getDiscoverableStoreBySlug(slug: string) {
     sellerDisplayName: store.seller.displayName,
     productCount: store._count.products, createdAt: store.createdAt
   } : null;
-=======
-    select: { id: true, slug: true, name: true, createdAt: true, _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE } } } } }
-  });
-  return store ? { id: store.id, slug: store.slug, name: store.name, productCount: store._count.products, createdAt: store.createdAt } : null;
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
+
 }
