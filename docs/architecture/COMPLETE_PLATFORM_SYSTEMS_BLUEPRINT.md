@@ -5,11 +5,14 @@
 **Canonical schema target:** `prisma/schema.prisma` (new implementation; schema is being designed)  
 **Companion audit:** `docs/PROJECT_AUDIT.md`
 **Companion page inventory:** `docs/architecture/PLATFORM_PAGE_INVENTORY.md` (required user-facing and operational routes; route presence is not proof of workflow completion)  
+**Page-to-system placement map:** `docs/architecture/PLATFORM_PAGE_SYSTEM_MAP.md` (canonical audience, page ownership, navigation and delivery-order map)  
 **Model map:** `docs/architecture/PRISMA_MODEL_USAGE_MAP.md`  
 **End-to-end delivery standard:** `docs/implementation/END_TO_END_JOURNEY_STANDARD.md`  
 **Imported as baseline:** 2026-11-03
 
 > This document is the functional blueprint for the 49 platform systems. It defines what each system must do, the expected screens, the canonical data models, the API surface, and the implementation state evidenced by the current repository audit. It is not a claim that every listed feature already works.
+
+**Global completeness extension:** [`GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md`](GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md) identifies additional mandatory global capabilities (KYB, product compliance, customs/landed cost, tax determination, payment orchestration, settlement, privacy, fraud, communications and reliability) and defines page-level acceptance and launch gates. The 49-system inventory remains the canonical numbered capability list; do not interpret the count as proof that these global concerns are fully implemented.
 
 ## 1. Rules for using this blueprint
 
