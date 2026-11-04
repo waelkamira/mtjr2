@@ -77,3 +77,11 @@ On the exact heads inspected on 2026-11-04:
 - #9: TypeScript errors at `src/server/orders/orders.ts:268,291,306`. The Prisma result selects `vendorOrders[].store` as `name,slug`, but the mapper contract requires `id,name,slug`. Fix the select and type contract together; do not hide it with a cast.
 - #11/#12/#13/#14: inherited lint errors include the admin tax page, `src/app/seller/messages/page.tsx:1`, `src/features/account/wishlist-page.tsx:27`, `src/features/admin/reviews-page.tsx:27`, `src/features/admin/store-reviews-page.tsx:26`, `src/features/seller/reviews-page.tsx:26`, and `src/features/storefront/product-reviews.tsx:43`. These trigger `react-hooks/set-state-in-effect`; async loaders called from effects synchronously update state. Refactor loading lifecycle; do not disable the lint rule.
 - The diagnostic logs were retrieved for exact job IDs attached to the inspected heads. Refresh PR heads before making changes, because a newer commit may already have corrected some findings.
+
+## Follow-up change: PR #4 lint correction
+
+- Refreshed PR #4 immediately before editing; its head was `2e9b810e9ec9c6f48646079972b2cd789b8c8bcd`.
+- Escaped the JSX apostrophe in `src/features/checkout/checkout-shipping-options.tsx` as `&apos;` to address `react/no-unescaped-entities`.
+- New branch head after the change: `c37d10982a71850c5f65222f087073ea2eaf082e`. The checkout copy fix is the only source change; seller workspace copy remained unchanged.
+- Fresh exact-head workflows are running: Quality job `126369311696`; PostgreSQL job `126369312055`. Logs were not yet downloadable at the time of this note. This change is **not verified** until both jobs finish successfully.
+- No merge or PR retarget/rebase was performed.
