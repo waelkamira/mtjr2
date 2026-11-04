@@ -1761,3 +1761,7 @@ These diagnostics are from the exact job logs for #2, #3, #4, #6, #9, #11, #12, 
 ## 2026-11-04 — CI failure ownership corrected
 
 A second pass against the job IDs corrected the PR-to-diagnostic mapping in the closeout audit: #4 owns the JSX apostrophe errors in checkout-shipping-options and seller workspace; #6 owns the admin tax-rates setState-in-effect lint error; #9 owns the orders.ts TypeScript selection/type mismatch; #11–#14 inherit the broader setState-in-effect errors in seller messages, wishlist and review screens. This correction is recorded in OPEN_WORK_CLOSEOUT_AUDIT.md. No source code or PR branch was changed.
+
+## 2026-11-04 — PR #4 checkout copy lint correction
+
+Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` on `feat/store-shipping-options` to address the exact-head `react/no-unescaped-entities` lint finding. New head: `c37d10982a71850c5f65222f087073ea2eaf082e`. Fresh Quality and PostgreSQL workflows are running (jobs `126369311696` and `126369312055`); not marked verified until both pass. No PR was merged or retargeted.
