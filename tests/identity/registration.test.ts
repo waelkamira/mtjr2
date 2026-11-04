@@ -96,7 +96,6 @@ describe("registration and email verification", () => {
     }, now);
     expect(txMock.seller.create).toHaveBeenCalledWith({ data: { ownerId: "seller-user-1", legalName: "Example Applicant", displayName: "Example Store", status: "PENDING" } });
   });
-<<<<<<< HEAD
 
   it("returns an identity conflict before hashing or inserting an existing email", async () => {
     prismaMock.user.findFirst.mockResolvedValue({ id: "existing-user" });
@@ -121,8 +120,6 @@ describe("registration and email verification", () => {
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
-=======
->>>>>>> 442aae41dfb67a4b1bc8871948cab095bcdb9ade
   it("requires business details when seller is selected", async () => {
     await expect(registerUser({
       email: "seller@example.com",
