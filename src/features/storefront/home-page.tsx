@@ -293,6 +293,7 @@ export default function StorefrontHomePage() {
         <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-10 text-sm text-white/70 lg:flex-row lg:items-center lg:justify-between lg:px-10">
           <span className="text-xl font-semibold tracking-tight text-white">mtjr<span className="text-[var(--color-copper-500)]">.</span></span>
           <p>A global marketplace built around discovery, trust and independent stores.</p>
+          <nav aria-label="Legal and account links" className="flex flex-wrap gap-4 text-xs text-white/80"><Link href="/terms" className="hover:text-white">Terms of Use</Link><Link href="/privacy" className="hover:text-white">Privacy Notice</Link><Link href="/account" className="hover:text-white">My account</Link><Link href="/seller" className="hover:text-white">Sell on Mtjr</Link></nav>
           <span>© {new Date().getFullYear()} Mtjr</span>
         </div>
       </footer>
