@@ -5,7 +5,11 @@ const { prismaMock, txMock, hashPasswordMock, verifyPasswordMock } = vi.hoisted(
     user: { updateMany: vi.fn() },
     userSession: { updateMany: vi.fn() },
     passwordResetToken: { updateMany: vi.fn() },
-    auditLog: { create: vi.fn() }
+    auditLog: { create: vi.fn() },
+    notificationPreference: { findUnique: vi.fn() },
+    notification: { create: vi.fn() },
+    notificationDelivery: { createMany: vi.fn() },
+    user: { updateMany: vi.fn() }
   };
   return {
     txMock: tx,
@@ -52,6 +56,9 @@ describe("authenticated password change", () => {
     txMock.userSession.updateMany.mockResolvedValue({ count: 2 });
     txMock.passwordResetToken.updateMany.mockResolvedValue({ count: 1 });
     txMock.auditLog.create.mockResolvedValue({});
+    txMock.notificationPreference.findUnique.mockResolvedValue(null);
+    txMock.notification.create.mockResolvedValue({ id: "notification-1" });
+    txMock.notificationDelivery.createMany.mockResolvedValue({ count: 0 });
   });
 
   it("atomically updates the password and revokes other sessions and reset links", async () => {
