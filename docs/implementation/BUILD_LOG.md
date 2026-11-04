@@ -1594,3 +1594,11 @@ The project owner approved Resend as the transactional email provider. The serve
 
 **Identity completion gate**
 - Keep System 01 at Implemented / unverified until exact-head CI and PostgreSQL integration pass, Google credentials are configured and provider sign-in is tested, and the full account lifecycle is exercised in a running deployment.
+
+
+**Additional account security slice**
+- Added `/account/security` and `/account/sessions`, plus `GET/DELETE /api/account/sessions`.
+- Session listing is restricted to the authenticated user's own non-revoked sessions. Revocation uses both session ID and authenticated user ID; revoking the current session clears the HttpOnly cookie.
+- Added audit events for session revocation. 2FA is visibly marked unavailable rather than exposing a non-functional enrollment control.
+- Added tests for blank optional Google credentials and seller-registration business-name validation.
+- Exact-head CI and PostgreSQL integration remain the final code gates.
