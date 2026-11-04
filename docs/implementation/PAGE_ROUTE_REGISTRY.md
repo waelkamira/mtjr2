@@ -197,3 +197,10 @@ Some absent targets may be intentionally implemented as sections or embedded wor
 ### API route audit boundary
 
 The 86 API route handlers are present in the tree. Their mere presence is not a pass. For each route touched by a feature, record request method/path, schema, session and permission guard, domain service, Prisma models, error mapping, and focused tests in the feature's journey trace. Prioritize auth, seller application/store creation, checkout/order, returns/refunds, inventory, and admin mutations. A complete endpoint-by-endpoint behavioral audit has not yet been performed.
+
+
+## Mandatory action-level trace requirement
+
+This registry records route presence and route-level status only. It does **not** certify every button or action on a route. For every route, enumerate all visible controls (including navigation, cards, icon buttons, forms, filters, pagination, dialogs, empty states, seller/admin actions and mobile controls) in the [49-system End-to-End Journey Matrix](END_TO_END_JOURNEY_MATRIX.md) or a linked system-specific action trace. Each action must include its UI handler, API method/path, validation, session/permission/resource scope, domain service, Prisma model/migration or explicit no-schema-change decision, transaction/idempotency/audit behavior, final persisted state and visible outcome, meaningful failure states, and exact-commit test evidence.
+
+A route stays **Implemented / unverified** (or Partial) if any exposed critical action is unverified. A visible nonfunctional action must be removed, disabled or honestly labelled unavailable; do not count it as complete. Route existence alone never upgrades an action or system to Verified.
