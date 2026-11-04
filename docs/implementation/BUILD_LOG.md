@@ -1956,3 +1956,21 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The external malware-scanning service is not implemented/configured; uploads remain quarantined when it is absent.
 - Store-message upload API, customer/admin upload UI, attachment listing/download journey, orphan cleanup/retention, and browser-level end-to-end verification remain open.
 - Do not enable attachments in production until these gates are completed and verified.
+
+
+## 2026-11-05 — Customer notification delivery
+
+**Implemented on `feat/customer-notification-delivery`**
+- Extended notification preferences to independently control in-app and email channels for order, seller order, store message, support/SLA, payment, shipment-ready, and account-security event types.
+- Added `UserConsent.NOTIFICATION_EMAIL`; email is opt-in, defaults off, and is checked both when queuing and immediately before sending. Withdrawal cancels pending deliveries.
+- Added `NotificationDelivery` outbox with unique event deduplication, delivery states (PENDING/PROCESSING/RETRY/SENT/FAILED/CANCELLED), attempt counters, lock recovery, timestamps, and provider message ID.
+- Added Resend transactional notification adapter using a stable idempotency key; only active users with verified email addresses are eligible.
+- Added protected five-minute GitHub Actions worker endpoint, batch claims, bounded exponential retries (1 minute to 6 hours), and user-scoped delivery history in `GET /api/notifications`.
+- Connected existing order placed, seller order received, store message, support reply and SLA events through the shared preference-aware event creation helper; connected payment success/failure and password change/reset events.
+- Updated `/notifications` controls and delivery-history UI. Added focused retry-backoff unit tests.
+
+**Not complete / operational gates**
+- No Resend API key or verified sender was supplied; no real email was sent or provider delivery verified.
+- Set repository variable `APP_URL` and secret `CRON_SECRET` to activate the scheduled delivery workflow.
+- Shipment preferences exist, but no Shipment model/carrier tracking lifecycle or SHIPPED/DELIVERED transition is present. Do not claim shipment notifications are live until that system exists.
+- Browser-level user journeys and provider callback/reconciliation are not yet verified.
