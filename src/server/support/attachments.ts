@@ -30,11 +30,12 @@ export async function startSupportAttachmentUpload(ticketIdInput: string, input:
   if (!ticket || !(await canManageTicket(actor.userId, ticket, now))) throw new Error("Support ticket not found.");
   if (ticket.status === "CLOSED" || ticket.status === "RESOLVED") throw new Error("Attachments cannot be added to a closed ticket.");
   const objectKey = newAttachmentObjectKey("support", ticket.id);
+  const upload = createR2UploadUrl(objectKey, metadata.contentType, now);
   const attachment = await prisma.supportAttachment.create({
     data: { ticketId, uploadedById: actor.userId, objectKey, ...metadata },
     select: { id: true, fileName: true, contentType: true, sizeBytes: true, status: true }
   });
-  return { attachment, upload: createR2UploadUrl(objectKey, metadata.contentType, now) };
+  return { attachment, upload };
 }
 
 export async function finalizeSupportAttachmentUpload(ticketIdInput: string, attachmentIdInput: string, now = new Date()) {
