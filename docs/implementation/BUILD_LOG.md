@@ -1742,3 +1742,12 @@ The project owner approved Resend as the transactional email provider. The serve
 **Verification**
 - Source and focused unit test have been committed to this branch. Exact-head General CI, Prisma validation/generation, and disposable PostgreSQL integration are pending; no pass is claimed yet.
 - No owner/local/production database was accessed. No production migration, Vercel setting, or secret was changed.
+
+
+## Post-merge deployment check — 2026-11-04
+
+- Vercel created a Production deployment for merge commit `6ff5561454294a587f076b67c4c2a4a83dafb248`, but the deployment ended in `ERROR` during Next.js page-data collection.
+- The build log identifies missing environment values `NEXT_PUBLIC_APP_URL` and `AUTH_SECRET`; the failure occurred while evaluating `src/lib/env.ts` through the shared site navigation/session-cookie import.
+- This is distinct from the earlier Hobby cron restriction and deployment-rate limit. Do not weaken server environment validation or invent a production auth secret to make the build pass.
+- Owner action: configure the required values in the correct Vercel Production environment (and Preview separately as needed). Generate `AUTH_SECRET` privately; never paste it into chat or commit it. Then retry one deployment after checking the environment configuration.
+- No Vercel settings or environment variables were read or changed by this work.
