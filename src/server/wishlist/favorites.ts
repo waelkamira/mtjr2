@@ -60,3 +60,24 @@ export async function removeFavorite(productId: string, now = new Date()) {
   await prisma.favorite.deleteMany({ where: { userId: actor.userId, productId: id } });
   return { productId: id, isFavorite: false };
 }
+
+export async function mergeGuestFavorites(productIds: string[], now = new Date()) {
+  const actor = await requireCurrentSession(now);
+  const uniqueIds = [...new Set(productIds)].slice(0, 100);
+  if (!uniqueIds.length) return { merged: 0, ignored: 0 };
+  const eligible = await prisma.product.findMany({
+    where: {
+      id: { in: uniqueIds },
+      status: CatalogEntityStatus.ACTIVE,
+      approvalStatus: ProductApprovalStatus.APPROVED,
+      store: { status: "ACTIVE", seller: { status: "ACTIVE" } }
+    },
+    select: { id: true }
+  });
+  const eligibleIds = eligible.map((item) => item.id);
+  const result = await prisma.favorite.createMany({
+    data: eligibleIds.map((productId) => ({ userId: actor.userId, productId })),
+    skipDuplicates: true
+  });
+  return { merged: result.count, ignored: uniqueIds.length - result.count };
+}
