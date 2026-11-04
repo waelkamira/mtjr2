@@ -5,6 +5,7 @@
 **Canonical schema target:** `prisma/schema.prisma` (new implementation; schema is being designed)  
 **Companion audit:** `docs/PROJECT_AUDIT.md`
 **Companion page inventory:** `docs/architecture/PLATFORM_PAGE_INVENTORY.md` (required user-facing and operational routes; route presence is not proof of workflow completion)  
+**Page-to-system placement map:** `docs/architecture/PLATFORM_PAGE_SYSTEM_MAP.md` (canonical audience, page ownership, navigation and delivery-order map)  
 **Model map:** `docs/architecture/PRISMA_MODEL_USAGE_MAP.md`  
 **End-to-end delivery standard:** `docs/implementation/END_TO_END_JOURNEY_STANDARD.md`  
 **Imported as baseline:** 2026-11-03
