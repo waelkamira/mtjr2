@@ -3,6 +3,7 @@ import "server-only";
 import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword, verifyPassword } from "@/server/identity/password";
+import { createInAppNotification } from "@/server/notifications/notifications";
 
 export type PasswordChangeResult =
   | "UPDATED"
@@ -68,6 +69,13 @@ export async function changePassword(
         occurredAt: now
       }
     });
+    await createInAppNotification(tx, { data: {
+      userId: input.userId, type: "ACCOUNT_SECURITY",
+      title: "Your password was changed",
+      message: "Your Mtjr account password was successfully changed. If this was not you, contact support.",
+      resourceType: "ACCOUNT", resourceId: input.userId,
+      deduplicationKey: `account-security:password-change:${input.userId}:${now.toISOString()}`
+    }});
     return "UPDATED";
   });
 }

@@ -1944,15 +1944,34 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - PR #32 added persisted support response/resolution targets, priority-based escalation, audit events, assigned-agent notifications, and a protected scheduled worker.
 - Exact-head CI and PostgreSQL integration passed for commit `afd2dafeed81c197d21b2dfd8bde8550cef79548`; merge commit: `edaff23d824caa33037343113dbf79816eaac7e5`.
 
-**In review — PR #33**
+**Merged — PR #33**
 - Added private Cloudflare R2 SigV4 presigned URL generation, attachment persistence for support tickets and store conversations, strict metadata validation (10 MB / MIME allowlist), and a support-ticket upload-init/finalize API.
-- Finalization verifies the R2 object metadata and fails closed unless an external malware scanner returns an explicit `{ "clean": true|false }` result.
-- Required server-only configuration: R2 account/access/bucket credentials and `ATTACHMENT_SCANNER_URL` + `ATTACHMENT_SCANNER_TOKEN`.
+- Finalization verifies R2 object metadata and fails closed unless an external malware scanner returns an explicit `{ "clean": true|false }` result.
+- Exact-head CI and PostgreSQL integration passed for `7000ea4c29e20659487b94c61fcd4924bcff6ad8`; merge commit: `d45fcad7ed5f95165c7eaaf917f3972ed6751dad`.
 - PR: https://github.com/waelkamira/mtjr2/pull/33
-- Current branch head: `332f2414317a6c330e9c795e5cd7634d03fa9247`; exact-head CI and PostgreSQL integration are pending.
+- Required server-only configuration: R2 account/access/bucket credentials and `ATTACHMENT_SCANNER_URL` + `ATTACHMENT_SCANNER_TOKEN`.
+
 
 **Not complete / rollout blocked**
 - No real R2 credentials or bucket CORS configuration have been supplied or tested.
 - The external malware-scanning service is not implemented/configured; uploads remain quarantined when it is absent.
 - Store-message upload API, customer/admin upload UI, attachment listing/download journey, orphan cleanup/retention, and browser-level end-to-end verification remain open.
 - Do not enable attachments in production until these gates are completed and verified.
+
+
+## 2026-11-05 — Customer notification delivery
+
+**Implemented on `feat/customer-notification-delivery`**
+- Extended notification preferences to independently control in-app and email channels for order, seller order, store message, support/SLA, payment, shipment-ready, and account-security event types.
+- Added `UserConsent.NOTIFICATION_EMAIL`; email is opt-in, defaults off, and is checked both when queuing and immediately before sending. Withdrawal cancels pending deliveries.
+- Added `NotificationDelivery` outbox with unique event deduplication, delivery states (PENDING/PROCESSING/RETRY/SENT/FAILED/CANCELLED), attempt counters, lock recovery, timestamps, and provider message ID.
+- Added Resend transactional notification adapter using a stable idempotency key; only active users with verified email addresses are eligible.
+- Added protected five-minute GitHub Actions worker endpoint, batch claims, bounded exponential retries (1 minute to 6 hours), and user-scoped delivery history in `GET /api/notifications`.
+- Connected existing order placed, seller order received, store message, support reply and SLA events through the shared preference-aware event creation helper; connected payment success/failure and password change/reset events.
+- Updated `/notifications` controls and delivery-history UI. Added focused retry-backoff unit tests.
+
+**Not complete / operational gates**
+- No Resend API key or verified sender was supplied; no real email was sent or provider delivery verified.
+- Set repository variable `APP_URL` and secret `CRON_SECRET` to activate the scheduled delivery workflow.
+- Shipment preferences exist, but no Shipment model/carrier tracking lifecycle or SHIPPED/DELIVERED transition is present. Do not claim shipment notifications are live until that system exists.
+- Browser-level user journeys and provider callback/reconciliation are not yet verified.
