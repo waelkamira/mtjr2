@@ -117,7 +117,9 @@ describe("market tax configuration and checkout calculation", () => {
 
   it("returns a configuration-required result when any seller has no shipping selection", async () => {
     mocks.checkoutQuoteFindFirst.mockResolvedValue({
-      ...mocks.checkoutQuoteFindFirst.mock.results[0]?.value,
+      id: "quote-1", status: CheckoutQuoteStatus.ACTIVE,
+      expiresAt: new Date("2026-11-04T12:10:00.000Z"),
+      marketId: "market-1", currencyCode: "EUR", subtotalMinor: BigInt(10000),
       deliveryAddress: { region: "CA" },
       lines: [{ storeId: "store-1" }, { storeId: "store-2" }],
       shippingSelections: [{ storeId: "store-1", amountMinor: BigInt(500), currencyCode: "EUR" }]
