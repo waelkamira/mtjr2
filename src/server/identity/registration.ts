@@ -95,6 +95,17 @@ export async function registerUser(
         }
       });
 
+      if (parsed.accountType === "CUSTOMER") {
+        const customerRole = await tx.role.findUnique({
+          where: { key: "CUSTOMER" },
+          select: { id: true }
+        });
+        if (!customerRole) throw new Error("CUSTOMER role is missing; run the identity seed before registering customers.");
+        await tx.userRoleAssignment.create({
+          data: { userId: createdUser.id, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" }
+        });
+      }
+
       if (parsed.accountType === "SELLER") {
         await tx.seller.create({ data: { ownerId: createdUser.id, legalName: parsed.sellerLegalName, displayName: parsed.sellerDisplayName, status: SellerStatus.PENDING } });
       }
