@@ -292,3 +292,10 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 | Seller scope | Current server session; active owned store or exact-store `orders:manage`; platform admin | Store scope derived in domain service; no client store ID accepted | Seller, Store, SellerStaff, UserRoleAssignment | Exact-head General CI and PostgreSQL passed on `797f8dd61ee5ec3591f8cc0d2abb46b85235a364`; PR #19 merged. Browser journey pending. |
 
 The parent ReturnRequest can span several stores but has a single global status. Do not add seller approval/rejection/receipt mutations until the per-vendor lifecycle design is implemented and verified.
+
+
+## Seller order preparation route update — 2026-11-04
+
+| Route / action | UI | API / domain | Prisma | Status |
+|---|---|---|---|---|
+| Seller order preparation | `/seller/orders` | `PATCH /api/seller/orders/[vendorOrderId]/status` → `transitionSellerVendorOrder` | Existing VendorOrder and status-history records plus AuditLog; no schema change | Implemented on PR #25; exact-head CI/PostgreSQL verification pending. Only paid `CONFIRMED → PROCESSING → READY_TO_SHIP` is exposed. |

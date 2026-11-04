@@ -311,3 +311,8 @@ Every visible control must be followed from click/submit through frontend handle
 ## Payment lifecycle status (2026-11-04)
 
 A provider-neutral payment foundation is being reconstructed on current `main`: canonical `Payment` / `PaymentWebhookEvent` persistence, idempotent order payment intent creation, a provider adapter contract, verified webhook processing, and a buyer order-detail payment entry point. No provider is registered by default and no live charge is enabled. The exact-head CI and disposable PostgreSQL checks must pass before merge; refunds, disputes, settlement reconciliation, and concrete provider onboarding remain incomplete.
+
+
+## Seller order preparation — 2026-11-04
+
+System 15 has an initial seller-side preparation slice on `feat/seller-order-processing`: paid vendor orders can move through `CONFIRMED → PROCESSING → READY_TO_SHIP` using a store-scoped API and connected seller UI. Writes use the existing Prisma status/history/audit models in a serializable transaction; no schema migration was needed. Shipping labels, tracking, dispatch, delivery, cancellation and refunds are deliberately not exposed until their own workflows are implemented. Exact-head verification is pending.
