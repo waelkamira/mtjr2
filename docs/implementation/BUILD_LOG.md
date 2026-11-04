@@ -1549,3 +1549,6 @@ The project owner approved Resend as the transactional email provider. The serve
 2. Add a real user-facing logout control and verify cookie/session revocation through `/api/auth/me` after logout.
 3. Owner must supply approved Terms of Service and Privacy Notice before public registration can be enabled.
 4. Configure the real trusted proxy header and Resend sender/key, then run one deployed HTTP journey: register → verify → login → authenticated request → logout → denied request. Until then Phase 2 remains open and downstream launch claims remain blocked.
+
+
+**Identity journey follow-up:** Added a real Sign out control to the customer order-history header. It posts to `/api/auth/logout`, prevents duplicate clicks, reports failures, and redirects to `/login` only after the server confirms success. Removed the homepage Create account CTA while registration is unavailable, so the storefront no longer advertises an unavailable signup action. Added `no-referrer` and `noindex` metadata to verification/reset token pages. These changes are in source but await fresh exact-head CI and browser/HTTP verification.
