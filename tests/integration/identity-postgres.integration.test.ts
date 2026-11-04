@@ -1,5 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
+
+const { sessionMock } = vi.hoisted(() => ({
+  sessionMock: { getCurrentSession: vi.fn(), requireCurrentSession: vi.fn() }
+}));
+vi.mock("@/server/identity/current-session", () => ({
+  getCurrentSession: sessionMock.getCurrentSession,
+  requireCurrentSession: sessionMock.requireCurrentSession
+}));
+
 import { prisma } from "@/lib/db/prisma";
 import { registerUser, verifyUserEmail } from "@/server/identity/registration";
 import { loginWithPassword } from "@/server/identity/login";
@@ -11,6 +20,10 @@ import {
   revokeUserSession
 } from "@/server/identity/session";
 import { userHasPermission } from "@/server/identity/permission-repository";
+import { GET as getAccountProfile, PATCH as patchAccountProfile } from "@/app/api/account/profile/route";
+import { createUserAddress, listUserAddresses } from "@/server/account/addresses";
+import { listMyFavorites, removeFavorite } from "@/server/wishlist/favorites";
+import { listCustomerOrders } from "@/server/orders/orders";
 import {
   clearLoginThrottle,
   consumeLoginAttempt
@@ -22,6 +35,12 @@ let userId: string | undefined;
 const createdUserIds = new Set<string>();
 
 describe("identity PostgreSQL integration", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    sessionMock.getCurrentSession.mockReset();
+    sessionMock.requireCurrentSession.mockReset();
+  });
+
   afterAll(async () => {
     if (createdUserIds.size) {
       await prisma.seller.deleteMany({ where: { ownerId: { in: [...createdUserIds] } } });
@@ -125,6 +144,84 @@ describe("identity PostgreSQL integration", () => {
 
     await expect(revokeUserSession(createdSession.token)).resolves.toBe(true);
     await expect(resolveUserSession(createdSession.token)).resolves.toBeNull();
+  });
+
+  it("scopes buyer profile, address, favorites and orders to the authenticated PostgreSQL user", async () => {
+    const registration = await registerUser({
+      email: "account-scope-" + suffix + "@example.test",
+      password: "Correct-Horse-Battery-42!",
+      displayName: "Integration Buyer",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    });
+    createdUserIds.add(registration.userId);
+    await verifyUserEmail(registration.verificationToken);
+
+    const session = { userId: registration.userId };
+    sessionMock.getCurrentSession.mockResolvedValue(session);
+    sessionMock.requireCurrentSession.mockResolvedValue(session);
+
+    const profileQuery = vi.spyOn(prisma.user, "findUnique");
+    const profileResponse = await getAccountProfile();
+    expect(profileResponse.status).toBe(200);
+    const profileBody = await profileResponse.json();
+    expect(profileBody.profile.id).toBe(registration.userId);
+    expect(profileQuery).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: registration.userId }
+    }));
+
+    const profileUpdate = vi.spyOn(prisma.user, "update");
+    const updateResponse = await patchAccountProfile(new Request("http://localhost:3000/api/account/profile", {
+      method: "PATCH",
+      headers: {
+        origin: "http://localhost:3000",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ displayName: "Updated Integration Buyer" })
+    }));
+    expect(updateResponse.status).toBe(200);
+    expect((await updateResponse.json()).profile.displayName).toBe("Updated Integration Buyer");
+    expect(profileUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: registration.userId },
+      data: { displayName: "Updated Integration Buyer" }
+    }));
+
+    await prisma.country.upsert({
+      where: { iso2: "QX" },
+      update: { name: "Identity Test Country", isActive: true },
+      create: { iso2: "QX", name: "Identity Test Country", isActive: true }
+    });
+    const address = await createUserAddress({
+      countryCode: "QX",
+      recipientName: "Integration Buyer",
+      phone: "+33612345678",
+      line1: "1 Integration Street",
+      city: "Paris"
+    });
+    expect(address.userId).toBe(registration.userId);
+    const addresses = await listUserAddresses();
+    expect(addresses).toHaveLength(1);
+    expect(addresses[0]).toMatchObject({ countryCode: "QX", countryName: "Identity Test Country" });
+
+    const favoriteQuery = vi.spyOn(prisma.favorite, "findMany");
+    const favorites = await listMyFavorites();
+    expect(favorites).toHaveLength(0);
+    expect(favoriteQuery).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ userId: registration.userId })
+    }));
+    const favoriteDelete = vi.spyOn(prisma.favorite, "deleteMany");
+    await removeFavorite("missing-product");
+    expect(favoriteDelete).toHaveBeenCalledWith({
+      where: { userId: registration.userId, productId: "missing-product" }
+    });
+
+    const orderQuery = vi.spyOn(prisma.order, "findMany");
+    const orders = await listCustomerOrders();
+    expect(orders).toHaveLength(0);
+    expect(orderQuery).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: registration.userId }
+    }));
   });
 
   it("keeps seller registration pending without granting seller permissions", async () => {
