@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   productFindMany: vi.fn(),
   productCount: vi.fn(),
   productFindFirst: vi.fn(),
+  productGroupBy: vi.fn(),
+  productCategoryGroupBy: vi.fn(),
   synonymFindMany: vi.fn(),
   queryRaw: vi.fn()
 }));
@@ -11,7 +13,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    product: { findMany: mocks.productFindMany, count: mocks.productCount, findFirst: mocks.productFindFirst },
+    product: { findMany: mocks.productFindMany, count: mocks.productCount, findFirst: mocks.productFindFirst, groupBy: mocks.productGroupBy },
+    productCategory: { groupBy: mocks.productCategoryGroupBy },
     searchSynonym: { findMany: mocks.synonymFindMany },
     $queryRaw: mocks.queryRaw
   }
@@ -25,6 +28,8 @@ describe("public product discovery", () => {
     mocks.productFindMany.mockResolvedValue([]);
     mocks.productCount.mockResolvedValue(0);
     mocks.productFindFirst.mockResolvedValue(null);
+    mocks.productGroupBy.mockResolvedValue([]);
+    mocks.productCategoryGroupBy.mockResolvedValue([]);
     mocks.synonymFindMany.mockResolvedValue([{ term: "sneaker", synonym: "trainer" }]);
     mocks.queryRaw.mockResolvedValue([]);
   });
