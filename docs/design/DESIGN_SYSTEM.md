@@ -42,7 +42,7 @@ Semantic colors remain distinct from promotional accents: success `#167653`, war
 
 ## Implementation and verification
 
-- The first implementation slice adds CSS custom properties in `src/app/globals.css` and keeps compatibility aliases for existing forest/sage/copper token names.
+- The first implementation slice adds CSS custom properties in `src/app/globals.css`, keeps compatibility aliases for existing forest/sage/copper token names, and applies the violet-blue primary action to the global navigation account/join actions and storefront browse/selected-filter controls.
 - Tokens are a foundation, not proof that every page has been visually migrated.
 - Adopt them in shared primitives before applying one-off page styles.
 - For each UI slice, record the routes/components changed and verify typecheck, lint, relevant tests, build, responsive layout, and the affected user journey.
