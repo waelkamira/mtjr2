@@ -12,25 +12,15 @@ describe("parseEnvironment", () => {
   it("accepts a valid PostgreSQL and application configuration", () => {
     expect(parseEnvironment(validEnvironment)).toMatchObject(validEnvironment);
   });
-
   it("rejects a non-PostgreSQL database URL", () => {
-    expect(() =>
-      parseEnvironment({ ...validEnvironment, DATABASE_URL: "https://example.com" })
-    ).toThrow(/DATABASE_URL.*PostgreSQL/);
+    expect(() => parseEnvironment({ ...validEnvironment, DATABASE_URL: "https://example.com" })).toThrow(/DATABASE_URL.*PostgreSQL/);
   });
-
   it("rejects a short authentication secret without exposing its value", () => {
-    expect(() =>
-      parseEnvironment({ ...validEnvironment, AUTH_SECRET: "short-secret" })
-    ).toThrow(/AUTH_SECRET/);
+    expect(() => parseEnvironment({ ...validEnvironment, AUTH_SECRET: "short-secret" })).toThrow(/AUTH_SECRET/);
   });
-
   it("rejects an invalid server application URL", () => {
-    expect(() =>
-      parseEnvironment({ ...validEnvironment, APP_URL: "not-a-url" })
-    ).toThrow(/APP_URL/);
+    expect(() => parseEnvironment({ ...validEnvironment, APP_URL: "not-a-url" })).toThrow(/APP_URL/);
   });
-
   it("enables registration by default in development and test only", () => {
     expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("true");
     expect(isPublicRegistrationEnabled(parseEnvironment(validEnvironment))).toBe(true);
@@ -38,21 +28,12 @@ describe("parseEnvironment", () => {
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production" }))).toBe(false);
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production", PUBLIC_REGISTRATION_ENABLED: "true" }))).toBe(false);
   });
-
   it("allows registration to be explicitly disabled outside production", () => {
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "false" }))).toBe(false);
   });
-
   it("accepts blank optional provider credentials in local env files", () => {
-    expect(parseEnvironment({
-      ...validEnvironment,
-      GOOGLE_CLIENT_ID: "",
-      GOOGLE_CLIENT_SECRET: "",
-      RESEND_API_KEY: "",
-      RESEND_FROM_EMAIL: ""
-    })).toMatchObject(validEnvironment);
+    expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", RESEND_API_KEY: "", RESEND_FROM_EMAIL: "" })).toMatchObject(validEnvironment);
   });
-
   it("rejects an invalid public registration flag", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
