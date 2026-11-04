@@ -624,6 +624,8 @@ model Product {
   reviews        ProductReview[]
   questions      ProductQuestion[]
   favorites      Favorite[]
+  recommendationsFrom Recommendation[] @relation("RecommendationSource")
+  recommendationsTo   Recommendation[] @relation("RecommendationTarget")
 
   @@unique([storeId, slug])
   @@index([storeId, status, approvalStatus, createdAt])
@@ -1430,6 +1432,23 @@ model Favorite {
   @@unique([userId, productId])
   @@index([userId, createdAt])
   @@index([productId, createdAt])
+}
+
+model Recommendation {
+  id                   String   @id @default(cuid())
+  sourceProductId      String
+  recommendedProductId String
+  score                Int      @default(0)
+  reason               String?  @db.VarChar(120)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  sourceProduct        Product  @relation("RecommendationSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  recommendedProduct   Product  @relation("RecommendationTarget", fields: [recommendedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceProductId, recommendedProductId])
+  @@index([sourceProductId, isActive, score])
+  @@index([recommendedProductId, isActive])
 }
 
 model NotificationPreference {
