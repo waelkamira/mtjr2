@@ -108,13 +108,13 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
           }
         })
       ]);
-      const hasOrdersPermission = (assignment: typeof assignments[number]) =>
-        assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage");
       const hasGlobalGrant = assignments.some((assignment) =>
-        assignment.scopeType === "GLOBAL" && assignment.scopeId === "GLOBAL" && hasOrdersPermission(assignment)
+        assignment.scopeType === "GLOBAL" && assignment.scopeId === "GLOBAL"
+        && assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage")
       );
       const hasStoreGrant = Boolean(activeStaff) && assignments.some((assignment) =>
-        assignment.scopeType === "STORE" && assignment.scopeId === current.storeId && hasOrdersPermission(assignment)
+        assignment.scopeType === "STORE" && assignment.scopeId === current.storeId
+        && assignment.role.permissions.some(({ permission }) => permission.key === "orders:manage")
       );
       if (!hasGlobalGrant && !hasStoreGrant) throw new PermissionDeniedError();
     }
