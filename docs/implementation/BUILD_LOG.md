@@ -1786,3 +1786,30 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No application source, Prisma schema, migration, production database, deployment setting or secret was changed or accessed.
 - No new system work was started. Phase 3 remains blocked until the Phase 2 exit gates are evidenced.
 - Next action: preserve the current freeze, obtain the required owner-approved legal/service/edge prerequisites, then execute the single HTTP journey and record exact runtime evidence. Continue auditing existing PRs separately without merging them absent explicit approval.
+
+
+## 2026-11-04 — Identity audit and account-flow corrections
+
+**Repository and exact-head baseline**
+- PR #15 was already closed and merged at 2026-11-04T02:44:51Z when this run began. This run did not merge it. The original feat/returns-workflow head was 1aee590a98f3bd2e8f682be1e721cec7acf989c1.
+- On that exact SHA, General CI run [41762316070](https://github.com/waelkamira/mtjr2/actions/runs/41762316070) passed every quality step: Prisma validate/generate, typecheck, lint, unit tests and production build.
+- On the same SHA, disposable PostgreSQL run [41762316053](https://github.com/waelkamira/mtjr2/actions/runs/41762316053) passed migration deployment, baseline role/permission seed and the integration suite. No failed Actions step or failure log existed to diagnose.
+- The separate combined commit status reported a Vercel deployment failure linked to the free daily deployment limit. It is not a CI/PostgreSQL failure and was not changed or retried here.
+- main had advanced to c9314efa66af92fd524f65c553d751927c778694 after the merge. The existing feature branch was fast-forwarded to that already-merged base before preparing this identity-only follow-up; main itself was not modified.
+
+**Confirmed identity/account defects and corrections**
+- The saved-address page consumed a nonexistent country.id/country.code shape and sent countryId, while /api/countries returns iso2 and the account-address service requires countryCode; the address list also returns flattened countryCode/countryName, not a nested country. The page now uses the actual API contract and the server service is covered by focused tests.
+- Production registration was hard-blocked in the email/password route but not in the Google callback new-account branch. New Google account creation now uses the same public-registration policy; an already-linked Google identity can still sign in while public registration is disabled.
+- The CUSTOMER selection was validated but not persisted. Email and new Google registrations now receive the seeded global CUSTOMER role. A SELLER selection still creates only a PENDING Seller application and receives no seller role or store:manage permission before approval.
+- No Prisma schema or migration change was needed; the existing User, UserRoleAssignment, Seller, OAuthAccount, UserConsent, UserSession, VerificationToken, UserAddress, Favorite and related models cover these flows.
+
+**Focused verification added in this follow-up**
+- Unit coverage for CUSTOMER role assignment, seller no-role behavior, Google registration policy, and the account-address request/response ownership contract.
+- PostgreSQL integration coverage for the persisted CUSTOMER role and a PENDING seller with no selling permission.
+- These follow-up changes require fresh exact-head General CI and PostgreSQL runs; no result is claimed until those runs complete.
+
+**External and runtime boundaries**
+- Google provider sign-in remains an external test requirement: configure GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and the exact callback URI NEXT_PUBLIC_APP_URL + /api/auth/google/callback in the Google project. Values were not requested, read or committed. Existing email accounts are not silently linked; the callback returns link_required, and a separate manual linking journey is not implemented.
+- Real verification/reset email requires RESEND_API_KEY and RESEND_FROM_EMAIL; login also requires a correctly configured TRUSTED_PROXY_IP_HEADER whose edge value is overwritten by the trusted proxy. No deployment secrets or Vercel settings were inspected or changed.
+- No browser runtime/preview was available for a live registration → verification email → login → account pages → logout journey. Source and automated CI evidence are not represented as a live browser pass.
+- No owner/local/production database was accessed, and no migration was applied outside the disposable GitHub Actions PostgreSQL service.
