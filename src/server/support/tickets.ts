@@ -123,11 +123,11 @@ export async function adminReplyToSupportTicket(ticketId: string, input: unknown
   const data = replySchema.parse(input);
   const actor = await requirePermission({ permissionKey: "support:manage", now });
   return prisma.$transaction(async (tx) => {
-    const ticket = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, customerId: true, status: true, firstResponseAt: true } });
+    const ticket = await tx.supportTicket.findUnique({ where: { id }, select: { id: true, customerId: true, status: true, firstResponseAt: true, firstResponseDueAt: true } });
     if (!ticket) throw new Error("Support ticket not found.");
     if (ticket.status === SupportTicketStatus.CLOSED) throw new Error("Closed tickets cannot receive replies.");
     const message = await tx.supportMessage.create({ data: { ticketId: id, senderId: actor.userId, body: data.body, isInternal: data.internal ?? false }, select: { id: true, body: true, isInternal: true, createdAt: true } });
-    await tx.supportTicket.update({ where: { id }, data: { status: data.internal ? ticket.status : SupportTicketStatus.WAITING_CUSTOMER, lastMessageAt: now, agentReadAt: now, ...(!data.internal && !ticket.firstResponseAt ? { firstResponseAt: now } : {}) } });
+    await tx.supportTicket.update({ where: { id }, data: { status: data.internal ? ticket.status : SupportTicketStatus.WAITING_CUSTOMER, lastMessageAt: now, agentReadAt: now, ...(!data.internal && !ticket.firstResponseAt ? { firstResponseAt: now, ...(ticket.firstResponseDueAt && now > ticket.firstResponseDueAt ? { firstResponseBreachedAt: now } : {}) } : {}) } });
     if (!data.internal) await createInAppNotification(tx, { data: {
       userId: ticket.customerId, type: "SUPPORT_REPLY", title: "Support replied to your ticket",
       message: "There is a new response to your support request.", resourceType: "support_ticket",
