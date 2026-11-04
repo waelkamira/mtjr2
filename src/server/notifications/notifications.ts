@@ -107,16 +107,22 @@ export async function updateMyNotificationPreferences(input: unknown, now = new 
 
 export async function listMyNotifications(now = new Date()) {
   const session = await requireCurrentSession(now);
-  const [items, unreadCount] = await Promise.all([
+  const [items, unreadCount, emailDeliveries] = await Promise.all([
     prisma.notification.findMany({
       where: { userId: session.userId },
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: { id: true, type: true, title: true, message: true, resourceType: true, resourceId: true, readAt: true, createdAt: true, deliveries: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true, attempts: true, sentAt: true, lastError: true } } }
+      select: { id: true, type: true, title: true, message: true, resourceType: true, resourceId: true, readAt: true, createdAt: true, deliveries: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true, attempts: true, sentAt: true } } }
     }),
-    prisma.notification.count({ where: { userId: session.userId, readAt: null } })
+    prisma.notification.count({ where: { userId: session.userId, readAt: null } }),
+    prisma.notificationDelivery.findMany({
+      where: { userId: session.userId },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: { id: true, type: true, title: true, status: true, attempts: true, sentAt: true, createdAt: true }
+    })
   ]);
-  return { items, unreadCount };
+  return { items, unreadCount, emailDeliveries };
 }
 
 export async function markMyNotificationRead(notificationId: string, now = new Date()) {
