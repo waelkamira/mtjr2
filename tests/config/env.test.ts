@@ -30,13 +30,20 @@ describe("parseEnvironment", () => {
       parseEnvironment({ ...validEnvironment, NEXT_PUBLIC_APP_URL: "not-a-url" })
     ).toThrow(/NEXT_PUBLIC_APP_URL/);
   });
-  it("keeps public registration disabled unless explicitly enabled", () => {
-    expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("false");
-    expect(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "true" }).PUBLIC_REGISTRATION_ENABLED).toBe("true");
+
+  it("enables registration by default in development and test only", () => {
+    expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("true");
+    expect(isPublicRegistrationEnabled(parseEnvironment(validEnvironment))).toBe(true);
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "development" }))).toBe(true);
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production" }))).toBe(false);
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production", PUBLIC_REGISTRATION_ENABLED: "true" }))).toBe(false);
+  });
+
+  it("allows registration to be explicitly disabled outside production", () => {
+    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "false" }))).toBe(false);
   });
 
   it("rejects an invalid public registration flag", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
-
 });
