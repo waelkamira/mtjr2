@@ -53,7 +53,7 @@
 | `ReturnRequest`, `ReturnItem` | `src/server/returns/returns.ts`; customer/admin return APIs | Return eligibility and review workflow. Current slice does not execute refunds or move money. |
 | `ProductReview`, `StoreReview` | `src/server/reviews/product-reviews.ts`; review APIs | Verified-purchase review lifecycle and moderation. |
 | `ProductQuestion`, `ProductAnswer` | `src/server/catalog/product-qa.ts`; customer/seller/admin Q&A APIs | Product questions, seller answers, moderation. |
-| `Favorite` | `src/server/wishlist/favorites.ts`; favorites APIs | Customer saved products. |
+| `Favorite`, `Recommendation` | `src/server/wishlist/favorites.ts`, `src/server/wishlist/recommendations.ts`; favorites and recommendations APIs | Owner-scoped saved products; curated product-to-product links plus per-user category similarity. Recommendation responses are private/no-store and exclude non-public products. |
 | `Notification`, `NotificationPreference` | `src/server/notifications/notifications.ts`; notifications APIs | In-app notifications and event preferences. Email delivery preferences are not implied. |
 | `SupportTicket`, `SupportMessage` | `src/server/support/tickets.ts`; support APIs | Customer support ticket lifecycle; internal notes must remain staff-only. |
 | `StoreConversation`, `StoreMessage` | `src/server/messaging/store-conversations.ts`; messaging APIs | Customer/store conversation and participant-scoped messages. |
