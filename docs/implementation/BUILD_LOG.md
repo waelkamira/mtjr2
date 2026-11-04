@@ -1786,3 +1786,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No application source, Prisma schema, migration, production database, deployment setting or secret was changed or accessed.
 - No new system work was started. Phase 3 remains blocked until the Phase 2 exit gates are evidenced.
 - Next action: preserve the current freeze, obtain the required owner-approved legal/service/edge prerequisites, then execute the single HTTP journey and record exact runtime evidence. Continue auditing existing PRs separately without merging them absent explicit approval.
+
+
+## 2026-11-04 — Verified reconstruction and merge batch
+
+- Reconstructed tax safety fixes from the historical stacked PR #5 onto current `main` as PR #18. The exact PR head `077cb6caf965015ddc09fd8e982a20e9f6527e5e` passed General CI (run `41823483435`: Prisma validate/generate, typecheck, lint, tests and build) and disposable PostgreSQL integration (run `41823483440`). Merged by squash as `32b519b4f65f586d713268aad13be5c123af3283`.
+- Reconstructed seller return visibility from historical PR #16 onto current `main` as PR #19. Exact head `797f8dd61ee5ec3591f8cc0d2abb46b85235a364` passed General CI (run `41823605855`: Prisma validate/generate, typecheck, lint, tests and build) and disposable PostgreSQL integration (run `41823605797`). Merged by squash as `c9314efa66af92fd524f65c553d751927c778694`.
+- Seller returns remains read-only. The implementation derives store scope from the verified session and exact permissions, and separates multi-store parent requests by store. Seller approval/rejection, receipt, shipping and refunds are not enabled.
+- Closed historical PRs #4, #5 and #16 after their unique deltas were either already present on main or reconstructed and merged through clean PRs. No changes to Prisma schema/migrations were needed in these two clean reconstructions.
+- Historical PR #17 was retargeted to main. Its code portion duplicates the now-merged PR #19; its remaining unique contribution is the per-vendor return lifecycle design and related route/verification documentation. This documentation is being reconstructed separately; no runtime lifecycle or schema migration is claimed complete.
+- No production database, secrets or deployment configuration were changed. No live browser journey or live payment/refund flow is claimed verified.
