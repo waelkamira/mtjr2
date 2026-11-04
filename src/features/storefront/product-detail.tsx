@@ -74,7 +74,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
             return { guest: false as const, isFavorite: favorite.isFavorite };
           })
           .then((favorite) => { if (active) { setGuestMode(favorite.guest); setIsFavorite(favorite.isFavorite); } })
-          .catch(() => { if (active) { setGuestMode(true); setIsFavorite(readGuestWishlist().includes(result.id)); } });
+          .catch(() => { if (active) { setGuestMode(false); setIsFavorite(false); } });
         setSelectedVariant(result.variants[0]?.id ?? "");
         setSelectedMarketId(result.variants[0]?.prices[0]?.marketId ?? "");
         setSelectedMediaIndex(Math.max(0, result.media.findIndex((item) => item.isPrimary)));
