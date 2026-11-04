@@ -170,6 +170,7 @@ export default function StorefrontHomePage() {
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <Link href="/account/wishlist" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Wishlist</Link>
             <Link href="/account/orders" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">Orders</Link>
+            <Link href="/account" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] sm:inline-flex">My account</Link>
             <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
             <Link href="/cart" className="rounded-lg bg-[var(--color-forest-800)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Cart</Link>
           </div>
