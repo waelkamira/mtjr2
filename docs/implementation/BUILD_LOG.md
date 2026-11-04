@@ -1796,3 +1796,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Closed historical PRs #4, #5 and #16 after their unique deltas were either already present on main or reconstructed and merged through clean PRs. No changes to Prisma schema/migrations were needed in these two clean reconstructions.
 - Historical PR #17 was retargeted to main. Its code portion duplicates the now-merged PR #19; its remaining unique contribution is the per-vendor return lifecycle design and related route/verification documentation. This documentation is being reconstructed separately; no runtime lifecycle or schema migration is claimed complete.
 - No production database, secrets or deployment configuration were changed. No live browser journey or live payment/refund flow is claimed verified.
+
+
+## 2026-11-04 — Marketplace design-system foundation merged
+
+- PR #21 merged by squash as `292fd83929eae765064f59a10d4bb868fda14fed`.
+- Added the petrol / warm-ivory / violet-blue / mint / orange / cyan token palette and retained legacy token aliases to avoid breaking existing components.
+- Applied the first visual adoption slice to global navigation actions, storefront hero/category selection, product cards, marketplace search, and product detail accents. Existing category layout, routes, and data behavior were preserved in the changed components.
+- Exact merged head `0bd03c8de90bb7c98883d2d73020ef4132b559b3` passed General CI run `41825949762` and disposable PostgreSQL integration run `41825949635`.
+- Browser-based visual comparison against the owner reference images remains outstanding; these checks establish code/build/database integrity, not pixel parity or a complete site-wide redesign.
