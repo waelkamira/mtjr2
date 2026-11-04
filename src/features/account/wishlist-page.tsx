@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
+const GUEST_WISHLIST_KEY = "mtjr:guest-wishlist:v1";
+function readGuestIds(): string[] {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(GUEST_WISHLIST_KEY) ?? "[]");
+    return Array.isArray(value) ? [...new Set(value.filter((item): item is string => typeof item === "string" && item.length > 0))].slice(0, 100) : [];
+  } catch { return []; }
+}
+type Recommendation = { id: string; slug: string; name: string; image: { url: string; altText: string | null } | null; store: { name: string; slug: string }; reason: string };
 type Favorite = {
   id: string; createdAt: string;
   product: {
@@ -15,7 +23,7 @@ export default function WishlistPage() {
   const [items, setItems] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState("");\n  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const load = useCallback(async () => {
     const response = await fetch("/api/favorites", { cache: "no-store" });
     const data = await response.json() as { items?: Favorite[]; error?: string };
@@ -24,7 +32,29 @@ export default function WishlistPage() {
   }, []);
   useEffect(() => {
     let active = true;
-    void Promise.resolve().then(load).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Wishlist could not be loaded."); })
+    async function initialize() {
+      const guestIds = readGuestIds();
+      if (guestIds.length) {
+        const merge = await fetch("/api/favorites/merge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productIds: guestIds })
+        });
+        if (merge.ok) {
+          try { window.localStorage.removeItem(GUEST_WISHLIST_KEY); } catch { /* Retain cache if storage is restricted. */ }
+        } else if (merge.status !== 401) {
+          const result = await merge.json().catch(() => ({})) as { error?: string };
+          throw new Error(result.error || "Guest wishlist could not be merged.");
+        }
+      }
+      await load();
+      const response = await fetch("/api/recommendations", { cache: "no-store" });
+      if (response.ok) {
+        const result = await response.json() as { items?: Recommendation[] };
+        if (active) setRecommendations(result.items ?? []);
+      }
+    }
+    void initialize().catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Wishlist could not be loaded."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [load]);
