@@ -24,8 +24,11 @@ function config(): R2Config {
 function sha256(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
-function hmac(key: Buffer | string, value: string, encoding?: "hex") {
-  return createHmac("sha256", key).update(value).digest(encoding);
+function hmac(key: Buffer | string, value: string): Buffer;
+function hmac(key: Buffer | string, value: string, encoding: "hex"): string;
+function hmac(key: Buffer | string, value: string, encoding?: "hex"): Buffer | string {
+  const digest = createHmac("sha256", key).update(value);
+  return encoding ? digest.digest(encoding) : digest.digest();
 }
 function signingKey(secret: string, date: string) {
   const dateKey = hmac(`AWS4${secret}`, date) as Buffer;
