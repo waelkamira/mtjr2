@@ -165,3 +165,29 @@ Each PR received a closeout comment explaining that its changes are already repr
 Closed PR #2 after comparing its current head to main. The checkout quote/reservation schema, migration, server service, routes and UI are already present on main. The only remaining tree differences were `.github/workflows/ci.yml` and `.github/workflows/identity-integration.yml`; the PR branch has narrower/older pull-request branch allowlists than main, so merging it would risk regressing workflow triggers. A closeout comment records this reason. No application code was removed or merged.
 
 **Remaining open PRs after stale-PR cleanup:** #4, #5, #6, #7, #16, #17.
+
+## 2026-11-04 — Fresh open-work reconciliation (latest check)
+
+**Live inventory:** six open PRs remain: #4, #5, #6, #7, #16 and #17. No merge or rebase was performed.
+
+**Exact-head checks refreshed**
+- #4 shipping (`f47e4e2`): General CI and disposable PostgreSQL integration both passed (runs [41768562829](https://github.com/waelkamira/mtjr2/actions/runs/41768562829) and [41768562822](https://github.com/waelkamira/mtjr2/actions/runs/41768562822)).
+- #5 tax (`3b62e38`): General CI and disposable PostgreSQL integration both passed (runs [41768861921](https://github.com/waelkamira/mtjr2/actions/runs/41768861921) and [41768862015](https://github.com/waelkamira/mtjr2/actions/runs/41768862015)).
+- #6 order creation (`249e9e7`): no General CI or PostgreSQL check run exists for this exact head. The tax-rates page blob on this branch matches main exactly; this does not validate the full PR or its order workflow.
+- #7 payment lifecycle (`b8b2b41`): no check runs found for this exact head.
+- #16 seller return visibility (`9502340`): General CI and PostgreSQL integration both passed (runs [41765911094](https://github.com/waelkamira/mtjr2/actions/runs/41765911094) and [41765911314](https://github.com/waelkamira/mtjr2/actions/runs/41765911314)).
+- #17 return lifecycle design (`7a56176`): no check runs found for this exact head; it is stacked on #16.
+
+**Diff reconciliation against current main**
+- #4 has 10 commits ahead / 453 behind and seven compare files; its current base is the superseded address-capture branch. Despite green exact-head CI, do not merge this historical stack blindly. Rebase/retarget review is required to isolate the shipping-only change and preserve main's newer workflow configuration.
+- #5 has 24 commits ahead / 436 behind and 11 compare files; it is stacked on #4. Keep it blocked until #4's unique shipping delta is reconciled and tax is reviewed as an isolated change.
+- #6 has 2 commits ahead / 375 behind; its only compare-file entry is the tax-rates page, whose blob matches main. Treat it as effectively superseded pending a fresh PR diff/commit-tree explanation; do not merge a duplicate or use the old PostgreSQL pass as proof of the current head.
+- #7 has 23 commits ahead / 375 behind and 15 compare files, including payment schema/migration and API/service work. It depends on #6 and must remain blocked until order creation is reconciled and payment exact-head checks are run.
+- #16 has 15 commits ahead / 14 behind and nine compare files, including seller-return read-only code. It is not safe to merge automatically while main has advanced; reconcile the exact code diff and run a browser journey before approval.
+- #17 has 18 commits ahead / 14 behind and ten compare files, including #16's implementation plus the lifecycle design. It is stacked and must be reviewed together with #16, not treated as a standalone docs-only change.
+
+**Phase 2 boundary**
+- This reconciliation does not close identity Phase 2. Its outstanding operational gates remain owner-approved legal/consent content, real Resend delivery, trusted-edge header/origin verification, and one deployed HTTP identity journey.
+- The latest main documentation Quality check for `69e4d58020b49d08ff7de6d8c641ec35321401ae` was still in progress at the time of inspection (run [41822578873](https://github.com/waelkamira/mtjr2/actions/runs/41822578873)); no pass is claimed.
+
+**Decision:** keep all six PRs open and do not merge. Continue with the dependency-safe reconciliation of #4/#5/#6, while Phase 2 remains blocked on its real operational evidence. No production database, migration, deployment configuration or secret was accessed.
