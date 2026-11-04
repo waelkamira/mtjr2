@@ -41,19 +41,21 @@ describe("public product discovery", () => {
       where: expect.objectContaining({ locale: "en", isActive: true }), take: 40
     }));
     const where = mocks.productFindMany.mock.calls[0][0].where;
-    expect(where.status).toBe("ACTIVE");
-    expect(where.approvalStatus).toBe("APPROVED");
-    expect(where.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
-    expect(where.AND).toHaveLength(1);
-    expect(where.AND[0].OR.length).toBeGreaterThan(8);
+    const filters = where.AND?.find((clause: Record<string, unknown>) => clause.status === "ACTIVE") ?? where;
+    expect(filters.status).toBe("ACTIVE");
+    expect(filters.approvalStatus).toBe("APPROVED");
+    expect(filters.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
+    expect(filters.AND).toHaveLength(1);
+    expect(filters.AND[0].OR.length).toBeGreaterThan(8);
     expect(mocks.synonymFindMany.mock.calls[0][0].where.OR).toHaveLength(2);
   });
 
   it("requires every query token to match across product fields", async () => {
     await listDiscoverableProducts({ q: "red sneaker" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
-    expect(where.AND).toHaveLength(2);
-    expect(where.AND[0].OR).toEqual(expect.arrayContaining([
+    const filters = where.AND?.find((clause: Record<string, unknown>) => clause.status === "ACTIVE") ?? where;
+    expect(filters.AND).toHaveLength(2);
+    expect(filters.AND[0].OR).toEqual(expect.arrayContaining([
       expect.objectContaining({ name: expect.objectContaining({ contains: "red" }) }),
       expect.objectContaining({ variants: expect.any(Object) })
     ]));
@@ -62,12 +64,13 @@ describe("public product discovery", () => {
   it("searches within the selected store and matches public seller names", async () => {
     await listDiscoverableProducts({ q: "northstar", storeId: "store-1" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
-    expect(where.store).toMatchObject({
+    const filters = where.AND?.find((clause: Record<string, unknown>) => clause.status === "ACTIVE") ?? where;
+    expect(filters.store).toMatchObject({
       id: "store-1",
       status: "ACTIVE",
       seller: { status: "ACTIVE" }
     });
-    expect(where.AND[0].OR).toContainEqual(expect.objectContaining({
+    expect(filters.AND[0].OR).toContainEqual(expect.objectContaining({
       store: expect.objectContaining({
         is: expect.objectContaining({
           seller: expect.objectContaining({
