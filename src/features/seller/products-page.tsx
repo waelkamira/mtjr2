@@ -38,6 +38,7 @@ export default function SellerProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [search, setSearch] = useState("");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
@@ -59,9 +60,11 @@ export default function SellerProductsPage() {
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
 
-  const loadProducts = useCallback(async (id: string) => {
+  const loadProducts = useCallback(async (id: string, q = "") => {
     if (!id) return;
-    const result = await json<{ items: Product[] }>(await fetch(`/api/seller/products?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }));
+    const params = new URLSearchParams({ storeId: id });
+    if (q.trim()) params.set("q", q.trim());
+    const result = await json<{ items: Product[] }>(await fetch(`/api/seller/products?${params.toString()}`, { cache: "no-store" }));
     setProducts(result.items);
   }, []);
 
@@ -93,11 +96,11 @@ export default function SellerProductsPage() {
   useEffect(() => {
     if (!storeId) return;
     let active = true;
-    Promise.resolve().then(() => loadProducts(storeId)).catch((cause: unknown) => {
+    const timer = window.setTimeout(() => { void loadProducts(storeId, search).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load products.");
-    });
-    return () => { active = false; };
-  }, [storeId, loadProducts]);
+    }); }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [storeId, search, loadProducts]);
 
   async function createProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -114,7 +117,7 @@ export default function SellerProductsPage() {
       }));
       setMessage(`Draft product created (${product.id}). It is awaiting platform review.`);
       setName(""); setSlug(""); setDescription(""); setSku(""); setImageUrl(""); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
-      await loadProducts(storeId);
+      await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Product could not be created.");
     } finally { setBusy(false); }
@@ -131,7 +134,7 @@ export default function SellerProductsPage() {
       }));
       setEditingId("");
       setMessage("Draft product updated and returned to pending review.");
-      await loadProducts(storeId);
+      await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Product could not be updated.");
     } finally { setBusy(false); }
@@ -142,7 +145,7 @@ export default function SellerProductsPage() {
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, { method: "POST" }));
       setMessage("Product published.");
-      await loadProducts(storeId);
+      await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Product could not be published.");
     } finally { setBusy(false); }
@@ -194,8 +197,8 @@ export default function SellerProductsPage() {
           </form>}
         </section>
         <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <h2 className="text-lg font-semibold">Store catalog</h2>
-          {!products.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">No products in this store yet.</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-semibold">Store catalog</h2><label className="mt-4 block text-xs font-medium">Search this store catalog<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder="Product name, slug, SKU or barcode" className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>
+          {!products.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">{search ? "No products match this search." : "No products in this store yet."}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} variants</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--color-ivory-100)] px-2.5 py-1 text-xs">{product.status}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{product.approvalStatus}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">Review: {product.rejectionReason}</p>}</div>
             <div className="flex flex-wrap gap-2">
               {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">Edit draft</button>}

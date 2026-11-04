@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import { env, isPublicRegistrationEnabled } from "@/lib/env";
 import { resendEmailAdapter } from "@/server/email/resend";
 import { IdentityConflictError, registerUser } from "@/server/identity/registration";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
@@ -6,6 +7,9 @@ import { validateIdentityMutationRequest } from "@/server/identity/request-secur
 export const runtime = "nodejs";
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isPublicRegistrationEnabled(env)) {
+    return Response.json({ error: "Account registration is temporarily unavailable." }, { status: 503 });
+  }
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
   let body: unknown;

@@ -34,6 +34,7 @@ describe("identity PostgreSQL integration", () => {
       email,
       password: "Correct-Horse-Battery-42!",
       displayName: "Integration Buyer",
+      accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
     });
@@ -154,6 +155,7 @@ describe("identity PostgreSQL integration", () => {
       email: loginEmail,
       password: "Correct-Horse-Battery-42!",
       displayName: "Login Integration",
+      accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
     });
@@ -218,6 +220,7 @@ describe("identity PostgreSQL integration", () => {
       email: resetEmail,
       password: oldPassword,
       displayName: "Password Reset Integration",
+      accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
     });
@@ -235,10 +238,20 @@ describe("identity PostgreSQL integration", () => {
     });
     expect(storedToken.tokenHash).not.toBe(challenge.token);
     expect(storedToken.tokenHash).toHaveLength(64);
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: registration.userId,
+        tokenHash: randomUUID().replaceAll("-", "").repeat(2),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000)
+      }
+    });
 
     await expect(completePasswordReset(challenge.token, newPassword)).resolves.toBe(true);
     await expect(completePasswordReset(challenge.token, newPassword)).resolves.toBe(false);
     await expect(resolveUserSession(activeSession.token)).resolves.toBeNull();
+    await expect(
+      prisma.passwordResetToken.count({ where: { userId: registration.userId, consumedAt: null } })
+    ).resolves.toBe(0);
 
     const updatedUser = await prisma.user.findUniqueOrThrow({
       where: { id: registration.userId },

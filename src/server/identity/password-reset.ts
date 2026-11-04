@@ -142,6 +142,10 @@ export async function completePasswordReset(
       where: { userId: challenge.userId, revokedAt: null },
       data: { revokedAt: now }
     });
+    await tx.passwordResetToken.updateMany({
+      where: { userId: challenge.userId, consumedAt: null },
+      data: { consumedAt: now }
+    });
 
     await tx.auditLog.create({
       data: {

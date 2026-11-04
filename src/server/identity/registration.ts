@@ -1,5 +1,5 @@
 import { randomBytes, createHash } from "node:crypto";
-import { AuditActorType, ConsentType, Prisma, UserStatus } from "@prisma/client";
+import { AuditActorType, ConsentType, Prisma, SellerStatus, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/server/identity/password";
@@ -9,8 +9,15 @@ const registrationInputSchema = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(12).max(128),
   displayName: z.string().trim().min(1).max(80).optional(),
+  accountType: z.enum(["CUSTOMER", "SELLER"]),
+  sellerLegalName: z.string().trim().min(2).max(160).optional(),
+  sellerDisplayName: z.string().trim().min(2).max(80).optional(),
   acceptedTerms: z.literal(true),
   acceptedPrivacy: z.literal(true)
+}).superRefine((value, context) => {
+  if (value.accountType === "SELLER" && (!value.sellerLegalName || !value.sellerDisplayName)) {
+    context.addIssue({ code: "custom", message: "Seller business name and public store name are required.", path: ["sellerLegalName"] });
+  }
 });
 
 export type RegistrationInput = z.input<typeof registrationInputSchema>;
@@ -62,6 +69,17 @@ export async function registerUser(
     throw new Error("A valid email address is required.");
   }
 
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: emailNormalized },
+        { emailNormalized }
+      ]
+    },
+    select: { id: true }
+  });
+  if (existingUser) throw new IdentityConflictError();
+
   const passwordHash = await hashPassword(parsed.password);
   const verificationToken = createVerificationToken();
   const verificationExpiresAt = new Date(now.getTime() + VERIFICATION_TTL_MS);
@@ -87,6 +105,10 @@ export async function registerUser(
           expiresAt: verificationExpiresAt
         }
       });
+
+      if (parsed.accountType === "SELLER") {
+        await tx.seller.create({ data: { ownerId: createdUser.id, legalName: parsed.sellerLegalName, displayName: parsed.sellerDisplayName, status: SellerStatus.PENDING } });
+      }
 
       await tx.userConsent.createMany({
         data: [
