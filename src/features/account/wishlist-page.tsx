@@ -23,7 +23,8 @@ export default function WishlistPage() {
   const [items, setItems] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
-  const [error, setError] = useState("");\n  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [error, setError] = useState("");
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const load = useCallback(async () => {
     const response = await fetch("/api/favorites", { cache: "no-store" });
     const data = await response.json() as { items?: Favorite[]; error?: string };
