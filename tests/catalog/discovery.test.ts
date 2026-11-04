@@ -45,8 +45,9 @@ describe("public product discovery", () => {
     expect(filters.status).toBe("ACTIVE");
     expect(filters.approvalStatus).toBe("APPROVED");
     expect(filters.store).toEqual({ status: "ACTIVE", seller: { status: "ACTIVE" } });
-    expect(filters.AND).toHaveLength(1);
-    expect(filters.AND[0].OR.length).toBeGreaterThan(8);
+    const relevanceQuery = mocks.queryRaw.mock.calls[0][0];
+    expect(relevanceQuery.sql).toContain("searchable");
+    expect(relevanceQuery.values).toEqual(expect.arrayContaining(["sneaker", "trainer"]));
     expect(mocks.synonymFindMany.mock.calls[0][0].where.OR).toHaveLength(2);
   });
 
@@ -54,11 +55,10 @@ describe("public product discovery", () => {
     await listDiscoverableProducts({ q: "red sneaker" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
     const filters = where.AND?.find((clause: Record<string, unknown>) => clause.status === "ACTIVE") ?? where;
-    expect(filters.AND).toHaveLength(2);
-    expect(filters.AND[0].OR).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: expect.objectContaining({ contains: "red" }) }),
-      expect.objectContaining({ variants: expect.any(Object) })
-    ]));
+    const relevanceQuery = mocks.queryRaw.mock.calls[0][0];
+    expect(relevanceQuery.sql).toContain("ILIKE");
+    expect(relevanceQuery.sql).toContain("ProductVariant");
+    expect(relevanceQuery.values).toEqual(expect.arrayContaining(["red", "sneaker"]));
   });
 
   it("searches within the selected store and matches public seller names", async () => {
@@ -70,17 +70,10 @@ describe("public product discovery", () => {
       status: "ACTIVE",
       seller: { status: "ACTIVE" }
     });
-    expect(filters.AND[0].OR).toContainEqual(expect.objectContaining({
-      store: expect.objectContaining({
-        is: expect.objectContaining({
-          seller: expect.objectContaining({
-            is: expect.objectContaining({
-              displayName: { contains: "northstar", mode: "insensitive" }
-            })
-          })
-        })
-      })
-    }));
+    const relevanceQuery = mocks.queryRaw.mock.calls[0][0];
+    expect(relevanceQuery.sql).toContain('seller."displayName"');
+    expect(relevanceQuery.sql).toContain("s.id");
+    expect(relevanceQuery.values).toEqual(expect.arrayContaining(["northstar", "store-1"]));
 
   });
 
