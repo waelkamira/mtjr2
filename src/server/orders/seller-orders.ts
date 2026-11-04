@@ -50,7 +50,7 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
       id: vendor.id, status: vendor.status, store: vendor.store,
       shippingServiceName: vendor.shippingServiceName, shippingDestinationRegion: vendor.shippingDestinationRegion,
       minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
-      order: vendor.order, shipment: vendor.shipment ? { ...vendor.shipment, shippedAt: vendor.shipment.shippedAt.toISOString() } : null,
+      order: vendor.order,
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
       shipment: vendor.shipment ? { ...vendor.shipment, shippedAt: vendor.shipment.shippedAt.toISOString() } : null,
