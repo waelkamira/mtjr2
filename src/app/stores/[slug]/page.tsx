@@ -18,7 +18,9 @@ export default async function StoreDetailPage({ params, searchParams }: Props) {
   if (!store) notFound();
   const page = Math.max(1, Math.min(10000, Number(search.page) || 1));
   const q = (search.q ?? "").trim().slice(0, 120);
-  const sort = search.sort === "name_asc" || search.sort === "name_desc" ? search.sort : "newest";
+  const sort = search.sort === "name_asc" || search.sort === "name_desc" || (q && search.sort === "relevance")
+    ? search.sort
+    : q ? "relevance" : "newest";
   const result = await listDiscoverableProducts({ storeId: store.id, q: q || undefined, page, limit: 24, sort });
   return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
     <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Verified marketplace seller</p>

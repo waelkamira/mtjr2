@@ -1704,6 +1704,19 @@ The project owner approved Resend as the transactional email provider. The serve
 - Focused query-token and multi-token matching tests added.
 - Exact-head CI and PostgreSQL integration are required before this slice is validated. Search ranking, typo tolerance, richer filters, browser accessibility testing and performance under production-scale catalog volumes remain future work. Do not label the search system complete.
 
+## 2026-11-04 — Search relevance, filters and synonym administration
+
+**Implemented at source level**
+- Added PostgreSQL `pg_trgm` indexes and relevance-ranked pagination with stable publish-time/ID tie-breaks.
+- Added validated market/currency-aware price bounds, stock filtering, category/brand facets and relevance sorting; empty optional form values are treated as unset.
+- Added `/api/search`, bounded suggestions, persistent public-search rate limits, and audited `users:manage`-protected synonym CRUD at `/admin/search-synonyms`.
+- Updated storefront filter controls and URL state for price, availability and relevance. Search suggestions clear stale results as the query changes.
+
+**Verification boundary**
+- All 182 tests pass with the repository environment loaded, and ESLint passes for changed search files.
+- Whole-app typecheck still fails only in pre-existing `src/server/wishlist/recommendations.ts` Prisma/model errors. The trigram migration has not been applied; exact-head PostgreSQL migration/runtime, browser/accessibility, and scale verification remain pending.
+- Do not run a seed or migration against an owner/production database without explicit approval.
+
 
 ## 2026-11-04 — Vercel Hobby-compatible checkout expiry scheduling
 

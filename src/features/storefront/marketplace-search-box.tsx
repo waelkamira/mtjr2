@@ -21,7 +21,7 @@ export default function MarketplaceSearchBox() {
   return <div ref={root} className="relative order-3 w-full min-w-0 sm:order-none sm:ml-3 sm:max-w-xl sm:flex-1">
     <form onSubmit={submit} role="search" className="flex overflow-hidden rounded-xl border border-[var(--border)] bg-white">
       <label htmlFor="site-search" className="sr-only">Search products and stores</label>
-      <input id="site-search" role="combobox" aria-autocomplete="list" aria-expanded={open&&hasResults} aria-controls="site-search-suggestions" autoComplete="off" maxLength={120} value={query} onFocus={()=>setOpen(true)} onChange={e=>setQuery(e.target.value)} placeholder="Search products, brands, stores and more" className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm outline-none"/>
+      <input id="site-search" role="combobox" aria-autocomplete="list" aria-expanded={open&&query.trim().length>=2} aria-controls="site-search-suggestions" autoComplete="off" maxLength={120} value={query} onFocus={()=>setOpen(true)} onChange={e=>{const value=e.target.value;setQuery(value);setSuggestions({products:[],stores:[]});setLoading(false);setError("");setOpen(value.trim().length>=2);}} placeholder="Search products, brands, stores and more" className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm outline-none"/>
       <button type="submit" className="bg-[var(--color-forest-800)] px-4 text-sm font-medium text-white transition hover:bg-[var(--color-forest-950)]">Search</button>
 
     </form>

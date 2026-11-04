@@ -58,6 +58,7 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
     listActiveMarkets()
   ]);
   const selectedMarket = markets.find((market) => market.id === marketId);
+  const selectedCurrency = selectedMarket?.currencies.find(({ currency }) => currency.code === currencyCode)?.currency;
   const filters = {
     ...(categoryId ? { categoryId } : {}),
     ...(brandId ? { brandId } : {}),
@@ -84,16 +85,16 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
         <label className="grid gap-1 text-xs font-medium">Store / vendor<select name="storeId" defaultValue={storeId ?? ""} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"><option value="">All stores</option>{stores.items.map((item) => <option key={item.id} value={item.id}>{item.name}{item.sellerDisplayName ? ` — ${item.sellerDisplayName}` : ""}</option>)}</select></label>
         <label className="grid gap-1 text-xs font-medium">Market<select name="marketId" defaultValue={marketId ?? ""} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"><option value="">All active markets</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.country.name}</option>)}</select></label>
         <label className="grid gap-1 text-xs font-medium">Currency<select name="currencyCode" defaultValue={currencyCode ?? ""} disabled={!selectedMarket} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm disabled:bg-gray-100"><option value="">All enabled currencies</option>{selectedMarket?.currencies.map(({ currency }) => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select></label>
-        <label className="grid gap-1 text-xs font-medium">Minimum price<input name="minPrice" type="number" min="0" step="0.01" defaultValue={minPrice} disabled={!selectedMarket || !currencyCode} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm disabled:bg-gray-100" /></label>
-        <label className="grid gap-1 text-xs font-medium">Maximum price<input name="maxPrice" type="number" min="0" step="0.01" defaultValue={maxPrice} disabled={!selectedMarket || !currencyCode} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm disabled:bg-gray-100" /></label>
+        <label className="grid gap-1 text-xs font-medium">Minimum price<input name="minPrice" type="number" min="0" step={selectedCurrency ? 1 / (10 ** selectedCurrency.minorUnit) : "any"} defaultValue={minPrice} disabled={!selectedCurrency} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm disabled:bg-gray-100" /></label>
+        <label className="grid gap-1 text-xs font-medium">Maximum price<input name="maxPrice" type="number" min="0" step={selectedCurrency ? 1 / (10 ** selectedCurrency.minorUnit) : "any"} defaultValue={maxPrice} disabled={!selectedCurrency} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm disabled:bg-gray-100" /></label>
         <label className="flex items-center gap-2 text-xs font-medium"><input type="checkbox" name="inStock" value="true" defaultChecked={inStock} /> In stock only ({result.facets.inStockCount})</label>
         <label className="grid gap-1 text-xs font-medium">Sort by<select name="sort" defaultValue={sort} className="rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"><option value="relevance" disabled={!q}>Relevance</option><option value="newest">Newest</option><option value="name_asc">Name: A to Z</option><option value="name_desc">Name: Z to A</option></select></label>
         <div className="flex items-end gap-2"><button type="submit" className="rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white">Apply filters</button><a href={action} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm">Clear</a></div>
       </form>
       <div className="mt-7 flex items-center justify-between text-sm text-[var(--muted)]"><span>{result.pagination.total} matching products</span>{q && <span>Query: “{q}” · Sorted by {sort === "relevance" ? "relevance" : sort.replace("_", " ")}</span>}</div>
-      <CatalogListControls action={action} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} params={filters} />
+      <CatalogListControls action={action} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} params={filters} sort={sort} />
       <CatalogProductGrid products={result.items} />
-      <CatalogListControls action={action} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} params={filters} />
+      <CatalogListControls action={action} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} params={filters} sort={sort} />
     </main>
   );
 }

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Search published products across active marketplace sellers."
 };
 
-type Props = { searchParams: Promise<{ q?: string; page?: string; categoryId?: string; brandId?: string; storeId?: string; marketId?: string; currencyCode?: string; sort?: string }> };
+type Props = { searchParams: Promise<{ q?: string; page?: string; categoryId?: string; brandId?: string; storeId?: string; marketId?: string; currencyCode?: string; minPrice?: string; maxPrice?: string; inStock?: string; sort?: string }> };
 
 export default function SearchPage({ searchParams }: Props) {
   return <CatalogDiscoveryPage

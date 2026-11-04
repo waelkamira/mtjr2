@@ -27,7 +27,7 @@
 | `Category`, `CategoryTranslation`, `Brand`, `BrandTranslation` | `src/server/catalog/taxonomy.ts`, `category-query.ts`, `category-tree.ts` | Taxonomy and localized labels. Seed activation requires an approved taxonomy. |
 | `Product`, `ProductCategory`, `ProductTranslation`, `ProductMedia`, `ProductVariant`, `ProductIdentifier`, `ProductPrice` | `src/server/catalog/products.ts`, `discovery.ts`; seller product APIs | Canonical product lifecycle, localized content, media, variants and market prices. |
 | `AttributeDefinition`, `AttributeTranslation`, `ProductAttribute`, `ProductAttributeValue`, `VariantAttribute` | Catalog domain; product create/update services | Typed product/variant attributes. Confirm consumer coverage before changing attribute semantics. |
-| `SearchSynonym` | `src/server/catalog/discovery.ts`, taxonomy/discovery APIs | Current synonym expansion; typo-tolerant ranking and autocomplete remain future scope. |
+| `SearchSynonym` | `src/server/catalog/discovery.ts`, `src/server/search/synonyms.ts`, search/admin APIs | Localized synonym expansion, trigram relevance matching, suggestions and audited admin CRUD; database migration/runtime verification remains pending. |
 
 ## 4. Inventory and shipping — Systems 04, 12 and fulfillment dependencies
 
@@ -80,4 +80,3 @@ This schema snapshot does not yet provide a complete implementation for all 49 s
 
 - `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, and `AuditLog` are consumed by `src/server/orders/seller-orders.ts` for the initial seller preparation transitions.
 - No Prisma change is required for `CONFIRMED → PROCESSING → READY_TO_SHIP`; shipment labels/tracking and later delivery states are not implemented by this slice.
-

@@ -71,7 +71,7 @@ export default function AdminTaxRatesPage() {
   }
 
   return <main className="min-h-screen bg-[var(--background)]">
-    <header className="border-b border-[var(--border)] bg-white px-5 py-5"><div className="mx-auto flex max-w-5xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><Link href="/admin/review" className="text-sm">Admin</Link></div></header>
+    <header className="border-b border-[var(--border)] bg-white px-5 py-5"><div className="mx-auto flex max-w-5xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link><nav className="flex gap-4 text-sm"><Link href="/admin/review">Admin</Link><Link href="/admin/search-synonyms">Search synonyms</Link></nav></div></header>
     <div className="mx-auto max-w-5xl px-5 py-10">
       <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Platform administration</p>
       <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">Market tax rules</h1>

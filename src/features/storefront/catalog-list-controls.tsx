@@ -7,7 +7,7 @@ type Props = {
   totalPages: number;
   label?: string;
   params?: Record<string,string>;
-  sort?: "newest" | "name_asc" | "name_desc";
+  sort?: "relevance" | "newest" | "name_asc" | "name_desc";
 
 };
 
@@ -29,6 +29,7 @@ export default function CatalogListControls({ action, query = "", page, totalPag
       {Object.entries(params).map(([key, value]) => key !== "sort" || !sort ? <input key={key} type="hidden" name={key} value={value} /> : null)}
       {sort && <label className="flex items-center gap-2 text-sm text-[var(--muted)]">Sort
         <select name="sort" defaultValue={sort} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--foreground)]">
+          <option value="relevance" disabled={!query.trim()}>Relevance</option>
           <option value="newest">Newest</option>
           <option value="name_asc">Name: A–Z</option>
           <option value="name_desc">Name: Z–A</option>

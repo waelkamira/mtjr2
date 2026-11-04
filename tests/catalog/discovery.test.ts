@@ -4,14 +4,24 @@ const mocks = vi.hoisted(() => ({
   productFindMany: vi.fn(),
   productCount: vi.fn(),
   productFindFirst: vi.fn(),
-  synonymFindMany: vi.fn()
+  synonymFindMany: vi.fn(),
+  currencyFindFirst: vi.fn(),
+  queryRaw: vi.fn(),
+  productGroupBy: vi.fn(),
+  productCategoryGroupBy: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    product: { findMany: mocks.productFindMany, count: mocks.productCount, findFirst: mocks.productFindFirst },
-    searchSynonym: { findMany: mocks.synonymFindMany }
+    product: {
+      findMany: mocks.productFindMany, count: mocks.productCount, findFirst: mocks.productFindFirst,
+      groupBy: mocks.productGroupBy
+    },
+    productCategory: { groupBy: mocks.productCategoryGroupBy },
+    currency: { findFirst: mocks.currencyFindFirst },
+    searchSynonym: { findMany: mocks.synonymFindMany },
+    $queryRaw: mocks.queryRaw
   }
 }));
 
@@ -24,10 +34,14 @@ describe("public product discovery", () => {
     mocks.productCount.mockResolvedValue(0);
     mocks.productFindFirst.mockResolvedValue(null);
     mocks.synonymFindMany.mockResolvedValue([{ term: "sneaker", synonym: "trainer" }]);
+    mocks.currencyFindFirst.mockResolvedValue({ minorUnit: 2 });
+    mocks.queryRaw.mockResolvedValue([]);
+    mocks.productGroupBy.mockResolvedValue([]);
+    mocks.productCategoryGroupBy.mockResolvedValue([]);
   });
 
   it("uses active localized synonyms and bounded pagination", async () => {
-    const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12" });
+    const result = await listDiscoverableProducts({ q: "sneaker", locale: "en", page: "2", limit: "12", sort: "newest" });
     expect(result.pagination).toEqual({ page: 2, limit: 12, total: 0, totalPages: 0 });
     expect(mocks.synonymFindMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ locale: "en", isActive: true }), take: 40
@@ -42,7 +56,7 @@ describe("public product discovery", () => {
   });
 
   it("requires every query token to match across product fields", async () => {
-    await listDiscoverableProducts({ q: "red sneaker" });
+    await listDiscoverableProducts({ q: "red sneaker", sort: "newest" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.AND).toHaveLength(2);
     expect(where.AND[0].OR).toEqual(expect.arrayContaining([
@@ -52,7 +66,7 @@ describe("public product discovery", () => {
   });
 
   it("searches within the selected store and matches public seller names", async () => {
-    await listDiscoverableProducts({ q: "northstar", storeId: "store-1" });
+    await listDiscoverableProducts({ q: "northstar", storeId: "store-1", sort: "newest" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.store).toMatchObject({
       id: "store-1",
@@ -78,8 +92,23 @@ describe("public product discovery", () => {
     expect(mocks.productFindMany).not.toHaveBeenCalled();
   });
 
+  it("ignores empty optional query values submitted by filter forms", async () => {
+    await listDiscoverableProducts({
+      q: "",
+      storeId: "",
+      marketId: "",
+      currencyCode: "",
+      minPrice: "",
+      maxPrice: ""
+    });
+    expect(mocks.productFindMany.mock.calls[0][0].where.store).toEqual({
+      status: "ACTIVE",
+      seller: { status: "ACTIVE" }
+    });
+  });
+
   it("matches the selected currency only when it is enabled in the active market", async () => {
-    await listDiscoverableProducts({ marketId: "market-1", currencyCode: "EUR" });
+    await listDiscoverableProducts({ marketId: "market-1", currencyCode: "EUR", sort: "newest" });
     const where = mocks.productFindMany.mock.calls[0][0].where;
     expect(where.variants.some.prices.some).toMatchObject({
       marketId: "market-1",
@@ -90,6 +119,44 @@ describe("public product discovery", () => {
         currencies: { some: { isEnabled: true, currency: { isActive: true }, currencyCode: "EUR" } }
       }
     });
+  });
+
+  it("converts decimal price bounds into minor units for the selected currency", async () => {
+    await listDiscoverableProducts({
+      marketId: "market-1",
+      currencyCode: "EUR",
+      minPrice: "10.25",
+      maxPrice: "40",
+      sort: "newest"
+    });
+    const where = mocks.productFindMany.mock.calls[0][0].where;
+    expect(where.variants.some.prices.some.amountMinor).toEqual({ gte: BigInt(1025), lte: BigInt(4000) });
+  });
+
+  it("filters inventory availability and returns category/brand facet counts", async () => {
+    mocks.queryRaw.mockResolvedValue([{ id: "variant-1" }]);
+    mocks.productGroupBy.mockResolvedValue([{ brandId: "brand-1", _count: { _all: 4 } }]);
+    mocks.productCategoryGroupBy.mockResolvedValue([{ categoryId: "category-1", _count: { _all: 3 } }]);
+    mocks.productCount.mockResolvedValueOnce(0).mockResolvedValueOnce(2);
+    const result = await listDiscoverableProducts({ inStock: "true", sort: "newest" });
+    expect(mocks.productFindMany.mock.calls[0][0].where.variants.some.id.in).toEqual(["variant-1"]);
+    expect(result.facets).toEqual({
+      categories: [{ id: "category-1", count: 3 }],
+      brands: [{ id: "brand-1", count: 4 }],
+      inStockCount: 2
+    });
+  });
+
+  it("uses database trigram ranking for relevance pages and stable ID pagination", async () => {
+    mocks.queryRaw
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: "product-1", total: BigInt(1) }]);
+    await listDiscoverableProducts({ q: "iphnoe", page: 1, limit: 12 });
+    const rawSql = mocks.queryRaw.mock.calls[1][0].sql as string;
+    expect(rawSql).toContain("similarity");
+    expect(rawSql).toContain("ORDER BY score DESC");
+    expect(rawSql).toContain("LIMIT");
+    expect(mocks.productFindMany.mock.calls[0][0].where.AND[1]).toEqual({ id: { in: ["product-1"] } });
   });
 
   it("serializes BigInt product prices into JSON-safe minor-unit strings", async () => {
