@@ -34,7 +34,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 12 | Seller onboarding, verification and KYC | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 13 | Seller dashboard and analytics | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 14 | Seller product management | Not audited | Not mapped | Not audited | Not audited | Not verified |
-| 15 | Seller order management | Partial — seller preparation actions added; shipment lifecycle remains unavailable | `/seller/orders`, `PATCH /api/seller/orders/[vendorOrderId]/status` | `transitionSellerVendorOrder`; session-derived store ownership / exact `orders:manage`; `CONFIRMED → PROCESSING → READY_TO_SHIP` | Existing `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, `AuditLog`; no schema change | Exact-head CI and focused PostgreSQL authorization/concurrency verification pending; no shipment label/tracking or delivered transition |
+| 15 | Seller order management | Implemented / verified for preparation and manual dispatch; wider seller operations remain open | `/seller/orders`, `PATCH /api/seller/orders/[vendorOrderId]/status`, `POST /api/seller/orders/[vendorOrderId]/shipment` | Session-derived store authorization; paid `CONFIRMED → PROCESSING → READY_TO_SHIP → SHIPPED` | `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, `Shipment`, `AuditLog` | Preparation merged PR #25; exact-head CI and PostgreSQL passed. Manual shipment slice pending verification; no carrier API/live status or delivery confirmation |
 | 16 | Seller inventory and warehouse management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 17 | Supplier and procurement management | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 18 | Shipping and fulfillment (seller) | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -211,3 +211,11 @@ Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL
 | Mark ready to ship | `/seller/orders` → same PATCH endpoint with `READY_TO_SHIP` | Same server-derived store and permission checks; current vendor status must be `PROCESSING` | Vendor status and audit/history commit atomically; repeated target request is idempotent | Shipment, label, tracking, dispatch, delivered, cancellation and refund actions remain unavailable |
 
 This is an initial System 15 slice, not completion of seller order management or System 18 shipping/fulfillment. Browser verification is still pending.
+
+
+## System 18 — seller dispatch and buyer tracking (manual slice)
+
+| Action | UI → API | Authorization / rules | Persistence and result | Limit |
+|---|---|---|---|---|
+| Record dispatch | Seller order card at `/seller/orders` → `POST /api/seller/orders/[vendorOrderId]/shipment` | Verified session; active store; owner or active store staff with exact `orders:manage` scope (or global grant); order must be `READY_TO_SHIP`; optional tracking URL must be HTTPS | One Shipment per vendor order; vendor status/history to SHIPPED; parent order recalculated to PARTIALLY_FULFILLED/FULFILLED; audit event in one serializable transaction | Manual seller-entered carrier/tracking only; no label purchase, carrier API/webhooks, live updates, proof of delivery or delivery confirmation |
+| View tracking | Buyer-owned order detail → existing `GET /api/orders/[orderId]` | Existing customer/guest ownership check | Owned order response includes carrier, tracking number, HTTPS URL and dispatch time | Tracking details are seller-entered and not independently carrier-verified |
