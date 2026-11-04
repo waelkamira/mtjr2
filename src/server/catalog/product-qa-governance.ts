@@ -35,7 +35,7 @@ export async function listSellerProductQuestionsForActor(now = new Date()) {
       id: true, question: true, status: true, createdAt: true,
       product: { select: { id: true, name: true, slug: true, store: { select: { id: true, name: true, seller: { select: { ownerId: true } } } } } },
       user: { select: { displayName: true } },
-      answers: { orderBy: { createdAt: "desc" }, take: 10, select: { id: true, body: true, status: true, createdAt: true, userId: true } }
+      answers: { orderBy: { createdAt: "desc" }, take: 10, select: { id: true, body: true, status: true, createdAt: true } }
     }
   });
   const authorized = await Promise.all(items.map(async (item) => ({
@@ -45,7 +45,7 @@ export async function listSellerProductQuestionsForActor(now = new Date()) {
   return authorized.filter(({ allowed }) => allowed).map(({ item }) => ({
     ...item, createdAt: item.createdAt.toISOString(),
     author: item.user.displayName || "Customer",
-    answers: item.answers.map(({ userId: _userId, ...answer }) => ({ ...answer, createdAt: answer.createdAt.toISOString() }))
+    answers: item.answers.map((answer) => ({ ...answer, createdAt: answer.createdAt.toISOString() }))
   }));
 }
 
