@@ -1,20 +1,22 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 type Suggestions = { products: Array<{ id: string; name: string; slug: string; storeName: string }>; stores: Array<{ id: string; name: string; slug: string }> };
 export default function MarketplaceSearchBox() {
+  const router=useRouter();
   const [query,setQuery]=useState(""); const [suggestions,setSuggestions]=useState<Suggestions>({products:[],stores:[]});
   const [open,setOpen]=useState(false); const [loading,setLoading]=useState(false); const [error,setError]=useState("");
   const root=useRef<HTMLDivElement>(null);
-  useEffect(()=>{const value=query.trim();if(value.length<2){setSuggestions({products:[],stores:[]});setLoading(false);setError("");return;}
-    const controller=new AbortController();const timer=window.setTimeout(async()=>{setLoading(true);setError("");
+  useEffect(()=>{const value=query.trim();if(value.length<2)return;
+    const controller=new AbortController();const timer=window.setTimeout(async()=>{setLoading(true);setError("");setSuggestions({products:[],stores:[]});
       try{const response=await fetch(`/api/search/suggestions?q=${encodeURIComponent(value)}`,{signal:controller.signal});const body=await response.json() as Suggestions & {error?:string};if(!response.ok)throw new Error(body.error??"Suggestions are unavailable.");setSuggestions(body);setOpen(true);}
       catch(cause){if(!controller.signal.aborted){setError(cause instanceof Error?cause.message:"Suggestions are unavailable.");setSuggestions({products:[],stores:[]});}}
       finally{if(!controller.signal.aborted)setLoading(false);}
     },250);return()=>{window.clearTimeout(timer);controller.abort();};
   },[query]);
   useEffect(()=>{function close(event:PointerEvent){if(event.target instanceof Node&&!root.current?.contains(event.target))setOpen(false);}document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close);},[]);
-  function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();const params=new URLSearchParams();if(query.trim())params.set("q",query.trim().slice(0,120));const suffix=params.toString();window.location.assign(`/search${suffix?`?${suffix}`:""}`);}
+  function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();const params=new URLSearchParams();if(query.trim())params.set("q",query.trim().slice(0,120));const suffix=params.toString();setOpen(false);router.push(`/search${suffix?`?${suffix}`:""}`);}
   const hasResults=suggestions.products.length>0||suggestions.stores.length>0;
   return <div ref={root} className="relative order-3 w-full min-w-0 sm:order-none sm:ml-3 sm:max-w-xl sm:flex-1">
     <form onSubmit={submit} role="search" className="flex overflow-hidden rounded-xl border border-[var(--border)] bg-white">
