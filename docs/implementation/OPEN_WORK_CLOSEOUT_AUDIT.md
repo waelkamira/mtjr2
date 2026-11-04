@@ -72,8 +72,8 @@ On the exact heads inspected on 2026-11-04:
 
 ## Exact quality-job diagnostics (retrieved from job logs)
 
-- #2: lint errors for unescaped apostrophes in `src/features/checkout/checkout-shipping-options.tsx:47` and `src/features/seller/workspace-page.tsx:165`. #3's later exact-head quality job passed.
-- #4: `src/app/admin/tax-rates/page.tsx:39` violates `react-hooks/set-state-in-effect`.
-- #6: TypeScript errors at `src/server/orders/orders.ts:268,291,306`. The Prisma result selects `vendorOrders[].store` as `name,slug`, but the mapper contract requires `id,name,slug`. Fix the select and type contract together; do not hide it with a cast.
-- #9/#11/#12/#13/#14: inherited lint errors include the admin tax page, `src/app/seller/messages/page.tsx:1`, `src/features/account/wishlist-page.tsx:27`, `src/features/admin/reviews-page.tsx:27`, `src/features/admin/store-reviews-page.tsx:26`, `src/features/seller/reviews-page.tsx:26`, and `src/features/storefront/product-reviews.tsx:43`. These trigger `react-hooks/set-state-in-effect`; async loaders called from effects synchronously update state. Refactor loading lifecycle; do not disable the lint rule.
+- #4: lint errors for unescaped apostrophes in `src/features/checkout/checkout-shipping-options.tsx:47` and `src/features/seller/workspace-page.tsx:165` (`react/no-unescaped-entities`).
+- #6: `src/app/admin/tax-rates/page.tsx:39` violates `react-hooks/set-state-in-effect`.
+- #9: TypeScript errors at `src/server/orders/orders.ts:268,291,306`. The Prisma result selects `vendorOrders[].store` as `name,slug`, but the mapper contract requires `id,name,slug`. Fix the select and type contract together; do not hide it with a cast.
+- #11/#12/#13/#14: inherited lint errors include the admin tax page, `src/app/seller/messages/page.tsx:1`, `src/features/account/wishlist-page.tsx:27`, `src/features/admin/reviews-page.tsx:27`, `src/features/admin/store-reviews-page.tsx:26`, `src/features/seller/reviews-page.tsx:26`, and `src/features/storefront/product-reviews.tsx:43`. These trigger `react-hooks/set-state-in-effect`; async loaders called from effects synchronously update state. Refactor loading lifecycle; do not disable the lint rule.
 - The diagnostic logs were retrieved for exact job IDs attached to the inspected heads. Refresh PR heads before making changes, because a newer commit may already have corrected some findings.
