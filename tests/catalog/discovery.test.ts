@@ -4,14 +4,16 @@ const mocks = vi.hoisted(() => ({
   productFindMany: vi.fn(),
   productCount: vi.fn(),
   productFindFirst: vi.fn(),
-  synonymFindMany: vi.fn()
+  synonymFindMany: vi.fn(),
+  queryRaw: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     product: { findMany: mocks.productFindMany, count: mocks.productCount, findFirst: mocks.productFindFirst },
-    searchSynonym: { findMany: mocks.synonymFindMany }
+    searchSynonym: { findMany: mocks.synonymFindMany },
+    $queryRaw: mocks.queryRaw
   }
 }));
 
@@ -24,6 +26,7 @@ describe("public product discovery", () => {
     mocks.productCount.mockResolvedValue(0);
     mocks.productFindFirst.mockResolvedValue(null);
     mocks.synonymFindMany.mockResolvedValue([{ term: "sneaker", synonym: "trainer" }]);
+    mocks.queryRaw.mockResolvedValue([]);
   });
 
   it("uses active localized synonyms and bounded pagination", async () => {
