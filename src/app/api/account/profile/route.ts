@@ -18,8 +18,7 @@ export async function GET(): Promise<Response> {
     });
     if (!user) return Response.json({ error: "Account not found." }, { status: 404 });
     return Response.json({ profile: { ...user, createdAt: user.createdAt.toISOString(), emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null } }, { headers: { "Cache-Control": "private, no-store" } });
-  } catch (error) {
-    if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+  } catch {
     return Response.json({ error: "Unable to load profile." }, { status: 500 });
   }
 }
