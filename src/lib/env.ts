@@ -38,7 +38,14 @@ export function parseEnvironment(
     throw new Error(`Invalid application environment: ${details}`);
   }
 
-  return {\n    ...result.data,\n    PUBLIC_REGISTRATION_ENABLED: result.data.PUBLIC_REGISTRATION_ENABLED ?? (result.data.NODE_ENV === "production" ? "false" : "true")\n  };
+  return {
+    ...result.data,
+    PUBLIC_REGISTRATION_ENABLED: result.data.PUBLIC_REGISTRATION_ENABLED ?? (result.data.NODE_ENV === "production" ? "false" : "true")
+  };
 }
 
-export function isPublicRegistrationEnabled(environment: ApplicationEnvironment): boolean {\n  return environment.NODE_ENV !== "production" && environment.PUBLIC_REGISTRATION_ENABLED === "true";\n}\n\nexport const env = parseEnvironment(process.env);
+export function isPublicRegistrationEnabled(environment: ApplicationEnvironment): boolean {
+  return environment.NODE_ENV !== "production" && environment.PUBLIC_REGISTRATION_ENABLED === "true";
+}
+
+export const env = parseEnvironment(process.env);
