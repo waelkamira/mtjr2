@@ -43,7 +43,7 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 
 ## 4.3 — Store shipping configuration and checkout options
 
-**Implemented on `feat/store-shipping-options`; verification pending.**
+**Implemented and verified on `feat/store-shipping-options` (2026-11-04).** General CI passed on commit `052c7cd141a673be45210439e8ad8b0b1428554e` (Prisma validate/generate, typecheck, lint, tests, build; run [41767833957](https://github.com/waelkamira/mtjr2/actions/runs/41767833957)). Disposable PostgreSQL migration/integration passed (run [41767834005](https://github.com/waelkamira/mtjr2/actions/runs/41767834005)). This verifies the shipping implementation slice only; it does not complete tax, discounts, final totals, order creation, payment, or shipment execution.
 
 - Added `StoreShippingRate` scoped to store, active market, currency, optional destination region, effective dates, delivery window, and integer minor-unit amount.
 - Added `CheckoutShippingSelection` as a quote-owned per-store immutable snapshot. Added `storeId` to `CheckoutQuoteLine` and backfilled it from the variant's product store so multi-vendor shipping cannot cross seller boundaries.
