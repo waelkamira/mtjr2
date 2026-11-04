@@ -647,12 +647,11 @@ After the current schema is validated:
 
 ## Buying Core implementation update — 2026-11-03
 
-The current implementation status is tracked in `docs/implementation/PHASE_04_BUYING_PLAN.md`. Cart, checkout quote/reservation, and delivery-address capture have passed their focused CI and disposable PostgreSQL gates. Configurable store shipping rates and per-store quote selections have been implemented on the stacked shipping branch, including Prisma persistence, migration, seller configuration UI, buyer checkout UI, and APIs; their verification is pending. Tax, discount, final order totals, order creation, payment, and shipment execution are not yet complete. Do not mark the buying system complete until its remaining workflows and verification gates pass.
-
+The current implementation status is tracked in `docs/implementation/PHASE_04_BUYING_PLAN.md`. Cart, checkout quote/reservation, delivery-address capture, and configurable per-store shipping options have passed their focused General CI and disposable PostgreSQL gates. Shipping was verified on commit `052c7cd141a673be45210439e8ad8b0b1428554e`: General CI run [41767833957](https://github.com/waelkamira/mtjr2/actions/runs/41767833957) passed Prisma validate/generate, typecheck, lint, tests, and build; disposable PostgreSQL run [41767834005](https://github.com/waelkamira/mtjr2/actions/runs/41767834005) passed. Tax, discounts, final checkout totals, order creation, payment, and shipment execution remain incomplete. Do not mark the buying system complete until its remaining workflows and verification gates pass.
 
 ## Buying Core update — shipping and tax implementation (2026-11-03)
 
-- Store-level shipping rates and quote-owned per-store shipping selections are implemented on the stacked shipping branch; final General CI was cancelled and the shipping slice remains pending final verification.
+- Store-level shipping rates and quote-owned per-store shipping selections are implemented and verified on the stacked shipping branch. General CI run [41767833957](https://github.com/waelkamira/mtjr2/actions/runs/41767833957) and disposable PostgreSQL run [41767834005](https://github.com/waelkamira/mtjr2/actions/runs/41767834005) passed.
 - Market tax configuration is now implemented on the next stacked branch with `MarketTaxRate` and `CheckoutTaxSnapshot`, admin configuration API/UI, and buyer quote tax calculation API/UI.
 - The current tax slice supports explicit market-wide or exact-region rules, inclusive/exclusive basis-point calculation, optional shipping taxation, and quote snapshots. It intentionally does not infer statutory rates or claim complete jurisdictional compliance.
-- The next buying milestone is server-side final quote validation and order/vendor-order creation. Discounts and payment remain incomplete.
+- Added focused tax tests covering admin authorization, rule creation, inclusive/exclusive arithmetic, missing seller shipping, invalid seller ownership, and absent tax configuration; CI execution is pending.
