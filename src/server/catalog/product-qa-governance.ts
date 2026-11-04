@@ -5,6 +5,76 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { requirePermission } from "@/server/identity/permission-guard";
+import { userHasScopedPermission } from "@/server/identity/permission-repository";
+
+async function canManageStoreQa(userId: string, storeId: string, ownerId: string, now: Date) {
+  if (ownerId === userId) return true;
+  const membership = await prisma.sellerStaff.findFirst({
+    where: { storeId, userId, status: "ACTIVE" },
+    select: { id: true }
+  });
+  if (!membership) return false;
+  return userHasScopedPermission(userId, {
+    permissionKey: "messages:manage",
+    scope: { type: "STORE", id: storeId },
+    now
+  });
+}
+
+export async function listSellerProductQuestionsForActor(now = new Date()) {
+  const actor = await requireCurrentSession(now);
+  const items = await prisma.productQuestion.findMany({
+    where: {
+      product: { store: { status: "ACTIVE", OR: [
+        { seller: { ownerId: actor.userId, status: "ACTIVE" } },
+        { staff: { some: { userId: actor.userId, status: "ACTIVE" } } }
+      ] } }
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 100,
+    select: {
+      id: true, question: true, status: true, createdAt: true,
+      product: { select: { id: true, name: true, slug: true, store: { select: { id: true, name: true, seller: { select: { ownerId: true } } } } } },
+      user: { select: { displayName: true } },
+      answers: { orderBy: { createdAt: "desc" }, take: 10, select: { id: true, body: true, status: true, createdAt: true, userId: true } }
+    }
+  });
+  const authorized = await Promise.all(items.map(async (item) => ({
+    item,
+    allowed: await canManageStoreQa(actor.userId, item.product.store.id, item.product.store.seller.ownerId, now)
+  })));
+  return authorized.filter(({ allowed }) => allowed).map(({ item }) => ({
+    ...item, createdAt: item.createdAt.toISOString(),
+    author: item.user.displayName || "Customer",
+    answers: item.answers.map(({ userId: _userId, ...answer }) => ({ ...answer, createdAt: answer.createdAt.toISOString() }))
+  }));
+}
+
+export async function createSellerProductAnswerWithStaff(questionId: string, input: unknown, now = new Date()) {
+  const id = z.string().trim().min(1).parse(questionId);
+  const data = z.object({ body: z.string().trim().min(3).max(4000) }).strict().parse(input);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const question = await tx.productQuestion.findFirst({
+      where: { id, status: "PUBLISHED", product: { status: "ACTIVE", approvalStatus: "APPROVED", store: { status: "ACTIVE", seller: { status: "ACTIVE" } } } },
+      select: { id: true, productId: true, product: { select: { storeId: true, store: { select: { seller: { select: { ownerId: true } } } } } } }
+    });
+    if (!question) throw new Error("Published question not found.");
+    const allowed = await canManageStoreQa(actor.userId, question.product.storeId, question.product.store.seller.ownerId, now);
+    if (!allowed) throw new Error("You do not have Q&A permission for this store.");
+    const answer = await tx.productAnswer.create({
+      data: { questionId: id, userId: actor.userId, body: data.body, status: ProductAnswerStatus.PENDING },
+      select: { id: true, body: true, status: true, createdAt: true }
+    });
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "product.answer.submitted",
+      resource: "product_answer", resourceId: answer.id, scopeType: "STORE", scopeId: question.product.storeId,
+      occurredAt: now, metadata: { questionId: id, productId: question.productId }
+    }});
+    return { ...answer, createdAt: answer.createdAt.toISOString() };
+  });
+}
+
+
 
 const reportSchema = z.object({
   answerId: z.string().trim().min(1).optional(),
@@ -92,10 +162,12 @@ export async function editSellerProductAnswer(answerId: string, body: unknown, n
   const actor = await requireCurrentSession(now);
   return prisma.$transaction(async (tx) => {
     const answer = await tx.productAnswer.findFirst({
-      where: { id, userId: actor.userId, question: { status: "PUBLISHED", product: { store: { status: "ACTIVE", seller: { status: "ACTIVE" } } } } },
-      select: { id: true, body: true, status: true, question: { select: { product: { select: { storeId: true } } } } }
+      where: { id, question: { status: "PUBLISHED", product: { store: { status: "ACTIVE", seller: { status: "ACTIVE" } } } } },
+      select: { id: true, userId: true, body: true, status: true, question: { select: { product: { select: { storeId: true, store: { select: { seller: { select: { ownerId: true } } } } } } } } }
     });
-    if (!answer) throw new Error("Only your own answer to an active store question can be edited.");
+    if (!answer) throw new Error("Answer not found for an active store question.");
+    const allowed = answer.userId === actor.userId || await canManageStoreQa(actor.userId, answer.question.product.storeId, answer.question.product.store.seller.ownerId, now);
+    if (!allowed) throw new Error("You do not have Q&A permission for this store.");
     await tx.productAnswerRevision.create({ data: { answerId: id, editorId: actor.userId, body: answer.body } });
     const updated = await tx.productAnswer.update({
       where: { id },
@@ -116,9 +188,11 @@ export async function listSellerAnswerHistory(answerId: string, now = new Date()
   const id = z.string().trim().min(1).parse(answerId);
   const actor = await requireCurrentSession(now);
   const answer = await prisma.productAnswer.findFirst({
-    where: { id, userId: actor.userId },
-    select: { id: true, body: true, revisions: { orderBy: { createdAt: "desc" }, take: 20, select: { id: true, body: true, createdAt: true } } }
+    where: { id },
+    select: { id: true, userId: true, body: true, question: { select: { product: { select: { storeId: true, store: { select: { seller: { select: { ownerId: true } } } } } } }, revisions: { orderBy: { createdAt: "desc" }, take: 20, select: { id: true, body: true, createdAt: true } } }
   });
   if (!answer) throw new Error("Answer not found.");
+  const allowed = answer.userId === actor.userId || await canManageStoreQa(actor.userId, answer.question.product.storeId, answer.question.product.store.seller.ownerId, now);
+  if (!allowed) throw new Error("You do not have Q&A permission for this store.");
   return { current: answer.body, revisions: answer.revisions.map((revision) => ({ ...revision, createdAt: revision.createdAt.toISOString() })) };
 }

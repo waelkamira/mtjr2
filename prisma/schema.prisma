@@ -60,6 +60,7 @@ model User {
   productReviews        ProductReview[]
   productQuestions      ProductQuestion[]
   productAnswers        ProductAnswer[]
+  productAnswerRevisions ProductAnswerRevision[]
   productQuestionReports ProductQuestionReport[] @relation("ProductQuestionReporter")
   moderatedProductQuestionReports ProductQuestionReport[] @relation("ProductQuestionReportModerator")
   storeReviews          StoreReview[]
