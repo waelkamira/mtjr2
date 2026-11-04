@@ -131,3 +131,14 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Repeating the current target status is idempotent. The seller cannot change another store's order or regress a status.
 - **No Prisma schema change:** `VendorOrderStatus`, `VendorOrderStatusHistory`, `OrderStatus`, `OrderStatusHistory`, and `AuditLog` already cover this bounded workflow.
 - Shipment creation, carrier labels/tracking, shipped/delivered transitions, cancellation, and refunds remain disabled until their own policy/provider and inventory/payment reversal rules are implemented. No shipment or delivery success is simulated.
+
+
+## 4.8 — Seller dispatch and buyer tracking (manual carrier details)
+
+**Implemented on `feat/manual-shipment-tracking`; exact-head verification pending.**
+
+- Added canonical `Shipment` persistence, one shipment per vendor order, with carrier, tracking number, optional HTTPS tracking URL, dispatch time and actor.
+- Added seller API `POST /api/seller/orders/[vendorOrderId]/shipment` and connected the seller order card. Dispatch is allowed only from `READY_TO_SHIP`, for an active store/seller and an owner or active store staff/global administrator with `orders:manage`.
+- Shipment record, vendor order `SHIPPED`, vendor history, parent order partial/fulfilled state and audit event are committed atomically with serializable isolation and compare-and-set status protection.
+- Buyer order detail exposes the seller-entered tracking details only through the existing owned-order lookup.
+- This is manual tracking data entry, not carrier integration: no label purchase, carrier API/webhook, live tracking sync, delivery proof or customer delivery confirmation is claimed.
