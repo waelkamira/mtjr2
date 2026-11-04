@@ -160,3 +160,4 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
 
     return { id, status: data.status, changed: true };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
