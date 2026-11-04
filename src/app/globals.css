@@ -1,58 +1,79 @@
 @import "tailwindcss";
 
 /*
- * Mtjr2 visual foundation
- * Palette: forest green + sage + warm ivory + restrained copper.
+ * Mtjr2 design system — visual foundation
+ * Core palette: deep petrol, warm ivory, violet-blue, mint, orange and cyan.
  * Glass effects are reserved for selected hero/overlay surfaces.
  */
 :root {
   color-scheme: light;
 
-  --color-forest-950: #102d27;
-  --color-forest-900: #173b32;
-  --color-forest-800: #245044;
-  --color-forest-700: #326657;
-  --color-sage-600: #718f7d;
-  --color-sage-500: #8fa997;
-  --color-sage-300: #c3d2c6;
-  --color-sage-200: #dce7dd;
-  --color-sage-100: #edf2ec;
+  /* Approved visual direction */
+  --color-petrol-950: #142832;
+  --color-petrol-900: #203746;
+  --color-petrol-800: #294858;
+  --color-petrol-700: #385c6c;
+  --color-petrol-600: #4b7180;
 
-  --color-ivory-50: #fcfbf7;
-  --color-ivory-100: #f6f4ed;
-  --color-ivory-200: #ece9df;
-  --color-stone-300: #d8d7ce;
-  --color-stone-500: #777d75;
-  --color-ink-900: #1b2823;
-  --color-ink-700: #3d4b43;
+  --color-violet-600: #5368f5;
+  --color-violet-700: #4054dc;
+  --color-violet-100: #e9ecff;
 
-  --color-copper-600: #b96d36;
-  --color-copper-500: #d18449;
-  --color-copper-100: #f5e5d6;
+  --color-mint-500: #2fc58b;
+  --color-mint-100: #dff8ed;
+  --color-orange-500: #ff8b3d;
+  --color-orange-600: #e87326;
+  --color-orange-100: #fff0e5;
+  --color-cyan-300: #83e8e4;
+  --color-cyan-100: #e3fbf9;
 
-  --color-success: #287653;
-  --color-warning: #a66a24;
-  --color-danger: #b64d45;
-  --color-info: #477b91;
+  --color-ivory-50: #fffdfb;
+  --color-ivory-100: #f5eee9;
+  --color-ivory-200: #e9ded7;
+  --color-stone-300: #d8d3cf;
+  --color-stone-500: #746f70;
+  --color-ink-900: #252329;
+  --color-ink-700: #4b4850;
 
-  --background: var(--color-ivory-50);
+  /* Backwards-compatible aliases for existing components */
+  --color-forest-950: var(--color-petrol-950);
+  --color-forest-900: var(--color-petrol-900);
+  --color-forest-800: var(--color-petrol-800);
+  --color-forest-700: var(--color-petrol-700);
+  --color-sage-600: #4c8f91;
+  --color-sage-500: #6db9b5;
+  --color-sage-300: #b5e8e3;
+  --color-sage-200: var(--color-cyan-300);
+  --color-sage-100: var(--color-cyan-100);
+
+  --color-copper-600: var(--color-orange-600);
+  --color-copper-500: var(--color-orange-500);
+  --color-copper-100: var(--color-orange-100);
+
+  --color-success: #167653;
+  --color-warning: #9a571b;
+  --color-danger: #b42332;
+  --color-info: #285fa8;
+
+  --background: var(--color-ivory-100);
   --foreground: var(--color-ink-900);
   --muted: var(--color-stone-500);
   --border: var(--color-ivory-200);
-  --brand: var(--color-forest-800);
-  --accent: var(--color-copper-500);
-  --surface: #ffffff;
+  --brand: var(--color-petrol-900);
+  --action: var(--color-violet-600);
+  --accent: var(--color-orange-500);
+  --surface: #fffdfb;
   --surface-soft: var(--color-ivory-100);
-  --surface-tint: var(--color-sage-100);
+  --surface-tint: var(--color-cyan-100);
 
   --radius-control: 0.75rem;
   --radius-card: 1.125rem;
   --radius-panel: 1.5rem;
   --radius-feature: 2rem;
 
-  --shadow-card: 0 8px 28px rgb(24 49 39 / 6%);
-  --shadow-floating: 0 18px 48px rgb(16 45 39 / 14%);
-  --shadow-glow: 0 12px 36px rgb(113 143 125 / 20%);
+  --shadow-card: 0 8px 28px rgb(32 55 70 / 7%);
+  --shadow-floating: 0 18px 48px rgb(20 40 50 / 16%);
+  --shadow-glow: 0 12px 36px rgb(83 104 245 / 18%);
 
   --content-max: 1440px;
   --page-gutter: clamp(1rem, 3vw, 2.5rem);
@@ -83,10 +104,10 @@ a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 
-::selection { background: var(--color-sage-200); color: var(--color-forest-950); }
+::selection { background: var(--color-violet-100); color: var(--color-petrol-950); }
 
 :focus-visible {
-  outline: 3px solid var(--color-copper-500);
+  outline: 3px solid var(--color-violet-600);
   outline-offset: 3px;
 }
 
