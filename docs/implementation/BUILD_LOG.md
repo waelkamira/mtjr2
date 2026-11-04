@@ -1825,3 +1825,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Found one concrete navigation defect: `/products` (the Shop target and the empty-catalog “Browse all products” destination) rendered `StorefrontHomePage` again, duplicating the homepage instead of opening the dedicated catalog experience.
 - Changed `/products` to redirect to `/search`, which already implements server-side product discovery, category/brand filters, sorting, pagination, and the catalog product grid backed by `listDiscoverableProducts` / Prisma.
 - No Prisma schema or migration change is needed for this route correction. Exact-head CI is required before merge; browser verification remains separate.
+
+
+## 2026-11-04 — Seller order preparation (System 15 initial slice)
+
+- Added the authenticated, store-scoped seller status API and connected seller order actions for `CONFIRMED → PROCESSING → READY_TO_SHIP`.
+- Payment confirmation remains a hard precondition. The service uses the verified session, active seller/store checks, exact store permission or owner scope, compare-and-set status updates, a serializable transaction, status history and audit logging.
+- No Prisma schema change or migration was required; the existing vendor-order and parent-order status/history models cover the bounded preparation states.
+- Shipment labels/tracking, shipped/delivered transitions, cancellation and refunds remain out of scope and are not exposed as working actions.
+- Exact-head General CI and focused PostgreSQL authorization/concurrency verification are pending; no production database or deployment configuration was accessed.
