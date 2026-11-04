@@ -303,7 +303,7 @@ export async function listCustomerOrders(now = new Date()) {
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } }, shipment: true } }
     }
   });
   return orders.map(serializeOrder);
