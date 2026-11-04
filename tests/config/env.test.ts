@@ -3,7 +3,7 @@ import { isPublicRegistrationEnabled, parseEnvironment } from "../../src/lib/env
 
 const validEnvironment = {
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mtjr2_test?schema=public",
-  NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+  APP_URL: "http://localhost:3000",
   AUTH_SECRET: "a-test-only-secret-with-at-least-32-characters",
   NODE_ENV: "test"
 };
@@ -25,10 +25,10 @@ describe("parseEnvironment", () => {
     ).toThrow(/AUTH_SECRET/);
   });
 
-  it("rejects an invalid public application URL", () => {
+  it("rejects an invalid server application URL", () => {
     expect(() =>
-      parseEnvironment({ ...validEnvironment, NEXT_PUBLIC_APP_URL: "not-a-url" })
-    ).toThrow(/NEXT_PUBLIC_APP_URL/);
+      parseEnvironment({ ...validEnvironment, APP_URL: "not-a-url" })
+    ).toThrow(/APP_URL/);
   });
 
   it("enables registration by default in development and test only", () => {
@@ -43,8 +43,14 @@ describe("parseEnvironment", () => {
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "false" }))).toBe(false);
   });
 
-  it("accepts blank optional Google OAuth credentials in local env files", () => {
-    expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "" })).toMatchObject(validEnvironment);
+  it("accepts blank optional provider credentials in local env files", () => {
+    expect(parseEnvironment({
+      ...validEnvironment,
+      GOOGLE_CLIENT_ID: "",
+      GOOGLE_CLIENT_SECRET: "",
+      RESEND_API_KEY: "",
+      RESEND_FROM_EMAIL: ""
+    })).toMatchObject(validEnvironment);
   });
 
   it("rejects an invalid public registration flag", () => {
