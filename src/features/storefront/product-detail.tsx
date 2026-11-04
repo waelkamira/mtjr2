@@ -42,7 +42,8 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
-  const [isFavorite, setIsFavorite] = useState(false);\n  const [guestMode, setGuestMode] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [favoriteError, setFavoriteError] = useState("");
   const [messageBusy, setMessageBusy] = useState(false);
