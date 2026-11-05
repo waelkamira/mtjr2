@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requirePlatformManagement } from "@/server/identity/permission-guard";
+import { sanitizeAuditMetadata } from "@/server/admin/audit-metadata";
 
 const querySchema = z.object({
   action: z.string().trim().max(160).optional(),
@@ -53,6 +54,7 @@ export async function getPlatformAuditEvents(input: unknown, now = new Date()) {
   return {
     events: page.map((event) => ({
       ...event,
+      metadata: sanitizeAuditMetadata(event.metadata),
       occurredAt: event.occurredAt.toISOString(),
       actor: event.actor ? {
         displayName: event.actor.displayName,
