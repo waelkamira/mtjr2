@@ -15,6 +15,7 @@ export default function MfaManagementPanel() {
   const [secret, setSecret] = useState("");
   const [code, setCode] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [enrollmentPassword, setEnrollmentPassword] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -52,11 +53,16 @@ export default function MfaManagementPanel() {
     {notice && <p role="status" className="mt-4 rounded-xl bg-[var(--color-sage-100)] p-3 text-sm">{notice}</p>}
     {!status ? <p className="mt-4 text-sm text-[var(--muted)]">Loading security status…</p> : <>
       <p className="mt-4 text-sm font-medium">{status.enabled ? "MFA is enabled." : "MFA is not enabled."} {status.enabled ? `${status.recoveryCodesRemaining} recovery codes remain.` : ""}</p>
-      {!status.enabled && !secret && <button disabled={busy} onClick={() => void run(async () => {
-        const result = await readJson(await mutation("/api/account/mfa/enrollment"));
-        setSecret(result.secret ?? "");
-        setNotice("Add this secret to your authenticator app, then enter the current six-digit code.");
-      })} className="mt-4 rounded-xl bg-[var(--color-ink-800)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">Set up MFA</button>}
+      {!status.enabled && !secret && <div className="mt-4 space-y-3">
+        <label className="block text-sm font-medium">Current password to confirm enrollment
+          <input type="password" autoComplete="current-password" value={enrollmentPassword} onChange={event => setEnrollmentPassword(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3" />
+        </label>
+        <button disabled={busy || !enrollmentPassword} onClick={() => void run(async () => {
+          const result = await readJson(await mutation("/api/account/mfa/enrollment", "POST", { currentPassword: enrollmentPassword }));
+          setSecret(result.secret ?? ""); setEnrollmentPassword("");
+          setNotice("Add this secret to your authenticator app, then enter the current six-digit code.");
+        })} className="rounded-xl bg-[var(--color-ink-800)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">Set up MFA</button>
+      </div>}
       {secret && <div className="mt-4 rounded-xl border border-[var(--border)] p-4">
         <p className="text-sm font-semibold">Authenticator secret</p>
         <code className="mt-2 block break-all rounded-lg bg-[var(--background)] p-3 text-sm">{secret}</code>
