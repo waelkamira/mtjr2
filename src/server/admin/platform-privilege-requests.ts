@@ -26,6 +26,8 @@ export class PlatformPrivilegeRequestConflictError extends Error {
 
 async function lockTarget(tx: Prisma.TransactionClient, targetUserId: string) {
   await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${targetUserId}, 0))`);
+  // Serialize with account-status changes as well as other privilege requests.
+  await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "User" WHERE "id" = ${targetUserId} FOR UPDATE`);
 }
 
 async function hasActivePlatformGrant(tx: Prisma.TransactionClient, userId: string, now: Date) {
@@ -88,11 +90,18 @@ export async function createPlatformPrivilegeRequest(input: unknown, now = new D
     }
 
     await lockTarget(tx, target.id);
-    if (await hasActivePlatformGrant(tx, target.id, now)) {
+    const lockedTarget = await tx.user.findUnique({
+      where: { id: target.id },
+      select: { id: true, email: true, status: true, emailVerifiedAt: true }
+    });
+    if (!lockedTarget || lockedTarget.status !== UserStatus.ACTIVE || !lockedTarget.emailVerifiedAt) {
+      throw new PlatformPrivilegeRequestConflictError("The target must remain active with a verified email.");
+    }
+    if (await hasActivePlatformGrant(tx, lockedTarget.id, now)) {
       throw new PlatformPrivilegeRequestConflictError("The target already has platform-wide management access.");
     }
     const pending = await tx.platformPrivilegeRequest.findFirst({
-      where: { targetUserId: target.id, status: PlatformPrivilegeRequestStatus.PENDING },
+      where: { targetUserId: lockedTarget.id, status: PlatformPrivilegeRequestStatus.PENDING },
       select: { id: true }
     });
     if (pending) {
@@ -101,7 +110,7 @@ export async function createPlatformPrivilegeRequest(input: unknown, now = new D
 
     const request = await tx.platformPrivilegeRequest.create({
       data: {
-        targetUserId: target.id,
+        targetUserId: lockedTarget.id,
         requestedById: actor.userId,
         reason: parsed.reason
       },
@@ -117,7 +126,7 @@ export async function createPlatformPrivilegeRequest(input: unknown, now = new D
         scopeType: "GLOBAL",
         scopeId: "GLOBAL",
         occurredAt: now,
-        metadata: { targetUserId: target.id, targetEmail: target.email }
+        metadata: { targetUserId: lockedTarget.id, targetEmail: lockedTarget.email }
       }
     });
     return { ...request, requestedAt: request.requestedAt.toISOString() };
