@@ -74,13 +74,29 @@ describe("password login service", () => {
       trustedIpAddress: "203.0.113.10"
     }, now);
 
-    expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS" });
+    expect(result).toMatchObject({ authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." });
     expect(verifyMock).toHaveBeenCalledOnce();
     expect(verifyMock.mock.calls[0][1]).toMatch(/^scrypt\$32768\$8\$1\$/);
     expect(createSessionMock).not.toHaveBeenCalled();
     expect(prismaMock.loginAttempt.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ succeeded: false, userId: null })
     }));
+  });
+
+  it("identifies an incorrect password for an existing eligible account", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-1", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: now
+    });
+    verifyMock.mockResolvedValue(false);
+
+    const result = await loginWithPassword({
+      email: "buyer@example.com", password: "wrong-password", trustedIpAddress: "203.0.113.10"
+    }, now);
+
+    expect(result).toMatchObject({
+      authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect. Please try again."
+    });
+    expect(createSessionMock).not.toHaveBeenCalled();
   });
 
   it("does not issue a session to an unverified or inactive account", async () => {
