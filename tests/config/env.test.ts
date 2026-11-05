@@ -57,6 +57,14 @@ describe("parseEnvironment", () => {
   it("accepts blank optional provider credentials in local env files", () => {
     expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", RESEND_API_KEY: "", RESEND_FROM_EMAIL: "" })).toMatchObject(validEnvironment);
   });
+  it("accepts a base64-encoded 32-byte MFA encryption key", () => {
+    expect(parseEnvironment({ ...validEnvironment, MFA_ENCRYPTION_KEY: "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=" })).toMatchObject(validEnvironment);
+  });
+
+  it("rejects a malformed MFA encryption key", () => {
+    expect(() => parseEnvironment({ ...validEnvironment, MFA_ENCRYPTION_KEY: "too-short" })).toThrow(/MFA_ENCRYPTION_KEY/);
+  });
+
   it("rejects an invalid public registration flag", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
