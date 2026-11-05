@@ -2089,3 +2089,20 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Deployment**
 - Vercel Preview build for `fd63b02` compiled Next.js and TypeScript, then failed while collecting page data because `AUTH_SECRET` was undefined in the Preview environment. This is an environment configuration requirement. Do not weaken fail-fast validation or commit secrets. No Vercel setting was changed.
 - No Prisma schema or migration changes, database calls, or production operations were made.
+
+## 2026-11-05 — Two-person Super Admin privilege approval workflow
+
+**Implemented**
+- Added `PlatformPrivilegeRequest` and `PlatformPrivilegeRequestStatus` to Prisma, with a dedicated PostgreSQL migration `20261105132500_platform_privilege_approvals`. The model records target, requester, reviewer, reason, decision note, status and timestamps.
+- Added `/admin/control-panel/privilege-requests` with a request form and pending/decision history, plus `GET/POST /api/admin/control-panel/privilege-requests` and `PATCH /api/admin/control-panel/privilege-requests/[requestId]`.
+- The workflow only grants the canonical `SUPER_ADMIN` role and only when it includes `platform:manage`. The target must be an existing ACTIVE user with verified email.
+- A requester cannot review their own request. Approval/rejection, the privilege assignment and the audit event are committed in one transaction. Target-level PostgreSQL advisory locks serialize requests and decisions to prevent duplicate pending requests and concurrent grants.
+- Requests are rejected if the target already has a current GLOBAL `platform:manage` grant. Expired canonical assignments are reactivated rather than creating a duplicate unique assignment.
+- Updated the one-time bootstrap guard to refuse initialization if any GLOBAL role assignment already carries `platform:manage`, not only if a role named `SUPER_ADMIN` is assigned.
+- Added a focused test for requester/reviewer separation.
+
+**Safety and verification**
+- This adds a new migration; it has not been applied to any database. Apply it only through the normal reviewed deployment process after migration review and backup.
+- No role-revocation or emergency break-glass UI was added. Revocation remains a separate high-risk workflow and is not exposed here.
+- CI passed on commit `6bdbae7` before this approval-workflow batch. Prisma validation, typecheck, lint, tests and build must be rerun on the new exact head before this batch is verified.
+- Vercel Preview deployments are currently rate-limited by the provider for 24 hours. A prior Preview build also exposed missing `AUTH_SECRET`; no deployment secrets or settings were changed.
