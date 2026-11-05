@@ -320,3 +320,14 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Seller shipment | `/seller/orders` | `POST /api/seller/orders/[vendorOrderId]/shipment` → `createSellerShipment` | Shipment, ShipmentTrackingEvent, VendorOrder history, Order history, AuditLog | One manual shipment per READY_TO_SHIP vendor order; HTTPS tracking links only. Migration applied locally; no carrier integration. |
 | Seller tracking updates | `/seller/orders` | `POST /api/seller/orders/[vendorOrderId]/tracking-events` → `addSellerShipmentTrackingEvent` | ShipmentTrackingEvent, Shipment, VendorOrder/Order histories, AuditLog | Forward-only manual events; seller scope is checked server-side; parent order status aggregates vendor shipments. Database/browser lifecycle verification pending. |
 | Invoices and paid cancellation | Not exposed | Not implemented | Future Invoice/InvoiceItem and payment refund workflow | Deferred pending tax/legal invoice requirements and refund/payment policy. |
+
+## Super Admin access-control hardening — 2026-11-05
+
+| Surface | Route / operation | Server-side boundary | Persistence | Status |
+|---|---|---|---|---|
+| Shared admin shell | /admin/* | src/app/admin/layout.tsx requires an authenticated session and at least one explicit admin permission before rendering the shell; unauthenticated users are redirected to /login with a safe internal return path; users without admin access receive not-found. Each API remains independently guarded. | Existing UserSession, UserRoleAssignment, RolePermission, Permission | Implemented in source; exact-head CI and authenticated browser verification pending. |
+| Platform control panel | /admin/control-panel | Dedicated platform:manage check; ordinary operational ADMIN permissions do not imply platform management. | Existing global SUPER_ADMIN role grant / platform:manage permission | Implemented in source; exact-head CI and ADMIN-denial/SUPER_ADMIN-allow browser verification pending. |
+| First Super Admin bootstrap | npm run db:bootstrap-super-admin | Explicit operator opt-in and confirmation, exact expected PostgreSQL host/database, existing ACTIVE email-verified account, serialized one-time operation, refuses if any Super Admin assignment exists. | UserRoleAssignment + AuditLog in one transaction; no schema change | Script committed, not executed. Requires operator-controlled target confirmation; never run automatically or from a public API. |
+| Ordinary role revocation | Existing role-assignment service/API | Refuses to revoke SUPER_ADMIN through delegated role-management flow. | Existing UserRoleAssignment + AuditLog | Implemented in source; focused integration verification pending. |
+
+**Verification boundary:** this records source implementation only. It does not certify a production database bootstrap, live admin session, browser journey, or deployment.
