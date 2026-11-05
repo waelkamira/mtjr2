@@ -2072,3 +2072,20 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The changes in this section are newer than that successful CI run. A new exact-head CI run must complete before this batch is considered verified.
 - Vercel Preview remains blocked on the required `AUTH_SECRET` being absent during build-time environment validation. The code intentionally retains fail-fast validation. Configure the Preview secret in Vercel; no secret was read, changed, or committed.
 - No live database, deployment configuration, or production environment was modified.
+
+## 2026-11-05 — Super Admin access catalogue and audit-data hardening
+
+**Completed**
+- Added a read-only platform roles/permissions catalogue at `/admin/control-panel/access-catalog`, backed by `GET /api/admin/control-panel/access-catalog`. It reports role definitions, exact permission keys, system-role markers, assignment counts, and permission usage counts. Both page and service require `platform:manage`; response is private/no-store.
+- Added sensitive-key redaction for audit metadata before returning it from the audit API. Credential, token, cookie, API-key, session, and payment-secret-shaped keys are masked recursively; payload depth, item count and long strings are bounded. The persisted AuditLog rows are not modified.
+- Added focused tests for audit metadata redaction and safe metadata preservation.
+- Added control-center navigation to both the audit log and access catalogue.
+
+**CI finding and correction**
+- The CI run on commit `fd63b02` reached lint and failed on the audit page's synchronous state update triggered by calling the initial loader directly inside an effect. The subsequent workflow was cancelled by newer pushes; it must not be reported as a completed passing run.
+- Deferred the initial fetch through a promise continuation so the effect schedules the external request and state updates occur asynchronously. The new exact-head CI result is pending.
+- Existing warnings in unrelated admin components were observed; they were not broadened into unrelated refactors.
+
+**Deployment**
+- Vercel Preview build for `fd63b02` compiled Next.js and TypeScript, then failed while collecting page data because `AUTH_SECRET` was undefined in the Preview environment. This is an environment configuration requirement. Do not weaken fail-fast validation or commit secrets. No Vercel setting was changed.
+- No Prisma schema or migration changes, database calls, or production operations were made.
