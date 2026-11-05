@@ -58,7 +58,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 
 ### 2.5 Login, logout, recovery, and enforcement
 - [x] Implement password login domain service: normalized identity lookup, dummy-hash verification for unknown accounts, generic credential failures, verified/active account checks, attempt recording, throttling before scrypt, session issuance, and successful-login audit event (CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822).
-- [x] Server-side logout primitive revokes the current cookie-backed session, records an audit event, and clears the cookie even on invalid-session/error paths (unit tests and CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822). HTTP route remains blocked on CSRF/Origin enforcement.
+- [x] Server-side logout primitive revokes the current cookie-backed session, records an audit event, and clears the cookie even on invalid-session/error paths (unit tests and CI passed on commit `8d48d92f8b8f7828d2adda953183b46483ba3a6d`, run 41580301822). HTTP route uses the shared fail-closed same-origin/JSON guard.
 - [x] Add server-side password-reset challenge issuance for active verified accounts; invalidate older outstanding challenges and persist only SHA-256 token digests (verified by PostgreSQL integration run 41581259836).
 - [x] Add atomic one-time password-reset completion, password replacement, session revocation, and audit event (verified by PostgreSQL integration run 41581259836).
 - [x] Add reset-request throttling with separate HMAC-keyed identifier/IP buckets (3 per identifier/IP pair and 10 per IP per 15 minutes); reset traffic cannot consume login-attempt budget. The HTTP handler must return the same generic response for unknown, throttled, and eligible accounts.
@@ -140,7 +140,7 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 
 ## Identity system audit — 2026-11-05 (PR #36; not a closeout)
 
-The identity feature review is governed by System 01 and the Phase 2 exit gates above. The current registration/login UX slice adds duplicate-email HTTP 409 handling (including Prisma P2002 race handling in the registration service), registration success redirect to email verification, a clear login success notice/redirect, and distinct unknown-email versus wrong-password feedback for eligible active verified accounts. This distinction intentionally reveals account existence; persistent throttling and dummy scrypt verification remain enabled. Suspended/unverified accounts retain a generic credential failure.
+The identity feature review is governed by System 01 and the Phase 2 exit gates above. The current registration/login UX slice adds duplicate-email HTTP 409 handling (including Prisma P2002 race handling in the registration service), registration success redirect to email verification, a clear login success notice/redirect, and consistent generic credential-failure feedback for unknown emails, wrong passwords, and inactive/unverified accounts. This distinction intentionally reveals account existence; persistent throttling and dummy scrypt verification remain enabled. Suspended/unverified accounts retain a generic credential failure.
 
 **Current exact verification state:** PR #36 head `fb417184da3c576c985a2d54c0a435a778f88527`. The preceding merged PR test candidate (merge commit `050bb6079012538cc48e2d24109e3e76de12d458`) passed Prisma validate/generate, typecheck and lint, but unit tests exposed one stale assertion expecting a raw `userId: null` in LoginAttempt. The implementation correctly stores only HMAC digests; the assertion was corrected. The PostgreSQL workflow pull-request path filter was also corrected to run when identity services, auth routes, account identity APIs, identity tests or integration tests change. New exact-head CI and PostgreSQL results are pending; no build success is claimed.
 
@@ -148,10 +148,10 @@ The identity feature review is governed by System 01 and the Phase 2 exit gates 
 - Core password registration/login, verification, resend, logout service/route, password reset, authenticated password change, current-session resolution, session listing/revocation, profile update, consent capture, audit events, persistent rate limits, same-origin mutation protection, role/permission evaluation and audited role assignment/revocation are implemented in source.
 - The account address surface currently exposes list/create only; edit/delete/default-address management is not complete and must be treated as the shared account-profile slice rather than claimed complete.
 - Google OIDC/PKCE code exists, but provider-backed sign-in/registration has not been exercised with real Google credentials and redirect URI.
-- Two-factor authentication is explicitly unavailable; it is optional in the blueprint and must remain labelled unavailable (no fake control). Passkeys are not implemented.
+- TOTP MFA is now implemented on the rebuild branch with encrypted secrets, replay prevention, one-time recovery codes, throttling and step-up. Passkeys and hardware security keys are not implemented.
 - Real Resend delivery, trusted-proxy header configuration/edge overwrite and origin-bypass prevention, and one deployed HTTP journey (register → verify → login → /api/auth/me → logout → anonymous denial) remain operational exit gates.
 - Production public registration remains disabled until policy/legal and operational approval. Development/test registration may be enabled by the environment gate; never infer production readiness from that.
-- The requested email-versus-password error distinction is a deliberate account-enumeration trade-off. Reconsider before production; generic errors are safer if anti-enumeration takes priority.
+- Login responses now use the same generic failure message and reason for unknown emails, incorrect passwords, and inactive/unverified accounts; focused regression assertions cover this anti-enumeration behavior.
 
 **Decision:** System 01 / Phase 2 remains **Implemented / not Verified / not Complete**. Do not close Phase 2 or unblock its final release gate until exact-head General CI, PostgreSQL identity integration, configured delivery/proxy controls and the single deployed HTTP journey are evidenced. Keep verification focused; no broad helper-level test expansion.
 
@@ -163,3 +163,36 @@ The identity feature review is governed by System 01 and the Phase 2 exit gates 
 - [x] Preserve safe same-origin return paths through the Google OAuth state-cookie flow.
 - [x] Add focused regression coverage for linked Google login and rejection of unlinked identities during login.
 - [ ] Verify exact-head CI/PostgreSQL integration and complete one deployed registration → verification → login → account → logout journey after mail and trusted-proxy configuration.
+
+
+## Controlled IAM rebuild status — 2026-11-06 (supersedes earlier implementation notes)
+
+The rebuild is on `rebuild/identity-iam`, reviewed through [PR #52](https://github.com/waelkamira/mtjr2/pull/52). The detailed source boundary is recorded in `docs/implementation/IDENTITY_ROUTE_ACCESS_MATRIX.md`.
+
+### Completed source work in this rebuild
+- [x] Preserve the existing canonical cookie-backed session and database-backed permission model; no parallel identity provider or client-trusted role store was introduced.
+- [x] Block ordinary role assignment and revocation for the `SUPER_ADMIN` role and any alternate role containing `platform:manage`.
+- [x] Add an explicit first-admin bootstrap with opt-in confirmation, expected PostgreSQL host/database checks, active verified target requirement, serialization, one-time invariant and audit.
+- [x] Add two-person privilege requests; requester and target cannot approve; target state and existing grants are rechecked in the approval transaction.
+- [x] Add Super Admin pages for the control center, access catalogue, privilege requests and audit log; protect page and service/API boundaries.
+- [x] Require active verified session, `platform:manage`, verified email, enrolled MFA, and a valid recent ten-minute step-up for Super Admin operations.
+- [x] Add AES-256-GCM encrypted TOTP enrollment, current-password reauthentication, one-time recovery codes, atomic replay prevention, separate HMAC-keyed attempt throttling, guarded disable, and audit events.
+- [x] Add account session inventory, per-session revocation, current-session logout and account-wide logout.
+- [x] Add generic login failure behavior to prevent account enumeration.
+- [x] Audit 23 admin API route handlers for server-side service authorization and mutation Origin/Fetch Metadata/JSON checks; fix the missing guard on admin return-decision PATCH.
+- [x] Add unit and PostgreSQL integration coverage for MFA lifecycle, step-up policy, platform privilege approvals, independent review, concurrent request serialization, and account-wide logout.
+
+### Exact-head verification
+The exact-head General CI and PostgreSQL integration workflows must pass after the final source commit. Previous successful workflow runs on older commits are historical evidence only and cannot close this gate. Record the final run URLs and SHA here after they complete.
+
+### Remaining mandatory release gates
+- [ ] Exact-head General CI: Prisma validate/generate, typecheck, lint, unit suite and production build.
+- [ ] Exact-head PostgreSQL integration: clean migration replay, deterministic seed, identity/MFA/privilege workflows and existing marketplace integration suite.
+- [ ] One controlled HTTP/browser journey: register → real verification email → login → authenticated `/api/auth/me` → MFA enrollment/step-up → Super Admin unauthorized/authorized matrix → logout/logout-all → anonymous denial.
+- [ ] Configure Resend API key and verified sender, then smoke-test delivery.
+- [ ] Configure the actual trusted proxy header, prove edge overwrite, block direct-origin bypass, and verify production cookie/origin behavior.
+- [ ] Exercise Google OAuth with real test credentials and the registered callback.
+- [ ] Verify bootstrap only against the explicitly confirmed intended database; no production database or secret was accessed during this rebuild.
+- [ ] Complete browser review of account security, sessions, Super Admin pages and every privileged action.
+
+**Decision:** Phase 2 is still **Implemented / awaiting exact-head CI and operational verification / not Complete**. Do not unblock Phase 3 or claim production readiness until every mandatory gate above has evidence. No Vercel deployment/configuration changes were made.
