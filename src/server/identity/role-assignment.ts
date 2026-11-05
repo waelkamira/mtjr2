@@ -2,9 +2,10 @@ import "server-only";
 
 import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { requirePermission } from "@/server/identity/permission-guard";
+import { requirePermission, PermissionDeniedError } from "@/server/identity/permission-guard";
 import { normalizeRoleScope, type RoleScope } from "@/server/identity/role-scope";
 import { userHasPermission } from "@/server/identity/permission-repository";
+import { isProtectedPlatformRole } from "@/server/identity/role-assignment-policy";
 
 export interface AssignRoleInput {
   targetUserId: string;
@@ -34,7 +35,10 @@ export async function assignRoleToUser(input: AssignRoleInput, now = new Date())
       tx.role.findUnique({ where: { key: roleKey }, select: { id: true, key: true, permissions: { select: { permission: { select: { key: true } } } } } })
     ]);
     if (!target || target.status !== UserStatus.ACTIVE) throw new Error("Role assignments require an active target account.");
-    if (!role || role.key === "SUPER_ADMIN") throw new Error("The requested role cannot be assigned through this operation.");
+    if (!role) throw new Error("The requested role does not exist.");
+    if (isProtectedPlatformRole(role.key, role.permissions.map(({ permission }) => permission.key))) {
+      throw new PermissionDeniedError();
+    }
 
     // Enforce privilege non-escalation: the actor may delegate only permissions
     // they already hold in this exact scope.
@@ -68,9 +72,18 @@ export async function revokeRoleAssignment(assignmentId: string, targetUserId: s
   if (!id) throw new Error("A role assignment ID is required.");
   const existing = await prisma.userRoleAssignment.findUnique({
     where: { id },
-    select: { id: true, scopeType: true, scopeId: true, userId: true, role: { select: { key: true } } }
+    select: {
+      id: true, scopeType: true, scopeId: true, userId: true,
+      role: { select: { key: true, permissions: { select: { permission: { select: { key: true } } } } } }
+    }
   });
   if (!existing || existing.userId !== targetUserId) return false;
+
+  // Super Admin access must not be removable through ordinary delegated role
+  // management. A future break-glass workflow must have its own safeguards.
+  if (isProtectedPlatformRole(existing.role.key, existing.role.permissions.map(({ permission }) => permission.key))) {
+    throw new PermissionDeniedError();
+  }
 
   const actor = await requirePermission({
     permissionKey: "roles:assign",
