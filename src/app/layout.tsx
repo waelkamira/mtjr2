@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SiteNavigation from "@/components/site-navigation";
+import AuthJourney from "@/components/auth-journey";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <SiteNavigation />
+        <AuthJourney />
         {children}
       </body>
     </html>

@@ -1,6 +1,7 @@
 import { randomBytes, createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
+import { safeAuthReturnPath } from "@/lib/auth-return";
 
 export const runtime = "nodejs";
 const COOKIE_OPTIONS = { httpOnly: true, secure: env.NODE_ENV === "production", sameSite: "lax" as const, path: "/api/auth/google", maxAge: 600 };
@@ -17,15 +18,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const requestedReturnTo = url.searchParams.get("returnTo") ?? "";
-  let returnTo = "/account/orders";
-  if (requestedReturnTo.startsWith("/") && !requestedReturnTo.startsWith("//")) {
-    try {
-      const parsed = new URL(requestedReturnTo, env.APP_URL);
-      if (parsed.origin === new URL(env.APP_URL).origin) {
-        returnTo = parsed.pathname + parsed.search + parsed.hash;
-      }
-    } catch { /* Use the safe account landing page. */ }
-  }
+  const returnTo = safeAuthReturnPath(requestedReturnTo, env.APP_URL) ?? "/account/orders";
 
   const accountType = intent === "login" ? "CUSTOMER" : url.searchParams.get("accountType");
   const acceptedTerms = url.searchParams.get("acceptedTerms") === "1";

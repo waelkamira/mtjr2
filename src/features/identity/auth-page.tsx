@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { clearAuthReturnPath, getAuthReturnPath, rememberAuthReturnPath } from "@/lib/auth-return";
 
 type AuthMode = "login" | "forgot" | "reset" | "verify";
 
@@ -21,16 +22,6 @@ async function postJson(path: string, payload: unknown): Promise<ApiResult> {
   return result;
 }
 
-function safeReturnPath(): string {
-  if (typeof window === "undefined") return "/account/orders";
-  const candidate = new URLSearchParams(window.location.search).get("returnTo");
-  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/account/orders";
-  try {
-    const parsed = new URL(candidate, window.location.origin);
-    return parsed.origin === window.location.origin ? parsed.pathname + parsed.search + parsed.hash : "/account/orders";
-  } catch { return "/account/orders"; }
-}
-
 const fieldClass = "clay-surface-inset mt-2 w-full rounded-2xl border-white/70 bg-[var(--color-lavender-50)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-lavender-600)]";
 const buttonClass = "clay-interactive inline-flex w-full items-center justify-center rounded-2xl border border-white/70 bg-[var(--color-lavender-600)] px-5 py-3.5 text-sm font-bold text-white shadow-[var(--shadow-clay)] transition hover:bg-[var(--color-lavender-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
@@ -45,6 +36,8 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
   const [deliveryUnavailable, setDeliveryUnavailable] = useState(false);
 
   useEffect(() => {
+    const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    if (returnTo) rememberAuthReturnPath(returnTo);
     // Defer URL-derived UI state until after hydration to avoid a server/client mismatch.
     const registrationTimer = window.setTimeout(() => {
       setRegistrationComplete(new URLSearchParams(window.location.search).get("registered") === "1");
@@ -68,7 +61,9 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
         const result = await postJson("/api/auth/login", { email, password });
         setNotice(result.message || "Signed in successfully. Redirecting…");
         setPassword("");
-        window.setTimeout(() => window.location.assign(safeReturnPath()), 900);
+        const destination = getAuthReturnPath("/account/orders");
+        clearAuthReturnPath();
+        window.location.assign(destination);
       } else if (mode === "forgot") {
         const result = await postJson("/api/auth/password-reset/request", { email });
         setNotice(result.message || "If an eligible account exists, reset instructions will be sent.");
@@ -89,7 +84,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
   }
 
   function continueWithGoogle() {
-    const params = new URLSearchParams({ intent: "login", returnTo: safeReturnPath() });
+    const params = new URLSearchParams({ intent: "login", returnTo: getAuthReturnPath("/account/orders") });
     window.location.assign(`/api/auth/google/start?${params.toString()}`);
   }
 

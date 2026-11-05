@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { clearAuthReturnPath, getAuthReturnPath, rememberAuthReturnPath, REGISTRATION_NOTICE_KEY } from "@/lib/auth-return";
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
 const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
@@ -20,10 +21,15 @@ export default function RegisterForm({ initialOAuthError = "", registrationAvail
   const [notice, setNotice] = useState("");
   const [oauthError, setOauthError] = useState(initialOAuthError);
 
+  useEffect(() => {
+    const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    if (returnTo) rememberAuthReturnPath(returnTo);
+  }, []);
+
   function continueWithGoogle() {
     if (!acceptedTerms || !acceptedPrivacy) { setOauthError("Please accept both policy documents before continuing."); return; }
     if (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim())) { setOauthError("Enter your applicant and store names before continuing."); return; }
-    const params = new URLSearchParams({ accountType, acceptedTerms: "1", acceptedPrivacy: "1" });
+    const params = new URLSearchParams({ accountType, acceptedTerms: "1", acceptedPrivacy: "1", returnTo: getAuthReturnPath("/") });
     if (accountType === "SELLER") { params.set("sellerLegalName", sellerLegalName); params.set("sellerDisplayName", sellerDisplayName); }
     window.location.assign(new URL("/api/auth/google/start?" + params.toString(), window.location.origin).toString());
   }
@@ -45,10 +51,10 @@ export default function RegisterForm({ initialOAuthError = "", registrationAvail
       if (!response.ok) throw new Error(result.error || "Registration could not be completed.");
       setNotice(result.message || "Account created successfully. Redirecting to email verification…");
       setPassword("");
-      window.setTimeout(() => {
-        const delivery = response.status === 202 ? "&delivery=unavailable" : "";
-        window.location.assign(`/verify-email?email=${encodeURIComponent(email.trim())}&registered=1${delivery}`);
-      }, 900);
+      const destination = getAuthReturnPath("/");
+      try { window.sessionStorage.setItem(REGISTRATION_NOTICE_KEY, response.status === 202 ? "unavailable" : "sent"); } catch { /* Storage can be disabled. */ }
+      clearAuthReturnPath();
+      window.location.assign(destination);
       return;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Registration could not be completed.");
