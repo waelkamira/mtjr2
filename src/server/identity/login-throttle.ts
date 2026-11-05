@@ -227,3 +227,34 @@ export async function consumeSearchAttempt(
     blocked: await consumeBucket(tx, key, 300, now)
   }));
 }
+
+
+/** Separate persistent attempt budget for TOTP and recovery-code verification. */
+export async function consumeMfaAttempt(
+  input: LoginThrottleInput,
+  now = new Date()
+): Promise<{ blocked: boolean }> {
+  const identifier = normalizeEmail(input.identifier);
+  if (!identifier || identifier.length > 254) throw new Error("A valid MFA identifier is required.");
+  const ip = input.trustedIpAddress.trim();
+  if (!ip || ip.length > 64) throw new Error("A trusted client IP value is required.");
+  const pairKey = digestSubject("mfa-identifier-ip", JSON.stringify([identifier, ip]));
+  const ipKey = digestSubject("mfa-ip", ip);
+  return prisma.$transaction(async tx => {
+    const pairBlocked = await consumeBucket(tx, pairKey, 5, now);
+    const ipBlocked = await consumeBucket(tx, ipKey, 30, now);
+    return { blocked: pairBlocked || ipBlocked };
+  });
+}
+
+/** Clear only the MFA identifier/IP pair after successful proof verification. */
+export async function clearMfaThrottle(identifierInput: string, trustedIpAddress: string): Promise<void> {
+  const identifier = normalizeEmail(identifierInput);
+  const ip = trustedIpAddress.trim();
+  if (!identifier || identifier.length > 254 || !ip || ip.length > 64) return;
+  const pairKey = digestSubject("mfa-identifier-ip", JSON.stringify([identifier, ip]));
+  await prisma.loginRateLimitBucket.updateMany({
+    where: { keyHash: pairKey },
+    data: { windowStartedAt: new Date(), attemptCount: 0, blockedUntil: null }
+  });
+}
