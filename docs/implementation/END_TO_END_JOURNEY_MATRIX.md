@@ -225,3 +225,10 @@ This is an initial System 15 slice, not completion of seller order management or
 | Retry after concurrent create | Same request after a uniqueness race | Same authorization and request checks; only the slug unique constraint is eligible for recovery. | After the failed transaction, re-reads the slug; returns the existing store only when owner/name/markets match exactly. | Other Prisma uniqueness errors propagate; no false success is returned. |
 
 Focused evidence: `npx vitest run tests/marketplace/seller-application.test.ts tests/marketplace/seller-store-route.test.ts` (12 tests) and the consolidated Phase 4–7 run (88 tests) pass. This does not replace disposable PostgreSQL or browser verification; the seller journey remains unverified end to end.
+
+## Super Admin audit history
+
+| User journey | Frontend | API/service | Persistence | Critical checks | Status |
+|---|---|---|---|---|---|
+| Super Admin opens audit history | `/admin/control-panel/audit-log` | Server route calls `requirePlatformManagement` before rendering | None | No session → login; no platform permission → not found | Implemented; CI pending |
+| Super Admin filters and pages audit events | Action/resource filters and Load older control | `GET /api/admin/control-panel/audit-log` → `getPlatformAuditEvents` | Read-only `AuditLog` query | Server permission gate; bounded page size; validated date range; no-store; stable descending cursor | Implemented; CI pending |
