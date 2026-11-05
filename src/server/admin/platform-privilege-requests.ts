@@ -25,7 +25,7 @@ export class PlatformPrivilegeRequestConflictError extends Error {
 }
 
 async function lockTarget(tx: Prisma.TransactionClient, targetUserId: string) {
-  await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${targetUserId}, 0))`);
+  await tx.$queryRaw(Prisma.sql`SELECT 1::int AS locked FROM (SELECT pg_advisory_xact_lock(hashtextextended(${targetUserId}, 0))) AS lock_result`);
   // Serialize with account-status changes as well as other privilege requests.
   await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "User" WHERE "id" = ${targetUserId} FOR UPDATE`);
 }
