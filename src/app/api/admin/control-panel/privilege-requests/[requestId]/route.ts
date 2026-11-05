@@ -2,6 +2,7 @@ import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import {
   AuthenticationRequiredError,
+  EmailVerificationRequiredError,
   PermissionDeniedError,
   MfaEnrollmentRequiredError,
   StepUpRequiredError
@@ -25,6 +26,7 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
     const result = await decidePlatformPrivilegeRequest(requestId, body);
     return Response.json(result, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
+    if (error instanceof EmailVerificationRequiredError) return Response.json({ error: "Verified email is required.", code: "EMAIL_VERIFICATION_REQUIRED" }, { status: 403 });
     if (error instanceof MfaEnrollmentRequiredError) return Response.json({ error: "MFA enrollment is required.", code: "MFA_ENROLLMENT_REQUIRED" }, { status: 403 });
     if (error instanceof StepUpRequiredError) return Response.json({ error: "Recent MFA verification is required.", code: "STEP_UP_REQUIRED" }, { status: 428 });
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
