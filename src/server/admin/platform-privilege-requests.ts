@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { requirePlatformManagement } from "@/server/identity/permission-guard";
+import { isIndependentPrivilegeReviewer } from "@/server/identity/platform-privilege-policy";
 
 const createSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -126,7 +127,7 @@ export async function createPlatformPrivilegeRequest(input: unknown, now = new D
 export async function decidePlatformPrivilegeRequest(requestId: string, input: unknown, now = new Date()) {
   const actor = await requirePlatformManagement(now);
   const id = requestId.trim();
-  if (!id) throw new z.ZodError([]);
+  if (!id) throw new PlatformPrivilegeRequestConflictError("A privilege request ID is required.");
   const parsed = decisionSchema.parse(input);
 
   return prisma.$transaction(async (tx) => {
@@ -150,7 +151,7 @@ export async function decidePlatformPrivilegeRequest(requestId: string, input: u
     if (!request || request.status !== PlatformPrivilegeRequestStatus.PENDING) {
       throw new PlatformPrivilegeRequestConflictError("This request is no longer pending.");
     }
-    if (request.requestedById === actor.userId) {
+    if (!isIndependentPrivilegeReviewer(request.requestedById, actor.userId)) {
       throw new PlatformPrivilegeRequestConflictError("A requester cannot approve or reject their own privilege request.");
     }
 
