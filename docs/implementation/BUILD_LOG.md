@@ -2096,3 +2096,65 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact-head General CI and PostgreSQL Integration results.
 - Real Google credentials, Resend sender/API key, trusted edge IP header, and one deployed HTTP/browser journey.
 - Public production registration remains gated until approved legal documents and deployment configuration are in place.
+
+
+## 2026-11-05 — Claymorphism visual direction and foundation
+
+**Owner-approved direction**
+- Replaced the previous forest/petrol and glass-led direction with Claymorphism / 3D Pastel Clay based on the user's written description of the Pinterest reference.
+- Established lavender, mint, blush, butter, sky, and neutral tokens with compatibility aliases for existing component token names.
+- Added opt-in raised and inset clay surface primitives with soft dual shadows; existing components are not globally force-styled.
+- Kept semantic status colors, readable text, reduced-motion behavior, and keyboard focus separate from decorative pastel accents.
+
+**Scope and safeguards**
+- This is a visual foundation only. It does not claim all routes/components have been migrated or visually verified.
+- Preserve all existing routes, category distribution, APIs, authorization, Prisma models, and commerce behavior during later component migration.
+- Storefront, buyer, seller, and admin workspaces share tokens but retain different information density and interaction patterns.
+- Super Admin implementation is explicitly out of scope for this workstream.
+
+**Verification**
+- Repository files and current main design tokens were reviewed through GitHub before the change.
+- No local shell, browser runtime, or deployed visual comparison was available in this session; typecheck, lint, tests, and build must be confirmed by the branch CI before merge.
+
+
+## 2026-11-05 — Claymorphism storefront and navigation migration
+
+- Applied raised pastel surfaces and clay-style navigation controls to the shared site header/navigation without changing destinations or session-dependent links.
+- Updated the storefront hero, editorial panel, discovery controls and product cards to use the new lavender/mint/blush palette and tactile surface tokens.
+- Preserved catalog data fetching, URL-backed filters, pagination, category layout, product routes, price formatting and seller attribution.
+- Updated the reusable catalog product grid with raised clay cards and stronger bottom price hierarchy.
+- This is the first visual adoption slice; account, seller and admin workspaces still require separate migration and responsive visual QA. Super Admin remains excluded.
+
+
+## 2026-11-05 — Claymorphism identity, catalog filters and seller workspace slice
+
+- Migrated the shared sign-in/password recovery/verification card and form controls to raised pastel surfaces while preserving all existing auth endpoints, safe return-path handling, Google login flow, verification resend, and success/error behavior.
+- Migrated server-rendered catalog discovery filter panel and form controls to inset clay fields; preserved GET parameters, category/brand/store/market filters, price filters, stock filter, sorting and pagination.
+- Applied the pastel canvas and shared surface treatment to the seller workspace shell and key headings without changing seller API requests or store/inventory/shipping workflows.
+- Compatibility aliases remain in place for legacy color references. Super Admin is still explicitly excluded.
+- CI and PostgreSQL integration are expected to rerun against the latest branch head; no local build or browser visual QA is claimed.
+
+
+## 2026-11-05 — Central Tailwind v4 theme bridge
+
+- Confirmed the repository uses Tailwind CSS v4.1 and `@tailwindcss/postcss`; there is no legacy `tailwind.config.js/ts`.
+- Added a CSS-first `@theme inline` bridge in `src/app/globals.css` that exposes the central root tokens as Tailwind color, shadow, radius, and font utilities.
+- Documented `:root` as the single source of truth; do not add a parallel legacy config or duplicate token values.
+- CI must validate the generated utility classes on the updated PR head before merge.
+
+
+## 2026-11-05 — Claymorphism customer account and commerce workspace migration
+
+- Migrated the customer account landing page, order history, order detail/payment panels, wishlist, customer returns, support requests and reviews to the central Claymorphism token system.
+- Migrated seller order management and seller return handling surfaces to the same central palette and raised surface treatment.
+- Replaced legacy forest/copper/ivory color references in these UI slices with shared ink, lavender and surface tokens; existing API calls, authorization boundaries, payment initiation, order/return state transitions, wishlist merge/removal, and seller shipment/return actions were left unchanged.
+- Super Admin routes and components were not touched. No Prisma schema or migration was needed for this visual-only slice.
+- Verification is pending on the updated branch head. No local build, browser visual QA, production database operation or deployment is claimed.
+
+
+## 2026-11-05 — Broad Claymorphism migration across platform routes
+
+- Extended the central visual-token migration to customer profile, addresses, sessions and messaging routes; seller inventory, product, question, review and staff workspaces; administrative product-Q&A, review, return, support and tax-rate workflows; cart and checkout; security and notification preferences; and category, brand and store detail routes.
+- Updated legacy forest/copper/ivory references to shared ink, lavender and surface tokens. The migration is presentation-only: route contracts, API requests, business actions, and authorization logic were not intentionally changed.
+- Super Admin routes/components remain explicitly excluded. No Prisma schema or database migration was required.
+- CI and PostgreSQL Integration must be rerun against the final PR head; visual browser QA and local build were not available in this GitHub-only session.

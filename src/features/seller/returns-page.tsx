@@ -101,26 +101,26 @@ export default function SellerReturnsPage() {
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-white px-5 py-5">
+      <header className="border-b border-[var(--border)] bg-[var(--surface)] shadow-clay-raised px-5 py-5">
         <div className="mx-auto flex max-w-6xl justify-between">
-          <Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
+          <Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link>
           <div className="flex gap-4 text-sm"><Link href="/seller/orders">Orders</Link><Link href="/seller">Seller workspace</Link></div>
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-5 py-10">
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Seller operations</p>
-        <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">Store returns</h1>
+        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">Seller operations</p>
+        <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">Store returns</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Review only the return items belonging to each store you own or are authorized to manage. A decision never changes another store&apos;s items.</p>
-        <p className="mt-3 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">Approval or rejection records the seller&apos;s decision. Physical receipt is recorded against a warehouse and placed in quarantine; it does not increase sellable stock or issue a refund.</p>
+        <p className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-4 text-sm text-[var(--muted)]">Approval or rejection records the seller&apos;s decision. Physical receipt is recorded against a warehouse and placed in quarantine; it does not increase sellable stock or issue a refund.</p>
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
-        {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-white p-4 text-sm">{notice}</p>}
-        {loading ? <div className="mt-6 h-40 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /> : items.length ? (
+        {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-4 text-sm">{notice}</p>}
+        {loading ? <div className="mt-6 h-40 animate-pulse rounded-3xl bg-[var(--surface-soft)]" /> : items.length ? (
           <div className="mt-6 space-y-4">
             {items.map((item) => {
               const key = item.id + ":" + item.storeId;
               const pending = item.items.some((product) => product.status === "REQUESTED");
               return (
-                <article key={key} className="rounded-3xl border border-[var(--border)] bg-white p-6">
+                <article key={key} className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-6">
                   <div className="flex flex-wrap justify-between gap-3">
                     <div><p className="text-xs text-[var(--muted)]">{item.returnNumber} · Order {item.orderNumber}</p><h2 className="mt-1 text-lg font-semibold">{item.storeName}</h2></div>
                     <div className="text-right"><p className="font-semibold">{item.status.replaceAll("_", " ")}</p><p className="mt-1 text-xs text-[var(--muted)]">{new Date(item.requestedAt).toLocaleString()}</p></div>
@@ -135,7 +135,7 @@ export default function SellerReturnsPage() {
                   </div>
                   {item.items.some((product) => product.status === "APPROVED") && <div className="mt-4 border-t border-[var(--border)] pt-4">
                     <label className="grid gap-2 text-sm font-medium">Receive approved items into warehouse
-                      <select value={warehouseByStore[item.storeId] || ""} onChange={(event) => setWarehouseByStore((current) => ({ ...current, [item.storeId]: event.target.value }))} className="rounded-xl border border-[var(--border)] bg-white p-3">
+                      <select value={warehouseByStore[item.storeId] || ""} onChange={(event) => setWarehouseByStore((current) => ({ ...current, [item.storeId]: event.target.value }))} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-3">
                         <option value="">Select warehouse</option>
                         {item.warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.name} ({warehouse.code})</option>)}
                       </select>
@@ -156,7 +156,7 @@ export default function SellerReturnsPage() {
               );
             })}
           </div>
-        ) : !error ? <div className="mt-6 rounded-3xl border border-[var(--border)] bg-white p-8 text-center text-sm text-[var(--muted)]">No return requests are associated with your authorized stores.</div> : null}
+        ) : !error ? <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-8 text-center text-sm text-[var(--muted)]">No return requests are associated with your authorized stores.</div> : null}
       </div>
     </main>
   );
