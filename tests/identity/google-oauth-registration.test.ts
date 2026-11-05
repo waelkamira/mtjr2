@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
   oauthAccountFindUnique: vi.fn(),
   userFindUnique: vi.fn(),
+  userUpdate: vi.fn(),
+  auditLogCreate: vi.fn(),
   transaction: vi.fn(),
   createUserSession: vi.fn(),
   setSessionCookie: vi.fn()
@@ -22,7 +24,8 @@ vi.mock("@/lib/env", () => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     oAuthAccount: { findUnique: mocks.oauthAccountFindUnique },
-    user: { findUnique: mocks.userFindUnique },
+    user: { findUnique: mocks.userFindUnique, update: mocks.userUpdate },
+    auditLog: { create: mocks.auditLogCreate },
     $transaction: mocks.transaction
   }
 }));
@@ -109,4 +112,57 @@ describe("Google OAuth registration gate", () => {
     );
     expect(mocks.setSessionCookie).toHaveBeenCalled();
   });
+
+  it("supports Google login without accepting registration consent or creating an account", async () => {
+    mocks.cookies.mockResolvedValue(createCookieStore({
+      mtjr_google_state: "expected-state",
+      mtjr_google_verifier: "verifier",
+      mtjr_google_intent: "login",
+      mtjr_google_return_to: encodeURIComponent("/account/orders?tab=open"),
+      mtjr_google_account_type: "CUSTOMER"
+    }));
+    mocks.oauthAccountFindUnique.mockResolvedValue({
+      userId: "existing-user",
+      user: { id: "existing-user", status: "ACTIVE", emailVerifiedAt: new Date() }
+    });
+    mocks.transaction.mockResolvedValue(undefined);
+    mocks.createUserSession.mockResolvedValue({
+      token: "opaque-session-token",
+      expiresAt: new Date(Date.now() + 60_000)
+    });
+
+    const response = await GET(new Request(
+      "http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"
+    ));
+
+    expect(response.headers.get("location")).toBe("http://localhost:3000/account/orders?tab=open");
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+    expect(mocks.transaction).toHaveBeenCalled();
+    expect(mocks.createUserSession).toHaveBeenCalledWith(
+      "existing-user",
+      { userAgent: null },
+      expect.any(Date)
+    );
+    expect(mocks.setSessionCookie).toHaveBeenCalled();
+  });
+
+  it("does not create or link a Google account during login when no link exists", async () => {
+    mocks.cookies.mockResolvedValue(createCookieStore({
+      mtjr_google_state: "expected-state",
+      mtjr_google_verifier: "verifier",
+      mtjr_google_intent: "login",
+      mtjr_google_account_type: "CUSTOMER"
+    }));
+    mocks.oauthAccountFindUnique.mockResolvedValue(null);
+
+    const response = await GET(new Request(
+      "http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"
+    ));
+
+    expect(response.headers.get("location")).toBe("http://localhost:3000/login?oauth=not_linked");
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+    expect(mocks.transaction).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+  });
+
 });
