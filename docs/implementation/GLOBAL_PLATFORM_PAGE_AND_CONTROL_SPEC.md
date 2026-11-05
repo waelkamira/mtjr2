@@ -48,3 +48,14 @@ This specification covers the platform-wide Super Admin control center only. It 
 - Audit API redacts fields with credential, token, cookie, API-key, session and payment-secret-shaped names recursively before serialization.
 - Redaction is a presentation/API boundary; persisted audit records remain unchanged.
 - Nested depth, object/array entry count and string length are bounded to reduce accidental oversized payloads.
+
+## Implemented workflow: Super Admin privilege approvals
+- Route: `/admin/control-panel/privilege-requests`.
+- APIs: `GET/POST /api/admin/control-panel/privilege-requests`, `PATCH /api/admin/control-panel/privilege-requests/[requestId]`.
+- Model: `PlatformPrivilegeRequest`; enum: `PlatformPrivilegeRequestStatus`; migration: `20261105132500_platform_privilege_approvals`.
+- This workflow is deliberately narrow: it requests and reviews only a grant of the canonical `SUPER_ADMIN` role. It does not accept arbitrary role keys or permission payloads.
+- Target must exist, be ACTIVE and have a verified email. A current GLOBAL `platform:manage` grant blocks a new request.
+- The requester cannot review their own request. The approval transaction grants the canonical role, records reviewer/decision and writes AuditLog atomically.
+- PostgreSQL advisory locks serialize per-target requests and decisions. The one-time bootstrap script now also refuses any existing GLOBAL assignment carrying `platform:manage`.
+- Revocation/break-glass remains intentionally unimplemented and requires a separately designed recovery protocol with multiple safeguards.
+- Migration has not been applied to any database.
