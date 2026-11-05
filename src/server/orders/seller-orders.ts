@@ -42,6 +42,7 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
     include: {
       store: { select: { id: true, name: true, slug: true } },
       order: { select: { id: true, orderNumber: true, status: true, currencyCode: true, placedAt: true, currency: { select: { minorUnit: true } } } },
+      shipment: { select: { carrierName: true, trackingNumber: true, trackingUrl: true, shippedAt: true } },
       items: { orderBy: { createdAt: "asc" }, select: { id: true, productName: true, sku: true, variantName: true, quantity: true, unitAmountMinor: true, lineTotalMinor: true } }
     }
   });
@@ -53,6 +54,7 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
       order: vendor.order,
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
+      shipment: vendor.shipment ? { carrierName: vendor.shipment.carrierName, trackingNumber: vendor.shipment.trackingNumber, trackingUrl: vendor.shipment.trackingUrl, shippedAt: vendor.shipment.shippedAt.toISOString() } : null,
       items: vendor.items.map((item) => ({
         ...item, unitAmountMinor: item.unitAmountMinor.toString(), lineTotalMinor: item.lineTotalMinor.toString()
       }))
@@ -85,6 +87,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
       where: { id },
       select: {
         id: true, orderId: true, storeId: true, status: true,
+        shipment: { select: { id: true, carrierName: true, trackingNumber: true, trackingUrl: true, shippedAt: true } },
         order: { select: { status: true, orderNumber: true } },
         store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
       }
@@ -163,3 +166,91 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
+const sellerShipmentSchema = z.object({
+  carrierName: z.string().trim().min(2).max(120),
+  trackingNumber: z.string().trim().min(3).max(160),
+  trackingUrl: z.string().trim().url().max(2048).refine((value) => { const url = new URL(value); return url.protocol === "https:" && !url.username && !url.password; }, "Tracking URL must use HTTPS and cannot contain credentials.").optional()
+}).strict();
+
+/** Seller-entered dispatch details; this does not claim carrier API verification. */
+export async function createSellerShipment(vendorOrderId: string, input: unknown, now = new Date()) {
+  const data = sellerShipmentSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  const id = z.string().trim().min(1).max(128).parse(vendorOrderId);
+
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.vendorOrder.findUnique({
+      where: { id },
+      select: {
+        id: true, orderId: true, storeId: true, status: true,
+        shipment: { select: { id: true, carrierName: true, trackingNumber: true, trackingUrl: true, shippedAt: true } },
+        order: { select: { status: true, orderNumber: true } },
+        store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
+      }
+    });
+    if (!current) throw new Error("Seller order not found.");
+    if (current.store.status !== "ACTIVE" || current.store.seller.status !== "ACTIVE") throw new Error("This store is not active.");
+
+    const isOwner = current.store.seller.ownerId === actor.userId;
+    if (!isOwner) {
+      const [activeStaff, assignments] = await Promise.all([
+        tx.sellerStaff.findFirst({ where: { storeId: current.storeId, userId: actor.userId, status: "ACTIVE" }, select: { id: true } }),
+        tx.userRoleAssignment.findMany({
+          where: { userId: actor.userId, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+          select: { scopeType: true, scopeId: true, role: { select: { permissions: { select: { permission: { select: { key: true } } } } } } }
+        })
+      ]);
+      const globalGrant = assignments.some((a) => a.scopeType === "GLOBAL" && a.scopeId === "GLOBAL" && a.role.permissions.some((p) => p.permission.key === "orders:manage"));
+      const storeGrant = Boolean(activeStaff) && assignments.some((a) => a.scopeType === "STORE" && a.scopeId === current.storeId && a.role.permissions.some((p) => p.permission.key === "orders:manage"));
+      if (!globalGrant && !storeGrant) throw new PermissionDeniedError();
+    }
+
+    if (current.status === VendorOrderStatus.SHIPPED && current.shipment
+      && current.shipment.carrierName === data.carrierName
+      && current.shipment.trackingNumber === data.trackingNumber
+      && current.shipment.trackingUrl === (data.trackingUrl || null)) {
+      return { id: current.shipment.id, carrierName: current.shipment.carrierName, trackingNumber: current.shipment.trackingNumber, trackingUrl: current.shipment.trackingUrl, shippedAt: current.shipment.shippedAt.toISOString(), vendorOrderStatus: VendorOrderStatus.SHIPPED, changed: false };
+    }
+    if (current.status !== VendorOrderStatus.READY_TO_SHIP) throw new Error("Only a ready-to-ship seller order can be dispatched.");
+    if (!( [OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED] as OrderStatus[]).includes(current.order.status)) {
+      throw new Error("The parent order is not eligible for dispatch.");
+    }
+
+    const shipment = await tx.shipment.create({
+      data: { vendorOrderId: id, carrierName: data.carrierName, trackingNumber: data.trackingNumber, trackingUrl: data.trackingUrl || null, shippedAt: now, createdById: actor.userId }
+    });
+    const changed = await tx.vendorOrder.updateMany({
+      where: { id, storeId: current.storeId, status: VendorOrderStatus.READY_TO_SHIP },
+      data: { status: VendorOrderStatus.SHIPPED }
+    });
+    if (changed.count !== 1) throw new Error("The seller order changed. Refresh and try again.");
+
+    await tx.vendorOrderStatusHistory.create({
+      data: { vendorOrderId: id, status: VendorOrderStatus.SHIPPED, note: "Seller recorded dispatch and tracking details.", actorId: actor.userId, createdAt: now }
+    });
+
+    const siblings = await tx.vendorOrder.findMany({ where: { orderId: current.orderId }, select: { status: true } });
+    const dispatched = siblings.filter((item) => item.status === VendorOrderStatus.SHIPPED || item.status === VendorOrderStatus.DELIVERED).length;
+    const nextParentStatus = dispatched === siblings.length ? OrderStatus.FULFILLED : dispatched > 0 ? OrderStatus.PARTIALLY_FULFILLED : current.order.status;
+    if (nextParentStatus !== current.order.status) {
+      const parentChanged = await tx.order.updateMany({
+        where: { id: current.orderId, status: current.order.status },
+        data: { status: nextParentStatus }
+      });
+      if (parentChanged.count === 1) {
+        await tx.orderStatusHistory.create({
+          data: { orderId: current.orderId, status: nextParentStatus, note: "Seller dispatch recorded.", actorId: actor.userId, createdAt: now }
+        });
+      }
+    }
+
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId, action: "seller.shipment.created",
+        resource: "shipment", resourceId: shipment.id, scopeType: "STORE", scopeId: current.storeId,
+        occurredAt: now, metadata: { vendorOrderId: id, orderNumber: current.order.orderNumber, carrierName: data.carrierName, trackingNumber: data.trackingNumber }
+      }
+    });
+    return { id: shipment.id, carrierName: shipment.carrierName, trackingNumber: shipment.trackingNumber, trackingUrl: shipment.trackingUrl, shippedAt: shipment.shippedAt.toISOString(), vendorOrderStatus: VendorOrderStatus.SHIPPED, changed: true };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}

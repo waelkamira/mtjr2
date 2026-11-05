@@ -213,3 +213,13 @@ Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL
 | Mark ready to ship | `/seller/orders` → same PATCH endpoint with `READY_TO_SHIP` | Same server-derived store and permission checks; current vendor status must be `PROCESSING` | Vendor status and audit/history commit atomically; repeated target request is idempotent | Shipment, label, tracking, dispatch, delivered, cancellation and refund actions remain unavailable |
 
 This is an initial System 15 slice, not completion of seller order management or System 18 shipping/fulfillment. Browser verification is still pending.
+
+
+## Manual seller dispatch — pending exact-head verification
+
+| Action | Journey | Authorization and invariant | Persistence/result | Failure behavior |
+|---|---|---|---|---|
+| Record dispatch | `/seller/orders` → POST `/api/seller/orders/[vendorOrderId]/shipment` | HttpOnly session; vendor order resolves store server-side; active store/seller; owner or active staff with exact STORE `orders:manage` or global permission; status must be READY_TO_SHIP; tracking URL HTTPS | Shipment + vendor status SHIPPED + parent aggregate status + both histories + AuditLog in one serializable transaction | Anonymous 401; forbidden 403; missing order 404; stale state 409; invalid payload 400; identical replay returns existing shipment |
+| View shipment | `/orders/[orderId]` reload | Existing order ownership check | Shipment serialized per vendor order | Missing shipment renders no tracking block; tracking link opens HTTPS URL in new tab |
+ 
+Manual seller-entered tracking is not a carrier integration. Carrier webhooks, live tracking, label purchase and delivery confirmation remain out of scope for this slice.

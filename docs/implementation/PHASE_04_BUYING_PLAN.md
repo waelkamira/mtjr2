@@ -132,5 +132,20 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Vendor-order status, status history, parent-order processing state/history, and audit event are written in one serializable transaction with compare-and-set protection against stale or concurrent updates.
 - Repeating the current target status is idempotent. The seller cannot change another store's order or regress a status.
 - **No Prisma schema change:** `VendorOrderStatus`, `VendorOrderStatusHistory`, `OrderStatus`, `OrderStatusHistory`, and `AuditLog` already cover this bounded workflow.
-- Shipment creation, carrier labels/tracking, shipped/delivered transitions, cancellation, and refunds remain disabled until their own policy/provider and inventory/payment reversal rules are implemented. No shipment or delivery success is simulated.
+- Manual seller-entered dispatch and buyer-visible tracking details are implemented on `feat/shipment-tracking-current-main` (PR pending). This records seller-supplied carrier/tracking metadata; it is not a carrier API integration, label purchase, live tracking feed, proof of delivery, cancellation, or refund. Exact-head CI and disposable PostgreSQL verification are required before treating this slice as verified.
 
+
+
+## 4.7 — Manual seller dispatch and buyer tracking
+
+**Implemented on `feat/shipment-tracking-current-main`; exact-head verification pending.**
+
+- Added `Shipment` as a one-to-one record for a vendor order, with carrier name, tracking number, optional HTTPS tracking URL, dispatch timestamp and creator.
+- Added forward-only migration `20261105130000_manual_shipment_tracking`; database checks reject empty carrier/tracking values and non-HTTPS tracking URLs.
+- Added `POST /api/seller/orders/[vendorOrderId]/shipment` and `createSellerShipment`. The service resolves the active seller/store from the vendor order, requires owner or exact store-scoped `orders:manage`/global permission, accepts only `READY_TO_SHIP`, creates the shipment, transitions the vendor order to `SHIPPED`, updates the parent order's aggregate fulfillment state, writes status history and audit in one serializable transaction.
+- An identical retry returns the existing shipment without creating a duplicate. Changed tracking details are not silently overwritten by this endpoint.
+- Connected `/seller/orders` dispatch inputs to the endpoint and displays buyer tracking details on the order detail page. All order serializers include the shipment snapshot after reload.
+- No live carrier API, label purchase, carrier event webhook, delivery confirmation, proof of delivery, returns routing or refund behavior is implemented. Tracking link is seller-supplied and must be HTTPS.
+- Added focused seller dispatch tests for successful transition/audit, invalid tracking URL, cross-store staff denial and idempotent replay.
+
+**Verification gate:** General CI and disposable PostgreSQL migration/integration must pass on the exact new branch head. The older PR #26 check result is not transferable because its base was stale and the migration timestamp collided with the payment migration already on main.

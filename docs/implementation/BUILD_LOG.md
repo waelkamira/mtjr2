@@ -2020,3 +2020,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Each plan defines scope ownership, workflows, critical invariants, P0 acceptance and exit criteria. Financial refunds/payouts, customer returns, market regulatory approval, release gates and post-launch operations are assigned to distinct owners to avoid duplicate implementations.
 - Updated README with the complete Phase 1–11 plan index and amended the roadmap audit to distinguish the historical gap from the new documentation coverage.
 - Documentation-only. This closes plan-documentation gaps, not implementation/verification gaps. No Prisma schema, migrations, database, production secrets or deployment changed.
+
+
+## 2026-11-05 — Phase 4 manual seller dispatch and buyer tracking
+
+- Ported the manual shipment slice from stale PR #26 onto current main as `feat/shipment-tracking-current-main`; did not merge the stale branch.
+- Added one Shipment per VendorOrder, a forward-only migration at `20261105130000_manual_shipment_tracking` (avoids the existing payment migration timestamp), server-side owner/store-scope authorization, idempotent identical dispatch retry, serializable status/history/audit writes, seller dispatch UI and buyer order tracking display.
+- Added focused seller-shipment tests for successful dispatch, HTTPS validation, cross-store permission denial and idempotent replay.
+- Updated Phase 4 plan, Prisma model map, route registry and journey matrix.
+- The older PR #26 CI/PostgreSQL result is not treated as evidence for this new branch. Fresh exact-head General CI and disposable PostgreSQL integration are required. No live carrier integration, label purchase, live tracking feed or delivery proof is claimed.
+- No production database or deployment was accessed.

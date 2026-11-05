@@ -1257,11 +1257,28 @@ model VendorOrder {
   shippingRate    StoreShippingRate? @relation(fields: [shippingRateId], references: [id], onDelete: SetNull)
   items           OrderItem[]
   statusHistory   VendorOrderStatusHistory[]
+  shipment        Shipment?
   storeReview     StoreReview?
 
   @@unique([orderId, storeId])
   @@index([storeId, status, createdAt])
   @@index([orderId, status])
+}
+
+model Shipment {
+  id             String      @id @default(cuid())
+  vendorOrderId  String      @unique
+  carrierName    String      @db.VarChar(120)
+  trackingNumber String      @db.VarChar(160)
+  trackingUrl    String?     @db.VarChar(2048)
+  shippedAt      DateTime    @default(now())
+  createdById    String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  vendorOrder    VendorOrder @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
+
+  @@index([trackingNumber])
+  @@index([shippedAt])
 }
 
 model OrderItem {
