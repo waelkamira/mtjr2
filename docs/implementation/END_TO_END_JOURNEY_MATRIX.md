@@ -238,3 +238,10 @@ Focused evidence: `npx vitest run tests/marketplace/seller-application.test.ts t
 | User journey | Frontend | API/service | Persistence | Critical checks | Status |
 |---|---|---|---|---|---|
 | Super Admin reviews role grants | `/admin/control-panel/access-catalog` | `GET /api/admin/control-panel/access-catalog` → `getPlatformAccessCatalog` | Read-only Role, Permission, RolePermission and UserRoleAssignment aggregates | Global platform permission at page and service; no mutation surface; private/no-store | Implemented; CI pending |
+
+## Super Admin privilege request and independent review
+
+| User journey | Frontend | API/service | Persistence | Critical checks | Status |
+|---|---|---|---|---|---|
+| Existing Super Admin requests access for another user | `/admin/control-panel/privilege-requests` form | `POST /api/admin/control-panel/privilege-requests` → `createPlatformPrivilegeRequest` | PlatformPrivilegeRequest + AuditLog | ACTIVE target, verified email, minimum justification, no current platform grant, one pending request per target under advisory lock | Implemented; migration/CI pending |
+| A different Super Admin approves or rejects | Pending request card | `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `decidePlatformPrivilegeRequest` | Request status, UserRoleAssignment on approval, AuditLog | Actor separation, pending-only transition, canonical role permission check, transaction + target lock | Implemented; migration/CI pending |
