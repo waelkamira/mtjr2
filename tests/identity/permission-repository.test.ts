@@ -59,6 +59,12 @@ describe("platform administrator permission enforcement", () => {
     expect(stepUpMock).toHaveBeenCalledWith("admin-1", now);
   });
 
+  it("rejects a user ID that does not match the current session", async () => {
+    sessionMock.mockResolvedValue({ userId: "attacker-selected-user" });
+    await expect(userHasPermission("victim-user", { permissionKey: "users:manage", now })).rejects.toThrow();
+    expect(assignmentsMock).not.toHaveBeenCalled();
+  });
+
   it("does not force MFA on non-platform users", async () => {
     sessionMock.mockResolvedValue({ userId: "seller-1" });
     assignmentsMock.mockResolvedValue([{
