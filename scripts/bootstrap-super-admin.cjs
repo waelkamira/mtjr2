@@ -68,7 +68,7 @@ async function main() {
         .map((role) => role.id);
       const existing = protectedRoleIds.length
         ? await tx.userRoleAssignment.findFirst({
-            where: { roleId: { in: protectedRoleIds }, scopeType: "GLOBAL", scopeId: "GLOBAL" },
+            where: { roleId: { in: protectedRoleIds }, scopeType: "GLOBAL", scopeId: "GLOBAL", OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
             select: { id: true }
           })
         : null;
