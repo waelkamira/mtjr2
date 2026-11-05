@@ -176,7 +176,8 @@ export async function createManualRefundForReturn(input: unknown, now = new Date
     const previousAllocations = await tx.refundItem.findMany({
       where: {
         returnItem: { orderItemId: { in: orderItemIds } },
-        refund: { paymentId: payment.id, status: { in: committedRefundStatuses } }
+        // Merchandise quantity/value is allocated across the order, not per payment attempt.
+        refund: { status: { in: committedRefundStatuses } }
       },
       select: { quantity: true, amountMinor: true, returnItem: { select: { orderItemId: true } } }
     });
