@@ -6,6 +6,9 @@ import {
 import { AuditActorType } from "@prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
+import { verifyPassword } from "@/server/identity/password";
+import { getUserAuthorizationGrants } from "@/server/identity/permission-repository";
+import { hasPermission } from "@/server/identity/authorization";
 
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const TOTP_PERIOD_SECONDS = 30;
@@ -224,6 +227,58 @@ export async function verifyMfaStepUp(sessionId: string, userId: string, code: s
   if (updated.count !== 1) return false;
   await prisma.auditLog.create({
     data: { actorType: AuditActorType.USER, actorId: userId, action: "identity.mfa.step_up.succeeded", resource: "user_session", resourceId: sessionId, occurredAt: now }
+  });
+  return true;
+}
+
+
+export async function regenerateMfaRecoveryCodes(userId: string, proof: string, now = new Date()) {
+  if (!(await verifyMfaProof(userId, proof, now))) {
+    throw new MfaStateConflictError("The MFA verification code is invalid or already used.");
+  }
+  const recovery = generateRecoveryCodes();
+  await prisma.$transaction(async tx => {
+    await tx.mfaRecoveryCode.deleteMany({ where: { userId } });
+    await tx.mfaRecoveryCode.createMany({
+      data: recovery.records.map(record => ({ userId, codeHash: record.codeHash }))
+    });
+    await tx.auditLog.create({
+      data: { actorType: AuditActorType.USER, actorId: userId, action: "identity.mfa.recovery_codes.regenerated", resource: "user", resourceId: userId, occurredAt: now }
+    });
+  });
+  return recovery.codes;
+}
+
+export async function disableMfa(
+  userId: string,
+  currentPassword: string,
+  proof: string,
+  now = new Date()
+): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { passwordHash: true }
+  });
+  if (!user?.passwordHash || !(await verifyPassword(currentPassword, user.passwordHash))) {
+    throw new MfaStateConflictError("The current password is incorrect.");
+  }
+  const grants = await getUserAuthorizationGrants(userId, now);
+  if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
+    throw new MfaStateConflictError("MFA cannot be disabled while platform-wide privileges are assigned.");
+  }
+  if (!(await verifyMfaProof(userId, proof, now))) {
+    throw new MfaStateConflictError("The MFA verification code is invalid or already used.");
+  }
+  await prisma.$transaction(async tx => {
+    await tx.userMfaAuthenticator.deleteMany({ where: { userId } });
+    await tx.mfaRecoveryCode.deleteMany({ where: { userId } });
+    await tx.userSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { stepUpVerifiedAt: null, stepUpExpiresAt: null }
+    });
+    await tx.auditLog.create({
+      data: { actorType: AuditActorType.USER, actorId: userId, action: "identity.mfa.disabled", resource: "user", resourceId: userId, occurredAt: now }
+    });
   });
   return true;
 }
