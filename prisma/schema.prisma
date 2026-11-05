@@ -56,6 +56,8 @@ model User {
   sellerProfile     Seller?
   storeMemberships  SellerStaff[]          @relation("SellerStaffUser")
   sentStoreInvitations SellerStaff[]        @relation("SellerStaffInviter")
+  mfaAuthenticator UserMfaAuthenticator?
+  mfaRecoveryCodes MfaRecoveryCode[]
   requestedPlatformPrivileges PlatformPrivilegeRequest[] @relation("PlatformPrivilegeTarget")
   createdPlatformPrivilegeRequests PlatformPrivilegeRequest[] @relation("PlatformPrivilegeRequester")
   reviewedPlatformPrivilegeRequests PlatformPrivilegeRequest[] @relation("PlatformPrivilegeReviewer")
@@ -148,6 +150,8 @@ model UserSession {
   lastSeenAt     DateTime  @default(now())
   expiresAt      DateTime
   revokedAt      DateTime?
+  stepUpVerifiedAt DateTime?
+  stepUpExpiresAt DateTime?
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
@@ -1835,4 +1839,32 @@ model PlatformPrivilegeRequest {
   @@index([targetUserId, status])
   @@index([requestedById, requestedAt])
   @@index([reviewedById, reviewedAt])
+}
+
+
+model UserMfaAuthenticator {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  secretCiphertext  String   @db.VarChar(256)
+  secretIv          String   @db.VarChar(32)
+  secretTag         String   @db.VarChar(32)
+  enabledAt         DateTime?
+  lastUsedStep      Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([enabledAt])
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String    @db.Char(64)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codeHash])
+  @@index([userId, usedAt])
 }

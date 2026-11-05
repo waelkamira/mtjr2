@@ -13,6 +13,11 @@ const environmentSchema = z.object({
   APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must contain at least 32 characters"),
+  MFA_ENCRYPTION_KEY: z.preprocess(
+    (value) => value === "" ? undefined : value,
+    z.string().optional()
+  ).refine((value) => value === undefined || Buffer.from(value, "base64").length === 32,
+    "MFA_ENCRYPTION_KEY must be a base64-encoded 32-byte key"),
   CRON_SECRET: z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional(),
   PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
   RESEND_API_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),

@@ -9,6 +9,7 @@ import {
   userHasAnyPermission
 } from "@/server/identity/permission-repository";
 import type { AuthorizationRequest } from "@/server/identity/authorization";
+import { prisma } from "@/lib/db/prisma";
 
 export class PermissionDeniedError extends Error {
   constructor() {
@@ -51,9 +52,26 @@ export async function requireAnyPermission(
   return session;
 }
 
-/** Dedicated gate for platform-wide Super Admin surfaces and mutations. */
+export class MfaEnrollmentRequiredError extends Error {
+  constructor() { super("MFA enrollment is required for platform-wide access."); this.name = "MfaEnrollmentRequiredError"; }
+}
+
+export class StepUpRequiredError extends Error {
+  constructor() { super("Recent MFA verification is required for platform-wide access."); this.name = "StepUpRequiredError"; }
+}
+
+/** Dedicated gate for platform-wide access: permission + enrolled MFA + recent step-up. */
 export async function requirePlatformManagement(now = new Date()) {
-  return requirePermission({ permissionKey: "platform:manage", now }, now);
+  const session = await requirePermission({ permissionKey: "platform:manage", now }, now);
+  const authenticator = await prisma.userMfaAuthenticator.findUnique({
+    where: { userId: session.userId },
+    select: { enabledAt: true }
+  });
+  if (!authenticator?.enabledAt) throw new MfaEnrollmentRequiredError();
+  if (!session.stepUpExpiresAt || session.stepUpExpiresAt.getTime() <= now.getTime()) {
+    throw new StepUpRequiredError();
+  }
+  return session;
 }
 
 export { AuthenticationRequiredError };
