@@ -23,8 +23,6 @@ export default function AuthJourney() {
     rememberAuthReturnPath(window.location.pathname + window.location.search + window.location.hash);
     return () => window.clearTimeout(timer);
   }, [pathname]);
-
-  }, []);
   if (!notice) return null;
   return <div role="status" className="mx-auto mt-4 flex max-w-4xl flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm">
     <span>{notice === "sent" ? "Account created. Check your email to verify your address before signing in." : "Account created, but the verification email could not be sent. Request another email later."}</span>
