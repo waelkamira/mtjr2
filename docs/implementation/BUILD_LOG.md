@@ -2030,3 +2030,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Updated Phase 4 plan, Prisma model map, route registry and journey matrix.
 - The older PR #26 CI/PostgreSQL result is not treated as evidence for this new branch. Fresh exact-head General CI and disposable PostgreSQL integration are required. No live carrier integration, label purchase, live tracking feed or delivery proof is claimed.
 - No production database or deployment was accessed.
+
+
+## 2026-11-05 — Multi-vendor fulfillment aggregation correction
+
+- Merged manual seller dispatch and buyer-visible tracking through PR #41 after exact-head General CI and disposable PostgreSQL integration both passed (head `049f7001811dfc0ee5fd44b468e543c2cf48900e`).
+- Closed stale duplicate PR #26; its earlier migration timestamp conflicted with the current payment migration and its implementation was superseded by PR #41's clean forward-only migration.
+- During the post-merge Phase 4 review, found that parent-order fulfillment aggregation counted cancelled vendor orders as orders still awaiting dispatch. This could leave a parent order PARTIALLY_FULFILLED forever after every remaining live vendor order had shipped.
+- Corrected the aggregate to exclude CANCELLED vendor orders from the fulfillment denominator and added regression coverage for cancelled siblings and still-active undispatched siblings. No schema change was required.
+- The correction is isolated in branch `fix/order-fulfillment-terminal-vendors`; exact-head General CI and PostgreSQL verification are pending. Super Admin PR #35 is intentionally out of scope while its owner continues local work.

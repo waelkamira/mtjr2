@@ -223,3 +223,11 @@ This is an initial System 15 slice, not completion of seller order management or
 | View shipment | `/orders/[orderId]` reload | Existing order ownership check | Shipment serialized per vendor order | Missing shipment renders no tracking block; tracking link opens HTTPS URL in new tab |
  
 Manual seller-entered tracking is not a carrier integration. Carrier webhooks, live tracking, label purchase and delivery confirmation remain out of scope for this slice.
+
+
+## Multi-vendor shipment aggregation correction — 2026-11-05
+
+- On seller dispatch, parent order aggregation now considers only non-cancelled vendor orders. A cancelled seller leg does not block FULFILLED once all remaining live vendor orders are SHIPPED or DELIVERED.
+- If at least one live vendor order remains undispatched after another has shipped, parent state remains PARTIALLY_FULFILLED.
+- Regression tests cover both states. No Prisma migration is needed; the existing CANCELLED status is sufficient.
+- Exact-head CI/PostgreSQL verification for this correction is pending.
