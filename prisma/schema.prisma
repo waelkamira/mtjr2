@@ -57,6 +57,8 @@ model User {
   returnRequests        ReturnRequest[] @relation("ReturnRequestCustomer")
   reviewedReturnRequests ReturnRequest[] @relation("ReturnRequestReviewer")
   reviewedReturnItems ReturnItem[] @relation("ReturnItemReviewer")
+  refundsRequested Refund[] @relation("RefundRequester")
+  refundsCompleted Refund[] @relation("RefundCompleter")
   notifications         Notification[]
   supportAttachments    SupportAttachment[] @relation("SupportAttachmentUploader")
   storeMessageAttachments StoreMessageAttachment[] @relation("StoreMessageAttachmentUploader")
@@ -354,6 +356,11 @@ enum PaymentStatus {
   DISPUTED
 }
 
+enum RefundStatus {
+  PENDING_MANUAL
+  COMPLETED
+}
+
 enum VendorOrderStatus {
   PENDING_PAYMENT
   CONFIRMED
@@ -438,6 +445,7 @@ model Currency {
   checkoutQuotes CheckoutQuote[]
   orders Order[]
   payments Payment[]
+  refunds Refund[]
 
   shippingRates StoreShippingRate[]
 
@@ -1223,6 +1231,7 @@ model Order {
   returnRequests  ReturnRequest[]
   statusHistory   OrderStatusHistory[]
   payments        Payment[]
+  refunds         Refund[]
 
   conversations StoreConversation[]
 
@@ -1359,6 +1368,7 @@ model ReturnRequest {
   customer       User                @relation("ReturnRequestCustomer", fields: [customerId], references: [id], onDelete: Restrict)
   reviewedBy     User?               @relation("ReturnRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   items          ReturnItem[]
+  refund         Refund?
 
   @@index([customerId, requestedAt])
   @@index([orderId, status])
@@ -1378,6 +1388,7 @@ model ReturnItem {
   reviewedBy      User?           @relation("ReturnItemReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   returnRequest   ReturnRequest  @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
   orderItem       OrderItem       @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  refundItem      RefundItem?
 
   @@unique([returnRequestId, orderItemId])
   @@index([orderItemId])
@@ -1783,10 +1794,53 @@ model Payment {
   order               Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
   currency            Currency      @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
   events              PaymentWebhookEvent[]
+  refunds             Refund[]
 
   @@unique([provider, providerReference])
   @@index([orderId, createdAt])
   @@index([status, createdAt])
+}
+
+model Refund {
+  id                String       @id @default(cuid())
+  orderId           String
+  paymentId         String
+  returnRequestId   String       @unique
+  currencyCode      String       @db.Char(3)
+  status            RefundStatus @default(PENDING_MANUAL)
+  amountMinor       BigInt
+  idempotencyKey    String       @unique @db.VarChar(180)
+  externalReference String?      @unique @db.VarChar(180)
+  note              String?      @db.VarChar(1000)
+  requestedById     String
+  completedById     String?
+  requestedAt       DateTime     @default(now())
+  completedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  order             Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  payment           Payment      @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  returnRequest     ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Restrict)
+  currency          Currency     @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  requestedBy       User         @relation("RefundRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  completedBy       User?        @relation("RefundCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  items             RefundItem[]
+
+  @@index([paymentId, status, createdAt])
+  @@index([status, requestedAt])
+}
+
+model RefundItem {
+  id           String      @id @default(cuid())
+  refundId     String
+  returnItemId String      @unique
+  quantity     Int
+  amountMinor  BigInt
+  createdAt    DateTime    @default(now())
+  refund       Refund      @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  returnItem   ReturnItem  @relation(fields: [returnItemId], references: [id], onDelete: Restrict)
+
+  @@index([refundId])
 }
 
 model PaymentWebhookEvent {
