@@ -10,7 +10,7 @@
 The previous roadmap was not a complete 1–10 plan:
 
 1. The README listed only **nine** phases.
-2. Only detailed execution plans for Phases 2, 3, and 4 existed under `docs/implementation/`; Phase 1 had a technical foundation note, not a delivery/acceptance plan. Dedicated phase plans for 5–10 were missing.
+2. Only detailed execution plans for Phases 2, 3, and 4 existed under `docs/implementation/`; Phase 1 had a technical foundation note, not a delivery/acceptance plan. Dedicated phase plans for 5–10 were missing at audit time; this follow-up adds those execution plans.
 3. The 49-system inventory and the phase roadmap were being used interchangeably. They are different dimensions: phases are delivery gates; systems are independently owned capabilities. System 10 (notifications) is not Phase 10.
 4. The README and older audit snapshots contain historical branch/PR states. They must not override current GitHub state or exact-commit CI evidence.
 5. Several documents list routes/models as present while explicitly warning that this is not proof of working journeys. The route registry and journey matrix must remain the evidence ledger.
@@ -139,3 +139,17 @@ If two documents disagree, update the owning canonical document and record the c
 10. Start Phase 11 operational scaling only after launch evidence exists.
 
 **Safety:** No production database migration, production secret change, Vercel deployment, real payment, or real customer email is authorized by this roadmap.
+
+
+## 7. Phase plan coverage follow-up — 2026-11-05
+
+Dedicated execution plans have now been added for Phase 1 and Phases 5–10:
+- `PHASE_01_FOUNDATION_PLAN.md`
+- `PHASE_05_SELLER_ADMIN_PLAN.md`
+- `PHASE_06_FINANCIAL_INTEGRITY_PLAN.md`
+- `PHASE_07_TRUST_ENGAGEMENT_PLAN.md`
+- `PHASE_08_PROPERTY_BOOKING_PLAN.md`
+- `PHASE_09_GLOBAL_REGULATORY_PLAN.md`
+- `PHASE_10_RELEASE_READINESS_PLAN.md`
+
+Phase 2–4 retain their existing detailed execution plans. Phase 11 remains defined in `PHASE_11_PRODUCTION_OPERATIONS_PLAN.md`. These documents close the plan-documentation gap only; they do not mark their phases implemented or verified.
