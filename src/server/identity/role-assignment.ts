@@ -2,7 +2,7 @@ import "server-only";
 
 import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { requirePermission } from "@/server/identity/permission-guard";
+import { requirePermission, PermissionDeniedError } from "@/server/identity/permission-guard";
 import { normalizeRoleScope, type RoleScope } from "@/server/identity/role-scope";
 import { userHasPermission } from "@/server/identity/permission-repository";
 
@@ -71,6 +71,10 @@ export async function revokeRoleAssignment(assignmentId: string, targetUserId: s
     select: { id: true, scopeType: true, scopeId: true, userId: true, role: { select: { key: true } } }
   });
   if (!existing || existing.userId !== targetUserId) return false;
+
+  // Super Admin access must not be removable through ordinary delegated role
+  // management. A future break-glass workflow must have its own safeguards.
+  if (existing.role.key === "SUPER_ADMIN") throw new PermissionDeniedError();
 
   const actor = await requirePermission({
     permissionKey: "roles:assign",
