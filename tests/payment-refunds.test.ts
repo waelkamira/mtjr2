@@ -104,6 +104,37 @@ describe("manual return refund lifecycle", () => {
     expect(mocks.refundCreate).not.toHaveBeenCalled();
   });
 
+  it("allocates remaining line value across different payment attempts", async () => {
+    mocks.returnRequestFindUnique.mockResolvedValue({
+      id: "return-2", status: "RECEIVED", orderId: "order-1",
+      order: { id: "order-1", orderNumber: "ORD-1", currencyCode: "EUR" },
+      items: [{
+        id: "return-item-2", quantity: 1,
+        orderItem: { id: "order-item-1", quantity: 3, lineTotalMinor: BigInt(1001), productName: "Item", sku: "SKU-1" }
+      }]
+    });
+    mocks.refundItemFindMany.mockResolvedValue([{
+      quantity: 1, amountMinor: BigInt(333), returnItem: { orderItemId: "order-item-1" }
+    }]);
+    transactionWith({
+      returnRequest: { findUnique: mocks.returnRequestFindUnique },
+      refund: { findUnique: mocks.refundFindUnique, aggregate: mocks.refundAggregate, create: mocks.refundCreate },
+      payment: { findMany: mocks.paymentFindMany },
+      refundItem: { findMany: mocks.refundItemFindMany },
+      auditLog: { create: mocks.auditCreate },
+      $queryRaw: mocks.queryRaw
+    });
+
+    await createManualRefundForReturn({ returnRequestId: "return-2" });
+
+    expect(mocks.refundItemFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { returnItem: { orderItemId: { in: ["order-item-1"] } }, refund: { status: { in: ["PENDING_MANUAL", "COMPLETED"] } } }
+    }));
+    expect(mocks.refundCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ amountMinor: BigInt(334) })
+    }));
+  });
+
   it("prevents a refund from exceeding the captured payment", async () => {
     mocks.paymentFindMany.mockResolvedValue([{ id: "payment-1", amountMinor: BigInt(1000), currencyCode: "EUR", status: "SUCCEEDED" }]);
     transactionWith({
