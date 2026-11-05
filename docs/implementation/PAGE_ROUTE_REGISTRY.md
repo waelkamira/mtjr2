@@ -331,3 +331,11 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Ordinary role revocation | Existing role-assignment service/API | Refuses to revoke SUPER_ADMIN through delegated role-management flow. | Existing UserRoleAssignment + AuditLog | Implemented in source; focused integration verification pending. |
 
 **Verification boundary:** this records source implementation only. It does not certify a production database bootstrap, live admin session, browser journey, or deployment.
+
+## Super Admin delegated-role boundary correction — 2026-11-05
+
+| Operation | Policy | Persistence | Status |
+|---|---|---|---|
+| Ordinary role assignment | Rejects both the canonical `SUPER_ADMIN` role and every role containing `platform:manage`; denial is enforced in the server service, not only the UI. | Existing UserRoleAssignment + AuditLog for permitted assignments; no schema change. | Policy and focused unit tests added; exact-head CI pending. |
+
+**Deployment note:** Vercel Preview build for commit `2f7e683` failed because required `AUTH_SECRET` was absent at build time. Configure the Preview secret in Vercel; do not bypass the server environment validation or commit a secret.
