@@ -44,6 +44,21 @@ This sequence is dependency-aware. The 49 systems will be mapped to these delive
 
 The phase audit found that the former README listed only nine phases and that detailed execution plans for Phases 5–10 were missing. The corrected canonical sequence is 1–11; the audit document records current gaps and the distinction between phase numbers and the 49-system IDs. Do not treat the roadmap as completion evidence. Exact-commit CI, disposable PostgreSQL integration, route/action journeys and provider/market approval remain mandatory for their respective exit gates.
 
+## Phase execution plan index
+
+- [Phase 1 — Foundation](docs/implementation/PHASE_01_FOUNDATION_PLAN.md)
+- [Phase 2 — Identity](docs/implementation/PHASE_02_IDENTITY_PLAN.md)
+- [Phase 3 — Marketplace](docs/implementation/PHASE_03_MARKETPLACE_PLAN.md)
+- [Phase 4 — Buying](docs/implementation/PHASE_04_BUYING_PLAN.md)
+- [Phase 5 — Seller and administration](docs/implementation/PHASE_05_SELLER_ADMIN_PLAN.md)
+- [Phase 6 — Financial integrity](docs/implementation/PHASE_06_FINANCIAL_INTEGRITY_PLAN.md)
+- [Phase 7 — Trust and engagement](docs/implementation/PHASE_07_TRUST_ENGAGEMENT_PLAN.md)
+- [Phase 8 — Property and booking](docs/implementation/PHASE_08_PROPERTY_BOOKING_PLAN.md)
+- [Phase 9 — Global and regulatory readiness](docs/implementation/PHASE_09_GLOBAL_REGULATORY_PLAN.md)
+- [Phase 10 — Release readiness](docs/implementation/PHASE_10_RELEASE_READINESS_PLAN.md)
+- [Phase 11 — Production operations and scale](docs/implementation/PHASE_11_PRODUCTION_OPERATIONS_PLAN.md)
+- [Full roadmap audit and dependency corrections](docs/implementation/PLATFORM_PHASE_ROADMAP_01_11.md)
+
 ## Prisma model map
 
 Use [`docs/architecture/PRISMA_MODEL_USAGE_MAP.md`](docs/architecture/PRISMA_MODEL_USAGE_MAP.md) with `prisma/schema.prisma` before every schema change. The map identifies the owning domain/service and known implementation boundaries; it is an impact-analysis aid, not evidence that a model's workflow is complete.

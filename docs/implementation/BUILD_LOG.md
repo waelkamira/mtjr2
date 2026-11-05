@@ -2012,3 +2012,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added `docs/implementation/PHASE_11_PRODUCTION_OPERATIONS_PLAN.md` covering SLOs, observability, worker/outbox operations, backup/restore, capacity, security operations, market expansion, cost controls and exit criteria.
 - Updated README.md to the canonical 11-phase sequence. Phase 11 is specification-only; no production operation, deployment, production migration or provider activation is claimed.
 - Documentation-only. No Prisma schema/migration, database, production secret, Vercel setting or deployment was changed.
+
+
+## 2026-11-05 — Complete missing phase execution plans
+
+- Added explicit Phase 1 and Phase 5–10 execution plans after the roadmap audit found these phase plans were missing. Phases 2–4 retain their existing detailed plans; Phase 11 has its new production operations plan.
+- Each plan defines scope ownership, workflows, critical invariants, P0 acceptance and exit criteria. Financial refunds/payouts, customer returns, market regulatory approval, release gates and post-launch operations are assigned to distinct owners to avoid duplicate implementations.
+- Updated README with the complete Phase 1–11 plan index and amended the roadmap audit to distinguish the historical gap from the new documentation coverage.
+- Documentation-only. This closes plan-documentation gaps, not implementation/verification gaps. No Prisma schema, migrations, database, production secrets or deployment changed.
