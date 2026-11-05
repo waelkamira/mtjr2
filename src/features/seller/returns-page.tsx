@@ -14,6 +14,7 @@ type SellerReturn = {
   requestedAt: string;
   storeId: string;
   storeName: string;
+  warehouses: Array<{ id: string; code: string; name: string }>;
   items: Array<{ id: string; productName: string; sku: string; orderedQuantity: number; returnQuantity: number; status: string; reviewNote: string | null }>;
 };
 
@@ -24,12 +25,19 @@ export default function SellerReturnsPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [warehouseByStore, setWarehouseByStore] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     const response = await fetch("/api/seller/returns", { cache: "no-store" });
     const data = await response.json() as { items?: SellerReturn[]; error?: string };
     if (!response.ok) throw new Error(data.error || "Seller returns could not be loaded.");
-    setItems(data.items ?? []);
+    const rows = data.items ?? [];
+    setItems(rows);
+    setWarehouseByStore((current) => {
+      const next = { ...current };
+      for (const row of rows) if (!next[row.storeId] && row.warehouses[0]) next[row.storeId] = row.warehouses[0].id;
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -40,7 +48,14 @@ export default function SellerReturnsPage() {
         if (!response.ok) throw new Error(data.error || "Seller returns could not be loaded.");
         return data.items ?? [];
       })
-      .then((rows) => { if (active) setItems(rows); })
+      .then((rows) => { if (active) {
+        setItems(rows);
+        setWarehouseByStore((current) => {
+          const next = { ...current };
+          for (const row of rows) if (!next[row.storeId] && row.warehouses[0]) next[row.storeId] = row.warehouses[0].id;
+          return next;
+        });
+      } })
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : "Seller returns could not be loaded.");
       })
@@ -65,6 +80,25 @@ export default function SellerReturnsPage() {
     } finally { setBusy(""); }
   }
 
+  async function receive(item: SellerReturn) {
+    const key = item.id + ":" + item.storeId;
+    const warehouseId = warehouseByStore[item.storeId];
+    if (!warehouseId) { setError("Create or activate a warehouse for this store before receiving returns."); return; }
+    setBusy(key); setError(""); setNotice("");
+    try {
+      const response = await fetch("/api/seller/returns/" + encodeURIComponent(item.id), {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId: item.storeId, warehouseId, status: "RECEIVED", note: notes[key] || "" })
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error || "Return receipt could not be recorded.");
+      setNotice("Physical receipt recorded. " + (data.result?.quarantinedQuantity ?? "Returned") + " unit(s) are held in quarantine and are not sellable until inspected.");
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Return receipt could not be recorded.");
+    } finally { setBusy(""); }
+  }
+
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <header className="border-b border-[var(--border)] bg-white px-5 py-5">
@@ -77,7 +111,7 @@ export default function SellerReturnsPage() {
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Seller operations</p>
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">Store returns</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Review only the return items belonging to each store you own or are authorized to manage. A decision never changes another store&apos;s items.</p>
-        <p className="mt-3 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">Approval or rejection records the seller&apos;s decision only. Return receipt, inventory restocking and payment refunds are separate workflows and are not performed here.</p>
+        <p className="mt-3 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">Approval or rejection records the seller&apos;s decision. Physical receipt is recorded against a warehouse and placed in quarantine; it does not increase sellable stock or issue a refund.</p>
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-white p-4 text-sm">{notice}</p>}
         {loading ? <div className="mt-6 h-40 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /> : items.length ? (
@@ -99,6 +133,16 @@ export default function SellerReturnsPage() {
                       <p className="tabular-nums">Return {product.returnQuantity} / ordered {product.orderedQuantity}</p>
                     </div>)}
                   </div>
+                  {item.items.some((product) => product.status === "APPROVED") && <div className="mt-4 border-t border-[var(--border)] pt-4">
+                    <label className="grid gap-2 text-sm font-medium">Receive approved items into warehouse
+                      <select value={warehouseByStore[item.storeId] || ""} onChange={(event) => setWarehouseByStore((current) => ({ ...current, [item.storeId]: event.target.value }))} className="rounded-xl border border-[var(--border)] bg-white p-3">
+                        <option value="">Select warehouse</option>
+                        {item.warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.name} ({warehouse.code})</option>)}
+                      </select>
+                    </label>
+                    <p className="mt-2 text-xs text-[var(--muted)]">Returned units are held separately from sellable stock until inspection.</p>
+                    <button disabled={Boolean(busy) || !item.warehouses.length} onClick={() => void receive(item)} className="mt-3 rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{busy === key ? "Recording receipt…" : "Receive approved items"}</button>
+                  </div>}
                   {pending && <div className="mt-4 border-t border-[var(--border)] pt-4">
                     <label className="grid gap-2 text-sm font-medium">Decision note (optional)
                       <textarea rows={2} maxLength={1000} value={notes[key] || ""} onChange={(event) => setNotes((current) => ({ ...current, [key]: event.target.value }))} className="rounded-xl border border-[var(--border)] p-3"/>
