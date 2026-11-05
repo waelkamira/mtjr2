@@ -9,7 +9,7 @@ import {
   userHasAnyPermission
 } from "@/server/identity/permission-repository";
 import type { AuthorizationRequest } from "@/server/identity/authorization";
-import { prisma } from "@/lib/db/prisma";
+import { EmailVerificationRequiredError, MfaEnrollmentRequiredError, StepUpRequiredError } from "@/server/identity/platform-session-policy";
 
 export class PermissionDeniedError extends Error {
   constructor() {
@@ -52,38 +52,11 @@ export async function requireAnyPermission(
   return session;
 }
 
-export class EmailVerificationRequiredError extends Error {
-  constructor() { super("A verified email is required for platform-wide access."); this.name = "EmailVerificationRequiredError"; }
-}
+export { EmailVerificationRequiredError, MfaEnrollmentRequiredError, StepUpRequiredError };
 
-export class MfaEnrollmentRequiredError extends Error {
-  constructor() { super("MFA enrollment is required for platform-wide access."); this.name = "MfaEnrollmentRequiredError"; }
-}
-
-export class StepUpRequiredError extends Error {
-  constructor() { super("Recent MFA verification is required for platform-wide access."); this.name = "StepUpRequiredError"; }
-}
-
-/** Dedicated gate for platform-wide access: permission + enrolled MFA + recent step-up. */
+/** Dedicated gate for platform-wide access; permission repository also applies this gate to every permission check for a platform administrator. */
 export async function requirePlatformManagement(now = new Date()) {
-  const session = await requirePermission({ permissionKey: "platform:manage", now }, now);
-  if (!session.user.emailVerifiedAt) throw new EmailVerificationRequiredError();
-  const authenticator = await prisma.userMfaAuthenticator.findUnique({
-    where: { userId: session.userId },
-    select: { enabledAt: true }
-  });
-  if (!authenticator?.enabledAt) throw new MfaEnrollmentRequiredError();
-  const verifiedAt = session.stepUpVerifiedAt?.getTime();
-  const expiresAt = session.stepUpExpiresAt?.getTime();
-  const maxAgeMs = 10 * 60 * 1000;
-  if (
-    verifiedAt === undefined || expiresAt === undefined ||
-    verifiedAt > now.getTime() || now.getTime() - verifiedAt > maxAgeMs ||
-    expiresAt <= now.getTime() || expiresAt > verifiedAt + maxAgeMs
-  ) {
-    throw new StepUpRequiredError();
-  }
-  return session;
+  return requirePermission({ permissionKey: "platform:manage", now }, now);
 }
 
 export { AuthenticationRequiredError };
