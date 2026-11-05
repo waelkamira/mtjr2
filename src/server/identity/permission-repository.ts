@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { requirePlatformSessionStepUp } from "@/server/identity/platform-session-policy";
 import {
   hasPermission,
   hasAnyPermission,
@@ -63,7 +64,11 @@ export async function userHasPermission(
   userId: string,
   request: AuthorizationRequest
 ): Promise<boolean> {
-  const grants = await getUserAuthorizationGrants(userId, request.now);
+  const now = request.now ?? new Date();
+  const grants = await getUserAuthorizationGrants(userId, now);
+  if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
+    await requirePlatformSessionStepUp(userId, now);
+  }
   return hasPermission(grants, request);
 }
 
@@ -74,6 +79,9 @@ export async function userHasAnyPermission(
   now = new Date()
 ): Promise<boolean> {
   const grants = await getUserAuthorizationGrants(userId, now);
+  if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
+    await requirePlatformSessionStepUp(userId, now);
+  }
   return hasAnyPermission(
     grants,
     requests.map((request) => ({ ...request, now: request.now ?? now }))
@@ -89,7 +97,11 @@ export async function userHasScopedPermission(
   userId: string,
   request: AuthorizationRequest & { scope: { type: string; id: string } }
 ): Promise<boolean> {
-  const grants = await getUserAuthorizationGrants(userId, request.now);
+  const now = request.now ?? new Date();
+  const grants = await getUserAuthorizationGrants(userId, now);
+  if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
+    await requirePlatformSessionStepUp(userId, now);
+  }
   const exactScopeGrants = grants.filter(
     (grant) => grant.scopeType === request.scope.type && grant.scopeId === request.scope.id
   );
