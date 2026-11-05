@@ -148,13 +148,16 @@ export async function getMfaStatus(userId: string) {
   };
 }
 
-export async function createMfaEnrollment(userId: string) {
+export async function createMfaEnrollment(userId: string, currentPassword: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, status: true, emailVerifiedAt: true }
+    select: { id: true, email: true, status: true, emailVerifiedAt: true, passwordHash: true }
   });
   if (!user || user.status !== "ACTIVE" || !user.emailVerifiedAt) {
     throw new MfaStateConflictError("An active, email-verified account is required.");
+  }
+  if (!user.passwordHash || !(await verifyPassword(currentPassword, user.passwordHash))) {
+    throw new MfaStateConflictError("Confirm your current password before enrolling MFA.");
   }
   const secret = generateTotpSecret();
   const encrypted = encryptMfaSecret(secret);
