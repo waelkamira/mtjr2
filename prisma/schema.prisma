@@ -1814,5 +1814,4 @@ enum PlatformPrivilegeRequestStatus {
   PENDING
   APPROVED
   REJECTED
-  CANCELLED
 }
