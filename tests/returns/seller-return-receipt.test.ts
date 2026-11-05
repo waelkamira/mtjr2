@@ -44,8 +44,8 @@ describe("seller return receipt into inventory quarantine", () => {
         { id: "return-item-2", quantity: 1, orderItem: { variantId: "variant-2", sku: "SKU-2" } }
       ])
       .mockResolvedValueOnce([{ status: "RECEIVED" }, { status: "RECEIVED" }]);
-    mocks.inventoryUpsert.mockImplementation(async ({ where }) => ({ id: "inventory-" + where.warehouseId_variantId.variantId }));
-    mocks.movementCreate.mockImplementation(async ({ data }) => ({ id: data.idempotencyKey }));
+    mocks.inventoryUpsert.mockImplementation(async ({ where }: { where: { warehouseId_variantId: { variantId: string } } }) => ({ id: "inventory-" + where.warehouseId_variantId.variantId }));
+    mocks.movementCreate.mockImplementation(async ({ data }: { data: { idempotencyKey: string } }) => ({ id: data.idempotencyKey }));
     mocks.itemUpdateMany.mockResolvedValue({ count: 2 });
     mocks.requestUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
