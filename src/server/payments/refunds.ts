@@ -107,7 +107,7 @@ export async function listRefundOperations(now = new Date()) {
         amountMinor: amountMinor.toString(),
         amountDisplay: displayAmount(amountMinor, request.order.currencyCode, request.order.currency.minorUnit),
         eligible,
-        reason: !payment ? "Exactly one successful captured payment is required." : !allocationsValid ? "Returned quantities or remaining line value have already been allocated." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > paymentRemaining ? "The amount exceeds the remaining captured payment balance." : null,
+        reason: !payment ? "Exactly one successful captured payment is required." : payment.currencyCode !== request.order.currencyCode ? "Payment and order currencies do not match." : !allocationsValid ? "Returned quantities or remaining line value have already been allocated." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > paymentRemaining ? "The amount exceeds the remaining captured payment balance." : null,
         items: request.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
       };
     }),
