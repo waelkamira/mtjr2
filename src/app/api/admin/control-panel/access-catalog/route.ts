@@ -1,6 +1,8 @@
 import {
   AuthenticationRequiredError,
-  PermissionDeniedError
+  PermissionDeniedError,
+  MfaEnrollmentRequiredError,
+  StepUpRequiredError
 } from "@/server/identity/permission-guard";
 import { getPlatformAccessCatalog } from "@/server/admin/platform-access-catalog";
 
