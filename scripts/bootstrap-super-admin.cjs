@@ -53,7 +53,7 @@ async function main() {
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Serialize bootstrap attempts, including attempts from separate machines.
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(74192831, 20261105)`;
+      await tx.$queryRaw`SELECT 1::int AS locked FROM (SELECT pg_advisory_xact_lock(74192831, 20261105)) AS lock_result`;
 
       // Bootstrap is only valid when no assignment of any role carrying
       // platform:manage exists, not merely when the canonical role is absent.
