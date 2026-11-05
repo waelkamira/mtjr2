@@ -2141,3 +2141,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added a CSS-first `@theme inline` bridge in `src/app/globals.css` that exposes the central root tokens as Tailwind color, shadow, radius, and font utilities.
 - Documented `:root` as the single source of truth; do not add a parallel legacy config or duplicate token values.
 - CI must validate the generated utility classes on the updated PR head before merge.
+
+
+## 2026-11-05 — Claymorphism customer account and commerce workspace migration
+
+- Migrated the customer account landing page, order history, order detail/payment panels, wishlist, customer returns, support requests and reviews to the central Claymorphism token system.
+- Migrated seller order management and seller return handling surfaces to the same central palette and raised surface treatment.
+- Replaced legacy forest/copper/ivory color references in these UI slices with shared ink, lavender and surface tokens; existing API calls, authorization boundaries, payment initiation, order/return state transitions, wishlist merge/removal, and seller shipment/return actions were left unchanged.
+- Super Admin routes and components were not touched. No Prisma schema or migration was needed for this visual-only slice.
+- Verification is pending on the updated branch head. No local build, browser visual QA, production database operation or deployment is claimed.
