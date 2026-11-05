@@ -43,8 +43,11 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
       });
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || "Registration could not be completed.");
-      setNotice(result.message || "Account created. Check your email to verify your address.");
+      setNotice(result.message || "Account created successfully. Redirecting to email verification…");
       setPassword("");
+      window.setTimeout(() => {
+        window.location.assign(`/verify-email?email=${encodeURIComponent(email.trim())}&registered=1`);
+      }, 900);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Registration could not be completed.");
     } finally {
