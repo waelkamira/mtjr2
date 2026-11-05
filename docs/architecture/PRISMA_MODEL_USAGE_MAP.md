@@ -35,6 +35,7 @@
 |---|---|---|
 | `Warehouse`, `Inventory`, `InventoryMovement`, `InventoryReservation`, `StockTransfer`, `StockTransferItem` | `src/server/inventory/stock.ts`; seller inventory APIs | Stock ledger, reservations, and inter-warehouse transfers. Keep quantity constraints and transactional movement invariants. |
 | `StoreShippingRate`, `CheckoutShippingSelection` | `src/server/shipping/shipping.ts`; seller shipping and checkout shipping APIs | Store/market/currency scoped shipping rates and immutable quote selection snapshots. Carrier integrations are not implied. |
+| `Shipment` | `src/server/orders/seller-orders.ts`; seller shipment API and buyer order serializer | One seller-entered dispatch record per vendor order; HTTPS tracking URL only. Does not represent live carrier events or proof of delivery. |
 
 ## 5. Cart, checkout, tax, and orders — Systems 04–07
 
