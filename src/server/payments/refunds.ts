@@ -35,7 +35,7 @@ export async function listRefundOperations(now = new Date()) {
         id: true, returnNumber: true,
         order: {
           select: {
-            orderNumber: true, currencyCode: true,
+            orderNumber: true, currencyCode: true, currency: { select: { minorUnit: true } },
             payments: {
               where: { status: { in: refundablePaymentStatuses } },
               select: { id: true, amountMinor: true, currencyCode: true, status: true }
@@ -53,6 +53,7 @@ export async function listRefundOperations(now = new Date()) {
       take: 100,
       include: {
         order: { select: { orderNumber: true } },
+        currency: { select: { minorUnit: true } },
         payment: { select: { status: true } },
         returnRequest: { select: { returnNumber: true } },
         items: { select: { quantity: true, amountMinor: true, returnItem: { select: { orderItem: { select: { productName: true, sku: true } } } } } }
@@ -71,6 +72,7 @@ export async function listRefundOperations(now = new Date()) {
         orderNumber: request.order.orderNumber,
         currencyCode: request.order.currencyCode,
         amountMinor: amountMinor.toString(),
+        amountDisplay: new Intl.NumberFormat("en", { style: "currency", currency: request.order.currencyCode, minimumFractionDigits: request.order.currency.minorUnit, maximumFractionDigits: request.order.currency.minorUnit }).format(Number(amountMinor) / (10 ** request.order.currency.minorUnit)),
         eligible,
         reason: !payment ? "Exactly one successful captured payment is required." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > payment.amountMinor ? "The amount exceeds the captured payment." : null,
         items: request.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
@@ -84,6 +86,7 @@ export async function listRefundOperations(now = new Date()) {
       paymentStatus: refund.payment.status,
       amountMinor: refund.amountMinor.toString(),
       currencyCode: refund.currencyCode,
+      amountDisplay: new Intl.NumberFormat("en", { style: "currency", currency: refund.currencyCode, minimumFractionDigits: refund.currency.minorUnit, maximumFractionDigits: refund.currency.minorUnit }).format(Number(refund.amountMinor) / (10 ** refund.currency.minorUnit)),
       externalReference: refund.externalReference,
       note: refund.note,
       requestedAt: refund.requestedAt.toISOString(),
