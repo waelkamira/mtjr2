@@ -1,50 +1,68 @@
-# Mtjr2 Design System — Visual Foundation
+# Mtjr2 Design System — Claymorphism
 
-**Status:** Foundation defined; component-by-component adoption remains in progress.  
-**Reference direction:** the owner-approved visual references discussed on 2026-11-04. The hexadecimal values below are the current implementation tokens, not a claim of pixel-sampled extraction from the source images.
+**Status:** Claymorphism visual direction approved by the project owner; shared CSS foundation added. Page-by-page adoption and visual QA remain in progress.
 
-## Principles
+## Design intent
 
-1. Preserve existing information architecture, routes, category distribution, and working commerce behavior while improving presentation.
-2. Prefer warm, quiet surfaces with deep petrol framing, clear violet-blue primary actions, and restrained mint/orange/cyan accents.
-3. Use glass/translucency only for deliberate hero or overlay surfaces; do not make every card translucent.
-4. Keep shared components consistent across storefront, customer account, seller workspace, and administration while allowing each workspace to retain task-appropriate density.
-5. A visual change must not turn a working control into a decorative or non-functional element.
+Use a modern **Claymorphism / 3D Pastel Clay** language: soft tactile surfaces, rounded geometry, pastel color families, and restrained inner/outer shadows that make selected elements feel gently raised. The marketplace must still feel trustworthy, premium, readable, and commerce-first—not like a toy dashboard.
 
-## Color tokens
+The visual language applies across the storefront, buyer account, seller workspace, and administration. Each area keeps its own information density and task hierarchy. Do not copy dashboard-only layouts into the shopping experience.
 
-| Token | Hex | Intended use |
-|---|---|---|
-| Petrol 950 | `#142832` | deepest contrast/background |
-| Petrol 900 | `#203746` | primary framing, navigation, strong headings |
-| Petrol 800 | `#294858` | secondary dark surfaces |
-| Violet 600 | `#5368F5` | primary actions, focus rings, selected controls |
-| Violet 700 | `#4054DC` | stronger/hover primary action |
-| Mint 500 | `#2FC58B` | positive states and restrained highlights |
-| Orange 500 | `#FF8B3D` | promotional accent and attention cues |
-| Cyan 300 | `#83E8E4` | decorative highlights and subtle interactive details |
-| Ivory 100 | `#F5EEE9` | page background |
-| Ivory 50 | `#FFFDFB` | cards and elevated surfaces |
-| Ink 900 | `#252329` | primary text |
+## Palette
 
-Semantic colors remain distinct from promotional accents: success `#167653`, warning `#9A571B`, danger `#B42332`, and information `#285FA8`.
+| Family | Main value | Supporting values | Use |
+|---|---|---|---|
+| Lavender | `#7867A6` | `#E9E2F8`, `#F7F3FF`, deep text `#39334F` | Primary brand/action family |
+| Mint | `#6C9D82` | `#DDF1E7`, `#F3FBF6`, deep text `#416A56` | Positive, seller and service highlights |
+| Blush | `#BD8292` | `#F8DFE5`, `#FFF5F7` | Wishlist, campaigns and secondary accents |
+| Butter | `#B69A53` | `#F8EDC9`, `#FFFAE9` | Offers and gentle attention cues |
+| Sky | `#456C88` | `#DEEDF7` | Information and supporting visuals |
+| Neutral | `#F1EEF7` | `#F8F6FC`, ink `#302D3B` | Canvas, cards and readable text |
 
-## Component rules
+Use dark foreground tokens for text on pastel backgrounds. Pastel colors are not automatically accessible; check actual contrast for every text/control pairing. Semantic success, warning, danger, and information colors remain separate from decorative palette accents.
 
-- **Buttons:** primary actions use the violet-blue token; secondary actions use neutral/petrol styling. Destructive actions use semantic danger. All actions need disabled, loading, focus, and error/success feedback where applicable.
-- **Cards:** warm white surfaces, consistent radius and restrained shadows. Product cards must preserve price, availability, variants, seller, and purchase affordances already required by their context.
-- **Forms:** labels remain visible; validation errors are associated with the relevant field; focus state is keyboard-visible.
-- **Navigation and search:** maintain clear hierarchy and responsive behavior; search remains functional and does not become a visual-only element.
-- **Status indicators:** use semantic colors and text/icons together; never rely on color alone.
-- **Motion:** short, purposeful transitions only; respect `prefers-reduced-motion`.
-- **Responsive behavior:** validate small mobile, tablet, and desktop layouts. Avoid horizontal overflow and keep important actions reachable.
-- **Accessibility:** maintain readable contrast, visible focus, keyboard access, and meaningful labels.
+## Clay surfaces and depth
 
-## Implementation and verification
+- Use a soft matte surface with a light inner edge and diffuse outer shadow; use inset shadows for search fields, filters, and selected recessed controls.
+- Reserve the strongest raised effect for cards, summary tiles, compact controls, and selected dashboard widgets. Avoid applying shadows to every nested container.
+- Use real product imagery as the main visual content. 3D clay illustrations may support empty states, onboarding, and dashboard summaries, but must not replace product photography or essential status information.
+- Avoid excessive blur, glassmorphism, glossy gradients, and heavy skeuomorphic buttons.
+- Keep touch targets at least 44×44 CSS pixels; ensure focus, hover, active, disabled, loading, and error states remain distinct.
 
-- The first implementation slice adds CSS custom properties in `src/app/globals.css`, keeps compatibility aliases for existing forest/sage/copper token names, and applies the violet-blue primary action to the global navigation account/join actions, storefront browse/selected-filter controls, and marketplace search submit button. Product grid cards and product-detail accents also adopt the new tokens while preserving existing routes and behavior.
-- Tokens are a foundation, not proof that every page has been visually migrated.
-- Adopt them in shared primitives before applying one-off page styles.
-- For each UI slice, record the routes/components changed and verify typecheck, lint, relevant tests, build, responsive layout, and the affected user journey.
-- Do not change data flow, authorization, APIs, or Prisma solely for a visual redesign.
-- Do not claim pixel parity with the reference images until the actual rendered pages have been compared against them.
+## Shape, typography and layout
+
+- Controls: approximately 16px radius; cards: 24px; panels: 30px; feature surfaces: 36px.
+- Use a consistent 4px spacing scale and a centered content width up to 1440px.
+- Typography remains crisp and high-contrast; do not imitate rounded toy lettering for functional content.
+- Product cards preserve image, title, seller, rating, variant, availability, and prominent price hierarchy.
+- Support long localized labels, variable currencies, RTL/LTR, and mobile-first layouts.
+
+## Workspace distinctions
+
+- **Storefront:** editorial product discovery, strong search, category navigation, real product imagery, clear price and purchase actions. Pastel surfaces must not reduce product scannability.
+- **Buyer account:** calm raised panels, readable order/wishlist summaries, and clear task progression.
+- **Seller workspace:** structured inventory/order/finance workflows; mint and lavender can distinguish operational groups, but tables and statuses stay dense and legible.
+- **Administration:** dashboard tiles and selected data visualizations may use the most expressive clay treatment; tables, permissions, and destructive actions remain restrained and precise.
+
+## Functional and accessibility rules
+
+1. Preserve routes, information architecture, category distribution, business rules, API calls, authorization, and database behavior during visual migration.
+2. A visual control must remain a real control with its original action and complete UI → API/service → persistence journey.
+3. Status must use text/icons as well as color.
+4. Maintain keyboard navigation, visible focus, reduced-motion support, accessible names, and WCAG 2.2 AA contrast.
+5. Validate mobile, tablet, desktop, RTL, and LTR. Prevent horizontal overflow and keep primary actions reachable without hover.
+
+## Implementation sequence
+
+1. **Foundation:** tokens, compatible aliases, page canvas, and opt-in clay surface primitives in `src/app/globals.css`.
+2. **Shared shell:** navigation, buttons, inputs, cards, badges, menus, dialogs, and feedback states.
+3. **Storefront:** home hero, category tiles, product cards, search, product detail, cart and checkout.
+4. **Buyer account:** profile, orders, wishlist, addresses and support.
+5. **Seller workspace and administration:** overview, catalog, fulfillment, finance, moderation, permissions and audit views.
+6. **Visual QA:** compare screenshots at mobile/tablet/desktop and test the key actions affected by each migrated component.
+
+Do not redesign the Super Admin workstream or its in-progress files as part of this foundation change; coordinate it separately.
+
+## Current implementation boundary
+
+The CSS tokens and opt-in surface primitives are implemented in `src/app/globals.css`. This foundation does not claim that every page or reusable component has already migrated. Component adoption must proceed in small slices with typecheck, lint, focused tests, build, responsive review, and verification that the affected user journeys still work.
