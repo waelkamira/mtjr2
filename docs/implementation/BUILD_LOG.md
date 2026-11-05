@@ -2115,3 +2115,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Verification**
 - Repository files and current main design tokens were reviewed through GitHub before the change.
 - No local shell, browser runtime, or deployed visual comparison was available in this session; typecheck, lint, tests, and build must be confirmed by the branch CI before merge.
+
+
+## 2026-11-05 — Claymorphism storefront and navigation migration
+
+- Applied raised pastel surfaces and clay-style navigation controls to the shared site header/navigation without changing destinations or session-dependent links.
+- Updated the storefront hero, editorial panel, discovery controls and product cards to use the new lavender/mint/blush palette and tactile surface tokens.
+- Preserved catalog data fetching, URL-backed filters, pagination, category layout, product routes, price formatting and seller attribution.
+- Updated the reusable catalog product grid with raised clay cards and stronger bottom price hierarchy.
+- This is the first visual adoption slice; account, seller and admin workspaces still require separate migration and responsive visual QA. Super Admin remains excluded.
