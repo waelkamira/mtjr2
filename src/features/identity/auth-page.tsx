@@ -196,6 +196,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
             {mode === "login" && <><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/verify-email">Verify email</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/register">Create account</Link></>}
             {(mode === "forgot" || mode === "reset" || mode === "verify") && <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Back to sign in</Link>}
           </div>
+          </div>
           </section>
         </div>
         <p className="mt-6 text-center text-xs text-[var(--muted)]">Secure account access · Your password is never sent by email.</p>
