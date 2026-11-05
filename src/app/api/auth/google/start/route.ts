@@ -24,10 +24,12 @@ export async function GET(request: Request): Promise<Response> {
 
   const state = randomBytes(32).toString("base64url");
   const verifier = randomBytes(32).toString("base64url");
+  const nonce = randomBytes(32).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
   const store = await cookies();
   store.set("mtjr_google_state", state, COOKIE_OPTIONS);
   store.set("mtjr_google_verifier", verifier, COOKIE_OPTIONS);
+  store.set("mtjr_google_nonce", nonce, COOKIE_OPTIONS);
   store.set("mtjr_google_account_type", accountType, COOKIE_OPTIONS);
   store.set("mtjr_google_terms", "v1", COOKIE_OPTIONS);
   store.set("mtjr_google_privacy", "v1", COOKIE_OPTIONS);
@@ -43,6 +45,7 @@ export async function GET(request: Request): Promise<Response> {
   authorize.searchParams.set("state", state);
   authorize.searchParams.set("code_challenge", challenge);
   authorize.searchParams.set("code_challenge_method", "S256");
+  authorize.searchParams.set("nonce", nonce);
   authorize.searchParams.set("prompt", "select_account");
   return Response.redirect(authorize, 302);
 }

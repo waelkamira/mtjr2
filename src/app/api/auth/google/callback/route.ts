@@ -1,8 +1,10 @@
+import { timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { AuditActorType, ConsentType, SellerStatus, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/lib/env";
 import { canCreateOAuthAccount } from "@/server/identity/oauth-registration-policy";
+import { verifyGoogleIdToken } from "@/server/identity/google-id-token";
 import { createUserSession } from "@/server/identity/session";
 import { setSessionCookie } from "@/server/identity/session-cookie";
 
@@ -12,8 +14,20 @@ function redirectTo(path: string): Response {
   return Response.redirect(new URL(path, env.NEXT_PUBLIC_APP_URL), 303);
 }
 
+function matchesState(actual: string | undefined, expected: string | undefined): boolean {
+  if (!actual || !expected) return false;
+  const actualBytes = Buffer.from(actual, "utf8");
+  const expectedBytes = Buffer.from(expected, "utf8");
+  return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
+}
+
+function decodeCookieValue(value: string | undefined): string {
+  if (!value) return "";
+  try { return decodeURIComponent(value); } catch { return ""; }
+}
+
 function clearOAuthCookies(store: Awaited<ReturnType<typeof cookies>>) {
-  for (const name of ["mtjr_google_state","mtjr_google_verifier","mtjr_google_account_type","mtjr_google_terms","mtjr_google_privacy","mtjr_google_seller_legal","mtjr_google_seller_display"]) {
+  for (const name of ["mtjr_google_state","mtjr_google_verifier","mtjr_google_nonce","mtjr_google_account_type","mtjr_google_terms","mtjr_google_privacy","mtjr_google_seller_legal","mtjr_google_seller_display"]) {
     store.set(name, "", { path: "/api/auth/google", maxAge: 0, expires: new Date(0), httpOnly: true, secure: env.NODE_ENV === "production", sameSite: "lax" });
   }
 }
@@ -25,14 +39,15 @@ export async function GET(request: Request): Promise<Response> {
   const state = url.searchParams.get("state");
   const expectedState = store.get("mtjr_google_state")?.value;
   const verifier = store.get("mtjr_google_verifier")?.value;
+  const nonce = store.get("mtjr_google_nonce")?.value;
   const accountType = store.get("mtjr_google_account_type")?.value;
   const termsVersion = store.get("mtjr_google_terms")?.value;
   const privacyVersion = store.get("mtjr_google_privacy")?.value;
-  const sellerLegalName = decodeURIComponent(store.get("mtjr_google_seller_legal")?.value ?? "");
-  const sellerDisplayName = decodeURIComponent(store.get("mtjr_google_seller_display")?.value ?? "");
+  const sellerLegalName = decodeCookieValue(store.get("mtjr_google_seller_legal")?.value);
+  const sellerDisplayName = decodeCookieValue(store.get("mtjr_google_seller_display")?.value);
   clearOAuthCookies(store);
 
-  if (!code || !state || !expectedState || state !== expectedState || !verifier ||
+  if (!code || !matchesState(state, expectedState) || !verifier || !nonce ||
       (accountType !== "CUSTOMER" && accountType !== "SELLER") || termsVersion !== "v1" || privacyVersion !== "v1") {
     return redirectTo("/register?oauth=invalid");
   }
@@ -53,14 +68,8 @@ export async function GET(request: Request): Promise<Response> {
     const tokens = await tokenResponse.json() as { id_token?: string };
     if (!tokens.id_token) return redirectTo("/register?oauth=failed");
 
-    const identityResponse = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(tokens.id_token), { cache: "no-store" });
-    if (!identityResponse.ok) return redirectTo("/register?oauth=failed");
-    const identity = await identityResponse.json() as { iss?: string; aud?: string; sub?: string; email?: string; email_verified?: string; name?: string; exp?: string };
-    if ((identity.iss !== "https://accounts.google.com" && identity.iss !== "accounts.google.com") ||
-        identity.aud !== env.GOOGLE_CLIENT_ID || !identity.sub || !identity.email ||
-        identity.email_verified !== "true" || !identity.exp || Number(identity.exp) * 1000 <= Date.now()) {
-      return redirectTo("/register?oauth=failed");
-    }
+    const identity = await verifyGoogleIdToken(tokens.id_token, env.GOOGLE_CLIENT_ID, nonce);
+    if (!identity) return redirectTo("/register?oauth=failed");
     const email = identity.email.trim().toLowerCase();
     const now = new Date();
     const linked = await prisma.oAuthAccount.findUnique({

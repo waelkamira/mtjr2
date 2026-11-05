@@ -310,3 +310,12 @@ No browser runtime was attached during this audit. No production database, Verce
 ## Identity verification evidence recheck — 2026-11-04
 
 The audited pre-update PR #22 head was `5a24e38c4ae448108384438772f6c5d47a701c11`. GitHub Actions reported zero workflow runs and the Checks API zero check-runs for that SHA. Do not treat prior-head CI/PostgreSQL passes as current. The registration, account pages, seller pending state and Google callback are source-wired, but System 01 remains **Implemented / unverified** until exact-head Prisma validate/generate, typecheck, lint, identity tests, build and disposable PostgreSQL all pass. No live browser was available. Google client credentials/callback, Resend delivery configuration and trusted-proxy edge configuration remain external requirements; no values were read or changed. The Vercel rate-limit status is not a CI result.
+
+
+## Google OIDC callback security update — 2026-11-05
+
+| Route | UI / API trace | Session, authorization and persistence | Status / remaining evidence |
+|---|---|---|---|
+| GET /api/auth/google/start and GET /api/auth/google/callback | /register → authorization-code flow → callback | Start creates one-time state, PKCE S256 verifier and nonce cookies. Callback verifies the RS256 ID-token signature with Google's published JWKS and validates issuer, audience/authorized party, expiry, issued-at, verified email and nonce. OAuthAccount maps by provider + Google sub; no automatic email-based account linking. | Focused verifier unit tests added; exact-head CI/PostgreSQL and live provider/browser verification pending. Requires Google client credentials and exact callback registration; no secret values are stored in the repository. |
+
+Google's tokeninfo debugging endpoint is no longer used as the production ID-token verifier. System 01 remains Implemented / unverified.

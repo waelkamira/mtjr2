@@ -1832,3 +1832,21 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No browser runtime was available. Email delivery, trusted-proxy header behavior and a real Google OAuth sign-in remain external/runtime checks. Google requires `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and the exact callback `NEXT_PUBLIC_APP_URL/api/auth/google/callback`; email requires `RESEND_API_KEY` and `RESEND_FROM_EMAIL`; `TRUSTED_PROXY_IP_HEADER` must be overwritten by the trusted edge. No secret values were requested or accessed.
 - No user/production database, migration, Vercel configuration or secrets were accessed or changed. PR #15 is already merged; this follow-up remains the open draft PR #22. No merge or base-branch change was made.
 - This is an evidence-only documentation update. Fresh Prisma validate/generate, typecheck, lint, unit/identity tests, production build and disposable PostgreSQL CI must be checked again against the resulting head before identity can be closed.
+
+
+## 2026-11-05 — Google OIDC ID-token verification hardening
+
+**Confirmed issue**
+- The Google callback previously called Google's tokeninfo endpoint for every production sign-in. Google's OpenID Connect reference explicitly describes tokeninfo as a debugging endpoint and says the signed ID token must be verified using the provider's published JWKS. This was a confirmed production-validation weakness, not a CI failure.
+
+**Correction on feat/returns-workflow**
+- Replaced the production tokeninfo request with local RS256 signature verification against Google's published JWKS (https://www.googleapis.com/oauth2/v3/certs).
+- Validate the signed token's issuer, audience/authorized party, expiry, issued-at time, subject, verified-email boolean and one-time nonce.
+- Added a random nonce cookie to the authorization request and verify it in the callback; retain the existing PKCE S256 verifier and state cookie, and compare state in constant time.
+- Added focused unit cases for valid tokens, wrong audience, expiry, unverified email, nonce mismatch, invalid signature, unsupported algorithm, missing signing keys and malformed input.
+- No Prisma schema or migration change is required. The existing OAuthAccount provider/subject key remains the account-linking identifier; email matching still does not silently link an existing local account.
+
+**Verification boundary**
+- The Node.js RS256/JWK crypto primitive was checked independently in the available Node runtime. The repository Vitest, Prisma, typecheck, lint, build and disposable PostgreSQL suites have not yet been observed on the resulting commit SHA.
+- No browser runtime or Google project credentials were available. Real Google sign-in remains an external check requiring GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and the exact NEXT_PUBLIC_APP_URL/api/auth/google/callback registration. Email delivery and trusted-proxy edge configuration remain external checks.
+- No secret values, user/production database, migrations or Vercel settings were accessed or changed. The identity system remains Implemented / unverified until exact-head Actions evidence and the required live checks are complete.

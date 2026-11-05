@@ -216,3 +216,12 @@ Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL
 ## Identity exact-head recheck — 2026-11-04
 
 For audited pre-update head `5a24e38c4ae448108384438772f6c5d47a701c11`, GitHub Actions returned no workflow runs and the commit Checks API returned no check-runs. The previous CI/PostgreSQL successes on `0574d94ed9330667edee1ad2843e97ee2169807c` do not verify this head. Therefore the new buyer-account PostgreSQL test, the identity path-filter change, and the overall identity exit gate remain **pending**, not passed. The Vercel build-rate-limit status is deployment-only and does not substitute for CI. No browser runtime was available; real email, trusted-edge and Google provider flows remain unverified. Recheck both workflows on the resulting documentation commit's exact SHA before closure.
+
+
+## Google OIDC verifier hardening — 2026-11-05
+
+| Journey | UI → API/service | Security and persistence | Verification |
+|---|---|---|---|
+| Google sign-in / registration | /register → GET /api/auth/google/start → Google authorization-code callback | State cookie, PKCE S256 verifier and one-time nonce; callback verifies RS256 signature against Google's published JWKS, issuer, audience/authorized party, expiry, issued-at, verified email and nonce. OAuthAccount links by stable Google sub; matching local email is not silently linked. | Source and focused unit cases added. Repository CI/PostgreSQL on the resulting head and a real Google project/browser journey remain unverified. |
+
+The previous production tokeninfo validation call was removed because Google documents that endpoint for debugging, not production validation. This correction does not prove a live provider sign-in. System 01 remains Implemented / unverified.
