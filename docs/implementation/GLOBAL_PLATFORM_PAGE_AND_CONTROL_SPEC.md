@@ -59,3 +59,9 @@ This specification covers the platform-wide Super Admin control center only. It 
 - PostgreSQL advisory locks serialize per-target requests and decisions. The one-time bootstrap script now also refuses any existing GLOBAL assignment carrying `platform:manage`.
 - Revocation/break-glass remains intentionally unimplemented and requires a separately designed recovery protocol with multiple safeguards.
 - Migration has not been applied to any database.
+
+### Approval data invariants
+- Request reasons require at least 20 characters at the API boundary and in a database CHECK constraint.
+- The target account row and target-specific advisory lock are held while checking eligibility and committing a decision.
+- Only PENDING requests can transition to APPROVED or REJECTED; the reviewer is stored separately from the requester.
+- The migration is additive and has not been deployed. Do not run it against a production or user database from this workflow.
