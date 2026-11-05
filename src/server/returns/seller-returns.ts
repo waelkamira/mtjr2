@@ -50,6 +50,9 @@ export async function listSellerReturnRequests(now = new Date()) {
         include: {
           orderItem: {
             select: {
+              id: true,
+              status: true,
+              reviewNote: true,
               productName: true,
               sku: true,
               quantity: true,
@@ -66,12 +69,15 @@ export async function listSellerReturnRequests(now = new Date()) {
   const items = requests.flatMap((request) => {
     const byStore = new Map<string, {
       storeName: string;
-      products: Array<{ productName: string; sku: string; orderedQuantity: number; returnQuantity: number }>;
+      products: Array<{ id: string; productName: string; sku: string; orderedQuantity: number; returnQuantity: number; status: string; reviewNote: string | null }>;
     }>();
     for (const item of request.items) {
       const vendor = item.orderItem.vendorOrder;
       const group = byStore.get(vendor.storeId) ?? { storeName: vendor.store.name, products: [] };
       group.products.push({
+        id: item.id,
+        status: item.status,
+        reviewNote: item.reviewNote,
         productName: item.orderItem.productName,
         sku: item.orderItem.sku,
         orderedQuantity: item.orderItem.quantity,
