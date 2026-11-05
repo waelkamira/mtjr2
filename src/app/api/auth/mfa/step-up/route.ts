@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { verifyMfaStepUp } from "@/server/identity/mfa";
+import { MfaConfigurationError, verifyMfaStepUp } from "@/server/identity/mfa";
 export const runtime = "nodejs";
 const schema = z.object({ code: z.string().trim().min(6).max(64) }).strict();
 export async function POST(request: Request): Promise<Response> {
@@ -12,7 +12,12 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "Enter an authenticator or recovery code." }, { status: 400 });
   const session = await getCurrentSession();
   if (!session) return Response.json({ error: "Authentication required." }, { status: 401 });
-  const verified = await verifyMfaStepUp(session.id, session.userId, parsed.data.code);
-  if (!verified) return Response.json({ error: "The MFA code is invalid, expired, or already used." }, { status: 400 });
+  try {
+    const verified = await verifyMfaStepUp(session.id, session.userId, parsed.data.code);
+    if (!verified) return Response.json({ error: "The MFA code is invalid, expired, or already used." }, { status: 400 });
+  } catch (error) {
+    if (error instanceof MfaConfigurationError) return Response.json({ error: error.message }, { status: 503 });
+    return Response.json({ error: "Unable to verify MFA." }, { status: 500 });
+  }
   return Response.json({ verified: true }, { headers: { "Cache-Control": "private, no-store" } });
 }
