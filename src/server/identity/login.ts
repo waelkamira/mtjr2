@@ -20,7 +20,7 @@ export interface LoginInput {
 
 export type LoginResult =
   | { authenticated: true; userId: string; session: CreatedSession }
-  | { authenticated: false; reason: "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
+  | { authenticated: false; reason: "EMAIL_NOT_FOUND" | "INVALID_PASSWORD" | "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
 
 function digestLoginValue(kind: "identifier" | "ip", value: string): string {
   return createHmac("sha256", env.AUTH_SECRET)
@@ -51,7 +51,7 @@ export async function loginWithPassword(
     !ip ||
     ip.length > 64
   ) {
-    return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
+    return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: eligible ? "The password is incorrect. Please try again." : INVALID_CREDENTIALS };
   }
 
   const throttle = await consumeLoginAttempt({ identifier: email, trustedIpAddress: ip }, now);
@@ -86,7 +86,12 @@ export async function loginWithPassword(
     user.emailVerifiedAt !== null &&
     user.passwordHash !== null;
 
-  if (!user || !eligible || !passwordMatches) {
+  if (!user) {
+    await prisma.loginAttempt.create({ data: { identifierHash, ipHash, succeeded: false, attemptedAt: now } });
+    return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." };
+  }
+
+  if (!eligible || !passwordMatches) {
     await prisma.loginAttempt.create({
       data: {
         userId: user?.id ?? null,
