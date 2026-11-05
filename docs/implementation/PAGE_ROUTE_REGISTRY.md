@@ -121,7 +121,7 @@ For every page added or modified, inventory all interactive controls (including 
 | `/admin/markets`, `/admin/currencies` | Platform admin | market configuration | market/currency services | Not audited | Do not infer launch market or exchange rates |
 | `/admin/orders` | Authorized admin | 05 | order administration service | Not audited | Audited interventions and immutable history |
 | `/admin/returns` | Returns manager | 11 | returns admin API | Implemented / unverified | Current status workflow only; no refund execution |
-| `/admin/refunds` | Finance-authorized admin | refund/payment system | refund/payment/ledger service | Conditional / future | Must not appear actionable until refund implementation exists |
+| `/admin/refunds` | Finance-authorized admin (`payments:refund`) | 29, 33 | `listRefundOperations`, `createManualRefundForReturn`, `completeManualRefund`; `Refund`, `RefundItem`, `Payment` | Implemented / unverified | Manual-only; external provider transaction reference required before completion; merchandise-only amount; no provider refund API |
 | `/admin/reviews`, `/admin/store-reviews` | Moderator | 06 | moderation APIs | Implemented / unverified | Separate queues and audit |
 | `/admin/questions` | Moderator | 08 | Q&A moderation API | Implemented / unverified | Verify moderation transitions |
 | `/admin/support` | Support staff | 09 | ticket administration APIs | Implemented / unverified | Internal notes restricted to staff |
@@ -198,6 +198,15 @@ The following dedicated page routes were **not found** in the original 30-page f
 - Admin: dedicated `/admin/sellers` and user/role management pages; some moderation actions may be embedded in existing admin screens or API-only at present.
 
 Some absent targets may be intentionally implemented as sections or embedded workflows on an existing route. Before creating new pages, inspect the actual navigation and component behavior; do not duplicate a working embedded workflow just to satisfy a route name. Authentication APIs exist, but the absence of dedicated auth pages must be resolved or explicitly documented as an approved embedded/modal design before release.
+
+### Refund and return receipt API routes — 2026-11-05
+
+| Method / route | Guard and service | Persistence / behavior | Verification boundary |
+|---|---|---|---|
+| `PATCH /api/seller/returns/[returnId]` with `status=RECEIVED` | request-security validation; store owner or exact-store `returns:manage`; `receiveSellerReturnItems` | `Inventory.quantityQuarantined`, `InventoryMovement(RETURN_RECEIPT)`, `ReturnItem`, parent status, audit in one serializable transaction | CI + disposable PostgreSQL migration pass; focused service tests; live browser journey not performed |
+| `GET /api/admin/refunds` | `payments:refund`; `listRefundOperations` | Received-return candidates plus persisted Refund/RefundItem ledger | Exact-head CI pending |
+| `POST /api/admin/refunds` | request-security validation; `payments:refund`; `createManualRefundForReturn` | Creates one PENDING_MANUAL refund per received return request; caps allocations to line and captured-payment balances | Exact-head CI pending |
+| `PATCH /api/admin/refunds/[refundId]` | request-security validation; `payments:refund`; `completeManualRefund` | Requires external reference; atomically completes refund and updates Payment status from completed totals | Exact-head CI pending; no provider API call |
 
 ### API route audit boundary
 
