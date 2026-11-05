@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { requirePlatformSessionStepUp } from "@/server/identity/platform-session-policy";
+import { AuthenticationRequiredError, getCurrentSession } from "@/server/identity/current-session";
 import {
   hasPermission,
   hasAnyPermission,
@@ -56,6 +57,11 @@ export async function getUserAuthorizationGrants(
   );
 }
 
+async function assertAuthorizationSubject(userId: string, now: Date) {
+  const session = await getCurrentSession(now);
+  if (!session || session.userId !== userId) throw new AuthenticationRequiredError();
+}
+
 /**
  * Server-side convenience policy. The caller must resolve userId from the
  * authenticated session before invoking this function.
@@ -65,6 +71,8 @@ export async function userHasPermission(
   request: AuthorizationRequest
 ): Promise<boolean> {
   const now = request.now ?? new Date();
+  await assertAuthorizationSubject(userId, now);
+  await assertAuthorizationSubject(userId, now);
   const grants = await getUserAuthorizationGrants(userId, now);
   if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
     await requirePlatformSessionStepUp(userId, now);
@@ -98,6 +106,7 @@ export async function userHasScopedPermission(
   request: AuthorizationRequest & { scope: { type: string; id: string } }
 ): Promise<boolean> {
   const now = request.now ?? new Date();
+  await assertAuthorizationSubject(userId, now);
   const grants = await getUserAuthorizationGrants(userId, now);
   if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
     await requirePlatformSessionStepUp(userId, now);
