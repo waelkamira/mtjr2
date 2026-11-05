@@ -124,7 +124,11 @@ export async function reviewSellerReturnItems(returnId: string, input: unknown, 
     });
     if (!store || store.status !== "ACTIVE" || store.seller.status !== "ACTIVE") throw new Error("This store is not active.");
     const isOwner = store.seller.ownerId === actor.userId;
-    const delegated = !isOwner && !platformAdmin && await userHasScopedPermission(actor.userId, {
+    const activeStaff = !isOwner && !platformAdmin ? await tx.sellerStaff.findFirst({
+      where: { storeId: store.id, userId: actor.userId, status: "ACTIVE" },
+      select: { id: true }
+    }) : null;
+    const delegated = Boolean(activeStaff) && await userHasScopedPermission(actor.userId, {
       permissionKey: "orders:manage", scope: { type: "STORE", id: store.id }, now
     });
     if (!isOwner && !delegated && !platformAdmin) throw new Error("Permission denied.");
