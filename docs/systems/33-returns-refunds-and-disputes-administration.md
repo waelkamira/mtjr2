@@ -5,7 +5,7 @@
 ## 1. الغرض والحدود
 - **الغرض:** Resolve returns, refund requests, chargebacks and evidence deadlines.
 - **المتطلبات الأساسية:** policy rules, partial refunds, evidence retention, deadlines, provider synchronization and immutable decisions.
-- **الحالة السابقة الموثقة:** **Partial / schema-only.** Return surfaces exist; refund/dispute lifecycle is not demonstrated.
+- **الحالة السابقة الموثقة:** **Partial — return decisions, physical receipt into inventory quarantine, and a finance-authorized manual refund ledger are implemented.** Dispute intake/evidence and automated provider refunds remain unimplemented.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
@@ -64,7 +64,7 @@
 |---|---|---|
 | `ReturnRequest` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
 | `ReturnItem` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
-| `Refund` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `Refund`, `RefundItem` | موجودان؛ manual pending/completed lifecycle linked to captured Payment and received ReturnItem |
 | `Dispute` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `DisputeEvidence` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `Payment` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
@@ -118,3 +118,10 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## Implementation update — 2026-11-05
+- `/admin/refunds` provides a finance queue for physically received returns and a ledger of manual refund records.
+- The workflow creates a pending merchandise refund only for received return lines, enforces per-line allocation and the captured-payment ceiling, and uses an idempotent return-request key.
+- Finance must execute the refund outside the platform and record its external transaction reference before the refund is marked completed or Payment status changes.
+- Tax/shipping allocation, provider refund API, chargebacks/disputes, evidence deadlines and reconciliation remain out of scope for this slice.
