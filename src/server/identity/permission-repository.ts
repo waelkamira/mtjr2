@@ -72,7 +72,6 @@ export async function userHasPermission(
 ): Promise<boolean> {
   const now = request.now ?? new Date();
   await assertAuthorizationSubject(userId, now);
-  await assertAuthorizationSubject(userId, now);
   const grants = await getUserAuthorizationGrants(userId, now);
   if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
     await requirePlatformSessionStepUp(userId, now);
@@ -86,6 +85,7 @@ export async function userHasAnyPermission(
   requests: readonly AuthorizationRequest[],
   now = new Date()
 ): Promise<boolean> {
+  await assertAuthorizationSubject(userId, now);
   const grants = await getUserAuthorizationGrants(userId, now);
   if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
     await requirePlatformSessionStepUp(userId, now);
