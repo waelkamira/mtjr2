@@ -14,6 +14,13 @@ const completeSchema = z.object({
 const refundablePaymentStatuses = [PaymentStatus.SUCCEEDED, PaymentStatus.PARTIALLY_REFUNDED];
 const committedRefundStatuses = [RefundStatus.PENDING_MANUAL, RefundStatus.COMPLETED];
 
+function displayAmount(amountMinor: bigint, currencyCode: string, minorUnit: number) {
+  const scale = BigInt(10) ** BigInt(minorUnit);
+  const whole = amountMinor / scale;
+  const fraction = minorUnit ? (amountMinor % scale).toString().padStart(minorUnit, "0") : "";
+  return `${currencyCode} ${new Intl.NumberFormat("en").format(whole)}${minorUnit ? "." + fraction : ""}`;
+}
+
 function refundAmount(line: { quantity: number; orderItem: { quantity: number; lineTotalMinor: bigint } }) {
   if (line.quantity < 1 || line.quantity > line.orderItem.quantity || line.orderItem.quantity < 1) {
     throw new Error("A received return quantity is invalid for its original order line.");
@@ -72,7 +79,7 @@ export async function listRefundOperations(now = new Date()) {
         orderNumber: request.order.orderNumber,
         currencyCode: request.order.currencyCode,
         amountMinor: amountMinor.toString(),
-        amountDisplay: new Intl.NumberFormat("en", { style: "currency", currency: request.order.currencyCode, minimumFractionDigits: request.order.currency.minorUnit, maximumFractionDigits: request.order.currency.minorUnit }).format(Number(amountMinor) / (10 ** request.order.currency.minorUnit)),
+        amountDisplay: displayAmount(amountMinor, request.order.currencyCode, request.order.currency.minorUnit),
         eligible,
         reason: !payment ? "Exactly one successful captured payment is required." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > payment.amountMinor ? "The amount exceeds the captured payment." : null,
         items: request.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
@@ -86,7 +93,7 @@ export async function listRefundOperations(now = new Date()) {
       paymentStatus: refund.payment.status,
       amountMinor: refund.amountMinor.toString(),
       currencyCode: refund.currencyCode,
-      amountDisplay: new Intl.NumberFormat("en", { style: "currency", currency: refund.currencyCode, minimumFractionDigits: refund.currency.minorUnit, maximumFractionDigits: refund.currency.minorUnit }).format(Number(refund.amountMinor) / (10 ** refund.currency.minorUnit)),
+      amountDisplay: displayAmount(refund.amountMinor, refund.currencyCode, refund.currency.minorUnit),
       externalReference: refund.externalReference,
       note: refund.note,
       requestedAt: refund.requestedAt.toISOString(),
