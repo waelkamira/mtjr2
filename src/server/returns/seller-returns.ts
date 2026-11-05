@@ -159,9 +159,9 @@ export async function reviewSellerReturnItems(returnId: string, input: unknown, 
     const allRejected = lines.length > 0 && lines.every((item) => item.status === ReturnItemStatus.REJECTED);
     const anyApproved = lines.some((item) => item.status === ReturnItemStatus.APPROVED || item.status === ReturnItemStatus.RECEIVED);
     const hasPending = lines.some((item) => item.status === ReturnItemStatus.REQUESTED);
-    const aggregate = allRejected ? ReturnRequestStatus.REJECTED
+    const aggregate = hasPending ? ReturnRequestStatus.REQUESTED
+      : allRejected ? ReturnRequestStatus.REJECTED
       : anyApproved ? ReturnRequestStatus.APPROVED
-      : hasPending ? ReturnRequestStatus.REQUESTED
       : current.status;
     if (aggregate !== current.status && [ReturnRequestStatus.REQUESTED, ReturnRequestStatus.APPROVED].includes(current.status)) {
       await tx.returnRequest.updateMany({
