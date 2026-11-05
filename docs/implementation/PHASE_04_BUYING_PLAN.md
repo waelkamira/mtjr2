@@ -183,3 +183,11 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Inventory movement, quarantine balance, item state, parent aggregation, and audit record commit in one serializable transaction. A repeated completed receipt is an idempotent no-op.
 - Seller returns UI requires a warehouse selection and displays quarantine separately in inventory. Admin approval/rejection no longer provides a bypass that could mark items received without a stock record.
 - This is physical receipt only. Inspection/release from quarantine, restock/disposal decisions, and payment refunds remain separate workflows.
+
+
+### Manual refund ledger (2026-11-05)
+- Added `Refund` and `RefundItem` with forward-only migration `20261105160000_manual_return_refunds`. Only physically received return items can be allocated to a refund; each return item and return request is protected against duplicate allocation.
+- Added finance-authorized `/admin/refunds`, GET/POST queue API and PATCH completion API. The amount is derived from immutable order-line merchandise value, allocated across partial returns, and capped by the captured payment after pending/completed refunds.
+- A created refund remains `PENDING_MANUAL`. No provider call occurs. Finance must process it externally and record a unique external transaction reference before the refund becomes `COMPLETED`; Payment then becomes `PARTIALLY_REFUNDED` or `REFUNDED` according to completed totals.
+- Late/replayed successful payment webhooks preserve partial/full refund and dispute states.
+- Shipping and tax are not included in the automatic merchandise amount; they require separate finance policy. Provider refund adapters, disputes and reconciliation remain incomplete.
