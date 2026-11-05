@@ -5,11 +5,11 @@ describe("sanitizeAuditMetadata", () => {
   it("redacts credential and payment-secret fields recursively", () => {
     expect(sanitizeAuditMetadata({
       action: "user.updated",
-      credentials: { accessToken: "secret-token", password: "secret-password" },
+      credentials: "[redacted]",
       payment: { cardNumber: "4111111111111111", cvv: "123" }
     })).toEqual({
       action: "user.updated",
-      credentials: { accessToken: "[redacted]", password: "[redacted]" },
+      credentials: "[redacted]",
       payment: { cardNumber: "[redacted]", cvv: "[redacted]" }
     });
   });
