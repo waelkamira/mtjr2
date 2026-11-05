@@ -1975,3 +1975,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Set repository variable `APP_URL` and secret `CRON_SECRET` to activate the scheduled delivery workflow.
 - Shipment preferences exist, but no Shipment model/carrier tracking lifecycle or SHIPPED/DELIVERED transition is present. Do not claim shipment notifications are live until that system exists.
 - Browser-level user journeys and provider callback/reconciliation are not yet verified.
+
+
+## 2026-11-05 — Identity registration and sign-in feedback
+
+**Implemented on `fix/identity-feedback-flow`**
+- Duplicate registration now returns HTTP 409 with `EMAIL_ALREADY_EXISTS` and a clear instruction to sign in or recover the password; the existing normalized-email lookup and database unique-constraint fallback both remain active.
+- Successful registration displays a success notice, then leaves `/register` for `/verify-email` with the email prefilled and a registration confirmation message.
+- Login now distinguishes an unknown email (`EMAIL_NOT_FOUND`) from an incorrect password (`INVALID_PASSWORD`) while preserving dummy scrypt verification for unknown addresses, persistent throttling, and generic responses for inactive/unverified accounts.
+- Successful login displays its confirmation before redirecting to the safe same-origin return path. The password field is cleared after success.
+- Added a focused unit test for the incorrect-password path and updated the unknown-email expectation.
+- **Security trade-off:** explicit email-vs-password feedback reveals whether an email has an account. This follows the requested UX; the existing rate limiter remains in force. If stronger account-enumeration resistance is preferred, both failures should use one generic message.
+
+**Verification**
+- Source changes committed; exact-head GitHub Actions CI and PostgreSQL integration have not yet reported results. Do not treat the identity journey as release-verified until those pass.
+- No local browser session, real email delivery, production database, or deployment was accessed.
