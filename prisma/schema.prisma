@@ -297,6 +297,7 @@ enum AttributeValueType {
 
 enum InventoryMovementType {
   RECEIPT
+  RETURN_RECEIPT
   SALE
   ADJUSTMENT
   TRANSFER_OUT
@@ -861,6 +862,7 @@ model Inventory {
   warehouseId       String
   variantId         String
   quantityOnHand    Int                    @default(0)
+  quantityQuarantined Int                  @default(0)
   quantityReserved  Int                    @default(0)
   reorderPoint      Int                    @default(0)
   createdAt         DateTime               @default(now())
@@ -880,6 +882,7 @@ model InventoryMovement {
   inventoryId    String
   type           InventoryMovementType
   quantityDelta  Int
+  quarantinedDelta Int                  @default(0)
   referenceType  String?               @db.VarChar(40)
   referenceId    String?               @db.VarChar(128)
   idempotencyKey String?               @unique @db.VarChar(160)

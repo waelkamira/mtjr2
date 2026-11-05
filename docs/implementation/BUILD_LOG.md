@@ -2066,3 +2066,14 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Administrative receipt now transitions only `APPROVED` return lines to `RECEIVED`; rejected/cancelled lines remain unchanged.
 - The transaction rejects receipt when no approved lines remain, preventing a parent status from claiming receipt without eligible lines.
 - Added focused tests for mixed approved/rejected receipt and no-approved-line rejection. Inventory restocking remains a separate next step; receipt is not yet represented as a stock movement.
+
+
+## 2026-11-05 — Seller return receipt into inventory quarantine
+
+- Added a forward-only Prisma migration introducing a quarantined stock balance and a `RETURN_RECEIPT` inventory movement. Physical return receipt increments quarantine only; it does not increase sellable `quantityOnHand`.
+- Added a seller-scoped receipt service and connected it to the seller return API/UI. The seller selects a warehouse belonging to the same active store; only approved return lines for that store can be received.
+- Inventory balance, movement (with deterministic per-return-item idempotency key), return-item status, parent aggregate, and audit log are committed in one serializable transaction.
+- Removed the admin-only received status path so a return cannot be marked received without a corresponding inventory movement. The seller inventory table now displays quarantined stock separately.
+- Added focused tests for quarantine-only movement, cross-store denial, missing variant rejection, completed retry, and admin receipt bypass prevention.
+- Inspection/release from quarantine and refunds remain intentionally separate. No provider refund, carrier integration, or production database action is claimed.
+- Exact-head General CI and disposable PostgreSQL Integration are required before merge.

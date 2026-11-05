@@ -106,7 +106,7 @@ export async function listStoreInventory(storeId: string, now = new Date(), sear
     orderBy: [{ warehouse: { name: "asc" } }, { variant: { sku: "asc" } }],
     take: 500,
     select: {
-      id: true, quantityOnHand: true, quantityReserved: true, reorderPoint: true,
+      id: true, quantityOnHand: true, quantityQuarantined: true, quantityReserved: true, reorderPoint: true,
       warehouse: { select: { id: true, code: true, name: true } },
       variant: { select: { id: true, sku: true, name: true, product: { select: { id: true, name: true, slug: true } } } }
     }

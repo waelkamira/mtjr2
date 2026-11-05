@@ -21,7 +21,7 @@ const createSchema = z.object({
   if (new Set(ids).size !== ids.length) ctx.addIssue({ code: "custom", message: "Each order item may appear only once.", path: ["items"] });
 });
 const reviewSchema = z.object({
-  status: z.enum(["APPROVED", "REJECTED", "RECEIVED"]),
+  status: z.enum(["APPROVED", "REJECTED"]),
   note: z.string().trim().max(1000).optional()
 }).strict();
 
@@ -175,22 +175,18 @@ export async function reviewReturnRequest(returnId: string, input: unknown, now 
   return prisma.$transaction(async (tx) => {
     const current = await tx.returnRequest.findUnique({ where: { id: returnId }, select: { id: true, status: true } });
     if (!current) throw new Error("Return request not found.");
-    const allowed = (current.status === ReturnRequestStatus.REQUESTED && ["APPROVED", "REJECTED"].includes(data.status))
-      || (current.status === ReturnRequestStatus.APPROVED && data.status === "RECEIVED");
-    if (!allowed) throw new Error("This return request cannot move to the selected status.");
+    const allowed = current.status === ReturnRequestStatus.REQUESTED;
+    if (!allowed) throw new Error("Only pending return requests can be approved or rejected. Sellers record physical receipt through their store inventory.");
     const changed = await tx.returnRequest.updateMany({
       where: { id: current.id, status: current.status },
       data: { status: data.status, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
     });
     if (changed.count !== 1) throw new Error("The return request changed. Refresh and try again.");
-    const itemStatus = data.status === "RECEIVED" ? ReturnItemStatus.APPROVED : ReturnItemStatus.REQUESTED;
     const updatedItems = await tx.returnItem.updateMany({
-      where: { returnRequestId: current.id, status: itemStatus },
+      where: { returnRequestId: current.id, status: ReturnItemStatus.REQUESTED },
       data: { status: data.status as ReturnItemStatus, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
     });
-    if (updatedItems.count === 0) throw new Error(data.status === "RECEIVED"
-      ? "There are no approved return items awaiting receipt."
-      : "There are no pending return items to review.");
+    if (updatedItems.count === 0) throw new Error("There are no pending return items to review.");
     await tx.auditLog.create({
       data: {
         actorType: AuditActorType.USER, actorId: actor.userId, action: "returns.status_changed",
