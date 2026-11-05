@@ -232,3 +232,9 @@ Focused evidence: `npx vitest run tests/marketplace/seller-application.test.ts t
 |---|---|---|---|---|---|
 | Super Admin opens audit history | `/admin/control-panel/audit-log` | Server route calls `requirePlatformManagement` before rendering | None | No session → login; no platform permission → not found | Implemented; CI pending |
 | Super Admin filters and pages audit events | Action/resource filters and Load older control | `GET /api/admin/control-panel/audit-log` → `getPlatformAuditEvents` | Read-only `AuditLog` query | Server permission gate; bounded page size; validated date range; no-store; stable descending cursor | Implemented; CI pending |
+
+## Super Admin role and permission inventory
+
+| User journey | Frontend | API/service | Persistence | Critical checks | Status |
+|---|---|---|---|---|---|
+| Super Admin reviews role grants | `/admin/control-panel/access-catalog` | `GET /api/admin/control-panel/access-catalog` → `getPlatformAccessCatalog` | Read-only Role, Permission, RolePermission and UserRoleAssignment aggregates | Global platform permission at page and service; no mutation surface; private/no-store | Implemented; CI pending |
