@@ -48,7 +48,7 @@ export default function PlatformAuditLogPage() {
     }
   }, []);
 
-  useEffect(() => { void load(null, false, "", ""); }, [load]);
+  useEffect(() => { void Promise.resolve().then(() => load(null, false, "", "")); }, [load]);
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
