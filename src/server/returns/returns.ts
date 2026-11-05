@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
-import { AuditActorType, Prisma, ReturnRequestStatus, VendorOrderStatus } from "@prisma/client";
+import { AuditActorType, Prisma, ReturnItemStatus, ReturnRequestStatus, VendorOrderStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
@@ -183,6 +183,10 @@ export async function reviewReturnRequest(returnId: string, input: unknown, now 
       data: { status: data.status, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
     });
     if (changed.count !== 1) throw new Error("The return request changed. Refresh and try again.");
+    await tx.returnItem.updateMany({
+      where: { returnRequestId: current.id },
+      data: { status: data.status as ReturnItemStatus, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
+    });
     await tx.auditLog.create({
       data: {
         actorType: AuditActorType.USER, actorId: actor.userId, action: "returns.status_changed",
