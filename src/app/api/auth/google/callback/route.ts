@@ -138,8 +138,8 @@ export async function GET(request: Request): Promise<Response> {
         });
         await tx.oAuthAccount.create({ data: { userId: user.id, provider: "google", providerAccountId: identity.sub! } });
         await tx.userConsent.createMany({ data: [
-          { userId: user.id, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion, granted: true, capturedAt: now, source: "google-registration" },
-          { userId: user.id, type: ConsentType.PRIVACY_POLICY, version: privacyVersion, granted: true, capturedAt: now, source: "google-registration" }
+          { userId: user.id, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true, capturedAt: now, source: "google-registration" },
+          { userId: user.id, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true, capturedAt: now, source: "google-registration" }
         ]});
         if (accountType === "SELLER") {
           if (sellerLegalName.length < 2 || sellerDisplayName.length < 2) throw new Error("Seller application details missing.");
