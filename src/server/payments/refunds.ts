@@ -36,7 +36,7 @@ export async function listRefundOperations(now = new Date()) {
             orderNumber: true, currencyCode: true, currency: { select: { minorUnit: true } },
             payments: {
               where: { status: { in: refundablePaymentStatuses } },
-              select: { id: true, amountMinor: true, currencyCode: true, status: true }
+              select: { id: true, amountMinor: true, currencyCode: true, status: true, provider: true }
             }
           }
         },
@@ -52,7 +52,7 @@ export async function listRefundOperations(now = new Date()) {
       include: {
         order: { select: { orderNumber: true } },
         currency: { select: { minorUnit: true } },
-        payment: { select: { status: true } },
+        payment: { select: { status: true, provider: true } },
         returnRequest: { select: { returnNumber: true } },
         items: { select: { quantity: true, amountMinor: true, returnItem: { select: { orderItem: { select: { productName: true, sku: true } } } } } }
       }
@@ -103,6 +103,7 @@ export async function listRefundOperations(now = new Date()) {
         returnNumber: request.returnNumber,
         orderNumber: request.order.orderNumber,
         currencyCode: request.order.currencyCode,
+        provider: payment?.provider ?? null,
         amountMinor: amountMinor.toString(),
         amountDisplay: displayAmount(amountMinor, request.order.currencyCode, request.order.currency.minorUnit),
         eligible,
@@ -116,6 +117,7 @@ export async function listRefundOperations(now = new Date()) {
       orderNumber: refund.order.orderNumber,
       status: refund.status,
       paymentStatus: refund.payment.status,
+      provider: refund.payment.provider,
       amountMinor: refund.amountMinor.toString(),
       currencyCode: refund.currencyCode,
       amountDisplay: displayAmount(refund.amountMinor, refund.currencyCode, refund.currency.minorUnit),
