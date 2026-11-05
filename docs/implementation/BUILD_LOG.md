@@ -2096,3 +2096,22 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact-head General CI and PostgreSQL Integration results.
 - Real Google credentials, Resend sender/API key, trusted edge IP header, and one deployed HTTP/browser journey.
 - Public production registration remains gated until approved legal documents and deployment configuration are in place.
+
+
+## 2026-11-05 — Claymorphism visual direction and foundation
+
+**Owner-approved direction**
+- Replaced the previous forest/petrol and glass-led direction with Claymorphism / 3D Pastel Clay based on the user's written description of the Pinterest reference.
+- Established lavender, mint, blush, butter, sky, and neutral tokens with compatibility aliases for existing component token names.
+- Added opt-in raised and inset clay surface primitives with soft dual shadows; existing components are not globally force-styled.
+- Kept semantic status colors, readable text, reduced-motion behavior, and keyboard focus separate from decorative pastel accents.
+
+**Scope and safeguards**
+- This is a visual foundation only. It does not claim all routes/components have been migrated or visually verified.
+- Preserve all existing routes, category distribution, APIs, authorization, Prisma models, and commerce behavior during later component migration.
+- Storefront, buyer, seller, and admin workspaces share tokens but retain different information density and interaction patterns.
+- Super Admin implementation is explicitly out of scope for this workstream.
+
+**Verification**
+- Repository files and current main design tokens were reviewed through GitHub before the change.
+- No local shell, browser runtime, or deployed visual comparison was available in this session; typecheck, lint, tests, and build must be confirmed by the branch CI before merge.
