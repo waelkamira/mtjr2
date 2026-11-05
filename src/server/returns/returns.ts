@@ -183,10 +183,14 @@ export async function reviewReturnRequest(returnId: string, input: unknown, now 
       data: { status: data.status, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
     });
     if (changed.count !== 1) throw new Error("The return request changed. Refresh and try again.");
-    await tx.returnItem.updateMany({
-      where: { returnRequestId: current.id },
+    const itemStatus = data.status === "RECEIVED" ? ReturnItemStatus.APPROVED : ReturnItemStatus.REQUESTED;
+    const updatedItems = await tx.returnItem.updateMany({
+      where: { returnRequestId: current.id, status: itemStatus },
       data: { status: data.status as ReturnItemStatus, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
     });
+    if (updatedItems.count === 0) throw new Error(data.status === "RECEIVED"
+      ? "There are no approved return items awaiting receipt."
+      : "There are no pending return items to review.");
     await tx.auditLog.create({
       data: {
         actorType: AuditActorType.USER, actorId: actor.userId, action: "returns.status_changed",
