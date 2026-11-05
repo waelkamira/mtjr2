@@ -1,18 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserStatus } from "@prisma/client";
 
-const { prismaMock, consumeMock, clearMock, verifyMock, createSessionMock, revokeMock } = vi.hoisted(() => ({
+const { prismaMock, consumeMock, clearMock, verifyMock } = vi.hoisted(() => ({
   prismaMock: {
-    user: { findUnique: vi.fn(), update: vi.fn() },
+    user: { findUnique: vi.fn(), updateMany: vi.fn() },
+    userSession: { create: vi.fn() },
     loginAttempt: { create: vi.fn() },
     auditLog: { create: vi.fn() },
     $transaction: vi.fn()
   },
   consumeMock: vi.fn(),
   clearMock: vi.fn(),
-  verifyMock: vi.fn(),
-  createSessionMock: vi.fn(),
-  revokeMock: vi.fn()
+  verifyMock: vi.fn()
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
@@ -22,8 +21,9 @@ vi.mock("@/server/identity/login-throttle", () => ({
 }));
 vi.mock("@/server/identity/password", () => ({ verifyPassword: verifyMock }));
 vi.mock("@/server/identity/session", () => ({
-  createUserSession: createSessionMock,
-  revokeUserSession: revokeMock
+  generateSessionToken: () => "s".repeat(43),
+  hashSessionToken: () => "session-digest",
+  SESSION_TTL_SECONDS: 30 * 24 * 60 * 60
 }));
 
 import { loginWithPassword } from "../../src/server/identity/login";
@@ -35,11 +35,11 @@ describe("password login service", () => {
     vi.clearAllMocks();
     consumeMock.mockResolvedValue({ blocked: false });
     verifyMock.mockResolvedValue(true);
-    createSessionMock.mockResolvedValue({ token: "s".repeat(43), expiresAt: new Date(now.getTime() + 1000) });
     prismaMock.loginAttempt.create.mockResolvedValue({});
-    prismaMock.user.update.mockResolvedValue({});
+    prismaMock.user.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.userSession.create.mockResolvedValue({});
     prismaMock.auditLog.create.mockResolvedValue({});
-    prismaMock.$transaction.mockResolvedValue([]);
+    prismaMock.$transaction.mockImplementation(async (callback) => callback(prismaMock));
     clearMock.mockResolvedValue(undefined);
   });
 
@@ -60,7 +60,7 @@ describe("password login service", () => {
 
     expect(result).toMatchObject({ authenticated: true, userId: "user-1" });
     expect(verifyMock).toHaveBeenCalledWith("a-secure-password", "stored-hash");
-    expect(createSessionMock).toHaveBeenCalledWith("user-1", { userAgent: "browser" }, now);
+    expect(prismaMock.userSession.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ userId: "user-1", tokenHash: "session-digest", userAgent: "browser" }) }));
     expect(prismaMock.$transaction).toHaveBeenCalledOnce();
     expect(clearMock).toHaveBeenCalledWith("buyer@example.com", "203.0.113.10");
   });
@@ -77,7 +77,7 @@ describe("password login service", () => {
     expect(result).toMatchObject({ authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." });
     expect(verifyMock).toHaveBeenCalledOnce();
     expect(verifyMock.mock.calls[0][1]).toMatch(/^scrypt\$32768\$8\$1\$/);
-    expect(createSessionMock).not.toHaveBeenCalled();
+    expect(prismaMock.userSession.create).not.toHaveBeenCalled();
     expect(prismaMock.loginAttempt.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ succeeded: false, identifierHash: expect.any(String), ipHash: expect.any(String) })
     }));
@@ -96,7 +96,7 @@ describe("password login service", () => {
     expect(result).toMatchObject({
       authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect. Please try again."
     });
-    expect(createSessionMock).not.toHaveBeenCalled();
+    expect(prismaMock.userSession.create).not.toHaveBeenCalled();
   });
 
   it("does not issue a session to an unverified or inactive account", async () => {
@@ -114,7 +114,22 @@ describe("password login service", () => {
     }, now);
 
     expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS" });
-    expect(createSessionMock).not.toHaveBeenCalled();
+    expect(prismaMock.userSession.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a login if the password or account state changed after verification", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-1", passwordHash: "old-hash", status: UserStatus.ACTIVE, emailVerifiedAt: now
+    });
+    prismaMock.user.updateMany.mockResolvedValue({ count: 0 });
+    const result = await loginWithPassword({
+      email: "buyer@example.com", password: "old-password", trustedIpAddress: "203.0.113.10"
+    }, now);
+    expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS" });
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ id: "user-1", passwordHash: "old-hash", status: UserStatus.ACTIVE, emailVerifiedAt: { not: null } })
+    }));
+    expect(prismaMock.userSession.create).not.toHaveBeenCalled();
   });
 
   it("does not run password verification after the throttle blocks a request", async () => {

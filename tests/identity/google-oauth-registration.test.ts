@@ -85,6 +85,21 @@ describe("Google OAuth registration gate", () => {
     expect(mocks.createUserSession).not.toHaveBeenCalled();
   });
 
+  it("rejects a malformed token expiry before looking up an account", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(Response.json({ id_token: "id-token" }))
+      .mockResolvedValueOnce(Response.json({
+        iss: "https://accounts.google.com", aud: "google-client", sub: "google-user",
+        email: "new@example.com", email_verified: "true", exp: "not-a-timestamp"
+      })));
+    const response = await GET(new Request(
+      "http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"
+    ));
+    expect(response.headers.get("location")).toBe("http://localhost:3000/register?oauth=failed");
+    expect(mocks.oauthAccountFindUnique).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+  });
+
   it("allows an already-linked Google account to sign in while registration is disabled", async () => {
     mocks.oauthAccountFindUnique.mockResolvedValue({
       userId: "existing-user",
