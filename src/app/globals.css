@@ -58,6 +58,14 @@
   --color-orange-100: var(--color-butter-100);
   --color-cyan-300: var(--color-sky-100);
   --color-cyan-100: #eff7fc;
+  /* Legacy neutral aliases retained for components not yet migrated */
+  --color-ivory-50: #fbf9ff;
+  --color-ivory-100: #f1eef7;
+  --color-ivory-200: #e7e1ef;
+  --color-stone-300: #d8d2e2;
+  --color-stone-500: #716c7c;
+  --color-ink-900: #302d3b;
+  --color-ink-700: #5d5869;
 
   --color-forest-950: var(--color-lavender-950);
   --color-forest-900: var(--color-lavender-800);
