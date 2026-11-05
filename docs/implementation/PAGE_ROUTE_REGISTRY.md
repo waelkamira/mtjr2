@@ -355,3 +355,11 @@ The view is read-only. Audit history is not editable or deletable from this inte
 | Roles and permission inventory | `/admin/control-panel/access-catalog` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/access-catalog` → `getPlatformAccessCatalog` → Prisma Role, RolePermission, Permission and assignment counts. | Read-only inventory implemented; exact-head CI pending. |
 
 Audit metadata is redacted before API serialization. The access catalogue deliberately does not expose role mutation controls until approval and actor-separation safeguards are implemented.
+
+## Super Admin privilege approvals — 2026-11-05
+
+| Surface | Route | Guard | Backend | Status |
+|---|---|---|---|---|
+| Privilege request and review | `/admin/control-panel/privilege-requests` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET/POST /api/admin/control-panel/privilege-requests`, `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `platform-privilege-requests.ts`. | Implemented; exact-head CI pending; migration not applied. |
+
+The workflow grants only canonical `SUPER_ADMIN` after independent review. The requester cannot decide their own request. Assignment, decision and audit record are transactional. Target must be ACTIVE and email-verified.
