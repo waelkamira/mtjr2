@@ -260,7 +260,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
       throw new Error("This refund was already completed with a different external reference.");
     }
     if (refund.status !== RefundStatus.PENDING_MANUAL) throw new Error("Only pending manual refunds can be completed.");
-    if (![PaymentStatus.SUCCEEDED, PaymentStatus.PARTIALLY_REFUNDED].includes(refund.payment.status)) {
+    if (refund.payment.status !== PaymentStatus.SUCCEEDED && refund.payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
       throw new Error("The payment is not in a refundable state; reconcile it before completion.");
     }
 
