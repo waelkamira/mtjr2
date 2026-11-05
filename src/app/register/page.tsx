@@ -1,4 +1,5 @@
 import RegisterForm from "@/features/identity/register-form";
+import { env, isPublicRegistrationEnabled } from "@/lib/env";
 
 export default async function RegistrationPage({ searchParams }: { searchParams: Promise<{ oauth?: string }> }) {
   const { oauth } = await searchParams;
@@ -11,5 +12,5 @@ export default async function RegistrationPage({ searchParams }: { searchParams:
     inactive: "This Google account is not active. Contact support.",
     link_required: "An account with this email already exists. Sign in with your existing method; accounts are not linked automatically."
   };
-  return <RegisterForm initialOAuthError={oauth ? errors[oauth] ?? "Google sign-in could not be completed." : ""} />;
+  return <RegisterForm registrationAvailable={isPublicRegistrationEnabled(env)} initialOAuthError={oauth ? errors[oauth] ?? "Google sign-in could not be completed." : ""} />;
 }
