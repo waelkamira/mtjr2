@@ -2077,3 +2077,22 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added focused tests for quarantine-only movement, cross-store denial, missing variant rejection, completed retry, and admin receipt bypass prevention.
 - Inspection/release from quarantine and refunds remain intentionally separate. No provider refund, carrier integration, or production database action is claimed.
 - Exact-head General CI and disposable PostgreSQL Integration are required before merge.
+
+
+## 2026-11-05 — Akaar identity experience applied to Mtjr2
+
+**Implemented**
+- Reworked sign-in and registration layouts into a responsive split-panel experience using Mtjr2's existing forest/copper design tokens.
+- Added Google sign-in to the login page, distinct from Google registration.
+- Added a login-only OAuth intent that accepts only an already-linked Google identity. It does not create users, link by email, or fabricate policy consent.
+- Preserved Mtjr2's stronger registration requirements: 12-character password minimum, explicit Terms/Privacy acceptance, pending seller application, email verification, rate limiting, and server-side session controls.
+- Kept password recovery and verification/resend flows connected from the sign-in screen.
+
+**Focused verification added**
+- Existing Google OAuth registration-gate tests retained.
+- Added regression cases for linked Google login, safe return path, and rejection of unlinked Google identities during login.
+
+**Still pending**
+- Exact-head General CI and PostgreSQL Integration results.
+- Real Google credentials, Resend sender/API key, trusted edge IP header, and one deployed HTTP/browser journey.
+- Public production registration remains gated until approved legal documents and deployment configuration are in place.
