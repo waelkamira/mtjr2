@@ -80,7 +80,7 @@ describe("seller shipment dispatch", () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "staff-2" });
     await expect(createSellerShipment("vendor-1", {
       carrierName: "DHL", trackingNumber: "TRACK-123"
-    })).rejects.toThrow("Permission denied");
+    })).rejects.toThrow("You do not have permission to perform this action.");
     expect(mocks.shipmentCreate).not.toHaveBeenCalled();
   });
 
