@@ -4,6 +4,13 @@ import { randomBytes } from "node:crypto";
 import { AuditActorType, Prisma, ReturnItemStatus, ReturnRequestStatus, VendorOrderStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+
+function displayRefundAmount(amountMinor: bigint, currencyCode: string, minorUnit: number) {
+  const scale = BigInt(10) ** BigInt(minorUnit);
+  const whole = amountMinor / scale;
+  const fraction = minorUnit ? (amountMinor % scale).toString().padStart(minorUnit, "0") : "";
+  return `${currencyCode} ${new Intl.NumberFormat("en").format(whole)}${minorUnit ? "." + fraction : ""}`;
+}
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { requirePermission } from "@/server/identity/permission-guard";
 
@@ -38,7 +45,8 @@ export async function getMyReturnCenter(now = new Date()) {
       take: 100,
       include: {
         order: { select: { orderNumber: true } },
-        items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true } } } }
+        items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true } } } },
+        refund: { select: { status: true, amountMinor: true, currencyCode: true, currency: { select: { minorUnit: true } } } }
       }
     }),
     prisma.order.findMany({
@@ -75,6 +83,7 @@ export async function getMyReturnCenter(now = new Date()) {
     requests: requests.map((request) => ({
       id: request.id, returnNumber: request.returnNumber, orderNumber: request.order.orderNumber,
       status: request.status, reasonCode: request.reasonCode, reasonDetails: request.reasonDetails,
+      refund: request.refund ? { status: request.refund.status, amountMinor: request.refund.amountMinor.toString(), amountDisplay: displayRefundAmount(request.refund.amountMinor, request.refund.currencyCode, request.refund.currency.minorUnit) } : null,
       reviewNote: request.reviewNote, requestedAt: request.requestedAt.toISOString(),
       reviewedAt: request.reviewedAt?.toISOString() ?? null,
       items: request.items.map((item) => ({ id: item.id, productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity, status: item.status, reviewNote: item.reviewNote }))
