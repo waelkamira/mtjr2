@@ -154,3 +154,12 @@ The identity feature review is governed by System 01 and the Phase 2 exit gates 
 - The requested email-versus-password error distinction is a deliberate account-enumeration trade-off. Reconsider before production; generic errors are safer if anti-enumeration takes priority.
 
 **Decision:** System 01 / Phase 2 remains **Implemented / not Verified / not Complete**. Do not close Phase 2 or unblock its final release gate until exact-head General CI, PostgreSQL identity integration, configured delivery/proxy controls and the single deployed HTTP journey are evidenced. Keep verification focused; no broad helper-level test expansion.
+
+
+### 2.6 Sign-in and registration experience alignment
+- [x] Align the sign-in and registration page hierarchy with the Akaar flow while retaining Mtjr2's marketplace design tokens and account safeguards.
+- [x] Keep email/password sign-in, password recovery, verification/resend, seller-vs-customer registration, required policy consent, and email verification in one connected journey.
+- [x] Add Google sign-in for existing linked accounts as a distinct OAuth intent; login intent cannot create an account, silently link an email, or record registration consent.
+- [x] Preserve safe same-origin return paths through the Google OAuth state-cookie flow.
+- [x] Add focused regression coverage for linked Google login and rejection of unlinked identities during login.
+- [ ] Verify exact-head CI/PostgreSQL integration and complete one deployed registration → verification → login → account → logout journey after mail and trusted-proxy configuration.

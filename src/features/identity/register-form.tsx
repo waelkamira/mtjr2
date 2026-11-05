@@ -62,7 +62,21 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
           <Link href="/" className="text-2xl font-semibold tracking-tight text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
           <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Back to marketplace</Link>
         </header>
-        <section className="mx-auto w-full max-w-md rounded-3xl border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-card)] sm:p-9">
+        <div className="grid overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] lg:grid-cols-[0.82fr_1.18fr]">
+          <aside className="relative hidden overflow-hidden bg-[var(--color-forest-950)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_12%,rgba(190,130,87,.38),transparent_38%),linear-gradient(145deg,transparent,rgba(0,0,0,.24))]" />
+            <div className="relative">
+              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-100)]">Join Mtjr2</p>
+              <h1 className="mt-8 max-w-md text-4xl font-semibold leading-tight xl:text-5xl">One account. A world of possibilities.</h1>
+              <p className="mt-5 max-w-md text-sm leading-7 text-white/75">Shop from stores, manage your orders and favorites, or apply to build your business on the marketplace.</p>
+            </div>
+            <div className="relative rounded-2xl border border-white/15 bg-white/5 p-5">
+              <p className="text-sm font-semibold text-[var(--color-copper-100)]">A safer marketplace starts here</p>
+              <p className="mt-2 text-sm leading-6 text-white/75">We verify email addresses and review seller applications before granting selling permissions.</p>
+            </div>
+          </aside>
+          <section className="w-full px-5 py-8 sm:px-9 lg:px-12 xl:px-14">
+            <div className="mx-auto w-full max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Mtjr2 account · development</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">Create your account</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Create a test account to explore the marketplace during development. Email verification is required.</p>
@@ -114,8 +128,10 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
             <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</Link>
             <span aria-hidden="true">·</span>
             <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href={`/verify-email${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ""}`}>Verify/resend email</Link>
+            </div>
           </div>
-        </section>
+          </section>
+        </div>
       </div>
     </main>
   );
