@@ -5,7 +5,7 @@
 ## 1. الغرض والحدود
 - **الغرض:** Request a return for delivered goods, review the request and track the physical return state before any financial refund is considered.
 - **المتطلبات الأساسية:** غير محدد في المخطط الأساسي ويجب حسمه قبل التنفيذ.
-- **الحالة السابقة الموثقة:** **Partial — initial canonical workflow implemented on `feat/returns-workflow`.** Customers can request a return for one delivered order item at a time, select a reason and optional details, and view status/review notes. Authorized support/admin operators can approve/reject requests and mark approved items received. The migration adds `ReturnRequest`/`ReturnItem`; it has not been applied to any owner database.
+- **الحالة السابقة الموثقة:** **Partial — return request, per-item seller decisions, seller warehouse receipt into inventory quarantine, and manual refund ledger are implemented.** Customers can request returns for delivered items and track decisions. Sellers can receive only their approved store lines into an active warehouse; the quantities remain quarantined and are excluded from sellable stock. Finance users can create merchandise-only manual refund records and confirm completion only after entering an external refund reference. No payment-provider refund API, automatic tax/shipping refund, quarantine inspection/release, or dispute workflow is implemented.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
