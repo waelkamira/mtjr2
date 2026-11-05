@@ -380,3 +380,10 @@ The controlled IAM rebuild is tracked on `rebuild/identity-iam` in [the identity
 Initial audit confirmed that the existing server-side identity foundation is substantial and should be preserved where verified. It also identified a privilege-escalation gap in ordinary role assignment: the current `main` implementation rejects the literal `SUPER_ADMIN` role but does not reject a different role that carries `platform:manage`. The Super Admin candidate branch contains a stronger policy, but it is significantly diverged from `main` and will be integrated selectively rather than merged wholesale. Its privilege-request mutation routes also need the canonical same-origin/JSON request guard before they are safe to adopt.
 
 **Status:** Phase 1 audit/remediation is in progress. No identity or Super Admin functionality is being declared complete until the exact branch commit passes the applicable unit, PostgreSQL integration, security, typecheck, lint, and build gates.
+
+
+### Super Admin implementation status
+
+The identity rebuild includes a dedicated Super Admin control center at `/admin/control-panel`, a read-only role/permission catalog, a privileged audit log, and a two-person privilege-request workflow. Ordinary role assignment/revocation is blocked for any role carrying `platform:manage`, not only the literal `SUPER_ADMIN` role. First-admin bootstrap is a separate explicitly confirmed, database-target-checked, one-time script.
+
+**Not release-ready yet:** MFA/step-up verification and exact-head PostgreSQL/integration/build verification remain open. The Super Admin feature branch is being ported selectively, not merged wholesale. No Vercel deployment or configuration change was performed.

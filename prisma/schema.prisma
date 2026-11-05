@@ -14,6 +14,12 @@ enum UserStatus {
   DISABLED
 }
 
+enum PlatformPrivilegeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum ConsentType {
   TERMS_OF_SERVICE
   PRIVACY_POLICY
@@ -50,6 +56,9 @@ model User {
   sellerProfile     Seller?
   storeMemberships  SellerStaff[]          @relation("SellerStaffUser")
   sentStoreInvitations SellerStaff[]        @relation("SellerStaffInviter")
+  requestedPlatformPrivileges PlatformPrivilegeRequest[] @relation("PlatformPrivilegeTarget")
+  createdPlatformPrivilegeRequests PlatformPrivilegeRequest[] @relation("PlatformPrivilegeRequester")
+  reviewedPlatformPrivilegeRequests PlatformPrivilegeRequest[] @relation("PlatformPrivilegeReviewer")
   carts                 Cart[]
   checkoutQuotes        CheckoutQuote[]
   addresses             UserAddress[]
@@ -1806,3 +1815,24 @@ model PaymentWebhookEvent {
   @@index([processedAt, receivedAt])
 }
 
+
+
+model PlatformPrivilegeRequest {
+  id             String                         @id @default(cuid())
+  targetUserId   String
+  requestedById  String
+  reviewedById   String?
+  status         PlatformPrivilegeRequestStatus @default(PENDING)
+  reason         String                         @db.VarChar(1000)
+  decisionNote   String?                        @db.VarChar(1000)
+  requestedAt    DateTime                       @default(now())
+  reviewedAt     DateTime?
+  targetUser     User                           @relation("PlatformPrivilegeTarget", fields: [targetUserId], references: [id], onDelete: Restrict)
+  requester      User                           @relation("PlatformPrivilegeRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  reviewer       User?                          @relation("PlatformPrivilegeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, requestedAt])
+  @@index([targetUserId, status])
+  @@index([requestedById, requestedAt])
+  @@index([reviewedById, reviewedAt])
+}

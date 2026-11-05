@@ -119,3 +119,18 @@ This is a controlled rebuild, not a destructive rewrite. Existing verified capab
 - [ ] Verify the complete Super Admin route/API/data boundary with negative tests.
 
 The candidate privilege-request `POST` and `PATCH` handlers parse JSON and call state-changing services without invoking `validateIdentityMutationRequest`. These handlers are not safe to adopt as-is. The rebuild must validate origin, fetch metadata, and JSON content type before reading request bodies.
+
+
+## Super Admin implementation slice — 2026-11-06
+
+- [x] Added a protected platform-role policy: ordinary role assignment/revocation rejects the canonical `SUPER_ADMIN` role and alternate roles containing `platform:manage`.
+- [x] Added the Super Admin control center, read-only permission catalog, sanitized privileged audit log, and privilege-request workflow.
+- [x] Added an additive Prisma model and migration for platform privilege requests.
+- [x] Added an explicitly confirmed, exact-database-target, one-time first-admin bootstrap script.
+- [x] Strengthened approval so neither requester nor target can review the privilege grant.
+- [x] Added same-origin/Fetch Metadata/JSON mutation validation to privilege-request POST/PATCH before parsing bodies.
+- [ ] Add MFA enrollment/recovery and recent step-up enforcement before privileged operations can be released.
+- [ ] Add PostgreSQL integration coverage for concurrent requests, independent approval, bootstrap invariants, and audit records.
+- [ ] Run exact-head Prisma, typecheck, lint, unit, PostgreSQL integration, and build checks.
+
+The Super Admin feature branch was ported selectively because it is 77 commits ahead and 19 commits behind `main`; it was not merged wholesale.
