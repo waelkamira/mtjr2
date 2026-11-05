@@ -2060,3 +2060,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Seller return decisions now require the exact-store `returns:manage` permission rather than reusing `orders:manage`.
 - Added `returns:manage` to SELLER and STORE_MANAGER role capability sets; assignments remain store-scoped and do not grant a global seller permission.
 - Updated focused decision tests and the vendor return lifecycle design record. Verify exact-head General CI and PostgreSQL Integration before merge.
+
+
+## 2026-11-05 — Return receipt line-state correction
+- Administrative receipt now transitions only `APPROVED` return lines to `RECEIVED`; rejected/cancelled lines remain unchanged.
+- The transaction rejects receipt when no approved lines remain, preventing a parent status from claiming receipt without eligible lines.
+- Added focused tests for mixed approved/rejected receipt and no-approved-line rejection. Inventory restocking remains a separate next step; receipt is not yet represented as a stock movement.
