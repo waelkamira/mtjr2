@@ -82,3 +82,12 @@ This schema snapshot does not yet provide a complete implementation for all 49 s
 - `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, and `AuditLog` are consumed by `src/server/orders/seller-orders.ts` for the initial seller preparation transitions.
 - No Prisma change is required for `CONFIRMED → PROCESSING → READY_TO_SHIP`; shipment labels/tracking and later delivery states are not implemented by this slice.
 
+
+
+## Return receipt and manual refund ledger — 2026-11-05
+
+- `Inventory.quantityQuarantined` and `InventoryMovement.quarantinedDelta` represent physically received returned stock separately from sellable on-hand quantities. `RETURN_RECEIPT` movements use a deterministic `return-receipt:<ReturnItemId>` key.
+- `Refund` owns one manual refund request per `ReturnRequest`, links the exact `Payment` and `Order`, and stores pending/completed status plus the external refund reference and finance actor.
+- `RefundItem` allocates the immutable merchandise amount to one received `ReturnItem`; unique returnItemId prevents duplicate allocation.
+- Consumers: `src/server/returns/return-receipt.ts`, `src/server/payments/refunds.ts`, `/api/seller/returns/[returnId]`, `/api/admin/refunds`, `/api/admin/refunds/[refundId]`, `/seller/returns`, `/seller/inventory`, and `/admin/refunds`.
+- Refund status completion is manual confirmation only; no payment provider refund adapter exists. Tax/shipping allocation and disputes remain separate future domains.
