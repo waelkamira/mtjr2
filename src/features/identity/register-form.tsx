@@ -66,12 +66,12 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
           <aside className="relative hidden overflow-hidden bg-[var(--color-forest-950)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_12%,rgba(190,130,87,.38),transparent_38%),linear-gradient(145deg,transparent,rgba(0,0,0,.24))]" />
             <div className="relative">
-              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-300)]">Join Mtjr2</p>
+              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-100)]">Join Mtjr2</p>
               <h1 className="mt-8 max-w-md text-4xl font-semibold leading-tight xl:text-5xl">One account. A world of possibilities.</h1>
               <p className="mt-5 max-w-md text-sm leading-7 text-white/75">Shop from stores, manage your orders and favorites, or apply to build your business on the marketplace.</p>
             </div>
             <div className="relative rounded-2xl border border-white/15 bg-white/5 p-5">
-              <p className="text-sm font-semibold text-[var(--color-copper-300)]">A safer marketplace starts here</p>
+              <p className="text-sm font-semibold text-[var(--color-copper-100)]">A safer marketplace starts here</p>
               <p className="mt-2 text-sm leading-6 text-white/75">We verify email addresses and review seller applications before granting selling permissions.</p>
             </div>
           </aside>
