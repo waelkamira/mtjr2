@@ -129,6 +129,7 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
             <span aria-hidden="true">·</span>
             <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href={`/verify-email${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ""}`}>Verify/resend email</Link>
             </div>
+          </div>
           </section>
         </div>
       </div>
