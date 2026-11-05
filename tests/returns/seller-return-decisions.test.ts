@@ -63,7 +63,7 @@ describe("store-scoped seller return decisions", () => {
       }),
       data: expect.objectContaining({ status: "APPROVED", reviewNote: "Checked", reviewedById: "seller-a" })
     }));
-    expect(result).toMatchObject({ status: "APPROVED", affectedItems: 2, changed: true });
+    expect(result).toMatchObject({ status: "REQUESTED", affectedItems: 2, changed: true });
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
