@@ -98,14 +98,17 @@ export async function startOrderPayment(input: {
     const checkoutUrl = new URL(intent.checkoutUrl);
     if (checkoutUrl.protocol !== "https:") throw new Error("Payment provider returned an insecure checkout URL.");
     if (!intent.providerReference.trim()) throw new Error("Payment provider returned an empty reference.");
-    const updated = await prisma.payment.update({
-      where: { id: payment.id },
+    await prisma.payment.updateMany({
+      where: { id: payment.id, status: PaymentStatus.INITIATING },
       data: {
         providerReference: intent.providerReference, checkoutUrl: checkoutUrl.toString(),
         expiresAt: intent.expiresAt ?? null, status: PaymentStatus.REQUIRES_ACTION,
         failureCode: null, failureMessage: null
       }
     });
+    // Another retry may have initialized the payment and a webhook may have
+    // advanced it while this provider request was in flight.
+    const updated = await prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
     return serializePayment(updated);
   } catch (error) {
     // Keep the attempt INITIATING: a network timeout can happen after the provider

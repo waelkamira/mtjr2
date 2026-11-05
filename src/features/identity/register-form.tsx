@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { clearAuthReturnPath, getAuthReturnPath, rememberAuthReturnPath, REGISTRATION_NOTICE_KEY } from "@/lib/auth-return";
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
 const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
-export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthError?: string }) {
+export default function RegisterForm({ initialOAuthError = "", registrationAvailable }: { initialOAuthError?: string; registrationAvailable: boolean }) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,10 +21,15 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
   const [notice, setNotice] = useState("");
   const [oauthError, setOauthError] = useState(initialOAuthError);
 
+  useEffect(() => {
+    const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    if (returnTo) rememberAuthReturnPath(returnTo);
+  }, []);
+
   function continueWithGoogle() {
     if (!acceptedTerms || !acceptedPrivacy) { setOauthError("Please accept both policy documents before continuing."); return; }
     if (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim())) { setOauthError("Enter your applicant and store names before continuing."); return; }
-    const params = new URLSearchParams({ accountType, acceptedTerms: "1", acceptedPrivacy: "1" });
+    const params = new URLSearchParams({ accountType, acceptedTerms: "1", acceptedPrivacy: "1", returnTo: getAuthReturnPath("/") });
     if (accountType === "SELLER") { params.set("sellerLegalName", sellerLegalName); params.set("sellerDisplayName", sellerDisplayName); }
     window.location.assign(new URL("/api/auth/google/start?" + params.toString(), window.location.origin).toString());
   }
@@ -38,21 +44,22 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName, email, password, accountType, sellerLegalName: accountType === "SELLER" ? sellerLegalName : undefined, sellerDisplayName: accountType === "SELLER" ? sellerDisplayName : undefined, acceptedTerms, acceptedPrivacy }),
+        body: JSON.stringify({ displayName: displayName.trim() || undefined, email, password, accountType, sellerLegalName: accountType === "SELLER" ? sellerLegalName : undefined, sellerDisplayName: accountType === "SELLER" ? sellerDisplayName : undefined, acceptedTerms, acceptedPrivacy }),
         cache: "no-store"
       });
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || "Registration could not be completed.");
       setNotice(result.message || "Account created successfully. Redirecting to email verification…");
       setPassword("");
-      window.setTimeout(() => {
-        window.location.assign(`/verify-email?email=${encodeURIComponent(email.trim())}&registered=1`);
-      }, 900);
+      const destination = getAuthReturnPath("/");
+      try { window.sessionStorage.setItem(REGISTRATION_NOTICE_KEY, response.status === 202 ? "unavailable" : "sent"); } catch { /* Storage can be disabled. */ }
+      clearAuthReturnPath();
+      window.location.assign(destination);
+      return;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Registration could not be completed.");
-    } finally {
-      setBusy(false);
     }
+    setBusy(false);
   }
 
   return (
@@ -81,6 +88,7 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">Create your account</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Create a test account to explore the marketplace during development. Email verification is required.</p>
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">Development preview: these policy documents are initial project drafts, not final legal terms. Public production registration remains disabled.</p>
+          {!registrationAvailable && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Account registration is currently unavailable. Existing customers can still sign in.</p>}
           {oauthError && <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{oauthError}</p>}
           {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
           {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">{notice}</p>}
@@ -119,7 +127,7 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
               <input className="mt-1 size-4 shrink-0 accent-[var(--color-forest-900)]" type="checkbox" checked={acceptedPrivacy} onChange={event => setAcceptedPrivacy(event.target.checked)} required />
               <span>I have read the <Link className="font-semibold text-[var(--color-forest-800)] underline" href="/privacy" target="_blank">Privacy Notice</Link> (version v1).</span>
             </label>
-            <button className={buttonClass} disabled={busy || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))}>{busy ? "Creating account…" : "Create account"}</button>
+            <button className={buttonClass} disabled={!registrationAvailable || busy || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))}>{busy ? "Creating account…" : "Create account"}</button>
             <div className="flex items-center gap-3 py-1 text-xs text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--border)]" />OR<span className="h-px flex-1 bg-[var(--border)]" /></div>
             <button type="button" onClick={continueWithGoogle} disabled={busy || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))} className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--color-ivory-100)] disabled:cursor-not-allowed disabled:opacity-50"><span className="text-base font-bold">G</span>Continue with Google</button>
           </form>

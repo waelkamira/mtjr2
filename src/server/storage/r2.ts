@@ -76,22 +76,25 @@ function createPresignedUrl(method: "GET" | "PUT" | "HEAD" | "DELETE", objectKey
   const date = timestamp(now);
   const day = date.slice(0, 8);
   const scope = `${day}/auto/s3/aws4_request`;
+  // An upload URL must not be reusable to replace an object after scanning.
+  const signedHeaders = method === "PUT" ? "content-type;host;if-none-match" : "host";
   const params = new URLSearchParams({
     "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
     "X-Amz-Credential": `${cfg.accessKeyId}/${scope}`,
     "X-Amz-Date": date,
     "X-Amz-Expires": "600",
-    "X-Amz-SignedHeaders": "host"
+    "X-Amz-SignedHeaders": signedHeaders
   });
   const canonicalQuery = [...params.entries()].sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
-  const canonicalHeaders = `host:${host}\n`;
-  const signedHeaders = "host";
+  const canonicalHeaders = method === "PUT"
+    ? `content-type:${contentType}\nhost:${host}\nif-none-match:*\n`
+    : `host:${host}\n`;
   const canonicalRequest = [method, path, canonicalQuery, canonicalHeaders, signedHeaders, "UNSIGNED-PAYLOAD"].join("\n");
   const stringToSign = ["AWS4-HMAC-SHA256", date, scope, sha256(canonicalRequest)].join("\n");
   const signature = hmac(signingKey(cfg.secretAccessKey, day), stringToSign, "hex");
   const url = `https://${host}${path}?${canonicalQuery}&X-Amz-Signature=${signature}`;
-  return { url, method, headers: contentType ? { "Content-Type": contentType } : {}, expiresInSeconds: 600 };
+  return { url, method, headers: method === "PUT" ? { "Content-Type": contentType!, "If-None-Match": "*" } : {}, expiresInSeconds: 600 };
 }
 
 export async function inspectR2Object(objectKey: string) {

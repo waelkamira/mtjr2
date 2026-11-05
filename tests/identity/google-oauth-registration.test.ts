@@ -85,6 +85,21 @@ describe("Google OAuth registration gate", () => {
     expect(mocks.createUserSession).not.toHaveBeenCalled();
   });
 
+  it("rejects a malformed token expiry before looking up an account", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(Response.json({ id_token: "id-token" }))
+      .mockResolvedValueOnce(Response.json({
+        iss: "https://accounts.google.com", aud: "google-client", sub: "google-user",
+        email: "new@example.com", email_verified: "true", exp: "not-a-timestamp"
+      })));
+    const response = await GET(new Request(
+      "http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"
+    ));
+    expect(response.headers.get("location")).toBe("http://localhost:3000/register?oauth=failed");
+    expect(mocks.oauthAccountFindUnique).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+  });
+
   it("allows an already-linked Google account to sign in while registration is disabled", async () => {
     mocks.oauthAccountFindUnique.mockResolvedValue({
       userId: "existing-user",
@@ -111,6 +126,19 @@ describe("Google OAuth registration gate", () => {
       expect.any(Date)
     );
     expect(mocks.setSessionCookie).toHaveBeenCalled();
+  });
+
+  it("returns a linked Google registration to the saved marketplace page", async () => {
+    mocks.cookies.mockResolvedValue(createCookieStore({
+      mtjr_google_state: "expected-state", mtjr_google_verifier: "verifier",
+      mtjr_google_account_type: "CUSTOMER", mtjr_google_terms: "v1", mtjr_google_privacy: "v1",
+      mtjr_google_return_to: encodeURIComponent("/products?category=tea#details")
+    }));
+    mocks.oauthAccountFindUnique.mockResolvedValue({ userId: "existing-user", user: { id: "existing-user", status: "ACTIVE", emailVerifiedAt: new Date() } });
+    mocks.transaction.mockResolvedValue(undefined);
+    mocks.createUserSession.mockResolvedValue({ token: "opaque-session-token", expiresAt: new Date(Date.now() + 60_000) });
+    const response = await GET(new Request("http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"));
+    expect(response.headers.get("location")).toBe("http://localhost:3000/products?category=tea#details");
   });
 
   it("supports Google login without accepting registration consent or creating an account", async () => {

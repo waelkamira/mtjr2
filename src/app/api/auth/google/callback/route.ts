@@ -5,6 +5,7 @@ import { env, isPublicRegistrationEnabled } from "@/lib/env";
 
 import { createUserSession } from "@/server/identity/session";
 import { setSessionCookie } from "@/server/identity/session-cookie";
+import { safeAuthReturnPath } from "@/lib/auth-return";
 
 export const runtime = "nodejs";
 
@@ -28,20 +29,6 @@ function decodeCookieValue(value: string | undefined): string {
   }
 }
 
-function safeReturnPath(value: string | undefined): string {
-  const fallback = "/account/orders";
-  const candidate = decodeCookieValue(value);
-  if (!candidate.startsWith("/") || candidate.startsWith("//")) return fallback;
-  try {
-    const parsed = new URL(candidate, env.APP_URL);
-    return parsed.origin === new URL(env.APP_URL).origin
-      ? parsed.pathname + parsed.search + parsed.hash
-      : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export async function GET(request: Request): Promise<Response> {
   const store = await cookies();
   const url = new URL(request.url);
@@ -50,8 +37,9 @@ export async function GET(request: Request): Promise<Response> {
   const expectedState = store.get("mtjr_google_state")?.value;
   const verifier = store.get("mtjr_google_verifier")?.value;
   const intent = store.get("mtjr_google_intent")?.value ?? "register";
-  const returnTo = safeReturnPath(store.get("mtjr_google_return_to")?.value);
   const accountType = store.get("mtjr_google_account_type")?.value;
+  const fallback = intent === "login" ? "/account/orders" : accountType === "SELLER" ? "/seller" : "/account";
+  const returnTo = safeAuthReturnPath(decodeCookieValue(store.get("mtjr_google_return_to")?.value), env.APP_URL) ?? fallback;
   const termsVersion = store.get("mtjr_google_terms")?.value;
   const privacyVersion = store.get("mtjr_google_privacy")?.value;
   const sellerLegalName = decodeCookieValue(store.get("mtjr_google_seller_legal")?.value);
@@ -89,7 +77,8 @@ export async function GET(request: Request): Promise<Response> {
     const identity = await identityResponse.json() as { iss?: string; aud?: string; sub?: string; email?: string; email_verified?: string; name?: string; exp?: string };
     if ((identity.iss !== "https://accounts.google.com" && identity.iss !== "accounts.google.com") ||
         identity.aud !== env.GOOGLE_CLIENT_ID || !identity.sub || !identity.email ||
-        identity.email_verified !== "true" || !identity.exp || Number(identity.exp) * 1000 <= Date.now()) {
+        identity.email_verified !== "true" || !identity.exp || !/^\d+$/.test(identity.exp) ||
+        !Number.isSafeInteger(Number(identity.exp)) || Number(identity.exp) * 1000 <= Date.now()) {
       return redirectTo(`${page}?oauth=failed`);
     }
     const email = identity.email.trim().toLowerCase();
@@ -170,7 +159,7 @@ export async function GET(request: Request): Promise<Response> {
     }
     const session = await createUserSession(userId, { userAgent: request.headers.get("user-agent") }, now);
     await setSessionCookie(session.token, session.expiresAt);
-    return redirectTo(intent === "login" ? returnTo : accountType === "SELLER" ? "/seller" : "/account");
+    return redirectTo(returnTo);
   } catch {
     return redirectTo(`${page}?oauth=failed`);
   }

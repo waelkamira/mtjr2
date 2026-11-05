@@ -5,7 +5,7 @@ import { env } from "@/lib/env";
 import { clearLoginThrottle, consumeLoginAttempt } from "@/server/identity/login-throttle";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { verifyPassword } from "@/server/identity/password";
-import { createUserSession, type CreatedSession } from "@/server/identity/session";
+import { generateSessionToken, hashSessionToken, SESSION_TTL_SECONDS, type CreatedSession } from "@/server/identity/session";
 
 const INVALID_CREDENTIALS = "Email or password is incorrect.";
 const DUMMY_PASSWORD_HASH =
@@ -104,13 +104,23 @@ export async function loginWithPassword(
     return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: eligible ? "The password is incorrect. Please try again." : INVALID_CREDENTIALS };
   }
 
-  const session = await createUserSession(user.id, {
-    userAgent: input.userAgent,
-  }, now);
-
-  try {
-    await prisma.$transaction([
-      prisma.loginAttempt.create({
+  const token = generateSessionToken();
+  const expiresAt = new Date(now.getTime() + SESSION_TTL_SECONDS * 1000);
+  const session = await prisma.$transaction(async (tx) => {
+    // The conditional write locks the user row until the session is created.
+    // Password changes use the same row, so they either revoke this session
+    // afterward or cause this check to fail before it can be issued.
+    const current = await tx.user.updateMany({
+      where: { id: user.id, status: UserStatus.ACTIVE, emailVerifiedAt: { not: null }, passwordHash: user.passwordHash },
+      data: { lastLoginAt: now }
+    });
+    if (current.count !== 1) return null;
+    await tx.userSession.create({ data: {
+      userId: user.id, tokenHash: hashSessionToken(token),
+      userAgent: input.userAgent?.slice(0, 512) || null,
+      createdAt: now, lastSeenAt: now, expiresAt
+    } });
+    await tx.loginAttempt.create({
         data: {
           userId: user.id,
           identifierHash,
@@ -118,12 +128,8 @@ export async function loginWithPassword(
           succeeded: true,
           attemptedAt: now
         }
-      }),
-      prisma.user.update({
-        where: { id: user.id },
-        data: { lastLoginAt: now }
-      }),
-      prisma.auditLog.create({
+      });
+    await tx.auditLog.create({
         data: {
           actorType: AuditActorType.USER,
           actorId: user.id,
@@ -133,14 +139,12 @@ export async function loginWithPassword(
           occurredAt: now,
           metadata: { method: "password" }
         }
-      })
-    ]);
-  } catch (error) {
-    // Do not leave an issued session behind if the login audit/persistence
-    // transaction fails.
-    const { revokeUserSession } = await import("@/server/identity/session");
-    await revokeUserSession(session.token, now);
-    throw error;
+      });
+    return { token, expiresAt };
+  });
+  if (!session) {
+    await prisma.loginAttempt.create({ data: { userId: user.id, identifierHash, ipHash, succeeded: false, attemptedAt: now } });
+    return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
   }
 
   await clearLoginThrottle(email, ip);

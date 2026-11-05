@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { clearAuthReturnPath, getAuthReturnPath, rememberAuthReturnPath } from "@/lib/auth-return";
 
 type AuthMode = "login" | "forgot" | "reset" | "verify";
 
@@ -21,16 +22,6 @@ async function postJson(path: string, payload: unknown): Promise<ApiResult> {
   return result;
 }
 
-function safeReturnPath(): string {
-  if (typeof window === "undefined") return "/account/orders";
-  const candidate = new URLSearchParams(window.location.search).get("returnTo");
-  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/account/orders";
-  try {
-    const parsed = new URL(candidate, window.location.origin);
-    return parsed.origin === window.location.origin ? parsed.pathname + parsed.search + parsed.hash : "/account/orders";
-  } catch { return "/account/orders"; }
-}
-
 const fieldClass = "clay-surface-inset mt-2 w-full rounded-2xl border-white/70 bg-[var(--color-lavender-50)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-lavender-600)]";
 const buttonClass = "clay-interactive inline-flex w-full items-center justify-center rounded-2xl border border-white/70 bg-[var(--color-lavender-600)] px-5 py-3.5 text-sm font-bold text-white shadow-[var(--shadow-clay)] transition hover:bg-[var(--color-lavender-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
@@ -42,11 +33,15 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
   const [error, setError] = useState(initialOAuthError);
   const [notice, setNotice] = useState("");
   const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [deliveryUnavailable, setDeliveryUnavailable] = useState(false);
 
   useEffect(() => {
+    const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    if (returnTo) rememberAuthReturnPath(returnTo);
     // Defer URL-derived UI state until after hydration to avoid a server/client mismatch.
     const registrationTimer = window.setTimeout(() => {
       setRegistrationComplete(new URLSearchParams(window.location.search).get("registered") === "1");
+      setDeliveryUnavailable(new URLSearchParams(window.location.search).get("delivery") === "unavailable");
     }, 0);
     const params = new URLSearchParams(window.location.search);
     if (params.has("token")) {
@@ -66,7 +61,9 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
         const result = await postJson("/api/auth/login", { email, password });
         setNotice(result.message || "Signed in successfully. Redirecting…");
         setPassword("");
-        window.setTimeout(() => window.location.assign(safeReturnPath()), 900);
+        const destination = getAuthReturnPath("/account/orders");
+        clearAuthReturnPath();
+        window.location.assign(destination);
       } else if (mode === "forgot") {
         const result = await postJson("/api/auth/password-reset/request", { email });
         setNotice(result.message || "If an eligible account exists, reset instructions will be sent.");
@@ -74,9 +71,11 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
         const result = await postJson("/api/auth/password-reset/complete", { token, password });
         setNotice(result.message || "Password updated. You can now sign in.");
         setPassword("");
+        setToken("");
       } else {
         const result = await postJson("/api/auth/verify-email", { token });
         setNotice(result.message || "Email verified successfully. You can now sign in.");
+        setRegistrationComplete(false);
         setToken("");
       }
     } catch (cause) {
@@ -85,7 +84,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
   }
 
   function continueWithGoogle() {
-    const params = new URLSearchParams({ intent: "login", returnTo: safeReturnPath() });
+    const params = new URLSearchParams({ intent: "login", returnTo: getAuthReturnPath("/account/orders") });
     window.location.assign(`/api/auth/google/start?${params.toString()}`);
   }
 
@@ -139,7 +138,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Mtjr2 account</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{title}</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{description}</p>
-          {mode === "verify" && registrationComplete && <p role="status" className="mt-4 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">Your account was created. Check your inbox for the verification email, then enter the code below.</p>}
+          {mode === "verify" && registrationComplete && <p role="status" className="mt-4 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">{deliveryUnavailable ? "Your account was created, but the verification email could not be sent. Please request another email later." : "Your account was created. Check your inbox for the verification email, then enter the code below."}</p>}
 
           {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
           {notice && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">{notice}</p>}
