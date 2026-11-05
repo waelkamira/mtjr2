@@ -56,6 +56,7 @@ model User {
   orders                Order[]
   returnRequests        ReturnRequest[] @relation("ReturnRequestCustomer")
   reviewedReturnRequests ReturnRequest[] @relation("ReturnRequestReviewer")
+  reviewedReturnItems ReturnItem[] @relation("ReturnItemReviewer")
   notifications         Notification[]
   supportAttachments    SupportAttachment[] @relation("SupportAttachmentUploader")
   storeMessageAttachments StoreMessageAttachment[] @relation("StoreMessageAttachmentUploader")
@@ -1371,6 +1372,7 @@ model ReturnItem {
   reviewedAt      DateTime?
   reviewedById    String?
   createdAt       DateTime        @default(now())
+  reviewedBy      User?           @relation("ReturnItemReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   returnRequest   ReturnRequest  @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
   orderItem       OrderItem       @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
 
