@@ -6,19 +6,38 @@ export const runtime = "nodejs";
 const COOKIE_OPTIONS = { httpOnly: true, secure: env.NODE_ENV === "production", sameSite: "lax" as const, path: "/api/auth/google", maxAge: 600 };
 
 export async function GET(request: Request): Promise<Response> {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    return Response.redirect(new URL("/register?oauth=unavailable", env.APP_URL), 303);
-
-  }
   const url = new URL(request.url);
-  const accountType = url.searchParams.get("accountType");
+  const intent = url.searchParams.get("intent") ?? "register";
+  if (intent !== "login" && intent !== "register") {
+    return Response.json({ error: "Invalid Google sign-in request." }, { status: 400 });
+  }
+  const page = intent === "login" ? "/login" : "/register";
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    return Response.redirect(new URL(`${page}?oauth=unavailable`, env.APP_URL), 303);
+  }
+
+  const requestedReturnTo = url.searchParams.get("returnTo") ?? "";
+  let returnTo = "/account/orders";
+  if (requestedReturnTo.startsWith("/") && !requestedReturnTo.startsWith("//")) {
+    try {
+      const parsed = new URL(requestedReturnTo, env.APP_URL);
+      if (parsed.origin === new URL(env.APP_URL).origin) {
+        returnTo = parsed.pathname + parsed.search + parsed.hash;
+      }
+    } catch { /* Use the safe account landing page. */ }
+  }
+
+  const accountType = intent === "login" ? "CUSTOMER" : url.searchParams.get("accountType");
   const acceptedTerms = url.searchParams.get("acceptedTerms") === "1";
   const acceptedPrivacy = url.searchParams.get("acceptedPrivacy") === "1";
-  if ((accountType !== "CUSTOMER" && accountType !== "SELLER") || !acceptedTerms || !acceptedPrivacy) {
-    return Response.json({ error: "Choose an account type and accept both policy documents before continuing." }, { status: 400 });
+  if (accountType !== "CUSTOMER" && accountType !== "SELLER") {
+    return Response.json({ error: "Choose a valid account type before continuing." }, { status: 400 });
   }
-  const sellerLegalName = url.searchParams.get("sellerLegalName")?.trim() ?? "";
-  const sellerDisplayName = url.searchParams.get("sellerDisplayName")?.trim() ?? "";
+  if (intent === "register" && (!acceptedTerms || !acceptedPrivacy)) {
+    return Response.json({ error: "Accept both policy documents before creating an account." }, { status: 400 });
+  }
+  const sellerLegalName = intent === "register" ? url.searchParams.get("sellerLegalName")?.trim() ?? "" : "";
+  const sellerDisplayName = intent === "register" ? url.searchParams.get("sellerDisplayName")?.trim() ?? "" : "";
   if (accountType === "SELLER" && (sellerLegalName.length < 2 || sellerLegalName.length > 160 || sellerDisplayName.length < 2 || sellerDisplayName.length > 80)) {
     return Response.json({ error: "Seller applicant and store names are required." }, { status: 400 });
   }
@@ -29,9 +48,11 @@ export async function GET(request: Request): Promise<Response> {
   const store = await cookies();
   store.set("mtjr_google_state", state, COOKIE_OPTIONS);
   store.set("mtjr_google_verifier", verifier, COOKIE_OPTIONS);
+  store.set("mtjr_google_intent", intent, COOKIE_OPTIONS);
+  store.set("mtjr_google_return_to", encodeURIComponent(returnTo), COOKIE_OPTIONS);
   store.set("mtjr_google_account_type", accountType, COOKIE_OPTIONS);
-  store.set("mtjr_google_terms", "v1", COOKIE_OPTIONS);
-  store.set("mtjr_google_privacy", "v1", COOKIE_OPTIONS);
+  store.set("mtjr_google_terms", intent === "register" ? "v1" : "", COOKIE_OPTIONS);
+  store.set("mtjr_google_privacy", intent === "register" ? "v1" : "", COOKIE_OPTIONS);
   store.set("mtjr_google_seller_legal", encodeURIComponent(sellerLegalName), COOKIE_OPTIONS);
   store.set("mtjr_google_seller_display", encodeURIComponent(sellerDisplayName), COOKIE_OPTIONS);
 
