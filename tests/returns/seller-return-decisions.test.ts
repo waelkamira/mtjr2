@@ -89,7 +89,7 @@ describe("store-scoped seller return decisions", () => {
     const result = await reviewSellerReturnItems("return-1", { storeId: "store-b", status: "APPROVED" });
 
     expect(mocks.userHasScopedPermission).toHaveBeenCalledWith("seller-a", {
-      permissionKey: "orders:manage", scope: { type: "STORE", id: "store-b" }, now: expect.any(Date)
+      permissionKey: "returns:manage", scope: { type: "STORE", id: "store-b" }, now: expect.any(Date)
     });
     expect(mocks.returnItemUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ orderItem: { vendorOrder: { storeId: "store-b" } } })
