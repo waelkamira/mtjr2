@@ -6,7 +6,7 @@ const { sessionMock, authenticatorMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/server/identity/current-session", () => ({
-  AuthenticationRequiredError: class AuthenticationRequiredError extends Error {},
+  AuthenticationRequiredError: class AuthenticationRequiredError extends Error { constructor() { super("Authentication is required."); } },
   getCurrentSession: sessionMock
 }));
 vi.mock("@/lib/db/prisma", () => ({
