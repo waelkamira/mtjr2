@@ -53,3 +53,11 @@ export function hasPermission(
     );
   });
 }
+
+/** Returns true when at least one requested permission is held in scope. */
+export function hasAnyPermission(
+  grants: readonly AuthorizationGrant[],
+  requests: readonly AuthorizationRequest[]
+): boolean {
+  return requests.some((request) => hasPermission(grants, request));
+}
