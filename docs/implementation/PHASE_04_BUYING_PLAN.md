@@ -176,6 +176,10 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - No Prisma schema or migration change is required.
 
 
-### Return receipt correctness
-- Marking a return request received updates only approved return lines; rejected lines are never overwritten.
-- Receipt fails when there are no approved lines to receive. Inventory restocking is intentionally not implied by this status change and remains a separately verified workflow.
+### Seller return receipt and inventory quarantine (2026-11-05)
+- Physical receipt is a seller/store-scoped operation. The receiving actor must own the active store or hold an active membership with the exact-store `returns:manage` permission; the selected warehouse must belong to that same active store.
+- Only that store's `APPROVED` return lines are received. Rejected and pending lines remain unchanged; the parent request stays pending while another store still has undecided lines.
+- Added `Inventory.quantityQuarantined` and `InventoryMovement.quarantinedDelta` plus `RETURN_RECEIPT`. Receipt creates a deterministic per-return-item movement and increases quarantined quantity while leaving `quantityOnHand` and sellable availability unchanged.
+- Inventory movement, quarantine balance, item state, parent aggregation, and audit record commit in one serializable transaction. A repeated completed receipt is an idempotent no-op.
+- Seller returns UI requires a warehouse selection and displays quarantine separately in inventory. Admin approval/rejection no longer provides a bypass that could mark items received without a stock record.
+- This is physical receipt only. Inspection/release from quarantine, restock/disposal decisions, and payment refunds remain separate workflows.
