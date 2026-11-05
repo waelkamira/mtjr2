@@ -45,7 +45,7 @@ export function encodeBase32(bytes: Buffer): string {
 }
 
 export function decodeBase32(input: string): Buffer {
-  const normalized = input.toUpperCase().replace(/=+$/g, "").replace(/\\s/g, "");
+  const normalized = input.toUpperCase().replace(/=+$/g, "").replace(/\s/g, "");
   if (!normalized || /[^A-Z2-7]/.test(normalized)) throw new Error("Invalid Base32 secret.");
   let bits = 0;
   let value = 0;
@@ -84,7 +84,7 @@ export function findMatchingTotpStep(
   now: Date,
   lastUsedStep: number | null
 ): number | null {
-  if (!/^\\d{6}$/.test(code)) return null;
+  if (!/^\d{6}$/.test(code)) return null;
   const current = Math.floor(now.getTime() / 1000 / TOTP_PERIOD_SECONDS);
   for (const step of [current, current - 1, current + 1]) {
     if (step < 0 || (lastUsedStep !== null && step <= lastUsedStep)) continue;
@@ -123,7 +123,7 @@ export function decryptMfaSecret(
 }
 
 function hashRecoveryCode(code: string): string {
-  const normalized = code.toUpperCase().replace(/[\\s-]/g, "");
+  const normalized = code.toUpperCase().replace(/[\s-]/g, "");
   return createHash("sha256").update(normalized, "utf8").digest("hex");
 }
 
@@ -145,7 +145,7 @@ export async function getMfaStatus(userId: string) {
   };
 }
 
-export async function createMfaEnrollment(userId: string, now = new Date()) {
+export async function createMfaEnrollment(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, email: true, status: true, emailVerifiedAt: true }
