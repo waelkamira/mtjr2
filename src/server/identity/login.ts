@@ -31,8 +31,8 @@ function digestLoginValue(kind: "identifier" | "ip", value: string): string {
 /**
  * Authenticates an email/password pair. Call only after the HTTP boundary has
  * resolved the client IP through explicitly trusted proxy configuration.
- * The same public failure is returned for unknown, unverified, inactive, and
- * incorrect-password accounts.
+ * The response distinguishes an unknown email from an incorrect password for
+ * an eligible account; inactive and unverified accounts retain a generic failure.
  */
 export async function loginWithPassword(
   input: LoginInput,
@@ -51,7 +51,7 @@ export async function loginWithPassword(
     !ip ||
     ip.length > 64
   ) {
-    return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: eligible ? "The password is incorrect. Please try again." : INVALID_CREDENTIALS };
+    return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
   }
 
   const throttle = await consumeLoginAttempt({ identifier: email, trustedIpAddress: ip }, now);
@@ -101,7 +101,7 @@ export async function loginWithPassword(
         attemptedAt: now
       }
     });
-    return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
+    return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: eligible ? "The password is incorrect. Please try again." : INVALID_CREDENTIALS };
   }
 
   const session = await createUserSession(user.id, {
