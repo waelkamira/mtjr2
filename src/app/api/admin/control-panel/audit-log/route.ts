@@ -1,7 +1,9 @@
 import { z } from "zod";
 import {
   AuthenticationRequiredError,
-  PermissionDeniedError
+  PermissionDeniedError,
+  MfaEnrollmentRequiredError,
+  StepUpRequiredError
 } from "@/server/identity/permission-guard";
 import { getPlatformAuditEvents } from "@/server/admin/platform-audit";
 
