@@ -153,6 +153,7 @@ export async function reviewSellerReturnItems(returnId: string, input: unknown, 
       });
       if (!existing.length) throw new Error("No items from this return belong to your store.");
       if (!existing.every((item) => item.status === targetStatus)) throw new Error("These return items have already been reviewed.");
+      return { id, status: current.status, affectedItems: 0, changed: false };
     }
 
     const lines = await tx.returnItem.findMany({ where: { returnRequestId: id }, select: { status: true } });
