@@ -80,6 +80,33 @@ describe("store-scoped seller return decisions", () => {
     expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
 
+
+  it("allows explicitly scoped active staff to decide their store's lines", async () => {
+    mocks.storeFindUnique.mockResolvedValue({ id: "store-b", status: "ACTIVE", seller: { ownerId: "seller-b", status: "ACTIVE" } });
+    mocks.staffFindFirst.mockResolvedValue({ id: "staff-membership" });
+    mocks.userHasScopedPermission.mockResolvedValue(true);
+
+    const result = await reviewSellerReturnItems("return-1", { storeId: "store-b", status: "APPROVED" });
+
+    expect(mocks.userHasScopedPermission).toHaveBeenCalledWith("seller-a", {
+      permissionKey: "orders:manage", scope: { type: "STORE", id: "store-b" }, now: expect.any(Date)
+    });
+    expect(mocks.returnItemUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ orderItem: { vendorOrder: { storeId: "store-b" } } })
+    }));
+    expect(result.changed).toBe(true);
+  });
+
+  it("treats a repeated identical decision as an idempotent no-op", async () => {
+    mocks.returnItemUpdateMany.mockResolvedValue({ count: 0 });
+    mocks.returnItemFindMany.mockResolvedValue([{ status: "APPROVED" }, { status: "APPROVED" }]);
+
+    const result = await reviewSellerReturnItems("return-1", { storeId: "store-a", status: "APPROVED" });
+
+    expect(result).toMatchObject({ status: "REQUESTED", affectedItems: 0, changed: false });
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
+  });
+
   it("marks the parent rejected only when every return line has been rejected", async () => {
     mocks.returnItemUpdateMany.mockResolvedValue({ count: 1 });
     mocks.returnItemFindMany.mockResolvedValue([{ status: "REJECTED" }, { status: "REJECTED" }]);
