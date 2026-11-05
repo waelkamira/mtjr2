@@ -15,11 +15,11 @@ vi.mock("@/server/identity/permission-guard", () => ({ requirePermission: mocks.
 
 import { reviewReturnRequest } from "@/server/returns/returns";
 
-describe("admin return receipt", () => {
+describe("admin return decisions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requirePermission.mockResolvedValue({ userId: "admin-1" });
-    mocks.requestFindUnique.mockResolvedValue({ id: "return-1", status: "APPROVED" });
+    mocks.requestFindUnique.mockResolvedValue({ id: "return-1", status: "REQUESTED" });
     mocks.requestUpdateMany.mockResolvedValue({ count: 1 });
     mocks.itemUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
@@ -31,22 +31,21 @@ describe("admin return receipt", () => {
     mocks.transaction.mockImplementation(async (callback) => callback(tx));
   });
 
-  it("marks only approved lines received and preserves rejected lines", async () => {
-    const result = await reviewReturnRequest("return-1", { status: "RECEIVED", note: "Package inspected" });
+  it("allows an administrator to approve pending lines", async () => {
+    const result = await reviewReturnRequest("return-1", { status: "APPROVED", note: "Eligible" });
 
     expect(mocks.itemUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: { returnRequestId: "return-1", status: "APPROVED" },
-      data: expect.objectContaining({ status: "RECEIVED", reviewNote: "Package inspected" })
+      where: { returnRequestId: "return-1", status: "REQUESTED" },
+      data: expect.objectContaining({ status: "APPROVED", reviewNote: "Eligible" })
     }));
-    expect(result).toEqual({ id: "return-1", status: "RECEIVED" });
+    expect(result).toEqual({ id: "return-1", status: "APPROVED" });
   });
 
-  it("does not mark the parent received when no approved lines remain to receive", async () => {
-    mocks.itemUpdateMany.mockResolvedValue({ count: 0 });
-
+  it("does not let the admin endpoint mark a return received without a warehouse movement", async () => {
     await expect(reviewReturnRequest("return-1", { status: "RECEIVED" }))
-      .rejects.toThrow("There are no approved return items awaiting receipt.");
-    expect(mocks.requestUpdateMany).toHaveBeenCalledOnce();
+      .rejects.toThrow();
+    expect(mocks.requestUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.itemUpdateMany).not.toHaveBeenCalled();
     expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
 });
