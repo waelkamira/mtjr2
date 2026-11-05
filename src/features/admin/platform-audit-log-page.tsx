@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import Link from "next/link";
 
 type AuditEvent = {
@@ -23,40 +24,37 @@ export default function PlatformAuditLogPage() {
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [action, setAction] = useState("");
   const [resource, setResource] = useState("");
-  const [cursor, setCursor] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(async (next: string | null, append: boolean) => {
+  const load = useCallback(async (next: string | null, append: boolean, actionFilter: string, resourceFilter: string) => {
     setLoading(true);
     setError("");
     try {
       const params = new URLSearchParams({ limit: "50" });
-      if (action.trim()) params.set("action", action.trim());
-      if (resource.trim()) params.set("resource", resource.trim());
+      if (actionFilter.trim()) params.set("action", actionFilter.trim());
+      if (resourceFilter.trim()) params.set("resource", resourceFilter.trim());
       if (next) params.set("cursor", next);
       const response = await fetch(`/api/admin/control-panel/audit-log?${params}`, { cache: "no-store" });
       const data = await response.json() as AuditResponse & { error?: string };
       if (!response.ok) throw new Error(data.error || "Unable to load audit events.");
       setEvents((current) => append ? [...current, ...data.events] : data.events);
-      setCursor(next);
       setNextCursor(data.nextCursor);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to load audit events.");
     } finally {
       setLoading(false);
     }
-  }, [action, resource]);
+  }, []);
 
-  useEffect(() => { void load(null, false); }, [load]);
+  useEffect(() => { void load(null, false, "", ""); }, [load]);
 
-  function applyFilters(event: React.FormEvent<HTMLFormElement>) {
+  function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setEvents([]);
-    setCursor(null);
     setNextCursor(null);
-    void load(null, false);
+    void load(null, false, action, resource);
   }
 
   return (
@@ -100,7 +98,7 @@ export default function PlatformAuditLogPage() {
             </div>
           )}
           {loading && <p role="status" className="border-t border-[var(--border)] p-4 text-sm text-[var(--muted)]">Loading audit events…</p>}
-          {!loading && nextCursor && <div className="border-t border-[var(--border)] p-4 text-center"><button onClick={() => void load(nextCursor, true)} className="rounded-xl border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:bg-[var(--color-ivory-100)]">Load older events</button></div>}
+          {!loading && nextCursor && <div className="border-t border-[var(--border)] p-4 text-center"><button onClick={() => void load(nextCursor, true, action, resource)} className="rounded-xl border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:bg-[var(--color-ivory-100)]">Load older events</button></div>}
         </section>
         <p className="mt-4 text-xs leading-5 text-[var(--muted)]">Audit events are displayed as recorded. This view does not permit editing or deleting history.</p>
       </div>
