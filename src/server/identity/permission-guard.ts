@@ -73,7 +73,14 @@ export async function requirePlatformManagement(now = new Date()) {
     select: { enabledAt: true }
   });
   if (!authenticator?.enabledAt) throw new MfaEnrollmentRequiredError();
-  if (!session.stepUpExpiresAt || session.stepUpExpiresAt.getTime() <= now.getTime()) {
+  const verifiedAt = session.stepUpVerifiedAt?.getTime();
+  const expiresAt = session.stepUpExpiresAt?.getTime();
+  const maxAgeMs = 10 * 60 * 1000;
+  if (
+    verifiedAt === undefined || expiresAt === undefined ||
+    verifiedAt > now.getTime() || now.getTime() - verifiedAt > maxAgeMs ||
+    expiresAt <= now.getTime() || expiresAt > verifiedAt + maxAgeMs
+  ) {
     throw new StepUpRequiredError();
   }
   return session;
