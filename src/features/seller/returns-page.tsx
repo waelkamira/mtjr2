@@ -34,11 +34,19 @@ export default function SellerReturnsPage() {
 
   useEffect(() => {
     let active = true;
-    load().catch((cause: unknown) => {
-      if (active) setError(cause instanceof Error ? cause.message : "Seller returns could not be loaded.");
-    }).finally(() => { if (active) setLoading(false); });
+    fetch("/api/seller/returns", { cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json() as { items?: SellerReturn[]; error?: string };
+        if (!response.ok) throw new Error(data.error || "Seller returns could not be loaded.");
+        return data.items ?? [];
+      })
+      .then((rows) => { if (active) setItems(rows); })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Seller returns could not be loaded.");
+      })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [load]);
+  }, []);
 
   async function decide(item: SellerReturn, status: "APPROVED" | "REJECTED") {
     const key = item.id + ":" + item.storeId;
@@ -68,8 +76,8 @@ export default function SellerReturnsPage() {
       <div className="mx-auto max-w-6xl px-5 py-10">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Seller operations</p>
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">Store returns</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Review only the return items belonging to each store you own or are authorized to manage. A decision never changes another store's items.</p>
-        <p className="mt-3 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">Approval or rejection records the seller's decision only. Return receipt, inventory restocking and payment refunds are separate workflows and are not performed here.</p>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">Review only the return items belonging to each store you own or are authorized to manage. A decision never changes another store&apos;s items.</p>
+        <p className="mt-3 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">Approval or rejection records the seller&apos;s decision only. Return receipt, inventory restocking and payment refunds are separate workflows and are not performed here.</p>
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-white p-4 text-sm">{notice}</p>}
         {loading ? <div className="mt-6 h-40 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /> : items.length ? (
@@ -96,8 +104,8 @@ export default function SellerReturnsPage() {
                       <textarea rows={2} maxLength={1000} value={notes[key] || ""} onChange={(event) => setNotes((current) => ({ ...current, [key]: event.target.value }))} className="rounded-xl border border-[var(--border)] p-3"/>
                     </label>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button disabled={Boolean(busy)} onClick={() => void decide(item, "APPROVED")} className="rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{busy === key ? "Saving…" : "Approve my store's items"}</button>
-                      <button disabled={Boolean(busy)} onClick={() => void decide(item, "REJECTED")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">Reject my store's items</button>
+                      <button disabled={Boolean(busy)} onClick={() => void decide(item, "APPROVED")} className="rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{busy === key ? "Saving…" : "Approve my store&apos;s items"}</button>
+                      <button disabled={Boolean(busy)} onClick={() => void decide(item, "REJECTED")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">Reject my store&apos;s items</button>
                     </div>
                   </div>}
                 </article>
