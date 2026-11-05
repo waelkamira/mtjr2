@@ -20,7 +20,7 @@ export interface LoginInput {
 
 export type LoginResult =
   | { authenticated: true; userId: string; session: CreatedSession }
-  | { authenticated: false; reason: "EMAIL_NOT_FOUND" | "INVALID_PASSWORD" | "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
+  | { authenticated: false; reason: "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
 
 function digestLoginValue(kind: "identifier" | "ip", value: string): string {
   return createHmac("sha256", env.AUTH_SECRET)
@@ -88,7 +88,7 @@ export async function loginWithPassword(
 
   if (!user) {
     await prisma.loginAttempt.create({ data: { identifierHash, ipHash, succeeded: false, attemptedAt: now } });
-    return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." };
+    return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
   }
 
   if (!eligible || !passwordMatches) {
@@ -101,7 +101,7 @@ export async function loginWithPassword(
         attemptedAt: now
       }
     });
-    return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: eligible ? "The password is incorrect. Please try again." : INVALID_CREDENTIALS };
+    return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
   }
 
   const token = generateSessionToken();
