@@ -8,6 +8,7 @@ type Candidate = {
   returnNumber: string;
   orderNumber: string;
   currencyCode: string;
+  provider: string | null;
   amountMinor: string;
   amountDisplay: string;
   eligible: boolean;
@@ -20,6 +21,7 @@ type RefundRow = {
   orderNumber: string;
   status: string;
   paymentStatus: string;
+  provider: string;
   amountMinor: string;
   amountDisplay: string;
   currencyCode: string;
@@ -114,7 +116,7 @@ export default function AdminRefundsPage() {
           {!candidates.length ? <p className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted)]">No received returns are waiting for a refund request.</p> : <div className="mt-4 grid gap-4 lg:grid-cols-2">
             {candidates.map((candidate) => <article key={candidate.returnRequestId} className="rounded-2xl border border-[var(--border)] bg-white p-5">
               <div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-semibold text-[var(--color-copper-600)]">{candidate.returnNumber}</p><p className="text-sm font-semibold">{candidate.amountDisplay}</p></div>
-              <p className="mt-2 font-semibold">Order {candidate.orderNumber}</p>
+              <p className="mt-2 font-semibold">Order {candidate.orderNumber}</p><p className="mt-1 text-xs text-[var(--muted)]">Payment provider: {candidate.provider || "Unavailable"}</p>
               <ul className="mt-3 space-y-1 text-sm text-[var(--muted)]">{candidate.items.map((item) => <li key={item.sku}>{item.productName} · {item.sku} × {item.quantity}</li>)}</ul>
               {!candidate.eligible && <p className="mt-3 text-sm text-red-700">{candidate.reason || "This return is not eligible."}</p>}
               <button disabled={!candidate.eligible || Boolean(busy)} onClick={() => void createRefund(candidate)} className="mt-4 rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === candidate.returnRequestId ? "Creating…" : "Create manual refund"}</button>
@@ -125,7 +127,7 @@ export default function AdminRefundsPage() {
           <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">Refund ledger</h2><span className="text-xs text-[var(--muted)]">{refunds.length} record(s)</span></div>
           {!refunds.length ? <p className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted)]">No refund records yet.</p> : <div className="mt-4 space-y-4">
             {refunds.map((refund) => <article key={refund.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
-              <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{refund.returnNumber} · Order {refund.orderNumber}</p><p className="mt-1 font-semibold">{refund.amountDisplay}</p></div><div className="text-right"><p className="text-sm font-semibold">{refund.status.replaceAll("_", " ")}</p><p className="text-xs text-[var(--muted)]">Payment: {refund.paymentStatus}</p></div></div>
+              <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{refund.returnNumber} · Order {refund.orderNumber}</p><p className="mt-1 font-semibold">{refund.amountDisplay}</p></div><div className="text-right"><p className="text-sm font-semibold">{refund.status.replaceAll("_", " ")}</p><p className="text-xs text-[var(--muted)]">Payment: {refund.paymentStatus} · Provider: {refund.provider}</p></div></div>
               <ul className="mt-3 space-y-1 text-sm text-[var(--muted)]">{refund.items.map((item) => <li key={item.sku}>{item.productName} · {item.sku} × {item.quantity}</li>)}</ul>
               {refund.status === "PENDING_MANUAL" ? <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4">
                 <label className="grid gap-1 text-sm font-medium">External refund transaction reference<input value={externalReferences[refund.id] || ""} onChange={(event) => setExternalReferences((current) => ({ ...current, [refund.id]: event.target.value }))} maxLength={180} minLength={4} className="rounded-xl border border-[var(--border)] px-3 py-2.5" placeholder="Reference from the payment provider"/></label>
