@@ -23,19 +23,41 @@ A ground-up implementation of a global, multi-vendor commerce platform.
 
 Exact dependency versions and deployment choices will be pinned during the foundation setup and verified against the runtime environment.
 
-## Build sequence
+## Build sequence — canonical phases 1–11
 
-1. **Foundation:** repository conventions, TypeScript/Next.js setup, environment validation, database connection, Prisma baseline, logging, error handling, CI, and test harness.
-2. **Identity and access:** users, sessions, authentication, role/permission model, authorization policies, and audit events.
-3. **Marketplace core:** countries/markets, currencies, stores, seller onboarding, categories, brands, products, variants, media, and search.
-4. **Buying core:** cart, pricing, checkout, inventory reservation, orders, payments, shipment, cancellation, returns, and refunds.
-5. **Seller and admin operations:** seller center, inventory/warehouses, procurement, commissions, moderation, support, and administration.
-6. **Global and financial systems:** tax, customs, localization, invoices, ledger, reconciliation, payouts, and reporting.
-7. **Trust, engagement, and scale:** reviews, Q&A, messaging, notifications, loyalty, promotions, integrations, background jobs, security, SEO, and analytics.
-8. **Separate property domain:** property listings and booking workflows, sharing only the platform capabilities that genuinely belong in common domains.
-9. **Release readiness:** security review, performance/load tests, observability, backups, deployment, and operational runbooks.
+1. **Technical foundation:** repository/runtime conventions, environment validation, PostgreSQL/Prisma baseline, logging, error handling, CI and test harness.
+2. **Identity and access:** accounts, credentials, sessions, OAuth, verification/recovery, RBAC, scoped authorization and audit.
+3. **Marketplace core:** markets/reference data, seller/store foundation, taxonomy, catalog, variants, media, discovery and inventory primitives.
+4. **Buying core:** cart, quote/reservation, address, shipping/tax snapshots, orders/vendor orders, payment lifecycle and customer order journey.
+5. **Seller operations and administration:** seller workspace, staff, procurement, seller fulfillment, moderation and platform-admin domain operations.
+6. **Financial integrity:** payment lifecycle integration, commissions, double-entry ledger, reconciliation, seller balances, payouts and invoices.
+7. **Trust, engagement and communications:** reviews, Q&A, messaging, support, returns, notifications, loyalty/promotions and lifecycle communications.
+8. **Separate property and booking domain:** property listings and booking workflows, sharing only explicitly common platform services.
+9. **Global market and regulatory readiness:** localization, FX policy, tax determination, customs, KYB, product compliance, privacy and market eligibility.
+10. **Release readiness and controlled launch:** security, performance, accessibility, observability, backup/restore, deployment/rollback and one approved-market release gate.
+11. **Production operations, reliability and scale:** SLOs, incident response, worker/outbox operations, disaster recovery, capacity, cost governance and controlled market expansion.
+
+The phase roadmap is a delivery sequence; the 49 numbered systems are independently owned capabilities. They are not interchangeable numbering schemes. Phase 10 is not System 10 (notifications). See [the Phase 1–11 roadmap audit](docs/implementation/PLATFORM_PHASE_ROADMAP_01_11.md) for the review/corrections and [Phase 11 execution plan](docs/implementation/PHASE_11_PRODUCTION_OPERATIONS_PLAN.md) for its acceptance gates.
 
 This sequence is dependency-aware. The 49 systems will be mapped to these delivery slices and implemented incrementally; it is not a promise to create all systems in one pass.
+## Phase roadmap and implementation status
+
+The phase audit found that the former README listed only nine phases and that detailed execution plans for Phases 5–10 were missing. The corrected canonical sequence is 1–11; the audit document records current gaps and the distinction between phase numbers and the 49-system IDs. Do not treat the roadmap as completion evidence. Exact-commit CI, disposable PostgreSQL integration, route/action journeys and provider/market approval remain mandatory for their respective exit gates.
+
+## Phase execution plan index
+
+- [Phase 1 — Foundation](docs/implementation/PHASE_01_FOUNDATION_PLAN.md)
+- [Phase 2 — Identity](docs/implementation/PHASE_02_IDENTITY_PLAN.md)
+- [Phase 3 — Marketplace](docs/implementation/PHASE_03_MARKETPLACE_PLAN.md)
+- [Phase 4 — Buying](docs/implementation/PHASE_04_BUYING_PLAN.md)
+- [Phase 5 — Seller and administration](docs/implementation/PHASE_05_SELLER_ADMIN_PLAN.md)
+- [Phase 6 — Financial integrity](docs/implementation/PHASE_06_FINANCIAL_INTEGRITY_PLAN.md)
+- [Phase 7 — Trust and engagement](docs/implementation/PHASE_07_TRUST_ENGAGEMENT_PLAN.md)
+- [Phase 8 — Property and booking](docs/implementation/PHASE_08_PROPERTY_BOOKING_PLAN.md)
+- [Phase 9 — Global and regulatory readiness](docs/implementation/PHASE_09_GLOBAL_REGULATORY_PLAN.md)
+- [Phase 10 — Release readiness](docs/implementation/PHASE_10_RELEASE_READINESS_PLAN.md)
+- [Phase 11 — Production operations and scale](docs/implementation/PHASE_11_PRODUCTION_OPERATIONS_PLAN.md)
+- [Full roadmap audit and dependency corrections](docs/implementation/PLATFORM_PHASE_ROADMAP_01_11.md)
 
 ## Prisma model map
 
@@ -44,6 +66,19 @@ Use [`docs/architecture/PRISMA_MODEL_USAGE_MAP.md`](docs/architecture/PRISMA_MOD
 ## Required page inventory
 
 The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the companion inventory for public storefront, authentication, customer account, seller center, admin, global operations, property/booking, and legal/system pages. Treat routes there as required targets, not as proof that they already exist. Every page must be connected to the owning API/domain service and have access control, loading/empty/error states, and verified key actions. Implement in dependency order and record evidence in the build log.
+
+## Global platform completeness specification
+
+## Independent system implementation specifications
+
+The 49 platform systems are split into individual build/verification contracts in [`docs/systems/README.md`](docs/systems/README.md). Use [`docs/systems/SYSTEM_INTEGRATION_MATRIX.md`](docs/systems/SYSTEM_INTEGRATION_MATRIX.md) for explicit upstream/downstream dependencies. Each system must be closed independently with its own UI-to-API-to-Prisma journey and P0/P1 acceptance evidence; see the global specification for cross-platform page and launch boundaries.
+
+
+Use [`docs/architecture/GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md`](docs/architecture/GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md) as the detailed page/dashboard/control specification: public storefront, buyer account, seller center, full admin domains, restricted finance/security/operations, sign-in/role routing/sign-out, global launch gates, and additional capabilities that must be explicitly accounted for beyond the 49-system inventory.
+
+## Canonical page-to-system placement map
+
+Use [`docs/architecture/PLATFORM_PAGE_SYSTEM_MAP.md`](docs/architecture/PLATFORM_PAGE_SYSTEM_MAP.md) to determine which public, buyer, seller, admin, finance/operations, and property pages own each of the 49 systems. This is the cross-system information architecture; `PLATFORM_PAGE_INVENTORY.md` remains the route checklist, `PAGE_ROUTE_REGISTRY.md` records actual source routes, and `END_TO_END_JOURNEY_MATRIX.md` records action-level evidence. Do not treat target routes as implemented or verified.
 
 ## Definition of done
 
@@ -79,17 +114,17 @@ A system may be marked **Complete** only when:
 ## Identity development status — 4 November 2026
 
 - `/terms` and `/privacy` are published in the application as clearly labelled v1 development drafts. They disclose that the operating company has not yet been incorporated and do not invent an operator identity or contact address.
-- `/register` asks the visitor to choose Customer/Buyer or Seller. Seller registration creates a `PENDING` seller application but does not grant seller permissions before approval. Separate unchecked Terms and Privacy consents are recorded as exact version `v1`.
+- `/register` asks the visitor to choose Customer/Buyer or Seller. A successful password registration activates and signs in the account immediately; Cloudflare Turnstile and persistent rate limits protect both password and Google registration. Seller registration creates a `PENDING` seller application but does not grant seller permissions before approval. Separate unchecked Terms and Privacy consents are recorded as exact version `v1`.
 - Google OpenID Connect authorization-code flow with state and PKCE is implemented at `/api/auth/google/start` and `/api/auth/google/callback`; it requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` plus the registered callback URL. Existing email accounts are never silently linked to Google.
 - Added `/account` dashboard, `/account/profile`, `/account/addresses`, `/account/favorites`, and `/account/store` aliases, connecting profile/address reads and writes to authenticated APIs and existing Prisma entities. Existing order, wishlist, return, review, question, messaging, support, notification and seller pages remain available.
-- Registration defaults to enabled in development/test and is unconditionally blocked in production, even if the environment flag is true. Set `PUBLIC_REGISTRATION_ENABLED=false` to disable it in development.
-- No Prisma schema change or migration was required for this slice. The policy documents remain development drafts. Identity is not marked complete until exact-head CI, PostgreSQL integration, Google credentials/provider journey, and registration → email verification → login/logout HTTP/browser verification pass.
+- Registration defaults to enabled in development/test and is unconditionally blocked in production, even if the environment flag is true. Set `PUBLIC_REGISTRATION_ENABLED=false` to disable it in development. Configure `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` together to enable the required registration bot check.
+- No Prisma schema change or migration was required for this slice. The policy documents remain development drafts. Identity is not marked complete until exact-head CI, PostgreSQL integration, Google credentials/provider journey, and registration → immediate sign-in → logout HTTP/browser verification pass.
 
 ## Current status
 
 **Phase 1 foundation: scaffolded. Phase 2 identity/access: core services and UI implemented; development/test registration is enabled by default, production registration is hard-blocked; exact-head CI and deployed browser journey remain pending, and production exit checks are not passed. Phase 3 Marketplace Core: in progress; seller/store, taxonomy, product lifecycle, discovery, inventory foundations, and the connected buyer/seller/admin workspaces are implemented. Buyer product SEO metadata is now server-generated from the catalog service. Market reference data, seller/store workflows, taxonomy, product lifecycle, public discovery APIs, and warehouse/inventory foundations are implemented. The buyer storefront consumes the live market/category/product APIs, including product detail and currency-aware price display. The seller workspace supports seller applications, store/warehouse management, inventory viewing, and API-connected product draft creation/editing/publication. A platform moderation workspace is connected to protected seller/product review queues. Seller team and invitation/acceptance/revocation screens are now connected to scoped staff APIs. Reference-data activation remains pending. Buying Core is now in progress: persistent cart, checkout quote/reservation, and delivery-address capture are implemented and verified by General CI and disposable PostgreSQL workflows (runs 41702592022/41702592323, 41704221580/41704221517, and 41706908024/41706907994). General CI and disposable PostgreSQL migration/integration verification passed on commit `3a9369bf`; the buyer product detail now includes an accessible media gallery. Warehouse, stock adjustment, and stock transfer screens are connected to the existing backend APIs.**
 
-Implemented identity capabilities include registration, email verification, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter, and a fail-closed trusted-proxy IP resolver.
+Implemented identity capabilities include Turnstile-protected registration, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter for password reset, and a fail-closed trusted-proxy IP resolver.
 
 **Verification evidence**
 - General CI passed on the latest documentation commit `0716f8f43e60771c3702bb6984715915a0a1a665`: [run 41648760634](https://github.com/waelkamira/mtjr2/actions/runs/41648760634). It includes Prisma validate/generate, typecheck, lint, unit tests, and production build.
@@ -97,10 +132,11 @@ Implemented identity capabilities include registration, email verification, logi
 - The existing focused password-reset PostgreSQL lifecycle and general CI evidence is recorded in [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and [build log](docs/implementation/BUILD_LOG.md).
 
 **Deferred Phase 2 production exit work (not passed)**
-1. Configure a verified Resend sender and perform one real delivery smoke test.
-2. Verify the trusted proxy header and block direct origin bypass.
-3. Run one deployed HTTP journey: register → verify email → login → `/api/auth/me` → logout → confirm anonymous access is denied.
-4. Record deployment evidence and the focused security review.
+1. Configure both Turnstile keys for the production hostname and verify the challenge.
+2. Configure a verified Resend sender for password reset and perform one real delivery smoke test.
+3. Verify the trusted proxy header and block direct origin bypass.
+4. Run one deployed HTTP journey: register → immediate sign-in → `/api/auth/me` → logout → confirm anonymous access is denied.
+5. Record deployment evidence and the focused security review.
 
 These are production-release gates, not blockers for schema/domain development in Phase 3. Continue using only local/disposable/CI PostgreSQL until the owner explicitly approves production database access. No additional helper-level test suites are planned.
 
@@ -328,4 +364,3 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 
 - Windows/PowerShell local setup using an isolated PostgreSQL `mtjr2_demo` database and the 80-product demo catalog: [Local development guide](docs/development/LOCAL_WINDOWS_SETUP.md).
 - The canonical application URL is server-only `APP_URL`; do not use a `NEXT_PUBLIC_*` prefix for server-side configuration.
-

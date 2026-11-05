@@ -17,6 +17,8 @@ const environmentSchema = z.object({
   PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
   RESEND_API_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   RESEND_FROM_EMAIL: z.preprocess((value) => value === "" ? undefined : value, z.string().email().optional()),
+  TURNSTILE_SECRET_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
 
   GOOGLE_CLIENT_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
@@ -28,6 +30,13 @@ const environmentSchema = z.object({
       code: "custom",
       path: ["APP_URL"],
       message: "APP_URL or NEXT_PUBLIC_APP_URL must be configured"
+    });
+  }
+  if (Boolean(value.TURNSTILE_SECRET_KEY) !== Boolean(value.NEXT_PUBLIC_TURNSTILE_SITE_KEY)) {
+    context.addIssue({
+      code: "custom",
+      path: ["TURNSTILE_SECRET_KEY"],
+      message: "TURNSTILE_SECRET_KEY and NEXT_PUBLIC_TURNSTILE_SITE_KEY must be configured together"
     });
   }
 });

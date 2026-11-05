@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
   oauthAccountFindUnique: vi.fn(),
   userFindUnique: vi.fn(),
+  userUpdate: vi.fn(),
+  auditLogCreate: vi.fn(),
   transaction: vi.fn(),
   createUserSession: vi.fn(),
   setSessionCookie: vi.fn()
@@ -22,7 +24,8 @@ vi.mock("@/lib/env", () => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     oAuthAccount: { findUnique: mocks.oauthAccountFindUnique },
-    user: { findUnique: mocks.userFindUnique },
+    user: { findUnique: mocks.userFindUnique, update: mocks.userUpdate },
+    auditLog: { create: mocks.auditLogCreate },
     $transaction: mocks.transaction
   }
 }));
@@ -126,6 +129,7 @@ describe("Google OAuth registration gate", () => {
     ));
 
     expect(response.headers.get("location")).toBe("http://localhost:3000/login?oauth=not_linked");
+    expect(mocks.userFindUnique).toHaveBeenCalledOnce();
     expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.createUserSession).not.toHaveBeenCalled();
   });

@@ -142,4 +142,58 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Vendor-order status, status history, parent-order processing state/history, and audit event are written in one serializable transaction with compare-and-set protection against stale or concurrent updates.
 - Repeating the current target status is idempotent. The seller cannot change another store's order or regress a status.
 - **No Prisma schema change:** `VendorOrderStatus`, `VendorOrderStatusHistory`, `OrderStatus`, `OrderStatusHistory`, and `AuditLog` already cover this bounded workflow.
+<<<<<<< HEAD
 - Shipment creation, carrier labels/tracking, shipped/delivered transitions, cancellation, and refunds remain disabled until their own policy/provider and inventory/payment reversal rules are implemented. No shipment or delivery success is simulated.
+=======
+- Manual seller-entered dispatch and buyer-visible tracking details are implemented on `feat/shipment-tracking-current-main` (PR pending). This records seller-supplied carrier/tracking metadata; it is not a carrier API integration, label purchase, live tracking feed, proof of delivery, cancellation, or refund. Exact-head CI and disposable PostgreSQL verification are required before treating this slice as verified.
+
+
+
+## 4.7 — Manual seller dispatch and buyer tracking
+
+**Implemented on `feat/shipment-tracking-current-main`; exact-head verification pending.**
+
+- Added `Shipment` as a one-to-one record for a vendor order, with carrier name, tracking number, optional HTTPS tracking URL, dispatch timestamp and creator.
+- Added forward-only migration `20261105130000_manual_shipment_tracking`; database checks reject empty carrier/tracking values and non-HTTPS tracking URLs.
+- Added `POST /api/seller/orders/[vendorOrderId]/shipment` and `createSellerShipment`. The service resolves the active seller/store from the vendor order, requires owner or exact store-scoped `orders:manage`/global permission, accepts only `READY_TO_SHIP`, creates the shipment, transitions the vendor order to `SHIPPED`, updates the parent order's aggregate fulfillment state, writes status history and audit in one serializable transaction.
+- An identical retry returns the existing shipment without creating a duplicate. Changed tracking details are not silently overwritten by this endpoint.
+- Connected `/seller/orders` dispatch inputs to the endpoint and displays buyer tracking details on the order detail page. All order serializers include the shipment snapshot after reload.
+- No live carrier API, label purchase, carrier event webhook, delivery confirmation, proof of delivery, returns routing or refund behavior is implemented. Tracking link is seller-supplied and must be HTTPS.
+- Added focused seller dispatch tests for successful transition/audit, invalid tracking URL, cross-store staff denial and idempotent replay.
+
+**Verification gate:** General CI and disposable PostgreSQL migration/integration must pass on the exact new branch head. The older PR #26 check result is not transferable because its base was stale and the migration timestamp collided with the payment migration already on main.
+
+
+## Fulfillment aggregation correction — 2026-11-05
+
+- Corrected parent-order fulfillment aggregation after manual dispatch: cancelled vendor orders are terminal and excluded from the set of vendor orders that must be shipped/delivered before the parent becomes FULFILLED.
+- A parent remains PARTIALLY_FULFILLED while at least one non-cancelled vendor order remains undispatched. If all non-cancelled vendor orders are SHIPPED/DELIVERED, the parent becomes FULFILLED even when another vendor order was cancelled.
+- Added focused regression tests for both mixed cancelled/dispatched and still-active undispatched multi-vendor cases.
+- No Prisma change: the existing VendorOrderStatus.CANCELLED enum and OrderStatus fulfillment states already represent this rule.
+- Verification is pending exact-head General CI and disposable PostgreSQL integration for the correction branch.
+
+
+## 2026-11-05 — Store-scoped return decisions
+
+- Added `ReturnItemStatus` plus item-level review note, reviewer and timestamp fields. Existing rows default safely to `REQUESTED` through the forward-only migration `20261105140000_store_scoped_return_decisions`.
+- Seller decisions are restricted to pending return lines whose order item belongs to the selected active store. Store ownership or an exact delegated `orders:manage` grant is checked server-side; the client-supplied store ID is never trusted without reauthorization.
+- Parent return status remains `REQUESTED` while any line is awaiting a store decision; it becomes `REJECTED` only when every line is rejected, and `APPROVED` once all lines have a non-rejected decision and at least one is approved. Platform review synchronizes item statuses.
+- Customer and seller screens display per-item decisions. Rejected line quantities are released for a future return request.
+- Seller approval/rejection does not confirm physical receipt, restock inventory, or initiate a refund. Those remain separate workflows; no provider refund is claimed.
+- Verification is pending exact-head General CI and PostgreSQL Integration.
+
+
+### Store-scoped return permission correction (2026-11-05)
+- Seller return decisions require `returns:manage` at the exact STORE scope; `orders:manage` alone no longer authorizes a return decision.
+- SELLER and STORE_MANAGER role capability sets include `returns:manage`; actual staff authority still requires an active membership and a matching scoped grant.
+- No Prisma schema or migration change is required.
+
+
+### Seller return receipt and inventory quarantine (2026-11-05)
+- Physical receipt is a seller/store-scoped operation. The receiving actor must own the active store or hold an active membership with the exact-store `returns:manage` permission; the selected warehouse must belong to that same active store.
+- Only that store's `APPROVED` return lines are received. Rejected and pending lines remain unchanged; the parent request stays pending while another store still has undecided lines.
+- Added `Inventory.quantityQuarantined` and `InventoryMovement.quarantinedDelta` plus `RETURN_RECEIPT`. Receipt creates a deterministic per-return-item movement and increases quarantined quantity while leaving `quantityOnHand` and sellable availability unchanged.
+- Inventory movement, quarantine balance, item state, parent aggregation, and audit record commit in one serializable transaction. A repeated completed receipt is an idempotent no-op.
+- Seller returns UI requires a warehouse selection and displays quarantine separately in inventory. Admin approval/rejection no longer provides a bypass that could mark items received without a stock record.
+- This is physical receipt only. Inspection/release from quarantine, restock/disposal decisions, and payment refunds remain separate workflows.
+>>>>>>> origin/main

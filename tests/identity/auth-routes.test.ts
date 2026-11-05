@@ -6,26 +6,32 @@ const mocks = vi.hoisted(() => ({
   resolveTrustedClientIp: vi.fn(),
   validateIdentityMutationRequest: vi.fn(),
   registerUser: vi.fn(),
-  sendVerificationEmail: vi.fn(),
+  consumeRegistrationAttempt: vi.fn(),
+  verifyRegistrationChallenge: vi.fn(),
+  createUserSession: vi.fn(),
   isPublicRegistrationEnabled: vi.fn()
 }));
 
 vi.mock("@/lib/env", () => ({
-  env: { NODE_ENV: "development", TRUSTED_PROXY_IP_HEADER: undefined },
+  env: {
+    NODE_ENV: "development",
+    TRUSTED_PROXY_IP_HEADER: undefined,
+    TURNSTILE_SECRET_KEY: "turnstile-secret",
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: "turnstile-site"
+  },
   isPublicRegistrationEnabled: mocks.isPublicRegistrationEnabled
 }));
 vi.mock("@/server/identity/session-cookie", () => ({ setSessionCookie: mocks.setSessionCookie }));
+vi.mock("@/server/identity/session", () => ({ createUserSession: mocks.createUserSession }));
 vi.mock("@/server/identity/login", () => ({ loginWithPassword: mocks.loginWithPassword }));
+vi.mock("@/server/identity/login-throttle", () => ({ consumeRegistrationAttempt: mocks.consumeRegistrationAttempt }));
+vi.mock("@/server/identity/turnstile", () => ({ verifyRegistrationChallenge: mocks.verifyRegistrationChallenge }));
 vi.mock("@/server/identity/trusted-client-ip", () => ({ resolveTrustedClientIp: mocks.resolveTrustedClientIp }));
 vi.mock("@/server/identity/request-security", () => ({ validateIdentityMutationRequest: mocks.validateIdentityMutationRequest }));
 vi.mock("@/server/identity/registration", () => ({
   IdentityConflictError: class IdentityConflictError extends Error {},
   registerUser: mocks.registerUser
 }));
-vi.mock("@/server/email/resend", () => ({
-  resendEmailAdapter: { sendVerificationEmail: mocks.sendVerificationEmail }
-}));
-
 import { POST as login } from "@/app/api/auth/login/route";
 import { POST as register } from "@/app/api/auth/register/route";
 
@@ -49,11 +55,14 @@ describe("identity HTTP routes", () => {
       session: { token: "session-token", expiresAt: new Date("2026-11-06T00:00:00.000Z") }
     });
     mocks.registerUser.mockResolvedValue({
-      userId: "user-1",
-      verificationToken: "verification-token",
-      verificationExpiresAt: new Date("2026-11-06T00:00:00.000Z")
+      userId: "user-1"
     });
-    mocks.sendVerificationEmail.mockResolvedValue(undefined);
+    mocks.consumeRegistrationAttempt.mockResolvedValue({ blocked: false });
+    mocks.verifyRegistrationChallenge.mockResolvedValue(true);
+    mocks.createUserSession.mockResolvedValue({
+      token: "session-token",
+      expiresAt: new Date("2026-11-06T00:00:00.000Z")
+    });
   });
 
   it("issues the session cookie after a successful password login", async () => {
@@ -87,7 +96,56 @@ describe("identity HTTP routes", () => {
     expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });
 
-  it("keeps duplicate email responses generic and never sends another verification email", async () => {
+  it("creates an active session immediately after a valid bot challenge", async () => {
+    const response = await register(request("/api/auth/register", {
+      email: "buyer@example.test",
+      password: "A-correct-password",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true,
+      turnstileToken: "valid-token"
+    }));
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ message: "Account created. You are now signed in." });
+    expect(mocks.verifyRegistrationChallenge).toHaveBeenCalledWith("valid-token", "127.0.0.1");
+    expect(mocks.registerUser).toHaveBeenCalledOnce();
+    expect(mocks.createUserSession).toHaveBeenCalledWith("user-1", {
+      ipAddress: "127.0.0.1",
+      userAgent: null
+    });
+    expect(mocks.setSessionCookie).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a failed bot challenge without creating an account", async () => {
+    mocks.verifyRegistrationChallenge.mockResolvedValue(false);
+    const response = await register(request("/api/auth/register", {
+      email: "buyer@example.test",
+      password: "A-correct-password",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true,
+      turnstileToken: "invalid-token"
+    }));
+
+    expect(response.status).toBe(400);
+    expect(mocks.registerUser).not.toHaveBeenCalled();
+    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
+  });
+
+  it("rejects rate-limited registration attempts before checking the bot challenge", async () => {
+    mocks.consumeRegistrationAttempt.mockResolvedValue({ blocked: true });
+    const response = await register(request("/api/auth/register", {
+      email: "buyer@example.test",
+      turnstileToken: "valid-token"
+    }));
+
+    expect(response.status).toBe(429);
+    expect(mocks.verifyRegistrationChallenge).not.toHaveBeenCalled();
+    expect(mocks.registerUser).not.toHaveBeenCalled();
+  });
+
+  it("returns a conflict for a duplicate email without issuing a session", async () => {
     const { IdentityConflictError } = await import("@/server/identity/registration");
     mocks.registerUser.mockRejectedValue(new IdentityConflictError());
 
@@ -96,14 +154,12 @@ describe("identity HTTP routes", () => {
       password: "A-correct-password",
       accountType: "CUSTOMER",
       acceptedTerms: true,
-      acceptedPrivacy: true
+      acceptedPrivacy: true,
+      turnstileToken: "valid-token"
     }));
 
-    expect(response.status).toBe(202);
-    expect(await response.json()).toEqual({
-      message: "If eligible, this account can be verified. Sign in or request another verification email."
-    });
-    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
+    expect(response.status).toBe(409);
+    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });
 
   it("stops registration before the service when the public-registration gate is disabled", async () => {

@@ -14,7 +14,7 @@ function redirectTo(path: string): Response {
 }
 
 function clearOAuthCookies(store: Awaited<ReturnType<typeof cookies>>) {
-  for (const name of ["mtjr_google_state","mtjr_google_verifier","mtjr_google_intent","mtjr_google_account_type","mtjr_google_terms","mtjr_google_privacy","mtjr_google_seller_legal","mtjr_google_seller_display","mtjr_google_return_to"]) {
+  for (const name of ["mtjr_google_state","mtjr_google_verifier","mtjr_google_intent","mtjr_google_return_to","mtjr_google_account_type","mtjr_google_terms","mtjr_google_privacy","mtjr_google_seller_legal","mtjr_google_seller_display"]) {
     store.set(name, "", { path: "/api/auth/google", maxAge: 0, expires: new Date(0), httpOnly: true, secure: env.NODE_ENV === "production", sameSite: "lax" });
   }
 }
@@ -41,7 +41,7 @@ export async function GET(request: Request): Promise<Response> {
   const privacyVersion = store.get("mtjr_google_privacy")?.value;
   const sellerLegalName = decodeCookieValue(store.get("mtjr_google_seller_legal")?.value);
   const sellerDisplayName = decodeCookieValue(store.get("mtjr_google_seller_display")?.value);
-  const returnTo = safeReturnPath(decodeCookieValue(store.get("mtjr_google_return_to")?.value), env.APP_URL);
+  const returnTo = safeReturnPath(decodeCookieValue(store.get("mtjr_google_return_to")?.value), env.APP_URL, "/account/orders");
 
   clearOAuthCookies(store);
 
@@ -88,15 +88,26 @@ export async function GET(request: Request): Promise<Response> {
     const now = new Date();
     const linked = await prisma.oAuthAccount.findUnique({
       where: { provider_providerAccountId: { provider: "google", providerAccountId: identity.sub } },
-      select: { userId: true, user: { select: { id: true, status: true, emailVerifiedAt: true } } }
+      select: { userId: true, user: { select: { id: true, status: true } } }
     });
     let userId: string;
-    if (linked) {
-      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) return oauthError("inactive");
+    if (intent === "login") {
+      // Login intent must never create or silently link an account. Only a
+      // previously linked Google identity may establish a session.
+      if (!linked) {
+        const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
+        return oauthError(existing ? "link_required" : "not_linked");
+      }
+      if (linked.user.status !== UserStatus.ACTIVE) {
+        return oauthError("inactive");
+      }
+      userId = linked.userId;
+      await prisma.user.update({ where: { id: userId }, data: { lastLoginAt: now } });
+    } else if (linked) {
+      if (linked.user.status !== UserStatus.ACTIVE) return oauthError("inactive");
       userId = linked.userId;
     } else {
       const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
-      if (intent === "login") return oauthError(existing ? "link_required" : "not_linked");
       if (existing) return oauthError("link_required");
       if (!termsVersion || !privacyVersion) return oauthError("invalid");
       if (!isPublicRegistrationEnabled(env)) {
@@ -110,8 +121,8 @@ export async function GET(request: Request): Promise<Response> {
         });
         await tx.oAuthAccount.create({ data: { userId: user.id, provider: "google", providerAccountId: identity.sub! } });
         await tx.userConsent.createMany({ data: [
-          { userId: user.id, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion, granted: true, capturedAt: now, source: "google-registration" },
-          { userId: user.id, type: ConsentType.PRIVACY_POLICY, version: privacyVersion, granted: true, capturedAt: now, source: "google-registration" }
+          { userId: user.id, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true, capturedAt: now, source: "google-registration" },
+          { userId: user.id, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true, capturedAt: now, source: "google-registration" }
         ]});
         if (accountType === "SELLER") {
           if (sellerLegalName.length < 2 || sellerDisplayName.length < 2) throw new Error("Seller application details missing.");

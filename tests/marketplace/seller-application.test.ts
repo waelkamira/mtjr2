@@ -24,7 +24,7 @@ import { createSellerStore, reviewSellerApplication, submitSellerApplication } f
 describe("marketplace seller lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: new Date() } });
+    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: null } });
     requirePermission.mockResolvedValue({ userId: "admin-1" });
     sellerFindUnique.mockResolvedValue(null);
     sellerCreate.mockResolvedValue({ id: "seller-1", status: "PENDING" });
@@ -45,7 +45,7 @@ describe("marketplace seller lifecycle", () => {
     } as unknown as Prisma.TransactionClient));
   });
 
-  it("submits one verified-user application and audits it atomically", async () => {
+  it("submits one authenticated-user application and audits it atomically", async () => {
     const result = await submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" });
     expect(result).toMatchObject({ sellerId: "seller-1", status: "PENDING", alreadySubmitted: false });
     expect(auditCreate).toHaveBeenCalledOnce();
@@ -56,11 +56,6 @@ describe("marketplace seller lifecycle", () => {
     const result = await submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" });
     expect(result.alreadySubmitted).toBe(true);
     expect(sellerCreate).not.toHaveBeenCalled();
-  });
-
-  it("rejects unverified accounts", async () => {
-    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: null } });
-    await expect(submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" })).rejects.toThrow(/verified email/i);
   });
 
   it("approves only pending applications and grants SELLER role in the same transaction", async () => {

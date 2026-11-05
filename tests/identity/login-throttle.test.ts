@@ -19,10 +19,14 @@ const { prismaMock, txMock } = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/env", () => ({
+  env: { AUTH_SECRET: "test-secret-with-more-than-thirty-two-characters" }
+}));
 
 import {
   clearLoginThrottle,
-  consumeLoginAttempt
+  consumeLoginAttempt,
+  consumeRegistrationAttempt
 } from "../../src/server/identity/login-throttle";
 
 const now = new Date("2026-11-03T12:00:00.000Z");
@@ -151,5 +155,18 @@ describe("persistent login throttling", () => {
         data: { windowStartedAt: now, attemptCount: 1, blockedUntil: null }
       }));
     }
+  });
+
+  it("uses isolated registration identifier/IP and IP-only rate-limit buckets", async () => {
+    await expect(consumeRegistrationAttempt({
+      identifier: " Buyer@Example.COM ",
+      trustedIpAddress: "203.0.113.8"
+    }, now)).resolves.toEqual({ blocked: false });
+
+    const keys = txMock.loginRateLimitBucket.upsert.mock.calls.map(([args]) => args.where.keyHash);
+    expect(keys).toHaveLength(2);
+    expect(keys[0]).not.toBe(keys[1]);
+    expect(keys.every((key: string) => /^[a-f0-9]{64}$/.test(key))).toBe(true);
+    expect(txMock.loginRateLimitBucket.upsert.mock.calls[0][0].create.attemptCount).toBe(1);
   });
 });

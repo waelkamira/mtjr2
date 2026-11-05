@@ -3,7 +3,7 @@ import { UserStatus } from "@prisma/client";
 
 const { prismaMock, consumeMock, clearMock, verifyMock, createSessionMock, revokeMock } = vi.hoisted(() => ({
   prismaMock: {
-    user: { findUnique: vi.fn(), update: vi.fn() },
+    user: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     loginAttempt: { create: vi.fn() },
     auditLog: { create: vi.fn() },
     $transaction: vi.fn()
@@ -38,17 +38,17 @@ describe("password login service", () => {
     createSessionMock.mockResolvedValue({ token: "s".repeat(43), expiresAt: new Date(now.getTime() + 1000) });
     prismaMock.loginAttempt.create.mockResolvedValue({});
     prismaMock.user.update.mockResolvedValue({});
+    prismaMock.user.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.auditLog.create.mockResolvedValue({});
     prismaMock.$transaction.mockResolvedValue([]);
     clearMock.mockResolvedValue(undefined);
   });
 
-  it("issues a session only for an active, email-verified account and records the successful login", async () => {
+  it("issues a session for an active account without requiring email verification", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: "user-1",
       passwordHash: "stored-hash",
-      status: UserStatus.ACTIVE,
-      emailVerifiedAt: now
+      status: UserStatus.ACTIVE
     });
 
     const result = await loginWithPassword({
@@ -65,7 +65,7 @@ describe("password login service", () => {
     expect(clearMock).toHaveBeenCalledWith("buyer@example.com", "203.0.113.10");
   });
 
-  it("performs dummy password verification and returns the same failure for an unknown account", async () => {
+  it("performs dummy password verification and uses dummy verification and records an unknown-account failure without storing raw identifiers", async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
     const result = await loginWithPassword({
@@ -74,21 +74,36 @@ describe("password login service", () => {
       trustedIpAddress: "203.0.113.10"
     }, now);
 
-    expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS" });
+    expect(result).toMatchObject({ authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." });
     expect(verifyMock).toHaveBeenCalledOnce();
     expect(verifyMock.mock.calls[0][1]).toMatch(/^scrypt\$32768\$8\$1\$/);
     expect(createSessionMock).not.toHaveBeenCalled();
     expect(prismaMock.loginAttempt.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ succeeded: false, userId: null })
+      data: expect.objectContaining({ succeeded: false, identifierHash: expect.any(String), ipHash: expect.any(String) })
     }));
   });
 
-  it("does not issue a session to an unverified or inactive account", async () => {
+  it("identifies an incorrect password for an existing active account", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-1", passwordHash: "stored-hash", status: UserStatus.ACTIVE
+    });
+    verifyMock.mockResolvedValue(false);
+
+    const result = await loginWithPassword({
+      email: "buyer@example.com", password: "wrong-password", trustedIpAddress: "203.0.113.10"
+    }, now);
+
+    expect(result).toMatchObject({
+      authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect. Please try again."
+    });
+    expect(createSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("does not issue a session to an inactive account", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: "user-2",
       passwordHash: "stored-hash",
-      status: UserStatus.SUSPENDED,
-      emailVerifiedAt: now
+      status: UserStatus.SUSPENDED
     });
 
     const result = await loginWithPassword({
@@ -99,6 +114,27 @@ describe("password login service", () => {
 
     expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS" });
     expect(createSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("activates a legacy pending account after its password is proven", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-pending",
+      passwordHash: "stored-hash",
+      status: UserStatus.PENDING
+    });
+
+    const result = await loginWithPassword({
+      email: "pending@example.com",
+      password: "a-secure-password",
+      trustedIpAddress: "203.0.113.10"
+    }, now);
+
+    expect(result).toMatchObject({ authenticated: true, userId: "user-pending" });
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-pending", status: UserStatus.PENDING },
+      data: { status: UserStatus.ACTIVE }
+    });
+    expect(createSessionMock).toHaveBeenCalledOnce();
   });
 
   it("does not run password verification after the throttle blocks a request", async () => {

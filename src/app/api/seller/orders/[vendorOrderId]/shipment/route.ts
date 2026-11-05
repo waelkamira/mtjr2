@@ -21,7 +21,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     if (error instanceof PermissionDeniedError) return Response.json({ error: "Permission denied." }, { status: 403 });
     const message = error instanceof Error ? error.message : "Shipment could not be created.";
     const status = /not found/i.test(message) ? 404
-      : /already exists|only seller orders|changed while/i.test(message) ? 409 : 400;
+      : /already exists|only .*ready|not eligible|not active|changed/i.test(message) ? 409 : 400;
     return Response.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
   }
 }

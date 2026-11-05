@@ -1941,6 +1941,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Browser-level guest-save → sign-in → merge → wishlist refresh and cross-user isolation remain to be verified.
 - Named user-created lists and cross-tab storage event synchronization remain outside this slice.
 
+<<<<<<< HEAD
 ## 2026-11-05 — System 06 review media, reports, and appeals
 
 **Implemented**
@@ -2133,3 +2134,263 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No migration was run against the user's database or production.
 - Vercel status for this exact commit returned FAILURE. The deployment failure reason has not yet been retrieved from Vercel build logs; do not infer that it is the previously observed `AUTH_SECRET` issue without inspecting this deployment's logs.
 - PR #35 remains open and Draft; no merge performed.
+=======
+
+## 2026-11-04 — Product Q&A governance extension
+
+**Implemented on** `feat/product-qa-reports-history-staff` (PR #31):
+- Added `ProductQuestionReport` with one report per reporter/question, supported reasons, open/reviewed/dismissed states, and audit events.
+- Added authenticated report submission and admin review/dismiss APIs plus a dedicated moderation page.
+- Added `ProductAnswerRevision`; edits preserve the prior answer and return the new text to pending moderation.
+- Added seller answer editing/history controls.
+- Extended seller Q&A access to active store staff only when an exact STORE-scoped `messages:manage` grant exists; store owners retain access.
+
+**Verification**
+- CI and PostgreSQL migration/integration workflows were triggered for exact head `85314f2ec5ff080ec5f213a98a415417bb00fae7`; results are pending at this log entry.
+- No local npm/Prisma commands were run in this session.
+- No production database or Vercel deployment was accessed.
+- Browser end-to-end journeys and dedicated feature-level integration tests remain to be verified.
+
+
+## 2026-11-05 — Support SLA targets and escalation
+
+**Implemented on** `feat/support-sla-escalation`:
+- Added persisted per-priority SLA policy rows and first-response/resolution deadlines to support tickets.
+- Default 24/7 elapsed-time targets: LOW 24h/5d, NORMAL 8h/72h, HIGH 4h/24h, URGENT 1h/4h (first response/resolution).
+- Added an idempotent protected SLA worker that records breaches, escalates priority by one level on resolution breach, writes audit events, and notifies the assigned agent.
+- Added a GitHub Actions 15-minute scheduler, admin queue SLA indicators, and a notification preference for SLA escalation.
+- Backfilled deadlines for existing tickets in the migration.
+
+**Operational configuration**
+- Set repository variable `APP_URL` and repository secret `CRON_SECRET` to enable the scheduled worker. No Vercel cron or deployment is used.
+- Targets use elapsed 24/7 hours, not business-hour calendars; policy administration UI is not included in this slice.
+- Attachments still require an approved S3-compatible storage endpoint and malware-scanning integration. No provider credentials are available in this task, so uploads are not represented as complete.
+- Outbound email remains dependent on a verified sender and delivery provider.
+
+**Verification**
+- Added focused SLA policy unit tests.
+- Prisma validation, typecheck, lint, unit tests, build and disposable PostgreSQL migration checks must pass on this exact PR head before merge.
+- No production database or Vercel deployment accessed.
+
+
+## 2026-11-05 — Support SLA and Cloudflare R2 attachment foundation
+
+**Merged**
+- PR #32 added persisted support response/resolution targets, priority-based escalation, audit events, assigned-agent notifications, and a protected scheduled worker.
+- Exact-head CI and PostgreSQL integration passed for commit `afd2dafeed81c197d21b2dfd8bde8550cef79548`; merge commit: `edaff23d824caa33037343113dbf79816eaac7e5`.
+
+**Merged — PR #33**
+- Added private Cloudflare R2 SigV4 presigned URL generation, attachment persistence for support tickets and store conversations, strict metadata validation (10 MB / MIME allowlist), and a support-ticket upload-init/finalize API.
+- Finalization verifies R2 object metadata and fails closed unless an external malware scanner returns an explicit `{ "clean": true|false }` result.
+- Exact-head CI and PostgreSQL integration passed for `7000ea4c29e20659487b94c61fcd4924bcff6ad8`; merge commit: `d45fcad7ed5f95165c7eaaf917f3972ed6751dad`.
+- PR: https://github.com/waelkamira/mtjr2/pull/33
+- Required server-only configuration: R2 account/access/bucket credentials and `ATTACHMENT_SCANNER_URL` + `ATTACHMENT_SCANNER_TOKEN`.
+
+
+**Not complete / rollout blocked**
+- No real R2 credentials or bucket CORS configuration have been supplied or tested.
+- The external malware-scanning service is not implemented/configured; uploads remain quarantined when it is absent.
+- Store-message upload API, customer/admin upload UI, attachment listing/download journey, orphan cleanup/retention, and browser-level end-to-end verification remain open.
+- Do not enable attachments in production until these gates are completed and verified.
+
+
+## 2026-11-05 — Customer notification delivery
+
+**Implemented on `feat/customer-notification-delivery`**
+- Extended notification preferences to independently control in-app and email channels for order, seller order, store message, support/SLA, payment, shipment-ready, and account-security event types.
+- Added `UserConsent.NOTIFICATION_EMAIL`; email is opt-in, defaults off, and is checked both when queuing and immediately before sending. Withdrawal cancels pending deliveries.
+- Added `NotificationDelivery` outbox with unique event deduplication, delivery states (PENDING/PROCESSING/RETRY/SENT/FAILED/CANCELLED), attempt counters, lock recovery, timestamps, and provider message ID.
+- Added Resend transactional notification adapter using a stable idempotency key; only active users with verified email addresses are eligible.
+- Added protected five-minute GitHub Actions worker endpoint, batch claims, bounded exponential retries (1 minute to 6 hours), and user-scoped delivery history in `GET /api/notifications`.
+- Connected existing order placed, seller order received, store message, support reply and SLA events through the shared preference-aware event creation helper; connected payment success/failure and password change/reset events.
+- Updated `/notifications` controls and delivery-history UI. Added focused retry-backoff unit tests.
+
+**Not complete / operational gates**
+- No Resend API key or verified sender was supplied; no real email was sent or provider delivery verified.
+- Set repository variable `APP_URL` and secret `CRON_SECRET` to activate the scheduled delivery workflow.
+- Shipment preferences exist, but no Shipment model/carrier tracking lifecycle or SHIPPED/DELIVERED transition is present. Do not claim shipment notifications are live until that system exists.
+- Browser-level user journeys and provider callback/reconciliation are not yet verified.
+
+
+## 2026-11-05 — Identity registration and sign-in feedback
+
+**Implemented on `fix/identity-feedback-flow`**
+- Duplicate registration now returns HTTP 409 with `EMAIL_ALREADY_EXISTS` and a clear instruction to sign in or recover the password; the existing normalized-email lookup and database unique-constraint fallback both remain active.
+- Successful registration displays a success notice, then leaves `/register` for `/verify-email` with the email prefilled and a registration confirmation message.
+- Login now distinguishes an unknown email (`EMAIL_NOT_FOUND`) from an incorrect password (`INVALID_PASSWORD`) while preserving dummy scrypt verification for unknown addresses, persistent throttling, and generic responses for inactive/unverified accounts.
+- Successful login displays its confirmation before redirecting to the safe same-origin return path. The password field is cleared after success.
+- Added a focused unit test for the incorrect-password path and updated the unknown-email expectation.
+- **Security trade-off:** explicit email-vs-password feedback reveals whether an email has an account. This follows the requested UX; the existing rate limiter remains in force. If stronger account-enumeration resistance is preferred, both failures should use one generic message.
+
+**Verification**
+- Source changes committed; exact-head GitHub Actions CI and PostgreSQL integration have not yet reported results. Do not treat the identity journey as release-verified until those pass.
+- No local browser session, real email delivery, production database, or deployment was accessed.
+
+
+## 2026-11-05 — System 01 identity audit and PR #36 verification corrections
+
+- Reviewed the full System 01 specification, Phase 2 identity execution plan, route registry, journey matrix, auth routes/services, account security/session/profile/address surfaces, Prisma identity model ownership and the PostgreSQL identity integration workflow.
+- PR #36 adds duplicate-email conflict mapping (including concurrent unique-constraint/P2002 handling), registration-success redirect/notice, and login-success feedback plus explicit unknown-email/wrong-password errors for eligible accounts. Dummy scrypt verification, keyed login-attempt storage and persistent throttling remain. This exposes account existence and is documented as a production security trade-off.
+- Exact-head CI on merge candidate `050bb6079012538cc48e2d24109e3e76de12d458`: Prisma validate, Prisma generate, typecheck and lint passed; unit suite failed one outdated assertion in `tests/identity/login.test.ts` because it expected raw `userId: null` after the ledger was intentionally changed to hashed identifiers. Updated the assertion to require keyed identifier/IP digests and not raw identifiers.
+- Found that the PostgreSQL integration workflow's pull-request path filter omitted identity service/API paths. Added identity services, auth/account routes, identity tests and integration tests so PR identity changes trigger the PostgreSQL gate.
+- Phase 2 audit findings and remaining exit gates are recorded in `PHASE_02_IDENTITY_PLAN.md`. System 01 remains Implemented / not Verified / not Complete: exact-head CI + PostgreSQL integration pending; real Resend delivery, trusted edge proxy/origin protection and one deployed register→verify→login→me→logout HTTP journey remain unverified. Google provider flow also remains conditional/unverified. 2FA is intentionally unavailable; account addresses currently list/create only.
+- No Prisma schema change was needed for the current UX slice. No production deployment, live email test or browser journey was performed.
+
+**Current PR #36 verification:** pending on the corrected head; do not merge until General CI and PostgreSQL identity integration both pass for the exact head.
+
+
+## 2026-11-05 — Phase roadmap audit and Phase 11 definition
+
+- Audited the README build sequence, FOUNDATION.md, Phase 2–4 execution plans, 49-system index/integration matrix, route registry, journey standard/matrix, Prisma model map, global page/control specification, and historical build log.
+- Corrected the roadmap's missing Phase 10 and absent dedicated delivery definition for Phase 11. The audit records that Phase 5–10 had no individual execution-plan files, clarifies the distinction between delivery phases and the 49 numbered systems, and assigns explicit ownership boundaries for buying, finance, returns/refunds, global regulatory readiness, release and post-launch operations.
+- Added `docs/implementation/PLATFORM_PHASE_ROADMAP_01_11.md` with findings, phase-by-phase status/gaps, corrected dependencies, evidence vocabulary and safe execution order.
+- Added `docs/implementation/PHASE_11_PRODUCTION_OPERATIONS_PLAN.md` covering SLOs, observability, worker/outbox operations, backup/restore, capacity, security operations, market expansion, cost controls and exit criteria.
+- Updated README.md to the canonical 11-phase sequence. Phase 11 is specification-only; no production operation, deployment, production migration or provider activation is claimed.
+- Documentation-only. No Prisma schema/migration, database, production secret, Vercel setting or deployment was changed.
+
+
+## 2026-11-05 — Complete missing phase execution plans
+
+- Added explicit Phase 1 and Phase 5–10 execution plans after the roadmap audit found these phase plans were missing. Phases 2–4 retain their existing detailed plans; Phase 11 has its new production operations plan.
+- Each plan defines scope ownership, workflows, critical invariants, P0 acceptance and exit criteria. Financial refunds/payouts, customer returns, market regulatory approval, release gates and post-launch operations are assigned to distinct owners to avoid duplicate implementations.
+- Updated README with the complete Phase 1–11 plan index and amended the roadmap audit to distinguish the historical gap from the new documentation coverage.
+- Documentation-only. This closes plan-documentation gaps, not implementation/verification gaps. No Prisma schema, migrations, database, production secrets or deployment changed.
+
+
+## 2026-11-05 — Phase 4 manual seller dispatch and buyer tracking
+
+- Ported the manual shipment slice from stale PR #26 onto current main as `feat/shipment-tracking-current-main`; did not merge the stale branch.
+- Added one Shipment per VendorOrder, a forward-only migration at `20261105130000_manual_shipment_tracking` (avoids the existing payment migration timestamp), server-side owner/store-scope authorization, idempotent identical dispatch retry, serializable status/history/audit writes, seller dispatch UI and buyer order tracking display.
+- Added focused seller-shipment tests for successful dispatch, HTTPS validation, cross-store permission denial and idempotent replay.
+- Updated Phase 4 plan, Prisma model map, route registry and journey matrix.
+- The older PR #26 CI/PostgreSQL result is not treated as evidence for this new branch. Fresh exact-head General CI and disposable PostgreSQL integration are required. No live carrier integration, label purchase, live tracking feed or delivery proof is claimed.
+- No production database or deployment was accessed.
+
+
+## 2026-11-05 — Multi-vendor fulfillment aggregation correction
+
+- Merged manual seller dispatch and buyer-visible tracking through PR #41 after exact-head General CI and disposable PostgreSQL integration both passed (head `049f7001811dfc0ee5fd44b468e543c2cf48900e`).
+- Closed stale duplicate PR #26; its earlier migration timestamp conflicted with the current payment migration and its implementation was superseded by PR #41's clean forward-only migration.
+- During the post-merge Phase 4 review, found that parent-order fulfillment aggregation counted cancelled vendor orders as orders still awaiting dispatch. This could leave a parent order PARTIALLY_FULFILLED forever after every remaining live vendor order had shipped.
+- Corrected the aggregate to exclude CANCELLED vendor orders from the fulfillment denominator and added regression coverage for cancelled siblings and still-active undispatched siblings. No schema change was required.
+- The correction is isolated in branch `fix/order-fulfillment-terminal-vendors`; exact-head General CI and PostgreSQL verification are pending. Super Admin PR #35 is intentionally out of scope while its owner continues local work.
+
+
+## 2026-11-05 — Store-scoped return decisions (in progress)
+
+**Implemented on `feat/store-scoped-return-decisions`**
+- Added a forward-only Prisma migration and `ReturnItemStatus` so each requested line has its own decision, note, reviewer and timestamp.
+- Added seller PATCH endpoint and service. Server rechecks active store, owner/delegated permission and updates only pending items belonging to that store.
+- Seller workspace now exposes approve/reject actions per store; customer return history displays per-item decision and note.
+- Parent request remains pending while any store has undecided items; rejected item quantities are excluded from future outstanding-return calculations.
+- Platform-wide review synchronizes the item-level states.
+
+**Explicit boundaries**
+- Seller decision is not proof of physical receipt.
+- No inventory is restocked and no payment refund/provider API is called.
+- CI and PostgreSQL migration/integration verification are pending on the exact PR head.
+
+
+## 2026-11-05 — Return permission boundary
+- Seller return decisions now require the exact-store `returns:manage` permission rather than reusing `orders:manage`.
+- Added `returns:manage` to SELLER and STORE_MANAGER role capability sets; assignments remain store-scoped and do not grant a global seller permission.
+- Updated focused decision tests and the vendor return lifecycle design record. Verify exact-head General CI and PostgreSQL Integration before merge.
+
+
+## 2026-11-05 — Return receipt line-state correction
+- Administrative receipt now transitions only `APPROVED` return lines to `RECEIVED`; rejected/cancelled lines remain unchanged.
+- The transaction rejects receipt when no approved lines remain, preventing a parent status from claiming receipt without eligible lines.
+- Added focused tests for mixed approved/rejected receipt and no-approved-line rejection. Inventory restocking remains a separate next step; receipt is not yet represented as a stock movement.
+
+
+## 2026-11-05 — Seller return receipt into inventory quarantine
+
+- Added a forward-only Prisma migration introducing a quarantined stock balance and a `RETURN_RECEIPT` inventory movement. Physical return receipt increments quarantine only; it does not increase sellable `quantityOnHand`.
+- Added a seller-scoped receipt service and connected it to the seller return API/UI. The seller selects a warehouse belonging to the same active store; only approved return lines for that store can be received.
+- Inventory balance, movement (with deterministic per-return-item idempotency key), return-item status, parent aggregate, and audit log are committed in one serializable transaction.
+- Removed the admin-only received status path so a return cannot be marked received without a corresponding inventory movement. The seller inventory table now displays quarantined stock separately.
+- Added focused tests for quarantine-only movement, cross-store denial, missing variant rejection, completed retry, and admin receipt bypass prevention.
+- Inspection/release from quarantine and refunds remain intentionally separate. No provider refund, carrier integration, or production database action is claimed.
+- Exact-head General CI and disposable PostgreSQL Integration are required before merge.
+
+
+## 2026-11-05 — Akaar identity experience applied to Mtjr2
+
+**Implemented**
+- Reworked sign-in and registration layouts into a responsive split-panel experience using Mtjr2's existing forest/copper design tokens.
+- Added Google sign-in to the login page, distinct from Google registration.
+- Added a login-only OAuth intent that accepts only an already-linked Google identity. It does not create users, link by email, or fabricate policy consent.
+- Preserved Mtjr2's stronger registration requirements: 12-character password minimum, explicit Terms/Privacy acceptance, pending seller application, email verification, rate limiting, and server-side session controls.
+- Kept password recovery and verification/resend flows connected from the sign-in screen.
+
+**Focused verification added**
+- Existing Google OAuth registration-gate tests retained.
+- Added regression cases for linked Google login, safe return path, and rejection of unlinked Google identities during login.
+
+**Still pending**
+- Exact-head General CI and PostgreSQL Integration results.
+- Real Google credentials, Resend sender/API key, trusted edge IP header, and one deployed HTTP/browser journey.
+- Public production registration remains gated until approved legal documents and deployment configuration are in place.
+
+
+## 2026-11-05 — Claymorphism visual direction and foundation
+
+**Owner-approved direction**
+- Replaced the previous forest/petrol and glass-led direction with Claymorphism / 3D Pastel Clay based on the user's written description of the Pinterest reference.
+- Established lavender, mint, blush, butter, sky, and neutral tokens with compatibility aliases for existing component token names.
+- Added opt-in raised and inset clay surface primitives with soft dual shadows; existing components are not globally force-styled.
+- Kept semantic status colors, readable text, reduced-motion behavior, and keyboard focus separate from decorative pastel accents.
+
+**Scope and safeguards**
+- This is a visual foundation only. It does not claim all routes/components have been migrated or visually verified.
+- Preserve all existing routes, category distribution, APIs, authorization, Prisma models, and commerce behavior during later component migration.
+- Storefront, buyer, seller, and admin workspaces share tokens but retain different information density and interaction patterns.
+- Super Admin implementation is explicitly out of scope for this workstream.
+
+**Verification**
+- Repository files and current main design tokens were reviewed through GitHub before the change.
+- No local shell, browser runtime, or deployed visual comparison was available in this session; typecheck, lint, tests, and build must be confirmed by the branch CI before merge.
+
+
+## 2026-11-05 — Claymorphism storefront and navigation migration
+
+- Applied raised pastel surfaces and clay-style navigation controls to the shared site header/navigation without changing destinations or session-dependent links.
+- Updated the storefront hero, editorial panel, discovery controls and product cards to use the new lavender/mint/blush palette and tactile surface tokens.
+- Preserved catalog data fetching, URL-backed filters, pagination, category layout, product routes, price formatting and seller attribution.
+- Updated the reusable catalog product grid with raised clay cards and stronger bottom price hierarchy.
+- This is the first visual adoption slice; account, seller and admin workspaces still require separate migration and responsive visual QA. Super Admin remains excluded.
+
+
+## 2026-11-05 — Claymorphism identity, catalog filters and seller workspace slice
+
+- Migrated the shared sign-in/password recovery/verification card and form controls to raised pastel surfaces while preserving all existing auth endpoints, safe return-path handling, Google login flow, verification resend, and success/error behavior.
+- Migrated server-rendered catalog discovery filter panel and form controls to inset clay fields; preserved GET parameters, category/brand/store/market filters, price filters, stock filter, sorting and pagination.
+- Applied the pastel canvas and shared surface treatment to the seller workspace shell and key headings without changing seller API requests or store/inventory/shipping workflows.
+- Compatibility aliases remain in place for legacy color references. Super Admin is still explicitly excluded.
+- CI and PostgreSQL integration are expected to rerun against the latest branch head; no local build or browser visual QA is claimed.
+
+
+## 2026-11-05 — Central Tailwind v4 theme bridge
+
+- Confirmed the repository uses Tailwind CSS v4.1 and `@tailwindcss/postcss`; there is no legacy `tailwind.config.js/ts`.
+- Added a CSS-first `@theme inline` bridge in `src/app/globals.css` that exposes the central root tokens as Tailwind color, shadow, radius, and font utilities.
+- Documented `:root` as the single source of truth; do not add a parallel legacy config or duplicate token values.
+- CI must validate the generated utility classes on the updated PR head before merge.
+
+
+## 2026-11-05 — Claymorphism customer account and commerce workspace migration
+
+- Migrated the customer account landing page, order history, order detail/payment panels, wishlist, customer returns, support requests and reviews to the central Claymorphism token system.
+- Migrated seller order management and seller return handling surfaces to the same central palette and raised surface treatment.
+- Replaced legacy forest/copper/ivory color references in these UI slices with shared ink, lavender and surface tokens; existing API calls, authorization boundaries, payment initiation, order/return state transitions, wishlist merge/removal, and seller shipment/return actions were left unchanged.
+- Super Admin routes and components were not touched. No Prisma schema or migration was needed for this visual-only slice.
+- Verification is pending on the updated branch head. No local build, browser visual QA, production database operation or deployment is claimed.
+
+
+## 2026-11-05 — Broad Claymorphism migration across platform routes
+
+- Extended the central visual-token migration to customer profile, addresses, sessions and messaging routes; seller inventory, product, question, review and staff workspaces; administrative product-Q&A, review, return, support and tax-rate workflows; cart and checkout; security and notification preferences; and category, brand and store detail routes.
+- Updated legacy forest/copper/ivory references to shared ink, lavender and surface tokens. The migration is presentation-only: route contracts, API requests, business actions, and authorization logic were not intentionally changed.
+- Super Admin routes/components remain explicitly excluded. No Prisma schema or database migration was required.
+- CI and PostgreSQL Integration must be rerun against the final PR head; visual browser QA and local build were not available in this GitHub-only session.
+>>>>>>> origin/main

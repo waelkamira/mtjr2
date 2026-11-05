@@ -8,7 +8,6 @@ type UserRow = {
   email: string;
   displayName: string | null;
   status: string;
-  emailVerifiedAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;
   orderCount: number;
@@ -77,8 +76,8 @@ export default function AdminUsersPage() {
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         <div className="mt-5 overflow-x-auto rounded-2xl border border-[var(--border)] bg-white">
           {loading && !data ? <div className="h-48 animate-pulse bg-[var(--color-ivory-100)]" /> : <table className="w-full min-w-[760px] text-left text-sm">
-            <thead><tr className="border-b border-[var(--border)] bg-[var(--color-ivory-100)] text-xs text-[var(--muted)]"><th className="px-4 py-3 font-medium">User</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 font-medium">Email verified</th><th className="px-4 py-3 font-medium">Last sign-in</th><th className="px-4 py-3 font-medium">Orders</th><th className="px-4 py-3 font-medium">Roles</th><th className="px-4 py-3 font-medium"></th></tr></thead>
-            <tbody>{data?.items.map((user) => <tr key={user.id} className="border-b border-[var(--border)] last:border-0"><td className="px-4 py-3"><p className="font-semibold">{user.displayName || "—"}</p><p className="text-xs text-[var(--muted)]">{user.email}</p></td><td className="px-4 py-3">{user.status}</td><td className="px-4 py-3">{user.emailVerifiedAt ? new Date(user.emailVerifiedAt).toLocaleDateString() : "Unverified"}</td><td className="px-4 py-3">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}</td><td className="px-4 py-3">{user.orderCount}</td><td className="px-4 py-3">{user.roleCount}</td><td className="px-4 py-3"><Link href={`/admin/users/${encodeURIComponent(user.id)}`} className="font-semibold text-[var(--color-copper-600)] underline">View account</Link></td></tr>)}</tbody>
+            <thead><tr className="border-b border-[var(--border)] bg-[var(--color-ivory-100)] text-xs text-[var(--muted)]"><th className="px-4 py-3 font-medium">User</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 font-medium">Last sign-in</th><th className="px-4 py-3 font-medium">Orders</th><th className="px-4 py-3 font-medium">Roles</th><th className="px-4 py-3 font-medium"></th></tr></thead>
+            <tbody>{data?.items.map((user) => <tr key={user.id} className="border-b border-[var(--border)] last:border-0"><td className="px-4 py-3"><p className="font-semibold">{user.displayName || "—"}</p><p className="text-xs text-[var(--muted)]">{user.email}</p></td><td className="px-4 py-3">{user.status}</td><td className="px-4 py-3">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}</td><td className="px-4 py-3">{user.orderCount}</td><td className="px-4 py-3">{user.roleCount}</td><td className="px-4 py-3"><Link href={`/admin/users/${encodeURIComponent(user.id)}`} className="font-semibold text-[var(--color-copper-600)] underline">View account</Link></td></tr>)}</tbody>
           </table>}
           {!loading && !data?.items.length && !error && <p className="p-8 text-center text-sm text-[var(--muted)]">No accounts match this search.</p>}
         </div>

@@ -5,7 +5,7 @@ import Link from "next/link";
 
 type UserDetail = {
   id: string; email: string; displayName: string | null; status: string;
-  emailVerifiedAt: string | null; lastLoginAt: string | null; createdAt: string; updatedAt: string;
+  lastLoginAt: string | null; createdAt: string; updatedAt: string;
   roleAssignments: Array<{ id: string; scopeType: string; scopeId: string; assignedAt: string; expiresAt: string | null; role: { key: string; name: string } }>;
   sessions: Array<{ id: string; ipAddress: string | null; userAgent: string | null; createdAt: string; lastSeenAt: string; expiresAt: string; revokedAt: string | null }>;
   consents: Array<{ id: string; type: string; version: string; granted: boolean; source: string | null; capturedAt: string }>;
@@ -81,8 +81,7 @@ export default function AdminUserDetailPage({ userId }: { userId: string }) {
       <header className="mt-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Account administration</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{user.displayName || user.email}</h1><p className="mt-1 text-sm text-[var(--muted)]">{user.email} · {user.id}</p></div><span className="rounded-full bg-[var(--color-ivory-100)] px-4 py-2 text-sm font-semibold">{user.status}</span></header>
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 text-sm text-green-800">{message}</p>}
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Info label="Email verification" value={user.emailVerifiedAt ? new Date(user.emailVerifiedAt).toLocaleString() : "Not verified"} />
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Info label="Last sign-in" value={user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"} />
         <Info label="Account created" value={new Date(user.createdAt).toLocaleString()} />
         <Info label="Related orders" value={String(user.counts.orders)} />

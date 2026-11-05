@@ -155,6 +155,48 @@ export async function consumeLoginAttempt(
   });
 }
 
+/** Separate persistent abuse budget for account creation. */
+export async function consumeRegistrationAttempt(
+  input: LoginThrottleInput,
+  now = new Date()
+): Promise<{ blocked: boolean }> {
+  const identifier = normalizeEmail(input.identifier);
+  if (!identifier || identifier.length > 254) {
+    throw new Error("A valid registration identifier is required.");
+  }
+
+  const ip = input.trustedIpAddress.trim();
+  if (!ip || ip.length > 64) {
+    throw new Error("A trusted client IP value is required.");
+  }
+
+  const pairKey = digestSubject(
+    "registration-identifier-ip",
+    JSON.stringify([identifier, ip])
+  );
+  const ipKey = digestSubject("registration-ip", ip);
+
+  return prisma.$transaction(async (tx) => {
+    const pairBlocked = await consumeBucket(tx, pairKey, 3, now);
+    const ipBlocked = await consumeBucket(tx, ipKey, 10, now);
+    return { blocked: pairBlocked || ipBlocked };
+  });
+}
+
+export async function consumeRegistrationIpAttempt(
+  trustedIpAddress: string,
+  now = new Date()
+): Promise<{ blocked: boolean }> {
+  const ip = trustedIpAddress.trim();
+  if (!ip || ip.length > 64) {
+    throw new Error("A trusted client IP value is required.");
+  }
+  const ipKey = digestSubject("registration-ip", ip);
+  return prisma.$transaction(async (tx) => ({
+    blocked: await consumeBucket(tx, ipKey, 10, now)
+  }));
+}
+
 /**
  * Separate abuse budget for password-reset requests. The action namespace is
  * included in both HMAC keys so reset traffic cannot consume login attempts or
@@ -187,33 +229,6 @@ export async function consumePasswordResetAttempt(
   });
 }
 
-
-/** Separate persistent abuse budget for verification-email sends. */
-export async function consumeVerificationEmailAttempt(
-  input: LoginThrottleInput,
-  now = new Date()
-): Promise<{ blocked: boolean }> {
-  const identifier = normalizeEmail(input.identifier);
-  if (!identifier || identifier.length > 254) {
-    throw new Error("A valid verification identifier is required.");
-  }
-  const ip = input.trustedIpAddress.trim();
-  if (!ip || ip.length > 64) {
-    throw new Error("A trusted client IP value is required.");
-  }
-
-  const pairKey = digestSubject(
-    "verification-email-identifier-ip",
-    JSON.stringify([identifier, ip])
-  );
-  const ipKey = digestSubject("verification-email-ip", ip);
-
-  return prisma.$transaction(async (tx) => {
-    const pairBlocked = await consumeBucket(tx, pairKey, 3, now);
-    const ipBlocked = await consumeBucket(tx, ipKey, 10, now);
-    return { blocked: pairBlocked || ipBlocked };
-  });
-}
 
 /** Persistent per-IP budget for public search and autocomplete requests. */
 export async function consumeSearchAttempt(

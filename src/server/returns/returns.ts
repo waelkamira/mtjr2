@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
-import { AuditActorType, Prisma, ReturnRequestStatus, VendorOrderStatus } from "@prisma/client";
+import { AuditActorType, Prisma, ReturnItemStatus, ReturnRequestStatus, VendorOrderStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
@@ -21,7 +21,7 @@ const createSchema = z.object({
   if (new Set(ids).size !== ids.length) ctx.addIssue({ code: "custom", message: "Each order item may appear only once.", path: ["items"] });
 });
 const reviewSchema = z.object({
-  status: z.enum(["APPROVED", "REJECTED", "RECEIVED"]),
+  status: z.enum(["APPROVED", "REJECTED"]),
   note: z.string().trim().max(1000).optional()
 }).strict();
 
@@ -57,7 +57,7 @@ export async function getMyReturnCenter(now = new Date()) {
   const itemIds = orders.flatMap((order) => order.vendorOrders.flatMap((vendor) => vendor.items.map((item) => item.id)));
   const previouslyRequested = itemIds.length ? await prisma.returnItem.groupBy({
     by: ["orderItemId"],
-    where: { orderItemId: { in: itemIds }, returnRequest: { status: { notIn: [ReturnRequestStatus.REJECTED, ReturnRequestStatus.CANCELLED] } } },
+    where: { orderItemId: { in: itemIds }, status: { notIn: ["REJECTED", "CANCELLED"] }, returnRequest: { status: { notIn: [ReturnRequestStatus.REJECTED, ReturnRequestStatus.CANCELLED] } } },
     _sum: { quantity: true }
   }) : [];
   const returnedByItem = new Map(previouslyRequested.map((row) => [row.orderItemId, row._sum.quantity ?? 0]));
@@ -77,7 +77,7 @@ export async function getMyReturnCenter(now = new Date()) {
       status: request.status, reasonCode: request.reasonCode, reasonDetails: request.reasonDetails,
       reviewNote: request.reviewNote, requestedAt: request.requestedAt.toISOString(),
       reviewedAt: request.reviewedAt?.toISOString() ?? null,
-      items: request.items.map((item) => ({ id: item.id, productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
+      items: request.items.map((item) => ({ id: item.id, productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity, status: item.status, reviewNote: item.reviewNote }))
     })),
     eligibleOrders
   };
@@ -104,6 +104,7 @@ export async function createMyReturnRequest(input: unknown, now = new Date()) {
       by: ["orderItemId"],
       where: {
         orderItemId: { in: data.items.map((item) => item.orderItemId) },
+        status: { notIn: ["REJECTED", "CANCELLED"] },
         returnRequest: { status: { notIn: [ReturnRequestStatus.REJECTED, ReturnRequestStatus.CANCELLED] } }
       },
       _sum: { quantity: true }
@@ -174,14 +175,18 @@ export async function reviewReturnRequest(returnId: string, input: unknown, now 
   return prisma.$transaction(async (tx) => {
     const current = await tx.returnRequest.findUnique({ where: { id: returnId }, select: { id: true, status: true } });
     if (!current) throw new Error("Return request not found.");
-    const allowed = (current.status === ReturnRequestStatus.REQUESTED && ["APPROVED", "REJECTED"].includes(data.status))
-      || (current.status === ReturnRequestStatus.APPROVED && data.status === "RECEIVED");
-    if (!allowed) throw new Error("This return request cannot move to the selected status.");
+    const allowed = current.status === ReturnRequestStatus.REQUESTED;
+    if (!allowed) throw new Error("Only pending return requests can be approved or rejected. Sellers record physical receipt through their store inventory.");
     const changed = await tx.returnRequest.updateMany({
       where: { id: current.id, status: current.status },
       data: { status: data.status, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
     });
     if (changed.count !== 1) throw new Error("The return request changed. Refresh and try again.");
+    const updatedItems = await tx.returnItem.updateMany({
+      where: { returnRequestId: current.id, status: ReturnItemStatus.REQUESTED },
+      data: { status: data.status as ReturnItemStatus, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
+    });
+    if (updatedItems.count === 0) throw new Error("There are no pending return items to review.");
     await tx.auditLog.create({
       data: {
         actorType: AuditActorType.USER, actorId: actor.userId, action: "returns.status_changed",

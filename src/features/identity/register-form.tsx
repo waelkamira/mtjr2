@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AuthReturnLink from "@/components/auth-return-link";
 import { currentReturnPath } from "@/lib/current-return-path";
+import RegistrationTurnstile from "@/features/identity/registration-turnstile";
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
 const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
-export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthError?: string }) {
+export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey }: { initialOAuthError?: string; turnstileSiteKey: string }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,42 +20,68 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
   const [sellerDisplayName, setSellerDisplayName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetVersion, setTurnstileResetVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [oauthError, setOauthError] = useState(initialOAuthError);
 
-  function continueWithGoogle() {
+  async function continueWithGoogle() {
     if (!acceptedTerms || !acceptedPrivacy) { setOauthError("Please accept both policy documents before continuing."); return; }
     if (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim())) { setOauthError("Enter your applicant and store names before continuing."); return; }
-    const params = new URLSearchParams({
-      accountType,
-      acceptedTerms: "1",
-      acceptedPrivacy: "1",
-      returnTo: currentReturnPath()
-    });
-    if (accountType === "SELLER") { params.set("sellerLegalName", sellerLegalName); params.set("sellerDisplayName", sellerDisplayName); }
-    window.location.assign(new URL("/api/auth/google/start?" + params.toString(), window.location.origin).toString());
+    if (!turnstileToken) { setOauthError("Please complete the bot check before continuing."); return; }
+    setBusy(true);
+    setOauthError("");
+    try {
+      const challengeResponse = await fetch("/api/auth/registration-challenge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ turnstileToken }),
+        cache: "no-store"
+      });
+      const challengeResult = await challengeResponse.json() as { error?: string };
+      if (!challengeResponse.ok) throw new Error(challengeResult.error || "The bot check could not be completed.");
+
+      const params = new URLSearchParams({
+        intent: "register",
+        accountType,
+        acceptedTerms: "1",
+        acceptedPrivacy: "1",
+        returnTo: currentReturnPath()
+      });
+      if (accountType === "SELLER") { params.set("sellerLegalName", sellerLegalName); params.set("sellerDisplayName", sellerDisplayName); }
+      window.location.assign(new URL("/api/auth/google/start?" + params.toString(), window.location.origin).toString());
+    } catch (cause) {
+      setOauthError(cause instanceof Error ? cause.message : "The bot check could not be completed.");
+      setTurnstileToken("");
+      setTurnstileResetVersion((version) => version + 1);
+      setBusy(false);
+    }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    if (!turnstileToken) { setError("Please complete the bot check before creating an account."); return; }
     setBusy(true);
     setError("");
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName, email, password, accountType, sellerLegalName: accountType === "SELLER" ? sellerLegalName : undefined, sellerDisplayName: accountType === "SELLER" ? sellerDisplayName : undefined, acceptedTerms, acceptedPrivacy }),
+        body: JSON.stringify({ displayName, email, password, accountType, sellerLegalName: accountType === "SELLER" ? sellerLegalName : undefined, sellerDisplayName: accountType === "SELLER" ? sellerDisplayName : undefined, acceptedTerms, acceptedPrivacy, turnstileToken }),
         cache: "no-store"
       });
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || "Registration could not be completed.");
-      const message = result.message || "Account created. Check your email to verify your address.";
+      const message = result.message || "Account created. You are now signed in.";
       window.dispatchEvent(new CustomEvent("mtjr:registration-notice", { detail: message }));
+      setPassword("");
       router.replace(currentReturnPath());
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Registration could not be completed.");
+      setTurnstileToken("");
+      setTurnstileResetVersion((version) => version + 1);
     } finally {
       setBusy(false);
     }
@@ -67,10 +94,24 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
           <Link href="/" className="text-2xl font-semibold tracking-tight text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
           <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Back to marketplace</Link>
         </header>
-        <section className="mx-auto w-full max-w-md rounded-3xl border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-card)] sm:p-9">
+        <div className="grid overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] lg:grid-cols-[0.82fr_1.18fr]">
+          <aside className="relative hidden overflow-hidden bg-[var(--color-forest-950)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_12%,rgba(190,130,87,.38),transparent_38%),linear-gradient(145deg,transparent,rgba(0,0,0,.24))]" />
+            <div className="relative">
+              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-100)]">Join Mtjr2</p>
+              <h1 className="mt-8 max-w-md text-4xl font-semibold leading-tight xl:text-5xl">One account. A world of possibilities.</h1>
+              <p className="mt-5 max-w-md text-sm leading-7 text-white/75">Shop from stores, manage your orders and favorites, or apply to build your business on the marketplace.</p>
+            </div>
+            <div className="relative rounded-2xl border border-white/15 bg-white/5 p-5">
+              <p className="text-sm font-semibold text-[var(--color-copper-100)]">A safer marketplace starts here</p>
+              <p className="mt-2 text-sm leading-6 text-white/75">Bot checks help protect accounts, and seller applications are reviewed before selling permissions are granted.</p>
+            </div>
+          </aside>
+          <section className="w-full px-5 py-8 sm:px-9 lg:px-12 xl:px-14">
+            <div className="mx-auto w-full max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Mtjr2 account · development</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">Create your account</h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Create a test account to explore the marketplace during development. Email verification is required.</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Create an account to explore the marketplace. Your account is ready as soon as registration succeeds.</p>
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">Development preview: these policy documents are initial project drafts, not final legal terms. Public production registration remains disabled.</p>
           {oauthError && <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{oauthError}</p>}
           {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
@@ -109,17 +150,18 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
               <input className="mt-1 size-4 shrink-0 accent-[var(--color-forest-900)]" type="checkbox" checked={acceptedPrivacy} onChange={event => setAcceptedPrivacy(event.target.checked)} required />
               <span>I have read the <Link className="font-semibold text-[var(--color-forest-800)] underline" href="/privacy" target="_blank">Privacy Notice</Link> (version v1).</span>
             </label>
-            <button className={buttonClass} disabled={busy || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))}>{busy ? "Creating account…" : "Create account"}</button>
+            <RegistrationTurnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetVersion={turnstileResetVersion} />
+            <button className={buttonClass} disabled={busy || !turnstileToken || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))}>{busy ? "Creating account…" : "Create account"}</button>
             <div className="flex items-center gap-3 py-1 text-xs text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--border)]" />OR<span className="h-px flex-1 bg-[var(--border)]" /></div>
-            <button type="button" onClick={continueWithGoogle} disabled={busy || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))} className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--color-ivory-100)] disabled:cursor-not-allowed disabled:opacity-50"><span className="text-base font-bold">G</span>Continue with Google</button>
+            <button type="button" onClick={continueWithGoogle} disabled={busy || !turnstileToken || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))} className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--color-ivory-100)] disabled:cursor-not-allowed disabled:opacity-50"><span className="text-base font-bold">G</span>Continue with Google</button>
           </form>
           <div className="mt-6 flex flex-wrap gap-x-2 gap-y-1 border-t border-[var(--border)] pt-5 text-sm text-[var(--muted)]">
             <span>Already have an account?</span>
             <AuthReturnLink className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</AuthReturnLink>
-            <span aria-hidden="true">·</span>
-            <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href={`/verify-email${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ""}`}>Verify/resend email</Link>
           </div>
-        </section>
+          </div>
+          </section>
+        </div>
       </div>
     </main>
   );

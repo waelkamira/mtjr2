@@ -149,44 +149,44 @@ export default function StorefrontHomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      <div className="border-b border-[var(--border)] bg-[var(--color-forest-950)] text-center text-xs tracking-wide text-white/85">
+    <main className="min-h-screen bg-transparent">
+      <div className="border-y border-white/70 bg-[var(--color-lavender-100)] py-2 text-center text-xs font-semibold tracking-wide text-[var(--color-lavender-800)]">
         A considered marketplace for the things worth keeping
       </div>
 
       <section className="mx-auto grid max-w-[1440px] gap-8 px-5 py-10 lg:grid-cols-[1.15fr_.85fr] lg:px-10 lg:py-16">
-        <div className="flex flex-col justify-center rounded-[2rem] bg-[var(--color-forest-950)] px-8 py-12 text-white sm:px-12 lg:min-h-[390px]">
-          <p className="mb-5 text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-sage-300)]">The world, thoughtfully curated</p>
-          <h1 className="max-w-2xl text-4xl font-medium leading-[1.12] tracking-tight sm:text-6xl">Find something <span className="font-serif italic text-[var(--color-sage-300)]">exceptional.</span></h1>
-          <p className="mt-6 max-w-lg text-base leading-7 text-white/75">Discover independent stores and considered collections from a marketplace built to bring the world closer.</p>
-          <a href="#discover" className="mt-8 inline-flex w-fit items-center rounded-xl bg-[var(--color-ivory-50)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-950)] transition hover:bg-[var(--color-sage-100)]">Explore the collection <span aria-hidden="true" className="ml-3">↗</span></a>
+        <div className="clay-surface flex flex-col justify-center rounded-[2.25rem] border-white/80 bg-[var(--color-lavender-100)] px-8 py-12 text-[var(--color-lavender-950)] sm:px-12 lg:min-h-[390px]">
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-lavender-600)]">The world, thoughtfully curated</p>
+          <h1 className="max-w-2xl text-4xl font-medium leading-[1.12] tracking-tight sm:text-6xl">Find something <span className="font-serif italic text-[var(--color-lavender-600)]">exceptional.</span></h1>
+          <p className="mt-6 max-w-lg text-base leading-7 text-[var(--color-lavender-800)]/80">Discover independent stores and considered collections from a marketplace built to bring the world closer.</p>
+          <a href="#discover" className="mt-8 inline-flex w-fit items-center clay-interactive rounded-2xl border border-white/80 bg-white/80 px-5 py-3 text-sm font-bold text-[var(--color-lavender-950)] shadow-[var(--shadow-clay)] transition hover:bg-white">Explore the collection <span aria-hidden="true" className="ml-3">↗</span></a>
         </div>
-        <div className="relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--color-sage-100)] p-8 sm:p-10">
+        <div className="clay-surface relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-[2.25rem] border-white/80 bg-[var(--color-mint-100)] p-8 sm:p-10">
           <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full border border-[var(--color-sage-500)]/40" />
           <div className="absolute -right-2 top-12 h-44 w-44 rounded-full border border-[var(--color-sage-500)]/40" />
-          <p className="relative text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-forest-800)]">A world of independent commerce</p>
+          <p className="relative text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-mint-800)]">A world of independent commerce</p>
           <div className="relative">
-            <p className="font-serif text-3xl leading-tight text-[var(--color-forest-950)] sm:text-4xl">Distinctive finds.<br />Trusted sellers.</p>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--color-ink-700)]">A growing collection of products, makers and stores — all in one place.</p>
+            <p className="font-serif text-3xl leading-tight text-[var(--color-mint-800)] sm:text-4xl">Distinctive finds.<br />Trusted sellers.</p>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--color-mint-800)]/80">A growing collection of products, makers and stores — all in one place.</p>
           </div>
-          <span className="relative text-xs tracking-widest text-[var(--color-forest-800)]">MTJR / GLOBAL MARKETPLACE</span>
+          <span className="relative text-xs tracking-widest text-[var(--color-mint-800)]">MTJR / GLOBAL MARKETPLACE</span>
         </div>
       </section>
 
       <section aria-labelledby="editorial-heading" className="mx-auto max-w-[1440px] px-5 py-8 lg:px-10 lg:py-12">
-        <div className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white">
+        <div className="clay-surface overflow-hidden rounded-[2rem] border-white/80 bg-[var(--surface)]">
           <div className="grid lg:grid-cols-[.85fr_1.15fr]">
-            <div className="flex flex-col justify-center bg-[var(--color-ivory-100)] p-7 sm:p-10 lg:p-12">
-              <p className="text-xs font-semibold uppercase tracking-[.22em] text-[var(--color-copper-600)]">A better way to discover</p>
-              <h2 id="editorial-heading" className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-[var(--color-forest-950)] sm:text-4xl">Good things come from looking a little closer.</h2>
+            <div className="flex flex-col justify-center bg-[var(--color-blush-100)] p-7 sm:p-10 lg:p-12">
+              <p className="text-xs font-semibold uppercase tracking-[.22em] text-[var(--color-blush-800)]">A better way to discover</p>
+              <h2 id="editorial-heading" className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-[var(--color-lavender-950)] sm:text-4xl">Good things come from looking a little closer.</h2>
               <p className="mt-4 max-w-md text-sm leading-7 text-[var(--color-ink-700)]">Explore independent stores, discover new brands and find pieces that feel like they were chosen just for you.</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <a href="#discover" className="inline-flex items-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Browse products <span aria-hidden="true" className="ml-3">↗</span></a>
+                <a href="#discover" className="inline-flex items-center rounded-xl clay-interactive rounded-2xl border border-white/70 bg-[var(--color-lavender-600)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-clay)] transition hover:bg-[var(--color-lavender-800)]">Browse products <span aria-hidden="true" className="ml-3">↗</span></a>
 
-                <Link href="/seller" className="inline-flex items-center rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-white">Meet the sellers</Link>
+                <Link href="/seller" className="inline-flex items-center clay-interactive rounded-2xl border border-white/80 bg-white/70 px-5 py-3 text-sm font-bold text-[var(--color-lavender-800)] shadow-[var(--shadow-clay)] transition hover:bg-white">Meet the sellers</Link>
               </div>
             </div>
-            <div className="grid min-h-[340px] grid-cols-2 gap-3 bg-[var(--color-sage-100)] p-3 sm:gap-4 sm:p-5">
+            <div className="grid min-h-[340px] grid-cols-2 gap-3 bg-[var(--color-lavender-50)] p-3 sm:gap-4 sm:p-5">
               <a href="#categories" className="group relative flex min-h-40 flex-col justify-end overflow-hidden rounded-[1.5rem] bg-[var(--color-forest-800)] p-5 text-white transition hover:shadow-[var(--shadow-card)] sm:min-h-64 sm:p-7">
                 <span className="absolute -right-8 -top-8 h-36 w-36 rounded-full border border-white/20 transition duration-500 group-hover:scale-110 sm:h-52 sm:w-52" />
                 <span className="absolute right-5 top-5 font-serif text-5xl text-white/30 sm:right-8 sm:top-8 sm:text-7xl">01</span>
@@ -225,7 +225,7 @@ export default function StorefrontHomePage() {
 
       {brands.length > 0 && <section id="brands" aria-label="Featured brands" className="mx-auto max-w-[1440px] px-5 py-5 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white px-5 py-5">
-          <div><p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Independent labels</p><h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">Discover the brands</h2></div>
+          <div><p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Independent labels</p><h2 className="mt-1 text-xl font-bold text-[var(--color-lavender-950)]">Discover the brands</h2></div>
           <div className="flex flex-wrap gap-2">
             {brands.slice(0, 8).map((brand) => <button key={brand.id} type="button" onClick={() => { setBrandId(brand.id === brandId ? "" : brand.id); setPage(1); document.getElementById("discover")?.scrollIntoView({ behavior: "smooth" }); }} aria-pressed={brandId === brand.id} className={`rounded-full border px-4 py-2 text-sm transition ${brandId === brand.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-800)] text-white" : "border-[var(--border)] text-[var(--color-ink-700)] hover:border-[var(--color-sage-500)]"}`}>{brand.name}</button>)}
 
@@ -244,7 +244,7 @@ export default function StorefrontHomePage() {
             {products.map((product) => {
               const price = product.variants.flatMap((variant) => variant.prices).find((item) => !marketId || item.marketId === marketId);
               const image = product.media[0];
-              return <Link key={product.id} href={`/products/${encodeURIComponent(product.slug)}`} className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-white transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-card)]">
+              return <Link key={product.id} href={`/products/${encodeURIComponent(product.slug)}`} className="clay-surface clay-interactive group overflow-hidden rounded-[var(--radius-card)] border-white/80 bg-[var(--surface)] transition duration-200">
                 <div className="relative aspect-[4/4.6] overflow-hidden bg-[var(--color-ivory-100)]">
                   {image ? <img src={image.url} alt={image.altText ?? product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[.2em] text-[var(--color-sage-600)]">Mtjr collection</div>}
                 </div>

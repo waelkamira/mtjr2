@@ -123,8 +123,8 @@ export default function SellerWorkspacePage() {
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--color-ivory-50)]">
+    <main className="min-h-screen bg-transparent">
+      <header className="border-b border-white/70 bg-[var(--surface)]/90 shadow-[0_8px_28px_rgba(74,62,103,0.08)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
           <Link href="/" className="text-2xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
           <div className="flex items-center gap-4"><Link href="/notifications" className="text-xs font-semibold text-[var(--color-forest-800)]">Notifications</Link><Link href="/seller/reviews" className="text-xs font-semibold text-[var(--color-forest-800)]">Reviews</Link><Link href="/seller/questions" className="text-xs font-semibold text-[var(--color-forest-800)]">Product Q&A</Link><span className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Seller workspace</span></div>
@@ -132,8 +132,8 @@ export default function SellerWorkspacePage() {
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-5 py-10">
-        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Your business</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">Seller workspace</h1>
+        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">Your business</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-lavender-950)]">Seller workspace</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">Manage your seller application, stores, active markets and warehouse stock. Every action is checked by the marketplace backend.</p>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-950)]">{message}</p>}

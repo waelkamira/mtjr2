@@ -45,11 +45,10 @@ function isMatchingStoreRequest(
     existingMarketIds.every((marketId, index) => marketId === expectedMarketIds[index]);
 }
 
-/** Authenticated, verified user submits one pending seller application. */
+/** Authenticated user submits one pending seller application. */
 export async function submitSellerApplication(input: SellerApplicationInput, now = new Date()) {
   const data = sellerApplicationSchema.parse(input);
   const actor = await requireCurrentSession(now);
-  if (!actor.user.emailVerifiedAt) throw new Error("A verified email address is required to apply as a seller.");
 
   try {
     return await prisma.$transaction(async (tx) => {

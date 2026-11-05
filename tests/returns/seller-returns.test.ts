@@ -46,8 +46,8 @@ describe("seller return visibility", () => {
       requestedAt: new Date("2026-11-04T00:00:00.000Z"),
       order: { orderNumber: "ORD-1" },
       items: [
-        { quantity: 1, orderItem: { productName: "Product A", sku: "A-1", quantity: 2, vendorOrder: { storeId: "store-owned", store: { name: "Owned store" } } } },
-        { quantity: 2, orderItem: { productName: "Product B", sku: "B-1", quantity: 3, vendorOrder: { storeId: "store-delegated", store: { name: "Delegated store" } } } }
+        { id: "return-item-a", status: "REQUESTED", reviewNote: null, quantity: 1, orderItem: { productName: "Product A", sku: "A-1", quantity: 2, vendorOrder: { storeId: "store-owned", store: { name: "Owned store" } } } },
+        { id: "return-item-b", status: "REQUESTED", reviewNote: null, quantity: 2, orderItem: { productName: "Product B", sku: "B-1", quantity: 3, vendorOrder: { storeId: "store-delegated", store: { name: "Delegated store" } } } }
       ]
     }]);
   });
@@ -60,8 +60,8 @@ describe("seller return visibility", () => {
       .toEqual(["store-owned", "store-delegated"]);
     expect(result.items).toHaveLength(2);
     expect(result.items.map((item) => item.storeId)).toEqual(["store-owned", "store-delegated"]);
-    expect(result.items[0].items).toEqual([{ productName: "Product A", sku: "A-1", orderedQuantity: 2, returnQuantity: 1 }]);
-    expect(result.items[1].items).toEqual([{ productName: "Product B", sku: "B-1", orderedQuantity: 3, returnQuantity: 2 }]);
+    expect(result.items[0].items).toEqual([{ id: "return-item-a", status: "REQUESTED", reviewNote: null, productName: "Product A", sku: "A-1", orderedQuantity: 2, returnQuantity: 1 }]);
+    expect(result.items[1].items).toEqual([{ id: "return-item-b", status: "REQUESTED", reviewNote: null, productName: "Product B", sku: "B-1", orderedQuantity: 3, returnQuantity: 2 }]);
   });
 
   it("does not query or expose returns when the user has no authorized active store", async () => {

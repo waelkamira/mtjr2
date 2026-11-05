@@ -46,7 +46,7 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
         legalName: true,
         displayName: true,
         createdAt: true,
-        owner: { select: { id: true, email: true, displayName: true, emailVerifiedAt: true, status: true } },
+        owner: { select: { id: true, email: true, displayName: true, status: true } },
         stores: {
           orderBy: { createdAt: "desc" },
           take: 10,
@@ -60,7 +60,6 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
     items: items.map((item) => ({
       ...item,
       createdAt: item.createdAt.toISOString(),
-      owner: { ...item.owner, emailVerifiedAt: item.owner.emailVerifiedAt?.toISOString() ?? null },
       stores: item.stores.map((store) => ({ ...store, createdAt: store.createdAt.toISOString() })),
       storeCount: item._count.stores
     })),

@@ -30,7 +30,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 08 | Product questions and answers | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 09 | Customer messaging and support | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 10 | Customer notifications | Not audited | Not mapped | Not audited | Not audited | Not verified |
-| 11 | Returns and refunds (customer journey) | `/account/returns`, `/orders/[orderId]` | Customer return APIs/services and screens | ReturnRequest, ReturnItem, Order, OrderItem, VendorOrder | CI + PostgreSQL passed on merged implementation; deployed browser journey pending | Implemented / unverified; no refund execution |
+| 11 | Returns and refunds (customer journey) | `/account/returns`, `/seller/returns`, `/admin/returns` | Customer request → store-scoped seller decision API/UI → platform review API/UI | ReturnRequest, ReturnItem (item-level status/reviewer/note), Order, OrderItem, VendorOrder | Exact-head CI + PostgreSQL integration pending for per-item seller decisions; browser journey pending | Seller approve/reject isolated by store; physical receipt, restock and refund execution not implemented |
 | 12 | Seller onboarding, verification and KYC | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 13 | Seller dashboard and analytics | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 14 | Seller product management | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -217,6 +217,7 @@ Status: Implemented at source level; not Verified until exact-head CI/PostgreSQL
 
 This is an initial System 15 slice, not completion of seller order management or System 18 shipping/fulfillment. Browser verification is still pending.
 
+<<<<<<< HEAD
 ## System 12 — seller store creation retry trace
 
 | Actor action | UI → API | Authorization and domain | Persistence / final outcome | Boundary |
@@ -245,3 +246,25 @@ Focused evidence: `npx vitest run tests/marketplace/seller-application.test.ts t
 |---|---|---|---|---|---|
 | Existing Super Admin requests access for another user | `/admin/control-panel/privilege-requests` form | `POST /api/admin/control-panel/privilege-requests` → `createPlatformPrivilegeRequest` | PlatformPrivilegeRequest + AuditLog | ACTIVE target, verified email, minimum justification, no current platform grant, one pending request per target under advisory lock | Implemented; migration/CI pending |
 | A different Super Admin approves or rejects | Pending request card | `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `decidePlatformPrivilegeRequest` | Request status, UserRoleAssignment on approval, AuditLog | Actor separation, pending-only transition, canonical role permission check, transaction + target lock | Implemented; migration/CI pending |
+=======
+
+## Manual seller dispatch — pending exact-head verification
+
+| Action | Journey | Authorization and invariant | Persistence/result | Failure behavior |
+|---|---|---|---|---|
+| Record dispatch | `/seller/orders` → POST `/api/seller/orders/[vendorOrderId]/shipment` | HttpOnly session; vendor order resolves store server-side; active store/seller; owner or active staff with exact STORE `orders:manage` or global permission; status must be READY_TO_SHIP; tracking URL HTTPS | Shipment + vendor status SHIPPED + parent aggregate status + both histories + AuditLog in one serializable transaction | Anonymous 401; forbidden 403; missing order 404; stale state 409; invalid payload 400; identical replay returns existing shipment |
+| View shipment | `/orders/[orderId]` reload | Existing order ownership check | Shipment serialized per vendor order | Missing shipment renders no tracking block; tracking link opens HTTPS URL in new tab |
+ 
+Manual seller-entered tracking is not a carrier integration. Carrier webhooks, live tracking, label purchase and delivery confirmation remain out of scope for this slice.
+
+
+## Multi-vendor shipment aggregation correction — 2026-11-05
+
+- On seller dispatch, parent order aggregation now considers only non-cancelled vendor orders. A cancelled seller leg does not block FULFILLED once all remaining live vendor orders are SHIPPED or DELIVERED.
+- If at least one live vendor order remains undispatched after another has shipped, parent state remains PARTIALLY_FULFILLED.
+- Regression tests cover both states. No Prisma migration is needed; the existing CANCELLED status is sufficient.
+- Exact-head CI/PostgreSQL verification for this correction is pending.
+
+
+2026-11-05: Seller return decisions now operate on `ReturnItem` rows scoped to the authorized store. A multi-store request remains pending until every store has decided; customer UI shows each line's status. Platform review synchronizes line status. No physical receipt, inventory restock or payment refund is performed.
+>>>>>>> origin/main

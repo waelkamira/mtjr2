@@ -311,6 +311,7 @@ The parent ReturnRequest can span several stores but has a single global status.
 |---|---|---|---|---|
 | Seller order preparation | `/seller/orders` | `PATCH /api/seller/orders/[vendorOrderId]/status` → `transitionSellerVendorOrder` | Existing VendorOrder and status-history records plus AuditLog; no schema change | Implemented on PR #25; exact-head CI/PostgreSQL verification pending. Only paid `CONFIRMED → PROCESSING → READY_TO_SHIP` is exposed. |
 
+<<<<<<< HEAD
 ## Buyer order management and seller tracking — 2026-11-05
 
 | Route / action | UI | API / domain | Prisma | Status |
@@ -363,3 +364,12 @@ Audit metadata is redacted before API serialization. The access catalogue delibe
 | Privilege request and review | `/admin/control-panel/privilege-requests` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET/POST /api/admin/control-panel/privilege-requests`, `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `platform-privilege-requests.ts`. | Implemented; full CI and all migrations passed in disposable PostgreSQL on code commit 4bd6f3d; not applied to user/production DB. |
 
 The workflow grants only canonical `SUPER_ADMIN` after independent review. The requester cannot decide their own request. Assignment, decision and audit record are transactional. Target must be ACTIVE and email-verified.
+=======
+
+## Manual seller dispatch and buyer tracking — pending verification
+
+| Route / action | UI | API / domain | Prisma | Status |
+|---|---|---|---|---|
+| Record dispatch | `/seller/orders` → Record dispatch | `POST /api/seller/orders/[vendorOrderId]/shipment` → `createSellerShipment` | Shipment, VendorOrder, VendorOrderStatusHistory, OrderStatusHistory, AuditLog | Implemented on `feat/shipment-tracking-current-main`; exact-head CI/PostgreSQL pending. Requires active owner or exact store-scoped `orders:manage`; only READY_TO_SHIP is accepted. |
+| View tracking details | `/orders/[orderId]` | Existing owned-order read serializer | Shipment joined through VendorOrder | Implemented on the same branch; customer sees seller-entered details only. No live carrier tracking is claimed. |
+>>>>>>> origin/main

@@ -23,7 +23,6 @@ const listSelect = {
   email: true,
   displayName: true,
   status: true,
-  emailVerifiedAt: true,
   lastLoginAt: true,
   createdAt: true,
   _count: { select: { orders: true, sessions: true, roleAssignments: true } }
@@ -56,7 +55,6 @@ export async function listAdminUsers(input: unknown, now = new Date()) {
   return {
     items: users.map(({ _count, ...user }) => ({
       ...user,
-      emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
       lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
       createdAt: user.createdAt.toISOString(),
       orderCount: _count.orders,
@@ -80,7 +78,6 @@ export async function getAdminUser(userId: string, now = new Date()) {
       email: true,
       displayName: true,
       status: true,
-      emailVerifiedAt: true,
       lastLoginAt: true,
       createdAt: true,
       updatedAt: true,
@@ -122,7 +119,6 @@ export async function getAdminUser(userId: string, now = new Date()) {
   if (!user) throw new Error("User was not found.");
   return {
     ...user,
-    emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
     lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),

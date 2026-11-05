@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { hashPassword } from "@/server/identity/password";
 import { consumePasswordResetAttempt } from "@/server/identity/login-throttle";
+import { createInAppNotification } from "@/server/notifications/notifications";
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 
@@ -19,7 +20,7 @@ export interface PasswordResetChallenge {
 }
 
 /**
- * Creates a one-hour, single-use reset challenge for an active verified account.
+ * Creates a one-hour, single-use reset challenge for an active account.
  * The HTTP layer must always return the same public response whether this
  * function returns a challenge or null, to prevent account enumeration.
  */
@@ -32,10 +33,10 @@ export async function createPasswordResetChallenge(
 
   const user = await prisma.user.findUnique({
     where: { emailNormalized: normalizedEmail },
-    select: { id: true, status: true, emailVerifiedAt: true }
+    select: { id: true, status: true }
   });
 
-  if (!user || user.status !== UserStatus.ACTIVE || user.emailVerifiedAt === null) {
+  if (!user || user.status !== UserStatus.ACTIVE) {
     return null;
   }
 
@@ -157,6 +158,13 @@ export async function completePasswordReset(
         occurredAt: now
       }
     });
+    await createInAppNotification(tx, { data: {
+      userId: challenge.userId, type: "ACCOUNT_SECURITY",
+      title: "Your password was reset",
+      message: "Your Mtjr account password was reset successfully. All previous sessions were revoked.",
+      resourceType: "ACCOUNT", resourceId: challenge.userId,
+      deduplicationKey: `account-security:password-reset:${challenge.userId}:${now.toISOString()}`
+    }});
 
     return true;
   });

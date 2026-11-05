@@ -10,8 +10,8 @@ import { z } from "zod";
 
 const shipmentInputSchema = z.object({
   carrierName: z.string().trim().min(2).max(120),
-  trackingNumber: z.string().trim().min(2).max(120),
-  trackingUrl: z.string().trim().url().max(2000).optional().nullable()
+  trackingNumber: z.string().trim().min(3).max(160),
+  trackingUrl: z.string().trim().url().max(2048).optional().nullable()
     .refine((value) => {
       if (!value) return true;
       const url = new URL(value);
@@ -67,11 +67,12 @@ async function updateParentFulfillmentStatus(
     tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } }),
     tx.vendorOrder.findMany({ where: { orderId }, select: { status: true } })
   ]);
-  const shipped = vendorOrders.filter((vendor) =>
+  const activeVendorOrders = vendorOrders.filter((vendor) => vendor.status !== VendorOrderStatus.CANCELLED);
+  const shipped = activeVendorOrders.filter((vendor) =>
     vendor.status === VendorOrderStatus.SHIPPED || vendor.status === VendorOrderStatus.DELIVERED
   ).length;
-  const nextStatus = vendorOrders.length > 0 && shipped === vendorOrders.length
-    ? vendorOrders.every((vendor) => vendor.status === VendorOrderStatus.DELIVERED)
+  const nextStatus = activeVendorOrders.length > 0 && shipped === activeVendorOrders.length
+    ? activeVendorOrders.every((vendor) => vendor.status === VendorOrderStatus.DELIVERED)
       ? OrderStatus.COMPLETED : OrderStatus.FULFILLED
     : shipped > 0 ? OrderStatus.PARTIALLY_FULFILLED : null;
   if (!nextStatus || nextStatus === order.status) return;
@@ -130,7 +131,8 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
       minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
       shipment: vendor.shipment ? {
         carrierName: vendor.shipment.carrierName, trackingNumber: vendor.shipment.trackingNumber,
-        trackingUrl: vendor.shipment.trackingUrl, status: vendor.shipment.status,
+        trackingUrl: vendor.shipment.trackingUrl, shippedAt: vendor.shipment.shippedAt.toISOString(),
+        status: vendor.shipment.status,
         events: vendor.shipment.events.map((event) => ({
           status: event.status, description: event.description, location: event.location,
           occurredAt: event.occurredAt.toISOString()
@@ -166,6 +168,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
       where: { id },
       select: {
         id: true, orderId: true, storeId: true, status: true,
+        shipment: { select: { id: true, carrierName: true, trackingNumber: true, trackingUrl: true, shippedAt: true } },
         order: { select: { status: true, orderNumber: true } },
         store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
       }
@@ -220,6 +223,7 @@ export async function transitionSellerVendorOrder(vendorOrderId: string, input: 
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
+/** Seller-entered dispatch details; this does not claim carrier API verification. */
 export async function createSellerShipment(vendorOrderId: string, input: unknown, now = new Date()) {
   const data = shipmentInputSchema.parse(input);
   const actor = await requireCurrentSession(now);
@@ -229,8 +233,11 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
       where: { id },
       select: {
         id: true, orderId: true, storeId: true, status: true,
-        shipment: { select: { id: true, carrierName: true, trackingNumber: true, status: true } },
-        order: { select: { orderNumber: true, userId: true } },
+        shipment: { select: {
+          id: true, carrierName: true, trackingNumber: true, trackingUrl: true, status: true, shippedAt: true,
+          events: { orderBy: { occurredAt: "asc" }, select: { status: true, description: true, location: true, occurredAt: true } }
+        } },
+        order: { select: { status: true, orderNumber: true, userId: true } },
         store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
       }
     });
@@ -239,26 +246,40 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
       throw new Error("This store is not active.");
     }
     await authorizeStoreOrder(tx, actor.userId, current.storeId, current.store.seller.ownerId, now);
+    if (current.shipment && current.status === VendorOrderStatus.SHIPPED
+      && current.shipment.carrierName === data.carrierName
+      && current.shipment.trackingNumber === data.trackingNumber
+      && current.shipment.trackingUrl === (data.trackingUrl || null)) {
+      return {
+        ...current.shipment, shippedAt: current.shipment.shippedAt.toISOString(),
+        events: current.shipment.events.map((event) => ({ ...event, occurredAt: event.occurredAt.toISOString() })),
+        vendorOrderStatus: VendorOrderStatus.SHIPPED, changed: false
+      };
+    }
     if (current.shipment) {
-      if (current.shipment.carrierName === data.carrierName && current.shipment.trackingNumber === data.trackingNumber) {
-        return { id: current.shipment.id, status: current.shipment.status, changed: false };
-      }
       throw new Error("A shipment already exists for this seller order.");
     }
     if (current.status !== VendorOrderStatus.READY_TO_SHIP) {
       throw new Error("Only seller orders marked ready to ship can be shipped.");
+    }
+    if (!( [OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED] as OrderStatus[]).includes(current.order.status)) {
+      throw new Error("The parent order is not eligible for dispatch.");
     }
 
     const shipment = await tx.shipment.create({
       data: {
         vendorOrderId: id, carrierName: data.carrierName, trackingNumber: data.trackingNumber,
         trackingUrl: data.trackingUrl ?? null, status: ShipmentTrackingStatus.SHIPPED, shippedAt: now,
+        createdById: actor.userId,
         events: { create: {
           status: ShipmentTrackingStatus.SHIPPED, description: "Shipment handed to carrier.",
           actorId: actor.userId, occurredAt: now
         } }
       },
-      select: { id: true, status: true }
+      select: {
+        id: true, carrierName: true, trackingNumber: true, trackingUrl: true, status: true, shippedAt: true,
+        events: { orderBy: { occurredAt: "asc" }, select: { status: true, description: true, location: true, occurredAt: true } }
+      }
     });
     const updated = await tx.vendorOrder.updateMany({
       where: { id, status: VendorOrderStatus.READY_TO_SHIP },
@@ -277,7 +298,7 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
         actorType: AuditActorType.USER, actorId: actor.userId,
         action: "seller.shipment.created", resource: "shipment", resourceId: shipment.id,
         scopeType: "STORE", scopeId: current.storeId, occurredAt: now,
-        metadata: { vendorOrderId: id, orderNumber: current.order.orderNumber, carrierName: data.carrierName }
+        metadata: { vendorOrderId: id, orderNumber: current.order.orderNumber, carrierName: data.carrierName, trackingNumber: data.trackingNumber }
       }
     });
     if (current.order.userId) {
@@ -290,7 +311,11 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
         }
       });
     }
-    return { ...shipment, changed: true };
+    return {
+      ...shipment, shippedAt: shipment.shippedAt.toISOString(),
+      events: shipment.events.map((event) => ({ ...event, occurredAt: event.occurredAt.toISOString() })),
+      vendorOrderStatus: VendorOrderStatus.SHIPPED, changed: true
+    };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 

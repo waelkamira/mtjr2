@@ -35,7 +35,7 @@ describe("admin user management", () => {
     mocks.userCount.mockResolvedValue(1);
     mocks.userFindMany.mockResolvedValue([{
       id: "buyer-1", email: "buyer@example.test", displayName: "Buyer", status: "ACTIVE",
-      emailVerifiedAt: null, lastLoginAt: null, createdAt: new Date("2026-01-01T00:00:00Z"),
+      lastLoginAt: null, createdAt: new Date("2026-01-01T00:00:00Z"),
       _count: { orders: 2, sessions: 1, roleAssignments: 1 }
     }]);
     mocks.transaction.mockImplementation((callback: (tx: unknown) => unknown) => callback({

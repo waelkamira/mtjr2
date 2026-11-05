@@ -15,7 +15,7 @@ function productPrice(product: Product) {
 }
 
 export default function CatalogProductGrid({ products }: { products: Product[] }) {
-  if (!products.length) return <div className="mt-8 rounded-[var(--radius-panel)] border border-dashed border-[var(--border)] bg-[var(--surface-tint)]/60 px-6 py-14 text-center">
+  if (!products.length) return <div className="clay-surface-inset mt-8 rounded-[var(--radius-panel)] border-white/70 bg-[var(--color-mint-50)] px-6 py-14 text-center">
 
     <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">No published products yet</h2>
     <p className="mt-2 text-sm text-[var(--muted)]">New products appear here when approved and published.</p>
@@ -24,13 +24,13 @@ export default function CatalogProductGrid({ products }: { products: Product[] }
   return <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
     {products.map((product) => {
       const image = product.media.find((item) => item.isPrimary) ?? product.media[0];
-      return <article key={product.id} className="group overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] transition duration-200 hover:-translate-y-1 hover:border-[var(--color-cyan-300)] hover:shadow-[var(--shadow-floating)]">
+      return <article key={product.id} className="clay-surface clay-interactive group overflow-hidden rounded-[var(--radius-card)] border-white/80 bg-[var(--surface)] transition duration-200">
         <Link href={`/products/${encodeURIComponent(product.slug)}`} className="block">
-          {image ? <img src={image.url} alt={image.altText ?? product.name} className="aspect-square w-full bg-[var(--color-ivory-100)] object-cover transition duration-300 group-hover:scale-[1.02]" /> : <div className="flex aspect-square items-center justify-center bg-[var(--surface-soft)] text-xs text-[var(--muted)]">No image</div>}
+          {image ? <img src={image.url} alt={image.altText ?? product.name} className="aspect-square w-full bg-[var(--color-lavender-50)] object-cover transition duration-300 group-hover:scale-[1.02]" /> : <div className="flex aspect-square items-center justify-center bg-[var(--surface-soft)] text-xs text-[var(--muted)]">No image</div>}
           <div className="p-4 sm:p-5">
-            {product.brand && <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-orange-600)]">{product.brand.name}</p>}
+            {product.brand && <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-blush-800)]">{product.brand.name}</p>}
             <h2 className="mt-2 line-clamp-2 min-h-10 text-sm font-semibold text-[var(--color-forest-950)]">{product.name}</h2>
-            <p className="mt-3 text-lg font-bold tracking-tight text-[var(--color-petrol-900)]">{productPrice(product)}</p>
+            <p className="mt-3 text-xl font-extrabold tracking-tight text-[var(--color-lavender-950)]">{productPrice(product)}</p>
 
             <p className="mt-2 text-xs text-[var(--muted)]">Sold by {product.store.name}</p>
           </div>

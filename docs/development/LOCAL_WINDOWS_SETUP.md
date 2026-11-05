@@ -110,7 +110,7 @@ Prisma Studio opens a local database UI. Stop it with `Ctrl+C`.
 - **Prisma migration error:** verify `DATABASE_URL` points to the empty local demo database, then rerun `npm run db:deploy`.
 - **Seed refuses to run:** confirm the three demo flags are set in `.env`, `NODE_ENV=development`, and the database name contains `demo`, `test`, or `dev`.
 - **Images do not load:** demo product media uses remote image URLs; browsing still works if a remote image host is temporarily unavailable.
-- **Registration/email/Google sign-in unavailable:** this is expected with the local browsing defaults. Registration is deliberately disabled and provider credentials are optional.
+- **Registration unavailable:** this is expected with the local browsing defaults. Set `PUBLIC_REGISTRATION_ENABLED=true` and configure both Turnstile keys to enable password registration; Google sign-in also requires its provider credentials.
 
 ## Environment variables actually used by this repository
 
@@ -122,7 +122,8 @@ Prisma Studio opens a local database UI. Stop it with `Ctrl+C`.
 | `PUBLIC_REGISTRATION_ENABLED` | Development registration feature switch; production is hard-disabled by policy. |
 | `DEMO_DATABASE_URL`, `SEED_DEMO_CATALOG`, `ALLOW_DEMO_CATALOG_SEED` | Explicitly guarded demo catalog seeding. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Google OpenID Connect. |
-| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Optional server-side transactional email. |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Optional server-side password-reset email. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Required together to enable registration with Cloudflare Turnstile. |
 | `CRON_SECRET` | Optional secret for protected scheduled endpoints. |
 | `TRUSTED_PROXY_IP_HEADER` | Deployment-only trusted edge header; leave unset locally. |
 

@@ -18,6 +18,7 @@ enum ConsentType {
   TERMS_OF_SERVICE
   PRIVACY_POLICY
   MARKETING_EMAIL
+  NOTIFICATION_EMAIL
   COOKIES
 }
 
@@ -75,7 +76,13 @@ model User {
   supportMessages         SupportMessage[]
   storeConversations      StoreConversation[]      @relation("ConversationCustomer")
   sentStoreMessages       StoreMessage[]           @relation("StoreMessageSender")
-
+  reviewedReturnItems ReturnItem[] @relation("ReturnItemReviewer")
+  supportAttachments    SupportAttachment[] @relation("SupportAttachmentUploader")
+  storeMessageAttachments StoreMessageAttachment[] @relation("StoreMessageAttachmentUploader")
+  notificationDeliveries NotificationDelivery[]
+  productAnswerRevisions ProductAnswerRevision[]
+  productQuestionReports ProductQuestionReport[] @relation("ProductQuestionReporter")
+  moderatedProductQuestionReports ProductQuestionReport[] @relation("ProductQuestionReportModerator")
   @@index([status, createdAt])
   @@index([createdAt])
 }
@@ -296,6 +303,7 @@ enum AttributeValueType {
 
 enum InventoryMovementType {
   RECEIPT
+  RETURN_RECEIPT
   SALE
   ORDER_CANCELLATION
   ADJUSTMENT
@@ -384,6 +392,14 @@ enum ReturnRequestStatus {
   CANCELLED
 }
 
+enum ReturnItemStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  CANCELLED
+}
+
 enum ReviewStatus {
   PENDING
   PUBLISHED
@@ -424,6 +440,12 @@ enum ProductAnswerStatus {
   PUBLISHED
   REJECTED
   HIDDEN
+}
+
+enum ProductQuestionReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
 }
 
 model Country {
@@ -876,6 +898,7 @@ model Inventory {
   warehouseId      String
   variantId        String
   quantityOnHand   Int                    @default(0)
+  quantityQuarantined Int                  @default(0)
   quantityReserved Int                    @default(0)
   reorderPoint     Int                    @default(0)
   createdAt        DateTime               @default(now())
@@ -895,6 +918,7 @@ model InventoryMovement {
   inventoryId    String
   type           InventoryMovementType
   quantityDelta  Int
+  quarantinedDelta Int                  @default(0)
   referenceType  String?               @db.VarChar(40)
   referenceId    String?               @db.VarChar(128)
   idempotencyKey String?               @unique @db.VarChar(160)
@@ -1329,6 +1353,25 @@ model VendorOrder {
   @@index([orderId, status])
 }
 
+model Shipment {
+  id             String                 @id @default(cuid())
+  vendorOrderId  String                 @unique
+  carrierName    String                 @db.VarChar(120)
+  trackingNumber String                 @db.VarChar(160)
+  trackingUrl    String?                @db.VarChar(2048)
+  status         ShipmentTrackingStatus @default(SHIPPED)
+  shippedAt      DateTime               @default(now())
+  deliveredAt    DateTime?
+  createdById    String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  vendorOrder    VendorOrder            @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
+  events         ShipmentTrackingEvent[]
+
+  @@index([trackingNumber])
+  @@index([status, shippedAt])
+}
+
 model OrderItem {
   id              String          @id @default(cuid())
   vendorOrderId   String
@@ -1376,23 +1419,6 @@ model VendorOrderStatusHistory {
   @@index([vendorOrderId, createdAt])
 }
 
-model Shipment {
-  id             String                  @id @default(cuid())
-  vendorOrderId  String                  @unique
-  carrierName    String                  @db.VarChar(120)
-  trackingNumber String                  @db.VarChar(120)
-  trackingUrl    String?                 @db.VarChar(2000)
-  status         ShipmentTrackingStatus  @default(SHIPPED)
-  shippedAt      DateTime                @default(now())
-  deliveredAt    DateTime?
-  createdAt      DateTime                @default(now())
-  updatedAt      DateTime                @updatedAt
-  vendorOrder    VendorOrder             @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
-  events         ShipmentTrackingEvent[]
-
-  @@index([status, shippedAt])
-}
-
 model ShipmentTrackingEvent {
   id          String                 @id @default(cuid())
   shipmentId  String
@@ -1436,12 +1462,18 @@ model ReturnItem {
   returnRequestId String
   orderItemId     String
   quantity        Int
+  status          ReturnItemStatus @default(REQUESTED)
+  reviewNote      String?         @db.VarChar(1000)
+  reviewedAt      DateTime?
+  reviewedById    String?
   createdAt       DateTime      @default(now())
+  reviewedBy      User?         @relation("ReturnItemReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
   orderItem       OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
 
   @@unique([returnRequestId, orderItemId])
   @@index([orderItemId])
+  @@index([status, reviewedAt])
 }
 
 model ProductReview {
@@ -1575,6 +1607,7 @@ model ProductQuestion {
   product     Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
   user        User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
   answers     ProductAnswer[]
+  reports     ProductQuestionReport[]
 
   @@index([productId, status, createdAt])
   @@index([userId, createdAt])
@@ -1593,10 +1626,47 @@ model ProductAnswer {
   updatedAt   DateTime            @updatedAt
   question    ProductQuestion     @relation(fields: [questionId], references: [id], onDelete: Cascade)
   user        User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  revisions   ProductAnswerRevision[]
+  reports     ProductQuestionReport[]
 
   @@index([questionId, status, createdAt])
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+model ProductAnswerRevision {
+  id        String   @id @default(cuid())
+  answerId  String
+  editorId  String
+  body      String   @db.VarChar(4000)
+  createdAt DateTime @default(now())
+  answer    ProductAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  editor    User     @relation(fields: [editorId], references: [id], onDelete: Restrict)
+
+  @@index([answerId, createdAt])
+  @@index([editorId, createdAt])
+}
+
+model ProductQuestionReport {
+  id         String   @id @default(cuid())
+  questionId String
+  answerId   String?
+  reporterId String
+  reason     String   @db.VarChar(32)
+  details    String?  @db.VarChar(1000)
+  status     ProductQuestionReportStatus @default(OPEN)
+  reviewedAt DateTime?
+  reviewedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  question   ProductQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer     ProductAnswer? @relation(fields: [answerId], references: [id], onDelete: SetNull)
+  reporter   User @relation("ProductQuestionReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  moderator  User? @relation("ProductQuestionReportModerator", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@unique([questionId, reporterId])
+  @@index([status, createdAt])
+  @@index([answerId, status])
 }
 
 model Favorite {
@@ -1629,17 +1699,54 @@ model Recommendation {
   @@index([recommendedProductId, isActive])
 }
 
+enum NotificationDeliveryStatus {
+  PENDING
+  PROCESSING
+  RETRY
+  SENT
+  FAILED
+  CANCELLED
+}
+
 model NotificationPreference {
   id           String   @id @default(cuid())
   userId       String
   type         String   @db.VarChar(64)
   inAppEnabled Boolean  @default(true)
+  emailEnabled Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, type])
   @@index([userId])
+}
+
+model NotificationDelivery {
+  id                String                    @id @default(cuid())
+  userId            String
+  notificationId    String?
+  type              String                    @db.VarChar(64)
+  title             String                    @db.VarChar(160)
+  message           String                    @db.VarChar(500)
+  resourceType      String?                   @db.VarChar(40)
+  resourceId        String?                   @db.VarChar(128)
+  deduplicationKey  String                    @unique @db.VarChar(200)
+  status            NotificationDeliveryStatus @default(PENDING)
+  attempts          Int                       @default(0)
+  maxAttempts       Int                       @default(8)
+  nextAttemptAt     DateTime                  @default(now())
+  lockedAt          DateTime?
+  sentAt            DateTime?
+  providerMessageId String?                   @db.VarChar(180)
+  lastError         String?                   @db.VarChar(500)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification     Notification?             @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  @@index([status, nextAttemptAt])
+  @@index([userId, createdAt])
 }
 
 model Notification {
@@ -1654,6 +1761,7 @@ model Notification {
   readAt           DateTime?
   createdAt        DateTime  @default(now())
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries        NotificationDelivery[]
 
   @@index([userId, readAt, createdAt])
   @@index([userId, createdAt])
@@ -1674,6 +1782,12 @@ enum SupportTicketPriority {
   URGENT
 }
 
+enum MessageAttachmentStatus {
+  PENDING_SCAN
+  CLEAN
+  REJECTED
+}
+
 model SupportTicket {
   id              String                @id @default(cuid())
   ticketNumber    String                @unique @db.VarChar(24)
@@ -1689,11 +1803,17 @@ model SupportTicket {
   customerReadAt  DateTime?
   agentReadAt     DateTime?
   firstResponseAt DateTime?
+  firstResponseDueAt DateTime?
+  resolutionDueAt DateTime?
+  firstResponseBreachedAt DateTime?
+  resolutionBreachedAt DateTime?
+  escalatedAt DateTime?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
   customer        User                  @relation("SupportTicketCustomer", fields: [customerId], references: [id], onDelete: Restrict)
   assignedTo      User?                 @relation("SupportTicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   messages        SupportMessage[]
+  attachments    SupportAttachment[]
 
   @@index([customerId, updatedAt])
   @@index([status, priority, lastMessageAt])
@@ -1709,10 +1829,42 @@ model SupportMessage {
   createdAt  DateTime      @default(now())
   ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   sender     User          @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  attachments SupportAttachment[]
 
   @@index([ticketId, isInternal, createdAt])
   @@index([senderId, createdAt])
 }
+
+model SupportAttachment {
+  id           String                  @id @default(cuid())
+  ticketId     String
+  messageId    String?
+  uploadedById String
+  objectKey    String                  @unique @db.VarChar(512)
+  fileName     String                  @db.VarChar(255)
+  contentType  String                  @db.VarChar(120)
+  sizeBytes    Int
+  status       MessageAttachmentStatus @default(PENDING_SCAN)
+  scanError    String?                 @db.VarChar(500)
+  createdAt    DateTime                @default(now())
+  scannedAt    DateTime?
+  ticket       SupportTicket           @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message      SupportMessage?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  uploadedBy   User                    @relation("SupportAttachmentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, status, createdAt])
+  @@index([messageId])
+}
+
+model SupportSlaPolicy {
+  priority             SupportTicketPriority @id
+  firstResponseMinutes Int
+  resolutionMinutes    Int
+  enabled              Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+}
+
 
 model StoreConversation {
   id             String         @id @default(cuid())
@@ -1729,6 +1881,7 @@ model StoreConversation {
   store          Store          @relation(fields: [storeId], references: [id], onDelete: Restrict)
   order          Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
   messages       StoreMessage[]
+  attachments    StoreMessageAttachment[]
 
   @@index([customerId, updatedAt])
   @@index([storeId, lastMessageAt])
@@ -1743,9 +1896,31 @@ model StoreMessage {
   createdAt      DateTime          @default(now())
   conversation   StoreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User              @relation("StoreMessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+  attachments    StoreMessageAttachment[]
 
   @@index([conversationId, createdAt])
   @@index([senderId, createdAt])
+}
+
+model StoreMessageAttachment {
+  id             String                  @id @default(cuid())
+  conversationId String
+  messageId      String?
+  uploadedById   String
+  objectKey      String                  @unique @db.VarChar(512)
+  fileName       String                  @db.VarChar(255)
+  contentType    String                  @db.VarChar(120)
+  sizeBytes      Int
+  status         MessageAttachmentStatus @default(PENDING_SCAN)
+  scanError      String?                 @db.VarChar(500)
+  createdAt      DateTime                @default(now())
+  scannedAt      DateTime?
+  conversation   StoreConversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message        StoreMessage?           @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  uploadedBy     User                    @relation("StoreMessageAttachmentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([conversationId, status, createdAt])
+  @@index([messageId])
 }
 
 model Payment {

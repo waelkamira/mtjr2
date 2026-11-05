@@ -32,7 +32,7 @@ describe("admin seller and store operations", () => {
     mocks.sellerFindMany.mockResolvedValue([{
       id: "seller-1", status: "ACTIVE", legalName: "Seller Inc.", displayName: "Seller",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
-      owner: { id: "owner-1", email: "owner@example.test", displayName: "Owner", emailVerifiedAt: null, status: "ACTIVE" },
+      owner: { id: "owner-1", email: "owner@example.test", displayName: "Owner", status: "ACTIVE" },
       stores: [{ id: "store-1", name: "Store", slug: "store", status: "ACTIVE", createdAt: new Date("2026-01-01T00:00:00.000Z") }],
       _count: { stores: 1 }
     }]);

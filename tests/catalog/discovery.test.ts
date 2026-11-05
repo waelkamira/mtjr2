@@ -33,6 +33,8 @@ describe("public product discovery", () => {
     mocks.productFindMany.mockResolvedValue([]);
     mocks.productCount.mockResolvedValue(0);
     mocks.productFindFirst.mockResolvedValue(null);
+    mocks.productGroupBy.mockResolvedValue([]);
+    mocks.productCategoryGroupBy.mockResolvedValue([]);
     mocks.synonymFindMany.mockResolvedValue([{ term: "sneaker", synonym: "trainer" }]);
     mocks.currencyFindFirst.mockResolvedValue({ minorUnit: 2 });
     mocks.queryRaw.mockResolvedValue([]);

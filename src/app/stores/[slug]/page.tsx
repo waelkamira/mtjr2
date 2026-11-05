@@ -24,8 +24,8 @@ export default async function StoreDetailPage({ params, searchParams }: Props) {
     : q ? "relevance" : "newest";
   const result = await listDiscoverableProducts({ storeId: store.id, q: q || undefined, page, limit: 24, sort });
   return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
-    <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Verified marketplace seller</p>
-    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{store.name}</h1>
+    <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">Verified marketplace seller</p>
+    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{store.name}</h1>
     {store.sellerDisplayName && <p className="mt-2 text-sm text-[var(--muted)]">Operated by {store.sellerDisplayName}</p>}
     <p className="mt-3 text-sm text-[var(--muted)]">{result.pagination.total} published products</p>
     <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} />
