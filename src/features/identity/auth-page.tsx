@@ -31,8 +31,8 @@ function safeReturnPath(): string {
   } catch { return "/account/orders"; }
 }
 
-const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
-const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
+const fieldClass = "clay-surface-inset mt-2 w-full rounded-2xl border-white/70 bg-[var(--color-lavender-50)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-lavender-600)]";
+const buttonClass = "clay-interactive inline-flex w-full items-center justify-center rounded-2xl border border-white/70 bg-[var(--color-lavender-600)] px-5 py-3.5 text-sm font-bold text-white shadow-[var(--shadow-clay)] transition hover:bg-[var(--color-lavender-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
 export default function AuthPage({ mode, initialToken = "", initialEmail = "", initialOAuthError = "" }: { mode: AuthMode; initialToken?: string; initialEmail?: string; initialOAuthError?: string }) {
   const [email, setEmail] = useState(initialEmail);
@@ -114,19 +114,19 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
   }[mode];
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 py-10 sm:px-6">
+    <main className="min-h-screen bg-transparent px-4 py-10 sm:px-6">
       <div className="mx-auto flex min-h-[80vh] max-w-5xl flex-col justify-center">
         <header className="mb-8 flex items-center justify-between">
           <Link href="/" className="text-2xl font-semibold tracking-tight text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
           <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Back to marketplace</Link>
         </header>
-        <div className="grid overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] lg:min-h-[650px] lg:grid-cols-[0.9fr_1.1fr]">
-          <aside className="relative hidden overflow-hidden bg-[var(--color-forest-950)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <div className="clay-surface grid overflow-hidden rounded-[2rem] border-white/80 bg-[var(--surface)] lg:min-h-[650px] lg:grid-cols-[0.9fr_1.1fr]">
+          <aside className="relative hidden overflow-hidden bg-[var(--color-lavender-100)] p-10 text-[var(--color-lavender-950)] lg:flex lg:flex-col lg:justify-between xl:p-14">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(190,130,87,.35),transparent_42%),linear-gradient(145deg,transparent,rgba(0,0,0,.2))]" />
             <div className="relative">
-              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-100)]">Mtjr2 marketplace</p>
+              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-lavender-600)]">Mtjr2 marketplace</p>
               <h2 className="mt-8 max-w-md text-4xl font-semibold leading-tight xl:text-5xl">{mode === "login" ? "Your marketplace. One secure account." : "Your account, protected at every step."}</h2>
-              <p className="mt-5 max-w-md text-sm leading-7 text-white/75">{mode === "login" ? "Discover products, manage orders, save favorites and connect with trusted stores." : "We verify email addresses, protect your sessions and keep account recovery simple."}</p>
+              <p className="mt-5 max-w-md text-sm leading-7 text-[var(--color-lavender-800)]/80">{mode === "login" ? "Discover products, manage orders, save favorites and connect with trusted stores." : "We verify email addresses, protect your sessions and keep account recovery simple."}</p>
             </div>
             <div className="relative space-y-4 text-sm text-white/80">
               <p>01 · One account for shopping and selling</p>
