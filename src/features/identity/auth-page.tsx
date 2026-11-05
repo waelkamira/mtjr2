@@ -44,13 +44,17 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
   const [registrationComplete, setRegistrationComplete] = useState(false);
 
   useEffect(() => {
-    setRegistrationComplete(new URLSearchParams(window.location.search).get("registered") === "1");
+    // Defer URL-derived UI state until after hydration to avoid a server/client mismatch.
+    const registrationTimer = window.setTimeout(() => {
+      setRegistrationComplete(new URLSearchParams(window.location.search).get("registered") === "1");
+    }, 0);
     const params = new URLSearchParams(window.location.search);
     if (params.has("token")) {
       params.delete("token");
       const query = params.toString();
       window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""));
     }
+    return () => window.clearTimeout(registrationTimer);
   }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
