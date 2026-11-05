@@ -124,6 +124,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_platform_test?schema=public
       AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
+      MFA_ENCRYPTION_KEY: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
       APP_URL: http://localhost:3000
       NODE_ENV: test
     steps:
