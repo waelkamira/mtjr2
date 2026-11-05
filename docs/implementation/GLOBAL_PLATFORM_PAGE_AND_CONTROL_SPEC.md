@@ -35,3 +35,16 @@ This specification covers the platform-wide Super Admin control center only. It 
 - Verify audit metadata is rendered as text and never interpreted as markup.
 - Verify role assignment and revocation both block canonical and alternate platform-management roles.
 - Run Prisma validation/generation, typecheck, lint, focused tests and production build. Do not run migrations against production or a user database.
+
+## Implemented page: Roles and permissions catalogue
+- Route: `/admin/control-panel/access-catalog`.
+- API: `GET /api/admin/control-panel/access-catalog`.
+- Service: `src/server/admin/platform-access-catalog.ts`.
+- Displays roles, system-role markers, permission keys, assignment counts and permission usage counts.
+- Read-only by design. Role edits and assignment mutations are not exposed in this page; ordinary delegation remains subject to non-escalation and protected platform permission checks.
+- No schema change required.
+
+## Audit metadata handling
+- Audit API redacts fields with credential, token, cookie, API-key, session and payment-secret-shaped names recursively before serialization.
+- Redaction is a presentation/API boundary; persisted audit records remain unchanged.
+- Nested depth, object/array entry count and string length are bounded to reduce accidental oversized payloads.
