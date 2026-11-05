@@ -16,9 +16,13 @@ export async function listSellerReturnRequests(now = new Date()) {
         { staff: { some: { userId: actor.userId, status: "ACTIVE" } } }
       ]
     },
-    select: { id: true, name: true, seller: { select: { ownerId: true, status: true } } }
+    select: {
+      id: true, name: true, seller: { select: { ownerId: true, status: true } },
+      warehouses: { where: { isActive: true }, select: { id: true, code: true, name: true }, orderBy: { name: "asc" } }
+    }
   });
 
+  const storeById = new Map(stores.map((store) => [store.id, store]));
   const permittedStoreIds = (await Promise.all(stores.map(async (store) => {
     const isOwner = store.seller.ownerId === actor.userId;
     const delegated = await userHasScopedPermission(actor.userId, {
@@ -97,6 +101,7 @@ export async function listSellerReturnRequests(now = new Date()) {
       requestedAt: request.requestedAt.toISOString(),
       storeId,
       storeName: group.storeName,
+      warehouses: storeById.get(storeId)?.warehouses ?? [],
       items: group.products
     }));
   });
