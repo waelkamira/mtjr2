@@ -2119,3 +2119,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Verified all 30 migrations applied successfully in that disposable CI database, including `20261105132500_platform_privilege_approvals`. This does not apply any migration to the user's database or production.
 - Final checks: Prisma validate ✓, migration deploy ✓, Prisma generate ✓, TypeScript ✓, ESLint ✓, Vitest ✓, Next.js production build ✓.
 - Vercel Preview is still blocked by the provider's deployment rate limit (retry after 24 hours). The earlier Preview build also exposed missing `AUTH_SECRET`; no secrets or deployment settings were modified.
+
+## 2026-11-05 — Review of latest visual and CI changes (commit `4287d3f2850a54903ca9891143e7c3098403a60f`)
+
+**Reviewed**
+- `src/app/globals.css`: botanical forest/sage/ivory/terracotta palette, backwards-compatible aliases, global radii/shadows, base form controls and focus-visible styling. No CSS syntax or build issue surfaced in the exact-head CI.
+- `src/components/site-navigation.tsx`: typography, spacing, surface shadow and active Home color changed; route targets and session-dependent links were not changed in this styling commit.
+- Previous changes in the same batch: isolated PostgreSQL 16 CI service and full migration deployment, scalar-returning advisory-lock queries, and privilege request row locking.
+
+**Exact-head verification**
+- Commit: `4287d3f2850a54903ca9891143e7c3098403a60f`.
+- GitHub Actions run `42054463880`: SUCCESS. Prisma validate, all migrations deployed to disposable PostgreSQL, Prisma generate, TypeScript, ESLint, Vitest and Next.js production build all passed.
+- No migration was run against the user's database or production.
+- Vercel status for this exact commit returned FAILURE. The deployment failure reason has not yet been retrieved from Vercel build logs; do not infer that it is the previously observed `AUTH_SECRET` issue without inspecting this deployment's logs.
+- PR #35 remains open and Draft; no merge performed.
