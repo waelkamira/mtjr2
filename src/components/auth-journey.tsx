@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { REGISTRATION_NOTICE_KEY, rememberAuthReturnPath } from "@/lib/auth-return";
 
 export default function AuthJourney() {
+  const pathname = usePathname();
   const [notice, setNotice] = useState<"sent" | "unavailable" | null>(null);
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -14,17 +16,12 @@ export default function AuthJourney() {
         window.sessionStorage.removeItem(REGISTRATION_NOTICE_KEY);
       } catch { /* Storage can be disabled. */ }
     }, 0);
-    function capture(event: MouseEvent) {
-      const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
-      if (!(link instanceof HTMLAnchorElement)) return;
-      const destination = new URL(link.href, window.location.href);
-      if (destination.origin === window.location.origin && ["/login", "/register"].includes(destination.pathname.replace(/\/+$/, ""))) {
-        rememberAuthReturnPath(window.location.pathname + window.location.search + window.location.hash);
-      }
-    }
-    document.addEventListener("click", capture, true);
-    return () => { window.clearTimeout(timer); document.removeEventListener("click", capture, true); };
-  }, []);
+    // Keep the most recently visited application route so both registration
+    // and sign-in can return the user to it, regardless of navigation method.
+    // safeAuthReturnPath rejects auth and API routes, so /login never replaces it.
+    rememberAuthReturnPath(window.location.pathname + window.location.search + window.location.hash);
+    return () => window.clearTimeout(timer);
+  }, [pathname]);
   if (!notice) return null;
   return <div role="status" className="mx-auto mt-4 flex max-w-4xl flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm">
     <span>{notice === "sent" ? "Account created. Check your email to verify your address before signing in." : "Account created, but the verification email could not be sent. Request another email later."}</span>
