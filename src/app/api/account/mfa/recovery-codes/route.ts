@@ -4,7 +4,7 @@ import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
 import { clearMfaThrottle, consumeMfaAttempt } from "@/server/identity/login-throttle";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { MfaStateConflictError, regenerateMfaRecoveryCodes } from "@/server/identity/mfa";
+import { MfaConfigurationError, MfaStateConflictError, regenerateMfaRecoveryCodes } from "@/server/identity/mfa";
 export const runtime = "nodejs";
 const schema = z.object({ code: z.string().trim().min(6).max(64) }).strict();
 export async function POST(request: Request): Promise<Response> {
@@ -25,6 +25,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ recoveryCodes }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     if (error instanceof MfaStateConflictError) return Response.json({ error: error.message }, { status: 409 });
+    if (error instanceof MfaConfigurationError) return Response.json({ error: error.message }, { status: 503 });
     return Response.json({ error: "Unable to regenerate recovery codes." }, { status: 500 });
   }
 }
