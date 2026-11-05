@@ -58,8 +58,9 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
     try {
       if (mode === "login") {
         const result = await postJson("/api/auth/login", { email, password });
-        setNotice(result.message || "Signed in. Redirecting…");
-        window.location.assign(safeReturnPath());
+        setNotice(result.message || "Signed in successfully. Redirecting…");
+        setPassword("");
+        window.setTimeout(() => window.location.assign(safeReturnPath()), 900);
       } else if (mode === "forgot") {
         const result = await postJson("/api/auth/password-reset/request", { email });
         setNotice(result.message || "If an eligible account exists, reset instructions will be sent.");
@@ -69,7 +70,8 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
         setPassword("");
       } else {
         const result = await postJson("/api/auth/verify-email", { token });
-        setNotice(result.message || "Email verified. You can now sign in.");
+        setNotice(result.message || "Email verified successfully. You can now sign in.");
+        setToken("");
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The request could not be completed.");
@@ -111,6 +113,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Mtjr2 account</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{title}</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{description}</p>
+          {mode === "verify" && new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("registered") === "1" && <p role="status" className="mt-4 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">Your account was created. Check your inbox for the verification email, then enter the code below.</p>}
 
           {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
           {notice && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">{notice}</p>}
