@@ -52,6 +52,10 @@ export async function requireAnyPermission(
   return session;
 }
 
+export class EmailVerificationRequiredError extends Error {
+  constructor() { super("A verified email is required for platform-wide access."); this.name = "EmailVerificationRequiredError"; }
+}
+
 export class MfaEnrollmentRequiredError extends Error {
   constructor() { super("MFA enrollment is required for platform-wide access."); this.name = "MfaEnrollmentRequiredError"; }
 }
@@ -63,6 +67,7 @@ export class StepUpRequiredError extends Error {
 /** Dedicated gate for platform-wide access: permission + enrolled MFA + recent step-up. */
 export async function requirePlatformManagement(now = new Date()) {
   const session = await requirePermission({ permissionKey: "platform:manage", now }, now);
+  if (!session.user.emailVerifiedAt) throw new EmailVerificationRequiredError();
   const authenticator = await prisma.userMfaAuthenticator.findUnique({
     where: { userId: session.userId },
     select: { enabledAt: true }
