@@ -1,8 +1,7 @@
 CREATE TYPE "PlatformPrivilegeRequestStatus" AS ENUM (
   'PENDING',
   'APPROVED',
-  'REJECTED',
-  'CANCELLED'
+  'REJECTED'
 );
 
 CREATE TABLE "PlatformPrivilegeRequest" (
@@ -15,7 +14,8 @@ CREATE TABLE "PlatformPrivilegeRequest" (
   "decisionNote" VARCHAR(1000),
   "requestedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "reviewedAt" TIMESTAMP(3),
-  CONSTRAINT "PlatformPrivilegeRequest_pkey" PRIMARY KEY ("id")
+  CONSTRAINT "PlatformPrivilegeRequest_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "PlatformPrivilegeRequest_reason_check" CHECK (length(trim("reason")) >= 20)
 );
 
 CREATE INDEX "PlatformPrivilegeRequest_status_requestedAt_idx"
