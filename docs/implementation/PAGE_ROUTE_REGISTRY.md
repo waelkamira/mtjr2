@@ -339,3 +339,11 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Ordinary role assignment | Rejects both the canonical `SUPER_ADMIN` role and every role containing `platform:manage`; denial is enforced in the server service, not only the UI. | Existing UserRoleAssignment + AuditLog for permitted assignments; no schema change. | Policy and focused unit tests added; exact-head CI pending. |
 
 **Deployment note:** Vercel Preview build for commit `2f7e683` failed because required `AUTH_SECRET` was absent at build time. Configure the Preview secret in Vercel; do not bypass the server environment validation or commit a secret.
+
+## Super Admin audit log — 2026-11-05
+
+| Surface | Route | Guard | Backend | Status |
+|---|---|---|---|---|
+| Platform audit history | `/admin/control-panel/audit-log` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/audit-log` → `getPlatformAuditEvents` → existing Prisma `AuditLog`; no-store, validated filters, max 100 rows, keyset pagination. | Implemented; exact-head CI pending. |
+
+The view is read-only. Audit history is not editable or deletable from this interface. Ordinary role assignment and revocation both protect any role carrying `platform:manage`.
