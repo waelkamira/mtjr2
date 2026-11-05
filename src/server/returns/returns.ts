@@ -77,7 +77,7 @@ export async function getMyReturnCenter(now = new Date()) {
       status: request.status, reasonCode: request.reasonCode, reasonDetails: request.reasonDetails,
       reviewNote: request.reviewNote, requestedAt: request.requestedAt.toISOString(),
       reviewedAt: request.reviewedAt?.toISOString() ?? null,
-      items: request.items.map((item) => ({ id: item.id, productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
+      items: request.items.map((item) => ({ id: item.id, productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity, status: item.status, reviewNote: item.reviewNote }))
     })),
     eligibleOrders
   };
