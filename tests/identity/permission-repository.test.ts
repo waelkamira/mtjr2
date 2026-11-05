@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { assignmentsMock, stepUpMock } = vi.hoisted(() => ({
+const { assignmentsMock, stepUpMock, sessionMock } = vi.hoisted(() => ({
   assignmentsMock: vi.fn(),
-  stepUpMock: vi.fn()
+  stepUpMock: vi.fn(),
+  sessionMock: vi.fn()
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { userRoleAssignment: { findMany: assignmentsMock } }
+}));
+vi.mock("@/server/identity/current-session", () => ({
+  AuthenticationRequiredError: class AuthenticationRequiredError extends Error {},
+  getCurrentSession: sessionMock
 }));
 vi.mock("@/server/identity/platform-session-policy", () => ({
   requirePlatformSessionStepUp: stepUpMock
@@ -32,6 +37,7 @@ describe("platform administrator permission enforcement", () => {
     vi.clearAllMocks();
     assignmentsMock.mockResolvedValue(platformAssignments);
     stepUpMock.mockResolvedValue({});
+    sessionMock.mockResolvedValue({ userId: "admin-1" });
   });
 
   it("requires step-up even when a platform administrator checks an ordinary permission", async () => {
@@ -54,6 +60,7 @@ describe("platform administrator permission enforcement", () => {
   });
 
   it("does not force MFA on non-platform users", async () => {
+    sessionMock.mockResolvedValue({ userId: "seller-1" });
     assignmentsMock.mockResolvedValue([{
       scopeType: "STORE",
       scopeId: "store-1",
