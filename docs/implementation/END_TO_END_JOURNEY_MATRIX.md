@@ -30,7 +30,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 08 | Product questions and answers | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 09 | Customer messaging and support | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 10 | Customer notifications | Not audited | Not mapped | Not audited | Not audited | Not verified |
-| 11 | Returns and refunds (customer journey) | `/account/returns`, `/orders/[orderId]` | Customer return APIs/services and screens | ReturnRequest, ReturnItem, Order, OrderItem, VendorOrder | CI + PostgreSQL passed on merged implementation; deployed browser journey pending | Implemented / unverified; no refund execution |
+| 11 | Returns and refunds (customer journey) | `/account/returns`, `/seller/returns`, `/admin/returns` | Customer request → store-scoped seller decision API/UI → platform review API/UI | ReturnRequest, ReturnItem (item-level status/reviewer/note), Order, OrderItem, VendorOrder | Exact-head CI + PostgreSQL integration pending for per-item seller decisions; browser journey pending | Seller approve/reject isolated by store; physical receipt, restock and refund execution not implemented |
 | 12 | Seller onboarding, verification and KYC | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 13 | Seller dashboard and analytics | Not audited | Not mapped | Not audited | Not audited | Not verified |
 | 14 | Seller product management | Not audited | Not mapped | Not audited | Not audited | Not verified |
@@ -231,3 +231,6 @@ Manual seller-entered tracking is not a carrier integration. Carrier webhooks, l
 - If at least one live vendor order remains undispatched after another has shipped, parent state remains PARTIALLY_FULFILLED.
 - Regression tests cover both states. No Prisma migration is needed; the existing CANCELLED status is sufficient.
 - Exact-head CI/PostgreSQL verification for this correction is pending.
+
+
+2026-11-05: Seller return decisions now operate on `ReturnItem` rows scoped to the authorized store. A multi-store request remains pending until every store has decided; customer UI shows each line's status. Platform review synchronizes line status. No physical receipt, inventory restock or payment refund is performed.
