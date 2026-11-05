@@ -42,16 +42,22 @@ function createCookieStore(values: Record<string, string>) {
   };
 }
 
+function oauthCookies(intent: "login" | "register", returnTo = "/") {
+  return createCookieStore({
+    mtjr_google_state: "expected-state",
+    mtjr_google_verifier: "verifier",
+    mtjr_google_intent: intent,
+    mtjr_google_account_type: "CUSTOMER",
+    mtjr_google_terms: intent === "register" ? "v1" : "",
+    mtjr_google_privacy: intent === "register" ? "v1" : "",
+    mtjr_google_return_to: encodeURIComponent(returnTo)
+  });
+}
+
 describe("Google OAuth registration gate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.cookies.mockResolvedValue(createCookieStore({
-      mtjr_google_state: "expected-state",
-      mtjr_google_verifier: "verifier",
-      mtjr_google_account_type: "CUSTOMER",
-      mtjr_google_terms: "v1",
-      mtjr_google_privacy: "v1"
-    }));
+    mocks.cookies.mockResolvedValue(oauthCookies("register"));
     mocks.oauthAccountFindUnique.mockResolvedValue(null);
     mocks.userFindUnique.mockResolvedValue(null);
     vi.stubGlobal("fetch", vi.fn()
@@ -83,6 +89,7 @@ describe("Google OAuth registration gate", () => {
   });
 
   it("allows an already-linked Google account to sign in while registration is disabled", async () => {
+    mocks.cookies.mockResolvedValue(oauthCookies("login", "/checkout?step=delivery"));
     mocks.oauthAccountFindUnique.mockResolvedValue({
       userId: "existing-user",
       user: {
@@ -101,12 +108,38 @@ describe("Google OAuth registration gate", () => {
       "http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"
     ));
 
-    expect(response.headers.get("location")).toBe("http://localhost:3000/account");
+    expect(response.headers.get("location")).toBe("http://localhost:3000/checkout?step=delivery");
+    expect(mocks.transaction).toHaveBeenCalledOnce();
     expect(mocks.createUserSession).toHaveBeenCalledWith(
       "existing-user",
       { userAgent: null },
       expect.any(Date)
     );
     expect(mocks.setSessionCookie).toHaveBeenCalled();
+  });
+
+  it("does not create or link an unlinked Google account during a login-only flow", async () => {
+    mocks.cookies.mockResolvedValue(oauthCookies("login"));
+
+    const response = await GET(new Request(
+      "http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"
+    ));
+
+    expect(response.headers.get("location")).toBe("http://localhost:3000/login?oauth=not_linked");
+    expect(mocks.transaction).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+  });
+
+  it("does not auto-link a Google login to an existing password account", async () => {
+    mocks.cookies.mockResolvedValue(oauthCookies("login"));
+    mocks.userFindUnique.mockResolvedValue({ id: "password-user" });
+
+    const response = await GET(new Request(
+      "http://localhost:3000/api/auth/google/callback?code=auth-code&state=expected-state"
+    ));
+
+    expect(response.headers.get("location")).toBe("http://localhost:3000/login?oauth=link_required");
+    expect(mocks.transaction).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
   });
 });

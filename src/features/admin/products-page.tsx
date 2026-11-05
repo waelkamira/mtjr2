@@ -1,0 +1,92 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
+
+type Product = {
+  id: string; name: string; slug: string; description: string | null; createdAt: string;
+  store: { id: string; name: string; seller: { id: string; displayName: string | null; legalName: string | null } };
+  media: Array<{ url: string; altText: string | null }>;
+  variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
+};
+
+export default function AdminProductsPage() {
+  const [items, setItems] = useState<Product[]>([]);
+  const [query, setQuery] = useState("");
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.resolve().then(async () => {
+      try {
+        const response = await fetch("/api/admin/products", { cache: "no-store" });
+        const data = await response.json() as { items?: Product[]; error?: string };
+        if (!response.ok) throw new Error(data.error || "Product approval queue unavailable.");
+        if (active) { setItems(data.items || []); setError(""); }
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : "Product approval queue unavailable.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, [revision]);
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase();
+    if (!needle) return items;
+    return items.filter((product) => [
+      product.id, product.name, product.slug, product.store.name,
+      product.store.seller.displayName || "", product.store.seller.legalName || "",
+      ...product.variants.map((variant) => variant.sku)
+    ].some((value) => value.toLocaleLowerCase().includes(needle)));
+  }, [items, query]);
+
+  async function moderate(product: Product, decision: "approve" | "reject") {
+    const reason = reasons[product.id]?.trim() || "";
+    if (decision === "reject" && reason.length < 5) { setError("Enter a rejection reason of at least five characters."); return; }
+    if (!window.confirm(`${decision === "approve" ? "Approve" : "Reject"} “${product.name}”?`)) return;
+    setBusy(product.id); setError(""); setMessage("");
+    try {
+      const response = await fetch(`/api/admin/products/${encodeURIComponent(product.id)}/${decision}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        ...(decision === "reject" ? { body: JSON.stringify({ reason }) } : {})
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Product moderation failed.");
+      setMessage(`Product ${decision === "approve" ? "approved" : "rejected"}. Approval alone does not publish the product; the store owner must publish it after satisfying catalog requirements.`);
+      setReasons((current) => ({ ...current, [product.id]: "" }));
+      setRevision((value) => value + 1);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Product moderation failed.");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  function search(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+  }
+
+  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+    <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Catalog operations</p>
+    <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">Product approvals</h1><p className="mt-1 text-sm text-[var(--muted)]">Review draft products submitted by active stores. Approval does not publish a product.</p></div><p className="text-sm text-[var(--muted)]">{items.length} pending · {visible.length} shown</p></div>
+    <form onSubmit={search} className="mt-6 rounded-2xl border border-[var(--border)] bg-white p-4"><label className="block text-xs font-medium text-[var(--muted)]">Search pending products, stores, sellers or SKU<input value={query} onChange={(event) => setQuery(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label></form>
+    {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
+    {message && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 text-sm text-green-800">{message}</p>}
+    {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : <div className="mt-5 space-y-4">{visible.map((product) => <article key={product.id} className="grid gap-5 rounded-2xl border border-[var(--border)] bg-white p-5 md:grid-cols-[160px_1fr]">
+      {product.media[0] ? <img src={product.media[0].url} alt={product.media[0].altText || product.name} referrerPolicy="no-referrer" className="h-40 w-full rounded-xl object-cover md:w-40" /> : <div className="flex h-40 items-center justify-center rounded-xl bg-[var(--color-ivory-100)] text-sm text-[var(--muted)] md:w-40">No primary image</div>}
+      <div><div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-semibold">{product.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{product.store.name} · Seller {product.store.seller.displayName || product.store.seller.legalName || product.store.seller.id}</p></div><span className="h-fit rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs">Submitted {new Date(product.createdAt).toLocaleDateString()}</span></div>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--muted)]">{product.description || "No description provided."}</p>
+        <div className="mt-3 flex flex-wrap gap-2">{product.variants.map((variant) => <div key={variant.id} className="rounded-lg bg-[var(--color-ivory-100)] px-3 py-2 text-xs"><span className="font-semibold">{variant.sku}</span>{variant.name && ` · ${variant.name}`}<span className="block text-[var(--muted)]">{variant.prices.map((price) => `${price.amountMinor} ${price.currencyCode}`).join(" · ") || "No price configured"}</span></div>)}</div>
+        <label className="mt-4 block text-xs font-medium text-[var(--muted)]">Moderation reason (required for rejection)<input value={reasons[product.id] || ""} onChange={(event) => setReasons((current) => ({ ...current, [product.id]: event.target.value }))} maxLength={2000} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
+        <div className="mt-4 flex gap-2"><button disabled={busy === product.id} onClick={() => void moderate(product, "approve")} className="rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Approve</button><button disabled={busy === product.id} onClick={() => void moderate(product, "reject")} className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-50">Reject</button></div>
+      </div>
+    </article>)}{!visible.length && !error && <div className="rounded-2xl border border-[var(--border)] bg-white p-8 text-center text-sm text-[var(--muted)]">{items.length ? "No pending products match this search." : "No products are awaiting approval."}</div>}</div>}
+  </div></main>;
+}

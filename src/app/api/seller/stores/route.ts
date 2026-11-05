@@ -27,7 +27,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "Invalid store details." }, { status: 400 });
   try {
     const result = await createSellerStore(parsed.data);
-    return Response.json(result, { status: 201 });
+    return Response.json(result, { status: result.alreadyCreated ? 200 : 201 });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     if (error instanceof Error && /permission/i.test(error.message)) return Response.json({ error: "Permission denied." }, { status: 403 });

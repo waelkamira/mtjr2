@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ConsentType, UserStatus } from "@prisma/client";
+import { ConsentType, Prisma, UserStatus } from "@prisma/client";
 
 const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
@@ -118,6 +118,23 @@ describe("registration and email verification", () => {
       select: { id: true }
     });
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects a concurrent duplicate when the normalized-email unique index wins the race", async () => {
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    txMock.user.create.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+      code: "P2002",
+      clientVersion: "6.19.0",
+      meta: { target: ["emailNormalized"] }
+    }));
+
+    await expect(registerUser({
+      email: "Buyer@Example.COM",
+      password: "correct horse battery staple 2026",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    }, now)).rejects.toBeInstanceOf(IdentityConflictError);
   });
 
   it("requires business details when seller is selected", async () => {

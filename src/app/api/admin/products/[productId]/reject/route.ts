@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/permission-guard";
 import { rejectProduct } from "@/server/catalog/products";
 
 export const runtime = "nodejs";
@@ -17,6 +17,7 @@ export async function POST(request: Request, context: { params: Promise<{ produc
     return Response.json(await rejectProduct({ productId, reason: parsed.data.reason }));
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+    if (error instanceof PermissionDeniedError) return Response.json({ error: "Permission denied." }, { status: 403 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to reject product." }, { status: 400 });
   }
 }

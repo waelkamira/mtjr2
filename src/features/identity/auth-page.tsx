@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { safeReturnPath as getSafeReturnPath } from "@/lib/safe-return-path";
 
 type AuthMode = "login" | "forgot" | "reset" | "verify";
 
@@ -21,25 +23,22 @@ async function postJson(path: string, payload: unknown): Promise<ApiResult> {
   return result;
 }
 
-function safeReturnPath(): string {
-  if (typeof window === "undefined") return "/account/orders";
+function currentReturnPath(): string {
+  if (typeof window === "undefined") return "/";
   const candidate = new URLSearchParams(window.location.search).get("returnTo");
-  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/account/orders";
-  try {
-    const parsed = new URL(candidate, window.location.origin);
-    return parsed.origin === window.location.origin ? parsed.pathname + parsed.search + parsed.hash : "/account/orders";
-  } catch { return "/account/orders"; }
+  return getSafeReturnPath(candidate, window.location.origin);
 }
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
 const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
-export default function AuthPage({ mode, initialToken = "", initialEmail = "" }: { mode: AuthMode; initialToken?: string; initialEmail?: string }) {
+export default function AuthPage({ mode, initialToken = "", initialEmail = "", initialOAuthError = "" }: { mode: AuthMode; initialToken?: string; initialEmail?: string; initialOAuthError?: string }) {
+  const router = useRouter();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [token, setToken] = useState(initialToken);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialOAuthError);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -59,7 +58,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
       if (mode === "login") {
         const result = await postJson("/api/auth/login", { email, password });
         setNotice(result.message || "Signed in. Redirecting…");
-        window.location.assign(safeReturnPath());
+        router.replace(currentReturnPath());
       } else if (mode === "forgot") {
         const result = await postJson("/api/auth/password-reset/request", { email });
         setNotice(result.message || "If an eligible account exists, reset instructions will be sent.");
@@ -85,6 +84,16 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The request could not be completed.");
     } finally { setBusy(false); }
+  }
+
+  function continueWithGoogle() {
+    const params = new URLSearchParams({
+      intent: "login",
+      returnTo: currentReturnPath()
+    });
+    // OAuth start must follow the server's external redirect as a document navigation.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign(`/api/auth/google/start?${params.toString()}`);
   }
 
   const title = {
@@ -144,6 +153,15 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
               </label>}
               <button className={buttonClass} disabled={busy || (mode === "reset" && token.length !== 43)}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "forgot" ? "Send reset instructions" : "Update password"}</button>
             </form>
+          )}
+
+          {mode === "login" && (
+            <div className="mt-5">
+              <div className="mb-4 flex items-center gap-3 text-xs text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--border)]" />OR<span className="h-px flex-1 bg-[var(--border)]" /></div>
+              <button type="button" className="w-full rounded-xl border border-[var(--border)] px-5 py-3.5 text-sm font-semibold text-[var(--color-forest-900)] transition hover:bg-[var(--color-ivory-100)] disabled:opacity-55" onClick={continueWithGoogle} disabled={busy}>
+                Continue with Google
+              </button>
+            </div>
           )}
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5 text-sm">

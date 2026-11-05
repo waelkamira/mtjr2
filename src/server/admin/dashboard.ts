@@ -42,10 +42,10 @@ export async function getAdminDashboard(input: unknown, now = new Date()) {
 
   const [country, currency, seller, store] = await Promise.all([
     filters.countryCode
-      ? prisma.country.findFirst({ where: { iso2: filters.countryCode, isActive: true }, select: { iso2: true } })
+      ? prisma.country.findFirst({ where: { iso2: filters.countryCode }, select: { iso2: true } })
       : Promise.resolve(null),
     filters.currencyCode
-      ? prisma.currency.findFirst({ where: { code: filters.currencyCode, isActive: true }, select: { code: true } })
+      ? prisma.currency.findFirst({ where: { code: filters.currencyCode }, select: { code: true } })
       : Promise.resolve(null),
     filters.sellerId
       ? prisma.seller.findUnique({ where: { id: filters.sellerId }, select: { id: true } })
@@ -120,8 +120,8 @@ export async function getAdminDashboard(input: unknown, now = new Date()) {
     prisma.storeReview.count({ where: { status: "PENDING" } }),
     prisma.returnRequest.count({ where: { status: "REQUESTED" } }),
     prisma.supportTicket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"] } } }),
-    prisma.country.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { iso2: true, name: true } }),
-    prisma.currency.findMany({ where: { isActive: true }, orderBy: { code: "asc" }, select: { code: true, name: true, minorUnit: true } }),
+    prisma.country.findMany({ orderBy: { name: "asc" }, select: { iso2: true, name: true } }),
+    prisma.currency.findMany({ orderBy: { code: "asc" }, select: { code: true, name: true, minorUnit: true } }),
     prisma.seller.findMany({
       orderBy: { displayName: "asc" }, take: 200,
       select: { id: true, displayName: true, legalName: true }

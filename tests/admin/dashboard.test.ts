@@ -127,4 +127,12 @@ describe("admin dashboard", () => {
       .rejects.toThrow("does not belong to that seller");
     expect(mocks.userCount).not.toHaveBeenCalled();
   });
+
+  it("does not read dashboard data when the administrator lacks permission", async () => {
+    mocks.requirePermission.mockRejectedValue(new Error("Permission denied."));
+
+    await expect(getAdminDashboard({})).rejects.toThrow("Permission denied.");
+    expect(mocks.userCount).not.toHaveBeenCalled();
+    expect(mocks.queryRaw).not.toHaveBeenCalled();
+  });
 });

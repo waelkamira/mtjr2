@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
-import { registerUser, verifyUserEmail } from "@/server/identity/registration";
+import { IdentityConflictError, registerUser, verifyUserEmail } from "@/server/identity/registration";
 import { loginWithPassword } from "@/server/identity/login";
 import { createPasswordResetChallenge, completePasswordReset } from "@/server/identity/password-reset";
 import { verifyPassword } from "@/server/identity/password";
@@ -40,6 +40,15 @@ describe("identity PostgreSQL integration", () => {
     });
     userId = registration.userId;
     createdUserIds.add(registration.userId);
+
+    await expect(registerUser({
+      email: email.toUpperCase(),
+      password: "Another-Correct-Horse-42!",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    })).rejects.toBeInstanceOf(IdentityConflictError);
+    await expect(prisma.user.count({ where: { emailNormalized: email } })).resolves.toBe(1);
 
     const pending = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -112,6 +121,40 @@ describe("identity PostgreSQL integration", () => {
 
     await expect(revokeUserSession(createdSession.token)).resolves.toBe(true);
     await expect(resolveUserSession(createdSession.token)).resolves.toBeNull();
+  });
+
+  it("allows only one account when duplicate registrations race", async () => {
+    const duplicateEmail = `duplicate-${suffix}@example.test`;
+    const results = await Promise.allSettled([
+      registerUser({
+        email: duplicateEmail,
+        password: "Correct-Horse-Battery-42!",
+        accountType: "CUSTOMER",
+        acceptedTerms: true,
+        acceptedPrivacy: true
+      }),
+      registerUser({
+        email: duplicateEmail.toUpperCase(),
+        password: "Another-Correct-Horse-42!",
+        accountType: "CUSTOMER",
+        acceptedTerms: true,
+        acceptedPrivacy: true
+      })
+    ]);
+
+    const accepted = results.filter(
+      (result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof registerUser>>> =>
+        result.status === "fulfilled"
+    );
+    const rejected = results.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    );
+    for (const result of accepted) createdUserIds.add(result.value.userId);
+
+    expect(accepted).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0].reason).toBeInstanceOf(IdentityConflictError);
+    await expect(prisma.user.count({ where: { emailNormalized: duplicateEmail } })).resolves.toBe(1);
   });
 
   it("enforces persistent login throttling under concurrent PostgreSQL requests", async () => {

@@ -1955,3 +1955,72 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Prisma schema validation passed. TypeScript typecheck passed against a generated client in a temporary output directory; the normal generated client could not be refreshed because the active Next.js dev server holds its Windows engine DLL.
 - Targeted ESLint passed with no errors (six informational `@next/next/no-img-element` warnings for user-supplied external review images).
 - `git diff --check` passed. The new migration has not been applied to any database; PostgreSQL migration replay and browser journeys remain pending.
+
+## 2026-11-05 — Super Admin Phase 1 dashboard foundation
+
+**Audit and implementation**
+- Audited the current `main` branch, admin route tree, admin APIs/services, permission guard, seed roles, 49-system blueprint, and Prisma models. The working tree already contained unrelated uncommitted marketplace/order/review changes; all were preserved. Work is on `feat/super-admin-control-panel`.
+- Existing infrastructure includes reusable `requirePermission`, scoped role grants, `AuditLog`, and functional admin surfaces for seller approval APIs, product moderation APIs, reviews, returns, support, Q&A, search synonyms, tax rates, and coupons. No admin dashboard or shared admin layout previously existed; seller/product admin pages documented in the route inventory are absent from the filesystem.
+- The schema supports operational counts and payment attempts, but has no payout, refund, dispute, posted commission/accounting, or infrastructure-health workflow. Those metrics are not inferred or fabricated.
+- Added the shared admin navigation shell and `/admin/dashboard` plus `/admin/control-panel`, backed by permission-protected `GET /api/admin/dashboard`. It provides bounded date/country/currency/seller/store filters, real user/seller/store/catalog/order/payment/queue counts, currency-separated order and successful-payment totals, daily order counts, and recent orders. Only existing queue pages are linked.
+- Updated the system blueprint, route registry, journey matrix, and this build log. No Prisma schema or migration change.
+- Changed files: `src/app/admin/layout.tsx`, `src/app/admin/dashboard/page.tsx`, `src/app/admin/control-panel/page.tsx`, `src/app/api/admin/dashboard/route.ts`, `src/features/admin/admin-navigation.tsx`, `src/features/admin/dashboard-page.tsx`, `src/server/admin/dashboard.ts`, `tests/admin/dashboard.test.ts`, and the four implementation/architecture documents listed above.
+
+**Verification**
+- `npx vitest run tests/admin/dashboard.test.ts`: 3 tests passed.
+- `npm run typecheck`: passed.
+- Targeted ESLint on all new dashboard/admin files: passed.
+- `git diff --check`: passed.
+- PostgreSQL-backed dashboard queries and browser journeys remain pending. Revenue/commission, seller payables, refunds/disputes, operational health, top performers, and absent entity drill-through pages remain outside Phase 1.
+
+## 2026-11-05 — Super Admin Phase 2 operations
+
+**Implemented**
+- Added user administration pages and APIs for bounded user search, account/security detail, and reason-required status changes. Status updates are conditional and audited; suspension/disable revokes active sessions, self-modification is denied, and SUPER_ADMIN accounts are protected.
+- Added seller/store administration UI using existing seller application decisions, plus audited ACTIVE/SUSPENDED store transitions guarded by current state and seller status.
+- Added the pending product approval UI using existing moderation APIs. It distinguishes approval from publication and requires a reason to reject.
+- Added read-only admin order list/detail APIs and pages with stable search/pagination/status filters, customer/order snapshots, vendor splits, payment attempt status, status history, and shipment tracking events. Provider references and checkout URLs are excluded, and no unsupported financial or fulfillment state changes are exposed.
+- Updated the admin route registry, journey matrix, and systems blueprint to reflect the implemented scope and remaining gaps. No schema or migration changes.
+
+**Verification**
+- `npx vitest run tests/admin/users.test.ts tests/admin/sellers.test.ts tests/admin/dashboard.test.ts tests/admin/orders.test.ts`: 13 tests passed.
+- `npm run typecheck`: passed after correcting the UI's currency-minor-unit formatting for all currencies.
+- Targeted ESLint on Phase 2 files: no errors; one warning remains for external product imagery in the product approval UI.
+- `git diff --check`: passed.
+- The shared browser tab rendered `/admin/orders` and its unauthorized API response correctly; authenticated admin workflows were not verified because no admin session was available. A production build and PostgreSQL-backed journeys remain pending. Product queue remains limited to the first 100 pending entries with client-side filtering; KYC, taxonomy administration, role changes, and order interventions remain out of scope.
+
+## 2026-11-05 — Super Admin Phase 3 financial and operational control
+
+**Implemented**
+- Added `/admin/payments` and payment detail inspection over canonical `Payment` and `PaymentWebhookEvent` records. The API requires the existing global `payments:read` permission, supports bounded search/provider/status filters and pagination, and summarizes attempts separately by status and currency.
+- Payment detail exposes failure/reconciliation fields and persisted webhook processing history while excluding provider references, checkout URLs, provider event IDs, and raw webhook payloads. The interface is read-only.
+- Added `/admin/logistics` and shipment detail inspection over persisted `Shipment` and `ShipmentTrackingEvent` records. Search/status filters and pagination are bounded; unsafe or credential-bearing tracking URLs are suppressed. No shipment or tracking records are created by these views.
+- Reused the existing `/admin/support` ticket desk for Phase 3, which already supports queue/detail, status/priority, self-assignment, public replies and private internal notes with audited transactional service operations.
+- Added Payments and Shipments to admin navigation and documented finance, logistics, and support readiness. No Prisma schema or migration changes.
+
+**Scope and financial safety**
+- The current schema has no double-entry ledger, commission, payout, refund, dispute, settlement, or reconciliation records/workflows. No financial balances are inferred and no payout/refund action is offered.
+- Carrier configuration, labels, automated tracking, SLA/delay detection, and shipment exception actions are not implemented. The logistics pages show persisted records only.
+- This is a partial Phase 3 slice, not a financial/accounting or fulfillment release.
+
+**Verification**
+- Nineteen focused tests across six admin test files passed; TypeScript check and targeted ESLint completed successfully.
+- `git diff --check` passed. Anonymous requests to the payments and shipments APIs returned `401 Authentication required`.
+- The shared browser tab loaded `/admin/payments`, but the development session reported HMR connection errors and a navigation hydration mismatch; authenticated page flows could not be verified because no admin session was available.
+- PostgreSQL-backed and production-build checks remain pending.
+
+## 2026-11-05 — Blueprint workstreams 4–7 follow-up
+
+**Scope and implementation**
+- Followed the platform blueprint's implementation order: search/discovery (4), cart/checkout (5), orders/payments (6), and seller operations (7). The first three already have source-level workflows; this pass did not duplicate them or enable payment behavior without the required launch/provider decisions.
+- Closed a seller onboarding retry gap without changing the schema or restricting sellers to one store. `POST /api/seller/stores` now uses the globally unique store slug as the idempotency key: exact owner/name/market retries return the existing store, mismatched/cross-seller uses are rejected, and a concurrent same-slug unique conflict is reconciled only after re-reading and matching persisted values.
+- The API returns `200` for an idempotent replay and `201` for a new store. The seller workspace explains that no duplicate was created. Audit is written only for the initial store creation.
+- Fixed the unauthenticated seller workspace state: a 401 now presents sign-in with a safe `/seller` return path and account creation, rather than exposing an application form whose submission cannot succeed.
+- Updated the seller route registry and action matrix. No migration or database operation was performed.
+
+**Verification**
+- `npx vitest run` over the focused Phase 4–7 suites: 20 files, 88 tests passed. The 12 seller-creation service/route tests were rerun after the subsequent seller sign-in UI adjustment and passed.
+- `npm run typecheck`, targeted ESLint on changed seller files, `git diff --check`, and `npm run build` passed.
+- Shared-browser smoke: `/cart` loaded its empty-cart state; `/checkout` correctly reported that no owned quote was available; `/seller` showed sign-in/create-account actions after the anonymous store API returned 401. HTTP checks returned 200 for `/cart`, `/checkout`, `/account/orders`, `/seller`, `/seller/orders`, and `/seller/inventory`; unauthenticated `/api/orders`, `/api/seller/stores`, and `/api/seller/orders` returned 401, while guest `/api/cart` and `/api/payments/providers` returned 200. No authenticated purchase/seller journey was attempted.
+- PostgreSQL migration replay and full browser journeys remain pending. The search trigram extension migration is present, but its runtime installation was not verified; no payment provider is configured, and no charge or payment success was simulated.
+- Seller onboarding remains end-to-end unverified; KYC/document intake, dedicated status pages, full catalog/inventory journey, and the rest of seller operational workflows are not complete.

@@ -21,9 +21,15 @@ type InventoryRow = {
   variant: { id: string; sku: string | null; name: string | null; product: { name: string; slug: string } };
 };
 
+class ApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
 async function readJson<T>(response: Response): Promise<T> {
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error ?? "The request could not be completed.");
+  if (!response.ok) throw new ApiError(body.error ?? "The request could not be completed.", response.status);
   return body as T;
 }
 
@@ -48,6 +54,7 @@ export default function SellerWorkspacePage() {
   const [warehouseCode, setWarehouseCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authenticationRequired, setAuthenticationRequired] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -68,7 +75,12 @@ export default function SellerWorkspacePage() {
       setWorkspace(sellerResult);
       if (sellerResult.stores[0]) { setSelectedStoreId(sellerResult.stores[0].id); localStorage.setItem("mtjr.activeStoreId", sellerResult.stores[0].id); }
     }).catch((cause: unknown) => {
-      if (active) setError(cause instanceof Error ? cause.message : "Sign in to access the seller workspace.");
+      if (!active) return;
+      if (cause instanceof ApiError && cause.status === 401) {
+        setAuthenticationRequired(true);
+        return;
+      }
+      setError(cause instanceof Error ? cause.message : "The seller workspace could not be loaded.");
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
@@ -91,14 +103,18 @@ export default function SellerWorkspacePage() {
     event.preventDefault();
     setBusy(true); setError(""); setMessage("");
     try {
-      await readJson(await fetch(path, {
+      const result = await readJson<{ alreadyCreated?: boolean }>(await fetch(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       }));
-      setMessage(success);
+      setMessage(result.alreadyCreated ? "This draft store already exists; no duplicate was created." : success);
       await reload();
     } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401) {
+        setAuthenticationRequired(true);
+        return;
+      }
       setError(cause instanceof Error ? cause.message : "The request failed.");
     } finally { setBusy(false); }
   }
@@ -120,7 +136,16 @@ export default function SellerWorkspacePage() {
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">Manage your seller application, stores, active markets and warehouse stock. Every action is checked by the marketplace backend.</p>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-950)]">{message}</p>}
-        {loading ? <p className="py-16 text-sm text-[var(--muted)]">Loading your workspace…</p> : !workspace?.seller ? (
+        {loading ? <p className="py-16 text-sm text-[var(--muted)]">Loading your workspace…</p> : authenticationRequired ? (
+          <section className="mt-8 max-w-2xl rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8">
+            <h2 className="text-xl font-semibold">Sign in to continue</h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Sign in or create an account to apply to sell and manage your stores.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/login?returnTo=%2Fseller" className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Sign in</Link>
+              <Link href="/register" className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)]">Create account</Link>
+            </div>
+          </section>
+        ) : !workspace?.seller ? (
           <section className="mt-8 max-w-2xl rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8">
             <h2 className="text-xl font-semibold">Apply to become a seller</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Submit your legal and public business names. Your application will remain pending until reviewed by the marketplace team.</p>

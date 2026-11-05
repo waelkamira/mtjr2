@@ -196,8 +196,10 @@ export default function AdminDashboardPage() {
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
             <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
               <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-lg font-semibold text-[var(--color-forest-950)]">Daily orders</h2><p className="mt-1 text-xs text-[var(--muted)]">Number of orders placed; canceled orders are excluded from the bars.</p></div><span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span></div>
-              <div className="mt-6 flex h-44 items-end gap-1 border-b border-l border-[var(--border)] px-2">
-                {dashboard.dailyOrders.map((day) => <div key={day.day} title={`${day.day}: ${day.count} orders`} className="group flex h-full min-w-0 flex-1 items-end"><div className="w-full rounded-t bg-[var(--color-copper-600)] transition-opacity group-hover:opacity-70" style={{ height: `${Math.max(3, (day.count / maxOrders) * 100)}%` }} /></div>)}
+              <div className="mt-6 overflow-x-auto">
+                <div className="flex h-44 min-w-[420px] items-end gap-1 border-b border-l border-[var(--border)] px-2" style={{ minWidth: `${Math.max(420, dashboard.dailyOrders.length * 12)}px` }}>
+                  {dashboard.dailyOrders.map((day) => <div key={day.day} title={`${day.day}: ${day.count} orders`} aria-label={`${day.day}: ${day.count} orders`} className="group flex h-full min-w-0 flex-1 items-end"><div className="w-full rounded-t bg-[var(--color-copper-600)] transition-opacity group-hover:opacity-70" style={{ height: day.count === 0 ? "0%" : `${Math.max(3, (day.count / maxOrders) * 100)}%` }} /></div>)}
+                </div>
               </div>
               <div className="mt-2 flex justify-between text-[10px] text-[var(--muted)]"><span>{dashboard.dailyOrders[0]?.day}</span><span>{dashboard.dailyOrders.at(-1)?.day}</span></div>
             </div>
