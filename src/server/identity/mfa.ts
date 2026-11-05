@@ -7,8 +7,6 @@ import { AuditActorType } from "@prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { verifyPassword } from "@/server/identity/password";
-import { getUserAuthorizationGrants } from "@/server/identity/permission-repository";
-import { hasPermission } from "@/server/identity/authorization";
 
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const TOTP_PERIOD_SECONDS = 30;
@@ -265,14 +263,22 @@ export async function disableMfa(
   if (!user?.passwordHash || !(await verifyPassword(currentPassword, user.passwordHash))) {
     throw new MfaStateConflictError("The current password is incorrect.");
   }
-  const grants = await getUserAuthorizationGrants(userId, now);
-  if (hasPermission(grants, { permissionKey: "platform:manage", now })) {
-    throw new MfaStateConflictError("MFA cannot be disabled while platform-wide privileges are assigned.");
-  }
   if (!(await verifyMfaProof(userId, proof, now))) {
     throw new MfaStateConflictError("The MFA verification code is invalid or already used.");
   }
   await prisma.$transaction(async tx => {
+    // Serialize MFA disable with privilege approval/bootstrap account-row locks.
+    await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+    const assignments = await tx.userRoleAssignment.findMany({
+      where: { userId, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      select: { role: { select: { permissions: { select: { permission: { select: { key: true } } } } } } }
+    });
+    const hasPlatformManagement = assignments.some(assignment =>
+      assignment.role.permissions.some(({ permission }) => permission.key === "platform:manage")
+    );
+    if (hasPlatformManagement) {
+      throw new MfaStateConflictError("MFA cannot be disabled while platform-wide privileges are assigned.");
+    }
     await tx.userMfaAuthenticator.deleteMany({ where: { userId } });
     await tx.mfaRecoveryCode.deleteMany({ where: { userId } });
     await tx.userSession.updateMany({
