@@ -5,7 +5,7 @@
 ## 1. الغرض والحدود
 - **الغرض:** Monitor provider transactions, attempts, refunds, reconciliation and payment failures.
 - **المتطلبات الأساسية:** verified provider events, idempotent updates, attempt history, refund controls and settlement matching.
-- **الحالة السابقة الموثقة:** غير محدد في المخطط الأساسي ويجب حسمه قبل التنفيذ.
+- **الحالة الحالية:** Partial — server-owned payment intents and verified webhooks are implemented. Manual return refunds now have durable records, captured-payment caps, idempotency, finance permission, external-reference confirmation and payment-status aggregation. No provider refund adapter or automated provider refund call is implemented.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
@@ -61,7 +61,7 @@
 |---|---|---|
 | `Payment` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
 | `PaymentWebhookEvent` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
-| `Refund` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `Refund`, `RefundItem` | أضيفا لتسجيل المبلغ والعناصر وحالة الاسترداد اليدوي وربطهما بالدفعة والطلب والمرتجع |
 | `Dispute` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `PaymentAttempt` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `PaymentReconciliation` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
@@ -114,3 +114,11 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## Manual refund implementation update — 2026-11-05
+- Finance-only API: `GET/POST /api/admin/refunds` and `PATCH /api/admin/refunds/[refundId]`, protected by `payments:refund` and mutation request-security validation.
+- `Refund` and `RefundItem` persist a pending manual refund only after the return request reaches `RECEIVED`. Each return item can be allocated once; per-order-item merchandise value and per-payment captured balance are checked under an order advisory lock and serializable transaction.
+- A refund remains `PENDING_MANUAL` and Payment status remains unchanged until finance records the external provider refund reference. Only then does Payment become `PARTIALLY_REFUNDED` or `REFUNDED` based on completed refund totals.
+- Late/replayed successful payment webhooks cannot overwrite a partial/full refund or dispute status.
+- Amount calculation covers merchandise line value only. Shipping and tax allocation/refunds require a separately reviewed policy. No provider refund API is called.
