@@ -302,3 +302,11 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Route / action | UI | API / domain | Prisma | Status |
 |---|---|---|---|---|
 | Seller order preparation | `/seller/orders` | `PATCH /api/seller/orders/[vendorOrderId]/status` → `transitionSellerVendorOrder` | Existing VendorOrder and status-history records plus AuditLog; no schema change | Implemented on PR #25; exact-head CI/PostgreSQL verification pending. Only paid `CONFIRMED → PROCESSING → READY_TO_SHIP` is exposed. |
+
+
+## Manual seller dispatch and buyer tracking — pending verification
+
+| Route / action | UI | API / domain | Prisma | Status |
+|---|---|---|---|---|
+| Record dispatch | `/seller/orders` → Record dispatch | `POST /api/seller/orders/[vendorOrderId]/shipment` → `createSellerShipment` | Shipment, VendorOrder, VendorOrderStatusHistory, OrderStatusHistory, AuditLog | Implemented on `feat/shipment-tracking-current-main`; exact-head CI/PostgreSQL pending. Requires active owner or exact store-scoped `orders:manage`; only READY_TO_SHIP is accepted. |
+| View tracking details | `/orders/[orderId]` | Existing owned-order read serializer | Shipment joined through VendorOrder | Implemented on the same branch; customer sees seller-entered details only. No live carrier tracking is claimed. |
