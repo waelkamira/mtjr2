@@ -34,12 +34,12 @@ function safeReturnPath(): string {
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
 const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
-export default function AuthPage({ mode, initialToken = "", initialEmail = "" }: { mode: AuthMode; initialToken?: string; initialEmail?: string }) {
+export default function AuthPage({ mode, initialToken = "", initialEmail = "", initialOAuthError = "" }: { mode: AuthMode; initialToken?: string; initialEmail?: string; initialOAuthError?: string }) {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [token, setToken] = useState(initialToken);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialOAuthError);
   const [notice, setNotice] = useState("");
   const [registrationComplete, setRegistrationComplete] = useState(false);
 
@@ -49,17 +49,6 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
       setRegistrationComplete(new URLSearchParams(window.location.search).get("registered") === "1");
     }, 0);
     const params = new URLSearchParams(window.location.search);
-    if (mode === "login") {
-      const oauth = params.get("oauth");
-      const oauthMessages: Record<string, string> = {
-        unavailable: "Google sign-in is not configured in this environment.",
-        invalid: "Google sign-in could not be verified. Please try again.",
-        failed: "Google sign-in failed. Please try again or use your email and password.",
-        inactive: "This account is not active. Contact marketplace support.",
-        not_linked: "This Google account is not linked to a Mtjr2 account. Use your existing sign-in method or create an account."
-      };
-      if (oauth) setError(oauthMessages[oauth] ?? "Google sign-in could not be completed.");
-    }
     if (params.has("token")) {
       params.delete("token");
       const query = params.toString();
