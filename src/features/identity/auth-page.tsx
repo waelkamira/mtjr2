@@ -135,7 +135,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
           <aside className="relative hidden overflow-hidden bg-[var(--color-forest-950)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(190,130,87,.35),transparent_42%),linear-gradient(145deg,transparent,rgba(0,0,0,.2))]" />
             <div className="relative">
-              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-300)]">Mtjr2 marketplace</p>
+              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-100)]">Mtjr2 marketplace</p>
               <h2 className="mt-8 max-w-md text-4xl font-semibold leading-tight xl:text-5xl">{mode === "login" ? "Your marketplace. One secure account." : "Your account, protected at every step."}</h2>
               <p className="mt-5 max-w-md text-sm leading-7 text-white/75">{mode === "login" ? "Discover products, manage orders, save favorites and connect with trusted stores." : "We verify email addresses, protect your sessions and keep account recovery simple."}</p>
             </div>
