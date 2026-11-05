@@ -16,7 +16,8 @@
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:bootstrap-super-admin": "node scripts/bootstrap-super-admin.cjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",
