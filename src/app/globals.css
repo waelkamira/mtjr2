@@ -6,48 +6,48 @@
  * Examples: bg-lavender-100, text-ink-950, shadow-clay, rounded-clay-card.
  */
 @theme inline {
-  --color-lavender-950: var(--color-lavender-950);
-  --color-lavender-800: var(--color-lavender-800);
-  --color-lavender-600: var(--color-lavender-600);
-  --color-lavender-300: var(--color-lavender-300);
-  --color-lavender-100: var(--color-lavender-100);
-  --color-lavender-50: var(--color-lavender-50);
-  --color-mint-800: var(--color-mint-800);
-  --color-mint-600: var(--color-mint-600);
-  --color-mint-300: var(--color-mint-300);
-  --color-mint-100: var(--color-mint-100);
-  --color-mint-50: var(--color-mint-50);
-  --color-blush-800: var(--color-blush-800);
-  --color-blush-600: var(--color-blush-600);
-  --color-blush-300: var(--color-blush-300);
-  --color-blush-100: var(--color-blush-100);
-  --color-blush-50: var(--color-blush-50);
-  --color-butter-800: var(--color-butter-800);
-  --color-butter-600: var(--color-butter-600);
-  --color-butter-300: var(--color-butter-300);
-  --color-butter-100: var(--color-butter-100);
-  --color-butter-50: var(--color-butter-50);
-  --color-sky-700: var(--color-sky-700);
-  --color-sky-100: var(--color-sky-100);
-  --color-ink-950: var(--color-ink-950);
-  --color-ink-800: var(--color-ink-800);
-  --color-ink-600: var(--color-ink-600);
-  --color-ink-400: var(--color-ink-400);
-  --color-line: var(--color-line);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
-  --color-danger: var(--color-danger);
-  --color-info: var(--color-info);
-  --color-canvas: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-soft: var(--surface-soft);
-  --color-surface-tint: var(--surface-tint);
+  --color-clay-lavender-950: var(--color-lavender-950);
+  --color-clay-lavender-800: var(--color-lavender-800);
+  --color-clay-lavender-600: var(--color-lavender-600);
+  --color-clay-lavender-300: var(--color-lavender-300);
+  --color-clay-lavender-100: var(--color-lavender-100);
+  --color-clay-lavender-50: var(--color-lavender-50);
+  --color-clay-mint-800: var(--color-mint-800);
+  --color-clay-mint-600: var(--color-mint-600);
+  --color-clay-mint-300: var(--color-mint-300);
+  --color-clay-mint-100: var(--color-mint-100);
+  --color-clay-mint-50: var(--color-mint-50);
+  --color-clay-blush-800: var(--color-blush-800);
+  --color-clay-blush-600: var(--color-blush-600);
+  --color-clay-blush-300: var(--color-blush-300);
+  --color-clay-blush-100: var(--color-blush-100);
+  --color-clay-blush-50: var(--color-blush-50);
+  --color-clay-butter-800: var(--color-butter-800);
+  --color-clay-butter-600: var(--color-butter-600);
+  --color-clay-butter-300: var(--color-butter-300);
+  --color-clay-butter-100: var(--color-butter-100);
+  --color-clay-butter-50: var(--color-butter-50);
+  --color-clay-sky-700: var(--color-sky-700);
+  --color-clay-sky-100: var(--color-sky-100);
+  --color-clay-ink-950: var(--color-ink-950);
+  --color-clay-ink-800: var(--color-ink-800);
+  --color-clay-ink-600: var(--color-ink-600);
+  --color-clay-ink-400: var(--color-ink-400);
+  --color-clay-line: var(--color-line);
+  --color-clay-success: var(--color-success);
+  --color-clay-warning: var(--color-warning);
+  --color-clay-danger: var(--color-danger);
+  --color-clay-info: var(--color-info);
+  --color-clay-canvas: var(--background);
+  --color-clay-surface: var(--surface);
+  --color-clay-surface-soft: var(--surface-soft);
+  --color-clay-surface-tint: var(--surface-tint);
 
-  --shadow-clay: var(--shadow-clay);
-  --shadow-clay-hover: var(--shadow-clay-hover);
-  --shadow-clay-inset: var(--shadow-clay-inset);
-  --shadow-floating: var(--shadow-floating);
-  --shadow-glow: var(--shadow-glow);
+  --shadow-clay-raised: var(--shadow-clay);
+  --shadow-clay-raised-hover: var(--shadow-clay-hover);
+  --shadow-clay-recessed: var(--shadow-clay-inset);
+  --shadow-clay-floating: var(--shadow-floating);
+  --shadow-clay-glow: var(--shadow-glow);
 
   --radius-clay-control: var(--radius-control);
   --radius-clay-card: var(--radius-card);
@@ -56,7 +56,6 @@
 
   --font-sans: Inter, "Segoe UI", Arial, sans-serif;
 }
-
 /*
  * Mtjr2 design system — Claymorphism / 3D Pastel Clay
  * Tokens are shared across storefront, buyer account, seller workspace and admin.
