@@ -134,3 +134,36 @@ The candidate privilege-request `POST` and `PATCH` handlers parse JSON and call 
 - [ ] Run exact-head Prisma, typecheck, lint, unit, PostgreSQL integration, and build checks.
 
 The Super Admin feature branch was ported selectively because it is 77 commits ahead and 19 commits behind `main`; it was not merged wholesale.
+
+
+## IAM rebuild continuation — 2026-11-06 (latest source audit)
+
+The implementation work is now recorded in the route/access matrix (IDENTITY_ROUTE_ACCESS_MATRIX.md) and Phase 2 identity plan (PHASE_02_IDENTITY_PLAN.md). This section supersedes the earlier Super Admin implementation slice above where its MFA and verification checkboxes were still open.
+
+### Source work now implemented
+- [x] Protected platform capability against ordinary role assignment/revocation, including custom roles carrying platform:manage.
+- [x] Selectively ported Super Admin control center, access catalogue, audit log and two-person privilege-request workflow.
+- [x] Added a one-time, explicitly confirmed, exact-database-target bootstrap for the first platform administrator.
+- [x] Enforced verified email, enrolled encrypted TOTP MFA, and a strictly checked ten-minute session-bound step-up for all platform-wide service/page/API access.
+- [x] Added recovery-code rotation, one-use code consumption, TOTP replay protection, MFA-specific throttling, password reauthentication, and audit events.
+- [x] Serialized MFA disable against platform privilege changes using the target account row lock.
+- [x] Added account-wide logout and UI, in addition to individual session revocation.
+- [x] Changed login failures to a single generic message/reason for unknown email, incorrect password, and inactive/unverified accounts.
+- [x] Reviewed the 23 admin API route handlers; fixed the missing same-origin/Fetch Metadata/JSON guard on the return-decision PATCH endpoint.
+- [x] Added a route and component access matrix.
+
+### Exact verification and review
+- PR: [#52 — Rebuild identity and secure Super Admin access](https://github.com/waelkamira/mtjr2/pull/52).
+- Exact branch head at the time of this record must be read from the PR before accepting workflow evidence; earlier CI results were cancelled as new commits were pushed.
+- Final General CI and PostgreSQL integration are required on the final head. Record their exact run IDs and SHA only after completion.
+
+### Findings and explicit limitations
+- The /account layout requires an authenticated session; account APIs additionally enforce ownership.
+- Seller and admin pages are not treated as security boundaries; their server services enforce active session, operation-specific permissions and store/resource scope.
+- Super Admin page guards and every platform service/API use the dedicated platform-management gate.
+- Session inventory is based on persisted sessions, user-agent and timestamps; it is not hardware-backed device identification or automated anomaly detection.
+- Passkeys, phone verification, hardware security keys and automated suspicious-session detection remain unimplemented.
+- Resend delivery, trusted proxy/origin-bypass controls, Google OAuth provider verification, and the full browser/HTTP journey remain deployment/operational gates.
+- No Vercel deployment/configuration change, production database operation, or production secret access was performed.
+
+**Current decision:** source implementation is substantially rebuilt, but Phase 1 inventory and Phase 2 release gates are not closed. Do not mark the system complete or unblock Phase 3 until exact-head CI, clean PostgreSQL integration, the controlled HTTP/browser journey, and provider/proxy checks are evidenced.
