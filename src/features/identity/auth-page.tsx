@@ -41,8 +41,10 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   useEffect(() => {
+    setRegistrationComplete(new URLSearchParams(window.location.search).get("registered") === "1");
     const params = new URLSearchParams(window.location.search);
     if (params.has("token")) {
       params.delete("token");
@@ -113,7 +115,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Mtjr2 account</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{title}</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{description}</p>
-          {mode === "verify" && new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("registered") === "1" && <p role="status" className="mt-4 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">Your account was created. Check your inbox for the verification email, then enter the code below.</p>}
+          {mode === "verify" && registrationComplete && <p role="status" className="mt-4 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">Your account was created. Check your inbox for the verification email, then enter the code below.</p>}
 
           {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
           {notice && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">{notice}</p>}
