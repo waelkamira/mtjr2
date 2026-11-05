@@ -1,3 +1,4 @@
+import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/permission-guard";
 import { completeManualRefund } from "@/server/payments/refunds";
 
@@ -5,6 +6,8 @@ export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ refundId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   try {
     const { refundId } = await context.params;
     const result = await completeManualRefund(refundId, await request.json());
