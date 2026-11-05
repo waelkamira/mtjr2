@@ -73,6 +73,6 @@ The CSS tokens and opt-in surface primitives are implemented in `src/app/globals
 The project uses Tailwind CSS v4, so the shared Tailwind theme is defined with `@theme inline` in `src/app/globals.css` rather than a legacy `tailwind.config.js` file. This is intentional: Tailwind v4 is CSS-first.
 
 - `:root` is the single source of truth for palette, semantic colors, surfaces, radii, and clay shadows.
-- `@theme inline` exposes those tokens as Tailwind utilities (for example `bg-lavender-100`, `text-ink-950`, `shadow-clay`, and `rounded-clay-card`).
+- `@theme inline` exposes those tokens as Tailwind utilities (for example `bg-clay-lavender-100`, `text-clay-ink-950`, `shadow-clay-raised`, and `rounded-clay-card`).
 - Change a token once in `:root`; both ordinary CSS and Tailwind utilities consume the same value.
 - Component-level inline values should be migrated to these named tokens instead of introducing new one-off colors or shadows.
