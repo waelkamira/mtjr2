@@ -2,7 +2,9 @@ import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import {
   AuthenticationRequiredError,
-  PermissionDeniedError
+  PermissionDeniedError,
+  MfaEnrollmentRequiredError,
+  StepUpRequiredError
 } from "@/server/identity/permission-guard";
 import {
   decidePlatformPrivilegeRequest,
