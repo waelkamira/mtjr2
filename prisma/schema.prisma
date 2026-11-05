@@ -370,6 +370,14 @@ enum ReturnRequestStatus {
   CANCELLED
 }
 
+enum ReturnItemStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  CANCELLED
+}
+
 enum ReviewStatus {
   PENDING
   PUBLISHED
@@ -1354,16 +1362,21 @@ model ReturnRequest {
 }
 
 model ReturnItem {
-  id              String       @id @default(cuid())
+  id              String          @id @default(cuid())
   returnRequestId String
   orderItemId     String
   quantity        Int
-  createdAt       DateTime     @default(now())
-  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
-  orderItem       OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  status          ReturnItemStatus @default(REQUESTED)
+  reviewNote      String?         @db.VarChar(1000)
+  reviewedAt      DateTime?
+  reviewedById    String?
+  createdAt       DateTime        @default(now())
+  returnRequest   ReturnRequest  @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItem       OrderItem       @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
 
   @@unique([returnRequestId, orderItemId])
   @@index([orderItemId])
+  @@index([status, reviewedAt])
 }
 
 model ProductReview {
