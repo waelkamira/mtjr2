@@ -2,6 +2,7 @@ import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { reviewSellerReturnItems } from "@/server/returns/seller-returns";
+import { receiveSellerReturnItems } from "@/server/returns/return-receipt";
 
 export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ returnId: string }> };
@@ -11,7 +12,10 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
   if (rejected) return rejected;
   try {
     const { returnId } = await context.params;
-    const result = await reviewSellerReturnItems(returnId, await request.json());
+    const body = await request.json() as { status?: string };
+    const result = body.status === "RECEIVED"
+      ? await receiveSellerReturnItems(returnId, body)
+      : await reviewSellerReturnItems(returnId, body);
     return Response.json({ result }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
