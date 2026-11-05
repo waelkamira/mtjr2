@@ -57,7 +57,7 @@ export async function getMyReturnCenter(now = new Date()) {
   const itemIds = orders.flatMap((order) => order.vendorOrders.flatMap((vendor) => vendor.items.map((item) => item.id)));
   const previouslyRequested = itemIds.length ? await prisma.returnItem.groupBy({
     by: ["orderItemId"],
-    where: { orderItemId: { in: itemIds }, returnRequest: { status: { notIn: [ReturnRequestStatus.REJECTED, ReturnRequestStatus.CANCELLED] } } },
+    where: { orderItemId: { in: itemIds }, status: { notIn: ["REJECTED", "CANCELLED"] }, returnRequest: { status: { notIn: [ReturnRequestStatus.REJECTED, ReturnRequestStatus.CANCELLED] } } },
     _sum: { quantity: true }
   }) : [];
   const returnedByItem = new Map(previouslyRequested.map((row) => [row.orderItemId, row._sum.quantity ?? 0]));
@@ -104,6 +104,7 @@ export async function createMyReturnRequest(input: unknown, now = new Date()) {
       by: ["orderItemId"],
       where: {
         orderItemId: { in: data.items.map((item) => item.orderItemId) },
+        status: { notIn: ["REJECTED", "CANCELLED"] },
         returnRequest: { status: { notIn: [ReturnRequestStatus.REJECTED, ReturnRequestStatus.CANCELLED] } }
       },
       _sum: { quantity: true }
