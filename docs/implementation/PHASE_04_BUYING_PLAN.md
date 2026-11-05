@@ -174,3 +174,8 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Seller return decisions require `returns:manage` at the exact STORE scope; `orders:manage` alone no longer authorizes a return decision.
 - SELLER and STORE_MANAGER role capability sets include `returns:manage`; actual staff authority still requires an active membership and a matching scoped grant.
 - No Prisma schema or migration change is required.
+
+
+### Return receipt correctness
+- Marking a return request received updates only approved return lines; rejected lines are never overwritten.
+- Receipt fails when there are no approved lines to receive. Inventory restocking is intentionally not implied by this status change and remains a separately verified workflow.
