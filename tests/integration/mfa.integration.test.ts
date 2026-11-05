@@ -5,11 +5,10 @@ import {
   confirmMfaEnrollment, createMfaEnrollment, getMfaStatus,
   generateTotpCode, verifyMfaStepUp
 } from "@/server/identity/mfa";
-import { createUserSession } from "@/server/identity/session";
+import { createUserSession, hashSessionToken } from "@/server/identity/session";
 
 const suffix = randomUUID();
 const createdUsers: string[] = [];
-const createdSessions: string[] = [];
 
 describe("MFA PostgreSQL integration", () => {
   afterAll(async () => {
@@ -39,10 +38,9 @@ describe("MFA PostgreSQL integration", () => {
     createdUsers.push(user.id);
     const session = await createUserSession(user.id);
     const sessionRow = await prisma.userSession.findUniqueOrThrow({
-      where: { tokenHash: (await import("@/server/identity/session")).hashSessionToken(session.token) },
+      where: { tokenHash: hashSessionToken(session.token) },
       select: { id: true }
     });
-    createdSessions.push(sessionRow.id);
 
     const enrollment = await createMfaEnrollment(user.id);
     expect(enrollment.secret).toBeTruthy();
@@ -50,7 +48,7 @@ describe("MFA PostgreSQL integration", () => {
     expect(pending.secretCiphertext).not.toContain(enrollment.secret);
     expect(pending.enabledAt).toBeNull();
 
-    const enrollmentStep = 60_000_000;
+    const enrollmentStep = Math.floor(Date.now() / 30_000);
     const enrollmentTime = new Date(enrollmentStep * 30_000);
     const enabled = await confirmMfaEnrollment(
       user.id,
