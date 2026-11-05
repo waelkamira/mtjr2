@@ -22,7 +22,7 @@ export async function listSellerReturnRequests(now = new Date()) {
   const permittedStoreIds = (await Promise.all(stores.map(async (store) => {
     const isOwner = store.seller.ownerId === actor.userId;
     const delegated = await userHasScopedPermission(actor.userId, {
-      permissionKey: "orders:manage",
+      permissionKey: "returns:manage",
       scope: { type: "STORE", id: store.id },
       now
     });
@@ -129,7 +129,7 @@ export async function reviewSellerReturnItems(returnId: string, input: unknown, 
       select: { id: true }
     }) : null;
     const delegated = Boolean(activeStaff) && await userHasScopedPermission(actor.userId, {
-      permissionKey: "orders:manage", scope: { type: "STORE", id: store.id }, now
+      permissionKey: "returns:manage", scope: { type: "STORE", id: store.id }, now
     });
     if (!isOwner && !delegated && !platformAdmin) throw new Error("Permission denied.");
 

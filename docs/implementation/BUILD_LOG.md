@@ -2054,3 +2054,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Seller decision is not proof of physical receipt.
 - No inventory is restocked and no payment refund/provider API is called.
 - CI and PostgreSQL migration/integration verification are pending on the exact PR head.
+
+
+## 2026-11-05 — Return permission boundary
+- Seller return decisions now require the exact-store `returns:manage` permission rather than reusing `orders:manage`.
+- Added `returns:manage` to SELLER and STORE_MANAGER role capability sets; assignments remain store-scoped and do not grant a global seller permission.
+- Updated focused decision tests and the vendor return lifecycle design record. Verify exact-head General CI and PostgreSQL Integration before merge.

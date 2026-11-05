@@ -168,3 +168,9 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Customer and seller screens display per-item decisions. Rejected line quantities are released for a future return request.
 - Seller approval/rejection does not confirm physical receipt, restock inventory, or initiate a refund. Those remain separate workflows; no provider refund is claimed.
 - Verification is pending exact-head General CI and PostgreSQL Integration.
+
+
+### Store-scoped return permission correction (2026-11-05)
+- Seller return decisions require `returns:manage` at the exact STORE scope; `orders:manage` alone no longer authorizes a return decision.
+- SELLER and STORE_MANAGER role capability sets include `returns:manage`; actual staff authority still requires an active membership and a matching scoped grant.
+- No Prisma schema or migration change is required.
