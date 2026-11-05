@@ -150,7 +150,7 @@ export async function GET(request: Request): Promise<Response> {
       });
       userId = created.id;
     }
-    if (linked) {
+    if (linked && intent === "register") {
       await prisma.$transaction(async (tx) => {
         const [terms, privacy, seller] = await Promise.all([
           tx.userConsent.findFirst({ where: { userId, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true }, select: { id: true } }),
