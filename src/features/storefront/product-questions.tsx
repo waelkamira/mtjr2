@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
+import AuthReturnLink from "@/components/auth-return-link";
 
 type Answer = { id: string; body: string; author: string; createdAt: string };
 type Question = { id: string; question: string; author: string; createdAt: string; answers: Answer[] };
@@ -43,7 +43,7 @@ export default function ProductQuestions({ productId }: { productId: string }) {
     <form onSubmit={submit} className="mt-6 rounded-2xl bg-[var(--color-ivory-100)] p-5"><label className="block text-sm font-semibold text-[var(--color-forest-950)]">Ask about this product<textarea required minLength={10} maxLength={2000} rows={3} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about size, compatibility, materials or delivery…" className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-3 font-normal" /></label>
       {message && <p role="status" className="mt-3 text-sm text-[var(--color-forest-800)]">{message}</p>}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-[var(--muted)]">Questions appear publicly after moderation.</p><button disabled={busy} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Submitting…" : "Submit question"}</button></div>
-      {error.includes("Sign in") && <Link href="/login" className="mt-2 inline-block text-sm font-semibold underline">Sign in to continue</Link>}
+      {error.includes("Sign in") && <AuthReturnLink href="/login" className="mt-2 inline-block text-sm font-semibold underline">Sign in to continue</AuthReturnLink>}
     </form>
   </div></section>;
 }

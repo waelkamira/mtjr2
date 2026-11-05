@@ -3,7 +3,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { safeReturnPath as getSafeReturnPath } from "@/lib/safe-return-path";
+import AuthReturnLink from "@/components/auth-return-link";
+import { currentReturnPath } from "@/lib/current-return-path";
 
 type AuthMode = "login" | "forgot" | "reset" | "verify";
 
@@ -21,12 +22,6 @@ async function postJson(path: string, payload: unknown): Promise<ApiResult> {
   catch { throw new Error("The server returned an unreadable response. Please try again."); }
   if (!response.ok) throw new Error(result.error || result.message || "The request could not be completed.");
   return result;
-}
-
-function currentReturnPath(): string {
-  if (typeof window === "undefined") return "/";
-  const candidate = new URLSearchParams(window.location.search).get("returnTo");
-  return getSafeReturnPath(candidate, window.location.origin);
 }
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
@@ -165,7 +160,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
           )}
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5 text-sm">
-            {mode === "login" && <><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/verify-email">Verify email</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/register">Create account</Link></>}
+            {mode === "login" && <><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/verify-email">Verify email</Link><AuthReturnLink className="font-medium text-[var(--color-forest-800)] hover:underline" href="/register">Create account</AuthReturnLink></>}
             {(mode === "forgot" || mode === "reset" || mode === "verify") && <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Back to sign in</Link>}
           </div>
         </section>

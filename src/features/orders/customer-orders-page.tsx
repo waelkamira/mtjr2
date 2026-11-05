@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type Order = { id: string; orderNumber: string; status: string; currencyCode: string; currency: { minorUnit: number }; totalMinor: string; placedAt: string; vendorOrders: Array<{ id: string; store: { name: string } }> };
 function money(value: string, code: string, unit: number) { return new Intl.NumberFormat(undefined, { style: "currency", currency: code }).format(Number(value) / (10 ** unit)); }
 
 export default function CustomerOrdersPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,7 +21,7 @@ export default function CustomerOrdersPage() {
       const response = await fetch("/api/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", cache: "no-store" });
       const data = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(data.error || "Could not sign out. Please try again.");
-      window.location.assign("/login");
+      router.push("/login?returnTo=%2Forders");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not sign out. Please try again.");
     } finally { setSigningOut(false); }

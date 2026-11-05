@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AuthReturnLink from "@/components/auth-return-link";
 import ProductReviews from "@/features/storefront/product-reviews";
 import StoreReviews from "@/features/storefront/store-reviews";
 import ProductQuestions from "@/features/storefront/product-questions";
@@ -186,7 +187,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
         {variant?.attributes.length ? <dl className="mt-5 grid gap-3 sm:grid-cols-2">{variant.attributes.map((attribute) => <div key={attribute.key}><dt className="text-xs font-medium text-[var(--muted)]">{attribute.name}</dt><dd className="mt-1 text-sm text-[var(--color-ink-700)]">{formatAttributeValue(attribute.value)}</dd></div>)}</dl> : null}
         <button type="button" onClick={() => void toggleFavorite()} disabled={favoriteBusy} aria-pressed={isFavorite} className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{favoriteBusy ? "Saving…" : isFavorite ? "♥ Saved to wishlist" : "♡ Save to wishlist"}</button>
 
-        {favoriteError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{favoriteError} <Link href="/login" className="font-semibold underline">Sign in</Link></p>}
+        {favoriteError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{favoriteError} <AuthReturnLink href="/login" className="font-semibold underline">Sign in</AuthReturnLink></p>}
         {messageError && <p role="alert" className="mt-2 text-sm text-[var(--color-danger)]">{messageError}</p>}
         <button type="button" onClick={contactStore} disabled={messageBusy} className="mt-3 rounded-xl border border-[var(--border)] px-6 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{messageBusy ? "Opening…" : "Message this store"}</button>
         <button type="button" onClick={addSelectedVariantToCart} disabled={!variant || !price || !selectedMarket || addingToCart} className="mt-8 rounded-xl bg-[var(--color-forest-900)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)] disabled:cursor-not-allowed disabled:opacity-50">{addingToCart ? "Adding…" : "Add to cart"}</button>

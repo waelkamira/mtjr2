@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import AuthReturnLink from "@/components/auth-return-link";
 
 type Review = {
   id: string; rating: number; title: string; body: string; author: string; createdAt: string; verifiedPurchase: true;
@@ -125,7 +125,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
               <label className="block text-sm font-medium">Image URLs (optional)<textarea value={mediaUrls} onChange={(event) => setMediaUrls(event.target.value)} maxLength={11000} rows={3} placeholder="One HTTPS image URL per line" className="mt-1 block w-full rounded-xl border border-[var(--border)] px-3 py-2" /><span className="mt-1 block text-xs text-[var(--muted)]">Up to 5 public HTTPS JPG, PNG, GIF, WebP or AVIF URLs. This attaches existing images; it does not upload files.</span></label>
               <button disabled={busy || !orderItemId} className="w-full rounded-xl bg-[var(--color-forest-900)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Submitting…" : "Submit review"}</button>
             </form> : <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Only customers with a delivered purchase can review this product. Reviews are limited to one per customer and product.</p>}
-          {needsSignIn && <Link href="/login" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white">Sign in</Link>}
+          {needsSignIn && <AuthReturnLink href="/login" className="mt-4 inline-flex rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white">Sign in</AuthReturnLink>}
         </aside>
       </div>
     </div>

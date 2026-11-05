@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MarketplaceSearchBox from "@/features/storefront/marketplace-search-box";
 import { getCurrentSession } from "@/server/identity/current-session";
+import AuthReturnLink from "@/components/auth-return-link";
 
 export default async function SiteNavigation() {
   let session = null;
@@ -32,8 +33,8 @@ export default async function SiteNavigation() {
             </>
           ) : (
             <>
-              <Link href="/login" className="rounded-xl px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
-              <Link href="/register" className="rounded-xl bg-[var(--color-forest-800)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition hover:bg-[var(--color-forest-950)]">Join</Link>
+              <AuthReturnLink href="/login" className="rounded-xl px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</AuthReturnLink>
+              <AuthReturnLink href="/register" className="rounded-xl bg-[var(--color-forest-800)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition hover:bg-[var(--color-forest-950)]">Join</AuthReturnLink>
 
             </>
           )}

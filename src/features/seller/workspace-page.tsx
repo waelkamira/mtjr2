@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import AuthReturnLink from "@/components/auth-return-link";
 
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type Store = {
@@ -141,8 +142,8 @@ export default function SellerWorkspacePage() {
             <h2 className="text-xl font-semibold">Sign in to continue</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Sign in or create an account to apply to sell and manage your stores.</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/login?returnTo=%2Fseller" className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Sign in</Link>
-              <Link href="/register" className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)]">Create account</Link>
+              <AuthReturnLink href="/login" className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">Sign in</AuthReturnLink>
+              <AuthReturnLink href="/register" className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)]">Create account</AuthReturnLink>
             </div>
           </section>
         ) : !workspace?.seller ? (

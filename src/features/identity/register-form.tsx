@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AuthReturnLink from "@/components/auth-return-link";
+import { currentReturnPath } from "@/lib/current-return-path";
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-copper-500)]";
 const buttonClass = "inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-forest-900)] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-800)] disabled:cursor-not-allowed disabled:opacity-55";
 
 export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthError?: string }) {
+  const router = useRouter();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,13 +21,17 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [oauthError, setOauthError] = useState(initialOAuthError);
 
   function continueWithGoogle() {
     if (!acceptedTerms || !acceptedPrivacy) { setOauthError("Please accept both policy documents before continuing."); return; }
     if (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim())) { setOauthError("Enter your applicant and store names before continuing."); return; }
-    const params = new URLSearchParams({ accountType, acceptedTerms: "1", acceptedPrivacy: "1" });
+    const params = new URLSearchParams({
+      accountType,
+      acceptedTerms: "1",
+      acceptedPrivacy: "1",
+      returnTo: currentReturnPath()
+    });
     if (accountType === "SELLER") { params.set("sellerLegalName", sellerLegalName); params.set("sellerDisplayName", sellerDisplayName); }
     window.location.assign(new URL("/api/auth/google/start?" + params.toString(), window.location.origin).toString());
   }
@@ -33,7 +41,6 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
     if (busy) return;
     setBusy(true);
     setError("");
-    setNotice("");
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -43,8 +50,9 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
       });
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || "Registration could not be completed.");
-      setNotice(result.message || "Account created. Check your email to verify your address.");
-      setPassword("");
+      const message = result.message || "Account created. Check your email to verify your address.";
+      window.dispatchEvent(new CustomEvent("mtjr:registration-notice", { detail: message }));
+      router.replace(currentReturnPath());
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Registration could not be completed.");
     } finally {
@@ -66,7 +74,6 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">Development preview: these policy documents are initial project drafts, not final legal terms. Public production registration remains disabled.</p>
           {oauthError && <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{oauthError}</p>}
           {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
-          {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-200)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-900)]">{notice}</p>}
           <form onSubmit={submit} className="mt-6 space-y-4">
             <fieldset className="space-y-3">
               <legend className="text-sm font-semibold">How will you use Mtjr2?</legend>
@@ -108,7 +115,7 @@ export default function RegisterForm({ initialOAuthError = "" }: { initialOAuthE
           </form>
           <div className="mt-6 flex flex-wrap gap-x-2 gap-y-1 border-t border-[var(--border)] pt-5 text-sm text-[var(--muted)]">
             <span>Already have an account?</span>
-            <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</Link>
+            <AuthReturnLink className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Sign in</AuthReturnLink>
             <span aria-hidden="true">·</span>
             <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href={`/verify-email${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ""}`}>Verify/resend email</Link>
           </div>
