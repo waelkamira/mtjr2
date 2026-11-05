@@ -24,7 +24,14 @@ export default function MfaManagementPanel() {
     const result = await readJson(await fetch("/api/account/mfa", { cache: "no-store" }));
     setStatus(result.status ?? null);
   }
-  useEffect(() => { void refresh().catch(cause => setError(cause instanceof Error ? cause.message : "Unable to load MFA status.")); }, []);
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/account/mfa", { cache: "no-store" })
+      .then(readJson)
+      .then(result => { if (active) setStatus(result.status ?? null); })
+      .catch(cause => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load MFA status."); });
+    return () => { active = false; };
+  }, []);
 
   async function run(action: () => Promise<void>) {
     if (busy) return;
