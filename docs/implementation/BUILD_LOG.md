@@ -2150,3 +2150,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Replaced legacy forest/copper/ivory color references in these UI slices with shared ink, lavender and surface tokens; existing API calls, authorization boundaries, payment initiation, order/return state transitions, wishlist merge/removal, and seller shipment/return actions were left unchanged.
 - Super Admin routes and components were not touched. No Prisma schema or migration was needed for this visual-only slice.
 - Verification is pending on the updated branch head. No local build, browser visual QA, production database operation or deployment is claimed.
+
+
+## 2026-11-05 — Broad Claymorphism migration across platform routes
+
+- Extended the central visual-token migration to customer profile, addresses, sessions and messaging routes; seller inventory, product, question, review and staff workspaces; administrative product-Q&A, review, return, support and tax-rate workflows; cart and checkout; security and notification preferences; and category, brand and store detail routes.
+- Updated legacy forest/copper/ivory references to shared ink, lavender and surface tokens. The migration is presentation-only: route contracts, API requests, business actions, and authorization logic were not intentionally changed.
+- Super Admin routes/components remain explicitly excluded. No Prisma schema or database migration was required.
+- CI and PostgreSQL Integration must be rerun against the final PR head; visual browser QA and local build were not available in this GitHub-only session.
