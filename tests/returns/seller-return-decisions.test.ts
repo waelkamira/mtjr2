@@ -48,6 +48,7 @@ describe("store-scoped seller return decisions", () => {
     mocks.auditCreate.mockResolvedValue({});
     const tx = {
       store: { findUnique: mocks.storeFindUnique },
+      sellerStaff: { findFirst: mocks.staffFindFirst },
       returnRequest: { findUnique: mocks.returnFindUnique, updateMany: mocks.returnRequestUpdateMany },
       returnItem: { updateMany: mocks.returnItemUpdateMany, findMany: mocks.returnItemFindMany },
       auditLog: { create: mocks.auditCreate }
