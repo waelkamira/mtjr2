@@ -83,19 +83,19 @@ export async function createPlatformPrivilegeRequest(input: unknown, now = new D
   return prisma.$transaction(async (tx) => {
     const target = await tx.user.findUnique({
       where: { emailNormalized },
-      select: { id: true, email: true, displayName: true, status: true }
+      select: { id: true, email: true, displayName: true, status: true, emailVerifiedAt: true }
     });
-    if (!target || target.status !== UserStatus.ACTIVE) {
-      throw new PlatformPrivilegeRequestConflictError("The target must be an existing active user.");
+    if (!target || target.status !== UserStatus.ACTIVE || !target.emailVerifiedAt) {
+      throw new PlatformPrivilegeRequestConflictError("The target must be an existing active user with a verified email.");
     }
 
     await lockTarget(tx, target.id);
     const lockedTarget = await tx.user.findUnique({
       where: { id: target.id },
-      select: { id: true, email: true, status: true }
+      select: { id: true, email: true, status: true, emailVerifiedAt: true }
     });
-    if (!lockedTarget || lockedTarget.status !== UserStatus.ACTIVE) {
-      throw new PlatformPrivilegeRequestConflictError("The target must remain active.");
+    if (!lockedTarget || lockedTarget.status !== UserStatus.ACTIVE || !lockedTarget.emailVerifiedAt) {
+      throw new PlatformPrivilegeRequestConflictError("The target must remain active with a verified email.");
     }
     if (await hasActivePlatformGrant(tx, lockedTarget.id, now)) {
       throw new PlatformPrivilegeRequestConflictError("The target already has platform-wide management access.");
@@ -154,7 +154,7 @@ export async function decidePlatformPrivilegeRequest(requestId: string, input: u
         targetUserId: true,
         requestedById: true,
         status: true,
-        targetUser: { select: { status: true, email: true } }
+        targetUser: { select: { status: true, email: true, emailVerifiedAt: true } }
       }
     });
     if (!request || request.status !== PlatformPrivilegeRequestStatus.PENDING) {
@@ -165,8 +165,8 @@ export async function decidePlatformPrivilegeRequest(requestId: string, input: u
     }
 
     if (parsed.decision === "APPROVE") {
-      if (request.targetUser.status !== UserStatus.ACTIVE) {
-        throw new PlatformPrivilegeRequestConflictError("The target account is no longer eligible for platform access.");
+      if (request.targetUser.status !== UserStatus.ACTIVE || !request.targetUser.emailVerifiedAt) {
+        throw new PlatformPrivilegeRequestConflictError("The target account is no longer active and email-verified.");
       }
       if (await hasActivePlatformGrant(tx, request.targetUserId, now)) {
         throw new PlatformPrivilegeRequestConflictError("The target already has platform-wide management access.");
