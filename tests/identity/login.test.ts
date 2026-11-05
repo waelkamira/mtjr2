@@ -65,7 +65,7 @@ describe("password login service", () => {
     expect(clearMock).toHaveBeenCalledWith("buyer@example.com", "203.0.113.10");
   });
 
-  it("performs dummy password verification and returns the same failure for an unknown account", async () => {
+  it("performs dummy password verification and uses dummy verification and records an unknown-account failure without storing raw identifiers", async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
     const result = await loginWithPassword({
@@ -79,7 +79,7 @@ describe("password login service", () => {
     expect(verifyMock.mock.calls[0][1]).toMatch(/^scrypt\$32768\$8\$1\$/);
     expect(createSessionMock).not.toHaveBeenCalled();
     expect(prismaMock.loginAttempt.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ succeeded: false, userId: null })
+      data: expect.objectContaining({ succeeded: false, identifierHash: expect.any(String), ipHash: expect.any(String) })
     }));
   });
 
