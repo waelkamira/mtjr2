@@ -47,12 +47,13 @@ export async function listSellerReturnRequests(now = new Date()) {
         where: {
           orderItem: { vendorOrder: { storeId: { in: permittedStoreIds } } }
         },
-        include: {
+        select: {
+          id: true,
+          status: true,
+          reviewNote: true,
+          quantity: true,
           orderItem: {
             select: {
-              id: true,
-              status: true,
-              reviewNote: true,
               productName: true,
               sku: true,
               quantity: true,
