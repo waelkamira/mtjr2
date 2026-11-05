@@ -1,6 +1,9 @@
+import "server-only";
+
 import { prisma } from "@/lib/db/prisma";
 import {
   hasPermission,
+  hasAnyPermission,
   type AuthorizationGrant,
   type AuthorizationRequest
 } from "@/server/identity/authorization";
@@ -64,6 +67,18 @@ export async function userHasPermission(
   return hasPermission(grants, request);
 }
 
+/** Loads grants once and evaluates an any-of permission gate. */
+export async function userHasAnyPermission(
+  userId: string,
+  requests: readonly AuthorizationRequest[],
+  now = new Date()
+): Promise<boolean> {
+  const grants = await getUserAuthorizationGrants(userId, now);
+  return hasAnyPermission(
+    grants,
+    requests.map((request) => ({ ...request, now: request.now ?? now }))
+  );
+}
 
 /**
  * Evaluates only a grant explicitly assigned to the requested resource scope.
