@@ -72,13 +72,18 @@ export async function revokeRoleAssignment(assignmentId: string, targetUserId: s
   if (!id) throw new Error("A role assignment ID is required.");
   const existing = await prisma.userRoleAssignment.findUnique({
     where: { id },
-    select: { id: true, scopeType: true, scopeId: true, userId: true, role: { select: { key: true } } }
+    select: {
+      id: true, scopeType: true, scopeId: true, userId: true,
+      role: { select: { key: true, permissions: { select: { permission: { select: { key: true } } } } } }
+    }
   });
   if (!existing || existing.userId !== targetUserId) return false;
 
   // Super Admin access must not be removable through ordinary delegated role
   // management. A future break-glass workflow must have its own safeguards.
-  if (existing.role.key === "SUPER_ADMIN") throw new PermissionDeniedError();
+  if (isProtectedPlatformRole(existing.role.key, existing.role.permissions.map(({ permission }) => permission.key))) {
+    throw new PermissionDeniedError();
+  }
 
   const actor = await requirePermission({
     permissionKey: "roles:assign",
