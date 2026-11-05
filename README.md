@@ -371,3 +371,12 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 - Windows/PowerShell local setup using an isolated PostgreSQL `mtjr2_demo` database and the 80-product demo catalog: [Local development guide](docs/development/LOCAL_WINDOWS_SETUP.md).
 - The canonical application URL is server-only `APP_URL`; do not use a `NEXT_PUBLIC_*` prefix for server-side configuration.
 
+
+
+## Identity and Super Admin rebuild — 2026-11-06
+
+The controlled IAM rebuild is tracked on `rebuild/identity-iam` in [the identity rebuild audit and execution record](docs/implementation/IDENTITY_REBUILD_AUDIT_AND_EXECUTION_PLAN.md). The scope explicitly includes the Super Admin control panel, its APIs, bootstrap process, two-person privilege approval, role/permission boundary, and audit trail. No Vercel deployment or configuration changes are part of this work.
+
+Initial audit confirmed that the existing server-side identity foundation is substantial and should be preserved where verified. It also identified a privilege-escalation gap in ordinary role assignment: the current `main` implementation rejects the literal `SUPER_ADMIN` role but does not reject a different role that carries `platform:manage`. The Super Admin candidate branch contains a stronger policy, but it is significantly diverged from `main` and will be integrated selectively rather than merged wholesale. Its privilege-request mutation routes also need the canonical same-origin/JSON request guard before they are safe to adopt.
+
+**Status:** Phase 1 audit/remediation is in progress. No identity or Super Admin functionality is being declared complete until the exact branch commit passes the applicable unit, PostgreSQL integration, security, typecheck, lint, and build gates.
