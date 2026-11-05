@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   userHasPermission: vi.fn(),
   userHasScopedPermission: vi.fn(),
   storeFindUnique: vi.fn(),
+  staffFindFirst: vi.fn(),
   returnFindUnique: vi.fn(),
   returnItemUpdateMany: vi.fn(),
   returnItemFindMany: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     $transaction: mocks.transaction,
     store: { findUnique: mocks.storeFindUnique },
+      sellerStaff: { findFirst: mocks.staffFindFirst },
     returnRequest: { findUnique: mocks.returnFindUnique },
     returnItem: { updateMany: mocks.returnItemUpdateMany, findMany: mocks.returnItemFindMany },
     auditLog: { create: mocks.auditCreate }
@@ -38,6 +40,7 @@ describe("store-scoped seller return decisions", () => {
     mocks.userHasPermission.mockResolvedValue(false);
     mocks.userHasScopedPermission.mockResolvedValue(false);
     mocks.storeFindUnique.mockResolvedValue({ id: "store-a", status: "ACTIVE", seller: { ownerId: "seller-a", status: "ACTIVE" } });
+    mocks.staffFindFirst.mockResolvedValue(null);
     mocks.returnFindUnique.mockResolvedValue({ id: "return-1", status: "REQUESTED", returnNumber: "RET-1", orderId: "order-1" });
     mocks.returnItemUpdateMany.mockResolvedValue({ count: 2 });
     mocks.returnItemFindMany.mockResolvedValue([{ status: "APPROVED" }, { status: "APPROVED" }, { status: "REQUESTED" }]);
