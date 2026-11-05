@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import MfaManagementPanel from "@/features/identity/mfa-management-panel";
 
 const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-lavender-600)]";
 
@@ -67,10 +68,7 @@ export default function SecurityPage() {
             <b>Active sessions</b>
             <p className="mt-1 text-sm text-[var(--muted)]">Review and revoke sessions on devices you no longer use.</p>
           </Link>
-          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-5">
-            <b>Two-factor authentication</b>
-            <p className="mt-1 text-sm text-[var(--muted)]">Not enabled yet. Enrollment and recovery are not available, so this control is intentionally disabled.</p>
-          </div>
+          <MfaManagementPanel />
         </div>
       </div>
     </main>

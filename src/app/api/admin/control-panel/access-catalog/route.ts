@@ -12,6 +12,8 @@ export async function GET(): Promise<Response> {
       headers: { "Cache-Control": "private, no-store" }
     });
   } catch (error) {
+    if (error instanceof MfaEnrollmentRequiredError) return Response.json({ error: "MFA enrollment is required.", code: "MFA_ENROLLMENT_REQUIRED" }, { status: 403 });
+    if (error instanceof StepUpRequiredError) return Response.json({ error: "Recent MFA verification is required.", code: "STEP_UP_REQUIRED" }, { status: 428 });
     if (error instanceof AuthenticationRequiredError) {
       return Response.json({ error: "Authentication required." }, { status: 401 });
     }
