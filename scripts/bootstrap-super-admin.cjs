@@ -1,7 +1,11 @@
 // One-time, explicitly targeted bootstrap for the first Super Admin.
 // Never run this against a database unless the expected host and database have
 // been independently confirmed by the operator.
-require("dotenv").config();
+// Load .env when present; deployment environments may inject variables directly.
+// Node 22 provides this without another package.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fs = require("node:fs");
+if (fs.existsSync(".env")) process.loadEnvFile(".env");
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require("@prisma/client");
