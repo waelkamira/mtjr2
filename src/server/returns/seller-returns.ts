@@ -168,7 +168,7 @@ export async function reviewSellerReturnItems(returnId: string, input: unknown, 
       : allRejected ? ReturnRequestStatus.REJECTED
       : anyApproved ? ReturnRequestStatus.APPROVED
       : current.status;
-    if (aggregate !== current.status && [ReturnRequestStatus.REQUESTED, ReturnRequestStatus.APPROVED].includes(current.status)) {
+    if (aggregate !== current.status && (current.status === ReturnRequestStatus.REQUESTED || current.status === ReturnRequestStatus.APPROVED)) {
       const parentChanged = await tx.returnRequest.updateMany({
         where: { id, status: current.status },
         data: { status: aggregate, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
