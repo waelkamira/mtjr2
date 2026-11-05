@@ -2024,3 +2024,23 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Shared-browser smoke: `/cart` loaded its empty-cart state; `/checkout` correctly reported that no owned quote was available; `/seller` showed sign-in/create-account actions after the anonymous store API returned 401. HTTP checks returned 200 for `/cart`, `/checkout`, `/account/orders`, `/seller`, `/seller/orders`, and `/seller/inventory`; unauthenticated `/api/orders`, `/api/seller/stores`, and `/api/seller/orders` returned 401, while guest `/api/cart` and `/api/payments/providers` returned 200. No authenticated purchase/seller journey was attempted.
 - PostgreSQL migration replay and full browser journeys remain pending. The search trigram extension migration is present, but its runtime installation was not verified; no payment provider is configured, and no charge or payment success was simulated.
 - Seller onboarding remains end-to-end unverified; KYC/document intake, dedicated status pages, full catalog/inventory journey, and the rest of seller operational workflows are not complete.
+
+## 2026-11-05 — Super Admin Phase 4 access-control hardening
+
+**Implemented**
+- Added server-side permission checks to the shared /admin layout. Unauthenticated requests are redirected to sign-in with the requested admin destination; authenticated users without an admin permission receive a not-found response.
+- Added a dedicated platform:manage gate to /admin/control-panel; operational Admin permissions alone do not grant access to the platform control panel. Existing APIs retain their own route/service authorization checks.
+- Hardened the ordinary role-revocation service so it cannot remove a SUPER_ADMIN assignment. Ordinary assignment already rejected granting the SUPER_ADMIN role.
+- Added a guarded, one-time scripts/bootstrap-super-admin.cjs command (npm run db:bootstrap-super-admin). It requires explicit opt-in, a confirmation phrase, an existing active email-verified account, and an exact expected PostgreSQL host/database match. A PostgreSQL transaction-scoped advisory lock serializes attempts; any existing Super Admin assignment permanently closes bootstrap; assignment and SYSTEM audit event are atomic. It does not create a default account, password, or seed assignment.
+- Expanded authorization policy tests for expiry boundary, malformed global scope markers, and any-of permission checks.
+- Corrected .github/workflows/ci.yml so pushes to this feature branch and pull requests targeting main trigger the quality workflow. Previously the PR base-branch allowlist omitted main-targeted PRs.
+
+**Important operational boundary**
+- The bootstrap command has been committed but has not been run. Do not run it until the operator has independently confirmed the target database and account. Do not expose its confirmation values in logs or source control.
+- No Prisma schema change or migration was needed or performed.
+- No production database, local user database, Vercel setting, secret, or PR merge was changed.
+
+**Verification status**
+- Source files and workflow changes were committed to feat/super-admin-control-panel.
+- Focused tests were added but have not been executed in this session. Typecheck, lint, production build, disposable PostgreSQL migration replay, and authenticated browser journeys remain pending exact-head CI/runtime verification.
+- Do not mark the Super Admin system complete until the latest exact-head CI is green and the ADMIN-versus-SUPER_ADMIN authorization journeys pass.
