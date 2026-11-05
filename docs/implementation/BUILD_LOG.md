@@ -2057,3 +2057,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Vercel deployment for `2f7e683` failed during Next.js page-data collection because `AUTH_SECRET` was absent from the Preview build environment. The failure is an environment configuration issue, not the application compilation or GitHub CI result. The application intentionally fails fast when required auth configuration is missing; do not weaken that validation to hide the missing deployment secret.
 - No Vercel environment variable, secret, database, or deployment setting was changed. An operator must configure a strong Preview `AUTH_SECRET` in Vercel and ensure other required runtime variables are present before expecting a successful preview deployment.
 - The new policy tests and subsequent CI/deployment runs remain pending. No migration or database operation was performed.
+
+## 2026-11-05 — Super Admin audit log and role-revocation hardening
+
+**Completed**
+- Extended the protected-role policy to ordinary role revocation as well as assignment. The service now loads each assigned role's permission keys and prevents removal of any assignment that carries `platform:manage`, not only the canonical `SUPER_ADMIN` role.
+- Added a read-only platform audit log service and endpoint at `GET /api/admin/control-panel/audit-log`. The service enforces `requirePlatformManagement`, validates bounded filters, returns at most 100 records per page, and uses descending keyset pagination.
+- Added the separately guarded `/admin/control-panel/audit-log` page with action/resource filters, actor, timestamp, scope and recorded metadata, plus a load-older action.
+- Linked the audit log from the Super Admin control-center header. The audit endpoint is private/no-store and exposes no mutation methods.
+- No Prisma schema change or migration was needed; this uses the existing `AuditLog` model and indexes.
+
+**Verification status**
+- The prior branch head `aaeca01773fb9cee4785bcc281790d485b998faf` passed GitHub Actions quality CI, including build, typecheck, lint, Prisma validation/generation and tests.
+- The changes in this section are newer than that successful CI run. A new exact-head CI run must complete before this batch is considered verified.
+- Vercel Preview remains blocked on the required `AUTH_SECRET` being absent during build-time environment validation. The code intentionally retains fail-fast validation. Configure the Preview secret in Vercel; no secret was read, changed, or committed.
+- No live database, deployment configuration, or production environment was modified.
