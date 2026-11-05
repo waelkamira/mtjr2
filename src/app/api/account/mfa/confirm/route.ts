@@ -3,7 +3,7 @@ import { getCurrentSession } from "@/server/identity/current-session";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { confirmMfaEnrollment, MfaConfigurationError, MfaStateConflictError } from "@/server/identity/mfa";
 export const runtime = "nodejs";
-const schema = z.object({ code: z.string().trim().regex(/^\\d{6}$/) }).strict();
+const schema = z.object({ code: z.string().trim().regex(/^\d{6}$/) }).strict();
 export async function POST(request: Request): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
