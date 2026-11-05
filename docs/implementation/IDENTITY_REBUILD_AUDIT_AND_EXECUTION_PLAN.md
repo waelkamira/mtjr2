@@ -15,7 +15,7 @@ This document is the execution record for the Identity and Access Management reb
 4. Never trust client-supplied user IDs, roles, grants, or resource ownership.
 5. Enforce authorization at server boundaries and verify resource/store scope.
 6. Do not grant Super Admin through public registration or ordinary role assignment.
-7. Do not modify unrelated Super Admin UI or behavior.
+7. Super Admin is explicitly in scope: audit, repair, and rebuild its pages, components, APIs, data model, bootstrap, privilege approval, audit trail, and security boundary wherever required. Preserve verified capabilities, but do not preserve insecure behavior merely for compatibility.
 8. Do not deploy to Vercel or change Vercel configuration/secrets.
 9. Use only disposable/local/CI PostgreSQL for schema and integration verification unless the owner separately approves otherwise.
 10. Mark a capability complete only with exact-commit test evidence and documented limitations.
@@ -46,7 +46,7 @@ Required actor classes: Guest, Customer, Seller, Seller Staff, Support Agent, Mo
 - Trusted proxy configuration and origin-bypass protection remain deployment-specific open checks. Do not trust arbitrary forwarding headers.
 - The current schema excerpt contains no dedicated MFA authenticator/recovery-code model and no explicit user-device inventory model. Inspect all identity migrations and existing implementations before designing these additions.
 - The current schema excerpt contains no direct user-permission grant model. Decide whether this is genuinely required or whether role assignments are sufficient; do not add unused authorization tables.
-- The role-assignment service blocks ordinary assignment of the `SUPER_ADMIN` role, but the complete bootstrap, break-glass, and Super Admin isolation lifecycle still requires an explicit security audit.
+- The `main` role-assignment service blocks only the literal `SUPER_ADMIN` key. It does not reject an alternate/custom role carrying `platform:manage`; the Super Admin branch contains a stronger `isProtectedPlatformRole` policy that must be ported and tested. The separate `feat/super-admin-control-panel` branch contains the control-panel UI/API, bootstrap script, and two-person privilege workflow, but it is 77 commits ahead and 19 commits behind `main`; it must not be merged wholesale. Its privilege-request POST/PATCH handlers currently do not call the shared same-origin/JSON mutation guard, a verified CSRF/origin-protection gap to fix before adoption.
 - `src/middleware.ts` was not found at the inspected path. Determine whether route protection is implemented through Next.js proxy conventions, layouts, route handlers, or service boundaries; do not add middleware as a substitute for server-side checks.
 - A repository-wide route/component/API inventory and systematic authorization coverage review is still required. Search results show broad server-side use of identity guards, but that is not proof every sensitive entry point is protected.
 - The identity implementation has multiple named modules and conventions; consolidate only after mapping dependencies and tests. Do not rewrite working flows solely to rename files.
@@ -61,7 +61,8 @@ Required actor classes: Guest, Customer, Seller, Seller Staff, Support Agent, Mo
 - [ ] Map all public, authenticated, customer, seller, staff, admin, and Super Admin routes to server-side policies.
 - [ ] Map all sensitive APIs/actions to permission checks and ownership/scope checks.
 - [ ] Review all identity migrations against the current Prisma schema and clean PostgreSQL replay.
-- [ ] Review the Super Admin security boundary without changing its unrelated UI.
+- [ ] Inventory every Super Admin page, component, API, server service, role/permission, bootstrap path, and privilege-approval workflow.
+- [ ] Review and remediate Super Admin UI, API, database, bootstrap, MFA/reauthentication, two-person approval, and audit controls.
 - [ ] Record baseline CI and PostgreSQL test evidence for the exact branch head.
 - [ ] Publish the completed audit and prioritized remediation list in README.
 
@@ -76,6 +77,8 @@ Define the single identity/session/authorization boundary, trusted actor shape, 
 Verify registration, password login, logout, logout-all, email verification, resend, password recovery/change, OAuth state/PKCE/linking rules, account suspension, and session invalidation. Add phone verification only with an actual configured provider and product requirement.
 
 ### Phase 4 — Roles, permissions, and scoped authorization
+
+This phase includes Super Admin protection: reject any role that contains `platform:manage` from ordinary assignment or revocation paths, regardless of its role key; permit platform privilege only through the separately audited bootstrap/approval workflows.
 Audit and normalize role/permission keys, system roles, scoped assignments, expiration/revocation, non-escalating delegation, store staff permissions, and admin grants. Define safe Super Admin bootstrap separately from ordinary role assignment.
 
 ### Phase 5 — Sessions and account security
@@ -102,3 +105,17 @@ Update README, Phase 2 plan, route registry, permission catalog, security review
 ## Current implementation policy
 
 This is a controlled rebuild, not a destructive rewrite. Existing verified capabilities remain in place until a replacement is implemented, tested, and safely adopted. The canonical schema remains `prisma/schema.prisma`. No Vercel deployment/configuration, production secrets, or production database access is in scope.
+
+
+## Super Admin audit findings — 2026-11-06
+
+- [x] Confirmed the `main` authorization guard derives the actor from the verified HttpOnly session.
+- [x] Confirmed the `main` role assignment service rejects `SUPER_ADMIN` by key but does not reject arbitrary roles carrying `platform:manage`.
+- [x] Located the separate Super Admin control-panel candidate branch and measured divergence: 77 commits ahead / 19 behind `main` at audit time.
+- [x] Inspected candidate two-person privilege approval, targeted bootstrap, access catalog, and audit-log services.
+- [ ] Port the protected-platform-role policy and tests to the rebuild branch.
+- [ ] Port the Super Admin UI/API selectively, adapting every mutation route to the canonical request-security guard.
+- [ ] Add/verify MFA or step-up authorization for privileged operations.
+- [ ] Verify the complete Super Admin route/API/data boundary with negative tests.
+
+The candidate privilege-request `POST` and `PATCH` handlers parse JSON and call state-changing services without invoking `validateIdentityMutationRequest`. These handlers are not safe to adopt as-is. The rebuild must validate origin, fetch metadata, and JSON content type before reading request bodies.
