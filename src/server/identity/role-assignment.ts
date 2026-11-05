@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requirePermission, PermissionDeniedError } from "@/server/identity/permission-guard";
 import { normalizeRoleScope, type RoleScope } from "@/server/identity/role-scope";
 import { userHasPermission } from "@/server/identity/permission-repository";
+import { isProtectedPlatformRole } from "@/server/identity/role-assignment-policy";
 
 export interface AssignRoleInput {
   targetUserId: string;
@@ -34,7 +35,10 @@ export async function assignRoleToUser(input: AssignRoleInput, now = new Date())
       tx.role.findUnique({ where: { key: roleKey }, select: { id: true, key: true, permissions: { select: { permission: { select: { key: true } } } } } })
     ]);
     if (!target || target.status !== UserStatus.ACTIVE) throw new Error("Role assignments require an active target account.");
-    if (!role || role.key === "SUPER_ADMIN") throw new Error("The requested role cannot be assigned through this operation.");
+    if (!role) throw new Error("The requested role does not exist.");
+    if (isProtectedPlatformRole(role.key, role.permissions.map(({ permission }) => permission.key))) {
+      throw new PermissionDeniedError();
+    }
 
     // Enforce privilege non-escalation: the actor may delegate only permissions
     // they already hold in this exact scope.
