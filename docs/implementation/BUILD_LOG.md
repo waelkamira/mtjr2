@@ -2077,3 +2077,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added focused tests for quarantine-only movement, cross-store denial, missing variant rejection, completed retry, and admin receipt bypass prevention.
 - Inspection/release from quarantine and refunds remain intentionally separate. No provider refund, carrier integration, or production database action is claimed.
 - Exact-head General CI and disposable PostgreSQL Integration are required before merge.
+
+
+## 2026-11-05 — Manual return refund ledger
+
+- Added `Refund` and `RefundItem` with migration `20261105160000_manual_return_refunds`, linking a refund to one received return request, its order, one successful captured payment and the exact received return lines.
+- Added finance-authorized queue/create/complete APIs and `/admin/refunds`. The service allocates immutable merchandise line value across partial return quantities, accounts for prior pending/completed allocations, and prevents refunds from exceeding the captured payment.
+- Refund creation remains `PENDING_MANUAL`; the platform does not call a provider refund API. Finance records an external transaction reference only after completing the refund outside Mtjr2. The payment status changes only after this confirmation.
+- Hardened verified payment webhook transitions so late/replayed success/failure events cannot erase `PARTIALLY_REFUNDED`, `REFUNDED` or `DISPUTED` states.
+- Added focused tests for received-only eligibility, idempotent creation, captured-payment ceiling, manual completion, partial/full payment status and late webhook preservation.
+- Merchandise only: shipping/tax refunds, provider adapter refunds, disputes and settlement reconciliation remain unimplemented. Exact-head General CI and disposable PostgreSQL Integration are required before merge.
