@@ -360,6 +360,6 @@ Audit metadata is redacted before API serialization. The access catalogue delibe
 
 | Surface | Route | Guard | Backend | Status |
 |---|---|---|---|---|
-| Privilege request and review | `/admin/control-panel/privilege-requests` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET/POST /api/admin/control-panel/privilege-requests`, `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `platform-privilege-requests.ts`. | Implemented; exact-head CI pending; migration not applied. |
+| Privilege request and review | `/admin/control-panel/privilege-requests` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET/POST /api/admin/control-panel/privilege-requests`, `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `platform-privilege-requests.ts`. | Implemented; full CI and all migrations passed in disposable PostgreSQL on code commit 4bd6f3d; not applied to user/production DB. |
 
 The workflow grants only canonical `SUPER_ADMIN` after independent review. The requester cannot decide their own request. Assignment, decision and audit record are transactional. Target must be ACTIVE and email-verified.
