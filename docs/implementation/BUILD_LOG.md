@@ -2044,3 +2044,16 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Source files and workflow changes were committed to feat/super-admin-control-panel.
 - Focused tests were added but have not been executed in this session. Typecheck, lint, production build, disposable PostgreSQL migration replay, and authenticated browser journeys remain pending exact-head CI/runtime verification.
 - Do not mark the Super Admin system complete until the latest exact-head CI is green and the ADMIN-versus-SUPER_ADMIN authorization journeys pass.
+
+## 2026-11-05 — Super Admin delegated platform-capability fix
+
+**Finding and correction**
+- Source review found that ordinary role assignment rejected the canonical `SUPER_ADMIN` role but did not reject a different role carrying `platform:manage`. Since the control-panel gate checks that permission, such a role could have recreated platform-wide access through the ordinary delegation endpoint.
+- Added a pure role-assignment policy that protects both the canonical `SUPER_ADMIN` key and any role containing `platform:manage`; the service now returns the existing permission-denied path for either case.
+- Added focused policy tests for canonical Super Admin, alternate platform-management roles, and ordinary delegatable roles.
+
+**Verification**
+- The preceding exact-head CI run `42032268502` completed successfully on commit `2f7e683`: Prisma validate/generate, typecheck, lint, Vitest, and production build all passed. This result predates the new policy commit and does not verify it.
+- Vercel deployment for `2f7e683` failed during Next.js page-data collection because `AUTH_SECRET` was absent from the Preview build environment. The failure is an environment configuration issue, not the application compilation or GitHub CI result. The application intentionally fails fast when required auth configuration is missing; do not weaken that validation to hide the missing deployment secret.
+- No Vercel environment variable, secret, database, or deployment setting was changed. An operator must configure a strong Preview `AUTH_SECRET` in Vercel and ensure other required runtime variables are present before expecting a successful preview deployment.
+- The new policy tests and subsequent CI/deployment runs remain pending. No migration or database operation was performed.
