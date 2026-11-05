@@ -162,8 +162,19 @@ export async function processVerifiedPaymentEvent(input: {
       const isNewerEvent = !payment.lastProviderEventAt || input.event.occurredAt > payment.lastProviderEventAt;
       let nextStatus = payment.status;
       if (isNewerEvent) {
-        if (input.event.eventType === "succeeded") nextStatus = PaymentStatus.SUCCEEDED;
-        else if (payment.status !== PaymentStatus.SUCCEEDED && payment.status !== PaymentStatus.FAILED && payment.status !== PaymentStatus.CANCELLED) {
+        if (input.event.eventType === "succeeded") {
+          // A late/replayed success event must never erase a recorded refund or dispute state.
+          if (payment.status !== PaymentStatus.REFUNDED && payment.status !== PaymentStatus.PARTIALLY_REFUNDED && payment.status !== PaymentStatus.DISPUTED) {
+            nextStatus = PaymentStatus.SUCCEEDED;
+          }
+        } else if (
+          payment.status !== PaymentStatus.SUCCEEDED &&
+          payment.status !== PaymentStatus.FAILED &&
+          payment.status !== PaymentStatus.CANCELLED &&
+          payment.status !== PaymentStatus.REFUNDED &&
+          payment.status !== PaymentStatus.PARTIALLY_REFUNDED &&
+          payment.status !== PaymentStatus.DISPUTED
+        ) {
           if (input.event.eventType === "processing") nextStatus = PaymentStatus.PROCESSING;
           else if (input.event.eventType === "failed") nextStatus = PaymentStatus.FAILED;
           else if (input.event.eventType === "cancelled") nextStatus = PaymentStatus.CANCELLED;
