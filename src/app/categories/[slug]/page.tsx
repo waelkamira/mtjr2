@@ -26,8 +26,8 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
   const result = await listDiscoverableProducts({ categoryId: category.id, q: q || undefined, page, limit: 24, sort });
 
   return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
-    <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Marketplace category</p>
-    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{category.name}</h1>
+    <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">Marketplace category</p>
+    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{category.name}</h1>
     {category.description && <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">{category.description}</p>}
     <p className="mt-5 text-xs text-[var(--muted)]">{result.pagination.total} published products</p>
     <CatalogListControls action={`/categories/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} />
