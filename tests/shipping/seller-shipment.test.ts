@@ -69,6 +69,42 @@ describe("seller shipment dispatch", () => {
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
+  it("fulfills the parent order when every non-cancelled vendor order is dispatched", async () => {
+    mocks.vendorOrderFindMany.mockResolvedValue([
+      { status: "SHIPPED" },
+      { status: "CANCELLED" }
+    ]);
+
+    await createSellerShipment("vendor-1", {
+      carrierName: "DHL", trackingNumber: "TRACK-123"
+    });
+
+    expect(mocks.orderUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "order-1", status: "PROCESSING" },
+      data: { status: "FULFILLED" }
+    }));
+    expect(mocks.orderStatusHistoryCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "FULFILLED" })
+    }));
+  });
+
+  it("keeps a multi-vendor parent partially fulfilled while a live vendor order remains undispatched", async () => {
+    mocks.vendorOrderFindMany.mockResolvedValue([
+      { status: "SHIPPED" },
+      { status: "READY_TO_SHIP" },
+      { status: "CANCELLED" }
+    ]);
+
+    await createSellerShipment("vendor-1", {
+      carrierName: "DHL", trackingNumber: "TRACK-123"
+    });
+
+    expect(mocks.orderUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "order-1", status: "PROCESSING" },
+      data: { status: "PARTIALLY_FULFILLED" }
+    }));
+  });
+
   it("rejects non-HTTPS tracking URLs before database writes", async () => {
     await expect(createSellerShipment("vendor-1", {
       carrierName: "DHL", trackingNumber: "TRACK-123", trackingUrl: "http://tracking.example.test/TRACK-123"
