@@ -12,6 +12,7 @@ A ground-up implementation of a global, multi-vendor commerce platform.
 - Use transactions, idempotency, audit trails, and concurrency-safe operations for orders, payments, inventory, refunds, and payouts.
 - A capability is not complete until its user journey, persistence, authorization, error handling, and automated tests pass.
 - Record decisions, implementation status, blockers, and test evidence in this repository.
+- Keep `main` as the only source of truth; follow [repository consolidation and merge gates](docs/implementation/REPOSITORY_SOURCE_OF_TRUTH.md) before integrating any branch.
 
 ## Target architecture
 
