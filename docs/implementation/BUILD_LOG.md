@@ -1975,3 +1975,30 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Set repository variable `APP_URL` and secret `CRON_SECRET` to activate the scheduled delivery workflow.
 - Shipment preferences exist, but no Shipment model/carrier tracking lifecycle or SHIPPED/DELIVERED transition is present. Do not claim shipment notifications are live until that system exists.
 - Browser-level user journeys and provider callback/reconciliation are not yet verified.
+
+
+## 2026-11-05 — Identity registration and sign-in feedback
+
+**Implemented on `fix/identity-feedback-flow`**
+- Duplicate registration now returns HTTP 409 with `EMAIL_ALREADY_EXISTS` and a clear instruction to sign in or recover the password; the existing normalized-email lookup and database unique-constraint fallback both remain active.
+- Successful registration displays a success notice, then leaves `/register` for `/verify-email` with the email prefilled and a registration confirmation message.
+- Login now distinguishes an unknown email (`EMAIL_NOT_FOUND`) from an incorrect password (`INVALID_PASSWORD`) while preserving dummy scrypt verification for unknown addresses, persistent throttling, and generic responses for inactive/unverified accounts.
+- Successful login displays its confirmation before redirecting to the safe same-origin return path. The password field is cleared after success.
+- Added a focused unit test for the incorrect-password path and updated the unknown-email expectation.
+- **Security trade-off:** explicit email-vs-password feedback reveals whether an email has an account. This follows the requested UX; the existing rate limiter remains in force. If stronger account-enumeration resistance is preferred, both failures should use one generic message.
+
+**Verification**
+- Source changes committed; exact-head GitHub Actions CI and PostgreSQL integration have not yet reported results. Do not treat the identity journey as release-verified until those pass.
+- No local browser session, real email delivery, production database, or deployment was accessed.
+
+
+## 2026-11-05 — System 01 identity audit and PR #36 verification corrections
+
+- Reviewed the full System 01 specification, Phase 2 identity execution plan, route registry, journey matrix, auth routes/services, account security/session/profile/address surfaces, Prisma identity model ownership and the PostgreSQL identity integration workflow.
+- PR #36 adds duplicate-email conflict mapping (including concurrent unique-constraint/P2002 handling), registration-success redirect/notice, and login-success feedback plus explicit unknown-email/wrong-password errors for eligible accounts. Dummy scrypt verification, keyed login-attempt storage and persistent throttling remain. This exposes account existence and is documented as a production security trade-off.
+- Exact-head CI on merge candidate `050bb6079012538cc48e2d24109e3e76de12d458`: Prisma validate, Prisma generate, typecheck and lint passed; unit suite failed one outdated assertion in `tests/identity/login.test.ts` because it expected raw `userId: null` after the ledger was intentionally changed to hashed identifiers. Updated the assertion to require keyed identifier/IP digests and not raw identifiers.
+- Found that the PostgreSQL integration workflow's pull-request path filter omitted identity service/API paths. Added identity services, auth/account routes, identity tests and integration tests so PR identity changes trigger the PostgreSQL gate.
+- Phase 2 audit findings and remaining exit gates are recorded in `PHASE_02_IDENTITY_PLAN.md`. System 01 remains Implemented / not Verified / not Complete: exact-head CI + PostgreSQL integration pending; real Resend delivery, trusted edge proxy/origin protection and one deployed register→verify→login→me→logout HTTP journey remain unverified. Google provider flow also remains conditional/unverified. 2FA is intentionally unavailable; account addresses currently list/create only.
+- No Prisma schema change was needed for the current UX slice. No production deployment, live email test or browser journey was performed.
+
+**Current PR #36 verification:** pending on the corrected head; do not merge until General CI and PostgreSQL identity integration both pass for the exact head.

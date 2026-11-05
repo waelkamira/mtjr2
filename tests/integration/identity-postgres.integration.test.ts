@@ -169,7 +169,7 @@ describe("identity PostgreSQL integration", () => {
     });
     expect(failed).toMatchObject({
       authenticated: false,
-      reason: "INVALID_CREDENTIALS"
+      reason: "INVALID_PASSWORD"
     });
 
     const authenticated = await loginWithPassword({
