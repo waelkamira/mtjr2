@@ -30,6 +30,9 @@ export default async function AdminControlPanelRoute() {
             <Link href="/admin/control-panel/access-catalog" className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--color-forest-950)] hover:bg-[var(--color-ivory-100)]">
               Roles & permissions
             </Link>
+            <Link href="/admin/control-panel/privilege-requests" className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--color-forest-950)] hover:bg-[var(--color-ivory-100)]">
+              Privilege approvals
+            </Link>
             <Link href="/admin/control-panel/audit-log" className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--color-forest-950)] hover:bg-[var(--color-ivory-100)]">
               Platform audit log
             </Link>
