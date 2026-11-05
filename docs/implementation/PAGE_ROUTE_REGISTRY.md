@@ -347,3 +347,11 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Platform audit history | `/admin/control-panel/audit-log` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/audit-log` → `getPlatformAuditEvents` → existing Prisma `AuditLog`; no-store, validated filters, max 100 rows, keyset pagination. | Implemented; exact-head CI pending. |
 
 The view is read-only. Audit history is not editable or deletable from this interface. Ordinary role assignment and revocation both protect any role carrying `platform:manage`.
+
+## Super Admin access catalogue — 2026-11-05
+
+| Surface | Route | Guard | Backend | Status |
+|---|---|---|---|---|
+| Roles and permission inventory | `/admin/control-panel/access-catalog` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/access-catalog` → `getPlatformAccessCatalog` → Prisma Role, RolePermission, Permission and assignment counts. | Read-only inventory implemented; exact-head CI pending. |
+
+Audit metadata is redacted before API serialization. The access catalogue deliberately does not expose role mutation controls until approval and actor-separation safeguards are implemented.
