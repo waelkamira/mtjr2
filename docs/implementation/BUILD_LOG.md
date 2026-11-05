@@ -2111,3 +2111,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The target account row is locked inside the same transaction as the privilege decision, so concurrent account suspension/deactivation cannot race the eligibility check.
 - The migration enforces a minimum 20-character justification with a database CHECK constraint as well as API validation.
 - Request state is intentionally limited to PENDING, APPROVED and REJECTED until a real cancellation workflow is designed.
+
+## 2026-11-05 — Final verification for Super Admin control-center batch
+
+- GitHub Actions run `42036694504` passed on commit `4bd6f3d63442cd7f3e52cba5ce6af575e0de9998`.
+- The CI job now starts an isolated PostgreSQL 16 service and executes the full `prisma migrate deploy` chain before Prisma generation, typecheck, lint, tests and production build.
+- Verified all 30 migrations applied successfully in that disposable CI database, including `20261105132500_platform_privilege_approvals`. This does not apply any migration to the user's database or production.
+- Final checks: Prisma validate ✓, migration deploy ✓, Prisma generate ✓, TypeScript ✓, ESLint ✓, Vitest ✓, Next.js production build ✓.
+- Vercel Preview is still blocked by the provider's deployment rate limit (retry after 24 hours). The earlier Preview build also exposed missing `AUTH_SECRET`; no secrets or deployment settings were modified.
