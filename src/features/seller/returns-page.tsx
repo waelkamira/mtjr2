@@ -90,7 +90,7 @@ export default function SellerReturnsPage() {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ storeId: item.storeId, warehouseId, status: "RECEIVED", note: notes[key] || "" })
       });
-      const data = await response.json() as { error?: string };
+      const data = await response.json() as { error?: string; result?: { quarantinedQuantity?: number } };
       if (!response.ok) throw new Error(data.error || "Return receipt could not be recorded.");
       setNotice("Physical receipt recorded. " + (data.result?.quarantinedQuantity ?? "Returned") + " unit(s) are held in quarantine and are not sellable until inspected.");
       await load();
