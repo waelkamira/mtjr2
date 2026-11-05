@@ -6,6 +6,7 @@ import {
   generateTotpCode, verifyMfaStepUp
 } from "@/server/identity/mfa";
 import { createUserSession, hashSessionToken } from "@/server/identity/session";
+import { hashPassword } from "@/server/identity/password";
 
 const suffix = randomUUID();
 const createdUsers: string[] = [];
@@ -30,6 +31,7 @@ describe("MFA PostgreSQL integration", () => {
         email,
         emailNormalized: email,
         displayName: "MFA Integration",
+        passwordHash: await hashPassword("Correct-Horse-Battery-42!"),
         status: "ACTIVE",
         emailVerifiedAt: new Date()
       },
@@ -42,7 +44,8 @@ describe("MFA PostgreSQL integration", () => {
       select: { id: true }
     });
 
-    const enrollment = await createMfaEnrollment(user.id);
+    await expect(createMfaEnrollment(user.id, "Incorrect-Password-000!")).rejects.toThrow(/current password/i);
+    const enrollment = await createMfaEnrollment(user.id, "Correct-Horse-Battery-42!");
     expect(enrollment.secret).toBeTruthy();
     const pending = await prisma.userMfaAuthenticator.findUniqueOrThrow({ where: { userId: user.id } });
     expect(pending.secretCiphertext).not.toContain(enrollment.secret);
