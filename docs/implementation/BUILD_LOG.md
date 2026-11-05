@@ -2133,3 +2133,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Applied the pastel canvas and shared surface treatment to the seller workspace shell and key headings without changing seller API requests or store/inventory/shipping workflows.
 - Compatibility aliases remain in place for legacy color references. Super Admin is still explicitly excluded.
 - CI and PostgreSQL integration are expected to rerun against the latest branch head; no local build or browser visual QA is claimed.
+
+
+## 2026-11-05 — Central Tailwind v4 theme bridge
+
+- Confirmed the repository uses Tailwind CSS v4.1 and `@tailwindcss/postcss`; there is no legacy `tailwind.config.js/ts`.
+- Added a CSS-first `@theme inline` bridge in `src/app/globals.css` that exposes the central root tokens as Tailwind color, shadow, radius, and font utilities.
+- Documented `:root` as the single source of truth; do not add a parallel legacy config or duplicate token values.
+- CI must validate the generated utility classes on the updated PR head before merge.
