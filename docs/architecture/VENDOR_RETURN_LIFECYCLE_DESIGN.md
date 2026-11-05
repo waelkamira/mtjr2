@@ -73,7 +73,7 @@ No shipping label/carrier integration, customer shipment confirmation, receipt e
 ### Existing authorization model
 - `returns:manage` already exists in the Permission seed and is granted to SUPPORT_AGENT, ADMIN and SUPER_ADMIN.
 - SELLER and STORE_MANAGER roles currently do not include `returns:manage`. Add it to those role permission sets only as a store-scoped capability; do not grant a GLOBAL seller/staff assignment. Owners may continue to act through verified ownership; delegated staff must have an exact `STORE` assignment and active membership.
-- Seller queue currently checks delegated `orders:manage`; switch return operations to exact-store `returns:manage` when the lifecycle mutation is introduced. Keep the read-only queue compatible until the permission migration/seed is ready.
+- Seller queue currently checks delegated `orders:manage`; the implementation now requires exact-store `returns:manage` for return decisions. Keep the read-only queue compatible until the permission migration/seed is ready.
 
 ### Legacy status and customer eligibility implications
 - Legacy parent statuses include REQUESTED, APPROVED, REJECTED, RECEIVED and CANCELLED. Backfill must map all five explicitly into the vendor-case state vocabulary; never infer a new seller action or actor.
