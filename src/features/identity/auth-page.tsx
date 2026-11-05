@@ -49,13 +49,24 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
       setRegistrationComplete(new URLSearchParams(window.location.search).get("registered") === "1");
     }, 0);
     const params = new URLSearchParams(window.location.search);
+    if (mode === "login") {
+      const oauth = params.get("oauth");
+      const oauthMessages: Record<string, string> = {
+        unavailable: "Google sign-in is not configured in this environment.",
+        invalid: "Google sign-in could not be verified. Please try again.",
+        failed: "Google sign-in failed. Please try again or use your email and password.",
+        inactive: "This account is not active. Contact marketplace support.",
+        not_linked: "This Google account is not linked to a Mtjr2 account. Use your existing sign-in method or create an account."
+      };
+      if (oauth) setError(oauthMessages[oauth] ?? "Google sign-in could not be completed.");
+    }
     if (params.has("token")) {
       params.delete("token");
       const query = params.toString();
       window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""));
     }
     return () => window.clearTimeout(registrationTimer);
-  }, []);
+  }, [mode]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,6 +93,11 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The request could not be completed.");
     } finally { setBusy(false); }
+  }
+
+  function continueWithGoogle() {
+    const params = new URLSearchParams({ intent: "login", returnTo: safeReturnPath() });
+    window.location.assign(`/api/auth/google/start?${params.toString()}`);
   }
 
   async function resendVerification() {
@@ -115,7 +131,22 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
           <Link href="/" className="text-2xl font-semibold tracking-tight text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
           <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Back to marketplace</Link>
         </header>
-        <section className="mx-auto w-full max-w-md rounded-3xl border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-card)] sm:p-9">
+        <div className="grid overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] lg:min-h-[650px] lg:grid-cols-[0.9fr_1.1fr]">
+          <aside className="relative hidden overflow-hidden bg-[var(--color-forest-950)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(190,130,87,.35),transparent_42%),linear-gradient(145deg,transparent,rgba(0,0,0,.2))]" />
+            <div className="relative">
+              <p className="text-xs font-semibold uppercase tracking-[.24em] text-[var(--color-copper-300)]">Mtjr2 marketplace</p>
+              <h2 className="mt-8 max-w-md text-4xl font-semibold leading-tight xl:text-5xl">{mode === "login" ? "Your marketplace. One secure account." : "Your account, protected at every step."}</h2>
+              <p className="mt-5 max-w-md text-sm leading-7 text-white/75">{mode === "login" ? "Discover products, manage orders, save favorites and connect with trusted stores." : "We verify email addresses, protect your sessions and keep account recovery simple."}</p>
+            </div>
+            <div className="relative space-y-4 text-sm text-white/80">
+              <p>01 · One account for shopping and selling</p>
+              <p>02 · Email verification and secure sessions</p>
+              <p>03 · Seller access after marketplace review</p>
+            </div>
+          </aside>
+          <section className="w-full px-6 py-8 sm:px-9 lg:px-12 xl:px-14">
+            <div className="mx-auto w-full max-w-md">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">Mtjr2 account</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{title}</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{description}</p>
@@ -155,11 +186,18 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "" }:
             </form>
           )}
 
+          {mode === "login" && (
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center gap-3 text-xs text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--border)]" />OR CONTINUE WITH<span className="h-px flex-1 bg-[var(--border)]" /></div>
+              <button type="button" onClick={continueWithGoogle} disabled={busy} className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--color-ivory-100)] disabled:opacity-50"><span aria-hidden="true" className="text-base font-bold text-[var(--color-forest-900)]">G</span>Continue with Google</button>
+            </div>
+          )}
           <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5 text-sm">
             {mode === "login" && <><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/forgot-password">Forgot password?</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/verify-email">Verify email</Link><Link className="font-medium text-[var(--color-forest-800)] hover:underline" href="/register">Create account</Link></>}
             {(mode === "forgot" || mode === "reset" || mode === "verify") && <Link className="font-semibold text-[var(--color-forest-800)] hover:underline" href="/login">Back to sign in</Link>}
           </div>
-        </section>
+          </section>
+        </div>
         <p className="mt-6 text-center text-xs text-[var(--muted)]">Secure account access · Your password is never sent by email.</p>
       </div>
     </main>
