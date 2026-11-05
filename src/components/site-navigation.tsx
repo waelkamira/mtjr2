@@ -13,35 +13,35 @@ export default async function SiteNavigation() {
   const accountLabel = session?.user.displayName?.trim() || "My account";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--color-ivory-50)]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-3 px-4 py-3 sm:px-5 lg:px-10">
-        <Link href="/" aria-label="Mtjr home" className="shrink-0 text-2xl font-semibold tracking-tight text-[var(--color-forest-950)]">
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--color-ivory-50)]/95 shadow-[var(--shadow-card)] backdrop-blur">
+      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-3 px-4 py-3.5 sm:px-5 lg:px-10">
+        <Link href="/" aria-label="Mtjr home" className="shrink-0 font-serif text-[1.8rem] font-semibold tracking-tight text-[var(--color-forest-950)]">
           mtjr<span className="text-[var(--color-copper-600)]">.</span>
         </Link>
 
         <MarketplaceSearchBox />
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-          <Link href="/cart" className="rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Cart</Link>
+          <Link href="/cart" className="rounded-xl px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Cart</Link>
           {session ? (
             <>
-              <Link href="/account/favorites" className="hidden rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] md:inline-flex">Favorites</Link>
-              <Link href="/account/orders" className="hidden rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] md:inline-flex">Orders</Link>
-              <Link href="/account" className="rounded-lg bg-[var(--color-forest-800)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">{accountLabel}</Link>
+              <Link href="/account/favorites" className="hidden rounded-xl px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] md:inline-flex">Favorites</Link>
+              <Link href="/account/orders" className="hidden rounded-xl px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)] md:inline-flex">Orders</Link>
+              <Link href="/account" className="rounded-xl bg-[var(--color-forest-800)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition hover:bg-[var(--color-forest-950)]">{accountLabel}</Link>
 
             </>
           ) : (
             <>
-              <Link href="/login" className="rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
-              <Link href="/register" className="rounded-lg bg-[var(--color-forest-800)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-forest-950)]">Join</Link>
+              <Link href="/login" className="rounded-xl px-3 py-2 text-sm font-medium text-[var(--color-forest-900)] transition hover:bg-[var(--color-sage-100)]">Sign in</Link>
+              <Link href="/register" className="rounded-xl bg-[var(--color-forest-800)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition hover:bg-[var(--color-forest-950)]">Join</Link>
 
             </>
           )}
         </div>
       </div>
 
-      <nav aria-label="Main navigation" className="mx-auto flex max-w-[1440px] gap-6 overflow-x-auto px-4 pb-3 text-sm text-[var(--color-ink-700)] sm:px-5 lg:px-10">
-        <Link href="/" className="whitespace-nowrap font-medium text-[var(--color-forest-800)]">Home</Link>
+      <nav aria-label="Main navigation" className="mx-auto flex max-w-[1440px] gap-6 overflow-x-auto px-4 pb-3.5 text-sm text-[var(--color-ink-700)] sm:px-5 lg:px-10">
+        <Link href="/" className="whitespace-nowrap font-semibold text-[var(--color-copper-600)]">Home</Link>
         <Link href="/products" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Shop</Link>
         <Link href="/categories" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Categories</Link>
         <Link href="/brands" className="whitespace-nowrap hover:text-[var(--color-forest-950)]">Brands</Link>

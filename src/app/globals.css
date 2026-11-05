@@ -1,48 +1,43 @@
 @import "tailwindcss";
 
-/*
- * Mtjr2 design system — visual foundation
- * Core palette: deep petrol, warm ivory, violet-blue, mint, orange and cyan.
- * Glass effects are reserved for selected hero/overlay surfaces.
- */
+/* Mtjr2's botanical palette: forest, sage, warm ivory and terracotta. */
 :root {
   color-scheme: light;
 
-  /* Approved visual direction */
-  --color-petrol-950: #142832;
-  --color-petrol-900: #203746;
-  --color-petrol-800: #294858;
-  --color-petrol-700: #385c6c;
-  --color-petrol-600: #4b7180;
+  --color-petrol-950: #18352f;
+  --color-petrol-900: #22463d;
+  --color-petrol-800: #315d4e;
+  --color-petrol-700: #497663;
+  --color-petrol-600: #668f78;
 
-  --color-violet-600: #5368f5;
-  --color-violet-700: #4054dc;
-  --color-violet-100: #e9ecff;
+  --color-violet-600: #c77848;
+  --color-violet-700: #a95f36;
+  --color-violet-100: #f5e5d8;
 
-  --color-mint-500: #2fc58b;
-  --color-mint-100: #dff8ed;
-  --color-orange-500: #ff8b3d;
-  --color-orange-600: #e87326;
-  --color-orange-100: #fff0e5;
-  --color-cyan-300: #83e8e4;
-  --color-cyan-100: #e3fbf9;
+  --color-mint-500: #718d67;
+  --color-mint-100: #e4ecdf;
+  --color-orange-500: #d58a52;
+  --color-orange-600: #b96e3d;
+  --color-orange-100: #f7e9dd;
+  --color-cyan-300: #a8bea0;
+  --color-cyan-100: #e8eee4;
 
-  --color-ivory-50: #fffdfb;
-  --color-ivory-100: #f5eee9;
-  --color-ivory-200: #e9ded7;
-  --color-stone-300: #d8d3cf;
-  --color-stone-500: #746f70;
-  --color-ink-900: #252329;
-  --color-ink-700: #4b4850;
+  --color-ivory-50: #fffdf8;
+  --color-ivory-100: #f5f1e8;
+  --color-ivory-200: #e7dfd1;
+  --color-stone-300: #d4ccbd;
+  --color-stone-500: #77766d;
+  --color-ink-900: #292b26;
+  --color-ink-700: #56584f;
 
   /* Backwards-compatible aliases for existing components */
   --color-forest-950: var(--color-petrol-950);
   --color-forest-900: var(--color-petrol-900);
   --color-forest-800: var(--color-petrol-800);
   --color-forest-700: var(--color-petrol-700);
-  --color-sage-600: #4c8f91;
-  --color-sage-500: #6db9b5;
-  --color-sage-300: var(--color-cyan-300);
+  --color-sage-600: #597957;
+  --color-sage-500: #83a07a;
+  --color-sage-300: #b9c9ae;
   --color-sage-200: var(--color-cyan-300);
   --color-sage-100: var(--color-cyan-100);
 
@@ -50,10 +45,10 @@
   --color-copper-500: var(--color-orange-500);
   --color-copper-100: var(--color-orange-100);
 
-  --color-success: #167653;
-  --color-warning: #9a571b;
-  --color-danger: #b42332;
-  --color-info: #285fa8;
+  --color-success: #39744c;
+  --color-warning: #9a6429;
+  --color-danger: #ad4742;
+  --color-info: #426c71;
 
   --background: var(--color-ivory-100);
   --foreground: var(--color-ink-900);
@@ -62,18 +57,18 @@
   --brand: var(--color-petrol-900);
   --action: var(--color-violet-600);
   --accent: var(--color-orange-500);
-  --surface: #fffdfb;
+  --surface: var(--color-ivory-50);
   --surface-soft: var(--color-ivory-100);
-  --surface-tint: var(--color-cyan-100);
+  --surface-tint: #e9eee5;
 
   --radius-control: 0.75rem;
-  --radius-card: 1.125rem;
-  --radius-panel: 1.5rem;
-  --radius-feature: 2rem;
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
+  --radius-feature: 2.25rem;
 
-  --shadow-card: 0 8px 28px rgb(32 55 70 / 7%);
-  --shadow-floating: 0 18px 48px rgb(20 40 50 / 16%);
-  --shadow-glow: 0 12px 36px rgb(83 104 245 / 18%);
+  --shadow-card: 0 10px 32px rgb(35 54 43 / 9%), 0 2px 8px rgb(35 54 43 / 4%);
+  --shadow-floating: 0 22px 56px rgb(24 53 47 / 19%), 0 6px 18px rgb(24 53 47 / 7%);
+  --shadow-glow: 0 12px 34px rgb(199 120 72 / 19%);
 
   --content-max: 1440px;
   --page-gutter: clamp(1rem, 3vw, 2.5rem);
@@ -86,6 +81,24 @@ html, body {
   margin: 0;
 }
 
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
 html {
   scroll-behavior: smooth;
   background: var(--background);
@@ -96,19 +109,31 @@ body {
   color: var(--foreground);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   font-feature-settings: "ss01" on;
+  line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: inherit; text-decoration: none; }
-button, input, textarea, select { font: inherit; }
-button { cursor: pointer; }
-
 ::selection { background: var(--color-violet-100); color: var(--color-petrol-950); }
 
 :focus-visible {
-  outline: 3px solid var(--color-violet-600);
+  outline: 3px solid var(--color-copper-600);
   outline-offset: 3px;
+}
+
+@layer base {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    border-color: var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted);
+    opacity: 0.8;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
