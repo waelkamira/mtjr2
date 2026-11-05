@@ -65,7 +65,7 @@ describe("password login service", () => {
     expect(clearMock).toHaveBeenCalledWith("buyer@example.com", "203.0.113.10");
   });
 
-  it("performs dummy password verification and uses dummy verification and records an unknown-account failure without storing raw identifiers", async () => {
+  it("uses the same generic response for unknown accounts without storing raw identifiers", async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
     const result = await loginWithPassword({
@@ -74,7 +74,7 @@ describe("password login service", () => {
       trustedIpAddress: "203.0.113.10"
     }, now);
 
-    expect(result).toMatchObject({ authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." });
+    expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS", message: "Email or password is incorrect." });
     expect(verifyMock).toHaveBeenCalledOnce();
     expect(verifyMock.mock.calls[0][1]).toMatch(/^scrypt\$32768\$8\$1\$/);
     expect(prismaMock.userSession.create).not.toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe("password login service", () => {
     }));
   });
 
-  it("identifies an incorrect password for an existing eligible account", async () => {
+  it("uses the same generic response for an incorrect password", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: "user-1", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: now
     });
@@ -94,7 +94,7 @@ describe("password login service", () => {
     }, now);
 
     expect(result).toMatchObject({
-      authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect. Please try again."
+      authenticated: false, reason: "INVALID_CREDENTIALS", message: "Email or password is incorrect."
     });
     expect(prismaMock.userSession.create).not.toHaveBeenCalled();
   });
