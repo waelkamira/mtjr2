@@ -2,8 +2,8 @@ const PLATFORM_MANAGEMENT_PERMISSION = "platform:manage";
 
 /**
  * Platform-wide management is a protected capability, not an ordinary
- * delegated role. Only the controlled first-admin bootstrap (and a future
- * separately reviewed break-glass workflow) may grant it.
+ * delegated role. Only the controlled first-admin bootstrap and the dedicated
+ * two-person privilege approval workflow may grant it.
  */
 export function isProtectedPlatformRole(
   roleKey: string,
