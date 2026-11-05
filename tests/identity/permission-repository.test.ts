@@ -40,7 +40,7 @@ describe("platform administrator permission enforcement", () => {
   });
 
   it("requires step-up for any-of permission checks", async () => {
-    await expect(userHasAnyPermission("admin-1", [{ permissionKey: "support:manage" }], now)).resolves.toBe(true);
+    await expect(userHasAnyPermission("admin-1", [{ permissionKey: "users:manage" }], now)).resolves.toBe(true);
     expect(stepUpMock).toHaveBeenCalledWith("admin-1", now);
   });
 
