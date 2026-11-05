@@ -149,3 +149,12 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Added focused seller dispatch tests for successful transition/audit, invalid tracking URL, cross-store staff denial and idempotent replay.
 
 **Verification gate:** General CI and disposable PostgreSQL migration/integration must pass on the exact new branch head. The older PR #26 check result is not transferable because its base was stale and the migration timestamp collided with the payment migration already on main.
+
+
+## Fulfillment aggregation correction — 2026-11-05
+
+- Corrected parent-order fulfillment aggregation after manual dispatch: cancelled vendor orders are terminal and excluded from the set of vendor orders that must be shipped/delivered before the parent becomes FULFILLED.
+- A parent remains PARTIALLY_FULFILLED while at least one non-cancelled vendor order remains undispatched. If all non-cancelled vendor orders are SHIPPED/DELIVERED, the parent becomes FULFILLED even when another vendor order was cancelled.
+- Added focused regression tests for both mixed cancelled/dispatched and still-active undispatched multi-vendor cases.
+- No Prisma change: the existing VendorOrderStatus.CANCELLED enum and OrderStatus fulfillment states already represent this rule.
+- Verification is pending exact-head General CI and disposable PostgreSQL integration for the correction branch.
