@@ -2106,3 +2106,8 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No role-revocation or emergency break-glass UI was added. Revocation remains a separate high-risk workflow and is not exposed here.
 - CI passed on commit `6bdbae7` before this approval-workflow batch. Prisma validation, typecheck, lint, tests and build must be rerun on the new exact head before this batch is verified.
 - Vercel Preview deployments are currently rate-limited by the provider for 24 hours. A prior Preview build also exposed missing `AUTH_SECRET`; no deployment secrets or settings were changed.
+
+**Additional approval safeguards**
+- The target account row is locked inside the same transaction as the privilege decision, so concurrent account suspension/deactivation cannot race the eligibility check.
+- The migration enforces a minimum 20-character justification with a database CHECK constraint as well as API validation.
+- Request state is intentionally limited to PENDING, APPROVED and REJECTED until a real cancellation workflow is designed.
