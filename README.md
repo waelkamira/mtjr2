@@ -49,6 +49,8 @@ The phase audit found that the former README listed only nine phases and that de
 
 - [Phase 1 — Foundation](docs/implementation/PHASE_01_FOUNDATION_PLAN.md)
 - [Phase 2 — Identity](docs/implementation/PHASE_02_IDENTITY_PLAN.md)
+
+- [Identity rebuild audit and phased execution record](docs/implementation/IDENTITY_REBUILD_AUDIT_AND_EXECUTION_PLAN.md)
 - [Phase 3 — Marketplace](docs/implementation/PHASE_03_MARKETPLACE_PLAN.md)
 - [Phase 4 — Buying](docs/implementation/PHASE_04_BUYING_PLAN.md)
 - [Phase 5 — Seller and administration](docs/implementation/PHASE_05_SELLER_ADMIN_PLAN.md)
@@ -111,6 +113,10 @@ A system may be marked **Complete** only when:
 - `docs/quality/` — test strategy, security, and release evidence.
 - `docs/design/` — visual design system, component rules, and accessibility standards.
 - `prisma/` — canonical Prisma schema, migrations, and seed data.
+
+## Identity rebuild — 6 November 2026
+
+The approved identity plan is being executed as a controlled, evidence-driven rebuild. The working record is [Identity Rebuild Audit and Execution Plan](docs/implementation/IDENTITY_REBUILD_AUDIT_AND_EXECUTION_PLAN.md). The existing system already contains core account, session, role, permission, scoped authorization, recovery, throttling, and audit foundations; this is not permission to discard working flows. Phase 1 repository audit is in progress. The known open operational gates remain real email delivery, trusted-proxy/origin-bypass verification, and the complete HTTP registration → verification → login → authenticated request → logout journey. No Vercel deployment/configuration or production database access is part of this work.
 
 ## Identity development status — 4 November 2026
 
