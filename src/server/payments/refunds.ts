@@ -21,15 +21,6 @@ function displayAmount(amountMinor: bigint, currencyCode: string, minorUnit: num
   return `${currencyCode} ${new Intl.NumberFormat("en").format(whole)}${minorUnit ? "." + fraction : ""}`;
 }
 
-function refundAmount(line: { quantity: number; orderItem: { quantity: number; lineTotalMinor: bigint } }) {
-  if (line.quantity < 1 || line.quantity > line.orderItem.quantity || line.orderItem.quantity < 1) {
-    throw new Error("A received return quantity is invalid for its original order line.");
-  }
-  return line.quantity === line.orderItem.quantity
-    ? line.orderItem.lineTotalMinor
-    : (line.orderItem.lineTotalMinor * BigInt(line.quantity)) / BigInt(line.orderItem.quantity);
-}
-
 /** Lists received return candidates and manual refunds for finance operators. */
 export async function listRefundOperations(now = new Date()) {
   await requirePermission({ permissionKey: "payments:refund", now });
