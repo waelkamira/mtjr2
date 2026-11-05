@@ -23,19 +23,26 @@ A ground-up implementation of a global, multi-vendor commerce platform.
 
 Exact dependency versions and deployment choices will be pinned during the foundation setup and verified against the runtime environment.
 
-## Build sequence
+## Build sequence — canonical phases 1–11
 
-1. **Foundation:** repository conventions, TypeScript/Next.js setup, environment validation, database connection, Prisma baseline, logging, error handling, CI, and test harness.
-2. **Identity and access:** users, sessions, authentication, role/permission model, authorization policies, and audit events.
-3. **Marketplace core:** countries/markets, currencies, stores, seller onboarding, categories, brands, products, variants, media, and search.
-4. **Buying core:** cart, pricing, checkout, inventory reservation, orders, payments, shipment, cancellation, returns, and refunds.
-5. **Seller and admin operations:** seller center, inventory/warehouses, procurement, commissions, moderation, support, and administration.
-6. **Global and financial systems:** tax, customs, localization, invoices, ledger, reconciliation, payouts, and reporting.
-7. **Trust, engagement, and scale:** reviews, Q&A, messaging, notifications, loyalty, promotions, integrations, background jobs, security, SEO, and analytics.
-8. **Separate property domain:** property listings and booking workflows, sharing only the platform capabilities that genuinely belong in common domains.
-9. **Release readiness:** security review, performance/load tests, observability, backups, deployment, and operational runbooks.
+1. **Technical foundation:** repository/runtime conventions, environment validation, PostgreSQL/Prisma baseline, logging, error handling, CI and test harness.
+2. **Identity and access:** accounts, credentials, sessions, OAuth, verification/recovery, RBAC, scoped authorization and audit.
+3. **Marketplace core:** markets/reference data, seller/store foundation, taxonomy, catalog, variants, media, discovery and inventory primitives.
+4. **Buying core:** cart, quote/reservation, address, shipping/tax snapshots, orders/vendor orders, payment lifecycle and customer order journey.
+5. **Seller operations and administration:** seller workspace, staff, procurement, seller fulfillment, moderation and platform-admin domain operations.
+6. **Financial integrity:** payment lifecycle integration, commissions, double-entry ledger, reconciliation, seller balances, payouts and invoices.
+7. **Trust, engagement and communications:** reviews, Q&A, messaging, support, returns, notifications, loyalty/promotions and lifecycle communications.
+8. **Separate property and booking domain:** property listings and booking workflows, sharing only explicitly common platform services.
+9. **Global market and regulatory readiness:** localization, FX policy, tax determination, customs, KYB, product compliance, privacy and market eligibility.
+10. **Release readiness and controlled launch:** security, performance, accessibility, observability, backup/restore, deployment/rollback and one approved-market release gate.
+11. **Production operations, reliability and scale:** SLOs, incident response, worker/outbox operations, disaster recovery, capacity, cost governance and controlled market expansion.
+
+The phase roadmap is a delivery sequence; the 49 numbered systems are independently owned capabilities. They are not interchangeable numbering schemes. Phase 10 is not System 10 (notifications). See [the Phase 1–11 roadmap audit](docs/implementation/PLATFORM_PHASE_ROADMAP_01_11.md) for the review/corrections and [Phase 11 execution plan](docs/implementation/PHASE_11_PRODUCTION_OPERATIONS_PLAN.md) for its acceptance gates.
 
 This sequence is dependency-aware. The 49 systems will be mapped to these delivery slices and implemented incrementally; it is not a promise to create all systems in one pass.
+## Phase roadmap and implementation status
+
+The phase audit found that the former README listed only nine phases and that detailed execution plans for Phases 5–10 were missing. The corrected canonical sequence is 1–11; the audit document records current gaps and the distinction between phase numbers and the 49-system IDs. Do not treat the roadmap as completion evidence. Exact-commit CI, disposable PostgreSQL integration, route/action journeys and provider/market approval remain mandatory for their respective exit gates.
 
 ## Prisma model map
 
