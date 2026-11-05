@@ -36,3 +36,34 @@ export async function logoutCurrentSession(now = new Date()): Promise<void> {
     await clearSessionCookie();
   }
 }
+
+
+/** Revokes every active session for the authenticated account, including this device. */
+export async function logoutAllSessions(now = new Date()): Promise<number> {
+  const token = await getSessionCookie();
+  try {
+    if (!token) return 0;
+    const session = await resolveUserSession(token, now);
+    if (!session) return 0;
+    const revoked = await prisma.userSession.updateMany({
+      where: { userId: session.userId, revokedAt: null },
+      data: { revokedAt: now }
+    });
+    if (revoked.count > 0) {
+      await prisma.auditLog.create({
+        data: {
+          actorType: AuditActorType.USER,
+          actorId: session.userId,
+          action: "identity.logout_all.succeeded",
+          resource: "user",
+          resourceId: session.userId,
+          occurredAt: now,
+          metadata: { revokedSessionCount: revoked.count }
+        }
+      });
+    }
+    return revoked.count;
+  } finally {
+    await clearSessionCookie();
+  }
+}
