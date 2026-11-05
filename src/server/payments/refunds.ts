@@ -81,36 +81,55 @@ export async function listRefundOperations(now = new Date()) {
   const committedByPayment = new Map<string, bigint>();
   for (const refund of committedRefunds) committedByPayment.set(refund.paymentId, (committedByPayment.get(refund.paymentId) ?? BigInt(0)) + refund.amountMinor);
 
-  return {
-    candidates: requests.map((request) => {
-      const allocationsValid = request.items.every((item) => {
-        const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
-        return item.quantity <= item.orderItem.quantity - previous.quantity && item.orderItem.lineTotalMinor > previous.amountMinor;
-      });
-      const amountMinor = request.items.reduce((sum, item) => {
+  const candidates = requests.map((request) => {
+    const allocationsValid = request.items.every((item) => {
+      const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
+      return item.quantity <= item.orderItem.quantity - previous.quantity && item.orderItem.lineTotalMinor > previous.amountMinor;
+    });
+    const amountMinor = request.items.reduce((sum, item) => {
+      const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
+      const remainingQuantity = item.orderItem.quantity - previous.quantity;
+      const remainingAmount = item.orderItem.lineTotalMinor - previous.amountMinor;
+      if (remainingQuantity <= 0 || item.quantity > remainingQuantity) return sum;
+      const lineAmount = item.quantity === remainingQuantity ? remainingAmount : (remainingAmount * BigInt(item.quantity)) / BigInt(remainingQuantity);
+      return sum + lineAmount;
+    }, BigInt(0));
+    const payment = request.order.payments.length === 1 ? request.order.payments[0] : null;
+    const paymentRemaining = payment ? payment.amountMinor - (committedByPayment.get(payment.id) ?? BigInt(0)) : BigInt(0);
+    const eligible = Boolean(payment && payment.currencyCode === request.order.currencyCode && allocationsValid && amountMinor > BigInt(0) && amountMinor <= paymentRemaining);
+
+    // Reserve each earlier candidate in this response so the queue never marks
+    // two separate returns as independently refundable against the same balance.
+    if (eligible && payment) {
+      committedByPayment.set(payment.id, (committedByPayment.get(payment.id) ?? BigInt(0)) + amountMinor);
+      for (const item of request.items) {
         const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
         const remainingQuantity = item.orderItem.quantity - previous.quantity;
         const remainingAmount = item.orderItem.lineTotalMinor - previous.amountMinor;
-        if (remainingQuantity <= 0 || item.quantity > remainingQuantity) return sum;
         const lineAmount = item.quantity === remainingQuantity ? remainingAmount : (remainingAmount * BigInt(item.quantity)) / BigInt(remainingQuantity);
-        return sum + lineAmount;
-      }, BigInt(0));
-      const payment = request.order.payments.length === 1 ? request.order.payments[0] : null;
-      const paymentRemaining = payment ? payment.amountMinor - (committedByPayment.get(payment.id) ?? BigInt(0)) : BigInt(0);
-      const eligible = Boolean(payment && payment.currencyCode === request.order.currencyCode && allocationsValid && amountMinor > BigInt(0) && amountMinor <= paymentRemaining);
-      return {
-        returnRequestId: request.id,
-        returnNumber: request.returnNumber,
-        orderNumber: request.order.orderNumber,
-        currencyCode: request.order.currencyCode,
-        provider: payment?.provider ?? null,
-        amountMinor: amountMinor.toString(),
-        amountDisplay: displayAmount(amountMinor, request.order.currencyCode, request.order.currency.minorUnit),
-        eligible,
-        reason: !payment ? "Exactly one successful captured payment is required." : payment.currencyCode !== request.order.currencyCode ? "Payment and order currencies do not match." : !allocationsValid ? "Returned quantities or remaining line value have already been allocated." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > paymentRemaining ? "The amount exceeds the remaining captured payment balance." : null,
-        items: request.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
-      };
-    }),
+        allocationByOrderItem.set(item.orderItem.id, {
+          quantity: previous.quantity + item.quantity,
+          amountMinor: previous.amountMinor + lineAmount
+        });
+      }
+    }
+
+    return {
+      returnRequestId: request.id,
+      returnNumber: request.returnNumber,
+      orderNumber: request.order.orderNumber,
+      currencyCode: request.order.currencyCode,
+      provider: payment?.provider ?? null,
+      amountMinor: amountMinor.toString(),
+      amountDisplay: displayAmount(amountMinor, request.order.currencyCode, request.order.currency.minorUnit),
+      eligible,
+      reason: !payment ? "Exactly one successful captured payment is required." : payment.currencyCode !== request.order.currencyCode ? "Payment and order currencies do not match." : !allocationsValid ? "Returned quantities or remaining line value have already been allocated." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > paymentRemaining ? "The amount exceeds the remaining captured payment balance." : null,
+      items: request.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
+    };
+  });
+
+  return {
+    candidates,
     refunds: refunds.map((refund) => ({
       id: refund.id,
       returnNumber: refund.returnRequest.returnNumber,
