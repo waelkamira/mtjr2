@@ -45,6 +45,7 @@ function serializeOrder(order: {
     id: string; status: VendorOrderStatus; store: { id: string; name: string; slug: string };
     shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
     subtotalMinor: bigint; shippingMinor: bigint; taxMinor: bigint; totalMinor: bigint;
+    shipment: { carrierName: string; trackingNumber: string; trackingUrl: string | null; shippedAt: Date } | null;
     items: Array<{ id: string; productName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
   }>;
 }) {
@@ -286,7 +287,7 @@ export async function getOwnedOrder(guestToken: string, orderId: string, now = n
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } }, shipment: true } }
     }
   });
   if (!order) throw new Error("Order not found.");
@@ -302,7 +303,7 @@ export async function listCustomerOrders(now = new Date()) {
     include: {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
-      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } } } }
+      vendorOrders: { orderBy: { createdAt: "asc" }, include: { store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } }, shipment: true } }
     }
   });
   return orders.map(serializeOrder);
