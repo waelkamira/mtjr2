@@ -11,7 +11,7 @@
 3. Page-level visibility is a usability feature. Every API and server-side service independently enforces its permission, account state, ownership, and scope.
 4. All state-changing JSON routes must call `validateIdentityMutationRequest(request)` before reading the body or invoking a service. The guard requires the configured exact Origin, rejects cross-site Fetch Metadata, and requires JSON.
 5. Super Admin is a protected platform capability, not a role name that can be delegated. Ordinary role assignment and revocation reject both `SUPER_ADMIN` and any custom role containing `platform:manage`.
-6. Platform-wide operations require an active cookie-backed session, `platform:manage`, verified email, enabled TOTP MFA, and a successful step-up whose verification timestamp and expiry form a valid ten-minute window.
+6. Every permission evaluation for an account holding `platform:manage` requires the matching active cookie-backed session, verified email, enabled TOTP MFA, and a successful step-up whose verification timestamp and expiry form a valid ten-minute window. This applies even when the Super Admin uses an ordinary admin page/service and the requested permission is not `platform:manage`.
 7. Privilege grants use a separate request/approval workflow. Requester and target cannot approve; approval is audited and serialized against concurrent requests.
 8. UI components never receive MFA encryption keys, session token digests, recovery-code hashes, or authorization grants.
 
