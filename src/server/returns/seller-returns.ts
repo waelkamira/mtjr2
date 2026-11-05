@@ -169,10 +169,11 @@ export async function reviewSellerReturnItems(returnId: string, input: unknown, 
       : anyApproved ? ReturnRequestStatus.APPROVED
       : current.status;
     if (aggregate !== current.status && [ReturnRequestStatus.REQUESTED, ReturnRequestStatus.APPROVED].includes(current.status)) {
-      await tx.returnRequest.updateMany({
+      const parentChanged = await tx.returnRequest.updateMany({
         where: { id, status: current.status },
         data: { status: aggregate, reviewNote: data.note || null, reviewedAt: now, reviewedById: actor.userId }
       });
+      if (parentChanged.count !== 1) throw new Error("The return request changed. Refresh and try again.");
     }
 
     await tx.auditLog.create({
