@@ -230,8 +230,13 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
     });
 
     const siblings = await tx.vendorOrder.findMany({ where: { orderId: current.orderId }, select: { status: true } });
-    const dispatched = siblings.filter((item) => item.status === VendorOrderStatus.SHIPPED || item.status === VendorOrderStatus.DELIVERED).length;
-    const nextParentStatus = dispatched === siblings.length ? OrderStatus.FULFILLED : dispatched > 0 ? OrderStatus.PARTIALLY_FULFILLED : current.order.status;
+    // Cancelled vendor orders are terminal and must not block fulfillment of the
+    // remaining live vendor orders in a multi-store parent order.
+    const activeSiblings = siblings.filter((item) => item.status !== VendorOrderStatus.CANCELLED);
+    const dispatched = activeSiblings.filter((item) => item.status === VendorOrderStatus.SHIPPED || item.status === VendorOrderStatus.DELIVERED).length;
+    const nextParentStatus = activeSiblings.length > 0 && dispatched === activeSiblings.length
+      ? OrderStatus.FULFILLED
+      : dispatched > 0 ? OrderStatus.PARTIALLY_FULFILLED : current.order.status;
     if (nextParentStatus !== current.order.status) {
       const parentChanged = await tx.order.updateMany({
         where: { id: current.orderId, status: current.order.status },
