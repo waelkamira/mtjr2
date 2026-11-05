@@ -55,12 +55,25 @@ async function main() {
       // Serialize bootstrap attempts, including attempts from separate machines.
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(74192831, 20261105)`;
 
-      const existing = await tx.userRoleAssignment.findFirst({
-        where: { role: { key: "SUPER_ADMIN" } },
-        select: { id: true }
+      // Bootstrap is only valid when no assignment of any role carrying
+      // platform:manage exists, not merely when the canonical role is absent.
+      const platformRoles = await tx.role.findMany({
+        select: {
+          id: true,
+          permissions: { select: { permission: { select: { key: true } } } }
+        }
       });
+      const protectedRoleIds = platformRoles
+        .filter((role) => role.permissions.some(({ permission }) => permission.key === "platform:manage"))
+        .map((role) => role.id);
+      const existing = protectedRoleIds.length
+        ? await tx.userRoleAssignment.findFirst({
+            where: { roleId: { in: protectedRoleIds }, scopeType: "GLOBAL", scopeId: "GLOBAL" },
+            select: { id: true }
+          })
+        : null;
       if (existing) {
-        throw new Error("A SUPER_ADMIN assignment already exists. Bootstrap is permanently closed for this database.");
+        throw new Error("A platform:manage assignment already exists. First-admin bootstrap is permanently closed for this database.");
       }
 
       const [user, role] = await Promise.all([
