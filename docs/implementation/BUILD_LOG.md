@@ -2124,3 +2124,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Preserved catalog data fetching, URL-backed filters, pagination, category layout, product routes, price formatting and seller attribution.
 - Updated the reusable catalog product grid with raised clay cards and stronger bottom price hierarchy.
 - This is the first visual adoption slice; account, seller and admin workspaces still require separate migration and responsive visual QA. Super Admin remains excluded.
+
+
+## 2026-11-05 — Claymorphism identity, catalog filters and seller workspace slice
+
+- Migrated the shared sign-in/password recovery/verification card and form controls to raised pastel surfaces while preserving all existing auth endpoints, safe return-path handling, Google login flow, verification resend, and success/error behavior.
+- Migrated server-rendered catalog discovery filter panel and form controls to inset clay fields; preserved GET parameters, category/brand/store/market filters, price filters, stock filter, sorting and pagination.
+- Applied the pastel canvas and shared surface treatment to the seller workspace shell and key headings without changing seller API requests or store/inventory/shipping workflows.
+- Compatibility aliases remain in place for legacy color references. Super Admin is still explicitly excluded.
+- CI and PostgreSQL integration are expected to rerun against the latest branch head; no local build or browser visual QA is claimed.
