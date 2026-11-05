@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   AuthenticationRequiredError,
+  EmailVerificationRequiredError,
   PermissionDeniedError,
   MfaEnrollmentRequiredError,
   StepUpRequiredError
@@ -28,6 +29,7 @@ export async function GET(request: Request): Promise<Response> {
       headers: { "Cache-Control": "private, no-store" }
     });
   } catch (error) {
+    if (error instanceof EmailVerificationRequiredError) return Response.json({ error: "Verified email is required.", code: "EMAIL_VERIFICATION_REQUIRED" }, { status: 403 });
     if (error instanceof MfaEnrollmentRequiredError) return Response.json({ error: "MFA enrollment is required.", code: "MFA_ENROLLMENT_REQUIRED" }, { status: 403 });
     if (error instanceof StepUpRequiredError) return Response.json({ error: "Recent MFA verification is required.", code: "STEP_UP_REQUIRED" }, { status: 428 });
     if (error instanceof AuthenticationRequiredError) {
