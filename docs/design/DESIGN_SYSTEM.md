@@ -66,3 +66,13 @@ Do not redesign the Super Admin workstream or its in-progress files as part of t
 ## Current implementation boundary
 
 The CSS tokens and opt-in surface primitives are implemented in `src/app/globals.css`. This foundation does not claim that every page or reusable component has already migrated. Component adoption must proceed in small slices with typecheck, lint, focused tests, build, responsive review, and verification that the affected user journeys still work.
+
+
+## Central Tailwind v4 configuration
+
+The project uses Tailwind CSS v4, so the shared Tailwind theme is defined with `@theme inline` in `src/app/globals.css` rather than a legacy `tailwind.config.js` file. This is intentional: Tailwind v4 is CSS-first.
+
+- `:root` is the single source of truth for palette, semantic colors, surfaces, radii, and clay shadows.
+- `@theme inline` exposes those tokens as Tailwind utilities (for example `bg-lavender-100`, `text-ink-950`, `shadow-clay`, and `rounded-clay-card`).
+- Change a token once in `:root`; both ordinary CSS and Tailwind utilities consume the same value.
+- Component-level inline values should be migrated to these named tokens instead of introducing new one-off colors or shadows.
