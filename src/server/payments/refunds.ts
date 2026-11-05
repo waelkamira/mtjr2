@@ -51,7 +51,7 @@ export async function listRefundOperations(now = new Date()) {
         },
         items: {
           where: { status: ReturnItemStatus.RECEIVED },
-          select: { quantity: true, orderItem: { select: { productName: true, sku: true, quantity: true, lineTotalMinor: true } } }
+          select: { quantity: true, orderItem: { select: { id: true, productName: true, sku: true, quantity: true, lineTotalMinor: true } } }
         }
       }
     }),
@@ -68,11 +68,45 @@ export async function listRefundOperations(now = new Date()) {
     })
   ]);
 
+  const orderItemIds = [...new Set(requests.flatMap((request) => request.items.map((item) => item.orderItem.id)))];
+  const paymentIds = [...new Set(requests.flatMap((request) => request.order.payments.map((payment) => payment.id)))];
+  const [previousAllocations, committedRefunds] = await Promise.all([
+    orderItemIds.length ? prisma.refundItem.findMany({
+      where: { returnItem: { orderItemId: { in: orderItemIds } }, refund: { status: { in: committedRefundStatuses } } },
+      select: { quantity: true, amountMinor: true, returnItem: { select: { orderItemId: true } } }
+    }) : [],
+    paymentIds.length ? prisma.refund.findMany({
+      where: { paymentId: { in: paymentIds }, status: { in: committedRefundStatuses } },
+      select: { paymentId: true, amountMinor: true }
+    }) : []
+  ]);
+  const allocationByOrderItem = new Map<string, { quantity: number; amountMinor: bigint }>();
+  for (const row of previousAllocations) {
+    const current = allocationByOrderItem.get(row.returnItem.orderItemId) ?? { quantity: 0, amountMinor: BigInt(0) };
+    current.quantity += row.quantity;
+    current.amountMinor += row.amountMinor;
+    allocationByOrderItem.set(row.returnItem.orderItemId, current);
+  }
+  const committedByPayment = new Map<string, bigint>();
+  for (const refund of committedRefunds) committedByPayment.set(refund.paymentId, (committedByPayment.get(refund.paymentId) ?? BigInt(0)) + refund.amountMinor);
+
   return {
     candidates: requests.map((request) => {
-      const amountMinor = request.items.reduce((sum, item) => sum + refundAmount(item), BigInt(0));
+      const allocationsValid = request.items.every((item) => {
+        const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
+        return item.quantity <= item.orderItem.quantity - previous.quantity && item.orderItem.lineTotalMinor > previous.amountMinor;
+      });
+      const amountMinor = request.items.reduce((sum, item) => {
+        const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
+        const remainingQuantity = item.orderItem.quantity - previous.quantity;
+        const remainingAmount = item.orderItem.lineTotalMinor - previous.amountMinor;
+        if (remainingQuantity <= 0 || item.quantity > remainingQuantity) return sum;
+        const lineAmount = item.quantity === remainingQuantity ? remainingAmount : (remainingAmount * BigInt(item.quantity)) / BigInt(remainingQuantity);
+        return sum + lineAmount;
+      }, BigInt(0));
       const payment = request.order.payments.length === 1 ? request.order.payments[0] : null;
-      const eligible = Boolean(payment && payment.currencyCode === request.order.currencyCode && amountMinor > BigInt(0) && amountMinor <= payment.amountMinor);
+      const paymentRemaining = payment ? payment.amountMinor - (committedByPayment.get(payment.id) ?? BigInt(0)) : BigInt(0);
+      const eligible = Boolean(payment && payment.currencyCode === request.order.currencyCode && allocationsValid && amountMinor > BigInt(0) && amountMinor <= paymentRemaining);
       return {
         returnRequestId: request.id,
         returnNumber: request.returnNumber,
@@ -81,7 +115,7 @@ export async function listRefundOperations(now = new Date()) {
         amountMinor: amountMinor.toString(),
         amountDisplay: displayAmount(amountMinor, request.order.currencyCode, request.order.currency.minorUnit),
         eligible,
-        reason: !payment ? "Exactly one successful captured payment is required." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > payment.amountMinor ? "The amount exceeds the captured payment." : null,
+        reason: !payment ? "Exactly one successful captured payment is required." : !allocationsValid ? "Returned quantities or remaining line value have already been allocated." : amountMinor <= BigInt(0) ? "The refundable merchandise amount must be positive." : amountMinor > paymentRemaining ? "The amount exceeds the remaining captured payment balance." : null,
         items: request.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity }))
       };
     }),
