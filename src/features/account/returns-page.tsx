@@ -5,7 +5,7 @@ import Link from "next/link";
 
 type EligibleItem = { id: string; productName: string; sku: string; orderedQuantity: number; availableQuantity: number };
 type EligibleOrder = { id: string; orderNumber: string; vendorOrders: Array<{ id: string; storeName: string; items: EligibleItem[] }> };
-type ReturnRow = { id: string; returnNumber: string; orderNumber: string; status: string; reasonCode: string; reasonDetails: string | null; reviewNote: string | null; requestedAt: string; items: Array<{ productName: string; sku: string; quantity: number }> };
+type ReturnRow = { id: string; returnNumber: string; orderNumber: string; status: string; reasonCode: string; reasonDetails: string | null; reviewNote: string | null; requestedAt: string; items: Array<{ productName: string; sku: string; quantity: number; status: string; reviewNote: string | null }> };
 type Center = { eligibleOrders: EligibleOrder[]; requests: ReturnRow[] };
 
 export default function CustomerReturnsPage() {
@@ -82,9 +82,9 @@ export default function CustomerReturnsPage() {
       </section>
       <section className="mt-8"><h2 className="text-xl font-semibold">Your return requests</h2>
         {loading ? <div className="mt-4 h-32 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]"/> : center.requests.length ? <div className="mt-4 space-y-3">{center.requests.map((row) => <article key={row.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
-          <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{row.returnNumber} · {row.orderNumber}</p><p className="mt-1 font-semibold">{row.items.map((item) => item.productName + " × " + item.quantity).join(", ")}</p></div><span className="h-fit rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs font-semibold">{row.status.replaceAll("_", " ")}</span></div>
+          <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{row.returnNumber} · {row.orderNumber}</p><p className="mt-1 font-semibold">{row.items.map((item) => item.productName + " × " + item.quantity + " (" + item.status.replaceAll("_", " ") + ")").join(", ")}</p></div><span className="h-fit rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs font-semibold">{row.status.replaceAll("_", " ")}</span></div>
           <p className="mt-2 text-xs text-[var(--muted)]">{row.reasonCode.replaceAll("_", " ")} · {new Date(row.requestedAt).toLocaleString()}</p>
-          {row.reviewNote && <p className="mt-3 rounded-xl bg-[var(--color-ivory-100)] p-3 text-sm">{row.reviewNote}</p>}
+          {row.items.filter((item) => item.reviewNote).map((item) => <p key={item.sku} className="mt-2 rounded-xl bg-[var(--color-ivory-100)] p-3 text-sm">{item.sku}: {item.reviewNote}</p>)}{row.reviewNote && <p className="mt-3 rounded-xl bg-[var(--color-ivory-100)] p-3 text-sm">{row.reviewNote}</p>}
         </article>)}</div> : <p className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-6 text-sm text-[var(--muted)]">You have not requested a return yet.</p>}
       </section>
     </div>

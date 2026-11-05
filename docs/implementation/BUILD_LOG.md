@@ -2039,3 +2039,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - During the post-merge Phase 4 review, found that parent-order fulfillment aggregation counted cancelled vendor orders as orders still awaiting dispatch. This could leave a parent order PARTIALLY_FULFILLED forever after every remaining live vendor order had shipped.
 - Corrected the aggregate to exclude CANCELLED vendor orders from the fulfillment denominator and added regression coverage for cancelled siblings and still-active undispatched siblings. No schema change was required.
 - The correction is isolated in branch `fix/order-fulfillment-terminal-vendors`; exact-head General CI and PostgreSQL verification are pending. Super Admin PR #35 is intentionally out of scope while its owner continues local work.
+
+
+## 2026-11-05 — Store-scoped return decisions (in progress)
+
+**Implemented on `feat/store-scoped-return-decisions`**
+- Added a forward-only Prisma migration and `ReturnItemStatus` so each requested line has its own decision, note, reviewer and timestamp.
+- Added seller PATCH endpoint and service. Server rechecks active store, owner/delegated permission and updates only pending items belonging to that store.
+- Seller workspace now exposes approve/reject actions per store; customer return history displays per-item decision and note.
+- Parent request remains pending while any store has undecided items; rejected item quantities are excluded from future outstanding-return calculations.
+- Platform-wide review synchronizes the item-level states.
+
+**Explicit boundaries**
+- Seller decision is not proof of physical receipt.
+- No inventory is restocked and no payment refund/provider API is called.
+- CI and PostgreSQL migration/integration verification are pending on the exact PR head.

@@ -158,3 +158,13 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Added focused regression tests for both mixed cancelled/dispatched and still-active undispatched multi-vendor cases.
 - No Prisma change: the existing VendorOrderStatus.CANCELLED enum and OrderStatus fulfillment states already represent this rule.
 - Verification is pending exact-head General CI and disposable PostgreSQL integration for the correction branch.
+
+
+## 2026-11-05 — Store-scoped return decisions
+
+- Added `ReturnItemStatus` plus item-level review note, reviewer and timestamp fields. Existing rows default safely to `REQUESTED` through the forward-only migration `20261105140000_store_scoped_return_decisions`.
+- Seller decisions are restricted to pending return lines whose order item belongs to the selected active store. Store ownership or an exact delegated `orders:manage` grant is checked server-side; the client-supplied store ID is never trusted without reauthorization.
+- Parent return status remains `REQUESTED` while any line is awaiting a store decision; it becomes `REJECTED` only when every line is rejected, and `APPROVED` once all lines have a non-rejected decision and at least one is approved. Platform review synchronizes item statuses.
+- Customer and seller screens display per-item decisions. Rejected line quantities are released for a future return request.
+- Seller approval/rejection does not confirm physical receipt, restock inventory, or initiate a refund. Those remain separate workflows; no provider refund is claimed.
+- Verification is pending exact-head General CI and PostgreSQL Integration.
