@@ -1,85 +1,68 @@
 # Mtjr2 — Visual Design System
 
-**Status:** Approved visual direction; foundation tokens implemented.  
-**Scope:** Shared design language for the global marketplace, buyer storefront, seller center, and platform administration.  
-**Reference:** User-provided visual references (2026-11-03).
+**Status:** Claymorphism visual direction approved by the project owner; shared CSS foundation added. Page-by-page adoption and visual QA remain in progress.
 
-## 1. Design intent
+## Design intent
 
-Create a premium, calm, contemporary marketplace that feels editorial and trustworthy rather than like a generic discount storefront. The references contribute their botanical forest/sage palette, warm neutral surfaces, soft depth, rounded geometry, generous spacing, and tactile product presentation.
+Use a modern **Claymorphism / 3D Pastel Clay** language: soft tactile surfaces, rounded geometry, pastel color families, and restrained inner/outer shadows that make selected elements feel gently raised. The marketplace must still feel trustworthy, premium, readable, and commerce-first—not like a toy dashboard.
 
-Mtjr2 is a global multi-vendor marketplace, not a grocery or plant shop. Do not copy the reference screens literally, their category content, or their wine/grocery-specific UI. The visual language must work for fashion, electronics, home, beauty, food, services, and future domains.
+The visual language applies across the storefront, buyer account, seller workspace, and administration. Each area keeps its own information density and task hierarchy. Do not copy dashboard-only layouts into the shopping experience.
 
-## 2. Color tokens
+## Palette
 
-| Role | Token | Value |
-|---|---|---|
-| Deep forest / primary dark | `--color-forest-950` | `#102D27` |
-| Primary forest | `--color-forest-800` | `#245044` |
-| Secondary forest | `--color-forest-700` | `#326657` |
-| Sage | `--color-sage-500` | `#8FA997` |
-| Pale sage | `--color-sage-100` | `#EDF2EC` |
-| Warm ivory page | `--color-ivory-50` | `#FCFBF7` |
-| Soft ivory surface | `--color-ivory-100` | `#F6F4ED` |
-| Main text | `--color-ink-900` | `#1B2823` |
-| Muted text | `--color-stone-500` | `#777D75` |
-| Restrained copper accent | `--color-copper-500` | `#D18449` |
+| Family | Main value | Supporting values | Use |
+|---|---|---|---|
+| Lavender | `#7867A6` | `#E9E2F8`, `#F7F3FF`, deep text `#39334F` | Primary brand/action family |
+| Mint | `#6C9D82` | `#DDF1E7`, `#F3FBF6`, deep text `#416A56` | Positive, seller and service highlights |
+| Blush | `#BD8292` | `#F8DFE5`, `#FFF5F7` | Wishlist, campaigns and secondary accents |
+| Butter | `#B69A53` | `#F8EDC9`, `#FFFAE9` | Offers and gentle attention cues |
+| Sky | `#456C88` | `#DEEDF7` | Information and supporting visuals |
+| Neutral | `#F1EEF7` | `#F8F6FC`, ink `#302D3B` | Canvas, cards and readable text |
 
-Forest green is the primary action and identity color. Sage is supportive, not a replacement for readable text. Copper is a small accent for selected highlights, offers, and key micro-interactions; it must not dominate the interface. Status colors are semantic and must not be repurposed decoratively.
+Use dark foreground tokens for text on pastel backgrounds. Pastel colors are not automatically accessible; check actual contrast for every text/control pairing. Semantic success, warning, danger, and information colors remain separate from decorative palette accents.
 
-## 3. Surfaces and depth
+## Clay surfaces and depth
 
-- Main canvas: warm ivory, not pure white.
-- Product and content cards: white or soft ivory with fine borders and subtle shadows.
-- Dark forest surfaces: selected hero panels, navigation emphasis, premium campaign sections, and high-contrast overlays.
-- Glassmorphism: limited to hero overlays, floating search/utility panels, or image-led campaign compositions. Never put essential product information inside low-contrast translucent glass.
-- Use real product photography with consistent crop rules and quiet backgrounds. Avoid excessive gradients, ornamental blur, and generic stock decoration.
+- Use a soft matte surface with a light inner edge and diffuse outer shadow; use inset shadows for search fields, filters, and selected recessed controls.
+- Reserve the strongest raised effect for cards, summary tiles, compact controls, and selected dashboard widgets. Avoid applying shadows to every nested container.
+- Use real product imagery as the main visual content. 3D clay illustrations may support empty states, onboarding, and dashboard summaries, but must not replace product photography or essential status information.
+- Avoid excessive blur, glassmorphism, glossy gradients, and heavy skeuomorphic buttons.
+- Keep touch targets at least 44×44 CSS pixels; ensure focus, hover, active, disabled, loading, and error states remain distinct.
 
-## 4. Shape, spacing, and typography
+## Shape, typography and layout
 
-- Controls: 12px radius; cards: 18px; panels: 24px; feature surfaces: 32px.
+- Controls: approximately 16px radius; cards: 24px; panels: 30px; feature surfaces: 36px.
 - Use a consistent 4px spacing scale and a centered content width up to 1440px.
-- Typography should be editorial and legible: clear display headings, compact but readable metadata, strong price hierarchy, and restrained use of uppercase labels.
-- Prices, discounts, stock state, delivery estimate, seller identity, and variant selectors must remain easy to scan.
-- Avoid excessive pill shapes. Reserve fully rounded pills for compact filters, tags, and selected states.
+- Typography remains crisp and high-contrast; do not imitate rounded toy lettering for functional content.
+- Product cards preserve image, title, seller, rating, variant, availability, and prominent price hierarchy.
+- Support long localized labels, variable currencies, RTL/LTR, and mobile-first layouts.
 
-## 5. Marketplace component principles
+## Workspace distinctions
 
-- **Header:** calm utility strip, clear brand/search/category hierarchy, locale/currency entry, account, wishlist, and cart. Keep search prominent.
-- **Navigation:** category navigation should scale to a large catalog without becoming visually dense.
-- **Hero/campaign:** image-led editorial layouts, dark forest or soft sage panels, clear single primary action.
-- **Category tiles:** image-forward, consistent crops, short labels, and responsive grid.
-- **Product cards:** large image area, restrained seller/rating metadata, clear title, prominent price, honest discount treatment, and accessible quick actions. Do not hide key actions behind hover on touch devices.
-- **Product detail:** strong gallery, readable variant/quantity controls, delivery/returns information, seller trust details, and a clear purchase panel.
-- **Forms and checkout:** high-contrast fields, explicit validation, visible progress, and no decorative glass behind critical inputs.
-- **Seller center/admin:** reuse the same tokens but prioritize information density, tables, status clarity, and task completion over storefront decoration.
-- **Feedback:** consistent empty, loading, success, warning, and error states; never rely on color alone.
+- **Storefront:** editorial product discovery, strong search, category navigation, real product imagery, clear price and purchase actions. Pastel surfaces must not reduce product scannability.
+- **Buyer account:** calm raised panels, readable order/wishlist summaries, and clear task progression.
+- **Seller workspace:** structured inventory/order/finance workflows; mint and lavender can distinguish operational groups, but tables and statuses stay dense and legible.
+- **Administration:** dashboard tiles and selected data visualizations may use the most expressive clay treatment; tables, permissions, and destructive actions remain restrained and precise.
 
-## 6. Responsive, international, and accessibility rules
+## Functional and accessibility rules
 
-- Mobile-first layouts; touch targets should be at least 44×44 CSS pixels.
-- Support both LTR and RTL through logical CSS properties and document direction; do not hard-code left/right layout assumptions.
-- Allow long translated labels, variable currencies, localized number formats, and multi-line product titles.
-- Meet WCAG 2.2 AA contrast for text and controls. Check actual color pairings before shipping; palette swatches alone do not establish compliance.
-- All controls need keyboard focus, labels, and meaningful accessible names. Respect reduced-motion preferences.
-- Do not use animation as the only signal for state changes.
+1. Preserve routes, information architecture, category distribution, business rules, API calls, authorization, and database behavior during visual migration.
+2. A visual control must remain a real control with its original action and complete UI → API/service → persistence journey.
+3. Status must use text/icons as well as color.
+4. Maintain keyboard navigation, visible focus, reduced-motion support, accessible names, and WCAG 2.2 AA contrast.
+5. Validate mobile, tablet, desktop, RTL, and LTR. Prevent horizontal overflow and keep primary actions reachable without hover.
 
-## 7. Implementation sequence
+## Implementation sequence
 
-1. **Now — foundation:** establish design tokens, surface rules, accessibility baseline, and shared component principles. This can proceed alongside Phase 2 without changing its security exit gates.
-2. **After Phase 2:** build the shared UI primitives and application shell.
-3. **Marketplace Core:** apply the system to storefront navigation, category browsing, product cards, search, and product detail.
-4. **Later domains:** extend the same system to seller/admin workflows, checkout, support, and property domain without creating disconnected visual styles.
+1. **Foundation:** tokens, compatible aliases, page canvas, and opt-in clay surface primitives in `src/app/globals.css`.
+2. **Shared shell:** navigation, buttons, inputs, cards, badges, menus, dialogs, and feedback states.
+3. **Storefront:** home hero, category tiles, product cards, search, product detail, cart and checkout.
+4. **Buyer account:** profile, orders, wishlist, addresses and support.
+5. **Seller workspace and administration:** overview, catalog, fulfillment, finance, moderation, permissions and audit views.
+6. **Visual QA:** compare screenshots at mobile/tablet/desktop and test the key actions affected by each migrated component.
 
-## 8. Acceptance criteria
+Do not redesign the Super Admin workstream or its in-progress files as part of this foundation change; coordinate it separately.
 
-- One source of truth for color, radius, spacing, shadow, typography, and focus tokens.
-- No page invents its own competing brand palette.
-- Shared components work on mobile and desktop, LTR and RTL, keyboard and touch.
-- Product information remains readable and actions discoverable without hover.
-- Color contrast, reduced motion, empty/loading/error states, and responsive behavior are tested.
-- Visual regression screenshots cover the primary buyer, seller, and admin journeys before release.
+## Current implementation boundary
 
-## 9. Current implementation boundary
-
-The CSS foundation tokens are defined in `src/app/globals.css`. This commit does not claim that storefront pages or reusable marketplace components have been designed or implemented. The current repository is still completing Phase 2 identity/access; marketplace UI implementation follows the approved delivery sequence and Phase 2 exit gates.
+The CSS tokens and opt-in surface primitives are implemented in `src/app/globals.css`. This foundation does not claim that every page or reusable component has already migrated. Component adoption must proceed in small slices with typecheck, lint, focused tests, build, responsive review, and verification that the affected user journeys still work.
