@@ -14,6 +14,14 @@ const addSchema = z.object({
   variantId: z.string().trim().min(1),
   quantity: quantitySchema.default(1)
 }).strict();
+const addManySchema = z.object({
+  marketId: z.string().trim().min(1),
+  currencyCode: z.string().trim().length(3).toUpperCase(),
+  items: z.array(z.object({
+    variantId: z.string().trim().min(1),
+    quantity: quantitySchema
+  }).strict()).min(1).max(500)
+}).strict();
 
 export type AddCartItemInput = z.input<typeof addSchema>;
 
@@ -245,7 +253,55 @@ export async function addCartItem(guestToken: string, input: AddCartItemInput, n
       await tx.cartItem.create({ data: { cartId: cart.id, variantId: data.variantId, quantity: data.quantity } });
     }
     return { cartId: cart.id, itemCount: await tx.cartItem.count({ where: { cartId: cart.id } }) };
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+/** Adds an entire previous order only if every line remains purchasable. */
+export async function addCartItems(guestToken: string, input: unknown, now = new Date()) {
+  const data = addManySchema.parse(input);
+  const quantities = new Map<string, number>();
+  for (const item of data.items) {
+    const quantity = (quantities.get(item.variantId) ?? 0) + item.quantity;
+    if (quantity > 99) throw new Error("A maximum of 99 units may be added per product option.");
+    quantities.set(item.variantId, quantity);
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const owner = await resolveOwner(tx, guestToken, now);
+    const cart = await getOrCreateOwnerCart(tx, owner, data.marketId, data.currencyCode);
+    const existingItems = await tx.cartItem.findMany({
+      where: { cartId: cart.id, variantId: { in: [...quantities.keys()] } },
+      select: { id: true, variantId: true, quantity: true }
+    });
+    const existingByVariant = new Map(existingItems.map((item) => [item.variantId, item]));
+    const validated = [];
+
+    for (const [variantId, quantity] of quantities) {
+      const { available } = await validatePurchasableVariant(tx, variantId, data.marketId, data.currencyCode);
+      const existing = existingByVariant.get(variantId);
+      if (quantity + (existing?.quantity ?? 0) > 99) {
+        throw new Error("A maximum of 99 units may be added per product option.");
+      }
+      if (quantity + (existing?.quantity ?? 0) > available) {
+        throw new Error("There is not enough available stock for every item in this reorder.");
+      }
+      validated.push({ variantId, quantity, existing });
+    }
+
+    for (const item of validated) {
+      if (item.existing) {
+        await tx.cartItem.update({
+          where: { id: item.existing.id },
+          data: { quantity: item.existing.quantity + item.quantity }
+        });
+      } else {
+        await tx.cartItem.create({
+          data: { cartId: cart.id, variantId: item.variantId, quantity: item.quantity }
+        });
+      }
+    }
+    return { cartId: cart.id, itemCount: await tx.cartItem.count({ where: { cartId: cart.id } }) };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
 /** Changes quantity only after checking current availability and cart ownership. */

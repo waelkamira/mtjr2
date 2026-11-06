@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { env } from "@/lib/env";
+import { getAiAssistantRuntimeSettings } from "@/server/ai/assistant-config";
 
 const groqResponseSchema = z.object({
   choices: z.array(z.object({
@@ -25,7 +26,8 @@ export type GroqMessage = {
 };
 
 export async function groqChat(messages: GroqMessage[], tools?: unknown[]) {
-  if (!env.GROQ_API_KEY || env.AI_ASSISTANT_ENABLED !== "true") {
+  const settings = await getAiAssistantRuntimeSettings();
+  if (!env.GROQ_API_KEY || !settings.enabled) {
     throw new Error("AI_ASSISTANT_DISABLED");
   }
 
@@ -36,11 +38,11 @@ export async function groqChat(messages: GroqMessage[], tools?: unknown[]) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: env.GROQ_MODEL,
+      model: settings.model,
       messages,
       ...(tools?.length ? { tools, tool_choice: "auto" } : {}),
       temperature: 0.2,
-      max_completion_tokens: 900
+      max_completion_tokens: settings.maxCompletionTokens
     }),
     signal: AbortSignal.timeout(25000),
     cache: "no-store"

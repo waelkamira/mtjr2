@@ -1,182 +1,5 @@
 @import "tailwindcss";
-
-/*
- * Tailwind v4 theme bridge.
- * Edit the source tokens below in :root; Tailwind utilities consume the same values.
- * Examples: bg-lavender-100, text-ink-950, shadow-clay, rounded-clay-card.
- */
-@theme inline {
-  --color-clay-lavender-950: var(--color-lavender-950);
-  --color-clay-lavender-800: var(--color-lavender-800);
-  --color-clay-lavender-600: var(--color-lavender-600);
-  --color-clay-lavender-300: var(--color-lavender-300);
-  --color-clay-lavender-100: var(--color-lavender-100);
-  --color-clay-lavender-50: var(--color-lavender-50);
-  --color-clay-mint-800: var(--color-mint-800);
-  --color-clay-mint-600: var(--color-mint-600);
-  --color-clay-mint-300: var(--color-mint-300);
-  --color-clay-mint-100: var(--color-mint-100);
-  --color-clay-mint-50: var(--color-mint-50);
-  --color-clay-blush-800: var(--color-blush-800);
-  --color-clay-blush-600: var(--color-blush-600);
-  --color-clay-blush-300: var(--color-blush-300);
-  --color-clay-blush-100: var(--color-blush-100);
-  --color-clay-blush-50: var(--color-blush-50);
-  --color-clay-butter-800: var(--color-butter-800);
-  --color-clay-butter-600: var(--color-butter-600);
-  --color-clay-butter-300: var(--color-butter-300);
-  --color-clay-butter-100: var(--color-butter-100);
-  --color-clay-butter-50: var(--color-butter-50);
-  --color-clay-sky-700: var(--color-sky-700);
-  --color-clay-sky-100: var(--color-sky-100);
-  --color-clay-ink-950: var(--color-ink-950);
-  --color-clay-ink-800: var(--color-ink-800);
-  --color-clay-ink-600: var(--color-ink-600);
-  --color-clay-ink-400: var(--color-ink-400);
-  --color-clay-line: var(--color-line);
-  --color-clay-success: var(--color-success);
-  --color-clay-warning: var(--color-warning);
-  --color-clay-danger: var(--color-danger);
-  --color-clay-info: var(--color-info);
-  --color-clay-canvas: var(--background);
-  --color-clay-surface: var(--surface);
-  --color-clay-surface-soft: var(--surface-soft);
-  --color-clay-surface-tint: var(--surface-tint);
-
-  --shadow-clay-raised: var(--shadow-clay);
-  --shadow-clay-raised-hover: var(--shadow-clay-hover);
-  --shadow-clay-recessed: var(--shadow-clay-inset);
-  --shadow-clay-floating: var(--shadow-floating);
-  --shadow-clay-glow: var(--shadow-glow);
-
-  --radius-clay-control: var(--radius-control);
-  --radius-clay-card: var(--radius-card);
-  --radius-clay-panel: var(--radius-panel);
-  --radius-clay-feature: var(--radius-feature);
-
-  --font-sans: Inter, "Segoe UI", Arial, sans-serif;
-}
-/*
- * Mtjr2 design system — Claymorphism / 3D Pastel Clay
- * Tokens are shared across storefront, buyer account, seller workspace and admin.
- * Use tactile depth selectively: content must remain readable and controls usable.
- */
-:root {
-  color-scheme: light;
-
-  /* Core pastel palette */
-  --color-lavender-950: #39334f;
-  --color-lavender-800: #51466f;
-  --color-lavender-600: #7867a6;
-  --color-lavender-300: #c9bde8;
-  --color-lavender-100: #e9e2f8;
-  --color-lavender-50: #f7f3ff;
-
-  --color-mint-800: #416a56;
-  --color-mint-600: #6c9d82;
-  --color-mint-300: #b9dfc9;
-  --color-mint-100: #ddf1e7;
-  --color-mint-50: #f3fbf6;
-
-  --color-blush-800: #875361;
-  --color-blush-600: #bd8292;
-  --color-blush-300: #edc2ce;
-  --color-blush-100: #f8dfe5;
-  --color-blush-50: #fff5f7;
-
-  --color-butter-800: #796331;
-  --color-butter-600: #b69a53;
-  --color-butter-300: #ead89b;
-  --color-butter-100: #f8edc9;
-  --color-butter-50: #fffae9;
-
-  --color-sky-700: #456c88;
-  --color-sky-100: #deedf7;
-  --color-white: #ffffff;
-  --color-ink-950: #302d3b;
-  --color-ink-800: #494555;
-  --color-ink-600: #716c7c;
-  --color-ink-400: #a19bab;
-  --color-line: #e7e1ef;
-
-  /* Backwards-compatible aliases: existing components keep working */
-  --color-petrol-950: var(--color-lavender-950);
-  --color-petrol-900: var(--color-lavender-800);
-  --color-petrol-800: #655a82;
-  --color-petrol-700: #81759d;
-  --color-petrol-600: #9b90b4;
-  --color-violet-700: var(--color-lavender-800);
-  --color-violet-600: var(--color-lavender-600);
-  --color-violet-100: var(--color-lavender-100);
-  --color-mint-500: var(--color-mint-600);
-  --color-orange-500: var(--color-butter-600);
-  --color-orange-600: var(--color-butter-800);
-  --color-orange-100: var(--color-butter-100);
-  --color-cyan-300: var(--color-sky-100);
-  --color-cyan-100: #eff7fc;
-  /* Legacy neutral aliases retained for components not yet migrated */
-  --color-ivory-50: #fbf9ff;
-  --color-ivory-100: #f1eef7;
-  --color-ivory-200: #e7e1ef;
-  --color-stone-300: #d8d2e2;
-  --color-stone-500: #716c7c;
-  --color-ink-900: #302d3b;
-  --color-ink-700: #5d5869;
-
-  --color-forest-950: var(--color-lavender-950);
-  --color-forest-900: var(--color-lavender-800);
-  --color-forest-800: #655a82;
-  --color-forest-700: #81759d;
-  --color-sage-600: var(--color-mint-800);
-  --color-sage-500: var(--color-mint-600);
-  --color-sage-300: var(--color-mint-300);
-  --color-sage-200: var(--color-mint-300);
-  --color-sage-100: var(--color-mint-100);
-  --color-copper-600: var(--color-butter-800);
-  --color-copper-500: var(--color-butter-600);
-  --color-copper-100: var(--color-butter-100);
-
-  /* Semantic colors are not replaced by decorative pastel accents */
-  --color-success: #24734f;
-  --color-warning: #8a5a16;
-  --color-danger: #b33b50;
-  --color-info: #315f91;
-
-  --background: #f1eef7;
-  --foreground: var(--color-ink-950);
-  --muted: var(--color-ink-600);
-  --border: var(--color-line);
-  --brand: var(--color-lavender-800);
-  --action: var(--color-lavender-600);
-  --accent: var(--color-blush-600);
-  --surface: #f8f6fc;
-  --surface-soft: var(--color-lavender-100);
-  --surface-tint: var(--color-mint-50);
-
-  --radius-control: 1rem;
-  --radius-card: 1.5rem;
-  --radius-panel: 1.875rem;
-  --radius-feature: 2.25rem;
-
-  /* Soft raised clay: diffuse outer shadow + subtle light/dark inner edges */
-  --shadow-clay:
-    10px 10px 24px rgb(94 82 125 / 12%),
-    -8px -8px 22px rgb(255 255 255 / 88%),
-    inset 1px 1px 2px rgb(255 255 255 / 90%);
-  --shadow-clay-hover:
-    14px 14px 30px rgb(94 82 125 / 16%),
-    -9px -9px 24px rgb(255 255 255 / 92%),
-    inset 1px 1px 2px rgb(255 255 255 / 95%);
-  --shadow-clay-inset:
-    inset 4px 4px 10px rgb(94 82 125 / 10%),
-    inset -4px -4px 10px rgb(255 255 255 / 90%);
-  --shadow-card: var(--shadow-clay);
-  --shadow-floating: 0 18px 44px rgb(67 57 91 / 18%), inset 1px 1px 2px rgb(255 255 255 / 85%);
-  --shadow-glow: 0 10px 28px rgb(120 103 166 / 18%);
-
-  --content-max: 1440px;
-  --page-gutter: clamp(1rem, 3vw, 2.5rem);
-}
+@import "./theme.css";
 
 * { box-sizing: border-box; }
 
@@ -191,13 +14,11 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(ellipse at 8% 0%, rgb(233 226 248 / 48%), transparent 34rem),
-    radial-gradient(ellipse at 100% 12%, rgb(221 241 231 / 34%), transparent 30rem),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-body);
   font-feature-settings: "ss01" on;
+  line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -206,23 +27,37 @@ a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 
-::selection { background: var(--color-lavender-100); color: var(--color-lavender-950); }
+::selection { background: var(--color-orange); color: var(--color-onyx); }
 
 :focus-visible {
-  outline: 3px solid var(--color-lavender-600);
+  outline: 3px solid var(--color-orange);
   outline-offset: 3px;
+}
+
+html[dir="rtl"] .text-left { text-align: right; }
+html[dir="rtl"] .text-right { text-align: left; }
+
+[class~="text-[var(--color-forest-800)]"],
+[class~="text-[var(--color-forest-900)]"],
+[class~="text-[var(--color-ink-600)]"],
+[class~="text-[var(--color-ink-800)]"] {
+  color: var(--color-onyx);
+}
+[class~="bg-[var(--color-forest-950)]"] {
+  background-color: var(--surface);
+  color: var(--foreground);
 }
 
 /* Opt-in primitives; migrate shared components deliberately instead of styling every div. */
 .clay-surface {
   background: var(--surface);
-  border: 1px solid rgb(255 255 255 / 78%);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-clay);
 }
 .clay-surface-inset {
   background: var(--surface-soft);
-  border: 1px solid rgb(255 255 255 / 72%);
+  border: 1px solid var(--border);
   border-radius: var(--radius-control);
   box-shadow: var(--shadow-clay-inset);
 }
@@ -238,11 +73,126 @@ button { cursor: pointer; }
   box-shadow: var(--shadow-clay-inset);
 }
 
+.clay-icon-tile {
+  display: inline-grid;
+  width: var(--icon-tile-size-md);
+  height: var(--icon-tile-size-md);
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--icon-tile-radius);
+  box-shadow: var(--shadow-clay);
+}
+.clay-icon-tile > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.clay-icon-tile--lavender,
+.clay-icon-tile--mint,
+.clay-icon-tile--blush,
+.clay-icon-tile--peach,
+.clay-icon-tile--butter {
+  background: var(--surface);
+  color: var(--color-orange);
+}
+
+.clay-dashboard-shell {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr);
+}
+.clay-dashboard-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+.clay-dashboard-main {
+  min-width: 0;
+  padding: var(--dashboard-padding);
+}
+.clay-dashboard-topbar {
+  display: flex;
+  min-height: var(--dashboard-topbar-height);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dashboard-gap);
+}
+.clay-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+  gap: var(--dashboard-gap);
+}
+.clay-dashboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--dashboard-gap);
+}
+.clay-dashboard-card {
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-clay);
+}
+
+[class~="bg-[var(--color-forest-900)]"],
+[class~="bg-[var(--color-forest-800)]"],
+[class~="bg-[var(--color-ink-800)]"],
+[class~="bg-[var(--color-ink-600)]"],
+[class~="bg-[var(--color-lavender-600)]"],
+[class~="bg-[var(--color-violet-600)]"] {
+  background-color: var(--color-orange);
+  color: var(--color-onyx);
+}
+
+html body [data-sonner-toaster].clay-toaster[data-sonner-theme="light"] {
+  font-family: var(--font-body);
+  --normal-bg: var(--toast-surface);
+  --normal-border: var(--toast-border);
+  --normal-text: var(--toast-text);
+  --success-bg: var(--toast-success-bg);
+  --success-border: var(--toast-success-border);
+  --success-text: var(--toast-success-text);
+  --info-bg: var(--toast-info-bg);
+  --info-border: var(--toast-info-border);
+  --info-text: var(--toast-info-text);
+  --warning-bg: var(--toast-warning-bg);
+  --warning-border: var(--toast-warning-border);
+  --warning-text: var(--toast-warning-text);
+  --error-bg: var(--toast-error-bg);
+  --error-border: var(--toast-error-border);
+  --error-text: var(--toast-error-text);
+  --border-radius: var(--radius-control);
+}
+[data-sonner-toaster] [data-sonner-toast].clay-toast {
+  box-shadow: var(--shadow-floating);
+}
+[data-sonner-toaster] [data-sonner-toast].clay-toast [data-title] {
+  font-weight: 650;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 48rem) {
+  .clay-dashboard-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .clay-dashboard-sidebar {
+    position: static;
+    height: auto;
+  }
+  .clay-dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -1,13 +1,17 @@
 import { z } from "zod";
 import { listDiscoverableProducts } from "@/server/catalog/discovery";
 import { listDiscoverableStores } from "@/server/marketplace/public-stores";
+import { enforcePublicSearchBudget } from "@/server/search/search-request";
+
 export const runtime = "nodejs";
 export async function GET(request: Request): Promise<Response> {
+  const rejected = await enforcePublicSearchBudget(request);
+  if (rejected) return rejected;
   const query = z.string().trim().min(2).max(120).safeParse(new URL(request.url).searchParams.get("q") ?? "");
-  if (!query.success) return Response.json({ products: [], stores: [] });
+  if (!query.success) return Response.json({ error: "Search query must contain 2 to 120 characters." }, { status: 400 });
   try {
     const [products, stores] = await Promise.all([
-      listDiscoverableProducts({ q: query.data, limit: 6 }),
+      listDiscoverableProducts({ q: query.data, limit: 6 }, { includeFacets: false }),
       listDiscoverableStores({ q: query.data, limit: 4 })
     ]);
     return Response.json({

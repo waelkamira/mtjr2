@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AuditActorType, SellerStatus, StoreStatus } from "@prisma/client";
+import { AuditActorType, Prisma, SellerStatus, StoreStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
@@ -23,11 +23,32 @@ const storeSchema = z.object({
 
 export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
 
-/** Authenticated, verified user submits one pending seller application. */
+function isStoreSlugConflict(error: unknown) {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false;
+  const target = error.meta?.target;
+  return Array.isArray(target)
+    ? target.some((field) => field === "slug" || field === "Store_slug_key")
+    : typeof target === "string" && (target.includes("slug") || target.includes("Store_slug_key"));
+}
+
+function isMatchingStoreRequest(
+  store: { sellerId: string; name: string; markets: Array<{ marketId: string }> },
+  sellerId: string,
+  name: string,
+  marketIds: string[]
+) {
+  const existingMarketIds = store.markets.map(({ marketId }) => marketId).sort();
+  const expectedMarketIds = [...marketIds].sort();
+  return store.sellerId === sellerId &&
+    store.name === name &&
+    existingMarketIds.length === expectedMarketIds.length &&
+    existingMarketIds.every((marketId, index) => marketId === expectedMarketIds[index]);
+}
+
+/** Authenticated user submits one pending seller application. */
 export async function submitSellerApplication(input: SellerApplicationInput, now = new Date()) {
   const data = sellerApplicationSchema.parse(input);
   const actor = await requireCurrentSession(now);
-  if (!actor.user.emailVerifiedAt) throw new Error("A verified email address is required to apply as a seller.");
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -100,40 +121,79 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
   const actor = await requirePermission({ permissionKey: "store:manage", now });
   const marketIds = [...new Set(data.marketIds)];
 
-  return prisma.$transaction(async (tx) => {
-    const seller = await tx.seller.findUnique({
-      where: { ownerId: actor.userId },
-      select: { id: true, status: true }
-    });
-    if (!seller || seller.status !== SellerStatus.ACTIVE) throw new Error("An approved seller account is required to create a store.");
+  let sellerId: string | null = null;
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const seller = await tx.seller.findUnique({
+        where: { ownerId: actor.userId },
+        select: { id: true, status: true }
+      });
+      if (!seller || seller.status !== SellerStatus.ACTIVE) throw new Error("An approved seller account is required to create a store.");
+      sellerId = seller.id;
 
-    const markets = await tx.market.findMany({
-      where: { id: { in: marketIds }, status: "ACTIVE", country: { isActive: true }, defaultCurrency: { isActive: true } },
+      const existing = await tx.store.findUnique({
+        where: { slug: data.slug },
+        select: {
+          id: true, sellerId: true, name: true, slug: true, status: true,
+          markets: { where: { isEnabled: true }, select: { marketId: true } }
+        }
+      });
+      if (existing) {
+        if (!isMatchingStoreRequest(existing, seller.id, data.name, marketIds)) {
+          throw new Error("This store URL is already in use or its setup details differ.");
+        }
+        return {
+          id: existing.id, name: existing.name, slug: existing.slug, status: existing.status,
+          alreadyCreated: true
+        };
+      }
+
+      const markets = await tx.market.findMany({
+        where: { id: { in: marketIds }, status: "ACTIVE", country: { isActive: true }, defaultCurrency: { isActive: true } },
+        select: {
+          id: true,
+          defaultCurrencyCode: true,
+          currencies: { where: { isEnabled: true, currency: { isActive: true } }, select: { currencyCode: true } }
+        }
+      });
+      if (markets.length !== marketIds.length ||
+        markets.some((market) => !market.currencies.some((currency) => currency.currencyCode === market.defaultCurrencyCode))) {
+        throw new Error("Every selected market must be active and have its default currency enabled.");
+      }
+
+      const store = await tx.store.create({
+        data: {
+          sellerId: seller.id, name: data.name, slug: data.slug, status: StoreStatus.DRAFT,
+          markets: { create: marketIds.map((marketId) => ({ marketId, isEnabled: true })) }
+        },
+        select: { id: true, name: true, slug: true, status: true }
+      });
+      await tx.auditLog.create({ data: {
+        actorType: AuditActorType.USER, actorId: actor.userId, action: "store.created",
+        resource: "store", resourceId: store.id, scopeType: "STORE", scopeId: store.id,
+        occurredAt: now, metadata: { slug: store.slug, marketIds }
+      }});
+      return { ...store, alreadyCreated: false };
+    });
+  } catch (error) {
+    if (!isStoreSlugConflict(error) || !sellerId) throw error;
+
+    const existing = await prisma.store.findUnique({
+      where: { slug: data.slug },
       select: {
-        id: true,
-        defaultCurrencyCode: true,
-        currencies: { where: { isEnabled: true, currency: { isActive: true } }, select: { currencyCode: true } }
+        id: true, sellerId: true, name: true, slug: true, status: true,
+        markets: { where: { isEnabled: true }, select: { marketId: true } }
       }
     });
-    if (markets.length !== marketIds.length ||
-      markets.some((market) => !market.currencies.some((currency) => currency.currencyCode === market.defaultCurrencyCode))) {
-      throw new Error("Every selected market must be active and have its default currency enabled.");
+    if (!existing) throw error;
+    if (!isMatchingStoreRequest(existing, sellerId, data.name, marketIds)) {
+      throw new Error("This store URL is already in use or its setup details differ.");
     }
-
-    const store = await tx.store.create({
-      data: {
-        sellerId: seller.id, name: data.name, slug: data.slug, status: StoreStatus.DRAFT,
-        markets: { create: marketIds.map((marketId) => ({ marketId, isEnabled: true })) }
-      },
-      select: { id: true, name: true, slug: true, status: true }
-    });
-    await tx.auditLog.create({ data: {
-      actorType: AuditActorType.USER, actorId: actor.userId, action: "store.created",
-      resource: "store", resourceId: store.id, scopeType: "STORE", scopeId: store.id,
-      occurredAt: now, metadata: { slug: store.slug, marketIds }
-    }});
-    return store;
-  });
+    return {
+      id: existing.id, name: existing.name, slug: existing.slug, status: existing.status,
+      alreadyCreated: true
+    };
+  }
 }
 
 

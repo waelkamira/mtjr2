@@ -68,6 +68,7 @@ export interface AuthenticatedSession {
   id: string;
   userId: string;
   expiresAt: Date;
+  mfaVerifiedAt: Date | null;
   user: {
     id: string;
     email: string;
@@ -89,6 +90,7 @@ export async function resolveUserSession(
       id: true,
       userId: true,
       expiresAt: true,
+      mfaVerifiedAt: true,
       revokedAt: true,
       user: {
         select: {
@@ -130,6 +132,7 @@ export async function resolveUserSession(
     id: session.id,
     userId: session.userId,
     expiresAt: session.expiresAt,
+    mfaVerifiedAt: session.mfaVerifiedAt,
     user: session.user
   };
 }

@@ -15,7 +15,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ quote: await createCheckoutQuote(token, body) }, { status: 201 });
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : "Unable to create a checkout quote.";
-    const status = /stock|purchasable|cart is empty|expired|already been used/i.test(message) ? 409 : 400;
+    const status = /stock|purchasable|cart is empty|expired|already been used|coupon has reached/i.test(message) ? 409 : 400;
     return Response.json({ error: message }, { status });
   }
 }

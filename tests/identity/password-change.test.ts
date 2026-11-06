@@ -47,7 +47,7 @@ describe("authenticated password change", () => {
       id: input.userId,
       passwordHash: "old-hash",
       status: "ACTIVE",
-      emailVerifiedAt: now
+      emailVerifiedAt: null
     });
     verifyPasswordMock.mockResolvedValue(true);
     hashPasswordMock.mockResolvedValue("new-hash");
@@ -67,7 +67,6 @@ describe("authenticated password change", () => {
       where: {
         id: input.userId,
         status: "ACTIVE",
-        emailVerifiedAt: { not: null },
         passwordHash: "old-hash"
       },
       data: { passwordHash: "new-hash" }
@@ -106,7 +105,7 @@ describe("authenticated password change", () => {
       id: input.userId,
       passwordHash: null,
       status: "ACTIVE",
-      emailVerifiedAt: now
+      emailVerifiedAt: null
     });
 
     await expect(changePassword(input, now)).resolves.toBe("PASSWORD_NOT_SET");

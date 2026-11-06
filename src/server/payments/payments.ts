@@ -8,6 +8,11 @@ import { getCurrentSession } from "@/server/identity/current-session";
 import { getPaymentProvider } from "./providers/registry";
 import type { VerifiedPaymentEvent } from "./providers/types";
 import { createInAppNotification } from "@/server/notifications/notifications";
+import {
+  allocateDiscountAcrossLines,
+  calculateCommissionMinor,
+  selectCommissionRule
+} from "@/server/admin/commission-policy";
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -140,9 +145,17 @@ export async function processVerifiedPaymentEvent(input: {
             include: {
               vendorOrders: {
                 include: {
+                  items: {
+                    select: {
+                      id: true,
+                      lineTotalMinor: true,
+                      commissionCategoryId: true,
+                      commissionCategoryName: true
+                    }
+                  },
                   store: {
                     include: {
-                      seller: { select: { ownerId: true } }
+                      seller: { select: { id: true, ownerId: true } }
                     }
                   }
                 }
@@ -203,6 +216,75 @@ export async function processVerifiedPaymentEvent(input: {
       }
 
       if (isNewerEvent && nextStatus === PaymentStatus.SUCCEEDED && payment.order.status === OrderStatus.PENDING_PAYMENT) {
+        const sellerIds = [...new Set(payment.order.vendorOrders.map((vendor) => vendor.store.seller.id))];
+        const categoryIds = [...new Set(payment.order.vendorOrders.flatMap((vendor) =>
+          vendor.items.flatMap((item) => item.commissionCategoryId ? [item.commissionCategoryId] : [])
+        ))];
+        const commissionRules = await tx.commissionRule.findMany({
+          where: {
+            effectiveFrom: { lte: input.event.occurredAt },
+            AND: [
+              { OR: [{ effectiveUntil: null }, { effectiveUntil: { gt: input.event.occurredAt } }] },
+              { OR: [{ deactivatedAt: null }, { deactivatedAt: { gt: input.event.occurredAt } }] },
+              {
+                OR: [
+                  { sellerId: null, categoryId: null },
+                  ...(sellerIds.length ? [{ sellerId: { in: sellerIds }, categoryId: null }] : []),
+                  ...(categoryIds.length ? [{ sellerId: null, categoryId: { in: categoryIds } }] : []),
+                  ...(sellerIds.length && categoryIds.length
+                    ? [{ sellerId: { in: sellerIds }, categoryId: { in: categoryIds } }]
+                    : [])
+                ]
+              }
+            ]
+          },
+          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }],
+          select: {
+            id: true, sellerId: true, categoryId: true, rateBasisPoints: true,
+            effectiveFrom: true, effectiveUntil: true, isActive: true, deactivatedAt: true
+          }
+        });
+
+        for (const vendor of payment.order.vendorOrders) {
+          const itemSubtotals = vendor.items.reduce((total, item) => total + item.lineTotalMinor, BigInt(0));
+          if (itemSubtotals !== vendor.subtotalMinor) {
+            throw new Error("Vendor order item totals do not match the saved merchandise subtotal.");
+          }
+          const bases = allocateDiscountAcrossLines(
+            vendor.items.map((item) => ({ id: item.id, lineTotalMinor: item.lineTotalMinor })),
+            vendor.discountMinor
+          );
+          await tx.commissionTransaction.createMany({
+            data: vendor.items.map((item) => {
+              const { rule, scope } = selectCommissionRule(
+                commissionRules,
+                vendor.store.seller.id,
+                item.commissionCategoryId,
+                input.event.occurredAt
+              );
+              const baseAmountMinor = bases.get(item.id);
+              if (baseAmountMinor === undefined) throw new Error("Commission base allocation is incomplete.");
+              const rateBasisPoints = rule?.rateBasisPoints ?? 0;
+              return {
+                orderId: payment.orderId,
+                vendorOrderId: vendor.id,
+                orderItemId: item.id,
+                storeId: vendor.storeId,
+                sellerId: vendor.store.seller.id,
+                commissionRuleId: rule?.id ?? null,
+                categoryId: item.commissionCategoryId,
+                categoryName: item.commissionCategoryName,
+                ruleScopeType: scope,
+                rateBasisPoints,
+                baseAmountMinor,
+                commissionMinor: calculateCommissionMinor(baseAmountMinor, rateBasisPoints),
+                currencyCode: payment.currencyCode,
+                createdAt: now
+              };
+            })
+          });
+        }
+
         await tx.order.update({ where: { id: payment.orderId }, data: { status: OrderStatus.CONFIRMED } });
         await tx.orderStatusHistory.create({
           data: { orderId: payment.orderId, status: OrderStatus.CONFIRMED, note: "Payment confirmed by a verified provider event.", createdAt: now }

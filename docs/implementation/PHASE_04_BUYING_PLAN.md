@@ -3,7 +3,7 @@
 **Project:** Mtjr2 — Global Multi-Vendor Marketplace  
 **Blueprint:** `docs/architecture/COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md`  
 **Canonical data contract:** `prisma/schema.prisma`  
-**Status:** In progress — cart, quote/reservation, address, shipping configuration, initial market-tax calculation, transactional order/vendor-order creation, and buyer/seller order views are implemented across stacked branches. The latest observed PostgreSQL integration run passed on the 2026-11-04 audit head; General CI exposed one unit-test fixture failure that has been corrected in a follow-up commit and is awaiting a fresh run. Payment, discounts, and fulfillment transitions remain.
+**Status:** In progress — cart, quote/reservation, address, shipping configuration, initial market-tax calculation, transactional order/vendor-order creation, buyer/seller order views, and marketplace coupon calculation are implemented at source level. The coupon migration is applied to the configured local `mtjr2_demo` database; checkout-specific PostgreSQL/browser journey and payment-provider configuration remain pending.
 
 ## Objective
 
@@ -63,8 +63,7 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Added protected platform configuration API `GET/POST /api/admin/tax-rates` and admin UI at `/admin/tax-rates`.
 - Added quote tax calculation API `POST /api/checkout/quote/[quoteId]/tax` and connected buyer checkout tax/estimated-total UI.
 - Calculation uses integer minor units and basis points. Region-specific rules take precedence over market-wide rules. No configured rule means no tax is guessed; checkout reports that configuration is missing.
-- Current first slice applies one market/region rule to the quote subtotal and optionally shipping. Product/category exemptions, multiple tax jurisdictions, VAT registration/nexus, compound taxes, and coupon interactions remain future jurisdiction-specific work. Do not treat this generic rule engine as legal tax advice or a complete tax-compliance engine.
-- Coupons are deferred until eligibility, usage limits, stacking, and seller/platform funding rules are defined.
+- Current first slice applies one market/region rule to the coupon-discounted quote subtotal and optionally shipping. Product/category exemptions, multiple tax jurisdictions, VAT registration/nexus, and compound taxes remain future jurisdiction-specific work. Do not treat this generic rule engine as legal tax advice or a complete tax-compliance engine.
 
 ## 4.5 — Order creation and vendor split
 
@@ -79,6 +78,17 @@ Implement the buyer journey as server-owned domain workflows. The browser never 
 - Added the first in-app notification slice: order placement atomically notifies the signed-in buyer and each store owner; notifications are listed and marked read through authenticated APIs and `/notifications`. Email and notification preferences remain separate work.
 - Added store-scoped seller order listing API and seller orders UI. Staff access requires the exact `orders:manage` store permission; store owners and platform admins can view their allowed orders.
 - Orders remain `PENDING_PAYMENT`. No payment is captured and sellers are not authorized to fulfill until a real payment provider and verified webhook lifecycle exist.
+
+## 4.5a — Marketplace coupon calculation
+
+**Implemented at source level; migration/runtime verification pending.**
+
+- Added `Coupon` and `CouponRedemption` models with migration `20261104235500_checkout_coupons`.
+- Supports marketplace-wide percentage coupons (basis points, any active currency) and fixed-amount coupons (bound to an active currency), optional start/end times, active state, and an optional total-redemption cap. Coupon stacking and store-specific sponsorship are intentionally excluded.
+- Added audited platform-admin `GET/POST /api/admin/coupons` and `PATCH /api/admin/coupons/[couponId]`; requires `users:manage`.
+- Added a coupon field to each cart. Checkout creation normalizes the code, checks eligibility, server-calculates discount on merchandise subtotal, snapshots the coupon and discount, and continues to reserve inventory transactionally.
+- Tax uses the discounted taxable base. Order placement splits coupon discount and tax across vendor orders, records one redemption, and includes all writes in the serializable order transaction. Retry after a recognized unique/serialization conflict returns the already-created order.
+- Focused tests cover coupon validation, currency mismatch, redemption cap, tax arithmetic, seller allocation, and order retry. Migration `20261104235500_checkout_coupons` was applied to the local `mtjr2_demo` database with user approval; verify the checkout journey before considering this slice release-ready.
 
 ## 4.6 — Provider-neutral payment lifecycle foundation
 
@@ -107,7 +117,7 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 
 - PR #1 cart and PR #2 quote/reservations are stacked predecessors.
 - PR #3 delivery address is implemented and its General CI/PostgreSQL workflows pass; it remains a draft stacked on PR #2 pending review/merge.
-- The next technical gate is fresh exact-head General CI plus disposable PostgreSQL verification for the reconstructed payment branch, followed by a focused buyer checkout/order journey review. A concrete provider may be enabled only after launch-market, currency, merchant-account, and payment-method decisions are approved. Discount rules, refunds/disputes, and fulfillment transitions remain separate follow-up slices.
+- The next technical gate is fresh exact-head General CI plus disposable PostgreSQL verification for the reconstructed payment branch, followed by focused buyer checkout/order and order-tracking journey reviews. A concrete provider may be enabled only after launch-market, currency, merchant-account, and payment-method decisions are approved. Refunds/disputes remain separate follow-up slices.
 
 
 

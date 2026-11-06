@@ -16,14 +16,17 @@ const environmentSchema = z.object({
   GROQ_API_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   GROQ_MODEL: z.preprocess((value) => typeof value === "string" && value.trim() === "" ? undefined : value, z.string().trim().min(1).default("openai/gpt-oss-20b")),
   AI_ASSISTANT_ENABLED: z.preprocess((value) => value === "" ? undefined : value, z.enum(["true", "false"]).default("false")),
+  MFA_ENCRYPTION_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(32).optional()),
   CRON_SECRET: z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional(),
   PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
   RESEND_API_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   RESEND_FROM_EMAIL: z.preprocess((value) => value === "" ? undefined : value, z.string().email().optional()),
+  TURNSTILE_SECRET_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
 
   GOOGLE_CLIENT_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
-  TRUSTED_PROXY_IP_HEADER: z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional(),
+  TRUSTED_PROXY_IP_HEADER: z.preprocess((value) => value === "" ? undefined : value, z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional()),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development")
 }).superRefine((value, context) => {
   if (!value.APP_URL && !value.NEXT_PUBLIC_APP_URL) {
@@ -31,6 +34,13 @@ const environmentSchema = z.object({
       code: "custom",
       path: ["APP_URL"],
       message: "APP_URL or NEXT_PUBLIC_APP_URL must be configured"
+    });
+  }
+  if (Boolean(value.TURNSTILE_SECRET_KEY) !== Boolean(value.NEXT_PUBLIC_TURNSTILE_SITE_KEY)) {
+    context.addIssue({
+      code: "custom",
+      path: ["TURNSTILE_SECRET_KEY"],
+      message: "TURNSTILE_SECRET_KEY and NEXT_PUBLIC_TURNSTILE_SITE_KEY must be configured together"
     });
   }
 });

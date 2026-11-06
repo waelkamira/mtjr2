@@ -17,7 +17,9 @@ const mocks = vi.hoisted(() => ({
   reservationUpdate: vi.fn(),
   inventoryUpdateMany: vi.fn(),
   executeRaw: vi.fn(),
-  cartFindFirst: vi.fn()
+  cartFindFirst: vi.fn(),
+  couponFindUnique: vi.fn(),
+  couponRedemptionCount: vi.fn()
 }));
 
 const tx = {
@@ -28,6 +30,8 @@ const tx = {
   checkoutQuoteLine: { createMany: mocks.quoteLineCreateMany },
   inventoryReservation: { findMany: mocks.reservationFindMany, create: mocks.reservationCreate, update: mocks.reservationUpdate },
   inventory: { updateMany: mocks.inventoryUpdateMany },
+  coupon: { findUnique: mocks.couponFindUnique },
+  couponRedemption: { count: mocks.couponRedemptionCount },
   cart: { findFirst: mocks.cartFindFirst },
   $executeRaw: mocks.executeRaw
 };
@@ -45,6 +49,7 @@ function quoteSnapshot() {
   return {
     id: "quote-1", status: "ACTIVE", market: { code: "NL", name: "Netherlands" },
     currency: { code: "EUR", symbol: "€", minorUnit: 2 }, subtotalMinor: BigInt(2400),
+    couponId: null, couponCode: null, discountMinor: BigInt(0),
     expiresAt: new Date(Date.now() + 600000),
     lines: [{ id: "line-1", productName: "Product", storeName: "Store", sku: "SKU-1", variantName: "Large", quantity: 2, unitAmountMinor: BigInt(1200), lineTotalMinor: BigInt(2400) }]
   };
@@ -86,6 +91,8 @@ describe("checkout quote and inventory reservation", () => {
     mocks.reservationCreate.mockResolvedValue({ id: "reservation-1" });
     mocks.transaction.mockImplementation(async (callback: (value: typeof tx) => unknown) => callback(tx));
     mocks.cartFindFirst.mockResolvedValue(cartSnapshot());
+    mocks.couponFindUnique.mockResolvedValue(null);
+    mocks.couponRedemptionCount.mockResolvedValue(0);
   });
 
   it("creates an immutable price snapshot and reserves inventory atomically", async () => {
@@ -111,6 +118,47 @@ describe("checkout quote and inventory reservation", () => {
     expect(result.id).toBe("quote-1");
     expect(mocks.cartFindFirst).not.toHaveBeenCalled();
     expect(mocks.executeRaw).not.toHaveBeenCalled();
+  });
+
+  it("applies an active percentage coupon to the server-calculated merchandise subtotal", async () => {
+    mocks.quoteFindUniqueOrThrow.mockResolvedValue({
+      ...quoteSnapshot(), couponCode: "SAVE10", discountMinor: BigInt(240)
+    });
+    mocks.couponFindUnique.mockResolvedValue({
+      id: "coupon-1", code: "SAVE10", discountType: "PERCENTAGE", value: BigInt(1000),
+      currencyCode: null, maxRedemptions: 10,
+      startsAt: null, expiresAt: null, isActive: true
+    });
+    const result = await createCheckoutQuote("opaque-guest-token", {
+      cartId: "cart-1", idempotencyKey: "checkout-coupon-0001", couponCode: "save10"
+    });
+    expect(result).toMatchObject({ couponCode: "SAVE10", discountMinor: "240" });
+    expect(mocks.quoteUpdate).toHaveBeenCalledWith({
+      where: { id: "quote-1" }, data: { subtotalMinor: BigInt(2400), couponId: "coupon-1", discountMinor: BigInt(240) }
+    });
+  });
+
+  it("rejects fixed-amount coupons configured for a different cart currency", async () => {
+    mocks.couponFindUnique.mockResolvedValue({
+      id: "coupon-1", code: "TENUSD", discountType: "FIXED_AMOUNT", value: BigInt(1000),
+      currencyCode: "USD", maxRedemptions: null,
+      startsAt: null, expiresAt: null, isActive: true
+    });
+    await expect(createCheckoutQuote("opaque-guest-token", {
+      cartId: "cart-1", idempotencyKey: "checkout-coupon-0002", couponCode: "TENUSD"
+    })).rejects.toThrow("not valid for the cart currency");
+  });
+
+  it("rejects coupons after their configured redemption limit is reached", async () => {
+    mocks.couponFindUnique.mockResolvedValue({
+      id: "coupon-1", code: "LIMITED", discountType: "PERCENTAGE", value: BigInt(1000),
+      currencyCode: null, maxRedemptions: 1,
+      startsAt: null, expiresAt: null, isActive: true
+    });
+    mocks.couponRedemptionCount.mockResolvedValue(1);
+    await expect(createCheckoutQuote("opaque-guest-token", {
+      cartId: "cart-1", idempotencyKey: "checkout-coupon-0003", couponCode: "LIMITED"
+    })).rejects.toThrow("reached its redemption limit");
   });
 
   it("fails when inventory cannot cover the full cart quantity", async () => {

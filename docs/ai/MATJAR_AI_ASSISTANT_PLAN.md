@@ -88,7 +88,9 @@ Do not expose tools for payments/refunds, cancellations, stock changes, account 
 
 ## Super Admin controls and observability
 
-Add an AI section to the existing Super Admin navigation only after inspecting its actual route/permission conventions:
+**Current implementation status (2026-11-06, branch `feat/super-admin-control-panel`):** the first settings slice is implemented at `/admin/control-panel/ai-assistant`, protected by the existing `platform:manage` guard and mandatory MFA. It uses the singleton `AiAssistantSetting` row, records every change in `AuditLog`, exposes only a boolean provider-key status, and applies a deployment-environment master kill switch that the database cannot override. The model is currently restricted to `openai/gpt-oss-20b`; completion tokens are bounded. Usage analytics, conversation access, feedback, approved knowledge management, and distributed rate limiting remain outstanding.
+
+The remaining Super Admin scope is:
 - Overview: request counts, tool-call counts, error/quota events, and feedback.
 - Conversations: restricted, audited access with privacy controls.
 - Provider settings: model ID, enable/disable switch, safe limits. Never display the API secret after saving.
@@ -131,7 +133,8 @@ Do not add Prisma models before inspecting the existing conversation, support, a
 - Require explicit confirmation before creating a support ticket.
 
 ### AI-5 — Super Admin and operations
-- Add permission-protected controls, aggregate usage/error metrics, feedback, audit, and retention controls.
+- [x] Add permission-protected enable/disable and bounded completion-token controls, environment kill switch, and audited settings changes.
+- [ ] Add aggregate usage/error metrics, feedback, and retention controls.
 - Verify that secret values cannot be read back or leaked.
 
 ### AI-6 — release verification

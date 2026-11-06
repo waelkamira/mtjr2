@@ -1,3 +1,5 @@
+import "server-only";
+
 import { createHash, randomBytes } from "node:crypto";
 import { AuditActorType, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";

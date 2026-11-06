@@ -23,9 +23,9 @@ export async function changePassword(
 ): Promise<PasswordChangeResult> {
   const user = await prisma.user.findUnique({
     where: { id: input.userId },
-    select: { id: true, passwordHash: true, status: true, emailVerifiedAt: true }
+    select: { id: true, passwordHash: true, status: true }
   });
-  if (!user || user.status !== UserStatus.ACTIVE || !user.emailVerifiedAt) {
+  if (!user || user.status !== UserStatus.ACTIVE) {
     return "CONCURRENT_CHANGE";
   }
   if (!user.passwordHash) return "PASSWORD_NOT_SET";
@@ -40,7 +40,6 @@ export async function changePassword(
       where: {
         id: input.userId,
         status: UserStatus.ACTIVE,
-        emailVerifiedAt: { not: null },
         passwordHash: user.passwordHash
       },
       data: { passwordHash }

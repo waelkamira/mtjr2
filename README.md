@@ -66,7 +66,9 @@ Use [`docs/architecture/PRISMA_MODEL_USAGE_MAP.md`](docs/architecture/PRISMA_MOD
 
 ## Required page inventory
 
-The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the companion inventory for public storefront, authentication, customer account, seller center, admin, global operations, property/booking, and legal/system pages. Treat routes there as required targets, not as proof that they already exist. Every page must be connected to the owning API/domain service and have access control, loading/empty/error states, and verified key actions. Implement in dependency order and record evidence in the build log.
+The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md) for the audited App Router routes, actual components/access boundaries, missing targets, and per-area implementation status. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the broader functional checklist for storefront, account, seller, admin, global operations, property/booking, and legal/system pages. The audit found 74 page routes and 143 API route handlers; route presence alone is not completion evidence.
+
+**Page inventory progress (2026-11-06):** Added root/global not-found and error UI plus loading/error boundaries for root, account, seller, and admin segments. `npm run typecheck`, targeted ESLint, `npm run build`, and `git diff --check` passed. A local browser smoke test verified the unknown-route 404 recovery links at 390px without horizontal overflow. Full route-by-route interaction, authorization matrix, responsive and persistence testing remains open; see the inventory for missing routes and exact evidence. No Vercel deployment was performed.
 
 ## Global platform completeness specification
 
@@ -96,7 +98,7 @@ A system may be marked **Complete** only when:
 
 - Approved premium visual direction: forest green, sage, warm ivory, and restrained copper, based on the user's supplied references.
 - Shared design specification: [Mtjr2 Visual Design System](docs/design/VISUAL_DESIGN_SYSTEM.md).
-- Foundation tokens are implemented in `src/app/globals.css`; storefront, seller, and admin UI implementation follows the delivery sequence and does not bypass Phase 2 security gates.
+- Foundation tokens are implemented in `src/app/theme.css` and shared styles/primitives in `src/app/globals.css`; storefront, seller, and admin UI implementation follows the delivery sequence and does not bypass Phase 2 security gates. The page-wide adoption and responsive audit remains open.
 
 ## Deployment
 
@@ -118,17 +120,17 @@ The implementation plan and release gates are documented in [`docs/ai/MATJAR_AI_
 ## Identity development status — 4 November 2026
 
 - `/terms` and `/privacy` are published in the application as clearly labelled v1 development drafts. They disclose that the operating company has not yet been incorporated and do not invent an operator identity or contact address.
-- `/register` asks the visitor to choose Customer/Buyer or Seller. Seller registration creates a `PENDING` seller application but does not grant seller permissions before approval. Separate unchecked Terms and Privacy consents are recorded as exact version `v1`.
+- `/register` asks the visitor to choose Customer/Buyer or Seller. A successful password registration activates and signs in the account immediately; Cloudflare Turnstile and persistent rate limits protect both password and Google registration. Seller registration creates a `PENDING` seller application but does not grant seller permissions before approval. Separate unchecked Terms and Privacy consents are recorded as exact version `v1`.
 - Google OpenID Connect authorization-code flow with state and PKCE is implemented at `/api/auth/google/start` and `/api/auth/google/callback`; it requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` plus the registered callback URL. Existing email accounts are never silently linked to Google.
 - Added `/account` dashboard, `/account/profile`, `/account/addresses`, `/account/favorites`, and `/account/store` aliases, connecting profile/address reads and writes to authenticated APIs and existing Prisma entities. Existing order, wishlist, return, review, question, messaging, support, notification and seller pages remain available.
-- Registration defaults to enabled in development/test and is unconditionally blocked in production, even if the environment flag is true. Set `PUBLIC_REGISTRATION_ENABLED=false` to disable it in development.
-- No Prisma schema change or migration was required for this slice. The policy documents remain development drafts. Identity is not marked complete until exact-head CI, PostgreSQL integration, Google credentials/provider journey, and registration → email verification → login/logout HTTP/browser verification pass.
+- Registration defaults to enabled in development/test and is unconditionally blocked in production, even if the environment flag is true. Set `PUBLIC_REGISTRATION_ENABLED=false` to disable it in development. Configure `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` together to enable the required registration bot check.
+- No Prisma schema change or migration was required for this slice. The policy documents remain development drafts. Identity is not marked complete until exact-head CI, PostgreSQL integration, Google credentials/provider journey, and registration → immediate sign-in → logout HTTP/browser verification pass.
 
 ## Current status
 
 **Phase 1 foundation: scaffolded. Phase 2 identity/access: core services and UI implemented; development/test registration is enabled by default, production registration is hard-blocked; exact-head CI and deployed browser journey remain pending, and production exit checks are not passed. Phase 3 Marketplace Core: in progress; seller/store, taxonomy, product lifecycle, discovery, inventory foundations, and the connected buyer/seller/admin workspaces are implemented. Buyer product SEO metadata is now server-generated from the catalog service. Market reference data, seller/store workflows, taxonomy, product lifecycle, public discovery APIs, and warehouse/inventory foundations are implemented. The buyer storefront consumes the live market/category/product APIs, including product detail and currency-aware price display. The seller workspace supports seller applications, store/warehouse management, inventory viewing, and API-connected product draft creation/editing/publication. A platform moderation workspace is connected to protected seller/product review queues. Seller team and invitation/acceptance/revocation screens are now connected to scoped staff APIs. Reference-data activation remains pending. Buying Core is now in progress: persistent cart, checkout quote/reservation, and delivery-address capture are implemented and verified by General CI and disposable PostgreSQL workflows (runs 41702592022/41702592323, 41704221580/41704221517, and 41706908024/41706907994). General CI and disposable PostgreSQL migration/integration verification passed on commit `3a9369bf`; the buyer product detail now includes an accessible media gallery. Warehouse, stock adjustment, and stock transfer screens are connected to the existing backend APIs.**
 
-Implemented identity capabilities include registration, email verification, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter, and a fail-closed trusted-proxy IP resolver.
+Implemented identity capabilities include Turnstile-protected registration, login/logout services, session resolution and revocation, password reset, persistent abuse throttling, scoped server-side authorization, role assignment/revocation, audit events, same-origin JSON mutation protection, a server-only Resend adapter for password reset, and a fail-closed trusted-proxy IP resolver.
 
 **Verification evidence**
 - General CI passed on the latest documentation commit `0716f8f43e60771c3702bb6984715915a0a1a665`: [run 41648760634](https://github.com/waelkamira/mtjr2/actions/runs/41648760634). It includes Prisma validate/generate, typecheck, lint, unit tests, and production build.
@@ -136,10 +138,11 @@ Implemented identity capabilities include registration, email verification, logi
 - The existing focused password-reset PostgreSQL lifecycle and general CI evidence is recorded in [Phase 2 execution plan](docs/implementation/PHASE_02_IDENTITY_PLAN.md) and [build log](docs/implementation/BUILD_LOG.md).
 
 **Deferred Phase 2 production exit work (not passed)**
-1. Configure a verified Resend sender and perform one real delivery smoke test.
-2. Verify the trusted proxy header and block direct origin bypass.
-3. Run one deployed HTTP journey: register → verify email → login → `/api/auth/me` → logout → confirm anonymous access is denied.
-4. Record deployment evidence and the focused security review.
+1. Configure both Turnstile keys for the production hostname and verify the challenge.
+2. Configure a verified Resend sender for password reset and perform one real delivery smoke test.
+3. Verify the trusted proxy header and block direct origin bypass.
+4. Run one deployed HTTP journey: register → immediate sign-in → `/api/auth/me` → logout → confirm anonymous access is denied.
+5. Record deployment evidence and the focused security review.
 
 These are production-release gates, not blockers for schema/domain development in Phase 3. Continue using only local/disposable/CI PostgreSQL until the owner explicitly approves production database access. No additional helper-level test suites are planned.
 
@@ -367,4 +370,3 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 
 - Windows/PowerShell local setup using an isolated PostgreSQL `mtjr2_demo` database and the 80-product demo catalog: [Local development guide](docs/development/LOCAL_WINDOWS_SETUP.md).
 - The canonical application URL is server-only `APP_URL`; do not use a `NEXT_PUBLIC_*` prefix for server-side configuration.
-

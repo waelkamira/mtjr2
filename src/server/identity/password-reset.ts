@@ -20,7 +20,7 @@ export interface PasswordResetChallenge {
 }
 
 /**
- * Creates a one-hour, single-use reset challenge for an active verified account.
+ * Creates a one-hour, single-use reset challenge for an active account.
  * The HTTP layer must always return the same public response whether this
  * function returns a challenge or null, to prevent account enumeration.
  */
@@ -33,10 +33,10 @@ export async function createPasswordResetChallenge(
 
   const user = await prisma.user.findUnique({
     where: { emailNormalized: normalizedEmail },
-    select: { id: true, status: true, emailVerifiedAt: true }
+    select: { id: true, status: true }
   });
 
-  if (!user || user.status !== UserStatus.ACTIVE || user.emailVerifiedAt === null) {
+  if (!user || user.status !== UserStatus.ACTIVE) {
     return null;
   }
 

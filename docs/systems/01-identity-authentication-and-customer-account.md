@@ -3,8 +3,8 @@
 > مواصفة تنفيذ مستقلة مستخرجة من المخطط الوظيفي. لا تعني وجود التنفيذ أو اكتماله.
 
 ## 1. الغرض والحدود
-- **الغرض:** Registration, sign-in/out, OAuth, password recovery, optional 2FA, sessions, consent, profile and account security.
-- **المتطلبات الأساسية:** secure password hashing, verified email, session revocation, rate limits, account status checks, consent history, role resolution and recovery-token single use.
+- **الغرض:** Registration, sign-in/out, OAuth, password recovery, TOTP MFA, sessions, consent, profile and account security.
+- **المتطلبات الأساسية:** secure password hashing, immediate activation without email verification, session revocation, rate limits, account status checks, consent history, role resolution and recovery-token single use. MFA is mandatory for platform-wide administrators.
 - **الحالة السابقة الموثقة:** **Partial / legacy-incompatible.** Auth surfaces exist; audit AUD-001 records mismatches between legacy user fields and canonical user/role relations.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
@@ -12,7 +12,7 @@
 - **قاعدة عدم التداخل:** مصدر واحد لكل حقيقة تجارية، ومالك واحد لكل state transition، وعدم إنشاء صفحة أو جدول مكرر لمجرد وجود زر جديد.
 
 ## 2. الصفحات ومكانها
-**صفحات الهدف:** `/(auth)/login`, `/register`, `/forgot-password`, `/reset-password`, `/account/profile`, `/account/security`, `/account/addresses`, `/account/sessions`.
+**صفحات الهدف:** `/login`, `/register`, `/forgot-password`, `/reset-password`, `/account/profile`, `/account/security`, `/account/addresses`, `/account/sessions`. Email verification and resend pages are intentionally not part of registration.
 
 | Route الهدف | ملف الصفحة في المصدر عند baseline |
 |---|---|
@@ -49,7 +49,7 @@
 | إعادة المحاولة | retry | same idempotency key | actor/resource/intent match | idempotent command | unique key | لا يتكرر الأثر |
 
 ## 5. واجهات API والخدمات
-**واجهات API المستهدفة:** `/api/auth/*`, `/api/register`, `/api/account/profile`, `/api/account/addresses`, `/api/account/sessions`, `/api/account/security`.
+**واجهات API المستهدفة:** `/api/auth/*`, `/api/account/profile`, `/api/account/addresses`, `/api/account/sessions`, `/api/account/security`, `/api/account/security/mfa`.
 
 | API | route.ts في baseline |
 |---|---|
@@ -65,7 +65,7 @@
 - لا تعتبر route موجوداً إذا كان stub أو fixture أو static response.
 
 ## 6. Prisma ومصدر الحقيقة
-**النماذج المقترحة في blueprint:** `User`, `UserSession`, `OAuthAccount`, `TwoFactorAuthentication`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `UserRoleAssignment`, `Role`, `Permission`, `RolePermission`, `UserAddress`.
+**النماذج المقترحة في blueprint:** `User`, `UserSession`, `OAuthAccount`, `UserTwoFactor`, `UserTwoFactorRecoveryCode`, `PasswordResetToken`, `VerificationToken` (legacy only), `UserConsent`, `LoginAttempt`, `UserRoleAssignment`, `Role`, `Permission`, `RolePermission`, `UserAddress`.
 
 | Prisma model | وضعه في schema الحالية | القرار |
 |---|---|---|

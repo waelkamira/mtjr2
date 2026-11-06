@@ -28,10 +28,21 @@ export async function POST(request: Request): Promise<Response> {
     });
     if (!result.authenticated) {
       const status = result.reason === "RATE_LIMITED" ? 429 : 401;
-      return Response.json({ error: result.message, code: result.reason }, { status });
+      return Response.json({
+        error: result.message,
+        code: result.reason === "RATE_LIMITED" ? "RATE_LIMITED" : "INVALID_CREDENTIALS"
+      }, { status });
     }
     await setSessionCookie(result.session.token, result.session.expiresAt);
-    return Response.json({ message: "Signed in successfully." });
+    return Response.json({
+      message: result.mfaRequired
+        ? "Enter your authenticator code to continue."
+        : result.mfaSetupRequired
+          ? "Set up multi-factor authentication to continue."
+          : "Signed in successfully.",
+      mfaRequired: result.mfaRequired,
+      mfaSetupRequired: result.mfaSetupRequired
+    });
   } catch {
     return Response.json({ error: "Unable to sign in right now." }, { status: 500 });
   }

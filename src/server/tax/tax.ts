@@ -99,7 +99,9 @@ export async function calculateCheckoutTax(guestToken: string, quoteId: string, 
       return { configured: false, requiresShippingSelection: false, message: "Tax has not been configured for this market and destination. No tax amount is assumed." };
     }
     const shippingMinor = quote.shippingSelections.reduce((sum, item) => sum + item.amountMinor, BigInt(0));
-    const taxableAmount = quote.subtotalMinor + (rate.appliesToShipping ? shippingMinor : BigInt(0));
+    const discountedSubtotal = quote.subtotalMinor - quote.discountMinor;
+    if (discountedSubtotal < BigInt(0)) throw new Error("Checkout discount exceeds the merchandise subtotal.");
+    const taxableAmount = discountedSubtotal + (rate.appliesToShipping ? shippingMinor : BigInt(0));
     const basis = BigInt(rate.rateBasisPoints);
     const denominator = BigInt(10000);
     const taxAmount = rate.isInclusive
@@ -119,11 +121,13 @@ export async function calculateCheckoutTax(guestToken: string, quoteId: string, 
       }
     });
     const totalShipping = shippingMinor;
-    const amountDue = quote.subtotalMinor + totalShipping + (rate.isInclusive ? BigInt(0) : taxAmount);
+    const amountDue = discountedSubtotal + totalShipping + (rate.isInclusive ? BigInt(0) : taxAmount);
     return {
       configured: true,
       rule: { name: rate.name, rateBasisPoints: rate.rateBasisPoints, isInclusive: rate.isInclusive, includesShipping: rate.appliesToShipping },
       subtotalMinor: quote.subtotalMinor.toString(),
+      couponCode: quote.couponCode,
+      discountMinor: quote.discountMinor.toString(),
       shippingMinor: totalShipping.toString(),
       taxableAmountMinor: snapshot.taxableAmountMinor.toString(),
       taxAmountMinor: snapshot.taxAmountMinor.toString(),

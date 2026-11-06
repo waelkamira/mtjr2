@@ -3,6 +3,7 @@ import { validateIdentityMutationRequest } from "@/server/identity/request-secur
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { createDraftProduct } from "@/server/catalog/products";
 import { listDiscoverableProducts } from "@/server/catalog/discovery";
+import { enforcePublicSearchBudget } from "@/server/search/search-request";
 
 export const runtime = "nodejs";
 const bodySchema = z.object({
@@ -27,6 +28,8 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function GET(request: Request): Promise<Response> {
+  const rejected = await enforcePublicSearchBudget(request);
+  if (rejected) return rejected;
   try {
     const params = Object.fromEntries(new URL(request.url).searchParams.entries());
     const result = await listDiscoverableProducts(params);

@@ -119,7 +119,7 @@ async function searchProducts(raw: unknown, locale: string): Promise<ProductCard
 
 export const assistantInputSchema = z.object({
   message: z.string().trim().min(1).max(1200),
-  locale: z.string().trim().min(2).max(10).default("en"),
+  locale: z.enum(["ar", "en"]).default("en"),
   history: z.array(z.object({
     role: z.enum(["user", "assistant"]),
     content: z.string().max(1200)

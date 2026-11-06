@@ -5,14 +5,21 @@ import {
   resolveUserSession,
   type AuthenticatedSession
 } from "@/server/identity/session";
+import {
+  getMfaAccessState,
+  isMfaVerificationFresh
+} from "@/server/identity/mfa";
+import {
+  AuthenticationRequiredError,
+  MfaEnrollmentRequiredError,
+  MfaVerificationRequiredError
+} from "@/server/identity/access-errors";
 
-/** Returned when a server-rendered page or handler requires authentication. */
-export class AuthenticationRequiredError extends Error {
-  constructor() {
-    super("Authentication is required.");
-    this.name = "AuthenticationRequiredError";
-  }
-}
+export {
+  AuthenticationRequiredError,
+  MfaEnrollmentRequiredError,
+  MfaVerificationRequiredError
+} from "@/server/identity/access-errors";
 
 /**
  * Resolves the current request's HttpOnly cookie against PostgreSQL.
@@ -32,5 +39,12 @@ export async function requireCurrentSession(
 ): Promise<AuthenticatedSession> {
   const session = await getCurrentSession(now);
   if (!session) throw new AuthenticationRequiredError();
+  const mfa = await getMfaAccessState(session.userId, now);
+  if (mfa.enrollmentRequired) throw new MfaEnrollmentRequiredError();
+  if (mfa.required && !isMfaVerificationFresh(session.mfaVerifiedAt, now)) {
+    throw new MfaVerificationRequiredError();
+  }
   return session;
 }
+
+export { PermissionDeniedError } from "@/server/identity/access-errors";

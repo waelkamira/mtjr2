@@ -14,10 +14,10 @@ export async function GET(): Promise<Response> {
     if (!session) return Response.json({ error: "Authentication required." }, { status: 401 });
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { id: true, email: true, displayName: true, status: true, emailVerifiedAt: true, createdAt: true }
+      select: { id: true, email: true, displayName: true, status: true, createdAt: true }
     });
     if (!user) return Response.json({ error: "Account not found." }, { status: 404 });
-    return Response.json({ profile: { ...user, createdAt: user.createdAt.toISOString(), emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null } }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json({ profile: { ...user, createdAt: user.createdAt.toISOString() } }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
     return Response.json({ error: "Unable to load profile." }, { status: 500 });
   }

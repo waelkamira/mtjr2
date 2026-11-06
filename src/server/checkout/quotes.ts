@@ -9,7 +9,11 @@ import { getActiveCarts } from "@/server/cart/cart";
 
 const quoteInputSchema = z.object({
   cartId: z.string().trim().min(1),
-  idempotencyKey: z.string().trim().min(16).max(160)
+  idempotencyKey: z.string().trim().min(16).max(160),
+  couponCode: z.preprocess(
+    (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.string().trim().toUpperCase().regex(/^[A-Z0-9][A-Z0-9_-]{1,39}$/).optional()
+  )
 }).strict();
 const quoteTtlMs = 10 * 60 * 1000;
 const reservationReference = "CHECKOUT_QUOTE";
@@ -62,6 +66,7 @@ function serializeQuote(quote: {
   id: string; status: CheckoutQuoteStatus; market: { code: string; name: string; country?: { iso2: string; name: string } };
   currency: { code: string; symbol: string | null; minorUnit: number };
   subtotalMinor: bigint; expiresAt: Date;
+  couponCode?: string | null; discountMinor?: bigint;
   deliveryAddress?: { id: string; sourceAddressId: string | null; recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   lines: Array<{ id: string; productName: string; storeName: string; sku: string; variantName: string | null; quantity: number; unitAmountMinor: bigint; lineTotalMinor: bigint }>;
 }) {
@@ -71,6 +76,8 @@ function serializeQuote(quote: {
     market: quote.market,
     currency: quote.currency,
     subtotalMinor: quote.subtotalMinor.toString(),
+    couponCode: quote.couponCode ?? null,
+    discountMinor: (quote.discountMinor ?? BigInt(0)).toString(),
     expiresAt: quote.expiresAt.toISOString(),
     deliveryAddress: quote.deliveryAddress ?? null,
     lines: quote.lines.map((line) => ({
@@ -104,6 +111,9 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
     if (existingQuote) {
       if (existingQuote.cartId !== data.cartId || ("userId" in owner ? existingQuote.userId !== owner.userId : existingQuote.guestSessionId !== owner.guestSessionId)) {
         throw new Error("This idempotency key has already been used for a different checkout.");
+      }
+      if ((existingQuote.couponCode ?? undefined) !== data.couponCode) {
+        throw new Error("This idempotency key has already been used with a different coupon.");
       }
       return serializeQuote(existingQuote);
     }
@@ -141,6 +151,7 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
     const quote = await tx.checkoutQuote.create({
       data: {
         cartId: cart.id, ...owner, marketId: cart.marketId, currencyCode: cart.currencyCode,
+        couponCode: data.couponCode ?? null, discountMinor: BigInt(0),
         subtotalMinor: BigInt(0), idempotencyKey: data.idempotencyKey, expiresAt
       }
     });
@@ -194,7 +205,35 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
     }
 
     await tx.checkoutQuoteLine.createMany({ data: quoteLines.map((line) => ({ ...line, quoteId: quote.id })) });
-    await tx.checkoutQuote.update({ where: { id: quote.id }, data: { subtotalMinor: subtotal } });
+    let couponId: string | null = null;
+    let discountMinor = BigInt(0);
+    if (data.couponCode) {
+      const coupon = await tx.coupon.findUnique({
+        where: { code: data.couponCode },
+        select: {
+          id: true, code: true, discountType: true, value: true, currencyCode: true,
+          maxRedemptions: true, startsAt: true, expiresAt: true, isActive: true
+        }
+      });
+      if (!coupon || !coupon.isActive || (coupon.startsAt && coupon.startsAt > now) || (coupon.expiresAt && coupon.expiresAt <= now)) {
+        throw new Error("This coupon code is invalid or expired.");
+      }
+      if (coupon.discountType === "FIXED_AMOUNT" && coupon.currencyCode !== cart.currencyCode) {
+        throw new Error("This coupon is not valid for the cart currency.");
+      }
+      if (coupon.maxRedemptions !== null) {
+        const redemptionCount = await tx.couponRedemption.count({ where: { couponId: coupon.id } });
+        if (redemptionCount >= coupon.maxRedemptions) throw new Error("This coupon has reached its redemption limit.");
+      }
+      discountMinor = coupon.discountType === "PERCENTAGE"
+        ? subtotal * coupon.value / BigInt(10000)
+        : coupon.value < subtotal ? coupon.value : subtotal;
+      couponId = coupon.id;
+    }
+    await tx.checkoutQuote.update({
+      where: { id: quote.id },
+      data: { subtotalMinor: subtotal, couponId, discountMinor }
+    });
     const saved = await tx.checkoutQuote.findUniqueOrThrow({
       where: { id: quote.id },
       include: { market: { select: { code: true, name: true, country: { select: { iso2: true, name: true } } } }, currency: { select: { code: true, symbol: true, minorUnit: true } }, lines: { orderBy: { createdAt: "asc" } }, deliveryAddress: true }

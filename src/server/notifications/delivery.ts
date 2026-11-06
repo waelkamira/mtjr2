@@ -39,7 +39,7 @@ export async function processNotificationDeliveries(now = new Date()) {
         id: true, type: true, title: true, message: true, attempts: true, maxAttempts: true,
         user: {
           select: {
-            email: true, status: true, emailVerifiedAt: true,
+            email: true, status: true,
             consents: { where: { type: "NOTIFICATION_EMAIL" }, orderBy: { capturedAt: "desc" }, take: 1, select: { granted: true } },
             notificationPreferences: { where: { type: candidate.type }, select: { emailEnabled: true } }
           }
@@ -57,8 +57,8 @@ export async function processNotificationDeliveries(now = new Date()) {
     }
 
     try {
-      if (delivery.user.status !== "ACTIVE" || !delivery.user.emailVerifiedAt) {
-        throw new Error("Recipient account is inactive or email is not verified.");
+      if (delivery.user.status !== "ACTIVE") {
+        throw new Error("Recipient account is inactive.");
       }
       const providerMessageId = await sendNotificationEmail({
         to: delivery.user.email,

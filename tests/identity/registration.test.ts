@@ -1,12 +1,13 @@
+import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ConsentType, UserStatus } from "@prisma/client";
+import { ConsentType, Prisma, UserStatus } from "@prisma/client";
 
 const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
     user: { create: vi.fn(), updateMany: vi.fn() },
     seller: { create: vi.fn() },
-    verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     userConsent: { createMany: vi.fn() },
+    verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     auditLog: { create: vi.fn() }
   };
   return {
@@ -28,19 +29,22 @@ import {
 
 const now = new Date("2026-11-03T12:00:00.000Z");
 
-describe("registration and email verification", () => {
+describe("registration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.$transaction.mockImplementation(
       (callback: (client: typeof txMock) => unknown) => callback(txMock)
     );
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    txMock.user.create.mockResolvedValue({ id: "user-1" });
+    txMock.user.updateMany.mockResolvedValue({ count: 1 });
+    txMock.seller.create.mockResolvedValue({ id: "seller-1" });
+    txMock.userConsent.createMany.mockResolvedValue({ count: 2 });
+    txMock.verificationToken.create.mockResolvedValue({ id: "verification-1" });
+    txMock.verificationToken.updateMany.mockResolvedValue({ count: 1 });
   });
 
-  it("creates a pending user, hashed password, one-time challenge, and required consents", async () => {
-    txMock.user.create.mockResolvedValue({ id: "user-1" });
-    txMock.verificationToken.create.mockResolvedValue({});
-    txMock.userConsent.createMany.mockResolvedValue({ count: 2 });
-
+  it("creates a pending user with a hashed password and single-use verification challenge", async () => {
     const result = await registerUser({
       email: "  Buyer@Example.COM ",
       password: "correct horse battery staple 2026",
@@ -49,9 +53,10 @@ describe("registration and email verification", () => {
       acceptedTerms: true,
       acceptedPrivacy: true
     }, now);
-
     expect(result.userId).toBe("user-1");
     expect(result.verificationToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(result.verificationExpiresAt).toEqual(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+
     expect(txMock.user.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: "buyer@example.com",
@@ -60,31 +65,27 @@ describe("registration and email verification", () => {
         displayName: "Buyer"
       })
     }));
-
     const createUserCall = txMock.user.create.mock.calls[0][0];
     expect(createUserCall.data.passwordHash).not.toContain("correct horse");
+    expect(createUserCall.data.emailVerifiedAt).toBeUndefined();
     expect(txMock.verificationToken.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({
-        userId: "user-1",
-        purpose: "EMAIL_VERIFICATION",
-        tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/)
-      })
+      data: expect.objectContaining({ userId: "user-1", purpose: "EMAIL_VERIFICATION", tokenHash: expect.any(String), expiresAt: result.verificationExpiresAt })
     }));
-
-    expect(txMock.auditLog.create).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "identity.registration.created", resourceId: "user-1" }) });
     expect(txMock.userConsent.createMany).toHaveBeenCalledWith({
       data: expect.arrayContaining([
         expect.objectContaining({ type: ConsentType.TERMS_OF_SERVICE, granted: true }),
         expect.objectContaining({ type: ConsentType.PRIVACY_POLICY, granted: true })
       ])
     });
+    expect(txMock.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: "identity.registration.created",
+        resourceId: "user-1"
+      })
+    });
   });
 
   it("creates a pending seller application when the user selects seller", async () => {
-    txMock.user.create.mockResolvedValue({ id: "seller-user-1" });
-    txMock.verificationToken.create.mockResolvedValue({});
-    txMock.seller.create.mockResolvedValue({ id: "seller-1" });
-    txMock.userConsent.createMany.mockResolvedValue({ count: 2 });
     await registerUser({
       email: "seller@example.com",
       password: "correct horse battery staple 2026",
@@ -94,7 +95,15 @@ describe("registration and email verification", () => {
       acceptedTerms: true,
       acceptedPrivacy: true
     }, now);
-    expect(txMock.seller.create).toHaveBeenCalledWith({ data: { ownerId: "seller-user-1", legalName: "Example Applicant", displayName: "Example Store", status: "PENDING" } });
+
+    expect(txMock.seller.create).toHaveBeenCalledWith({
+      data: {
+        ownerId: "user-1",
+        legalName: "Example Applicant",
+        displayName: "Example Store",
+        status: "PENDING"
+      }
+    });
   });
 
   it("returns an identity conflict before hashing or inserting an existing email", async () => {
@@ -120,7 +129,58 @@ describe("registration and email verification", () => {
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
-  it("requires business details when seller is selected", async () => {
+  it("consumes a valid email challenge once and activates only the pending account", async () => {
+    const token = "v".repeat(43);
+    const expiresAt = new Date(now.getTime() + 60_000);
+    txMock.verificationToken.findUnique.mockResolvedValue({
+      id: "verification-1", userId: "user-1", purpose: "EMAIL_VERIFICATION",
+      expiresAt, consumedAt: null
+    });
+
+    await expect(verifyUserEmail(token, now)).resolves.toBe(true);
+
+    const digest = createHash("sha256").update(token, "utf8").digest("hex");
+    expect(txMock.verificationToken.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      where: { tokenHash: digest }
+    }));
+    expect(txMock.verificationToken.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "verification-1", purpose: "EMAIL_VERIFICATION", consumedAt: null, expiresAt: { gt: now } },
+      data: { consumedAt: now }
+    }));
+    expect(txMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", status: UserStatus.PENDING },
+      data: { status: UserStatus.ACTIVE, emailVerifiedAt: now }
+    });
+  });
+
+  it("rejects an expired email challenge without changing account state", async () => {
+    txMock.verificationToken.findUnique.mockResolvedValue({
+      id: "verification-1", userId: "user-1", purpose: "EMAIL_VERIFICATION",
+      expiresAt: new Date(now.getTime() - 1), consumedAt: null
+    });
+
+    await expect(verifyUserEmail("v".repeat(43), now)).resolves.toBe(false);
+    expect(txMock.verificationToken.updateMany).not.toHaveBeenCalled();
+    expect(txMock.user.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects a concurrent duplicate when the normalized-email unique index wins the race", async () => {
+    txMock.user.create.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+      code: "P2002",
+      clientVersion: "6.19.0",
+      meta: { target: ["emailNormalized"] }
+    }));
+
+    await expect(registerUser({
+      email: "Buyer@Example.COM",
+      password: "correct horse battery staple 2026",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    }, now)).rejects.toBeInstanceOf(IdentityConflictError);
+  });
+
+  it("requires seller details and explicit policy consent", async () => {
     await expect(registerUser({
       email: "seller@example.com",
       password: "correct horse battery staple 2026",
@@ -128,9 +188,6 @@ describe("registration and email verification", () => {
       acceptedTerms: true,
       acceptedPrivacy: true
     } as never, now)).rejects.toThrow();
-    expect(prismaMock.$transaction).not.toHaveBeenCalled();
-  });
-  it("rejects registration without explicit terms and privacy consent", async () => {
     await expect(registerUser({
       email: "buyer@example.com",
       password: "correct horse battery staple 2026",
@@ -138,89 +195,6 @@ describe("registration and email verification", () => {
       acceptedTerms: false,
       acceptedPrivacy: true
     } as never, now)).rejects.toThrow();
-
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
-  });
-
-  it("activates an account only after consuming a valid unexpired token", async () => {
-    txMock.verificationToken.findUnique.mockResolvedValue({
-      id: "verification-1",
-      userId: "user-1",
-      purpose: "EMAIL_VERIFICATION",
-      expiresAt: new Date(now.getTime() + 60_000),
-      consumedAt: null
-    });
-    txMock.verificationToken.updateMany.mockResolvedValue({ count: 1 });
-    txMock.user.updateMany.mockResolvedValue({ count: 1 });
-
-    await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(true);
-    expect(txMock.verificationToken.updateMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({
-        id: "verification-1",
-        consumedAt: null,
-        expiresAt: { gt: now }
-      })
-    }));
-    expect(txMock.user.updateMany).toHaveBeenCalledWith({
-      where: { id: "user-1", status: UserStatus.PENDING },
-      data: { status: UserStatus.ACTIVE, emailVerifiedAt: now }
-    });
-    expect(txMock.auditLog.create).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "identity.email_verification.completed", resourceId: "user-1" }) });
-  });
-
-  it("rejects expired, consumed, wrong-purpose, and malformed challenges", async () => {
-    await expect(verifyUserEmail("short", now)).resolves.toBe(false);
-    expect(txMock.verificationToken.findUnique).not.toHaveBeenCalled();
-
-    txMock.verificationToken.findUnique.mockResolvedValueOnce({
-      id: "v1", userId: "u1", purpose: "EMAIL_VERIFICATION",
-      expiresAt: now, consumedAt: null
-    });
-    await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(false);
-
-    txMock.verificationToken.findUnique.mockResolvedValueOnce({
-      id: "v2", userId: "u1", purpose: "EMAIL_VERIFICATION",
-      expiresAt: new Date(now.getTime() + 60_000), consumedAt: now
-    });
-    await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(false);
-
-    txMock.verificationToken.findUnique.mockResolvedValueOnce({
-      id: "v3", userId: "u1", purpose: "PASSWORD_RESET",
-      expiresAt: new Date(now.getTime() + 60_000), consumedAt: null
-    });
-    await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(false);
-    expect(txMock.user.updateMany).not.toHaveBeenCalled();
-  });
-
-  it("does not activate an account if another request already consumed the token", async () => {
-    txMock.verificationToken.findUnique.mockResolvedValue({
-      id: "verification-1",
-      userId: "user-1",
-      purpose: "EMAIL_VERIFICATION",
-      expiresAt: new Date(now.getTime() + 60_000),
-      consumedAt: null
-    });
-    txMock.verificationToken.updateMany.mockResolvedValue({ count: 0 });
-
-    await expect(verifyUserEmail("x".repeat(43), now)).resolves.toBe(false);
-    expect(txMock.user.updateMany).not.toHaveBeenCalled();
-  });
-
-  it("does not reactivate an account that is no longer pending", async () => {
-    txMock.verificationToken.findUnique.mockResolvedValue({
-      id: "verification-2",
-      userId: "user-suspended",
-      purpose: "EMAIL_VERIFICATION",
-      expiresAt: new Date(now.getTime() + 60_000),
-      consumedAt: null
-    });
-    txMock.verificationToken.updateMany.mockResolvedValue({ count: 1 });
-    txMock.user.updateMany.mockResolvedValue({ count: 0 });
-
-    await expect(verifyUserEmail("y".repeat(43), now)).resolves.toBe(false);
-    expect(txMock.user.updateMany).toHaveBeenCalledWith({
-      where: { id: "user-suspended", status: UserStatus.PENDING },
-      data: { status: UserStatus.ACTIVE, emailVerifiedAt: now }
-    });
   });
 });

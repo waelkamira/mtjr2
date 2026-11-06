@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useLocale } from "@/components/locale-provider";
+import { translate } from "@/lib/locale";
 
 type Market = {
   id: string; code: string; name: string;
@@ -32,6 +34,7 @@ function flatten(items: Category[], prefix = ""): Array<{ id: string; label: str
 }
 
 export default function SellerProductsPage() {
+  const { locale } = useLocale();
   const [stores, setStores] = useState<Store[]>([]);
   const [storeId, setStoreId] = useState("");
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -115,11 +118,11 @@ export default function SellerProductsPage() {
           variants: [{ sku, prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "" })) }]
         })
       }));
-      setMessage(`Draft product created (${product.id}). It is awaiting platform review.`);
+      setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       setName(""); setSlug(""); setDescription(""); setSku(""); setImageUrl(""); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Product could not be created.");
+      setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
     } finally { setBusy(false); }
   }
 
@@ -133,10 +136,10 @@ export default function SellerProductsPage() {
         body: JSON.stringify({ name: editName, slug: editSlug, description: editDescription })
       }));
       setEditingId("");
-      setMessage("Draft product updated and returned to pending review.");
+      setMessage(translate(locale, "Draft product updated and returned to pending review.", "تم تحديث مسودة المنتج وإعادتها إلى قائمة المراجعة."));
       await loadProducts(storeId, search);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Product could not be updated.");
+      setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be updated.", "تعذر تحديث المنتج."));
     } finally { setBusy(false); }
   }
 
@@ -144,10 +147,10 @@ export default function SellerProductsPage() {
     setBusy(true); setError(""); setMessage("");
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, { method: "POST" }));
-      setMessage("Product published.");
+      setMessage(translate(locale, "Product published.", "تم نشر المنتج."));
       await loadProducts(storeId, search);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Product could not be published.");
+      setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be published.", "تعذر نشر المنتج."));
     } finally { setBusy(false); }
   }
 
@@ -155,15 +158,15 @@ export default function SellerProductsPage() {
   return <main className="min-h-screen bg-[var(--background)]">
     <header className="border-b border-[var(--border)] bg-[var(--background)]"><div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5"><Link href="/" className="text-2xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><Link href="/seller" className="text-sm font-medium text-[var(--color-ink-800)]">← Seller workspace</Link></div></header>
     <div className="mx-auto max-w-6xl px-5 py-10">
-      <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">Catalog management</p>
-      <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">Products</h1>
-      <p className="mt-2 text-sm text-[var(--muted)]">Create draft products using your store&apos;s enabled markets. Product review and publication are enforced by the backend.</p>
+      <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Catalog management", "إدارة الكتالوج")}</p>
+      <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Products", "المنتجات")}</h1>
+      <p className="mt-2 text-sm text-[var(--muted)]">{translate(locale, "Create draft products using your store's enabled markets. Product review and publication are enforced by the backend.", "أنشئ مسودات منتجات باستخدام الأسواق المفعلة لمتجرك. تتم مراجعة المنتجات ونشرها بواسطة النظام الخلفي.")}</p>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
-      {loading ? <p className="py-12 text-sm text-[var(--muted)]">Loading catalog…</p> : <div className="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
+      {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-          <h2 className="text-lg font-semibold">Create product draft</h2>
-          <label className="mt-5 grid gap-2 text-sm font-medium">Store<select className={inputClass} value={storeId} onChange={(e) => {
+          <h2 className="text-lg font-semibold">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2>
+          <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} onChange={(e) => {
             const nextId = e.target.value;
             setStoreId(nextId);
             setProducts([]);
@@ -171,46 +174,46 @@ export default function SellerProductsPage() {
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
             setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
           }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
-          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">Create a store and activate its markets before adding products.</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
-            <label className="grid gap-1 text-sm">Product name<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
-            <label className="grid gap-1 text-sm">URL slug<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
-            <label className="grid gap-1 text-sm">Description<textarea maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
+          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
+            <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label>
-            <label className="grid gap-1 text-sm">Primary image URL<input required type="url" className={inputClass} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" /></label>
-            <label className="grid gap-1 text-sm">Category<select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">No category</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-            <label className="grid gap-1 text-sm">Brand<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">No brand</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Primary image URL", "رابط الصورة الرئيسية")}<input required type="url" className={inputClass} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
             <div className="grid gap-3 rounded-2xl bg-[var(--surface-soft)] p-4">
-              <p className="text-sm font-semibold">Prices for every enabled store market</p>
-              {!availableMarkets.length && <p className="text-xs text-amber-800">This store has no active markets enabled.</p>}
+              <p className="text-sm font-semibold">{translate(locale, "Prices for every enabled store market", "أسعار كل سوق مفعّل للمتجر")}</p>
+              {!availableMarkets.length && <p className="text-xs text-amber-800">{translate(locale, "This store has no active markets enabled.", "لا توجد أسواق مفعّلة لهذا المتجر.")}</p>}
               {availableMarkets.map((market) => {
                 const draft = marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amountMinor: "" };
                 const currencies = market.currencies.map((entry) => entry.currency);
                 const currency = currencies.find((item) => item.code === draft.currencyCode) ?? market.defaultCurrency;
                 return <div key={market.id} className="grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
                   <p className="text-sm font-semibold">{market.name}</p>
-                  <label className="grid gap-1 text-sm">Currency<select required className={inputClass} value={draft.currencyCode} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, currencyCode: e.target.value } }))}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
-                  <label className="grid gap-1 text-sm">Price in minor units<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.amountMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amountMinor: e.target.value } }))} placeholder="e.g. 1299" /><span className="text-xs text-[var(--muted)]">Integer minor units · precision {currency.minorUnit}.</span></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={draft.currencyCode} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, currencyCode: e.target.value } }))}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Price in minor units", "السعر بالوحدات الصغرى")}<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.amountMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amountMinor: e.target.value } }))} placeholder={translate(locale, "e.g. 1299", "مثال: 1299")} /><span className="text-xs text-[var(--muted)]">{translate(locale, "Integer minor units · precision", "عدد صحيح بالوحدات الصغرى · الدقة")} {currency.minorUnit}.</span></label>
                 </div>;
               })}
             </div>
-            <button disabled={busy || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Saving…" : "Create draft product"}</button>
+            <button disabled={busy || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-          <h2 className="text-lg font-semibold">Store catalog</h2><label className="mt-4 block text-xs font-medium">Search this store catalog<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder="Product name, slug, SKU or barcode" className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>
-          {!products.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-5 text-sm text-[var(--muted)]">{search ? "No products match this search." : "No products in this store yet."}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} variants</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs">{product.status}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{product.approvalStatus}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">Review: {product.rejectionReason}</p>}</div>
+          <h2 className="text-lg font-semibold">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2><label className="mt-4 block text-xs font-medium">{translate(locale, "Search this store catalog", "البحث في كتالوج المتجر")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product name, slug, SKU or barcode", "اسم المنتج أو المعرّف أو SKU أو الباركود")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>
+          {!products.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-5 text-sm text-[var(--muted)]">{search ? translate(locale, "No products match this search.", "لا توجد منتجات تطابق هذا البحث.") : translate(locale, "No products in this store yet.", "لا توجد منتجات في هذا المتجر بعد.")}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs">{translate(locale, product.status, product.status === "DRAFT" ? "مسودة" : product.status)}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{translate(locale, product.approvalStatus, product.approvalStatus === "PENDING" ? "قيد المراجعة" : product.approvalStatus === "APPROVED" ? "مقبول" : product.approvalStatus === "REJECTED" ? "مرفوض" : product.approvalStatus)}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">{translate(locale, "Review:", "ملاحظة المراجعة:")} {product.rejectionReason}</p>}</div>
             <div className="flex flex-wrap gap-2">
-              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">Edit draft</button>}
-              {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">Publish</button>}
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+              {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
           {editingId && <form onSubmit={saveProductEdit} className="mt-5 grid gap-3 rounded-2xl border border-[var(--border)] p-4">
-            <h3 className="font-semibold">Edit draft product</h3>
-            <label className="grid gap-1 text-sm">Name<input required minLength={2} maxLength={180} className={inputClass} value={editName} onChange={(e) => setEditName(e.target.value)} /></label>
-            <label className="grid gap-1 text-sm">Slug<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={editSlug} onChange={(e) => setEditSlug(e.target.value)} /></label>
-            <label className="grid gap-1 text-sm">Description<textarea maxLength={12000} rows={3} className={inputClass} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} /></label>
-            <div className="flex gap-2"><button disabled={busy} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">Save changes</button><button type="button" onClick={() => setEditingId("")} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">Cancel</button></div>
+            <h3 className="font-semibold">{translate(locale, "Edit draft product", "تعديل مسودة المنتج")}</h3>
+            <label className="grid gap-1 text-sm">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={180} className={inputClass} value={editName} onChange={(e) => setEditName(e.target.value)} /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Slug", "المعرّف")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={editSlug} onChange={(e) => setEditSlug(e.target.value)} /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} /></label>
+            <div className="flex gap-2"><button disabled={busy} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" onClick={() => setEditingId("")} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
           </form>}
         </section>
       </div>}

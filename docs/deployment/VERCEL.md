@@ -6,7 +6,8 @@ Vercel is the selected application hosting platform for Mtjr2. This document rec
 
 - A Vercel project connected to `waelkamira/mtjr2`, deploying the `main` branch.
 - A managed PostgreSQL 16+ database reachable from Vercel.
-- A Resend account with a verified sending domain/address.
+- A Cloudflare Turnstile widget configured for the production hostname.
+- A Resend account with a verified sending domain/address for password-reset messages.
 
 ## 2. Vercel project settings
 
@@ -27,11 +28,11 @@ Set these for Production (and Preview only when using isolated preview resources
 | `DATABASE_URL` | PostgreSQL connection string for the production database. Use the provider's runtime-compatible connection string. |
 | `APP_URL` | Exact canonical HTTPS production URL, with no trailing slash. |
 | `AUTH_SECRET` | Random secret of at least 32 characters; generate a unique value for each environment. |
-| `RESEND_API_KEY` | Resend API key with permission to send from the verified domain. |
-| `RESEND_FROM_EMAIL` | Sender address verified by Resend, e.g. `no-reply@example.com` (the current environment schema requires a plain email address). |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Public site key for the Cloudflare Turnstile widget configured on the production hostname. |
+| `TURNSTILE_SECRET_KEY` | Private server-side secret for verifying Turnstile challenges. |
 | `TRUSTED_PROXY_IP_HEADER` | Set to `x-vercel-forwarded-for` only after confirming the deployed request path is exclusively through Vercel and the origin cannot be reached directly. |
 
-Never use the example values from `.env.example` in production. Do not expose `AUTH_SECRET`, database credentials, or the Resend key as `NEXT_PUBLIC_*` variables.
+Configure `RESEND_API_KEY` and `RESEND_FROM_EMAIL` if password-reset email is enabled. Never use the example values from `.env.example` in production. Do not expose `AUTH_SECRET`, database credentials, the Turnstile secret, or the Resend key as `NEXT_PUBLIC_*` variables.
 
 ## 4. Database migration
 
@@ -57,13 +58,12 @@ If any condition is uncertain, leave the variable unset. IP-dependent public ide
 
 ## 6. Minimum production verification — one journey
 
-After deployment and DNS/HTTPS are ready, perform exactly one controlled journey using a dedicated test account and mailbox:
+After deployment and DNS/HTTPS are ready, perform exactly one controlled journey using a dedicated test account:
 
-1. Register a new account and confirm the verification email arrives.
-2. Open the verification action and confirm the account becomes active.
-3. Log in and confirm `GET /api/auth/me` returns the authenticated user.
-4. Log out.
-5. Repeat `GET /api/auth/me` and confirm anonymous access is denied.
+1. Complete Turnstile and register a new account; confirm the account is signed in immediately.
+2. Confirm `GET /api/auth/me` returns the authenticated user.
+3. Log out.
+4. Repeat `GET /api/auth/me` and confirm anonymous access is denied.
 
 Also confirm the Vercel deployment is healthy and review its runtime logs for errors during this journey. Do not record tokens, passwords, cookies, or secret values in the build log.
 

@@ -1,12 +1,21 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
-import { registerUser, verifyUserEmail } from "@/server/identity/registration";
+import { IdentityConflictError, registerUser, verifyUserEmail } from "@/server/identity/registration";
 import { loginWithPassword } from "@/server/identity/login";
 import { createPasswordResetChallenge, completePasswordReset } from "@/server/identity/password-reset";
 import { verifyPassword } from "@/server/identity/password";
 import {
+  beginMfaEnrollment,
+  confirmMfaEnrollment,
+  createTotpCode,
+  disableMfa,
+  getMfaAccessState,
+  verifyMfaSession
+} from "@/server/identity/mfa";
+import {
   createUserSession,
+  hashSessionToken,
   resolveUserSession,
   revokeUserSession
 } from "@/server/identity/session";
@@ -29,7 +38,7 @@ describe("identity PostgreSQL integration", () => {
     await prisma.$disconnect();
   });
 
-  it("registers, verifies, scopes permissions, and revokes a real database session", async () => {
+  it("verifies a pending account, scopes permissions, and revokes a real database session", async () => {
     const registration = await registerUser({
       email,
       password: "Correct-Horse-Battery-42!",
@@ -40,27 +49,25 @@ describe("identity PostgreSQL integration", () => {
     });
     userId = registration.userId;
     createdUserIds.add(registration.userId);
+    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
 
-    const pending = await prisma.user.findUniqueOrThrow({
+    await expect(registerUser({
+      email: email.toUpperCase(),
+      password: "Another-Correct-Horse-42!",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    })).rejects.toBeInstanceOf(IdentityConflictError);
+    await expect(prisma.user.count({ where: { emailNormalized: email } })).resolves.toBe(1);
+
+    const active = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      include: { consents: true, verificationTokens: true }
+      include: { consents: true }
     });
 
-    expect(pending.status).toBe("PENDING");
-    expect(pending.consents).toHaveLength(2);
-    expect(pending.verificationTokens).toHaveLength(1);
-    expect(pending.verificationTokens[0].tokenHash).not.toBe(registration.verificationToken);
-
-    // Concurrent consumers must not both activate the same verification challenge.
-    const verificationResults = await Promise.all([
-      verifyUserEmail(registration.verificationToken),
-      verifyUserEmail(registration.verificationToken)
-    ]);
-    expect(verificationResults.filter(Boolean)).toHaveLength(1);
-
-    const active = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
     expect(active.status).toBe("ACTIVE");
     expect(active.emailVerifiedAt).not.toBeNull();
+    expect(active.consents).toHaveLength(2);
 
     const role = await prisma.role.findUniqueOrThrow({
       where: { key: "STORE_MANAGER" }
@@ -114,6 +121,146 @@ describe("identity PostgreSQL integration", () => {
     await expect(resolveUserSession(createdSession.token)).resolves.toBeNull();
   });
 
+  it("allows only one account when duplicate registrations race", async () => {
+    const duplicateEmail = `duplicate-${suffix}@example.test`;
+    const results = await Promise.allSettled([
+      registerUser({
+        email: duplicateEmail,
+        password: "Correct-Horse-Battery-42!",
+        accountType: "CUSTOMER",
+        acceptedTerms: true,
+        acceptedPrivacy: true
+      }),
+      registerUser({
+        email: duplicateEmail.toUpperCase(),
+        password: "Another-Correct-Horse-42!",
+        accountType: "CUSTOMER",
+        acceptedTerms: true,
+        acceptedPrivacy: true
+      })
+    ]);
+
+    const accepted = results.filter(
+      (result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof registerUser>>> =>
+        result.status === "fulfilled"
+    );
+    const rejected = results.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    );
+    for (const result of accepted) createdUserIds.add(result.value.userId);
+
+    expect(accepted).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0].reason).toBeInstanceOf(IdentityConflictError);
+    await expect(prisma.user.count({ where: { emailNormalized: duplicateEmail } })).resolves.toBe(1);
+  });
+
+  it("enforces Super Admin MFA enrollment, verification freshness, and one-time recovery codes", async () => {
+    const registration = await registerUser({
+      email: `mfa-${suffix}@example.test`,
+      password: "Correct-Horse-Battery-42!",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    });
+    createdUserIds.add(registration.userId);
+    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
+    const superAdminRole = await prisma.role.findUniqueOrThrow({
+      where: { key: "SUPER_ADMIN" }
+    });
+    await prisma.userRoleAssignment.create({
+      data: {
+        userId: registration.userId,
+        roleId: superAdminRole.id,
+        scopeType: "GLOBAL",
+        scopeId: "GLOBAL"
+      }
+    });
+    const session = await createUserSession(registration.userId);
+    const sessionRow = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hashSessionToken(session.token) },
+      select: { id: true }
+    });
+
+    await expect(getMfaAccessState(registration.userId)).resolves.toMatchObject({
+      enabled: false,
+      platformRequired: true,
+      enrollmentRequired: true
+    });
+
+    const enrollment = await beginMfaEnrollment(
+      registration.userId,
+      "Correct-Horse-Battery-42!"
+    );
+    expect(enrollment.status).toBe("READY");
+    if (enrollment.status !== "READY") throw new Error("MFA enrollment did not start.");
+    expect(enrollment.secret).not.toContain("=");
+    expect(enrollment.otpauthUri).toContain("otpauth://totp/");
+
+    const now = new Date();
+    const recoveryCodes = await confirmMfaEnrollment(
+      registration.userId,
+      sessionRow.id,
+      createTotpCode(enrollment.secret, now),
+      now
+    );
+    expect(recoveryCodes).toHaveLength(10);
+    if (!recoveryCodes || !recoveryCodes[0]) throw new Error("No MFA recovery codes were created.");
+    await expect(getMfaAccessState(registration.userId, now)).resolves.toMatchObject({
+      enabled: true,
+      required: true,
+      platformRequired: true,
+      enrollmentRequired: false
+    });
+    await expect(
+      disableMfa(
+        registration.userId,
+        sessionRow.id,
+        "Correct-Horse-Battery-42!",
+        createTotpCode(enrollment.secret, new Date(now.getTime() + 30_000)),
+        new Date(now.getTime() + 30_000)
+      )
+    ).resolves.toBe("MFA_REQUIRED");
+    await expect(getMfaAccessState(registration.userId, now)).resolves.toMatchObject({
+      enabled: true,
+      platformRequired: true
+    });
+
+    const secondSession = await createUserSession(registration.userId);
+    const secondSessionRow = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hashSessionToken(secondSession.token) },
+      select: { id: true }
+    });
+    const nextStep = new Date(now.getTime() + 30_000);
+    const code = createTotpCode(enrollment.secret, nextStep);
+    await expect(
+      verifyMfaSession(registration.userId, secondSessionRow.id, code, nextStep)
+    ).resolves.toBe(true);
+    await expect(
+      verifyMfaSession(registration.userId, secondSessionRow.id, code, nextStep)
+    ).resolves.toBe(false);
+
+    const recoverySession = await createUserSession(registration.userId);
+    const recoverySessionRow = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hashSessionToken(recoverySession.token) },
+      select: { id: true }
+    });
+    await expect(
+      verifyMfaSession(
+        registration.userId,
+        recoverySessionRow.id,
+        recoveryCodes[0]
+      )
+    ).resolves.toBe(true);
+    await expect(
+      verifyMfaSession(
+        registration.userId,
+        recoverySessionRow.id,
+        recoveryCodes[0]
+      )
+    ).resolves.toBe(false);
+  });
+
   it("enforces persistent login throttling under concurrent PostgreSQL requests", async () => {
     const throttleEmail = `throttle-${suffix}@example.test`;
     const ipHex = suffix.replaceAll("-", "");
@@ -148,7 +295,7 @@ describe("identity PostgreSQL integration", () => {
     ).resolves.toEqual({ blocked: false });
   });
 
-  it("authenticates a verified user, records attempts, and persists a digest-only session", async () => {
+  it("authenticates an active user, records attempts, and persists a digest-only session", async () => {
     const loginEmail = `login-${suffix}@example.test`;
     const trustedIpAddress = "2001:db8:abcd:1234::42";
     const registration = await registerUser({

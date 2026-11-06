@@ -7,7 +7,7 @@ import { buildCategoryTree as buildBoundedCategoryTree, type CategoryTreeNode, t
 import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
 
 const listSchema = z.object({
-  locale: z.string().trim().min(2).max(16).default("en"),
+  locale: z.string().trim().min(2).max(16).default("ar"),
   page: z.coerce.number().int().min(1).max(1000).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(30)
 });
@@ -16,6 +16,13 @@ type CategoryRow = {
   id: string; parentId: string | null; slug: string; name: string;
   description: string | null; imageUrl: string | null; sortOrder: number;
   translations: Array<{ name: string; description: string | null }>;
+};
+
+const discoverableProductWhere: Prisma.ProductWhereInput = {
+  status: CatalogEntityStatus.ACTIVE,
+  approvalStatus: "APPROVED",
+  store: { status: CatalogEntityStatus.ACTIVE, seller: { status: CatalogEntityStatus.ACTIVE } },
+  variants: { some: { isActive: true } }
 };
 
 export function buildCategoryTree(rows: CategoryRow[]): CategoryTreeNode[] {
@@ -32,6 +39,16 @@ export function buildCategoryTree(rows: CategoryRow[]): CategoryTreeNode[] {
   return buildBoundedCategoryTree(treeRows, 6);
 }
 
+function keepCategoriesWithProducts(
+  categories: CategoryTreeNode[],
+  populatedIds: ReadonlySet<string>
+): CategoryTreeNode[] {
+  return categories.flatMap((category) => {
+    const children = keepCategoriesWithProducts(category.children, populatedIds);
+    return populatedIds.has(category.id) ? [{ ...category, children }] : children;
+  });
+}
+
 export async function listActiveCategoryTree(input: unknown = {}) {
   const query = listSchema.parse(input);
   const where: Prisma.CategoryWhereInput = { status: CatalogEntityStatus.ACTIVE, parentId: null };
@@ -41,14 +58,16 @@ export async function listActiveCategoryTree(input: unknown = {}) {
     translations: { where: { locale: query.locale }, select: { name: true, description: true }, take: 1 }
   } as const;
 
-  // Paginate only root categories. Fetch descendants separately so a page boundary
-  // can never detach a child from its parent in the public category tree.
-  const [roots, total] = await Promise.all([
+  const [roots, populatedCategories] = await Promise.all([
     prisma.category.findMany({
       where, orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-      skip: (query.page - 1) * query.limit, take: query.limit, select
+      select
     }),
-    prisma.category.count({ where })
+    prisma.productCategory.findMany({
+      where: { product: discoverableProductWhere },
+      select: { categoryId: true },
+      distinct: ["categoryId"]
+    })
   ]);
 
   const rows: CategoryRow[] = [...roots];
@@ -70,9 +89,19 @@ export async function listActiveCategoryTree(input: unknown = {}) {
     depth += 1;
   }
 
+  const visibleRoots = keepCategoriesWithProducts(
+    buildCategoryTree(rows),
+    new Set(populatedCategories.map((item) => item.categoryId))
+  );
+  const start = (query.page - 1) * query.limit;
   return {
-    items: buildCategoryTree(rows),
-    pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
+    items: visibleRoots.slice(start, start + query.limit),
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      total: visibleRoots.length,
+      totalPages: Math.ceil(visibleRoots.length / query.limit)
+    }
   };
 }
 export async function listActiveBrands(input: unknown = {}) {
@@ -101,11 +130,15 @@ export async function listActiveBrands(input: unknown = {}) {
   };
 }
 
-export async function getActiveCategoryBySlug(slug: string, locale = "en") {
+export async function getActiveCategoryBySlug(slug: string, locale = "ar") {
   const key = z.string().trim().min(1).max(180).parse(slug);
   const language = z.string().trim().min(2).max(16).parse(locale);
   const item = await prisma.category.findFirst({
-    where: { slug: key, status: CatalogEntityStatus.ACTIVE },
+    where: {
+      slug: key,
+      status: CatalogEntityStatus.ACTIVE,
+      productLinks: { some: { product: discoverableProductWhere } }
+    },
     select: {
       id: true, slug: true, name: true, description: true, imageUrl: true,
       translations: { where: { locale: language }, select: { name: true, description: true, seoTitle: true, seoDescription: true }, take: 1 }
@@ -121,7 +154,7 @@ export async function getActiveCategoryBySlug(slug: string, locale = "en") {
   } : null;
 }
 
-export async function getActiveBrandBySlug(slug: string, locale = "en") {
+export async function getActiveBrandBySlug(slug: string, locale = "ar") {
   const key = z.string().trim().min(1).max(180).parse(slug);
   const language = z.string().trim().min(2).max(16).parse(locale);
   const item = await prisma.brand.findFirst({

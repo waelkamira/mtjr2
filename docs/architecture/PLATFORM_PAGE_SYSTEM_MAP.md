@@ -40,7 +40,7 @@ Property listings and booking remain a separate bounded context and separate nav
 
 | # | System | Primary user-facing / operational pages | Where its controls belong |
 |---:|---|---|---|
-| 01 | Identity, authentication and customer account | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/account`, `/account/profile`, `/account/security`, `/account/sessions`, `/account/addresses` | Public auth pages; account profile/security; global account menu. Seller/admin access is role-gated after sign-in. |
+| 01 | Identity, authentication and customer account | `/login`, `/register`, `/forgot-password`, `/reset-password`, `/account`, `/account/profile`, `/account/security`, `/account/sessions`, `/account/addresses` | Public auth pages; account profile/security; global account menu. Registration activates immediately without email verification. Platform administration requires MFA and permission checks. |
 | 02 | Product catalog and discovery | `/`, `/products`, `/products/[slug]`, `/categories`, `/categories/[slug]`, `/brands`, `/brands/[slug]`, `/stores`, `/stores/[slug]` | Public storefront listings and detail pages; create/edit controls only in seller product workspace; moderation in admin catalog. |
 | 03 | Search, filtering and sorting | `/search`, `/products`, category/brand/store listing pages; admin synonym/ranking controls | Global header search opens `/search`; scoped search/filter panels remain on each listing; admin tuning under `/admin/catalog/search`. |
 | 04 | Cart and checkout | `/cart`, `/checkout`, checkout confirmation / order detail | Cart icon and product add-to-cart; checkout owns address, shipping, tax, discounts, payment and final confirmation steps. |

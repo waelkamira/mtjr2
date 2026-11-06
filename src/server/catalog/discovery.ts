@@ -3,19 +3,25 @@ import "server-only";
 import { CatalogEntityStatus, Prisma, ProductApprovalStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { defaultLocale } from "@/lib/locale";
 import { tokenizeSearchQuery } from "@/server/search/query";
 import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
 
+const optionalQueryString = (schema: z.ZodString) => z.preprocess(
+  (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+  schema.optional()
+);
+
 const querySchema = z.object({
-  locale: z.string().trim().min(2).max(16).default("en"),
-  q: z.string().trim().min(2).max(120).optional(),
-  categoryId: z.string().trim().min(1).optional(),
-  brandId: z.string().trim().min(1).optional(),
-  storeId: z.string().trim().min(1).optional(),
-  marketId: z.string().trim().min(1).optional(),
-  currencyCode: z.string().trim().length(3).toUpperCase().optional(),
-  minPrice: z.string().trim().regex(/^(0|[1-9]\d{0,14})(\.\d{1,4})?$/).optional(),
-  maxPrice: z.string().trim().regex(/^(0|[1-9]\d{0,14})(\.\d{1,4})?$/).optional(),
+  locale: z.string().trim().min(2).max(16).default("ar"),
+  q: optionalQueryString(z.string().trim().min(1).max(120)),
+  categoryId: optionalQueryString(z.string().trim().min(1)),
+  brandId: optionalQueryString(z.string().trim().min(1)),
+  storeId: optionalQueryString(z.string().trim().min(1)),
+  marketId: optionalQueryString(z.string().trim().min(1)),
+  currencyCode: optionalQueryString(z.string().trim().length(3).toUpperCase()),
+  minPrice: optionalQueryString(z.string().trim().regex(/^(0|[1-9]\d{0,14})(\.\d{1,4})?$/)),
+  maxPrice: optionalQueryString(z.string().trim().regex(/^(0|[1-9]\d{0,14})(\.\d{1,4})?$/)),
   inStock: z.enum(["true", "false"]).default("false"),
   page: z.coerce.number().int().min(1).max(10000).default(1),
   limit: z.coerce.number().int().min(1).max(48).default(24),
@@ -38,8 +44,12 @@ function priceToMinor(value: string, minorUnit: number): bigint {
     path: ["price"],
     message: `Price supports at most ${minorUnit} decimal places for the selected currency.`
   }]);
-  return BigInt(whole) * (BigInt(10) ** BigInt(minorUnit)) +
+  const amount = BigInt(whole) * (BigInt(10) ** BigInt(minorUnit)) +
     BigInt((fraction + "0".repeat(minorUnit)).slice(0, minorUnit) || "0");
+  if (amount > BigInt("9223372036854775807")) {
+    throw new z.ZodError([{ code: "custom", path: ["price"], message: "Price exceeds the supported range." }]);
+  }
+  return amount;
 }
 type ProductWithPrices = {
   store?: {
@@ -99,7 +109,6 @@ function buildWhere(
   searchGroups: Prisma.ProductWhereInput[][],
   options: { omitCategory?: boolean; omitBrand?: boolean; stockVariantIds?: string[]; minPriceMinor?: bigint; maxPriceMinor?: bigint } = {}
 ): Prisma.ProductWhereInput {
-  const hasPriceFilter = options.minPriceMinor !== undefined || options.maxPriceMinor !== undefined;
   const priceWhere: Prisma.ProductPriceWhereInput = {
     marketId: query.marketId,
     currencyCode: query.currencyCode,
@@ -288,7 +297,7 @@ function relevanceSql(
   `;
 }
 
-export async function listDiscoverableProducts(input: unknown = {}) {
+export async function listDiscoverableProducts(input: unknown = {}, options: { includeFacets?: boolean } = {}) {
   const parsed = querySchema.parse(input);
   const query: ParsedQuery = { ...parsed, sort: parsed.sort ?? (parsed.q ? "relevance" : "newest") };
   const tokens = query.q ? tokenizeSearchQuery(query.q) : [];
@@ -299,7 +308,7 @@ export async function listDiscoverableProducts(input: unknown = {}) {
       facets: { categories: [], brands: [], inStockCount: 0 }
     };
   }
-  const currency = query.minPrice || query.maxPrice
+  const currency = query.currencyCode
     ? await prisma.currency.findFirst({
         where: {
           code: query.currencyCode,
@@ -309,7 +318,7 @@ export async function listDiscoverableProducts(input: unknown = {}) {
         select: { minorUnit: true }
       })
     : null;
-  if ((query.minPrice || query.maxPrice) && !currency) {
+  if (query.currencyCode && !currency) {
     throw new z.ZodError([{ code: "custom", path: ["currencyCode"], message: "Select an active currency enabled in the selected market." }]);
   }
   const minPriceMinor = query.minPrice && currency ? priceToMinor(query.minPrice, currency.minorUnit) : undefined;
@@ -351,7 +360,9 @@ export async function listDiscoverableProducts(input: unknown = {}) {
   const tokenTerms = tokens.map((token) => [...new Set([token, ...synonyms.filter((item) =>
     item.term.toLocaleLowerCase() === token || item.synonym.toLocaleLowerCase() === token
   ).flatMap((item) => [item.term, item.synonym])])].slice(0, 12));
-  const availableVariantIds = await findInStockVariantIds();
+  const availableVariantIds = query.inStock === "true" || options.includeFacets !== false
+    ? await findInStockVariantIds()
+    : [];
   const stockVariantIds = query.inStock === "true" ? availableVariantIds : undefined;
   const where = buildWhere(query, searchGroups, { stockVariantIds, minPriceMinor, maxPriceMinor });
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
@@ -456,28 +467,30 @@ export async function listDiscoverableProducts(input: unknown = {}) {
         return item ? [item] : [];
       }) ?? []
     : items;
-  const [brandFacets, categoryFacets, inStockCount] = await Promise.all([
-    prisma.product.groupBy({
-      by: ["brandId"],
-      where: buildWhere(query, searchGroups, { omitBrand: true, stockVariantIds, minPriceMinor, maxPriceMinor }),
-      _count: { _all: true }
-    }),
-    prisma.productCategory.groupBy({
-      by: ["categoryId"],
-      where: {
-        product: buildWhere(query, searchGroups, { omitCategory: true, stockVariantIds, minPriceMinor, maxPriceMinor }),
-        category: { status: CatalogEntityStatus.ACTIVE }
-      },
-      _count: { _all: true }
-    }),
-    prisma.product.count({
-      where: {
-        AND: [
-          buildWhere({ ...query, inStock: "true" }, searchGroups, { stockVariantIds: availableVariantIds, minPriceMinor, maxPriceMinor })
-        ]
-      }
-    })
-  ]);
+  const [brandFacets, categoryFacets, inStockCount] = options.includeFacets === false
+    ? [[], [], 0]
+    : await Promise.all([
+        prisma.product.groupBy({
+          by: ["brandId"],
+          where: buildWhere(query, searchGroups, { omitBrand: true, stockVariantIds, minPriceMinor, maxPriceMinor }),
+          _count: { _all: true }
+        }),
+        prisma.productCategory.groupBy({
+          by: ["categoryId"],
+          where: {
+            product: buildWhere(query, searchGroups, { omitCategory: true, stockVariantIds, minPriceMinor, maxPriceMinor }),
+            category: { status: CatalogEntityStatus.ACTIVE }
+          },
+          _count: { _all: true }
+        }),
+        prisma.product.count({
+          where: {
+            AND: [
+              buildWhere({ ...query, inStock: "true" }, searchGroups, { stockVariantIds: availableVariantIds, minPriceMinor, maxPriceMinor })
+            ]
+          }
+        })
+      ]);
   return {
     items: orderedItems.map((item) => ({
       ...serializeProductPrices({
@@ -510,7 +523,7 @@ export async function listDiscoverableProducts(input: unknown = {}) {
   };
 }
 
-export async function getDiscoverableProduct(slug: string, locale = "en") {
+export async function getDiscoverableProduct(slug: string, locale = defaultLocale) {
   const key = z.string().trim().min(1).max(180).parse(slug);
   const language = z.string().trim().min(2).max(16).parse(locale);
   const product = await prisma.product.findFirst({

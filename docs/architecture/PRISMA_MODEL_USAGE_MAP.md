@@ -9,9 +9,11 @@
 
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
-| `User`, `UserSession`, `OAuthAccount`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `LoginRateLimitBucket` | `src/server/identity/*`; `src/app/api/auth/*` | Account lifecycle, session security, verification and abuse controls. OAuth/MFA routes must remain conditional until providers and full flows exist. |
+| `User`, `UserSession`, `OAuthAccount`, `UserTwoFactor`, `UserTwoFactorRecoveryCode`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `LoginRateLimitBucket` | `src/server/identity/*`; `src/app/api/auth/*`; `/api/account/security/mfa` | Account lifecycle, single-use email verification challenges, encrypted TOTP secrets, one-time recovery codes, MFA-assured sessions, OAuth and abuse controls. Password registration remains pending until email verification. |
 | `Role`, `Permission`, `RolePermission`, `UserRoleAssignment` | `src/server/identity/authorization.ts`, `permission-guard.ts`, `permission-repository.ts`, `role-assignment.ts`, `role-scope.ts` | Global grants and exact resource-scoped grants. Resolve actor and scope on the server. |
-| `AuditLog` | Domain services that perform sensitive writes | Cross-cutting audit record; do not create duplicate audit tables per domain without a demonstrated need. |
+| `PlatformPrivilegeRequest` | `src/server/admin/platform-privilege-requests.ts`; `/api/admin/control-panel/privilege-requests` | Two-person Super Admin elevation approval; requester cannot approve their own request. First administrator bootstrap is separate and one-time. |
+| `AiAssistantSetting` | `src/server/admin/ai-assistant-settings.ts`, `src/server/ai/assistant-config.ts`; `/api/admin/control-panel/ai-assistant` | Singleton runtime enable flag, fixed approved model and bounded completion tokens. Environment master switch and server-only provider key remain authoritative; every change is audited. |
+| `AuditLog` | Domain services that perform sensitive writes | Cross-cutting audit record; do not create duplicate audit tables per domain without a demonstrated need. Super Admin privilege and AI settings changes use this model. |
 
 ## 2. Markets and seller/store foundation — Systems 02, 03, 12 and shared operations
 
@@ -27,7 +29,7 @@
 | `Category`, `CategoryTranslation`, `Brand`, `BrandTranslation` | `src/server/catalog/taxonomy.ts`, `category-query.ts`, `category-tree.ts` | Taxonomy and localized labels. Seed activation requires an approved taxonomy. |
 | `Product`, `ProductCategory`, `ProductTranslation`, `ProductMedia`, `ProductVariant`, `ProductIdentifier`, `ProductPrice` | `src/server/catalog/products.ts`, `discovery.ts`; seller product APIs | Canonical product lifecycle, localized content, media, variants and market prices. |
 | `AttributeDefinition`, `AttributeTranslation`, `ProductAttribute`, `ProductAttributeValue`, `VariantAttribute` | Catalog domain; product create/update services | Typed product/variant attributes. Confirm consumer coverage before changing attribute semantics. |
-| `SearchSynonym` | `src/server/catalog/discovery.ts`, taxonomy/discovery APIs | Current synonym expansion; typo-tolerant ranking and autocomplete remain future scope. |
+| `SearchSynonym` | `src/server/catalog/discovery.ts`, `src/server/search/synonyms.ts`, search/admin APIs | Localized synonym expansion, trigram relevance matching, suggestions and audited admin CRUD; database migration/runtime verification remains pending. |
 
 ## 4. Inventory and shipping — Systems 04, 12 and fulfillment dependencies
 
@@ -42,17 +44,19 @@
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
 | `GuestSession`, `Cart`, `CartItem` | `src/server/cart/cart.ts`, `guest-cookie.ts`; cart APIs | Guest/customer cart ownership, merge, and market/currency partition. |
-| `CheckoutQuote`, `CheckoutQuoteLine`, `CheckoutQuoteAddress` | `src/server/checkout/quotes.ts`, `delivery-address.ts` | Time-bounded quote, item and address snapshots. Address changes invalidate dependent shipping/tax snapshots. |
+| `CheckoutQuote`, `CheckoutQuoteLine`, `CheckoutQuoteAddress` | `src/server/checkout/quotes.ts`, `delivery-address.ts` | Time-bounded quote, item, coupon-discount and address snapshots. Address changes invalidate dependent shipping/tax snapshots. |
+| `Coupon`, `CouponRedemption` | `src/server/checkout/coupons.ts`, `quotes.ts`, `orders.ts`; admin coupon APIs | Admin-managed percentage or currency-specific fixed coupon, quote snapshot and one redemption per created order. Redemption caps are checked in serializable order creation. |
 | `UserAddress` | `src/server/account/addresses.ts`, checkout delivery-address service | Customer address book and market-country constraints. |
 | `MarketTaxRate`, `CheckoutTaxSnapshot` | `src/server/tax/tax.ts`; admin tax and checkout tax APIs | Initial configurable market/region tax rule and immutable quote calculation; not a complete jurisdictional tax engine. |
-| `Order`, `OrderAddress`, `VendorOrder`, `OrderItem`, `OrderStatusHistory`, `VendorOrderStatusHistory` | `src/server/orders/orders.ts`, `seller-orders.ts` | Parent order and store-specific vendor orders. Current order state is pending payment until verified provider events exist. |
+| `Order`, `OrderAddress`, `VendorOrder`, `OrderItem`, `OrderStatusHistory`, `VendorOrderStatusHistory`, `Shipment`, `ShipmentTrackingEvent` | `src/server/orders/orders.ts`, `seller-orders.ts` | Buyer-owned order timelines, safe pre-payment cancellation and all-or-nothing reorder. Seller shipment records and manually entered tracking events are store-scoped and audited; cancellation restores SALE ledger quantities through idempotent `ORDER_CANCELLATION` movements. Paid-order refunds and invoices are not implemented. |
+| `CommissionRule`, `CommissionTransaction` | `src/server/admin/commission-management.ts`; `src/server/payments/payments.ts`; `/api/admin/commission-rules`, `/api/admin/commissions` | Super Admin effective-dated commission policy and immutable per-order-item snapshots at verified payment success. Commission basis is line merchandise net of proportionally allocated vendor discounts; tax/shipping excluded. Rule precedence is seller+category, seller, category, global; no matching rule snapshots 0%. Category ID/name is snapshotted onto OrderItem at order creation. `orderItemId` uniqueness makes each item posting idempotent. No seller ledger, payout, refund reversal or reconciliation is implemented. |
 
 ## 6. Returns, trust, engagement, and support — Systems 06–11
 
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
 | `ReturnRequest`, `ReturnItem` | `src/server/returns/returns.ts`; customer/admin return APIs | Return eligibility and review workflow. Current slice does not execute refunds or move money. |
-| `ProductReview`, `StoreReview` | `src/server/reviews/product-reviews.ts`; review APIs | Verified-purchase review lifecycle and moderation. |
+| `ProductReview`, `StoreReview`, `ReviewMedia`, `ReviewReport`, `ReviewAppeal` | `src/server/reviews/product-reviews.ts`; customer, seller, and admin review APIs | Verified-purchase reviews, URL-validated media references, one-report/one-appeal constraints, moderated report/appeal decisions, aggregates, and audited seller responses. Review image bytes are not uploaded or remotely fetched. |
 | `ProductQuestion`, `ProductAnswer` | `src/server/catalog/product-qa.ts`; customer/seller/admin Q&A APIs | Product questions, seller answers, moderation. |
 | `Favorite`, `Recommendation` | `src/server/wishlist/favorites.ts`, `src/server/wishlist/recommendations.ts`; favorites and recommendations APIs | Owner-scoped saved products; curated product-to-product links plus per-user category similarity. Recommendation responses are private/no-store and exclude non-public products. |
 | `Notification`, `NotificationPreference` | `src/server/notifications/notifications.ts`; notifications APIs | In-app notifications and event preferences. Email delivery preferences are not implied. |
@@ -74,11 +78,10 @@ Before adding or changing a model:
 
 ## 8. Known boundaries and unmapped future domains
 
-This schema snapshot does not yet provide a complete implementation for all 49 systems. Payment provider intents/webhooks/refunds/disputes, payout and double-entry accounting, customs/tax compliance, supplier/procurement, loyalty/promotions, invoices, CMS/legal content, feature flags, webhooks/outbox, logistics/carrier integrations, KYC documents, and the separate property/booking domain require their own reviewed data contracts and workflows. Do not invent models or claim these systems are implemented merely because they appear in the 49-system blueprint.
+This schema snapshot does not yet provide a complete implementation for all 49 systems. Payout and double-entry accounting, payment refunds/disputes, customs/tax compliance, supplier/procurement, loyalty/promotions, invoices, CMS/legal content, feature flags, webhooks/outbox, logistics/carrier integrations, KYC documents, and the separate property/booking domain require their own reviewed data contracts and workflows. Do not invent models or claim these systems are implemented merely because they appear in the 49-system blueprint.
 
 
 ## Seller order preparation — 2026-11-04
 
 - `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, and `AuditLog` are consumed by `src/server/orders/seller-orders.ts` for the initial seller preparation transitions.
 - No Prisma change is required for `CONFIRMED → PROCESSING → READY_TO_SHIP`; shipment labels/tracking and later delivery states are not implemented by this slice.
-
