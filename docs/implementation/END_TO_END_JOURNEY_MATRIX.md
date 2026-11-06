@@ -225,3 +225,22 @@ For audited pre-update head `5a24e38c4ae448108384438772f6c5d47a701c11`, GitHub A
 | Google sign-in / registration | /register → GET /api/auth/google/start → Google authorization-code callback | State cookie, PKCE S256 verifier and one-time nonce; callback verifies RS256 signature against Google's published JWKS, issuer, audience/authorized party, expiry, issued-at, verified email and nonce. OAuthAccount links by stable Google sub; matching local email is not silently linked. | Source and focused unit cases added. Repository CI/PostgreSQL on the resulting head and a real Google project/browser journey remain unverified. |
 
 The previous production tokeninfo validation call was removed because Google documents that endpoint for debugging, not production validation. This correction does not prove a live provider sign-in. System 01 remains Implemented / unverified.
+
+
+## Identity buyer/seller journey evidence review — 2026-11-06
+
+| Journey step | UI / API / service | Persistence and authorization | Evidence status |
+|---|---|---|---|
+| Buyer registration | /register → POST /api/auth/register → registerUser | Explicit CUSTOMER role; required Terms/Privacy v1 consent; PENDING User; one-time VerificationToken digest | Source reviewed; existing PostgreSQL integration asserts pending state, two consents, digest-only token and CUSTOMER assignment. Exact resulting-head Actions pending. |
+| Verify email | POST /api/auth/verify-email → verifyUserEmail | Atomic single-use challenge consumption; only PENDING user becomes ACTIVE and receives emailVerifiedAt | Source reviewed; PostgreSQL integration checks concurrent verification consumes the token once. |
+| Login/session | POST /api/auth/login → loginWithPassword | Requires ACTIVE + verified email; persistent throttling; HttpOnly cookie; only session digest stored | Source and PostgreSQL integration reviewed; integration authenticates a verified buyer and resolves/revokes the real session. |
+| Profile | GET/PATCH /api/account/profile | User ID comes from current session, never request body | PostgreSQL integration exercises read/update and asserts the session user ID is queried. |
+| Addresses | GET/POST /api/account/addresses | UserAddress.userId is the current session user; active Country lookup | PostgreSQL integration creates/lists an address and checks ownership. |
+| Favorites | GET /api/favorites, GET/POST/DELETE /api/favorites/[productId] | Favorite query/mutation includes current session user ID | PostgreSQL integration checks list/remove scope; live browser add/reload remains unverified. |
+| Orders | GET /api/orders and owned order detail | Customer order list filters by current session user ID; detail uses authenticated owner or guest token | PostgreSQL integration checks order-list ownership; no live checkout-to-history browser run is claimed. |
+| Logout | POST /api/auth/logout → logoutCurrentSession | Same-origin JSON mutation; current cookie session is revoked, audited and cleared | Unit tests cover logout service. A new PostgreSQL integration case now exercises the HTTP handler and real session revocation; exact-head Actions pending. |
+| Seller registration | /register with SELLER → registerUser | Creates Seller=PENDING; does not assign SELLER role or store:manage | PostgreSQL integration asserts pending status, zero role assignments and denied store:manage. |
+| Seller approval | Admin review → reviewSellerApplication | PENDING→ACTIVE and SELLER role assignment occur atomically; store creation separately checks ACTIVE + store:manage | Source reviewed; live reviewer/browser journey remains unverified. |
+| Google OAuth | GET /api/auth/google/start → Google → GET /api/auth/google/callback | State + PKCE S256 + nonce; JWKS RS256 signature and OIDC claims; provider-subject mapping; no silent email linking | Unit tests use synthetic signed test keys only. Real Google credentials/callback and browser consent flow remain external and unverified. |
+
+The latest reviewed starting SHA d5208538c46003d35f8374bc04bcd64678dc5303 had no GitHub Actions workflow runs. The workflow push filters were corrected in the follow-up commit so General CI and disposable PostgreSQL can execute after the PR has already merged. No browser runtime was available; source and database integration evidence must not be described as a live browser pass.

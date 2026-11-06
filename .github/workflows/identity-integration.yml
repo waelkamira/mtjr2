@@ -64,10 +64,21 @@ on:
       - "src/features/admin/product-qa-page.tsx"
       - "tests/cart/**"
       - "tests/integration/**"
+      - "tests/identity/**"
+      - "src/app/account/**"
+      - "src/app/api/account/**"
+      - "src/server/account/**"
+      - "src/server/wishlist/**"
+      - "src/app/api/favorites/**"
+      - "src/server/orders/**"
+      - "src/app/api/orders/**"
+      - "src/server/marketplace/seller-application.ts"
+      - "src/app/api/seller/applications/**"
+      - "src/app/api/seller/stores/**"
       - "vitest.integration.config.ts"
       - "package.json"
   push:
-    branches: [main]
+    branches: [main, "feat/returns-workflow"]
     paths:
       - "src/server/identity/**"
       - "src/app/api/auth/**"

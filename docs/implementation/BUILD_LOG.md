@@ -1850,3 +1850,29 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The Node.js RS256/JWK crypto primitive was checked independently in the available Node runtime. The repository Vitest, Prisma, typecheck, lint, build and disposable PostgreSQL suites have not yet been observed on the resulting commit SHA.
 - No browser runtime or Google project credentials were available. Real Google sign-in remains an external check requiring GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and the exact NEXT_PUBLIC_APP_URL/api/auth/google/callback registration. Email delivery and trusted-proxy edge configuration remain external checks.
 - No secret values, user/production database, migrations or Vercel settings were accessed or changed. The identity system remains Implemented / unverified until exact-head Actions evidence and the required live checks are complete.
+
+
+## 2026-11-06 — Identity exact-head review and CI trigger correction
+
+**Repository and Actions baseline**
+- Re-read the current feat/returns-workflow branch and the buyer, seller and Google identity paths at starting SHA d5208538c46003d35f8374bc04bcd64678dc5303.
+- PR #15 is closed and merged, not an open draft: GitHub records its merge at 2026-11-04T02:44:51Z with main as its base. The current branch head is a later follow-up commit; this run did not create, reopen or merge a PR.
+- GitHub Actions returned zero workflow runs for starting SHA d5208538c46003d35f8374bc04bcd64678dc5303; no quality/CI or PostgreSQL job was attached to that SHA, so there was no failed Actions step or log to diagnose. No earlier SHA is substituted as current evidence.
+
+**Confirmed CI trigger gap and correction**
+- General CI only ran on pushes to main; its pull_request.branches list filters the PR's base branch, not the source/head branch.
+- The PostgreSQL integration workflow also only ran on pushes to main, despite having identity/account paths in its pull-request filter. Once PR #15 was merged, later commits on this feature branch had no push-triggered quality or PostgreSQL run.
+- Added feat/returns-workflow to both workflows' push branch filters. Expanded the PostgreSQL push paths to include identity tests, account APIs/pages, favorites, customer orders, seller applications/stores and the existing identity integration suite.
+- Added a focused PostgreSQL integration case for the actual POST /api/auth/logout route: it starts from a verified buyer session, invokes the HTTP handler, confirms the session is revoked, checks the audit event and confirms the cookie-clear adapter is called.
+
+**Source-level identity findings**
+- Buyer registration requires explicit CUSTOMER selection and both v1 consents; it creates a PENDING user, a hashed one-time verification challenge and a global CUSTOMER role. Email verification consumes the challenge once and activates only a PENDING user. Password login requires ACTIVE + verified email, uses persistent throttling and stores only a session-token digest.
+- Profile, address, favorites and order reads/writes derive the owner from the current HttpOnly session. The existing PostgreSQL integration suite checks the profile, address, favorites and orders against that current user ID.
+- SELLER registration creates a PENDING Seller application and no role assignment. The approval service grants the seeded SELLER role only in the approval transaction; store creation additionally requires an ACTIVE seller and store:manage.
+- Google authorization uses state, PKCE S256 and nonce cookies. The callback compares state in constant time, exchanges the code with the verifier, verifies the RS256 ID-token signature against Google's JWKS and validates issuer, audience/authorized party, expiry, issued-at, verified email and nonce. OAuth accounts map by Google subject; existing local accounts are not silently linked.
+- No Prisma schema or migration change was justified by this audit.
+
+**Verification boundary**
+- The new workflow-trigger and logout-test commit must complete General CI and disposable PostgreSQL on its exact resulting SHA before any closure decision. This log does not predeclare those results.
+- No browser runtime was available, so no live browser journey is claimed. Real Google sign-in remains an external test requirement for GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and the exact NEXT_PUBLIC_APP_URL/api/auth/google/callback registration. The real email journey also needs owner-configured Resend sender credentials; login HTTP verification needs a trusted proxy header that is overwritten by the trusted edge.
+- No secret values were requested or accessed. No user/production database was contacted and no migration was applied outside disposable CI PostgreSQL. No deployment action was performed.

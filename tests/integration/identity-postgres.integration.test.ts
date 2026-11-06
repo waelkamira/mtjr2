@@ -1,12 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 
-const { sessionMock } = vi.hoisted(() => ({
-  sessionMock: { getCurrentSession: vi.fn(), requireCurrentSession: vi.fn() }
+const { sessionMock, sessionCookieMock } = vi.hoisted(() => ({
+  sessionMock: { getCurrentSession: vi.fn(), requireCurrentSession: vi.fn() },
+  sessionCookieMock: { getSessionCookie: vi.fn(), clearSessionCookie: vi.fn() }
 }));
 vi.mock("@/server/identity/current-session", () => ({
   getCurrentSession: sessionMock.getCurrentSession,
   requireCurrentSession: sessionMock.requireCurrentSession
+}));
+vi.mock("@/server/identity/session-cookie", () => ({
+  getSessionCookie: sessionCookieMock.getSessionCookie,
+  clearSessionCookie: sessionCookieMock.clearSessionCookie
 }));
 
 import { prisma } from "@/lib/db/prisma";
@@ -21,6 +26,7 @@ import {
 } from "@/server/identity/session";
 import { userHasPermission } from "@/server/identity/permission-repository";
 import { GET as getAccountProfile, PATCH as patchAccountProfile } from "@/app/api/account/profile/route";
+import { POST as postLogout } from "@/app/api/auth/logout/route";
 import { createUserAddress, listUserAddresses } from "@/server/account/addresses";
 import { listMyFavorites, removeFavorite } from "@/server/wishlist/favorites";
 import { listCustomerOrders } from "@/server/orders/orders";
@@ -39,6 +45,8 @@ describe("identity PostgreSQL integration", () => {
     vi.restoreAllMocks();
     sessionMock.getCurrentSession.mockReset();
     sessionMock.requireCurrentSession.mockReset();
+    sessionCookieMock.getSessionCookie.mockReset();
+    sessionCookieMock.clearSessionCookie.mockReset();
   });
 
   afterAll(async () => {
@@ -347,6 +355,40 @@ describe("identity PostgreSQL integration", () => {
       userId: registration.userId
     });
     await expect(revokeUserSession(authenticated.session.token)).resolves.toBe(true);
+  });
+
+  it("logs out through the HTTP API, revokes the current PostgreSQL session, and clears the cookie", async () => {
+    const registration = await registerUser({
+      email: "logout-" + suffix + "@example.test",
+      password: "Correct-Horse-Battery-42!",
+      displayName: "Logout Integration",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    });
+    createdUserIds.add(registration.userId);
+    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
+
+    const session = await createUserSession(registration.userId);
+    sessionCookieMock.getSessionCookie.mockResolvedValue(session.token);
+    sessionCookieMock.clearSessionCookie.mockResolvedValue(undefined);
+
+    const response = await postLogout(new Request("http://localhost:3000/api/auth/logout", {
+      method: "POST",
+      headers: {
+        origin: "http://localhost:3000",
+        "content-type": "application/json"
+      },
+      body: "{}"
+    }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ message: "Signed out." });
+    expect(sessionCookieMock.clearSessionCookie).toHaveBeenCalledOnce();
+    await expect(resolveUserSession(session.token)).resolves.toBeNull();
+    await expect(prisma.auditLog.findFirst({
+      where: { actorId: registration.userId, action: "identity.logout.succeeded" }
+    })).resolves.not.toBeNull();
   });
 
   it("consumes a password reset token once, changes the password, and revokes sessions", async () => {
