@@ -11,7 +11,15 @@ type Product = {
   imageUrl: string | null;
   prices: Array<{ amount: string; currencyCode: string }>;
 };
-type Message = { role: "user" | "assistant"; content: string; products?: Product[] };
+type Order = {
+  orderNumber: string;
+  status: string;
+  placedAt: string;
+  total: string;
+  currencyCode: string;
+  shipments: Array<{ store: string; status: string; carrier: string | null; trackingUrl: string | null }>;
+};
+type Message = { role: "user" | "assistant"; content: string; products?: Product[]; orders?: Order[] };
 
 const suggestions = [
   "ابحث عن منتجات إلكترونية",
@@ -44,9 +52,9 @@ export default function MatjarAIAssistant() {
           history: messages.slice(-6).map(({ role, content }) => ({ role, content }))
         })
       });
-      const data = await response.json() as { message?: string; products?: Product[]; error?: string };
+      const data = await response.json() as { message?: string; products?: Product[]; orders?: Order[]; error?: string };
       if (!response.ok) throw new Error(data.error || "تعذر الاتصال بالمساعد.");
-      setMessages([...next, { role: "assistant", content: data.message || "", products: data.products || [] }]);
+      setMessages([...next, { role: "assistant", content: data.message || "", products: data.products || [], orders: data.orders || [] }]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "تعذر الاتصال بالمساعد.");
     } finally {
@@ -69,8 +77,9 @@ export default function MatjarAIAssistant() {
             {messages.length === 0 && (
               <div className="space-y-3">
                 <div className="rounded-2xl bg-white p-4 text-sm leading-7 text-[var(--color-ink-800)] shadow-sm">
-                  مرحباً بك في Matjar! اسألني عن المنتجات أو الأسعار أو كيفية استخدام المتجر. عند الاستفسار عن طلباتك، قد تتم معالجة ملخص الطلب المرتبط بحسابك عبر Groq لتوليد الإجابة. لا ترسل كلمات المرور أو بيانات الدفع.
+                  مرحباً بك في Matjar! اسألني عن المنتجات أو الأسعار أو كيفية استخدام المتجر. تُرسل رسائلك إلى Groq لتوليد الإجابة، أما تفاصيل طلباتك فتُعرض من Matjar مباشرة ولا تُرسل إلى النموذج. لا ترسل كلمات المرور أو بيانات الدفع.
                 </div>
+                <a href="/account/support" className="block text-center text-xs font-semibold text-[var(--color-lavender-800)] underline">التواصل مع خدمة العملاء</a>
                 {suggestions.map((suggestion) => (
                   <button key={suggestion} type="button" onClick={() => void send(suggestion)} className="block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-right text-xs text-[var(--color-lavender-800)] hover:bg-[var(--color-lavender-50)]">
                     {suggestion}
@@ -81,6 +90,20 @@ export default function MatjarAIAssistant() {
             {messages.map((item, index) => (
               <div key={index} className={item.role === "user" ? "ml-8 rounded-2xl rounded-br-sm bg-[var(--color-lavender-800)] p-3 text-sm leading-6 text-white" : "mr-5 rounded-2xl rounded-bl-sm bg-white p-3 text-sm leading-7 text-[var(--color-ink-800)] shadow-sm"}>
                 <p className="whitespace-pre-wrap">{item.content}</p>
+                {item.orders?.map((order) => (
+                  <div key={order.orderNumber} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--color-mint-50)] p-3 text-xs text-[var(--color-ink-800)]">
+                    <div className="flex items-center justify-between gap-2 font-bold">
+                      <span>{order.orderNumber}</span><span>{order.status}</span>
+                    </div>
+                    <p className="mt-1">{order.total} {order.currencyCode} · {new Date(order.placedAt).toLocaleDateString()}</p>
+                    {order.shipments.map((shipment, shipmentIndex) => (
+                      <div key={shipmentIndex} className="mt-2 border-t border-[var(--border)] pt-2">
+                        <p>{shipment.store}: {shipment.status}</p>
+                        {shipment.trackingUrl && <a href={shipment.trackingUrl} target="_blank" rel="noreferrer" className="font-semibold underline">تتبع الشحنة</a>}
+                      </div>
+                    ))}
+                  </div>
+                ))}
                 {item.products?.map((product) => (
                   <a key={product.id} href={`/products/${encodeURIComponent(product.slug)}`} className="mt-3 flex gap-3 rounded-xl border border-[var(--border)] p-2 text-[var(--color-ink-800)] hover:bg-[var(--color-lavender-50)]">
                     {product.imageUrl ? <img src={product.imageUrl} alt="" className="h-16 w-16 rounded-lg object-cover" /> : <div className="h-16 w-16 rounded-lg bg-[var(--color-lavender-100)]" />}
