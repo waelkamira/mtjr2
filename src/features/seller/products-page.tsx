@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -119,10 +120,12 @@ export default function SellerProductsPage() {
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
+      toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
       setName(""); setSlug(""); setDescription(""); setSku(""); setImageUrl(""); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
+      toast.error(translate(locale, "Product could not be created", "تعذر إنشاء المنتج"));
     } finally { setBusy(false); }
   }
 
@@ -137,9 +140,11 @@ export default function SellerProductsPage() {
       }));
       setEditingId("");
       setMessage(translate(locale, "Draft product updated and returned to pending review.", "تم تحديث مسودة المنتج وإعادتها إلى قائمة المراجعة."));
+      toast.success(translate(locale, "Product updated", "تم تحديث المنتج"));
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be updated.", "تعذر تحديث المنتج."));
+      toast.error(translate(locale, "Product could not be updated", "تعذر تحديث المنتج"));
     } finally { setBusy(false); }
   }
 
@@ -148,9 +153,11 @@ export default function SellerProductsPage() {
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, { method: "POST" }));
       setMessage(translate(locale, "Product published.", "تم نشر المنتج."));
+      toast.success(translate(locale, "Product published", "تم نشر المنتج"));
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be published.", "تعذر نشر المنتج."));
+      toast.error(translate(locale, "Product could not be published", "تعذر نشر المنتج"));
     } finally { setBusy(false); }
   }
 
