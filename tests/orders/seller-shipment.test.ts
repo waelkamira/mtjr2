@@ -77,7 +77,7 @@ describe("seller shipment tracking", () => {
       })
     }));
     expect(mocks.vendorUpdateMany).toHaveBeenCalledWith({
-      where: { id: "vendor-1", status: "READY_TO_SHIP" }, data: { status: "SHIPPED" }
+      where: { id: "vendor-1", storeId: "store-1", status: "READY_TO_SHIP" }, data: { status: "SHIPPED" }
     });
     expect(mocks.orderUpdateMany).toHaveBeenCalledWith({
       where: { id: "order-1", status: "PROCESSING" }, data: { status: "FULFILLED" }
