@@ -54,6 +54,18 @@ describe("parseEnvironment", () => {
   it("allows registration to be explicitly disabled outside production", () => {
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "false" }))).toBe(false);
   });
+  it("defaults blank Groq configuration without breaking application startup", () => {
+    const parsed = parseEnvironment({
+      ...validEnvironment,
+      GROQ_API_KEY: "",
+      GROQ_MODEL: "   ",
+      AI_ASSISTANT_ENABLED: ""
+    });
+    expect(parsed.GROQ_MODEL).toBe("openai/gpt-oss-20b");
+    expect(parsed.AI_ASSISTANT_ENABLED).toBe("false");
+    expect(parsed.GROQ_API_KEY).toBeUndefined();
+  });
+
   it("accepts blank optional provider credentials in local env files", () => {
     expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", RESEND_API_KEY: "", RESEND_FROM_EMAIL: "" })).toMatchObject(validEnvironment);
   });
