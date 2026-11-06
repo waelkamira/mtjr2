@@ -98,7 +98,7 @@ export async function recordSponsoredAdEvent(input: {
   const visitorHash = visitorIp ? createHash("sha256").update(visitorIp).digest("hex") : null;
   if (input.type === "CLICK" && !visitorHash) throw new Error("Trusted client IP is required before an advertising click can be billed.");
   return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${payload.campaignId}, 0))`);
+    await tx.$queryRaw(Prisma.sql`SELECT 1::int AS locked FROM (SELECT pg_advisory_xact_lock(hashtextextended(${payload.campaignId}, 0))) AS lock_result`);
     const campaign = await tx.adCampaign.findUnique({
       where: { id: payload.campaignId },
       select: { id: true, storeId: true, currencyCode: true, status: true, startsAt: true, endsAt: true, budgetMinor: true, dailyBudgetMinor: true, cpcBidMinor: true, spentMinor: true }
