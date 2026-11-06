@@ -8,11 +8,11 @@ const publicReads = new Set([
   "payments/providers/route.ts", "stores/route.ts"
 ]);
 const evidencePatterns = [
-  /validateIdentityMutationRequest\\s*\\(/, /requireCurrentSession\\s*\\(/, /getCurrentSession\\s*\\(/,
-  /requirePermission\\s*\\(/, /requireAnyPermission\\s*\\(/, /requirePlatformManagement\\s*\\(/,
-  /userHasPermission\\s*\\(/, /userHasScopedPermission\\s*\\(/, /authorized\\s*\\(\\s*request/,
-  /verifyWebhook\\s*\\(/, /processVerifiedPaymentEvent\\s*\\(/, /getSessionCookie\\s*\\(/,
-  /guestToken/, /hashToken\\s*\\(/, /ownerWhere\\s*\\(/, /assert[A-Z]\\w*(?:Owner|Access|Scope)\\s*\\(/
+  /validateIdentityMutationRequest\s*\(/, /requireCurrentSession\s*\(/, /getCurrentSession\s*\(/,
+  /requirePermission\s*\(/, /requireAnyPermission\s*\(/, /requirePlatformManagement\s*\(/,
+  /userHasPermission\s*\(/, /userHasScopedPermission\s*\(/, /authorized\s*\(\s*request/,
+  /verifyWebhook\s*\(/, /processVerifiedPaymentEvent\s*\(/, /getSessionCookie\s*\(/,
+  /guestToken/, /hashToken\s*\(/, /ownerWhere\s*\(/, /assert[A-Z]\w*(?:Owner|Access|Scope)\s*\(/
 ];
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -24,18 +24,18 @@ function collect(source, file, depth = 0, seen = new Set()) {
   if (depth > 4 || seen.has(file)) return "";
   seen.add(file);
   let result = source;
-  for (const match of source.matchAll(/from\\s+["']@\\/(server\\/[^"']+)["']/g)) {
+  for (const match of source.matchAll(/from\s+["']@\/(server\/[^"']+)["']/g)) {
     const relative = match[1];
     const candidates = [path.join(root, "src", relative + ".ts"), path.join(root, "src", relative, "index.ts"), path.join(root, "src", relative + ".tsx")];
     const target = candidates.find((candidate) => fs.existsSync(candidate));
-    if (target) result += "\\n" + collect(fs.readFileSync(target, "utf8"), target, depth + 1, seen);
+    if (target) result += "\n" + collect(fs.readFileSync(target, "utf8"), target, depth + 1, seen);
   }
   return result;
 }
 const rows = walk(apiRoot).map((file) => {
   const relative = path.relative(apiRoot, file).split(path.sep).join("/");
   const source = fs.readFileSync(file, "utf8");
-  const methods = [...source.matchAll(/export\\s+async\\s+function\\s+(GET|POST|PUT|PATCH|DELETE)/g)].map((match) => match[1]);
+  const methods = [...source.matchAll(/export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)/g)].map((match) => match[1]);
   const allSource = collect(source, file);
   const evidence = evidencePatterns.filter((pattern) => pattern.test(allSource)).map((pattern) => pattern.source);
   const isPublicRead = methods.length > 0 && methods.every((method) => method === "GET") && publicReads.has(relative);
@@ -55,8 +55,8 @@ const lines = [
   "",
   "| Route | Methods | Classification | Guard evidence |",
   "|---|---|---|---|",
-  ...rows.map((row) => `| \`${row.relative}\` | ${row.methods || "none"} | ${row.classification} | ${row.evidence.replace(/\\|/g, "\\|")} |`)
+  ...rows.map((row) => `| \`${row.relative}\` | ${row.methods || "none"} | ${row.classification} | ${row.evidence.replace(/\|/g, "\|")} |`)
 ];
-const report = lines.join("\\n") + "\\n";
+const report = lines.join("\n") + "\n";
 fs.writeFileSync("api-route-security-report.md", report);
 process.stdout.write(report);
