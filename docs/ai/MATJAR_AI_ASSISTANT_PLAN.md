@@ -1,6 +1,6 @@
 # Matjar AI Assistant — implementation plan
 
-**Status:** Approved direction; implementation not started.
+**Status:** Public catalog assistant v1 implemented on `feat/matjar-ai-public-catalog-chat`; automated verification and deployment configuration are pending. Customer-specific support and Super Admin management are not implemented.
 **Provider:** GroqCloud API, using its free tier within the account's published rate limits.
 **Primary model candidate:** `openai/gpt-oss-20b` (tool calling supported). Keep the model configurable because provider model availability and free-tier limits can change.
 **Cost constraint:** No paid model/API plan and no paid vector database. The application must fail gracefully when the free quota is exhausted; it must never silently switch to a paid provider.
@@ -153,3 +153,14 @@ Environment variable names and validation must be reconciled with the existing e
 
 - 2026-11-06: Owner created a GroqCloud account and API key. The key has not been shared in chat and must remain private.
 - 2026-11-06: This implementation contract was added to the canonical repository documentation. No API key was committed, no Vercel environment was accessed, no database was changed, and no AI endpoint or UI is yet claimed implemented.
+
+
+## Implementation log
+
+- 2026-11-06: Added server-only Groq Chat Completions adapter with configurable model, 20-second timeout, bounded context, secret-safe errors, and explicit 429 handling. The provider never falls back to a paid model.
+- 2026-11-06: Added fail-closed environment settings: `GROQ_API_KEY`, `GROQ_MODEL`, and `AI_ASSISTANT_ENABLED`. The assistant stays disabled unless explicitly enabled and a server-side key is present.
+- 2026-11-06: Added a public-only chat endpoint. It retrieves up to five discoverable products through the existing catalog service and passes only public product names, descriptions, brand/store names, and market prices to Groq. It does not query private customer data or accept model-generated database commands.
+- 2026-11-06: Added a floating Arabic chat panel to the global application layout. It displays product suggestions and verified catalog prices returned by the server.
+- 2026-11-06: Added initial environment and provider unit tests. These tests have been committed but have not yet been executed in a trusted CI run.
+- Current scope limitation: this is a public catalog/FAQ-style assistant only. Authenticated order tracking, returns, support tickets, knowledge-base administration, conversation history, rate limiting, and Super Admin controls remain future phases.
+- Safety: no API key was committed; no database migration was made; no hosting settings or deployment were changed; Vercel was not used intentionally.
