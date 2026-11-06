@@ -31,7 +31,7 @@ function publicSettings(setting: {
   const enabled = setting?.enabled ?? false;
   return {
     enabled,
-    model: setting?.model ?? env.GROQ_MODEL ?? DEFAULT_MODEL,
+    model: setting?.model === DEFAULT_MODEL ? setting.model : DEFAULT_MODEL,
     maxCompletionTokens: setting?.maxCompletionTokens ?? 900,
     environmentEnabled,
     providerKeyConfigured,
