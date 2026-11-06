@@ -163,7 +163,8 @@ Environment variable names and validation must be reconciled with the existing e
 - Added `POST /api/ai/chat` with same-origin JSON mutation checks, bounded input/history, no-store responses, and a per-instance request throttle. The throttle is a best-effort local guard, not a distributed production rate limiter.
 - Added the global floating storefront assistant UI in Arabic-first mode, product result cards, order summary cards, retry/error states, and a direct link to `/account/support`.
 - Added live public product search using the existing `listDiscoverableProducts` service. This preserves active/approved product and active store/seller visibility rules.
-- Added current-customer order lookup using `listCustomerOrders`, which resolves the authenticated server session. Only minimal order summaries are returned to the browser; order addresses and order details are not sent to Groq.
+- Added public product detail lookup and current-stock filtering using existing catalog services.
+- Added current-customer order and return lookup using `listCustomerOrders` and `getMyReturnCenter`, both of which resolve the authenticated server session. Only minimal summaries are returned to the browser; private order/return details are not sent to Groq.
 - Added input validation tests and configured CI to run on `feat/**` branches.
 - No Prisma schema or migration changes were needed.
 - No Vercel configuration, deployment, or environment secrets were changed.
