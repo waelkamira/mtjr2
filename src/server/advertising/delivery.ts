@@ -30,7 +30,7 @@ function readToken(token: string, now: Date): TokenPayload | null {
 }
 
 export async function listSponsoredCampaigns(input: {
-  marketId?: string; categoryId?: string; query?: string; limit?: number; now?: Date;
+  marketId?: string; categoryId?: string; brandId?: string; query?: string; limit?: number; now?: Date;
 }) {
   const now = input.now ?? new Date();
   if (!input.marketId) return [];
@@ -40,7 +40,7 @@ export async function listSponsoredCampaigns(input: {
       status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now },
       marketId: input.marketId,
       market: { status: "ACTIVE", country: { isActive: true }, currencies: { some: { isEnabled: true } } },
-      OR: [{ targetCategoryId: null }, ...(input.categoryId ? [{ targetCategoryId: input.categoryId }] : [])],
+      AND: [\n        { OR: [{ targetCategoryId: null }, ...(input.categoryId ? [{ targetCategoryId: input.categoryId }] : [])] },\n        { OR: [{ targetBrandId: null }, ...(input.brandId ? [{ targetBrandId: input.brandId }] : [])] }\n      ],
       product: {
         status: "ACTIVE", approvalStatus: "APPROVED",
         store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: { some: { marketId: input.marketId, isEnabled: true } } },

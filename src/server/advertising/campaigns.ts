@@ -17,6 +17,9 @@ const createSchema=z.object({
 .refine(x=>BigInt(x.cpcBidMinor)<=BigInt(x.dailyBudgetMinor),{path:["cpcBidMinor"],message:"Cost per click cannot exceed the daily budget."});
 export type CreateAdCampaignInput=z.input<typeof createSchema>;
 const select={id:true,storeId:true,productId:true,marketId:true,currencyCode:true,budgetMinor:true,dailyBudgetMinor:true,cpcBidMinor:true,spentMinor:true,impressionCount:true,clickCount:true,targetCategoryId:true,targetBrandId:true,targetKeywords:true,title:true,message:true,status:true,moderationNote:true,startsAt:true,endsAt:true,submittedAt:true,reviewedAt:true,createdAt:true,updatedAt:true,product:{select:{id:true,name:true,slug:true}},store:{select:{id:true,name:true,slug:true}}} satisfies Prisma.AdCampaignSelect;
+function serializeCampaign<T extends {budgetMinor:bigint;dailyBudgetMinor:bigint;cpcBidMinor:bigint;spentMinor:bigint;impressionCount:bigint;clickCount:bigint}>(item:T){
+ return {...item,budgetMinor:item.budgetMinor.toString(),dailyBudgetMinor:item.dailyBudgetMinor.toString(),cpcBidMinor:item.cpcBidMinor.toString(),spentMinor:item.spentMinor.toString(),impressionCount:item.impressionCount.toString(),clickCount:item.clickCount.toString()};
+}
 
 async function assertStoreAccess(storeId:string,userId:string,now:Date){
  const store=await prisma.store.findUnique({where:{id:storeId},select:{id:true,status:true,seller:{select:{ownerId:true,status:true}}}});
@@ -26,7 +29,7 @@ async function assertStoreAccess(storeId:string,userId:string,now:Date){
 }
 export async function listSellerAdCampaigns(storeId:string,now=new Date()){
  const actor=await requireCurrentSession(now); await assertStoreAccess(storeId,actor.userId,now);
- return prisma.adCampaign.findMany({where:{storeId},orderBy:[{createdAt:"desc"},{id:"desc"}],take:100,select});
+ return (await prisma.adCampaign.findMany({where:{storeId},orderBy:[{createdAt:"desc"},{id:"desc"}],take:100,select})).map(serializeCampaign);
 }
 export async function createSellerAdCampaign(input:CreateAdCampaignInput,now=new Date()){
  const data=createSchema.parse(input),actor=await requireCurrentSession(now); await assertStoreAccess(data.storeId,actor.userId,now);
@@ -54,7 +57,7 @@ export async function submitSellerAdCampaign(id:string,now=new Date()){
   const changed=await tx.adCampaign.updateMany({where:{id,status:item.status},data:{status:AdCampaignStatus.SUBMITTED,submittedAt:now,moderationNote:null}});
   if(changed.count!==1)throw new Error("Campaign changed; reload and try again.");
   await tx.auditLog.create({data:{actorType:AuditActorType.USER,actorId:actor.userId,action:"advertising.campaign.submitted",resource:"ad_campaign",resourceId:id,scopeType:"STORE",scopeId:item.storeId,occurredAt:now}});
-  return tx.adCampaign.findUniqueOrThrow({where:{id},select});
+  return serializeCampaign(await tx.adCampaign.findUniqueOrThrow({where:{id},select}));
  });
 }
 export async function changeSellerAdCampaignStatus(id:string,action:"ACTIVATE"|"PAUSE"|"ARCHIVE",now=new Date()){
@@ -79,7 +82,7 @@ export async function changeSellerAdCampaignStatus(id:string,action:"ACTIVATE"|"
 }
 export async function listAdCampaignsForModeration(now=new Date()){
  await requirePermission({permissionKey:"ads:moderate",now});
- return prisma.adCampaign.findMany({where:{status:AdCampaignStatus.SUBMITTED},orderBy:[{submittedAt:"asc"},{id:"asc"}],take:100,select:{...select,store:{select:{id:true,name:true,slug:true,seller:{select:{displayName:true,legalName:true}}}}}});
+ return (await prisma.adCampaign.findMany({where:{status:AdCampaignStatus.SUBMITTED},orderBy:[{submittedAt:"asc"},{id:"asc"}],take:100,select:{...select,store:{select:{id:true,name:true,slug:true,seller:{select:{displayName:true,legalName:true}}}}}})).map(serializeCampaign);
 }
 export async function moderateAdCampaign(id:string,decision:"APPROVE"|"REJECT",reason:string|undefined,now=new Date()){
  const actor=await requirePermission({permissionKey:"ads:moderate",now});
