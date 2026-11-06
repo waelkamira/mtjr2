@@ -58,7 +58,7 @@ type ProductCard = {
 
 function formatMinorUnits(value: string, minorUnit: number): string {
   const amount = BigInt(value);
-  const divisor = 10n ** BigInt(minorUnit);
+  const divisor = BigInt(10) ** BigInt(minorUnit);
   const whole = amount / divisor;
   if (minorUnit === 0) return whole.toString();
   const fraction = (amount % divisor).toString().padStart(minorUnit, "0");
