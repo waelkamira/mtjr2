@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
@@ -51,7 +52,8 @@ export default function SellerReviewsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || translate(locale, "Seller response could not be saved.", "تعذر حفظ رد البائع."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Seller response could not be saved.", "تعذر حفظ رد البائع.")); }
+      toast.success(translate(locale, "Your response was saved.", "تم حفظ ردك."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Seller response could not be saved.", "تعذر حفظ رد البائع."); setError(message); toast.error(message); }
     finally { setBusyId(""); }
   }
   return <main className="min-h-screen bg-[var(--background)]"><header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5"><div className="mx-auto flex max-w-5xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><Link href="/seller" className="text-sm">{translate(locale, "Seller workspace", "مساحة عمل البائع")}</Link></div></header>

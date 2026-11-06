@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
@@ -117,9 +118,9 @@ export default function SellerInventoryPage() {
         body: JSON.stringify({ storeId, code: warehouseCode, name: warehouseName })
       }));
       setStores((current) => current.map((store) => store.id === storeId ? { ...store, warehouses: [...store.warehouses, warehouse] } : store));
-      setWarehouseCode(""); setWarehouseName("");       setNotice(translate(locale, "Warehouse created.", "تم إنشاء المستودع."));
+      setWarehouseCode(""); setWarehouseName("");       setNotice(translate(locale, "Warehouse created.", "تم إنشاء المستودع.")); toast.success(translate(locale, "Warehouse created.", "تم إنشاء المستودع."));
       if (!adjustWarehouseId) setAdjustWarehouseId(warehouse.id);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to create warehouse.", "تعذر إنشاء المستودع.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to create warehouse.", "تعذر إنشاء المستودع."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -130,9 +131,9 @@ export default function SellerInventoryPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ warehouseId: adjustWarehouseId, variantId: adjustVariantId, quantityDelta: Number(quantityDelta), idempotencyKey: crypto.randomUUID(), note: adjustNote || undefined })
       }));
-      setNotice(translate(locale, "Stock adjustment recorded.", "تم تسجيل تعديل المخزون."));
+      setNotice(translate(locale, "Stock adjustment recorded.", "تم تسجيل تعديل المخزون.")); toast.success(translate(locale, "Stock adjustment recorded.", "تم تسجيل تعديل المخزون."));
       await refreshStore(storeId, search);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to adjust stock.", "تعذر تعديل المخزون.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to adjust stock.", "تعذر تعديل المخزون."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -143,9 +144,9 @@ export default function SellerInventoryPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sourceWarehouseId, destinationWarehouseId, reference: transferReference || undefined, idempotencyKey: crypto.randomUUID(), items: [{ variantId: transferVariantId, quantity: Number(transferQuantity) }] })
       }));
-      setNotice(translate(locale, "Transfer draft created.", "تم إنشاء مسودة النقل."));
+      setNotice(translate(locale, "Transfer draft created.", "تم إنشاء مسودة النقل.")); toast.success(translate(locale, "Transfer draft created.", "تم إنشاء مسودة النقل."));
       await refreshStore(storeId, search);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to create transfer.", "تعذر إنشاء عملية النقل.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to create transfer.", "تعذر إنشاء عملية النقل."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -153,9 +154,9 @@ export default function SellerInventoryPage() {
     setBusy(true); setError(""); setNotice("");
     try {
       await readJson(await fetch(`/api/seller/inventory/transfers/${encodeURIComponent(id)}/${action}`, { method: "POST" }));
-      setNotice(action === "ship" ? translate(locale, "Transfer shipped; source stock was deducted.", "تم شحن النقل وخصم الكمية من مخزون المصدر.") : translate(locale, "Transfer received; destination stock was credited.", "تم استلام النقل وإضافة الكمية إلى مخزون الوجهة."));
+      setNotice(action === "ship" ? translate(locale, "Transfer shipped; source stock was deducted.", "تم شحن النقل وخصم الكمية من مخزون المصدر.") : translate(locale, "Transfer received; destination stock was credited.", "تم استلام النقل وإضافة الكمية إلى مخزون الوجهة.")); toast.success(action === "ship" ? translate(locale, "Transfer shipped.", "تم شحن عملية النقل.") : translate(locale, "Transfer received.", "تم استلام عملية النقل."));
       await refreshStore(storeId, search);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to process transfer.", "تعذرت معالجة عملية النقل.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to process transfer.", "تعذرت معالجة عملية النقل."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 

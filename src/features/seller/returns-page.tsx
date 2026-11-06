@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
@@ -91,10 +92,10 @@ export default function SellerReturnsPage() {
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || translate(locale, "Return decision could not be saved.", "تعذر حفظ قرار الإرجاع."));
-      setNotice(status === "APPROVED" ? translate(locale, "Your store's return items were approved.", "تمت الموافقة على عناصر الإرجاع الخاصة بمتجرك.") : translate(locale, "Your store's return items were rejected.", "تم رفض عناصر الإرجاع الخاصة بمتجرك."));
+      setNotice(status === "APPROVED" ? translate(locale, "Your store's return items were approved.", "تمت الموافقة على عناصر الإرجاع الخاصة بمتجرك.") : translate(locale, "Your store's return items were rejected.", "تم رفض عناصر الإرجاع الخاصة بمتجرك.")); toast.success(status === "APPROVED" ? translate(locale, "Return items approved.", "تمت الموافقة على عناصر الإرجاع.") : translate(locale, "Return items rejected.", "تم رفض عناصر الإرجاع."));
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Return decision could not be saved.", "تعذر حفظ قرار الإرجاع."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Return decision could not be saved.", "تعذر حفظ قرار الإرجاع."); setError(message); toast.error(message);
     } finally { setBusy(""); }
   }
 
@@ -110,10 +111,10 @@ export default function SellerReturnsPage() {
       });
       const data = await response.json() as { error?: string; result?: { quarantinedQuantity?: number } };
       if (!response.ok) throw new Error(data.error || translate(locale, "Return receipt could not be recorded.", "تعذر تسجيل استلام المرتجع."));
-      setNotice(`${translate(locale, "Physical receipt recorded.", "تم تسجيل الاستلام الفعلي.")} ${data.result?.quarantinedQuantity ?? translate(locale, "Returned", "مرتجع")} ${translate(locale, "unit(s) are held in quarantine and are not sellable until inspected.", "وحدة قيد الحجر ولا يمكن بيعها حتى فحصها.")}`);
+      setNotice(`${translate(locale, "Physical receipt recorded.", "تم تسجيل الاستلام الفعلي.")} ${data.result?.quarantinedQuantity ?? translate(locale, "Returned", "مرتجع")} ${translate(locale, "unit(s) are held in quarantine and are not sellable until inspected.", "وحدة قيد الحجر ولا يمكن بيعها حتى فحصها.")}`); toast.success(translate(locale, "Return receipt recorded and quarantined.", "تم تسجيل استلام المرتجع ووضعه في الحجر."));
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Return receipt could not be recorded.", "تعذر تسجيل استلام المرتجع."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Return receipt could not be recorded.", "تعذر تسجيل استلام المرتجع."); setError(message); toast.error(message);
     } finally { setBusy(""); }
   }
 
