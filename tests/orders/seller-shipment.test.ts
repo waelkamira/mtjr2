@@ -57,7 +57,7 @@ describe("seller shipment tracking", () => {
       shipment: null, order: { status: "PROCESSING", orderNumber: "MTJ-ORDER-1", userId: "buyer-1" },
       store: { status: "ACTIVE", seller: { ownerId: "seller-1", status: "ACTIVE" } }
     });
-    mocks.shipmentCreate.mockResolvedValue({ id: "shipment-1", status: "SHIPPED" });
+    mocks.shipmentCreate.mockResolvedValue({ id: "shipment-1", status: "SHIPPED", shippedAt: new Date("2026-11-05T10:00:00.000Z"), events: [] });
     mocks.vendorUpdateMany.mockResolvedValue({ count: 1 });
     mocks.orderFindUnique.mockResolvedValue({ status: "PROCESSING" });
     mocks.vendorFindMany.mockResolvedValue([{ status: "SHIPPED" }]);
