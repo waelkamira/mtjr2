@@ -12,6 +12,7 @@ function isRateLimited(request: Request): boolean {
   const current = requestWindows.get(key);
   if (!current || now - current.startedAt >= 60_000) {
     requestWindows.set(key, { startedAt: now, count: 1 });
+    if (requestWindows.size > 10000) requestWindows.clear();
     return false;
   }
   current.count += 1;
@@ -21,6 +22,9 @@ function isRateLimited(request: Request): boolean {
 export async function POST(request: Request): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
+  if (isRateLimited(request)) {
+    return Response.json({ error: "طلبات كثيرة خلال وقت قصير. حاول بعد دقيقة." }, { status: 429, headers: { "Cache-Control": "no-store" } });
+  }
 
   let body: unknown;
   try {
