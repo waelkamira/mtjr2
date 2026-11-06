@@ -275,6 +275,23 @@ export default function AdminDashboardPage() {
               { label: "Failed", value: dashboard.metrics.failedPayments, color: "bg-rose-500" },
               { label: "Pending", value: dashboard.metrics.pendingPayments, color: "bg-amber-500" }
             ]} />
+            <DistributionChart locale={locale} title="Customer trust & reviews" rows={[
+              { label: "Product reviews awaiting moderation", value: dashboard.metrics.pendingProductReviews, color: "bg-fuchsia-500" },
+              { label: "Store reviews awaiting moderation", value: dashboard.metrics.pendingStoreReviews, color: "bg-purple-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Customer care" rows={[
+              { label: "Open support tickets", value: dashboard.metrics.openSupportTickets, color: "bg-cyan-500" },
+              { label: "Requested returns", value: dashboard.metrics.requestedReturns, color: "bg-orange-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Order fulfillment pipeline" rows={[
+              { label: "Awaiting payment", value: dashboard.metrics.pendingOrders, color: "bg-yellow-500" },
+              { label: "Processing", value: dashboard.metrics.processingOrders, color: "bg-blue-500" },
+              { label: "Completed", value: dashboard.metrics.completedOrders, color: "bg-green-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Catalog moderation" rows={[
+              { label: "Approved or published catalog", value: Math.max(0, dashboard.metrics.totalProducts - dashboard.metrics.pendingProducts), color: "bg-indigo-500" },
+              { label: "Awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-amber-500" }
+            ]} />
           </section>
 
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
