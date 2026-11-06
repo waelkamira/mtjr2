@@ -2101,7 +2101,15 @@ model AiAssistantSetting {
 }
 
 
-enum AdCampaignStatus { DRAFT SUBMITTED APPROVED REJECTED ACTIVE PAUSED ARCHIVED }
+enum AdCampaignStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
 
 model AdCampaign {
   id String @id @default(cuid())
