@@ -165,3 +165,21 @@ export async function listSellerAdInvoices(storeId: string, now = new Date()) {
   const rows = await prisma.adInvoice.findMany({ where: { storeId }, orderBy: [{ periodStart: "desc" }, { createdAt: "desc" }], take: 100, select: { id: true, currencyCode: true, periodStart: true, periodEnd: true, amountMinor: true, status: true, dueAt: true, createdAt: true, currency: { select: { minorUnit: true } } } });
   return rows.map((row) => ({ ...row, amountMinor: row.amountMinor.toString() }));
 }
+
+export async function getAdminAdvertisingAnalytics(now = new Date()) {
+  await (await import("@/server/identity/permission-guard")).requirePermission({ permissionKey: "ads:moderate", now });
+  const [campaigns, spendByCurrency, invoicesByCurrency, activeCampaigns] = await Promise.all([
+    prisma.adCampaign.aggregate({ _count: { _all: true }, _sum: { impressionCount: true, clickCount: true } }),
+    prisma.adSpendLedgerEntry.groupBy({ by: ["currencyCode"], _sum: { amountMinor: true } }),
+    prisma.adInvoice.groupBy({ by: ["currencyCode", "status"], _sum: { amountMinor: true }, _count: { _all: true } }),
+    prisma.adCampaign.count({ where: { status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now } } })
+  ]);
+  return {
+    campaignCount: campaigns._count._all,
+    activeCampaigns,
+    impressions: (campaigns._sum.impressionCount ?? 0n).toString(),
+    clicks: (campaigns._sum.clickCount ?? 0n).toString(),
+    spendByCurrency: spendByCurrency.map((row) => ({ currencyCode: row.currencyCode, amountMinor: (row._sum.amountMinor ?? 0n).toString() })),
+    invoicesByCurrency: invoicesByCurrency.map((row) => ({ currencyCode: row.currencyCode, status: row.status, amountMinor: (row._sum.amountMinor ?? 0n).toString(), count: row._count._all }))
+  };
+}

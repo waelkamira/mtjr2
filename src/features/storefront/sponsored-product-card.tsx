@@ -41,7 +41,7 @@ export default function SponsoredProductCard({ product, token, locale }: { produ
     ? new Intl.NumberFormat(locale, { style: "currency", currency: price.currencyCode }).format(Number(price.amountMinor) / (10 ** price.currency.minorUnit))
     : translate(locale, "Price unavailable", "السعر غير متاح");
   return <article ref={root} className="clay-surface group overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-copper-300)] bg-[var(--surface)] shadow-sm">
-    <Link href={`/products/${encodeURIComponent(product.slug)}?ad=${encodeURIComponent(token)}`} onClick={() => send(token, "CLICK")} className="block">
+    <Link href={`/products/${encodeURIComponent(product.slug)}`} onClick={() => send(token, "CLICK")} className="block">
       <span className="absolute z-10 m-3 rounded-full bg-[var(--color-copper-700)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">{translate(locale, "Sponsored", "إعلان ممول")}</span>
       {image ? <img src={image.url} alt={image.altText ?? product.name} className="aspect-square w-full bg-[var(--surface-soft)] object-cover" /> : <div className="aspect-square bg-[var(--surface-soft)]" />}
       <div className="p-4"><h2 className="line-clamp-2 min-h-10 text-sm font-semibold">{product.name}</h2><p className="mt-3 text-xl font-extrabold">{priceLabel}</p><p className="mt-2 text-xs text-[var(--muted)]">{translate(locale, "Sold by", "يُباع بواسطة")} {product.store.name}</p></div>
