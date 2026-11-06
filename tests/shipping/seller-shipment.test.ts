@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   vendorOrderUpdateMany: vi.fn(),
   vendorOrderStatusHistoryCreate: vi.fn(),
   vendorOrderFindMany: vi.fn(),
+  orderFindUniqueOrThrow: vi.fn(),
   orderUpdateMany: vi.fn(),
   orderStatusHistoryCreate: vi.fn(),
   auditCreate: vi.fn(),
@@ -18,7 +19,7 @@ const tx = {
   vendorOrder: { findUnique: mocks.vendorOrderFindUnique, updateMany: mocks.vendorOrderUpdateMany, findMany: mocks.vendorOrderFindMany },
   shipment: { create: mocks.shipmentCreate },
   vendorOrderStatusHistory: { create: mocks.vendorOrderStatusHistoryCreate },
-  order: { updateMany: mocks.orderUpdateMany },
+  order: { findUniqueOrThrow: mocks.orderFindUniqueOrThrow, updateMany: mocks.orderUpdateMany },
   orderStatusHistory: { create: mocks.orderStatusHistoryCreate },
   auditLog: { create: mocks.auditCreate },
   sellerStaff: { findFirst: mocks.sellerStaffFindFirst },
@@ -44,10 +45,11 @@ describe("seller shipment dispatch", () => {
     vi.clearAllMocks();
     mocks.requireCurrentSession.mockResolvedValue({ userId: "owner-1" });
     mocks.vendorOrderFindUnique.mockResolvedValue(readyOrder);
-    mocks.shipmentCreate.mockImplementation(async ({ data }) => ({ id: "shipment-1", ...data }));
+    mocks.shipmentCreate.mockImplementation(async ({ data }) => ({ id: "shipment-1", ...data, events: [{ status: "SHIPPED", description: "Shipment handed to carrier.", location: null, occurredAt: new Date() }] }));
     mocks.vendorOrderUpdateMany.mockResolvedValue({ count: 1 });
     mocks.vendorOrderStatusHistoryCreate.mockResolvedValue({});
     mocks.vendorOrderFindMany.mockResolvedValue([{ status: "SHIPPED" }]);
+    mocks.orderFindUniqueOrThrow.mockResolvedValue({ status: "PROCESSING" });
     mocks.orderUpdateMany.mockResolvedValue({ count: 1 });
     mocks.orderStatusHistoryCreate.mockResolvedValue({});
     mocks.auditCreate.mockResolvedValue({});
