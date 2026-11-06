@@ -87,7 +87,8 @@ async function searchProducts(raw: unknown, locale: string): Promise<ProductCard
     locale,
     limit: input.limit,
     page: 1,
-    sort: "relevance"
+    sort: "relevance",
+    inStock: input.inStock ? "true" : "false"
   });
   return result.items.map((product) => {
     const prices = product.variants.flatMap((variant) => variant.prices.map((price) => {
