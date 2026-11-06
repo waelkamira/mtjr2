@@ -33,7 +33,7 @@ describe("marketplace seller lifecycle", () => {
     roleUpsert.mockResolvedValue({});
     sellerUpdateMany.mockResolvedValue({ count: 1 });
     storeFindUnique.mockResolvedValue(null);
-    storeCreate.mockResolvedValue({ id: "store-1", storeNumber: 201n, name: "Shop", slug: "shop", status: "DRAFT" });
+    storeCreate.mockResolvedValue({ id: "store-1", storeNumber: BigInt("201"), name: "Shop", slug: "shop", status: "DRAFT" });
     marketFindMany.mockResolvedValue([{ id: "market-1", defaultCurrencyCode: "EUR", currencies: [{ currencyCode: "EUR" }] }]);
     transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       seller: { findUnique: sellerFindUnique, create: sellerCreate, updateMany: sellerUpdateMany },
@@ -82,7 +82,7 @@ describe("marketplace seller lifecycle", () => {
   it("returns an existing matching store without duplicating audit on retry", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
     storeFindUnique.mockResolvedValue({
-      id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name: "Shop", slug: "shop", status: "DRAFT",
+      id: "store-existing", sellerId: "seller-1", storeNumber: BigInt("202"), name: "Shop", slug: "shop", status: "DRAFT",
       markets: [{ marketId: "market-1" }]
     });
 
@@ -111,7 +111,7 @@ describe("marketplace seller lifecycle", () => {
     storeFindUnique
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({
-        id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name: "Shop", slug: "shop", status: "DRAFT",
+        id: "store-existing", sellerId: "seller-1", storeNumber: BigInt("202"), name: "Shop", slug: "shop", status: "DRAFT",
         markets: [{ marketId: "market-1" }]
       });
     storeCreate.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
