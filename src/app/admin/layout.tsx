@@ -9,6 +9,7 @@ import {
   PermissionDeniedError
 } from "@/server/identity/current-session";
 import { requireAnyPermission } from "@/server/identity/permission-guard";
+import { userHasPermission } from "@/server/identity/permission-repository";
 
 const ADMIN_AREA_PERMISSIONS = [
   "users:read",
@@ -34,8 +35,15 @@ const ADMIN_AREA_PERMISSIONS = [
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   try {
-    await requireAnyPermission(
+    const session = await requireAnyPermission(
       ADMIN_AREA_PERMISSIONS.map((permissionKey) => ({ permissionKey }))
+    );
+    const canManagePlatform = await userHasPermission(session.userId, { permissionKey: "platform:manage" });
+    return (
+      <div className="min-h-screen bg-[var(--background)] lg:flex">
+        <AdminNavigation canManagePlatform={canManagePlatform} />
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
     );
   } catch (error) {
     if (error instanceof MfaEnrollmentRequiredError) {
@@ -56,10 +64,4 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     throw error;
   }
 
-  return (
-    <div className="min-h-screen bg-[var(--background)] lg:flex">
-      <AdminNavigation />
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
-  );
 }
