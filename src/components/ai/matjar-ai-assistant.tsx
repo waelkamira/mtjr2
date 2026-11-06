@@ -65,7 +65,7 @@ export default function MatjarAIAssistant() {
   return (
     <div className="fixed bottom-5 right-5 z-[70]">
       {open && (
-        <section aria-label="Matjar AI assistant" className="mb-3 flex h-[min(650px,calc(100dvh-110px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-[var(--surface)] shadow-[0_24px_80px_rgba(48,45,59,0.24)]">
+        <section dir="rtl" aria-label="Matjar AI assistant" className="mb-3 flex h-[min(650px,calc(100dvh-110px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-[var(--surface)] shadow-[0_24px_80px_rgba(48,45,59,0.24)]">
           <header className="flex items-center justify-between bg-[var(--color-lavender-800)] px-5 py-4 text-white">
             <div>
               <p className="font-bold">Matjar AI</p>
@@ -88,8 +88,8 @@ export default function MatjarAIAssistant() {
               </div>
             )}
             {messages.map((item, index) => (
-              <div key={index} className={item.role === "user" ? "ml-8 rounded-2xl rounded-br-sm bg-[var(--color-lavender-800)] p-3 text-sm leading-6 text-white" : "mr-5 rounded-2xl rounded-bl-sm bg-white p-3 text-sm leading-7 text-[var(--color-ink-800)] shadow-sm"}>
-                <p className="whitespace-pre-wrap">{item.content}</p>
+              <div key={index} className={item.role === "user" ? "mr-8 rounded-2xl rounded-bl-sm bg-[var(--color-lavender-800)] p-3 text-sm leading-6 text-white" : "ml-5 rounded-2xl rounded-br-sm bg-white p-3 text-sm leading-7 text-[var(--color-ink-800)] shadow-sm"}>
+                <p dir="auto" className="whitespace-pre-wrap">{item.content}</p>
                 {item.orders?.map((order) => (
                   <div key={order.orderNumber} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--color-mint-50)] p-3 text-xs text-[var(--color-ink-800)]">
                     <div className="flex items-center justify-between gap-2 font-bold">
