@@ -20,6 +20,9 @@ const environmentSchema = z.object({
 
   GOOGLE_CLIENT_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  GROQ_API_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  GROQ_MODEL: z.string().trim().min(1).max(120).default("openai/gpt-oss-20b"),
+  AI_ASSISTANT_ENABLED: z.enum(["true", "false"]).default("false"),
   TRUSTED_PROXY_IP_HEADER: z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development")
 }).superRefine((value, context) => {
@@ -60,6 +63,10 @@ export function parseEnvironment(
     APP_URL: result.data.APP_URL ?? result.data.NEXT_PUBLIC_APP_URL!,
     PUBLIC_REGISTRATION_ENABLED: result.data.PUBLIC_REGISTRATION_ENABLED ?? (result.data.NODE_ENV === "production" ? "false" : "true")
   };
+}
+
+export function isAiAssistantEnabled(environment: ApplicationEnvironment): boolean {
+  return environment.AI_ASSISTANT_ENABLED === "true" && Boolean(environment.GROQ_API_KEY);
 }
 
 export function isPublicRegistrationEnabled(environment: ApplicationEnvironment): boolean {
