@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // CI-only fixture bootstrap. Creates ephemeral role-specific sessions in the isolated E2E database.
 const { createHash, randomBytes } = require("node:crypto");
 const fs = require("node:fs");
