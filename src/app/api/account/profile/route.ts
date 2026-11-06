@@ -17,7 +17,33 @@ export async function GET(): Promise<Response> {
       select: { id: true, email: true, displayName: true, status: true, createdAt: true }
     });
     if (!user) return Response.json({ error: "Account not found." }, { status: 404 });
-    return Response.json({ profile: { ...user, createdAt: user.createdAt.toISOString() } }, { headers: { "Cache-Control": "private, no-store" } });
+    const [orderStatuses, favorites, productReviews, storeReviews, monthlyOrders] = await Promise.all([
+      prisma.order.groupBy({ by: ["status"], where: { userId: session.userId }, _count: { _all: true } }),
+      prisma.favorite.count({ where: { userId: session.userId } }),
+      prisma.productReview.count({ where: { userId: session.userId } }),
+      prisma.storeReview.count({ where: { userId: session.userId } }),
+      prisma.$queryRaw<Array<{ month: string; count: number }>>`
+        SELECT to_char(date_trunc('month', "placedAt"), 'YYYY-MM') AS month,
+          COUNT(*)::int AS count
+        FROM "Order"
+        WHERE "userId" = ${session.userId}
+          AND "placedAt" >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'
+        GROUP BY 1
+        ORDER BY 1
+      `
+    ]);
+    const totalOrders = orderStatuses.reduce((sum, row) => sum + row._count._all, 0);
+    return Response.json({
+      profile: { ...user, createdAt: user.createdAt.toISOString() },
+      analytics: {
+        totalOrders,
+        orderStatuses: orderStatuses.map((row) => ({ status: row.status, count: row._count._all })),
+        monthlyOrders: monthlyOrders.map((row) => ({ month: row.month, count: row.count })),
+        favorites,
+        productReviews,
+        storeReviews
+      }
+    }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
     return Response.json({ error: "Unable to load profile." }, { status: 500 });
   }
