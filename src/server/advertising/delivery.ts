@@ -42,7 +42,10 @@ export async function listSponsoredCampaigns(input: {
       status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now },
       marketId: input.marketId,
       market: { status: "ACTIVE", country: { isActive: true }, currencies: { some: { isEnabled: true } } },
-      AND: [\n        { OR: [{ targetCategoryId: null }, ...(input.categoryId ? [{ targetCategoryId: input.categoryId }] : [])] },\n        { OR: [{ targetBrandId: null }, ...(input.brandId ? [{ targetBrandId: input.brandId }] : [])] }\n      ],
+      AND: [
+        { OR: [{ targetCategoryId: null }, ...(input.categoryId ? [{ targetCategoryId: input.categoryId }] : [])] },
+        { OR: [{ targetBrandId: null }, ...(input.brandId ? [{ targetBrandId: input.brandId }] : [])] }
+      ],
       product: {
         status: "ACTIVE", approvalStatus: "APPROVED",
         store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: { some: { marketId: input.marketId, isEnabled: true } } },
