@@ -58,7 +58,7 @@ export default function MatjarAIAssistant() {
         body: JSON.stringify({
           message: value,
           locale: /[\u0600-\u06FF]/.test(value) ? "ar" : "en",
-          history: messages.slice(-6).map(({ role, content }) => ({ role, content }))
+          history: messages.slice(-6).map(({ role, content }) => ({ role, content: content.slice(0, 1200) }))
         })
       });
       const data = await response.json() as { message?: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[]; error?: string };
@@ -129,7 +129,7 @@ export default function MatjarAIAssistant() {
                     <span className="min-w-0 flex-1">
                       <span className="block line-clamp-2 text-xs font-bold">{product.name}</span>
                       <span className="mt-1 block text-[10px] text-[var(--muted)]">{product.storeName}</span>
-                      {product.prices.map((price) => <span key={price.currencyCode} className="mr-2 text-xs font-bold">{price.amount} {price.currencyCode}</span>)}
+                      {product.prices.map((price, priceIndex) => <span key={`${price.currencyCode}-${price.amount}-${priceIndex}`} className="mr-2 text-xs font-bold">{price.amount} {price.currencyCode}</span>)}
                     </span>
                   </a>
                 ))}
