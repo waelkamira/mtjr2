@@ -71,7 +71,8 @@ describe("parseEnvironment", () => {
       GOOGLE_CLIENT_SECRET: "",
       RESEND_API_KEY: "",
       RESEND_FROM_EMAIL: "",
-      GROQ_API_KEY: ""
+      GROQ_API_KEY: "",
+      TRUSTED_PROXY_IP_HEADER: ""
     })).toMatchObject(validEnvironment);
   });
 
