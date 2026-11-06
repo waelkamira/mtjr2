@@ -44,7 +44,7 @@ export default function ProductQaReportsPage() {
       if (!response.ok) throw new Error(data.error || translate(locale, "Moderation failed.", "تعذّر الإشراف."));
       await load();
       toast.success(translate(locale, "Report decision saved.", "تم حفظ قرار البلاغ."));
-    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Moderation failed.", "تعذّر الإشراف."); setError(message); toast.error(message);
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Moderation failed.", "تعذّر الإشراف."); setError(message); toast.error(message); }
     finally { setBusy(""); }
   }
   return <main className="min-h-screen bg-[var(--background)]">
