@@ -65,32 +65,6 @@ describe("parseEnvironment", () => {
   });
 
   it("accepts blank optional provider credentials in local env files", () => {
-<<<<<<< HEAD
-    expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", RESEND_API_KEY: "", RESEND_FROM_EMAIL: "" })).toMatchObject(validEnvironment);
-  });
-  it("accepts an optional contact email and rejects an invalid one", () => {
-    expect(parseEnvironment({ ...validEnvironment, CONTACT_EMAIL: "help@example.com" }).CONTACT_EMAIL).toBe("help@example.com");
-    expect(() => parseEnvironment({ ...validEnvironment, CONTACT_EMAIL: "not-an-email" })).toThrow(/CONTACT_EMAIL/);
-  });
-  it("rejects an invalid public registration flag", () => {
-    expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
-  });
-
-  it("enables registration by default in development and test only", () => {
-    expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("true");
-    expect(isPublicRegistrationEnabled(parseEnvironment(validEnvironment))).toBe(true);
-    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "development" }))).toBe(true);
-    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production" }))).toBe(false);
-    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production", PUBLIC_REGISTRATION_ENABLED: "true" }))).toBe(false);
-  });
-
-  it("allows registration to be explicitly disabled outside production", () => {
-    expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "false" }))).toBe(false);
-  });
-
-  it("accepts blank optional Google OAuth credentials in local env files", () => {
-    expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "" })).toMatchObject(validEnvironment);
-=======
     expect(parseEnvironment({
       ...validEnvironment,
       GOOGLE_CLIENT_ID: "",
@@ -100,11 +74,11 @@ describe("parseEnvironment", () => {
       GROQ_API_KEY: "",
       TRUSTED_PROXY_IP_HEADER: ""
     })).toMatchObject(validEnvironment);
->>>>>>> 5dc32fe6055c1cf21876ac14f3888f1a16992696
   });
 
-  it("rejects an invalid public registration flag", () => {
-    expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
+  it("accepts an optional contact email and rejects an invalid one", () => {
+    expect(parseEnvironment({ ...validEnvironment, CONTACT_EMAIL: "help@example.com" }).CONTACT_EMAIL).toBe("help@example.com");
+    expect(() => parseEnvironment({ ...validEnvironment, CONTACT_EMAIL: "not-an-email" })).toThrow(/CONTACT_EMAIL/);
   });
 
   it("keeps the AI assistant disabled by default and accepts a server-only Groq key", () => {

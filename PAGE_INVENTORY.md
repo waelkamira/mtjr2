@@ -15,13 +15,13 @@
 | `NEEDS_REDESIGN` | Existing page/shell conflicts with the approved shared design or information architecture. |
 | `NEEDS_TESTING` | Source exists, but the complete page contract has not been verified. |
 
-`page.tsx` presence is not completion evidence. This audit inspected the App Router page/layout files, shared navigation, route feature imports, API route tree, existing route registry and platform page inventory. A fresh local browser tab verified the unknown-route 404 and its recovery links at a 390px viewport with no horizontal overflow. The supplied tabs could not be reopened; the remaining page journeys, responsive behavior and controls remain unverified. Authentication and authorization below describe intended/server-side boundaries found in source, not a claim that every control has been exercised.
+`page.tsx` presence is not completion evidence. This audit inspected the App Router page/layout files, shared navigation, route feature imports, API route tree, existing route registry and platform page inventory. On 2026-11-06, a local browser smoke test covered representative public, authentication, account, seller, and admin routes; sampled responsive layout at 390px; and inspected unauthenticated API behavior. The broad authenticated page journeys, responsive behavior and controls remain unverified. Authentication and authorization below describe intended/server-side boundaries found in source, not a claim that every control has been exercised. See [`docs/qa/TEST_EXECUTION_LOG.md`](docs/qa/TEST_EXECUTION_LOG.md) for exact evidence and limitations.
 
 ## Cross-cutting shell and exceptional states
 
 | Page/state | Route or source | Exists | Components/layout | Access and integration | Status |
 |---|---|---:|---|---|---|
-| Storefront shell | All routes; `src/app/layout.tsx` | Yes | Root layout, `SiteNavigation`, registration notice, Sonner toaster, global CSS/theme tokens | Global navigation links map to existing public routes; authenticated links depend on session. Responsive visual behavior has not been browser-tested. | NEEDS_TESTING |
+| Storefront shell | All routes; `src/app/layout.tsx` | Yes | Root layout, `SiteNavigation`, registration notice, `SiteFooter`, conditional AI assistant, Sonner toaster, global CSS/theme tokens | Global navigation links map to existing public routes; authenticated links depend on session. Representative Arabic public rendering was browser-tested; broad responsive behavior remains unverified. | NEEDS_TESTING |
 | Not-found page | Next.js `not-found.tsx` convention (not a `/404` URL) | Yes, added in this audit | `src/app/not-found.tsx`; root layout | Safe home/product recovery links; Next.js handles unmatched URLs and `notFound()` results. | NEEDS_TESTING |
 | Root loading state | Root segment loading boundary | Yes, added in this audit | `src/app/loading.tsx`, `RouteLoadingState` | Generic accessible skeleton for streamed route content. | NEEDS_TESTING |
 | Root render failure | Root segment error boundary | Yes, added in this audit | `src/app/error.tsx`, `RouteErrorState` | Retry and home recovery; does not expose error message or stack. | NEEDS_TESTING |
@@ -37,7 +37,7 @@
 
 ## Existing App Router pages
 
-There are **74 `page.tsx` routes** in the audited source tree: 20 public/auth/commerce routes, 17 account routes, 9 seller routes, and 28 admin routes. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below.
+There are **78 `page.tsx` routes** in the current source tree: 23 public/auth/commerce routes, 17 account routes, 9 seller routes, and 29 admin routes. There are also 148 API `route.ts` handlers. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below. Counts were rechecked against the current filesystem on 2026-11-06.
 
 ### Public marketplace, cart, checkout, authentication, and legal
 
@@ -211,7 +211,7 @@ These are roadmap targets, not permission to create duplicates. Existing aliases
 | Errors and recovery | Root/global/segment error boundaries and not-found UI were added. API-backed pages may still need local field/operation errors. | Force API, permission, validation, conflict, unavailable dependency and stale-data failures per control. |
 | Success states | Some forms show inline success, toast or refreshed server data. | Verify each mutation persists, updates after refresh, and only reports success after confirmed server response. |
 | Authentication | Account layout redirects guests with safe return path. Admin layout checks permission and MFA. Seller APIs are expected to guard store scope. | Test guest, expired session, buyer, seller, scoped staff, admin and Super Admin separately. |
-| API/database | Source tree contains 143 API `route.ts` files and Prisma-backed services; route presence does not establish a page's complete binding. | Map every visible control to request/schema/permission/service/Prisma transaction and test persistence with disposable PostgreSQL. |
+| API/database | Source tree contains 148 API `route.ts` files and Prisma-backed services; route presence does not establish a page's complete binding. | Map every visible control to request/schema/permission/service/Prisma transaction and test persistence with disposable PostgreSQL. |
 | Design system | Centralized theme tokens are in `src/app/theme.css` and global primitives in `src/app/globals.css`. | Audit all page components for token use, typography, spacing, shadows, color contrast, keyboard/focus states and duplicate headers. |
 
 ## Implementation and verification progress
@@ -223,4 +223,4 @@ Implemented in this audit, in dependency order:
 3. Added loading and error boundaries for account, seller, and admin segments.
 4. Added this actual-route inventory without creating duplicate commerce or account pages.
 
-Validation results are recorded in the root README and build log after running the targeted checks. No Vercel deployment or production database changes were performed.
+Validation results and blockers are recorded in the root README and the [`docs/qa/`](docs/qa) evidence set. On 2026-11-06 the isolated PostgreSQL QA database received all 44 migrations, was seeded with synthetic catalog/role fixtures twice, and passed the identity PostgreSQL integration suite (7/7). The full unit suite previously passed 369/369 tests; production build and type-check passed. A representative local browser route sweep and 390px viewport check completed. Full authenticated shopping, payment/refund, seller, admin, and Super Admin journeys remain open; the search API returns 503 in the isolated production-mode app until its trusted proxy IP header is configured. No Vercel deployment or production database changes were performed.

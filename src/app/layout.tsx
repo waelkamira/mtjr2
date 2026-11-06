@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import SiteNavigation from "@/components/site-navigation";
-<<<<<<< HEAD
 import SiteFooter from "@/components/site-footer";
-=======
 import AuthJourney from "@/components/auth-journey";
 import MatjarAIAssistant from "@/components/ai/matjar-ai-assistant";
 import { getAiAssistantRuntimeSettings } from "@/server/ai/assistant-config";
->>>>>>> 5dc32fe6055c1cf21876ac14f3888f1a16992696
 import RegistrationNotice from "@/components/registration-notice";
 import SonnerToaster from "@/components/sonner-toaster";
 import { LocaleProvider } from "@/components/locale-provider";
@@ -44,11 +41,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <AuthJourney />
           <RegistrationNotice />
           {children}
-<<<<<<< HEAD
           <SiteFooter locale={locale} contactEmail={env.CONTACT_EMAIL ?? env.RESEND_FROM_EMAIL ?? null} />
-=======
           {aiSettings.enabled ? <MatjarAIAssistant /> : null}
->>>>>>> 5dc32fe6055c1cf21876ac14f3888f1a16992696
           <SonnerToaster />
         </LocaleProvider>
       </body>
