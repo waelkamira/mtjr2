@@ -122,8 +122,8 @@ export async function answerCustomer(raw: unknown) {
         products = await searchProducts(args, input.locale);
         toolResult = { products, count: products.length };
       } else if (call.function.name === "get_my_orders") {
-        const orders = await listCustomerOrders();
-        orders = orders.slice(0, 5).map((order) => ({
+        const customerOrders = await listCustomerOrders();
+        orders = customerOrders.slice(0, 5).map((order) => ({
           orderNumber: order.orderNumber,
           status: order.status,
           placedAt: order.placedAt,
