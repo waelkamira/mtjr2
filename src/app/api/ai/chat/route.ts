@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { env } from "@/lib/env";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { answerCustomer, assistantInputSchema } from "@/server/ai/assistant";
 
@@ -6,17 +7,30 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const requestWindows = new Map<string, { startedAt: number; count: number }>();
+
+/** Apply a bounded per-client throttle using only the explicitly trusted proxy header. */
 function isRateLimited(request: Request): boolean {
-  const key = (request.headers.get("x-vercel-forwarded-for") ?? "local-shared").split(",")[0].trim();
+  const trustedHeader = env.TRUSTED_PROXY_IP_HEADER;
+  const forwardedValue = trustedHeader ? request.headers.get(trustedHeader) : null;
+  const clientKey = forwardedValue?.split(",")[0]?.trim();
+  // Without a configured/available trusted client identity, use one restrictive
+  // shared bucket rather than trusting arbitrary forwarding headers.
+  const key = clientKey || "untrusted-client";
+  const limit = clientKey ? 12 : 3;
   const now = Date.now();
+
+  for (const [entryKey, entry] of requestWindows) {
+    if (now - entry.startedAt >= 60_000) requestWindows.delete(entryKey);
+  }
+
   const current = requestWindows.get(key);
   if (!current || now - current.startedAt >= 60_000) {
     requestWindows.set(key, { startedAt: now, count: 1 });
-    if (requestWindows.size > 10000) requestWindows.clear();
     return false;
   }
+
   current.count += 1;
-  return current.count > 12;
+  return current.count > limit;
 }
 
 export async function POST(request: Request): Promise<Response> {
