@@ -177,11 +177,11 @@ export async function answerCustomer(raw: unknown) {
           toolResult = {
             product: {
               name: product.name,
-              description: product.description,
+              description: product.description?.slice(0, 2000) ?? null,
               brand: product.brand?.name ?? null,
               categories: product.categories.map((category) => category.name),
               attributes: product.attributes,
-              variants: product.variants.map((variant) => ({
+              variants: product.variants.slice(0, 20).map((variant) => ({
                 name: variant.name,
                 sku: variant.sku,
                 options: variant.optionValues,
