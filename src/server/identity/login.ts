@@ -10,7 +10,7 @@ import { generateSessionToken, hashSessionToken, SESSION_TTL_SECONDS, type Creat
 
 const INVALID_CREDENTIALS = "Email or password is incorrect.";
 const DUMMY_PASSWORD_HASH =
-  "scrypt$32768$8$1$n0waey5tgDWhyfC01-KmEw$I-smw-3q3v0T4X-sxmksg9yoI156U0atV-DhaGzn4eIP_HHRLelqPP_UksHNTaf7AiDvFQ";
+  "scrypt$32768$8$1$n0waey5tgDWhyfC01-KmEw$I-smw-3q3v0T4X-sxmksg9yoI156U0atV-DhaGzn4eIP_HHRLelqPP_UksHNTaf7AiDvXxghMW1Og6Bet_BfUQ";
 
 export interface LoginInput {
   email: string;
