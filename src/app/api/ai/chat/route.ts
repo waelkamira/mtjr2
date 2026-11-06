@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }> = [];
 
   try {
-    const result = await listDiscoverableProducts({ q: message, locale, limit: 5, page: 1 });
+    const result = await listDiscoverableProducts({ q: message.slice(0, 120), locale, limit: 5, page: 1 });
     products = result.items.map((product) => ({
       id: product.id,
       name: product.name,
