@@ -33,7 +33,7 @@ describe("marketplace seller lifecycle", () => {
     roleUpsert.mockResolvedValue({});
     sellerUpdateMany.mockResolvedValue({ count: 1 });
     storeFindUnique.mockResolvedValue(null);
-    storeCreate.mockResolvedValue({ id: "store-1", name: "Shop", slug: "shop", status: "DRAFT" });
+    storeCreate.mockResolvedValue({ id: "store-1", storeNumber: 201n, name: "Shop", slug: "shop", status: "DRAFT" });
     marketFindMany.mockResolvedValue([{ id: "market-1", defaultCurrencyCode: "EUR", currencies: [{ currencyCode: "EUR" }] }]);
     transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       seller: { findUnique: sellerFindUnique, create: sellerCreate, updateMany: sellerUpdateMany },
@@ -74,7 +74,7 @@ describe("marketplace seller lifecycle", () => {
   it("creates a draft store only for an approved seller and active market", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
     const result = await createSellerStore({ name: "Shop", slug: "shop", marketIds: ["market-1"] });
-    expect(result).toMatchObject({ status: "DRAFT", alreadyCreated: false });
+    expect(result).toMatchObject({ status: "DRAFT", storeNumber: "201", alreadyCreated: false });
     expect(requirePermission).toHaveBeenCalledWith(expect.objectContaining({ permissionKey: "store:manage", now: expect.any(Date) }));
     expect(auditCreate).toHaveBeenCalledOnce();
   });
@@ -82,13 +82,13 @@ describe("marketplace seller lifecycle", () => {
   it("returns an existing matching store without duplicating audit on retry", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
     storeFindUnique.mockResolvedValue({
-      id: "store-existing", sellerId: "seller-1", name: "Shop", slug: "shop", status: "DRAFT",
+      id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name:, slug: "shop", status: "DRAFT",
       markets: [{ marketId: "market-1" }]
     });
 
     const result = await createSellerStore({ name: "Shop", slug: "shop", marketIds: ["market-1", "market-1"] });
 
-    expect(result).toMatchObject({ id: "store-existing", status: "DRAFT", alreadyCreated: true });
+    expect(result).toMatchObject({ id: "store-existing", storeNumber: "202", status: "DRAFT", alreadyCreated: true });
     expect(storeCreate).not.toHaveBeenCalled();
     expect(marketFindMany).not.toHaveBeenCalled();
     expect(auditCreate).not.toHaveBeenCalled();
@@ -111,7 +111,7 @@ describe("marketplace seller lifecycle", () => {
     storeFindUnique
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({
-        id: "store-existing", sellerId: "seller-1", name: "Shop", slug: "shop", status: "DRAFT",
+        id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name:, slug: "shop", status: "DRAFT",
         markets: [{ marketId: "market-1" }]
       });
     storeCreate.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
@@ -120,7 +120,7 @@ describe("marketplace seller lifecycle", () => {
 
     const result = await createSellerStore({ name: "Shop", slug: "shop", marketIds: ["market-1"] });
 
-    expect(result).toMatchObject({ id: "store-existing", alreadyCreated: true });
+    expect(result).toMatchObject({ id: "store-existing", storeNumber: "202", alreadyCreated: true });
     expect(auditCreate).not.toHaveBeenCalled();
   });
 });
