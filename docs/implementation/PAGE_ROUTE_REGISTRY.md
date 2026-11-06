@@ -330,3 +330,10 @@ Google's tokeninfo debugging endpoint is no longer used as the production ID-tok
 - Google start/callback use state, PKCE S256, nonce and JWKS-backed ID-token verification. Do not mark live Google OAuth complete without the provider client credentials and the exact callback URL registered in the Google project.
 - On starting SHA d5208538c46003d35f8374bc04bcd64678dc5303, no GitHub Actions runs existed. Push triggers for feat/returns-workflow were added to General CI and PostgreSQL integration so the next feature-branch commit is checked. Keep System 01 Implemented / unverified until both workflows pass on the resulting exact SHA and external/browser requirements are honestly recorded.
 - No browser runtime was attached. No production database, secret values, migrations or deployment actions were accessed or changed.
+
+
+## Identity CI failure follow-up — 2026-11-06
+
+- General CI on e743a8afc30c1bad67c6bf164a50f5572874e3b2 reached Prisma validate/generate, then TypeScript failed on the nullable Google OAuth state argument and the wrong JsonWebKey type for Node crypto. Both source typing defects were corrected without changing OAuth validation policy.
+- PostgreSQL on e743a8afc30c1bad67c6bf164a50f5572874e3b2 deployed all 23 migrations and seeded baseline permissions successfully, but the integration suite stopped at module loading because the integration Vitest config did not resolve the Next.js server-only marker. An integration-only alias and stub were added so the logout HTTP handler can be exercised in Node tests.
+- The next exact-head CI/PostgreSQL results are required; this failure SHA is not an identity pass. No browser journey is claimed.

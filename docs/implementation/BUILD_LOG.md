@@ -1876,3 +1876,23 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The new workflow-trigger and logout-test commit must complete General CI and disposable PostgreSQL on its exact resulting SHA before any closure decision. This log does not predeclare those results.
 - No browser runtime was available, so no live browser journey is claimed. Real Google sign-in remains an external test requirement for GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and the exact NEXT_PUBLIC_APP_URL/api/auth/google/callback registration. The real email journey also needs owner-configured Resend sender credentials; login HTTP verification needs a trusted proxy header that is overwritten by the trusted edge.
 - No secret values were requested or accessed. No user/production database was contacted and no migration was applied outside disposable CI PostgreSQL. No deployment action was performed.
+
+
+## 2026-11-06 — Exact-head CI failures diagnosed and identity fixes
+
+**Exact SHA and confirmed failures**
+- The first corrected-trigger commit was e743a8afc30c1bad67c6bf164a50f5572874e3b2. General CI run 42211451792 failed at TypeScript; PostgreSQL run 42211451843 completed schema validation, Prisma generation, all 23 migration deployments and baseline role/permission seeding, then failed before executing any integration test.
+- General CI log confirmed two Google identity typing errors: the OAuth state query parameter is string|null while the state matcher accepted only string|undefined; and the browser DOM JsonWebKey cast was incompatible with Node crypto's JsonWebKey input type.
+- PostgreSQL log confirmed the integration suite could not resolve Next.js's server-only marker when the new HTTP logout route was imported. No test body ran, so this is a test-runtime alias issue, not a database migration or identity assertion failure.
+
+**Corrections on feat/returns-workflow**
+- Widened the Google state matcher input to accept null and fail closed as before.
+- Changed the JWK cast to Node's crypto JsonWebKey type, matching createPublicKey's actual input contract.
+- Added an integration-only Vitest alias for the server-only marker, backed by an empty test stub, so Node integration tests can import the server handlers they intentionally exercise without changing application runtime behavior.
+- Corrected the PostgreSQL workflow push path list to include identity tests, account pages/APIs, favorites, orders, seller applications/stores and the server-only test stub. The previous commit had expanded the pull-request path list; this follow-up ensures the same identity changes also trigger PostgreSQL on feature-branch pushes.
+
+**Verification state**
+- The failures above are tied to exact SHA e743a8afc30c1bad67c6bf164a50f5572874e3b2; they are not reported as fixed until a new exact-head General CI and PostgreSQL run completes.
+- Prisma validate/generate, all 23 disposable PostgreSQL migrations and baseline seed succeeded on e743a8afc30c1bad67c6bf164a50f5572874e3b2. The integration suite itself did not execute.
+- No browser runtime was available. Google provider credentials/callback registration, real verification email delivery and trusted-edge IP header behavior remain external runtime requirements.
+- No application Prisma schema or migration changed. No user/production database, secret values or deployment configuration were accessed or modified.

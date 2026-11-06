@@ -244,3 +244,11 @@ The previous production tokeninfo validation call was removed because Google doc
 | Google OAuth | GET /api/auth/google/start → Google → GET /api/auth/google/callback | State + PKCE S256 + nonce; JWKS RS256 signature and OIDC claims; provider-subject mapping; no silent email linking | Unit tests use synthetic signed test keys only. Real Google credentials/callback and browser consent flow remain external and unverified. |
 
 The latest reviewed starting SHA d5208538c46003d35f8374bc04bcd64678dc5303 had no GitHub Actions workflow runs. The workflow push filters were corrected in the follow-up commit so General CI and disposable PostgreSQL can execute after the PR has already merged. No browser runtime was available; source and database integration evidence must not be described as a live browser pass.
+
+
+## Exact-head identity test failure diagnosis — 2026-11-06
+
+- On SHA e743a8afc30c1bad67c6bf164a50f5572874e3b2, General CI passed npm install, Prisma validate and Prisma generate, then failed TypeScript in the Google callback state parameter and the JWK type passed to Node crypto. Both are identity-specific type errors and have been corrected in the follow-up commit.
+- The disposable PostgreSQL job successfully started PostgreSQL 16, validated/generated Prisma, applied all 23 committed migrations and seeded six system roles, 23 permissions and 67 role-permission links. The integration suite then failed during module loading because Vitest did not resolve Next.js's server-only marker; zero test cases ran. An integration-only alias/stub was added, without changing production code.
+- The exact-head run did not prove buyer/seller integration success. Re-run General CI and PostgreSQL on the new SHA before accepting any of these journeys as Verified.
+- The PostgreSQL push filter now includes identity tests, account, favorites, orders and seller-application paths, in addition to the workflow's existing schema and server paths.

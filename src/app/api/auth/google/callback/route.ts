@@ -14,7 +14,7 @@ function redirectTo(path: string): Response {
   return Response.redirect(new URL(path, env.NEXT_PUBLIC_APP_URL), 303);
 }
 
-function matchesState(actual: string | undefined, expected: string | undefined): boolean {
+function matchesState(actual: string | null | undefined, expected: string | undefined): boolean {
   if (!actual || !expected) return false;
   const actualBytes = Buffer.from(actual, "utf8");
   const expectedBytes = Buffer.from(expected, "utf8");

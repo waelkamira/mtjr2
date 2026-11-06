@@ -1,4 +1,4 @@
-import { createPublicKey, verify as verifySignature } from "node:crypto";
+import { createPublicKey, verify as verifySignature, type JsonWebKey as NodeJsonWebKey } from "node:crypto";
 
 const GOOGLE_JWKS_URI = "https://www.googleapis.com/oauth2/v3/certs";
 
@@ -80,7 +80,7 @@ export async function verifyGoogleIdToken(
     if (!jwk) return null;
 
     const publicKey = createPublicKey({
-      key: { kty: "RSA", n: jwk.n, e: jwk.e } as JsonWebKey,
+      key: { kty: "RSA", n: jwk.n, e: jwk.e } as NodeJsonWebKey,
       format: "jwk"
     });
     const signature = Buffer.from(encodedSignature, "base64url");
