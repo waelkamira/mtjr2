@@ -288,9 +288,10 @@ export default function AdminDashboardPage() {
               { label: "Processing", value: dashboard.metrics.processingOrders, color: "bg-blue-500" },
               { label: "Completed", value: dashboard.metrics.completedOrders, color: "bg-green-500" }
             ]} />
-            <DistributionChart locale={locale} title="Catalog moderation" rows={[
-              { label: "Approved or published catalog", value: Math.max(0, dashboard.metrics.totalProducts - dashboard.metrics.pendingProducts), color: "bg-indigo-500" },
-              { label: "Awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-amber-500" }
+            <DistributionChart locale={locale} title="Moderation workload" rows={[
+              { label: "Products awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-amber-500" },
+              { label: "Product reviews awaiting moderation", value: dashboard.metrics.pendingProductReviews, color: "bg-fuchsia-500" },
+              { label: "Store reviews awaiting moderation", value: dashboard.metrics.pendingStoreReviews, color: "bg-violet-500" }
             ]} />
           </section>
 
