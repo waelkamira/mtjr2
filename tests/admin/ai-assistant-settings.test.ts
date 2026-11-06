@@ -129,6 +129,15 @@ describe("AI assistant runtime policy", () => {
     });
   });
 
+  it("fails closed if persisted settings contain a model outside the allowlist", async () => {
+    mocks.prisma.aiAssistantSetting.findUnique.mockResolvedValue({
+      enabled: true, model: "unapproved/model", maxCompletionTokens: 900
+    });
+    await expect(getAiAssistantRuntimeSettings()).resolves.toEqual({
+      enabled: false, model: "openai/gpt-oss-20b", maxCompletionTokens: 900
+    });
+  });
+
   it("keeps the environment master switch authoritative", async () => {
     mocks.env.AI_ASSISTANT_ENABLED = "false";
     await expect(getAiAssistantRuntimeSettings()).resolves.toMatchObject({ enabled: false });
