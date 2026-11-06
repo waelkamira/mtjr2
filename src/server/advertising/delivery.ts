@@ -55,7 +55,7 @@ export async function listSponsoredCampaigns(input: {
     orderBy: [{ cpcBidMinor: "desc" }, { createdAt: "asc" }],
     take: Math.min(24, Math.max(1, input.limit ?? 4)),
     select: {
-      id: true, budgetMinor: true, dailyBudgetMinor: true, cpcBidMinor: true, spentMinor: true,
+      id: true, currencyCode: true, budgetMinor: true, dailyBudgetMinor: true, cpcBidMinor: true, spentMinor: true,
       targetKeywords: true, product: {
         select: {
           id: true, slug: true, name: true, description: true,
@@ -77,13 +77,13 @@ export async function listSponsoredCampaigns(input: {
     const dailySpent = row.spendEntries.reduce((sum, entry) => sum + entry.amountMinor, 0n);
     if (dailySpent >= row.dailyBudgetMinor) return false;
     if (row.targetKeywords.length && (!tokens.length || !row.targetKeywords.some((keyword) => tokens.includes(keyword.toLocaleLowerCase())))) return false;
-    return row.product.variants.some((variant) => variant.prices.length > 0);
+    return Boolean(row.currencyCode) && row.product.variants.some((variant) => variant.prices.some((price) => price.currencyCode === row.currencyCode));
   }).slice(0, input.limit ?? 4).map((row) => ({
     campaignId: row.id,
     token: makeToken({ campaignId: row.id, expiresAt: now.getTime() + TOKEN_TTL_MS, nonce: createHash("sha256").update(row.id + ":" + now.getTime()).digest("hex").slice(0, 24) }),
     product: {
       ...row.product,
-      variants: row.product.variants.map((variant) => ({ prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() })) }))
+      variants: row.product.variants.map((variant) => ({ prices: variant.prices.filter((price) => price.currencyCode === row.currencyCode).map((price) => ({ ...price, amountMinor: price.amountMinor.toString() })) }))
     }
   }));
 }
@@ -95,7 +95,7 @@ export async function recordSponsoredAdEvent(input: {
   const payload = readToken(input.token, now);
   if (!payload || !/^[A-Za-z0-9_-]{16,80}$/.test(input.eventId)) throw new Error("Invalid or expired advertising event token.");
   const visitorIp = resolveTrustedClientIp(input.headers, env.TRUSTED_PROXY_IP_HEADER, env.NODE_ENV);
-  const visitorHash = visitorIp ? createHash("sha256").update(visitorIp).digest("hex") : null;
+  const visitorHash = visitorIp ? createHash("sha256").update(visitorIp).digest("hex") : null;\n  if (input.type === "CLICK" && !visitorHash) throw new Error("Trusted client IP is required before an advertising click can be billed.");
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${payload.campaignId}, 0))`);
     const campaign = await tx.adCampaign.findUnique({

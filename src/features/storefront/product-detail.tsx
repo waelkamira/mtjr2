@@ -106,7 +106,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
   useEffect(() => {
-    if (!product || !selectedMarketId) { setSponsored([]); return; }
+    if (!product || !selectedMarketId) return;
     let active = true;
     fetch(`/api/advertising/sponsored?marketId=${encodeURIComponent(selectedMarketId)}&q=${encodeURIComponent(product.name)}`, { cache: "no-store" })
       .then(async (response) => {

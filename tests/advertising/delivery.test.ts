@@ -2,15 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(), transaction: vi.fn(), queryRaw: vi.fn(), campaignFind: vi.fn(),
-  eventFind: vi.fn(), aggregate: vi.fn(), eventCreate: vi.fn(), campaignUpdate: vi.fn(), ledgerCreate: vi.fn()
+  eventFind: vi.fn(), eventFindFirst: vi.fn(), aggregate: vi.fn(), eventCreate: vi.fn(), campaignUpdate: vi.fn(), ledgerCreate: vi.fn()
 }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/env", () => ({ env: { AUTH_SECRET: "a".repeat(48), TRUSTED_PROXY_IP_HEADER: undefined, NODE_ENV: "test" } }));
+vi.mock("@/lib/env", () => ({ env: { AUTH_SECRET: "a".repeat(48), TRUSTED_PROXY_IP_HEADER: undefined, NODE_ENV: "development" } }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { adCampaign: { findMany: mocks.findMany }, $transaction: mocks.transaction } }));
 import { listSponsoredCampaigns, recordSponsoredAdEvent } from "@/server/advertising/delivery";
 
 const row = {
-  id: "campaign-1", budgetMinor: 10000n, dailyBudgetMinor: 2000n, cpcBidMinor: 100n, spentMinor: 0n,
+  id: "campaign-1", currencyCode: "EUR", budgetMinor: 10000n, dailyBudgetMinor: 2000n, cpcBidMinor: 100n, spentMinor: 0n,
   targetKeywords: ["running"], spendEntries: [], product: {
     id: "product-1", slug: "shoe", name: "Running shoe", description: null, brand: null,
     store: { id: "store-1", name: "Store", slug: "store" },
@@ -20,7 +20,7 @@ const row = {
 const tx = {
   $queryRaw: mocks.queryRaw,
   adCampaign: { findUnique: mocks.campaignFind, update: mocks.campaignUpdate },
-  adCampaignEvent: { findUnique: mocks.eventFind, create: mocks.eventCreate },
+  adCampaignEvent: { findUnique: mocks.eventFind, findFirst: mocks.eventFindFirst, create: mocks.eventCreate },
   adSpendLedgerEntry: { aggregate: mocks.aggregate, create: mocks.ledgerCreate }
 };
 describe("sponsored ad delivery and billing ledger", () => {
@@ -30,7 +30,7 @@ describe("sponsored ad delivery and billing ledger", () => {
     mocks.transaction.mockImplementation(async (callback: (value: typeof tx) => unknown) => callback(tx));
     mocks.queryRaw.mockResolvedValue([]);
     mocks.campaignFind.mockResolvedValue({ id: "campaign-1", storeId: "store-1", currencyCode: "EUR", status: "ACTIVE", startsAt: new Date("2026-01-01"), endsAt: new Date("2027-01-01"), budgetMinor: 10000n, dailyBudgetMinor: 2000n, cpcBidMinor: 100n, spentMinor: 0n });
-    mocks.eventFind.mockResolvedValue(null);
+    mocks.eventFind.mockResolvedValue(null);\n    mocks.eventFindFirst.mockResolvedValue(null);
     mocks.aggregate.mockResolvedValue({ _sum: { amountMinor: 0n } });
     mocks.eventCreate.mockResolvedValue({ id: "event-1" });
     mocks.campaignUpdate.mockResolvedValue({});

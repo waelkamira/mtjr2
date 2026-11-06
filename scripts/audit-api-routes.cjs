@@ -5,7 +5,7 @@ const apiRoot = path.join(root, "src/app/api");
 const publicReads = new Set([
   "brands/route.ts", "categories/route.ts", "countries/route.ts", "currencies/route.ts",
   "markets/route.ts", "search/route.ts", "search/suggestions/route.ts", "recommendations/route.ts",
-  "payments/providers/route.ts", "stores/route.ts"
+  "payments/providers/route.ts", "stores/route.ts", "advertising/sponsored/route.ts"
 ]);
 const evidencePatterns = [
   /validateIdentityMutationRequest\s*\(/, /requireCurrentSession\s*\(/, /getCurrentSession\s*\(/,

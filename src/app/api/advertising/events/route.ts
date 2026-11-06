@@ -1,5 +1,5 @@
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { recordSponsoredAdEvent } from "@/server/advertising/delivery";
+import { recordSponsoredAdEvent } from "@/server/advertising/delivery";\nimport { enforcePublicSearchBudget } from "@/server/search/search-request";
 
 export const runtime = "nodejs";
 
