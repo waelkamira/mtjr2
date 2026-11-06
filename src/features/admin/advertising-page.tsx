@@ -4,7 +4,8 @@ import {toast} from "sonner";
 import {useLocale} from "@/components/locale-provider";
 import {translate} from "@/lib/locale";
 type Analytics={campaignCount:number;activeCampaigns:number;impressions:string;clicks:string;spendByCurrency:Array<{currencyCode:string;amountMinor:string}>;invoicesByCurrency:Array<{currencyCode:string;status:string;amountMinor:string;count:number}>};
-type Invoice={id:string;store:{name:string};currencyCode:string;currency:{minorUnit:number};periodStart:string;periodEnd:string;amountMinor:string;status:string;paymentReference:string|null;settledAt:string|null;dueAt:string};\ntype Campaign={id:string;title:string;message:string|null;startsAt:string;endsAt:string;product:{name:string};store:{name:string;seller:{displayName:string|null;legalName:string|null}}};
+type Invoice={id:string;store:{name:string};currencyCode:string;currency:{minorUnit:number};periodStart:string;periodEnd:string;amountMinor:string;status:string;paymentReference:string|null;settledAt:string|null;dueAt:string};
+type Campaign={id:string;title:string;message:string|null;startsAt:string;endsAt:string;product:{name:string};store:{name:string;seller:{displayName:string|null;legalName:string|null}}};
 async function readJson<T>(r:Response):Promise<T>{const b=await r.json();if(!r.ok)throw new Error(b.error??"Request failed.");return b as T;}
 export default function AdminAdvertisingPage(){
  const {locale}=useLocale();const [items,setItems]=useState<Campaign[]>([]);const [analytics,setAnalytics]=useState<Analytics|null>(null);const [invoices,setInvoices]=useState<Invoice[]>([]);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState(false);const [error,setError]=useState("");
