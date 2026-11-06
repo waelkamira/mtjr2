@@ -49,7 +49,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     delete data.turnstileToken;
-    const result = await registerUser(data);
+    const result = await registerUser(data as Parameters<typeof registerUser>[0]);
     try {
       await resendEmailAdapter.sendVerificationEmail(data.email.trim().toLowerCase(), result.verificationToken);
     } catch {
