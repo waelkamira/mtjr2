@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPublicRegistrationEnabled, parseEnvironment } from "../../src/lib/env";
+import { isAiAssistantEnabled, isPublicRegistrationEnabled, parseEnvironment } from "../../src/lib/env";
 
 const validEnvironment = {
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mtjr2_test?schema=public",
