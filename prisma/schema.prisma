@@ -570,6 +570,7 @@ model Seller {
 
 model Store {
   id                         String                      @id @default(cuid())
+  storeNumber                BigInt                      @unique @default(autoincrement())
   sellerId                   String
   slug                       String                      @unique @db.VarChar(160)
   name                       String
@@ -697,6 +698,7 @@ model BrandTranslation {
 
 model Product {
   id                  String                @id @default(cuid())
+  productNumber       BigInt                @unique @default(autoincrement())
   storeId             String
   brandId             String?
   slug                String                @db.VarChar(180)
