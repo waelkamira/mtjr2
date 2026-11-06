@@ -175,3 +175,18 @@ Security invariants encoded in the service:
 - State changes use conditional updates and audit records.
 
 Exact-head CI/PostgreSQL results and dedicated security tests are pending. PR remains Draft/open/unmerged pending verification, remaining Toast coverage and browser E2E/visual QA.
+
+
+## Exact-head verification update — 2026-11-07
+
+Current implementation head: `f27767effd4ef6bdd141b529baa05eeb2b52a11d`.
+
+- Pull-request CI [42298838565](https://github.com/waelkamira/mtjr2/actions/runs/42298838565) completed successfully: Prisma validate, migration deploy, Prisma generate, TypeScript, ESLint, full test command and production build all passed.
+- Platform PostgreSQL Integration [42298838567](https://github.com/waelkamira/mtjr2/actions/runs/42298838567) completed successfully: migrations, baseline permission seed, integration suite and repeatable demo seed passed.
+- Prisma validation and committed advertising migration deployed successfully on the CI PostgreSQL instance.
+- Dedicated advertising service tests passed as part of the full test command.
+- ESLint passed after clarifying that advertising queue state updates occur only after asynchronous requests settle.
+
+Toast coverage now includes the previously identified user-detail, notification preference/read, checkout delivery-address, Q&A report moderation and other admin/seller mutation surfaces. This remains a targeted feature inventory, not a claim that every mutation in every route and component has been exhaustively scanned.
+
+**Acceptance limitations remain:** no real-browser E2E or visual QA was run; the available connected browser integration in this session cannot drive the app. The campaign workflow manages draft/submission/moderation/activation states only. Live placement/delivery, campaign targeting, impressions/clicks, attribution, analytics and billing/debits remain future work. PR #57 is still Draft/open/unmerged.

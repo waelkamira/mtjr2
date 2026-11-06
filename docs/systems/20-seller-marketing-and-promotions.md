@@ -136,7 +136,7 @@ The seller advertising gap therefore remains real. Any implementation must be a 
 
 ## 13. Seller advertising campaign management — implementation added in PR #57
 
-Implemented in branch commit `f82d75e6b80ba77820ef65ac012fdbf4837f0375`; exact-head verification is pending.
+Implemented in PR #57. Exact-head CI and PostgreSQL integration passed on `f27767effd4ef6bdd141b529baa05eeb2b52a11d` (PR CI run `42298838565`; PostgreSQL integration run `42298838567`).
 
 - Dedicated `AdCampaign` model and PostgreSQL migration, separate from global checkout coupons.
 - Store-scoped campaign tied to one product from that same store; only active, approved and published products are eligible.
