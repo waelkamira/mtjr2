@@ -108,3 +108,55 @@ The current identity seed defines `platform:manage`, store/catalog/inventory/ord
 ### Merge gate
 
 PR #57 remains Draft, open and unmerged. The two exact-head automated workflows now pass, but seller advertising, full Toast action coverage, route-by-route behavioral authorization, browser E2E and visual QA remain open. Do not merge this PR until those product and verification gates are addressed.
+
+
+## Corrections and expanded mutation-feedback audit (2026-11-07)
+
+This section supersedes the earlier sentence saying the customer profile chart source had not been checked. The exact profile route `src/app/account/profile/page.tsx` was inspected: it renders **three** charts (order-status donut, monthly-order area chart and customer-engagement bar chart), plus four KPI cards. Browser visual verification remains outstanding.
+
+### Dashboard chart inventory at `ead4d610c38b03ed839a2e124522bc4d29840331`
+
+- Super Admin dashboard: 11 chart component instances.
+- Seller surfaces: 18 instances across workspace (4), inventory (4), products (2), questions (2), returns (2), reviews (2) and seller orders (2).
+- Customer profile: 3 instances.
+- Shared renderer: colorful multi-hue donut segments, bar, line, area, gauge, gradient treatment, empty states and accessible SVG labels.
+
+These are source counts only; no browser screenshot, viewport comparison or visual acceptance test has been completed.
+
+### Additional Toast actions wired
+
+After the initial seven seller screens and the customer/admin changes recorded above, Toast success/error feedback was added to:
+- Seller orders: status transition, dispatch creation and tracking event submission.
+- Admin seller operations: seller approval/rejection and store suspend/reactivate.
+- Customer profile: profile save.
+- Customer support: ticket creation, ticket replies and attachment upload after successful scan.
+- Wishlist: guest-list merge and favorite removal.
+- Product reviews: review submission and review report.
+- Admin moderation: product-review moderation, report/appeal decisions and store-review moderation.
+- Checkout: seller shipping option selection (and load failures).
+
+The root Sonner toaster remains mounted once in the root layout. These changes were committed in the PR branch and checked by exact-SHA CI.
+
+### Remaining targeted Toast gaps
+
+The source scan found additional mutation components without Sonner feedback. They still need action-by-action treatment or an explicit documented decision to retain inline-only feedback:
+- Admin: AI assistant settings, catalog product management, categories, commissions, privilege requests, product Q&A and reports, product management, returns, search synonyms, support and user detail.
+- Checkout: delivery-address and tax-summary actions.
+- Customer/order: customer order actions and notification actions.
+- Storefront: any mutation path not covered by the product-review component scan.
+
+This is not a claim that every repository mutation was audited; it is a concrete outstanding list from the feature-level scan. Login, registration and security flows already use dedicated inline/form states and should not receive duplicate success toasts without a deliberate UX decision.
+
+### Latest exact implementation checks
+
+Latest UI code head: `ead4d610c38b03ed839a2e124522bc4d29840331`.
+- Push CI run [42294249716](https://github.com/waelkamira/mtjr2/actions/runs/42294249716): passed all steps (Prisma validation, migration deploy, generation, typecheck, lint, tests and build).
+- Platform PostgreSQL Integration run [42294258935](https://github.com/waelkamira/mtjr2/actions/runs/42294258935): passed, including baseline role/permission seed, existing PostgreSQL integration suite and demo seed repeatability.
+- The same-SHA pull-request CI run was still processing when this record was prepared; the successful push-triggered CI and PostgreSQL integration are both tied to the exact same SHA.
+
+### Explicit non-completion gates
+
+1. Seller-owned advertising campaigns, campaign moderation, scoped permissions, APIs, UI and tests are still not implemented. No working "Create advertisement" control exists; do not add a dead link or disguise global coupons as advertising.
+2. The targeted Toast gaps above remain.
+3. Browser E2E and visual QA remain unperformed; the available connected browser interface is read-only and cannot drive the application.
+4. PR #57 remains Draft/open/unmerged. Do not merge until the product gaps and verification gates are closed.
