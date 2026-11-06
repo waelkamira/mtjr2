@@ -27,9 +27,12 @@ export async function getAiAssistantRuntimeSettings(): Promise<AiAssistantRuntim
       where: { id: "global" },
       select: { enabled: true, model: true, maxCompletionTokens: true }
     });
+    if (setting && setting.model !== DEFAULT_MODEL) {
+      return { enabled: false, model: DEFAULT_MODEL, maxCompletionTokens: 900 };
+    }
     return {
       enabled: setting?.enabled === true,
-      model: setting?.model ?? model,
+      model: DEFAULT_MODEL,
       maxCompletionTokens: setting?.maxCompletionTokens ?? 900
     };
   } catch {
