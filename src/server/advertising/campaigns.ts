@@ -8,7 +8,7 @@ import { userHasScopedPermission } from "@/server/identity/permission-repository
 
 const createSchema=z.object({
  storeId:z.string().trim().min(1),productId:z.string().trim().min(1),marketId:z.string().trim().min(1),currencyCode:z.string().trim().length(3).toUpperCase(),
- budgetMinor:z.string().regex(/^[1-9]\\d{0,14}$/),dailyBudgetMinor:z.string().regex(/^[1-9]\\d{0,14}$/),cpcBidMinor:z.string().regex(/^[1-9]\\d{0,14}$/),
+ budgetMinor:z.string().regex(/^[1-9]\d{0,14}$/),dailyBudgetMinor:z.string().regex(/^[1-9]\d{0,14}$/),cpcBidMinor:z.string().regex(/^[1-9]\d{0,14}$/),
  targetCategoryId:z.string().trim().min(1).optional(),targetBrandId:z.string().trim().min(1).optional(),targetKeywords:z.array(z.string().trim().min(2).max(40)).max(8).default([]),
  title:z.string().trim().min(5).max(140),message:z.string().trim().max(300).optional(),startsAt:z.coerce.date(),endsAt:z.coerce.date()
 }).strict().refine(x=>x.startsAt<x.endsAt,{path:["endsAt"],message:"Campaign end must be later than its start."})
@@ -94,6 +94,6 @@ export async function moderateAdCampaign(id:string,decision:"APPROVE"|"REJECT",r
   const changed=await tx.adCampaign.updateMany({where:{id,status:AdCampaignStatus.SUBMITTED},data:{status,reviewedById:actor.userId,reviewedAt:now,moderationNote:decision==="REJECT"?reason!.trim():null}});
   if(changed.count!==1)throw new Error("Campaign was already reviewed.");
   await tx.auditLog.create({data:{actorType:AuditActorType.USER,actorId:actor.userId,action:"advertising.campaign."+decision.toLowerCase(),resource:"ad_campaign",resourceId:id,scopeType:"STORE",scopeId:item.storeId,occurredAt:now,metadata:{decision,reason:reason??null}}});
-  return tx.adCampaign.findUniqueOrThrow({where:{id},select});
+  return serializeCampaign(await tx.adCampaign.findUniqueOrThrow({where:{id},select}));
  });
 }
