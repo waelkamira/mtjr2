@@ -5,6 +5,8 @@ import { AdCampaignEventType, AdCampaignStatus, Prisma } from "@prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
+import { requireCurrentSession } from "@/server/identity/current-session";
+import { userHasScopedPermission } from "@/server/identity/permission-repository";
 
 const TOKEN_TTL_MS = 30 * 60 * 1000;
 type TokenPayload = { campaignId: string; expiresAt: number; nonce: string };
@@ -152,11 +154,11 @@ export async function generateAdInvoices(input: { periodStart: Date; periodEnd: 
 }
 
 export async function listSellerAdInvoices(storeId: string, now = new Date()) {
-  const actor = await (await import("@/server/identity/current-session")).requireCurrentSession(now);
+  const actor = await requireCurrentSession(now);
   const store = await prisma.store.findUnique({ where: { id: storeId }, select: { id: true, seller: { select: { ownerId: true } } } });
-  if (!store || (store.seller.ownerId !== actor.userId && !(await (await import("@/server/identity/permission-repository")).userHasScopedPermission(actor.userId, { permissionKey: "ads:manage", scope: { type: "STORE", id: storeId }, now })))) {
+  if (!store || (store.seller.ownerId !== actor.userId && !(await userHasScopedPermission(actor.userId, { permissionKey: "ads:manage", scope: { type: "STORE", id: storeId }, now })))) {
     throw new Error("You do not have access to this store's advertising invoices.");
   }
-  const rows = await prisma.adInvoice.findMany({ where: { storeId }, orderBy: [{ periodStart: "desc" }, { createdAt: "desc" }], take: 100, select: { id: true, currencyCode: true, periodStart: true, periodEnd: true, amountMinor: true, status: true, dueAt: true, createdAt: true } });
+  const rows = await prisma.adInvoice.findMany({ where: { storeId }, orderBy: [{ periodStart: "desc" }, { createdAt: "desc" }], take: 100, select: { id: true, currencyCode: true, periodStart: true, periodEnd: true, amountMinor: true, status: true, dueAt: true, createdAt: true, currency: { select: { minorUnit: true } } } });
   return rows.map((row) => ({ ...row, amountMinor: row.amountMinor.toString() }));
 }
