@@ -9,7 +9,13 @@ const oauthErrors: Record<string, string> = {
   not_linked: "No Mtjr2 account is linked to that Google account. Create an account first."
 };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ oauth?: string }> }) {
-  const { oauth } = await searchParams;
-  return <AuthPage mode="login" initialOAuthError={oauth ? oauthErrors[oauth] ?? "Google sign-in could not be completed." : ""} />;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ oauth?: string; mfa?: string }> }) {
+  const { oauth, mfa } = await searchParams;
+  return (
+    <AuthPage
+      mode="login"
+      initialOAuthError={oauth ? oauthErrors[oauth] ?? "Google sign-in could not be completed." : ""}
+      initialMfaRequired={mfa === "required"}
+    />
+  );
 }

@@ -2,26 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLocale } from "@/components/locale-provider";
+import { translate } from "@/lib/locale";
 
 const links = [
-  { href: "/admin/dashboard", label: "Overview" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/sellers", label: "Sellers & stores" },
-  { href: "/admin/products", label: "Product approvals" },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/payments", label: "Payments" },
-  { href: "/admin/logistics", label: "Shipments" },
-  { href: "/admin/returns", label: "Returns" },
-  { href: "/admin/support", label: "Customer support" },
-  { href: "/admin/reviews", label: "Product reviews" },
-  { href: "/admin/store-reviews", label: "Store reviews" },
-  { href: "/admin/questions", label: "Product Q&A" },
-  { href: "/admin/search-synonyms", label: "Search synonyms" },
-  { href: "/admin/tax-rates", label: "Tax rates" }
+  { href: "/admin/dashboard", label: "Overview", ar: "نظرة عامة" },
+  { href: "/admin/users", label: "Users", ar: "المستخدمون" },
+  { href: "/admin/sellers", label: "Sellers & stores", ar: "البائعون والمتاجر" },
+  { href: "/admin/products", label: "Product approvals", ar: "اعتماد المنتجات" },
+  { href: "/admin/product-management", label: "Product management", ar: "إدارة المنتجات" },
+  { href: "/admin/categories", label: "Categories", ar: "الفئات" },
+  { href: "/admin/orders", label: "Orders", ar: "الطلبات" },
+  { href: "/admin/payments", label: "Payments", ar: "المدفوعات" },
+  { href: "/admin/logistics", label: "Shipments", ar: "الشحنات" },
+  { href: "/admin/returns", label: "Returns", ar: "المرتجعات" },
+  { href: "/admin/support", label: "Customer support", ar: "دعم العملاء" },
+  { href: "/admin/reviews", label: "Product reviews", ar: "مراجعات المنتجات" },
+  { href: "/admin/store-reviews", label: "Store reviews", ar: "مراجعات المتاجر" },
+  { href: "/admin/questions", label: "Product Q&A", ar: "أسئلة وأجوبة المنتجات" },
+  { href: "/admin/search-synonyms", label: "Search synonyms", ar: "مرادفات البحث" },
+  { href: "/admin/tax-rates", label: "Tax rates", ar: "معدلات الضرائب" },
+  { href: "/admin/commissions", label: "Commissions", ar: "العمولات" },
+  { href: "/admin/coupons", label: "Discount codes", ar: "رموز الخصم" }
 ];
 
 export default function AdminNavigation() {
   const pathname = usePathname();
+  const { locale } = useLocale();
 
   return (
     <aside className="border-b border-[var(--border)] bg-[var(--color-forest-950)] text-white lg:min-h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
@@ -29,9 +36,9 @@ export default function AdminNavigation() {
         <Link href="/admin/dashboard" className="text-xl font-semibold">
           MATJAR<span className="text-[var(--color-copper-600)]">.</span>
         </Link>
-        <span className="text-xs text-white/60">Administration</span>
+        <span className="text-xs text-white/60">{translate(locale, "Administration", "الإدارة")}</span>
       </div>
-      <nav aria-label="Administration" className="flex gap-1 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:px-3">
+      <nav aria-label={translate(locale, "Administration", "الإدارة")} className="flex gap-1 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:px-3">
         {links.map((link) => {
           const active = link.href === "/admin/dashboard"
             ? pathname === link.href || pathname === "/admin/control-panel"
@@ -45,13 +52,13 @@ export default function AdminNavigation() {
                 active ? "bg-white/15 font-semibold text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {link.label}
+              {translate(locale, link.label, link.ar)}
             </Link>
           );
         })}
       </nav>
       <div className="hidden px-6 pt-5 text-xs leading-5 text-white/50 lg:block">
-        Navigation includes implemented admin areas only. Additional modules will appear as their workflows are built.
+        {translate(locale, "Navigation includes implemented admin areas only. Additional modules will appear as their workflows are built.", "تتضمن قائمة التنقل أقسام الإدارة المتاحة فقط. ستظهر الوحدات الإضافية عند اكتمال إجراءات العمل الخاصة بها.")}
       </div>
     </aside>
   );

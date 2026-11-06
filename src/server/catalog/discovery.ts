@@ -3,6 +3,7 @@ import "server-only";
 import { CatalogEntityStatus, Prisma, ProductApprovalStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { defaultLocale } from "@/lib/locale";
 import { tokenizeSearchQuery } from "@/server/search/query";
 import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
 
@@ -12,7 +13,7 @@ const optionalQueryString = (schema: z.ZodString) => z.preprocess(
 );
 
 const querySchema = z.object({
-  locale: z.string().trim().min(2).max(16).default("en"),
+  locale: z.string().trim().min(2).max(16).default("ar"),
   q: optionalQueryString(z.string().trim().min(1).max(120)),
   categoryId: optionalQueryString(z.string().trim().min(1)),
   brandId: optionalQueryString(z.string().trim().min(1)),
@@ -522,7 +523,7 @@ export async function listDiscoverableProducts(input: unknown = {}, options: { i
   };
 }
 
-export async function getDiscoverableProduct(slug: string, locale = "en") {
+export async function getDiscoverableProduct(slug: string, locale = defaultLocale) {
   const key = z.string().trim().min(1).max(180).parse(slug);
   const language = z.string().trim().min(2).max(16).parse(locale);
   const product = await prisma.product.findFirst({

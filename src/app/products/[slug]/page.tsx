@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import ProductDetail from "@/features/storefront/product-detail";
 import { getDiscoverableProduct } from "@/server/catalog/discovery";
+import { getPreferredLocale } from "@/server/locale";
+import { translate } from "@/lib/locale";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getDiscoverableProduct(slug, "en");
+  const locale = await getPreferredLocale();
+  const product = await getDiscoverableProduct(slug, locale);
   if (!product) {
     return {
-      title: "Product not found",
+      title: translate(locale, "Product not found", "المنتج غير موجود"),
       robots: { index: false, follow: false }
     };
   }

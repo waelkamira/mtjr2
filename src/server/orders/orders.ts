@@ -138,7 +138,25 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       where: { id: quoteId, ...ownerWhere(owner), status: CheckoutQuoteStatus.ACTIVE, expiresAt: { gt: now } },
       include: {
         deliveryAddress: true,
-        lines: { orderBy: { createdAt: "asc" }, include: { variant: { select: { productId: true } } } },
+        lines: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            variant: {
+              select: {
+                productId: true,
+                product: {
+                  select: {
+                    categories: {
+                      where: { isPrimary: true },
+                      select: { categoryId: true, category: { select: { name: true } } },
+                      take: 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         shippingSelections: true,
         taxSnapshot: true,
         coupon: { select: { id: true, isActive: true, startsAt: true, expiresAt: true, maxRedemptions: true } },
@@ -296,7 +314,9 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
           items: { create: lines.map((line) => ({
             productId: line.variant.productId, variantId: line.variantId, productName: line.productName, sku: line.sku,
             variantName: line.variantName, quantity: line.quantity,
-            unitAmountMinor: line.unitAmountMinor, lineTotalMinor: line.lineTotalMinor
+            unitAmountMinor: line.unitAmountMinor, lineTotalMinor: line.lineTotalMinor,
+            commissionCategoryId: line.variant.product.categories[0]?.categoryId ?? null,
+            commissionCategoryName: line.variant.product.categories[0]?.category.name ?? null
           })) }
         }
       });

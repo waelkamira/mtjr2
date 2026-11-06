@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserStatus } from "@prisma/client";
 
-const { prismaMock, consumeMock, clearMock, verifyMock, createSessionMock, revokeMock } = vi.hoisted(() => ({
+const { prismaMock, consumeMock, clearMock, verifyMock, createSessionMock, revokeMock, mfaStateMock } = vi.hoisted(() => ({
   prismaMock: {
     user: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     loginAttempt: { create: vi.fn() },
@@ -12,7 +12,8 @@ const { prismaMock, consumeMock, clearMock, verifyMock, createSessionMock, revok
   clearMock: vi.fn(),
   verifyMock: vi.fn(),
   createSessionMock: vi.fn(),
-  revokeMock: vi.fn()
+  revokeMock: vi.fn(),
+  mfaStateMock: vi.fn()
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
@@ -25,6 +26,7 @@ vi.mock("@/server/identity/session", () => ({
   createUserSession: createSessionMock,
   revokeUserSession: revokeMock
 }));
+vi.mock("@/server/identity/mfa", () => ({ getMfaAccessState: mfaStateMock }));
 
 import { loginWithPassword } from "../../src/server/identity/login";
 
@@ -42,6 +44,12 @@ describe("password login service", () => {
     prismaMock.auditLog.create.mockResolvedValue({});
     prismaMock.$transaction.mockResolvedValue([]);
     clearMock.mockResolvedValue(undefined);
+    mfaStateMock.mockResolvedValue({
+      enabled: false,
+      required: false,
+      platformRequired: false,
+      enrollmentRequired: false
+    });
   });
 
   it("issues a session for an active account without requiring email verification", async () => {
@@ -58,7 +66,12 @@ describe("password login service", () => {
       userAgent: "browser"
     }, now);
 
-    expect(result).toMatchObject({ authenticated: true, userId: "user-1" });
+    expect(result).toMatchObject({
+      authenticated: true,
+      userId: "user-1",
+      mfaRequired: false,
+      mfaSetupRequired: false
+    });
     expect(verifyMock).toHaveBeenCalledWith("a-secure-password", "stored-hash");
     expect(createSessionMock).toHaveBeenCalledWith("user-1", { userAgent: "browser" }, now);
     expect(prismaMock.$transaction).toHaveBeenCalledOnce();
@@ -74,7 +87,11 @@ describe("password login service", () => {
       trustedIpAddress: "203.0.113.10"
     }, now);
 
-    expect(result).toMatchObject({ authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." });
+    expect(result).toMatchObject({
+      authenticated: false,
+      reason: "EMAIL_NOT_FOUND",
+      message: "Email or password is incorrect."
+    });
     expect(verifyMock).toHaveBeenCalledOnce();
     expect(verifyMock.mock.calls[0][1]).toMatch(/^scrypt\$32768\$8\$1\$/);
     expect(createSessionMock).not.toHaveBeenCalled();
@@ -94,7 +111,7 @@ describe("password login service", () => {
     }, now);
 
     expect(result).toMatchObject({
-      authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect. Please try again."
+      authenticated: false, reason: "INVALID_PASSWORD", message: "Email or password is incorrect."
     });
     expect(createSessionMock).not.toHaveBeenCalled();
   });
@@ -135,6 +152,58 @@ describe("password login service", () => {
       data: { status: UserStatus.ACTIVE }
     });
     expect(createSessionMock).toHaveBeenCalledOnce();
+  });
+
+  it("requires a second-factor challenge for an enrolled account", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-mfa",
+      passwordHash: "stored-hash",
+      status: UserStatus.ACTIVE
+    });
+    mfaStateMock.mockResolvedValue({
+      enabled: true,
+      required: true,
+      platformRequired: true,
+      enrollmentRequired: false
+    });
+
+    const result = await loginWithPassword({
+      email: "admin@example.com",
+      password: "a-secure-password",
+      trustedIpAddress: "203.0.113.10"
+    }, now);
+
+    expect(result).toMatchObject({
+      authenticated: true,
+      mfaRequired: true,
+      mfaSetupRequired: false
+    });
+  });
+
+  it("requires platform administrators without MFA to enroll before using privileged routes", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-admin",
+      passwordHash: "stored-hash",
+      status: UserStatus.ACTIVE
+    });
+    mfaStateMock.mockResolvedValue({
+      enabled: false,
+      required: true,
+      platformRequired: true,
+      enrollmentRequired: true
+    });
+
+    const result = await loginWithPassword({
+      email: "admin@example.com",
+      password: "a-secure-password",
+      trustedIpAddress: "203.0.113.10"
+    }, now);
+
+    expect(result).toMatchObject({
+      authenticated: true,
+      mfaRequired: false,
+      mfaSetupRequired: true
+    });
   });
 
   it("does not run password verification after the throttle blocks a request", async () => {

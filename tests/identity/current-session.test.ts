@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserStatus } from "@prisma/client";
 
-const { getCookieMock, resolveMock } = vi.hoisted(() => ({
+const { getCookieMock, resolveMock, mfaStateMock, mfaFreshMock } = vi.hoisted(() => ({
   getCookieMock: vi.fn(),
-  resolveMock: vi.fn()
+  resolveMock: vi.fn(),
+  mfaStateMock: vi.fn(),
+  mfaFreshMock: vi.fn()
 }));
 
 vi.mock("@/server/identity/session-cookie", () => ({
@@ -12,9 +14,15 @@ vi.mock("@/server/identity/session-cookie", () => ({
 vi.mock("@/server/identity/session", () => ({
   resolveUserSession: resolveMock
 }));
+vi.mock("@/server/identity/mfa", () => ({
+  getMfaAccessState: mfaStateMock,
+  isMfaVerificationFresh: mfaFreshMock
+}));
 
 import {
   AuthenticationRequiredError,
+  MfaEnrollmentRequiredError,
+  MfaVerificationRequiredError,
   getCurrentSession,
   requireCurrentSession
 } from "../../src/server/identity/current-session";
@@ -24,6 +32,7 @@ const activeSession = {
   id: "session-1",
   userId: "user-1",
   expiresAt: new Date(now.getTime() + 60_000),
+  mfaVerifiedAt: null,
   user: {
     id: "user-1",
     email: "buyer@example.com",
@@ -34,7 +43,16 @@ const activeSession = {
 };
 
 describe("request-bound current session", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mfaStateMock.mockResolvedValue({
+      enabled: false,
+      required: false,
+      platformRequired: false,
+      enrollmentRequired: false
+    });
+    mfaFreshMock.mockReturnValue(false);
+  });
 
   it("resolves the HttpOnly cookie without accepting client-supplied identity", async () => {
     getCookieMock.mockResolvedValue("opaque-session-token");
@@ -66,5 +84,35 @@ describe("request-bound current session", () => {
     resolveMock.mockResolvedValue(activeSession);
 
     await expect(requireCurrentSession(now)).resolves.toEqual(activeSession);
+  });
+
+  it("blocks platform privileges until MFA is enrolled", async () => {
+    getCookieMock.mockResolvedValue("opaque-session-token");
+    resolveMock.mockResolvedValue(activeSession);
+    mfaStateMock.mockResolvedValue({
+      enabled: false,
+      required: true,
+      platformRequired: true,
+      enrollmentRequired: true
+    });
+
+    await expect(requireCurrentSession(now)).rejects.toBeInstanceOf(
+      MfaEnrollmentRequiredError
+    );
+  });
+
+  it("blocks protected operations until MFA is verified for the current period", async () => {
+    getCookieMock.mockResolvedValue("opaque-session-token");
+    resolveMock.mockResolvedValue(activeSession);
+    mfaStateMock.mockResolvedValue({
+      enabled: true,
+      required: true,
+      platformRequired: false,
+      enrollmentRequired: false
+    });
+
+    await expect(requireCurrentSession(now)).rejects.toBeInstanceOf(
+      MfaVerificationRequiredError
+    );
   });
 });

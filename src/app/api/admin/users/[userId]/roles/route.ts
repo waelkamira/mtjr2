@@ -2,6 +2,7 @@ import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import {
   assignRoleToUser,
+  listDelegableRoles,
   revokeRoleAssignment
 } from "@/server/identity/role-assignment";
 import {
@@ -31,10 +32,23 @@ function errorResponse(error: unknown): Response {
   if (error instanceof PermissionDeniedError) {
     return Response.json({ error: "Permission denied." }, { status: 403 });
   }
-  return Response.json({ error: "Unable to update role assignments." }, { status: 400 });
+  if (error instanceof Error && /role assignments require|requires a STORE scope|active membership|cannot delegate|already exists|expiry must be|does not exist/i.test(error.message)) {
+    return Response.json({ error: error.message }, { status: 409 });
+  }
+  return Response.json({ error: "Unable to process role assignment request." }, { status: 500 });
 }
 
 type RouteContext = { params: Promise<{ userId: string }> };
+
+export async function GET(): Promise<Response> {
+  try {
+    return Response.json({ roles: await listDelegableRoles() }, {
+      headers: { "Cache-Control": "private, no-store" }
+    });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
 
 export async function POST(request: Request, context: RouteContext): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);

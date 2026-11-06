@@ -1,5 +1,9 @@
 const PLATFORM_MANAGEMENT_PERMISSION = "platform:manage";
 
+export function getRequiredRoleScopeType(roleKey: string): "STORE" | null {
+  return roleKey === "STORE_MANAGER" ? "STORE" : null;
+}
+
 /**
  * Platform-wide management is a protected capability, not an ordinary
  * delegated role. Only the controlled first-admin bootstrap and the dedicated

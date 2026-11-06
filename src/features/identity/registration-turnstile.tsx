@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
+import { useLocale } from "@/components/locale-provider";
+import { translate } from "@/lib/locale";
 
 declare global {
   interface Window {
@@ -31,6 +33,7 @@ export default function RegistrationTurnstile({
   onToken: (token: string) => void;
   resetVersion: number;
 }) {
+  const { locale } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -59,7 +62,7 @@ export default function RegistrationTurnstile({
   }
 
   if (!siteKey) {
-    return <p role="alert" className="text-sm text-red-800">Registration bot protection is not configured.</p>;
+    return <p role="alert" className="text-sm text-red-800">{translate(locale, "Registration bot protection is not configured.", "لم يتم إعداد الحماية من الروبوتات للتسجيل.")}</p>;
   }
 
   return (
@@ -71,7 +74,7 @@ export default function RegistrationTurnstile({
         onError={() => setLoadError(true)}
       />
       <div ref={containerRef} />
-      {loadError && <p role="alert" className="mt-2 text-sm text-red-800">Bot protection could not be loaded. Please try again later.</p>}
+      {loadError && <p role="alert" className="mt-2 text-sm text-red-800">{translate(locale, "Bot protection could not be loaded. Please try again later.", "تعذّر تحميل الحماية من الروبوتات. حاول مجددًا لاحقًا.")}</p>}
     </div>
   );
 }

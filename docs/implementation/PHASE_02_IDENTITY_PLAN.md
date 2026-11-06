@@ -8,6 +8,15 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 
 **Current registration policy (2026-11-06):** email confirmation is not part of registration or account activation. Password registration creates an active account and session immediately after a valid Cloudflare Turnstile challenge. Google registration uses the same challenge before starting OAuth. Persistent per-email/IP and per-IP throttles limit repeated attempts. Historical verification/resend notes below describe retired behavior; legacy database fields remain for compatibility.
 
+## Current identity rebuild update — 2026-11-06
+
+- Password and Google registration activate accounts without an email-confirmation or resend step. Email-verification schema fields remain only for legacy compatibility.
+- Unknown-account and incorrect-password failures now share the same public login message and code.
+- Password and Google login/registration return to the validated prior same-origin route, including query strings. Protected account/admin routes preserve their requested path through `src/proxy.ts` before redirecting guests to sign-in; MFA challenges return to the same protected destination.
+- TOTP MFA is implemented with AES-GCM encrypted secrets, one-time recovery codes, replay protection, and a 12-hour session assurance window. Accounts holding `platform:manage` must enroll; enabled MFA must be verified before protected server operations. Configure a stable, unique `MFA_ENCRYPTION_KEY` before production enrollment; changing it makes existing TOTP secrets undecryptable.
+- `/account/security` supports enrollment, confirmation, MFA challenges, one-time recovery-code display, and optional MFA removal for non-platform administrators. Password and Google login both require the challenge when MFA is enabled.
+- The additive schema migration is `20261106120000_identity_mfa`. Prisma schema validation passed; client generation, exact-head CI, PostgreSQL migration replay and configured deployment HTTP journeys remain pending.
+
 ## Work packages and status
 
 ### 2.1 Identity data and configuration
@@ -32,6 +41,9 @@ Deliver a secure identity and access foundation for buyers, sellers, staff, and 
 - [x] Session create/resolve/revoke and revoke-all operations.
 - [x] HttpOnly session cookie helpers; Secure in production.
 - [x] Unit tests for password and session primitives/lifecycle.
+- [x] Bind MFA assurance to server-managed sessions and require renewed verification at least every 12 hours.
+- [x] Require TOTP enrollment and fresh verification for accounts holding `platform:manage`.
+- [x] Encrypt TOTP secrets, prevent code replay, and store one-time recovery-code digests.
 - [ ] Covered by the single deployment HTTP end-to-end journey below; no separate cookie/API test suite.
 - [x] Add a fail-closed same-origin JSON mutation guard: require exact configured application Origin, reject non-same-origin Fetch Metadata when supplied, and require application/json. Public mutation routes must invoke it before reading bodies or calling domain services.
 - [x] Add persistent, HMAC-keyed login rate-limit buckets for normalized identifier/IP pairs and trusted client IPs; store only keyed digests, never raw identifiers/IPs in the throttle ledger.
@@ -150,10 +162,10 @@ The identity feature review is governed by System 01 and the Phase 2 exit gates 
 - Core password registration/login, logout service/route, password reset, authenticated password change, current-session resolution, session listing/revocation, profile update, consent capture, audit events, persistent rate limits, same-origin mutation protection, role/permission evaluation and audited role assignment/revocation are implemented in source. Email verification and resend flows are retired.
 - The account address surface currently exposes list/create only; edit/delete/default-address management is not complete and must be treated as the shared account-profile slice rather than claimed complete.
 - Google OIDC/PKCE code exists, but provider-backed sign-in/registration has not been exercised with real Google credentials and redirect URI.
-- Two-factor authentication is explicitly unavailable; it is optional in the blueprint and must remain labelled unavailable (no fake control). Passkeys are not implemented.
+- TOTP MFA and one-time recovery codes are implemented; Super Admin operations require enrollment and fresh verification. Passkeys are not implemented.
 - Real Resend delivery for password reset, Turnstile configuration, trusted-proxy header configuration/edge overwrite and origin-bypass prevention, and one deployed HTTP journey (register → immediate session → /api/auth/me → logout → anonymous denial) remain operational exit gates.
 - Production public registration remains disabled until policy/legal and operational approval. Development/test registration may be enabled by the environment gate; never infer production readiness from that.
-- The requested email-versus-password error distinction is a deliberate account-enumeration trade-off. Reconsider before production; generic errors are safer if anti-enumeration takes priority.
+- The former email-versus-password error distinction is retired; public login failures are generic to reduce account enumeration.
 
 **Decision:** System 01 / Phase 2 remains **Implemented / not Verified / not Complete**. Do not close Phase 2 or unblock its final release gate until exact-head General CI, PostgreSQL identity integration, configured delivery/proxy controls and the single deployed HTTP journey are evidenced. Keep verification focused; no broad helper-level test expansion.
 

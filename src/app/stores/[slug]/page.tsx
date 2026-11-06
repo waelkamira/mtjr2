@@ -5,16 +5,21 @@ import { listDiscoverableProducts } from "@/server/catalog/discovery";
 import CatalogProductGrid from "@/features/storefront/catalog-product-grid";
 import CatalogListControls from "@/features/storefront/catalog-list-controls";
 import StoreReviews from "@/features/storefront/store-reviews";
+import { getPreferredLocale } from "@/server/locale";
+import { translate } from "@/lib/locale";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; sort?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const locale = await getPreferredLocale();
   const store = await getDiscoverableStoreBySlug(slug);
-  return store ? { title: store.name, description: `Browse published products from ${store.name} on Mtjr.`, alternates: { canonical: `/stores/${encodeURIComponent(store.slug)}` } } : { title: "Store not found", robots: { index: false, follow: false } };
+  return store ? { title: store.name, description: translate(locale, `Browse published products from ${store.name} on Mtjr.`, `تصفّح المنتجات المنشورة من ${store.name} على متجري.`), alternates: { canonical: `/stores/${encodeURIComponent(store.slug)}` } } : { title: translate(locale, "Store not found", "المتجر غير موجود"), robots: { index: false, follow: false } };
 }
 export default async function StoreDetailPage({ params, searchParams }: Props) {
   const [{ slug }, search] = await Promise.all([params, searchParams]);
+  const locale = await getPreferredLocale();
+  const t = (english: string, arabic: string) => translate(locale, english, arabic);
   const store = await getDiscoverableStoreBySlug(slug);
   if (!store) notFound();
   const page = Math.max(1, Math.min(10000, Number(search.page) || 1));
@@ -22,15 +27,15 @@ export default async function StoreDetailPage({ params, searchParams }: Props) {
   const sort = search.sort === "name_asc" || search.sort === "name_desc" || (q && search.sort === "relevance")
     ? search.sort
     : q ? "relevance" : "newest";
-  const result = await listDiscoverableProducts({ storeId: store.id, q: q || undefined, page, limit: 24, sort });
+  const result = await listDiscoverableProducts({ storeId: store.id, q: q || undefined, page, limit: 24, sort, locale });
   return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
-    <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">Verified marketplace seller</p>
+    <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Verified marketplace seller", "بائع موثّق في السوق")}</p>
     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{store.name}</h1>
-    {store.sellerDisplayName && <p className="mt-2 text-sm text-[var(--muted)]">Operated by {store.sellerDisplayName}</p>}
-    <p className="mt-3 text-sm text-[var(--muted)]">{result.pagination.total} published products</p>
-    <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} />
-    <CatalogProductGrid products={result.items} />
-    <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} />
+    {store.sellerDisplayName && <p className="mt-2 text-sm text-[var(--muted)]">{t("Operated by", "يديره")} {store.sellerDisplayName}</p>}
+    <p className="mt-3 text-sm text-[var(--muted)]">{result.pagination.total} {t("published products", "منتج منشور")}</p>
+    <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} locale={locale} />
+    <CatalogProductGrid products={result.items} locale={locale} />
+    <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} locale={locale} />
     <StoreReviews storeId={store.id} storeName={store.name} />
   </main>;
 }

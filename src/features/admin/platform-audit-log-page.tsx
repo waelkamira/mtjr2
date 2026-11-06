@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import { useLocale } from "@/components/locale-provider";
+import { translate } from "@/lib/locale";
 
 type AuditEvent = {
   id: string;
@@ -21,6 +23,7 @@ type AuditEvent = {
 type AuditResponse = { events: AuditEvent[]; nextCursor: string | null; limit: number };
 
 export default function PlatformAuditLogPage() {
+  const { locale } = useLocale();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [action, setAction] = useState("");
   const [resource, setResource] = useState("");
@@ -38,15 +41,15 @@ export default function PlatformAuditLogPage() {
       if (next) params.set("cursor", next);
       const response = await fetch(`/api/admin/control-panel/audit-log?${params}`, { cache: "no-store" });
       const data = await response.json() as AuditResponse & { error?: string };
-      if (!response.ok) throw new Error(data.error || "Unable to load audit events.");
+      if (!response.ok) throw new Error(data.error || translate(locale, "Unable to load audit events.", "تعذر تحميل أحداث التدقيق."));
       setEvents((current) => append ? [...current, ...data.events] : data.events);
       setNextCursor(data.nextCursor);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to load audit events.");
+      setError(cause instanceof Error ? cause.message : translate(locale, "Unable to load audit events.", "تعذر تحميل أحداث التدقيق."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => { void Promise.resolve().then(() => load(null, false, "", "")); }, [load]);
 
@@ -60,28 +63,28 @@ export default function PlatformAuditLogPage() {
   return (
     <main className="min-h-screen bg-[var(--background)] px-5 py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <Link href="/admin/control-panel" className="text-sm font-medium text-[var(--color-copper-600)] hover:underline">← Platform control panel</Link>
+        <Link href="/admin/control-panel" className="text-sm font-medium text-[var(--color-copper-600)] hover:underline">← {translate(locale, "Platform control panel", "لوحة تحكم المنصة")}</Link>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Security & governance</p>
-            <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">Platform audit log</h1>
-            <p className="mt-2 text-sm text-[var(--muted)]">Read-only history of privileged and operational changes recorded by the platform.</p>
+            <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Security & governance", "الأمن والحوكمة")}</p>
+            <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Platform audit log", "سجل تدقيق المنصة")}</h1>
+            <p className="mt-2 text-sm text-[var(--muted)]">{translate(locale, "Read-only history of privileged and operational changes recorded by the platform.", "سجل للقراءة فقط للتغييرات المميزة والتشغيلية التي سجلتها المنصة.")}</p>
           </div>
-          <span className="rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-xs text-[var(--muted)]">Newest first · private data</span>
+          <span className="rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-xs text-[var(--muted)]">{translate(locale, "Newest first · private data", "الأحدث أولًا · بيانات خاصة")}</span>
         </div>
 
         <form onSubmit={applyFilters} className="mt-7 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 sm:grid-cols-[1fr_1fr_auto]">
-          <label className="text-xs font-medium text-[var(--muted)]">Action contains<input value={action} onChange={(event) => setAction(event.target.value)} maxLength={160} placeholder="identity.role_assignment" className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
-          <label className="text-xs font-medium text-[var(--muted)]">Resource contains<input value={resource} onChange={(event) => setResource(event.target.value)} maxLength={120} placeholder="user_role_assignment" className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
-          <button disabled={loading} className="self-end rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">Filter</button>
+          <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Action contains", "الإجراء يتضمن")}<input value={action} onChange={(event) => setAction(event.target.value)} maxLength={160} placeholder="identity.role_assignment" className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
+          <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Resource contains", "المورد يتضمن")}<input value={resource} onChange={(event) => setResource(event.target.value)} maxLength={120} placeholder="user_role_assignment" className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
+          <button disabled={loading} className="self-end rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{translate(locale, "Filter", "تصفية")}</button>
         </form>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         <section className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-white">
-          {events.length === 0 && !loading ? <p className="p-8 text-center text-sm text-[var(--muted)]">No audit events match these filters.</p> : (
+          {events.length === 0 && !loading ? <p className="p-8 text-center text-sm text-[var(--muted)]">{translate(locale, "No audit events match these filters.", "لا توجد أحداث تدقيق تطابق عوامل التصفية هذه.")}</p> : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-left text-sm">
-                <thead className="bg-[var(--color-ivory-100)] text-xs text-[var(--muted)]"><tr><th className="px-4 py-3 font-medium">When</th><th className="px-4 py-3 font-medium">Actor</th><th className="px-4 py-3 font-medium">Action</th><th className="px-4 py-3 font-medium">Resource</th><th className="px-4 py-3 font-medium">Scope</th><th className="px-4 py-3 font-medium">Details</th></tr></thead>
+                <thead className="bg-[var(--color-ivory-100)] text-xs text-[var(--muted)]"><tr><th className="px-4 py-3 font-medium">{translate(locale, "When", "الوقت")}</th><th className="px-4 py-3 font-medium">{translate(locale, "Actor", "المنفّذ")}</th><th className="px-4 py-3 font-medium">{translate(locale, "Action", "الإجراء")}</th><th className="px-4 py-3 font-medium">{translate(locale, "Resource", "المورد")}</th><th className="px-4 py-3 font-medium">{translate(locale, "Scope", "النطاق")}</th><th className="px-4 py-3 font-medium">{translate(locale, "Details", "التفاصيل")}</th></tr></thead>
                 <tbody className="divide-y divide-[var(--border)]">
                   {events.map((event) => (
                     <tr key={event.id} className="align-top">
@@ -97,10 +100,10 @@ export default function PlatformAuditLogPage() {
               </table>
             </div>
           )}
-          {loading && <p role="status" className="border-t border-[var(--border)] p-4 text-sm text-[var(--muted)]">Loading audit events…</p>}
-          {!loading && nextCursor && <div className="border-t border-[var(--border)] p-4 text-center"><button onClick={() => void load(nextCursor, true, action, resource)} className="rounded-xl border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:bg-[var(--color-ivory-100)]">Load older events</button></div>}
+          {loading && <p role="status" className="border-t border-[var(--border)] p-4 text-sm text-[var(--muted)]">{translate(locale, "Loading audit events…", "جارٍ تحميل أحداث التدقيق…")}</p>}
+          {!loading && nextCursor && <div className="border-t border-[var(--border)] p-4 text-center"><button onClick={() => void load(nextCursor, true, action, resource)} className="rounded-xl border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:bg-[var(--color-ivory-100)]">{translate(locale, "Load older events", "تحميل أحداث أقدم")}</button></div>}
         </section>
-        <p className="mt-4 text-xs leading-5 text-[var(--muted)]">Audit events are displayed as recorded. This view does not permit editing or deleting history.</p>
+        <p className="mt-4 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Audit events are displayed as recorded. This view does not permit editing or deleting history.", "تُعرض أحداث التدقيق كما سُجلت. لا يسمح هذا العرض بتعديل السجل أو حذفه.")}</p>
       </div>
     </main>
   );

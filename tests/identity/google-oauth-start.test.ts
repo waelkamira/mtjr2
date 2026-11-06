@@ -66,11 +66,13 @@ describe("Google OAuth start", () => {
 
   it("requires a verified registration challenge before starting Google sign-up", async () => {
     const response = await GET(new Request(
-      "http://localhost:3000/api/auth/google/start?intent=register&accountType=CUSTOMER&acceptedTerms=1&acceptedPrivacy=1"
+      "http://localhost:3000/api/auth/google/start?intent=register&accountType=CUSTOMER&acceptedTerms=1&acceptedPrivacy=1&returnTo=%2Fproducts%2Fchair%3Fcolor%3Dblue"
     ));
 
     expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/register?oauth=challenge_required");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/register?oauth=challenge_required&returnTo=%2Fproducts%2Fchair%3Fcolor%3Dblue"
+    );
     expect(setCookie).not.toHaveBeenCalled();
   });
 

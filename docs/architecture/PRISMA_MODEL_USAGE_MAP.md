@@ -9,7 +9,7 @@
 
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
-| `User`, `UserSession`, `OAuthAccount`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `LoginRateLimitBucket` | `src/server/identity/*`; `src/app/api/auth/*` | Account lifecycle, session security, verification and abuse controls. OAuth/MFA routes must remain conditional until providers and full flows exist. |
+| `User`, `UserSession`, `OAuthAccount`, `UserTwoFactor`, `UserTwoFactorRecoveryCode`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `LoginRateLimitBucket` | `src/server/identity/*`; `src/app/api/auth/*`; `/api/account/security/mfa` | Account lifecycle, encrypted TOTP secrets, one-time recovery codes, MFA-assured sessions, OAuth and abuse controls. Email-verification fields remain legacy-only; registration activates immediately. |
 | `Role`, `Permission`, `RolePermission`, `UserRoleAssignment` | `src/server/identity/authorization.ts`, `permission-guard.ts`, `permission-repository.ts`, `role-assignment.ts`, `role-scope.ts` | Global grants and exact resource-scoped grants. Resolve actor and scope on the server. |
 | `AuditLog` | Domain services that perform sensitive writes | Cross-cutting audit record; do not create duplicate audit tables per domain without a demonstrated need. |
 
@@ -47,6 +47,7 @@
 | `UserAddress` | `src/server/account/addresses.ts`, checkout delivery-address service | Customer address book and market-country constraints. |
 | `MarketTaxRate`, `CheckoutTaxSnapshot` | `src/server/tax/tax.ts`; admin tax and checkout tax APIs | Initial configurable market/region tax rule and immutable quote calculation; not a complete jurisdictional tax engine. |
 | `Order`, `OrderAddress`, `VendorOrder`, `OrderItem`, `OrderStatusHistory`, `VendorOrderStatusHistory`, `Shipment`, `ShipmentTrackingEvent` | `src/server/orders/orders.ts`, `seller-orders.ts` | Buyer-owned order timelines, safe pre-payment cancellation and all-or-nothing reorder. Seller shipment records and manually entered tracking events are store-scoped and audited; cancellation restores SALE ledger quantities through idempotent `ORDER_CANCELLATION` movements. Paid-order refunds and invoices are not implemented. |
+| `CommissionRule`, `CommissionTransaction` | `src/server/admin/commission-management.ts`; `src/server/payments/payments.ts`; `/api/admin/commission-rules`, `/api/admin/commissions` | Super Admin effective-dated commission policy and immutable per-order-item snapshots at verified payment success. Commission basis is line merchandise net of proportionally allocated vendor discounts; tax/shipping excluded. Rule precedence is seller+category, seller, category, global; no matching rule snapshots 0%. Category ID/name is snapshotted onto OrderItem at order creation. `orderItemId` uniqueness makes each item posting idempotent. No seller ledger, payout, refund reversal or reconciliation is implemented. |
 
 ## 6. Returns, trust, engagement, and support — Systems 06–11
 
@@ -75,7 +76,7 @@ Before adding or changing a model:
 
 ## 8. Known boundaries and unmapped future domains
 
-This schema snapshot does not yet provide a complete implementation for all 49 systems. Payment provider intents/webhooks/refunds/disputes, payout and double-entry accounting, customs/tax compliance, supplier/procurement, loyalty/promotions, invoices, CMS/legal content, feature flags, webhooks/outbox, logistics/carrier integrations, KYC documents, and the separate property/booking domain require their own reviewed data contracts and workflows. Do not invent models or claim these systems are implemented merely because they appear in the 49-system blueprint.
+This schema snapshot does not yet provide a complete implementation for all 49 systems. Payout and double-entry accounting, payment refunds/disputes, customs/tax compliance, supplier/procurement, loyalty/promotions, invoices, CMS/legal content, feature flags, webhooks/outbox, logistics/carrier integrations, KYC documents, and the separate property/booking domain require their own reviewed data contracts and workflows. Do not invent models or claim these systems are implemented merely because they appear in the 49-system blueprint.
 
 
 ## Seller order preparation — 2026-11-04

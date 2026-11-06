@@ -35,12 +35,14 @@ model User {
   passwordHash            String?
   displayName             String?
   status                  UserStatus               @default(PENDING)
+  anonymizedAt            DateTime?
   emailVerifiedAt         DateTime?
   lastLoginAt             DateTime?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   sessions                UserSession[]
   oauthAccounts           OAuthAccount[]
+  twoFactor               UserTwoFactor?
   roleAssignments         UserRoleAssignment[]
   passwordResets          PasswordResetToken[]
   verificationTokens      VerificationToken[]
@@ -51,6 +53,7 @@ model User {
   platformPrivilegeRequests  PlatformPrivilegeRequest[] @relation("PlatformPrivilegeRequester")
   platformPrivilegeReviews   PlatformPrivilegeRequest[] @relation("PlatformPrivilegeReviewer")
   sellerProfile           Seller?
+  createdCommissionRules  CommissionRule[]          @relation("CommissionRuleCreator")
   storeMemberships        SellerStaff[]            @relation("SellerStaffUser")
   sentStoreInvitations    SellerStaff[]            @relation("SellerStaffInviter")
   carts                   Cart[]
@@ -146,10 +149,36 @@ model UserSession {
   lastSeenAt DateTime  @default(now())
   expiresAt  DateTime
   revokedAt  DateTime?
+  mfaVerifiedAt DateTime?
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
   @@index([expiresAt])
+}
+
+model UserTwoFactor {
+  id                 String                       @id @default(cuid())
+  userId             String                       @unique
+  secretCiphertext   String
+  enabledAt          DateTime?
+  lastVerifiedStep   BigInt?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+  user               User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recoveryCodes      UserTwoFactorRecoveryCode[]
+
+  @@index([enabledAt])
+}
+
+model UserTwoFactorRecoveryCode {
+  id         String       @id @default(cuid())
+  userId     String
+  codeHash   String       @unique
+  createdAt  DateTime     @default(now())
+  usedAt     DateTime?
+  twoFactor  UserTwoFactor @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, usedAt])
 }
 
 model OAuthAccount {
@@ -479,6 +508,7 @@ model Currency {
   checkoutQuotes CheckoutQuote[]
   orders         Order[]
   payments       Payment[]
+  commissionTransactions CommissionTransaction[]
   coupons        Coupon[]         @relation("CouponCurrency")
 
   shippingRates StoreShippingRate[]
@@ -532,6 +562,8 @@ model Seller {
   updatedAt   DateTime     @updatedAt
   owner       User         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   stores      Store[]
+  commissionRules CommissionRule[]
+  commissionTransactions CommissionTransaction[]
 
   @@index([status, createdAt])
 }
@@ -556,6 +588,7 @@ model Store {
   checkoutQuoteLines         CheckoutQuoteLine[]
   vendorOrders               VendorOrder[]
   conversations              StoreConversation[]
+  commissionTransactions     CommissionTransaction[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
@@ -607,6 +640,8 @@ model Category {
   children     Category[]            @relation("CategoryTree")
   translations CategoryTranslation[]
   productLinks ProductCategory[]
+  commissionRules CommissionRule[]
+  orderItems   OrderItem[]
 
   @@index([parentId, status, sortOrder])
   @@index([status, sortOrder])
@@ -1298,6 +1333,7 @@ model Order {
   returnRequests       ReturnRequest[]
   statusHistory        OrderStatusHistory[]
   payments             Payment[]
+  commissionTransactions CommissionTransaction[]
 
   conversations StoreConversation[]
 
@@ -1344,6 +1380,7 @@ model VendorOrder {
   store                     Store                      @relation(fields: [storeId], references: [id], onDelete: Restrict)
   shippingRate              StoreShippingRate?         @relation(fields: [shippingRateId], references: [id], onDelete: SetNull)
   items                     OrderItem[]
+  commissionTransactions   CommissionTransaction[]
   statusHistory             VendorOrderStatusHistory[]
   shipment                  Shipment?
   storeReview               StoreReview?
@@ -1383,16 +1420,21 @@ model OrderItem {
   quantity        Int
   unitAmountMinor BigInt
   lineTotalMinor  BigInt
+  commissionCategoryId String?
+  commissionCategoryName String?
   createdAt       DateTime        @default(now())
   vendorOrder     VendorOrder     @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
   product         Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
   variant         ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  commissionCategory Category?    @relation(fields: [commissionCategoryId], references: [id], onDelete: Restrict)
+  commissionTransaction CommissionTransaction?
   review          ProductReview?
   returnItems     ReturnItem[]
 
   @@index([vendorOrderId])
   @@index([productId])
   @@index([variantId])
+  @@index([commissionCategoryId])
 }
 
 model OrderStatusHistory {
@@ -1947,6 +1989,59 @@ model Payment {
   @@unique([provider, providerReference])
   @@index([orderId, createdAt])
   @@index([status, createdAt])
+}
+
+model CommissionRule {
+  id              String   @id @default(cuid())
+  sellerId        String?
+  categoryId      String?
+  rateBasisPoints Int
+  effectiveFrom   DateTime
+  effectiveUntil  DateTime?
+  isActive        Boolean  @default(true)
+  deactivatedAt   DateTime?
+  createdById     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  seller          Seller?  @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  category        Category? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdBy       User?    @relation("CommissionRuleCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  transactions    CommissionTransaction[]
+
+  @@index([sellerId, categoryId, isActive, effectiveFrom])
+  @@index([categoryId, isActive, effectiveFrom])
+  @@index([isActive, effectiveFrom])
+}
+
+model CommissionTransaction {
+  id                String   @id @default(cuid())
+  orderId           String
+  vendorOrderId     String
+  orderItemId       String   @unique
+  storeId           String
+  sellerId          String
+  commissionRuleId  String?
+  categoryId        String?
+  categoryName      String?
+  ruleScopeType     String   @db.VarChar(32)
+  rateBasisPoints   Int
+  baseAmountMinor   BigInt
+  commissionMinor   BigInt
+  currencyCode      String   @db.Char(3)
+  createdAt         DateTime @default(now())
+  order             Order      @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  vendorOrder       VendorOrder @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
+  orderItem         OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  store             Store     @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  seller            Seller    @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  commissionRule    CommissionRule? @relation(fields: [commissionRuleId], references: [id], onDelete: Restrict)
+  currency          Currency  @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([vendorOrderId])
+  @@index([storeId, createdAt])
+  @@index([sellerId, createdAt])
+  @@index([commissionRuleId])
 }
 
 model PaymentWebhookEvent {

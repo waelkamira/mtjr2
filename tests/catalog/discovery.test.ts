@@ -201,6 +201,7 @@ describe("public product discovery", () => {
       }]
     });
     const product = await getDiscoverableProduct("sample-product");
+    expect(mocks.productFindFirst.mock.calls[0][0].select.translations.where.locale).toBe("ar");
     expect(product?.variants[0].prices[0]).toMatchObject({
       marketId: "market-1",
       currencyCode: "EUR",

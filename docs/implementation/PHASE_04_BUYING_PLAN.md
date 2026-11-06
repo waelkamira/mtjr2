@@ -142,9 +142,6 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Vendor-order status, status history, parent-order processing state/history, and audit event are written in one serializable transaction with compare-and-set protection against stale or concurrent updates.
 - Repeating the current target status is idempotent. The seller cannot change another store's order or regress a status.
 - **No Prisma schema change:** `VendorOrderStatus`, `VendorOrderStatusHistory`, `OrderStatus`, `OrderStatusHistory`, and `AuditLog` already cover this bounded workflow.
-<<<<<<< HEAD
-- Shipment creation, carrier labels/tracking, shipped/delivered transitions, cancellation, and refunds remain disabled until their own policy/provider and inventory/payment reversal rules are implemented. No shipment or delivery success is simulated.
-=======
 - Manual seller-entered dispatch and buyer-visible tracking details are implemented on `feat/shipment-tracking-current-main` (PR pending). This records seller-supplied carrier/tracking metadata; it is not a carrier API integration, label purchase, live tracking feed, proof of delivery, cancellation, or refund. Exact-head CI and disposable PostgreSQL verification are required before treating this slice as verified.
 
 
@@ -196,4 +193,3 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Inventory movement, quarantine balance, item state, parent aggregation, and audit record commit in one serializable transaction. A repeated completed receipt is an idempotent no-op.
 - Seller returns UI requires a warehouse selection and displays quarantine separately in inventory. Admin approval/rejection no longer provides a bypass that could mark items received without a stock record.
 - This is physical receipt only. Inspection/release from quarantine, restock/disposal decisions, and payment refunds remain separate workflows.
->>>>>>> origin/main

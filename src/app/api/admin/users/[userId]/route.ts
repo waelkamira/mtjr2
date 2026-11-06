@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { changeAdminUserStatus, getAdminUser } from "@/server/admin/users";
+import { anonymizeAdminUser, changeAdminUserStatus, getAdminUser } from "@/server/admin/users";
 import {
   AuthenticationRequiredError,
   PermissionDeniedError
@@ -22,7 +22,7 @@ function failure(error: unknown): Response {
   if (error instanceof Error && error.message === "User was not found.") {
     return Response.json({ error: error.message }, { status: 404 });
   }
-  if (error instanceof Error && /cannot|already|concurrently|super administrator/i.test(error.message)) {
+  if (error instanceof Error && /cannot|already|concurrently|platform administrator|confirmation email|anonymized/i.test(error.message)) {
     return Response.json({ error: error.message }, { status: 409 });
   }
   return Response.json({ error: "Unable to process user administration request." }, { status: 500 });
@@ -51,6 +51,25 @@ export async function PATCH(request: Request, context: Context): Promise<Respons
   try {
     const { userId } = await context.params;
     return Response.json({ result: await changeAdminUserStatus(userId, body) }, {
+      headers: { "Cache-Control": "private, no-store" }
+    });
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function DELETE(request: Request, context: Context): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+  try {
+    const { userId } = await context.params;
+    return Response.json({ result: await anonymizeAdminUser(userId, body) }, {
       headers: { "Cache-Control": "private, no-store" }
     });
   } catch (error) {

@@ -8,6 +8,8 @@ interface TurnstileResponse {
   hostname?: string;
 }
 
+const LOCAL_TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA";
+
 export async function verifyRegistrationChallenge(
   token: string,
   trustedIpAddress: string
@@ -39,7 +41,12 @@ export async function verifyRegistrationChallenge(
     throw new Error("Turnstile returned an invalid response.");
   }
 
-  return result.success === true &&
-    result.action === "registration" &&
+  if (result.success !== true) return false;
+
+  if (env.NODE_ENV === "development" && env.TURNSTILE_SECRET_KEY === LOCAL_TURNSTILE_TEST_SECRET) {
+    return result.action === undefined && result.hostname === "example.com";
+  }
+
+  return result.action === "registration" &&
     result.hostname === new URL(env.APP_URL).hostname;
 }

@@ -33,19 +33,26 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "Seller applicant and store names are required." }, { status: 400 });
   }
 
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+  const returnTo = safeReturnPath(url.searchParams.get("returnTo"), env.APP_URL, "/account/orders");
+  function redirectToAuthError(code: string): Response {
     const page = intent === "login" ? "/login" : "/register";
-    return Response.redirect(new URL(`${page}?oauth=unavailable`, env.APP_URL), 303);
+    const destination = new URL(page, env.APP_URL);
+    destination.searchParams.set("oauth", code);
+    if (returnTo !== "/") destination.searchParams.set("returnTo", returnTo);
+    return Response.redirect(destination, 303);
+  }
+
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    return redirectToAuthError("unavailable");
   }
 
   const store = await cookies();
   if (intent === "register" && !isValidRegistrationChallengeCookie(
     store.get(REGISTRATION_CHALLENGE_COOKIE)?.value
   )) {
-    return Response.redirect(new URL("/register?oauth=challenge_required", env.APP_URL), 303);
+    return redirectToAuthError("challenge_required");
   }
 
-  const returnTo = safeReturnPath(url.searchParams.get("returnTo"), env.APP_URL, "/account/orders");
   const state = randomBytes(32).toString("base64url");
   const verifier = randomBytes(32).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");

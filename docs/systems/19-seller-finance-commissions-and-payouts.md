@@ -5,7 +5,8 @@
 ## 1. الغرض والحدود
 - **الغرض:** Transparent seller balance, fees, commissions, settlement statements and payout requests.
 - **المتطلبات الأساسية:** immutable ledger, double-entry postings, fees/taxes/refunds, holds, available vs pending balance, payout eligibility and reconciliation.
-- **الحالة السابقة الموثقة:** **Schema-only.** Finance models exist; audit found no direct model delegates or complete seller finance workflow.
+- **الحالة عند تدقيق baseline:** **Schema-only.** Finance models existed; audit found no direct model delegates or complete seller finance workflow.
+- **الحالة الحالية (2026-11-06):** Commission rules and payment-success transaction snapshots are partially implemented for Super Admins. Seller balances/statements, payout methods/requests, accounting ledger, and reconciliation remain unimplemented.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.

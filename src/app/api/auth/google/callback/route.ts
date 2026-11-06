@@ -6,6 +6,7 @@ import { safeReturnPath } from "@/lib/safe-return-path";
 
 import { createUserSession } from "@/server/identity/session";
 import { setSessionCookie } from "@/server/identity/session-cookie";
+import { getMfaAccessState } from "@/server/identity/mfa";
 
 export const runtime = "nodejs";
 
@@ -48,7 +49,7 @@ export async function GET(request: Request): Promise<Response> {
   function oauthError(code: string): Response {
     const destination = new URL(intent === "login" ? "/login" : "/register", env.APP_URL);
     destination.searchParams.set("oauth", code);
-    if (intent === "login" && returnTo !== "/") destination.searchParams.set("returnTo", returnTo);
+    if (returnTo !== "/") destination.searchParams.set("returnTo", returnTo);
     return Response.redirect(destination, 303);
   }
 
@@ -163,14 +164,19 @@ export async function GET(request: Request): Promise<Response> {
         }
       });
     });
+    const mfa = await getMfaAccessState(userId, now);
     const session = await createUserSession(userId, { userAgent: request.headers.get("user-agent") }, now);
     await setSessionCookie(session.token, session.expiresAt);
-    const destination = intent === "login"
-      ? returnTo
-      : accountType === "SELLER"
-        ? "/seller"
-        : returnTo;
-    return redirectTo(destination);
+    if (mfa.enrollmentRequired || mfa.enabled) {
+      const destination = new URL(
+        mfa.enrollmentRequired ? "/account/security" : "/login",
+        env.APP_URL
+      );
+      destination.searchParams.set("mfa", mfa.enrollmentRequired ? "setup" : "required");
+      destination.searchParams.set("returnTo", returnTo);
+      return Response.redirect(destination, 303);
+    }
+    return redirectTo(returnTo);
   } catch {
     return oauthError("failed");
   }

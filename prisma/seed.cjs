@@ -197,6 +197,51 @@ const demoCategories = [
   },
 ];
 
+const demoSubcategories = {
+  "phones-electronics": [
+    { slug: "smartphones", name: "Smartphones", ar: "الهواتف الذكية", productIndexes: [0, 1] },
+    { slug: "audio-headphones", name: "Audio & Headphones", ar: "الصوت وسماعات الرأس", productIndexes: [2] },
+    { slug: "wearables", name: "Smartwatches & Wearables", ar: "الساعات الذكية والأجهزة القابلة للارتداء", productIndexes: [3] },
+    { slug: "computers-tablets", name: "Computers & Tablets", ar: "الحواسيب والأجهزة اللوحية", productIndexes: [4, 5] },
+    { slug: "cameras-photography", name: "Cameras & Photography", ar: "الكاميرات والتصوير", productIndexes: [7] },
+    { slug: "tech-accessories", name: "Tech Accessories", ar: "ملحقات الأجهزة الإلكترونية", productIndexes: [6, 8, 9] },
+  ],
+  "clothing-fashion": [
+    { slug: "clothing", name: "Clothing", ar: "الملابس", productIndexes: [0, 1, 3, 4, 7, 9] },
+    { slug: "shoes", name: "Shoes", ar: "الأحذية", productIndexes: [2] },
+    { slug: "bags-accessories", name: "Bags & Accessories", ar: "الحقائب والإكسسوارات", productIndexes: [5, 6, 8] },
+  ],
+  "furniture-home": [
+    { slug: "furniture", name: "Furniture", ar: "الأثاث", productIndexes: [0, 1, 2, 4, 6] },
+    { slug: "home-decor-lighting", name: "Home Decor & Lighting", ar: "ديكور المنزل والإضاءة", productIndexes: [3, 5, 7, 8, 9] },
+  ],
+  "home-appliances": [
+    { slug: "kitchen-appliances", name: "Kitchen Appliances", ar: "أجهزة المطبخ", productIndexes: [0, 2, 6, 8, 9] },
+    { slug: "cleaning-air-care", name: "Cleaning & Air Care", ar: "التنظيف والعناية بالهواء", productIndexes: [1, 4, 5] },
+    { slug: "garment-care", name: "Garment Care", ar: "العناية بالملابس", productIndexes: [3] },
+  ],
+  "beauty-personal-care": [
+    { slug: "skincare", name: "Skincare", ar: "العناية بالبشرة", productIndexes: [0, 1, 4, 7] },
+    { slug: "hair-grooming", name: "Hair & Grooming", ar: "العناية بالشعر والحلاقة", productIndexes: [2, 9] },
+    { slug: "makeup", name: "Makeup", ar: "مستحضرات التجميل", productIndexes: [3, 5] },
+    { slug: "wellness-personal-care", name: "Wellness & Personal Care", ar: "العافية والعناية الشخصية", productIndexes: [6, 8] },
+  ],
+  "sports-outdoors": [
+    { slug: "fitness-training", name: "Fitness & Training", ar: "اللياقة والتدريب", productIndexes: [0, 2, 5, 7] },
+    { slug: "outdoor-camping", name: "Outdoor & Camping", ar: "الأنشطة الخارجية والتخييم", productIndexes: [1, 4, 6, 8, 9] },
+    { slug: "sports-equipment", name: "Sports Equipment", ar: "المعدات الرياضية", productIndexes: [3] },
+  ],
+  "books-stationery": [
+    { slug: "books", name: "Books", ar: "الكتب", productIndexes: [4, 5] },
+    { slug: "office-stationery", name: "Office & Stationery", ar: "المكتب والقرطاسية", productIndexes: [0, 1, 2, 3, 8] },
+    { slug: "arts-crafts", name: "Arts & Crafts", ar: "الفنون والحرف", productIndexes: [6, 7] },
+  ],
+  "automotive-accessories": [
+    { slug: "car-electronics", name: "Car Electronics", ar: "إلكترونيات السيارات", productIndexes: [0, 1, 8, 9] },
+    { slug: "car-care-safety", name: "Car Care & Safety", ar: "العناية بالسيارة والسلامة", productIndexes: [2, 3, 4, 5, 6, 7] },
+  ],
+};
+
 const demoBrands = [
   { slug: "mtjr-select", name: "Mtjr Select", ar: "متجر سيليكت" },
   { slug: "nova-labs", name: "Nova Labs", ar: "نوفا لابس" },
@@ -275,6 +320,7 @@ async function seedDemoCatalog() {
   }
 
   const categoryRows = new Map();
+  const subcategoryRows = new Map();
   for (let index = 0; index < demoCategories.length; index += 1) {
     const definition = demoCategories[index];
     const category = await prisma.category.upsert({
@@ -289,6 +335,33 @@ async function seedDemoCatalog() {
     await upsertTranslation(prisma.categoryTranslation, {
       categoryId_locale: { categoryId: category.id, locale: "en" },
     }, { categoryId: category.id, locale: "en", name: definition.name, description: definition.description }, { name: definition.name, description: definition.description });
+
+    for (const [childIndex, childDefinition] of (demoSubcategories[definition.slug] ?? []).entries()) {
+      const child = await prisma.category.upsert({
+        where: { slug: childDefinition.slug },
+        create: {
+          slug: childDefinition.slug, parentId: category.id, name: childDefinition.name,
+          description: definition.description, imageUrl: definition.images[childIndex % definition.images.length],
+          status: "ACTIVE", sortOrder: childIndex + 1,
+        },
+        update: {
+          parentId: category.id, name: childDefinition.name, description: definition.description,
+          imageUrl: definition.images[childIndex % definition.images.length], status: "ACTIVE",
+          sortOrder: childIndex + 1,
+        },
+      });
+      subcategoryRows.set(childDefinition.slug, child);
+      await upsertTranslation(prisma.categoryTranslation, {
+        categoryId_locale: { categoryId: child.id, locale: "ar" },
+      }, {
+        categoryId: child.id, locale: "ar", name: childDefinition.ar, description: definition.description,
+      }, { name: childDefinition.ar, description: definition.description });
+      await upsertTranslation(prisma.categoryTranslation, {
+        categoryId_locale: { categoryId: child.id, locale: "en" },
+      }, {
+        categoryId: child.id, locale: "en", name: childDefinition.name, description: definition.description,
+      }, { name: childDefinition.name, description: definition.description });
+    }
   }
 
   const brandRows = new Map();
@@ -338,6 +411,15 @@ async function seedDemoCatalog() {
         create: { productId: product.id, categoryId: category.id, isPrimary: true, sortOrder: 0 },
         update: { isPrimary: true, sortOrder: 0 },
       });
+      for (const childDefinition of demoSubcategories[definition.slug] ?? []) {
+        if (!childDefinition.productIndexes.includes(productIndex)) continue;
+        const child = subcategoryRows.get(childDefinition.slug);
+        await prisma.productCategory.upsert({
+          where: { productId_categoryId: { productId: product.id, categoryId: child.id } },
+          create: { productId: product.id, categoryId: child.id, isPrimary: false, sortOrder: 0 },
+          update: { isPrimary: false, sortOrder: 0 },
+        });
+      }
 
       const imageUrl = definition.images[productIndex % definition.images.length];
       const existingMedia = await prisma.productMedia.findFirst({ where: { productId: product.id, url: imageUrl } });
@@ -395,13 +477,17 @@ async function seedDemoCatalog() {
     });
   }
 
+  const expectedCategorySlugs = [
+    ...demoCategories.map((item) => item.slug),
+    ...Object.values(demoSubcategories).flatMap((items) => items.map((item) => item.slug)),
+  ];
   const [productCount, categoryCount, storeCount, inventoryCount] = await Promise.all([
     prisma.product.count({ where: { slug: { startsWith: "demo-" } } }),
-    prisma.category.count({ where: { slug: { in: demoCategories.map((item) => item.slug) }, status: "ACTIVE" } }),
+    prisma.category.count({ where: { slug: { in: expectedCategorySlugs }, status: "ACTIVE" } }),
     prisma.store.count({ where: { slug: { startsWith: "demo-" }, status: "ACTIVE" } }),
     prisma.inventory.count({ where: { warehouse: { store: { slug: { startsWith: "demo-" } } } } }),
   ]);
-  if (categoryCount !== demoCategories.length || productCount < demoCategories.length * 10) {
+  if (categoryCount !== expectedCategorySlugs.length || productCount < demoCategories.length * 10) {
     throw new Error(`Demo catalog verification failed: ${categoryCount} categories, ${productCount} products.`);
   }
   console.log(`Demo catalog verified: ${productCount} products across ${categoryCount} categories, ${storeCount} stores, ${inventoryCount} inventory rows in DEMO-US/USD.`);

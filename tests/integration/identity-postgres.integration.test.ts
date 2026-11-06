@@ -6,7 +6,16 @@ import { loginWithPassword } from "@/server/identity/login";
 import { createPasswordResetChallenge, completePasswordReset } from "@/server/identity/password-reset";
 import { verifyPassword } from "@/server/identity/password";
 import {
+  beginMfaEnrollment,
+  confirmMfaEnrollment,
+  createTotpCode,
+  disableMfa,
+  getMfaAccessState,
+  verifyMfaSession
+} from "@/server/identity/mfa";
+import {
   createUserSession,
+  hashSessionToken,
   resolveUserSession,
   revokeUserSession
 } from "@/server/identity/session";
@@ -143,6 +152,111 @@ describe("identity PostgreSQL integration", () => {
     expect(rejected).toHaveLength(1);
     expect(rejected[0].reason).toBeInstanceOf(IdentityConflictError);
     await expect(prisma.user.count({ where: { emailNormalized: duplicateEmail } })).resolves.toBe(1);
+  });
+
+  it("enforces Super Admin MFA enrollment, verification freshness, and one-time recovery codes", async () => {
+    const registration = await registerUser({
+      email: `mfa-${suffix}@example.test`,
+      password: "Correct-Horse-Battery-42!",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true
+    });
+    createdUserIds.add(registration.userId);
+    const superAdminRole = await prisma.role.findUniqueOrThrow({
+      where: { key: "SUPER_ADMIN" }
+    });
+    await prisma.userRoleAssignment.create({
+      data: {
+        userId: registration.userId,
+        roleId: superAdminRole.id,
+        scopeType: "GLOBAL",
+        scopeId: "GLOBAL"
+      }
+    });
+    const session = await createUserSession(registration.userId);
+    const sessionRow = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hashSessionToken(session.token) },
+      select: { id: true }
+    });
+
+    await expect(getMfaAccessState(registration.userId)).resolves.toMatchObject({
+      enabled: false,
+      platformRequired: true,
+      enrollmentRequired: true
+    });
+
+    const enrollment = await beginMfaEnrollment(
+      registration.userId,
+      "Correct-Horse-Battery-42!"
+    );
+    expect(enrollment.status).toBe("READY");
+    if (enrollment.status !== "READY") throw new Error("MFA enrollment did not start.");
+    expect(enrollment.secret).not.toContain("=");
+    expect(enrollment.otpauthUri).toContain("otpauth://totp/");
+
+    const now = new Date();
+    const recoveryCodes = await confirmMfaEnrollment(
+      registration.userId,
+      sessionRow.id,
+      createTotpCode(enrollment.secret, now),
+      now
+    );
+    expect(recoveryCodes).toHaveLength(10);
+    if (!recoveryCodes || !recoveryCodes[0]) throw new Error("No MFA recovery codes were created.");
+    await expect(getMfaAccessState(registration.userId, now)).resolves.toMatchObject({
+      enabled: true,
+      required: true,
+      platformRequired: true,
+      enrollmentRequired: false
+    });
+    await expect(
+      disableMfa(
+        registration.userId,
+        sessionRow.id,
+        "Correct-Horse-Battery-42!",
+        createTotpCode(enrollment.secret, new Date(now.getTime() + 30_000)),
+        new Date(now.getTime() + 30_000)
+      )
+    ).resolves.toBe("MFA_REQUIRED");
+    await expect(getMfaAccessState(registration.userId, now)).resolves.toMatchObject({
+      enabled: true,
+      platformRequired: true
+    });
+
+    const secondSession = await createUserSession(registration.userId);
+    const secondSessionRow = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hashSessionToken(secondSession.token) },
+      select: { id: true }
+    });
+    const nextStep = new Date(now.getTime() + 30_000);
+    const code = createTotpCode(enrollment.secret, nextStep);
+    await expect(
+      verifyMfaSession(registration.userId, secondSessionRow.id, code, nextStep)
+    ).resolves.toBe(true);
+    await expect(
+      verifyMfaSession(registration.userId, secondSessionRow.id, code, nextStep)
+    ).resolves.toBe(false);
+
+    const recoverySession = await createUserSession(registration.userId);
+    const recoverySessionRow = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hashSessionToken(recoverySession.token) },
+      select: { id: true }
+    });
+    await expect(
+      verifyMfaSession(
+        registration.userId,
+        recoverySessionRow.id,
+        recoveryCodes[0]
+      )
+    ).resolves.toBe(true);
+    await expect(
+      verifyMfaSession(
+        registration.userId,
+        recoverySessionRow.id,
+        recoveryCodes[0]
+      )
+    ).resolves.toBe(false);
   });
 
   it("enforces persistent login throttling under concurrent PostgreSQL requests", async () => {

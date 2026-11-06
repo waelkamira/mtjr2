@@ -3,6 +3,8 @@ import { validateIdentityMutationRequest } from "@/server/identity/request-secur
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { updateDraftProduct } from "@/server/catalog/products";
 import { getDiscoverableProduct } from "@/server/catalog/discovery";
+import { getPreferredLocale } from "@/server/locale";
+import { isLocale } from "@/lib/locale";
 
 export const runtime = "nodejs";
 
@@ -24,7 +26,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ produ
 export async function GET(request: Request, context: { params: Promise<{ productId: string }> }): Promise<Response> {
   try {
     const { productId } = await context.params;
-    const locale = new URL(request.url).searchParams.get("locale") ?? "en";
+    const requestedLocale = new URL(request.url).searchParams.get("locale");
+    const locale = requestedLocale ?? await getPreferredLocale();
+    if (!isLocale(locale)) return Response.json({ error: "Unsupported locale." }, { status: 400 });
     const product = await getDiscoverableProduct(productId, locale);
     return product ? Response.json(product) : Response.json({ error: "Product not found." }, { status: 404 });
   } catch (error) {

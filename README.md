@@ -65,7 +65,9 @@ Use [`docs/architecture/PRISMA_MODEL_USAGE_MAP.md`](docs/architecture/PRISMA_MOD
 
 ## Required page inventory
 
-The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the companion inventory for public storefront, authentication, customer account, seller center, admin, global operations, property/booking, and legal/system pages. Treat routes there as required targets, not as proof that they already exist. Every page must be connected to the owning API/domain service and have access control, loading/empty/error states, and verified key actions. Implement in dependency order and record evidence in the build log.
+The 49-system blueprint defines business capabilities; it does not replace the route-by-route screen checklist. Use [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md) for the audited App Router routes, actual components/access boundaries, missing targets, and per-area implementation status. Use [`docs/architecture/PLATFORM_PAGE_INVENTORY.md`](docs/architecture/PLATFORM_PAGE_INVENTORY.md) as the broader functional checklist for storefront, account, seller, admin, global operations, property/booking, and legal/system pages. The audit found 74 page routes and 143 API route handlers; route presence alone is not completion evidence.
+
+**Page inventory progress (2026-11-06):** Added root/global not-found and error UI plus loading/error boundaries for root, account, seller, and admin segments. `npm run typecheck`, targeted ESLint, `npm run build`, and `git diff --check` passed. A local browser smoke test verified the unknown-route 404 recovery links at 390px without horizontal overflow. Full route-by-route interaction, authorization matrix, responsive and persistence testing remains open; see the inventory for missing routes and exact evidence. No Vercel deployment was performed.
 
 ## Global platform completeness specification
 
@@ -95,7 +97,7 @@ A system may be marked **Complete** only when:
 
 - Approved premium visual direction: forest green, sage, warm ivory, and restrained copper, based on the user's supplied references.
 - Shared design specification: [Mtjr2 Visual Design System](docs/design/VISUAL_DESIGN_SYSTEM.md).
-- Foundation tokens are implemented in `src/app/globals.css`; storefront, seller, and admin UI implementation follows the delivery sequence and does not bypass Phase 2 security gates.
+- Foundation tokens are implemented in `src/app/theme.css` and shared styles/primitives in `src/app/globals.css`; storefront, seller, and admin UI implementation follows the delivery sequence and does not bypass Phase 2 security gates. The page-wide adoption and responsive audit remains open.
 
 ## Deployment
 

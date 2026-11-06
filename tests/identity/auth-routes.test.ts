@@ -52,7 +52,9 @@ describe("identity HTTP routes", () => {
     mocks.loginWithPassword.mockResolvedValue({
       authenticated: true,
       userId: "user-1",
-      session: { token: "session-token", expiresAt: new Date("2026-11-06T00:00:00.000Z") }
+      session: { token: "session-token", expiresAt: new Date("2026-11-06T00:00:00.000Z") },
+      mfaRequired: false,
+      mfaSetupRequired: false
     });
     mocks.registerUser.mockResolvedValue({
       userId: "user-1"
@@ -94,6 +96,44 @@ describe("identity HTTP routes", () => {
 
     expect(response.status).toBe(401);
     expect(mocks.setSessionCookie).not.toHaveBeenCalled();
+  });
+
+  it("uses the same public error code for unknown-account and incorrect-password failures", async () => {
+    mocks.loginWithPassword.mockResolvedValue({
+      authenticated: false,
+      reason: "EMAIL_NOT_FOUND",
+      message: "Email or password is incorrect."
+    });
+
+    const response = await login(request("/api/auth/login", {
+      email: "unknown@example.test",
+      password: "incorrect"
+    }));
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({
+      error: "Email or password is incorrect.",
+      code: "INVALID_CREDENTIALS"
+    });
+  });
+
+  it("sets a session cookie but does not signal completed sign-in before MFA", async () => {
+    mocks.loginWithPassword.mockResolvedValue({
+      authenticated: true,
+      userId: "admin-1",
+      session: { token: "session-token", expiresAt: new Date("2026-11-06T00:00:00.000Z") },
+      mfaRequired: true,
+      mfaSetupRequired: false
+    });
+
+    const response = await login(request("/api/auth/login", {
+      email: "admin@example.test",
+      password: "A-correct-password"
+    }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ mfaRequired: true });
+    expect(mocks.setSessionCookie).toHaveBeenCalledOnce();
   });
 
   it("creates an active session immediately after a valid bot challenge", async () => {

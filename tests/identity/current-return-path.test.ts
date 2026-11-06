@@ -22,6 +22,15 @@ describe("getCurrentReturnPath", () => {
     })).toBe("/checkout?step=delivery");
   });
 
+  it("preserves the requested page after registration", () => {
+    expect(getCurrentReturnPath({
+      pathname: "/register",
+      search: "?returnTo=%2Fproducts%3Fcategory%3Dbooks",
+      hash: "",
+      origin
+    })).toBe("/products?category=books");
+  });
+
   it("uses an internal referrer when an auth page has no return path", () => {
     expect(getCurrentReturnPath({
       pathname: "/register",

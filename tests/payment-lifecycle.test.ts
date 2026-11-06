@@ -17,7 +17,10 @@ const mocks = vi.hoisted(() => ({
   txPaymentFindUnique: vi.fn(),
   txPaymentFindFirst: vi.fn(),
   txPaymentCreate: vi.fn(),
-  txWebhookEventCreate: vi.fn()
+  txWebhookEventCreate: vi.fn(),
+  txWebhookEventUpdate: vi.fn(),
+  txCommissionRuleFindMany: vi.fn(),
+  txCommissionTransactionCreateMany: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
@@ -42,19 +45,22 @@ import { processVerifiedPaymentEvent, startOrderPayment } from "@/server/payment
 
 const tx = {
   $queryRaw: mocks.txQueryRaw,
-  order: { findFirst: mocks.txOrderFindFirst },
+  order: { findFirst: mocks.txOrderFindFirst, update: vi.fn() },
   payment: {
     findUnique: mocks.txPaymentFindUnique,
     findFirst: mocks.txPaymentFindFirst,
     create: mocks.txPaymentCreate,
     update: vi.fn()
   },
-  paymentWebhookEvent: { create: mocks.txWebhookEventCreate },
+  paymentWebhookEvent: { create: mocks.txWebhookEventCreate, update: mocks.txWebhookEventUpdate },
+  commissionRule: { findMany: mocks.txCommissionRuleFindMany },
+  commissionTransaction: { createMany: mocks.txCommissionTransactionCreateMany },
   auditLog: { create: vi.fn() },
   orderStatusHistory: { create: vi.fn() },
   vendorOrder: { update: vi.fn() },
   vendorOrderStatusHistory: { create: vi.fn() },
-  notification: { create: vi.fn() }
+  notification: { create: vi.fn() },
+  notificationPreference: { findUnique: vi.fn() }
 };
 
 describe("payment lifecycle safety", () => {
@@ -78,6 +84,12 @@ describe("payment lifecycle safety", () => {
     mocks.txOrderFindFirst.mockResolvedValue({ id: "order-1" });
     mocks.txPaymentFindUnique.mockResolvedValue(null);
     mocks.txPaymentFindFirst.mockResolvedValue(null);
+    mocks.txWebhookEventCreate.mockResolvedValue({ id: "webhook-event-1" });
+    mocks.txWebhookEventUpdate.mockResolvedValue({});
+    mocks.txCommissionRuleFindMany.mockResolvedValue([]);
+    mocks.txCommissionTransactionCreateMany.mockResolvedValue({ count: 1 });
+    tx.notificationPreference.findUnique.mockResolvedValue(null);
+    tx.notification.create.mockResolvedValue({ id: "notification-1" });
     mocks.txPaymentCreate.mockResolvedValue({
       id: "payment-1", orderId: "order-1", provider: "test_provider",
       status: PaymentStatus.INITIATING, amountMinor: BigInt("1500"), currencyCode: "EUR",
@@ -148,5 +160,56 @@ describe("payment lifecycle safety", () => {
       payloadHash: "a".repeat(64)
     })).rejects.toThrow("amount or currency does not match");
     expect(mocks.txWebhookEventCreate).not.toHaveBeenCalled();
+  });
+
+  it("snapshots discounted item commission once when payment succeeds", async () => {
+    const occurredAt = new Date("2026-11-06T12:00:00.000Z");
+    mocks.txPaymentFindUnique
+      .mockResolvedValueOnce({ id: "payment-1", orderId: "order-1" })
+      .mockResolvedValueOnce({
+        id: "payment-1", orderId: "order-1", provider: "test_provider",
+        providerReference: "provider-ref-1", amountMinor: BigInt("1500"), currencyCode: "EUR",
+        status: PaymentStatus.REQUIRES_ACTION, lastProviderEventAt: null, succeededAt: null,
+        order: {
+          id: "order-1", status: OrderStatus.PENDING_PAYMENT, orderNumber: "ORD-1", userId: null,
+          vendorOrders: [{
+            id: "vendor-1", storeId: "store-1", subtotalMinor: BigInt("1000"), discountMinor: BigInt("100"),
+            items: [{
+              id: "item-1", lineTotalMinor: BigInt("1000"),
+              commissionCategoryId: "category-1", commissionCategoryName: "Phones"
+            }],
+            store: { seller: { id: "seller-1", ownerId: "seller-owner-1" } }
+          }]
+        }
+      });
+    mocks.txCommissionRuleFindMany.mockResolvedValue([{
+      id: "global-rule", sellerId: null, categoryId: null, rateBasisPoints: 500,
+      effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveUntil: null,
+      isActive: true, deactivatedAt: null
+    }]);
+
+    await expect(processVerifiedPaymentEvent({
+      providerKey: "test_provider",
+      event: {
+        eventId: "evt-success", eventType: "succeeded", providerReference: "provider-ref-1",
+        amountMinor: "1500", currencyCode: "EUR", occurredAt
+      },
+      payloadHash: "b".repeat(64),
+      now: new Date("2026-11-06T12:00:01.000Z")
+    })).resolves.toMatchObject({ accepted: true, status: PaymentStatus.SUCCEEDED });
+
+    expect(mocks.txCommissionTransactionCreateMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({
+        orderItemId: "item-1",
+        commissionRuleId: "global-rule",
+        categoryId: "category-1",
+        categoryName: "Phones",
+        ruleScopeType: "GLOBAL",
+        rateBasisPoints: 500,
+        baseAmountMinor: BigInt("900"),
+        commissionMinor: BigInt("45"),
+        currencyCode: "EUR"
+      })]
+    });
   });
 });

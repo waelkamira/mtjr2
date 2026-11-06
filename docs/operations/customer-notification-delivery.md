@@ -5,7 +5,7 @@
 - In-app notifications remain enabled by default unless a user disables a specific event type.
 - Email preferences default to disabled. A user must explicitly enable at least one email event in `/notifications`; this records a `UserConsent` entry of type `NOTIFICATION_EMAIL`.
 - Every email enqueue checks the latest consent and per-event preference. The worker checks both again immediately before sending; withdrawn consent/preferences cancel queued work.
-- Only ACTIVE accounts with verified email addresses are eligible for delivery.
+- Only ACTIVE accounts with a normalized email address are eligible for delivery. Registration does not require email verification; users explicitly opt into each email event and provider failures remain visible in delivery history.
 - Marketing email consent is separate and is not inferred from transactional notification consent.
 
 ## Provider configuration

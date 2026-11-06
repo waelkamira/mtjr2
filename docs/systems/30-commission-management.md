@@ -4,8 +4,9 @@
 
 ## 1. الغرض والحدود
 - **الغرض:** Configure category/store/seller commission rules and calculate immutable transaction-level fees.
-- **المتطلبات الأساسية:** effective dates, precedence, minimums/caps, currency precision, versioning and recalculation policy.
-- **الحالة السابقة الموثقة:** **Schema-only.** No complete commission management workflow was identified.
+- **المتطلبات الأساسية:** effective dates, precedence, minor-unit rounding, versioning and recalculation policy. Minimums/caps remain future work.
+- **الحالة عند تدقيق baseline:** **Schema-only.** No complete commission management workflow was identified.
+- **الحالة الحالية (2026-11-06):** Admin rule configuration and immutable payment-success snapshots are implemented; seller ledger, payout integration, reconciliation, refund reversal, and full financial reports remain unavailable.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
@@ -16,7 +17,7 @@
 
 | Route الهدف | ملف الصفحة في المصدر عند baseline |
 |---|---|
-| `/admin/commissions` | غير موجود بالمسار المتوقع؛ افحص route registry لاحتمال مسار بديل |
+| `/admin/commissions` | `src/app/admin/commissions/page.tsx` |
 > فحص الوجود من شجرة commit `a509196e643fc82937eed856b522c0cc5e4dbc2f` فقط. لا يثبت أن الصفحة تعرض أو تعمل. لا تنشئ مساراً بديلاً قبل مراجعة `PAGE_ROUTE_REGISTRY.md`.
 
 ## 3. آلية عمل النظام
@@ -46,9 +47,10 @@
 
 | API | route.ts في baseline |
 |---|---|
-| `/api/admin/commission-rules` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/admin/commissions` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/admin/commissions/preview` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
+| `/api/admin/commission-rules` | `src/app/api/admin/commission-rules/route.ts` — GET/POST |
+| `/api/admin/commission-rules/[ruleId]` | `src/app/api/admin/commission-rules/[ruleId]/route.ts` — PATCH/deactivate |
+| `/api/admin/commissions` | `src/app/api/admin/commissions/route.ts` — GET transaction snapshots |
+| `/api/admin/commissions/preview` | Not implemented |
 - افحص handler → Zod → permission guard → domain service → repository → Prisma → response.
 - استخرج user/seller/store/actor من الجلسة والعضوية server-side؛ لا تثق بمعرفات scope القادمة من العميل.
 - أخطاء مستقرة: 400/401/403/404/409/422/429/500 دون تسريب أسرار أو معلومات موارد خاصة.
@@ -59,8 +61,8 @@
 
 | Prisma model | وضعه في schema الحالية | القرار |
 |---|---|---|
-| `CommissionRule` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `CommissionTransaction` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `CommissionRule` | Added; effective-dated scope and rate policy with creator and audited deactivation |
+| `CommissionTransaction` | Added; immutable per-order-item rate/base/amount snapshot created with payment confirmation |
 | `VendorOrder` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
 | `OrderItem` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
 | `SellerLedgerEntry` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |

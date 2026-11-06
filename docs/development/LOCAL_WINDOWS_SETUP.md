@@ -57,7 +57,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 - Keep `DATABASE_URL` and `DEMO_DATABASE_URL` pointed to the same isolated `mtjr2_demo` database for this local demo.
 - Keep `SEED_DEMO_CATALOG=true` and `ALLOW_DEMO_CATALOG_SEED=true`.
 - Leave Resend and Google credentials blank if you only want to browse the storefront. Do not paste production keys into this file.
-- Keep `PUBLIC_REGISTRATION_ENABLED=false`; registration stays disabled while the policy documents are development drafts.
+- For browsing only, keep `PUBLIC_REGISTRATION_ENABLED=false`. To test local registration, set it to `true` and use Cloudflare's published dummy Turnstile keys in `.env.local`:
+
+```dotenv
+PUBLIC_REGISTRATION_ENABLED=true
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+```
+
+These public dummy keys are for local testing only. Use real Turnstile credentials in production; restart `npm run dev` after changing environment files.
 
 The `.env` file is ignored by Git. Never commit it.
 
@@ -110,7 +118,7 @@ Prisma Studio opens a local database UI. Stop it with `Ctrl+C`.
 - **Prisma migration error:** verify `DATABASE_URL` points to the empty local demo database, then rerun `npm run db:deploy`.
 - **Seed refuses to run:** confirm the three demo flags are set in `.env`, `NODE_ENV=development`, and the database name contains `demo`, `test`, or `dev`.
 - **Images do not load:** demo product media uses remote image URLs; browsing still works if a remote image host is temporarily unavailable.
-- **Registration unavailable:** this is expected with the local browsing defaults. Set `PUBLIC_REGISTRATION_ENABLED=true` and configure both Turnstile keys to enable password registration; Google sign-in also requires its provider credentials.
+- **Registration unavailable:** for local testing, set `PUBLIC_REGISTRATION_ENABLED=true` and configure both Turnstile keys as shown above; restart the dev server. Google sign-in also requires its provider credentials.
 
 ## Environment variables actually used by this repository
 

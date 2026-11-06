@@ -79,7 +79,7 @@ async function main() {
       const [user, role] = await Promise.all([
         tx.user.findUnique({
           where: { emailNormalized: target.email },
-          select: { id: true, status: true, emailVerifiedAt: true }
+          select: { id: true, status: true }
         }),
         tx.role.findUnique({
           where: { key: "SUPER_ADMIN" },
@@ -93,8 +93,8 @@ async function main() {
         })
       ]);
 
-      if (!user || user.status !== "ACTIVE" || !user.emailVerifiedAt) {
-        throw new Error("The target must be an existing, active account with a verified email address.");
+      if (!user || user.status !== "ACTIVE") {
+        throw new Error("The target must be an existing active account.");
       }
       if (!role || !role.permissions.some(({ permission }) => permission.key === "platform:manage")) {
         throw new Error("The SUPER_ADMIN role or its platform:manage permission is missing. Run the identity seed first.");

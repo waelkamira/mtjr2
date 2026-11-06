@@ -100,10 +100,13 @@ describe("admin user management", () => {
     await expect(changeAdminUserStatus("admin-1", { status: "SUSPENDED", reason: "reason" }))
       .rejects.toThrow("cannot change their own");
     mocks.userFindUnique.mockResolvedValue({
-      id: "buyer-1", status: "ACTIVE", roleAssignments: [{ id: "role-1" }]
+      id: "buyer-1",
+      status: "ACTIVE",
+      anonymizedAt: null,
+      roleAssignments: [{ role: { key: "SUPER_ADMIN", permissions: [] } }]
     });
     await expect(changeAdminUserStatus("buyer-1", { status: "SUSPENDED", reason: "reason" }))
-      .rejects.toThrow("Super administrator accounts cannot be changed");
+      .rejects.toThrow("Platform administrator accounts cannot be changed");
     expect(mocks.userUpdateMany).not.toHaveBeenCalled();
     expect(mocks.auditCreate).not.toHaveBeenCalled();
   });

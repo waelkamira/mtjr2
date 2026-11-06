@@ -1941,7 +1941,6 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Browser-level guest-save → sign-in → merge → wishlist refresh and cross-user isolation remain to be verified.
 - Named user-created lists and cross-tab storage event synchronization remain outside this slice.
 
-<<<<<<< HEAD
 ## 2026-11-05 — System 06 review media, reports, and appeals
 
 **Implemented**
@@ -2096,7 +2095,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Implemented**
 - Added `PlatformPrivilegeRequest` and `PlatformPrivilegeRequestStatus` to Prisma, with a dedicated PostgreSQL migration `20261105132500_platform_privilege_approvals`. The model records target, requester, reviewer, reason, decision note, status and timestamps.
 - Added `/admin/control-panel/privilege-requests` with a request form and pending/decision history, plus `GET/POST /api/admin/control-panel/privilege-requests` and `PATCH /api/admin/control-panel/privilege-requests/[requestId]`.
-- The workflow only grants the canonical `SUPER_ADMIN` role and only when it includes `platform:manage`. The target must be an existing ACTIVE user with verified email.
+- The workflow only grants the canonical `SUPER_ADMIN` role and only when it includes `platform:manage`. The target must be an existing ACTIVE user; email verification is not required because registration activates accounts immediately by policy.
 - A requester cannot review their own request. Approval/rejection, the privilege assignment and the audit event are committed in one transaction. Target-level PostgreSQL advisory locks serialize requests and decisions to prevent duplicate pending requests and concurrent grants.
 - Requests are rejected if the target already has a current GLOBAL `platform:manage` grant. Expired canonical assignments are reactivated rather than creating a duplicate unique assignment.
 - Updated the one-time bootstrap guard to refuse initialization if any GLOBAL role assignment already carries `platform:manage`, not only if a role named `SUPER_ADMIN` is assigned.
@@ -2134,7 +2133,6 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No migration was run against the user's database or production.
 - Vercel status for this exact commit returned FAILURE. The deployment failure reason has not yet been retrieved from Vercel build logs; do not infer that it is the previously observed `AUTH_SECRET` issue without inspecting this deployment's logs.
 - PR #35 remains open and Draft; no merge performed.
-=======
 
 ## 2026-11-04 — Product Q&A governance extension
 
@@ -2393,4 +2391,41 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Updated legacy forest/copper/ivory references to shared ink, lavender and surface tokens. The migration is presentation-only: route contracts, API requests, business actions, and authorization logic were not intentionally changed.
 - Super Admin routes/components remain explicitly excluded. No Prisma schema or database migration was required.
 - CI and PostgreSQL Integration must be rerun against the final PR head; visual browser QA and local build were not available in this GitHub-only session.
->>>>>>> origin/main
+
+## 2026-11-06 — Identity and MFA rebuild
+
+- Password registration activates accounts immediately without email verification; Turnstile and persistent registration throttles provide bot/abuse controls. Historical verification-flow entries above are superseded.
+- Password login returns a generic public credential failure for unknown accounts and incorrect passwords. Successful authentication redirects to the safe same-origin return path.
+- Added encrypted TOTP enrollment, replay-resistant code verification, one-time recovery codes, session-bound 12-hour MFA assurance, and mandatory MFA enrollment/verification for platform-wide administrators.
+- Added migration `20261106120000_identity_mfa`. Configure a stable `MFA_ENCRYPTION_KEY` before production MFA enrollment; changing the key makes stored TOTP secrets unreadable.
+- At this checkpoint, local migration application and database/browser journeys were pending. The local `mtjr2_demo` database has since been migrated; this does not imply deployment elsewhere. Standard Prisma client generation succeeded after restarting the local dev server. Production build and deployment/browser journeys remain unverified.
+# 2026-11-06 — Commission policy and payment snapshots
+
+**Implemented**
+- Added effective-dated Super Admin commission rules for global, seller, category, and seller+category scopes, with overlap prevention, audited creation/deactivation, and the confirmed precedence order.
+- Snapshotted each item's primary category at order creation and recorded immutable commission base/rate/amount rows on verified payment success. The base is merchandise net of a deterministic proportional discount allocation; shipping and tax are excluded. Unmatched rules record 0%.
+- Added `/admin/commissions` to manage rules and inspect recorded snapshots. Financial mutations require `platform:manage`.
+- Added migration `20261106150000_commission_rules_and_transactions`; applied it to local `mtjr2_demo`. This does not imply deployment to another database.
+
+**Verification**
+- Prisma schema validation and client generation passed.
+- Local migration deployment and migration status passed.
+- `npm run typecheck`, targeted ESLint, commission-policy tests (4), commission-management tests (3), and payment-lifecycle tests (5) passed (12 focused tests total).
+- `npm run build` passed and included `/admin/commissions` and the commission APIs.
+- No full payment-success PostgreSQL/browser journey was performed. Seller ledger, payout workflow, refund reversal, settlement/reconciliation, and complete financial reports remain unimplemented.
+
+# 2026-11-06 — Page inventory and route recovery states
+
+**Implemented**
+- Added root `PAGE_INVENTORY.md` with the 74 actual App Router pages, their route/page component, access boundary, API/data integration evidence, known state gaps, and missing roadmap targets. The audit separately counted 143 API route handlers.
+- Added shared not-found, root/global error, and loading UI plus loading/error boundaries for the root, account, seller, and admin segments. No duplicate commerce routes were created.
+- Updated README page inventory guidance, implementation progress, design-token references, and verification evidence.
+- No Vercel deployment or production database changes were performed.
+
+**Verification**
+- `npm run typecheck` passed.
+- Targeted ESLint on all added route-state components/boundaries passed.
+- `npm run build` passed and included the new App Router boundaries.
+- `git diff --check` passed.
+- Browser smoke test of an unknown local URL displayed the branded 404 and home/product recovery links; at a 390px viewport the document/body widths remained 390px. A regular user visiting `/admin/commissions` received the expected permission-hidden 404. Authorized admin UI was not tested.
+- Full page-by-page action, responsive, state, and persistence verification remains open; all unverified existing pages remain `NEEDS_TESTING` rather than being marked complete.

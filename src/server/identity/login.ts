@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { env } from "@/lib/env";
 import { clearLoginThrottle, consumeLoginAttempt } from "@/server/identity/login-throttle";
 import { normalizeEmail } from "@/server/identity/normalize-email";
+import { getMfaAccessState } from "@/server/identity/mfa";
 import { verifyPassword } from "@/server/identity/password";
 import { createUserSession, type CreatedSession } from "@/server/identity/session";
 
@@ -19,7 +20,13 @@ export interface LoginInput {
 }
 
 export type LoginResult =
-  | { authenticated: true; userId: string; session: CreatedSession }
+  | {
+      authenticated: true;
+      userId: string;
+      session: CreatedSession;
+      mfaRequired: boolean;
+      mfaSetupRequired: boolean;
+    }
   | { authenticated: false; reason: "EMAIL_NOT_FOUND" | "INVALID_PASSWORD" | "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
 
 function digestLoginValue(kind: "identifier" | "ip", value: string): string {
@@ -31,8 +38,8 @@ function digestLoginValue(kind: "identifier" | "ip", value: string): string {
 /**
  * Authenticates an email/password pair. Call only after the HTTP boundary has
  * resolved the client IP through explicitly trusted proxy configuration.
- * The response distinguishes an unknown email from an incorrect password for
- * an eligible account. Legacy pending accounts activate after valid credentials.
+ * Public failures use the same message for unknown accounts and wrong passwords.
+ * Legacy pending accounts activate after valid credentials.
  */
 export async function loginWithPassword(
   input: LoginInput,
@@ -81,7 +88,7 @@ export async function loginWithPassword(
   );
   if (!user) {
     await prisma.loginAttempt.create({ data: { identifierHash, ipHash, succeeded: false, attemptedAt: now } });
-    return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." };
+    return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: INVALID_CREDENTIALS };
   }
 
   let accountActivatedOnLogin = false;
@@ -114,9 +121,10 @@ export async function loginWithPassword(
         attemptedAt: now
       }
     });
-    return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: eligible ? "The password is incorrect. Please try again." : INVALID_CREDENTIALS };
+    return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
   }
 
+  const mfa = await getMfaAccessState(user.id, now);
   const session = await createUserSession(user.id, {
     userAgent: input.userAgent,
   }, now);
@@ -157,5 +165,11 @@ export async function loginWithPassword(
   }
 
   await clearLoginThrottle(email, ip);
-  return { authenticated: true, userId: user.id, session };
+  return {
+    authenticated: true,
+    userId: user.id,
+    session,
+    mfaRequired: mfa.enabled,
+    mfaSetupRequired: mfa.enrollmentRequired
+  };
 }

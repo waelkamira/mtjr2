@@ -4,18 +4,12 @@ import {
   AuthenticationRequiredError,
   requireCurrentSession
 } from "@/server/identity/current-session";
+import { PermissionDeniedError } from "@/server/identity/access-errors";
 import {
   userHasPermission,
   userHasAnyPermission
 } from "@/server/identity/permission-repository";
 import type { AuthorizationRequest } from "@/server/identity/authorization";
-
-export class PermissionDeniedError extends Error {
-  constructor() {
-    super("You do not have permission to perform this action.");
-    this.name = "PermissionDeniedError";
-  }
-}
 
 /**
  * Requires an authenticated request and evaluates its permissions using only
@@ -56,4 +50,4 @@ export async function requirePlatformManagement(now = new Date()) {
   return requirePermission({ permissionKey: "platform:manage", now }, now);
 }
 
-export { AuthenticationRequiredError };
+export { AuthenticationRequiredError, PermissionDeniedError };

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import CheckoutDeliveryAddress from "@/features/checkout/checkout-delivery-address";
 import CheckoutShippingOptions from "@/features/checkout/checkout-shipping-options";
 import CheckoutTaxSummary from "@/features/checkout/checkout-tax-summary";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLocale } from "@/components/locale-provider";
+import { translate } from "@/lib/locale";
 
 type Quote = {
   id: string;
@@ -24,6 +26,8 @@ function money(amountMinor: string, code: string, minorUnit: number) {
 }
 
 export default function CheckoutReviewPage() {
+  const { locale } = useLocale();
+  const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
   const search = useSearchParams();
   const router = useRouter();
   const quoteId = search.get("quoteId");
@@ -39,13 +43,13 @@ export default function CheckoutReviewPage() {
     fetch(`/api/checkout/quote/${encodeURIComponent(quoteId)}`, { cache: "no-store" })
       .then(async (response) => {
         const result = await response.json() as { quote?: Quote; error?: string };
-        if (!response.ok || !result.quote) throw new Error(result.error || "Checkout quote could not be loaded.");
+        if (!response.ok || !result.quote) throw new Error(result.error || t("Checkout quote could not be loaded.", "تعذّر تحميل عرض الشراء."));
         if (active) setQuote(result.quote);
       })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Checkout quote could not be loaded."); })
+      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : t("Checkout quote could not be loaded.", "تعذّر تحميل عرض الشراء.")); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [quoteId]);
+  }, [quoteId, t]);
 
   async function releaseQuote() {
     if (!quote) return;
@@ -56,10 +60,10 @@ export default function CheckoutReviewPage() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({})
       });
       const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error || "The reservation could not be released.");
+      if (!response.ok) throw new Error(result.error || t("The reservation could not be released.", "تعذّر إلغاء الحجز."));
       router.push("/cart");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The reservation could not be released.");
+      setError(cause instanceof Error ? cause.message : t("The reservation could not be released.", "تعذّر إلغاء الحجز."));
     } finally { setBusy(false); }
   }
 
@@ -72,14 +76,14 @@ export default function CheckoutReviewPage() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({})
       });
       const result = await response.json() as { order?: { id: string }; error?: string };
-      if (!response.ok || !result.order) throw new Error(result.error || "The order could not be placed.");
+      if (!response.ok || !result.order) throw new Error(result.error || t("The order could not be placed.", "تعذّر تقديم الطلب."));
       router.push(`/orders/${encodeURIComponent(result.order.id)}`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The order could not be placed.");
+      setError(cause instanceof Error ? cause.message : t("The order could not be placed.", "تعذّر تقديم الطلب."));
     } finally { setPlacingOrder(false); }
   }
 
-  const displayError = error || (!quoteId ? "A checkout quote is required. Return to your cart to review it." : "");
+  const displayError = error || (!quoteId ? t("A checkout quote is required. Return to your cart to review it.", "يلزم وجود عرض شراء. عُد إلى سلتك لمراجعته.") : "");
   const isLoading = Boolean(quoteId) && loading;
 
   return (
@@ -87,48 +91,48 @@ export default function CheckoutReviewPage() {
       <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 px-5 py-5">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link>
-          <Link href="/cart" className="text-sm text-[var(--color-ink-600)]">Back to cart</Link>
+          <Link href="/cart" className="text-sm text-[var(--color-ink-600)]">{t("Back to cart", "العودة إلى السلة")}</Link>
         </div>
       </header>
       <div className="mx-auto max-w-5xl px-5 py-10 md:py-14">
-        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">Buying core · Step 2</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">Review your order</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">This is a server-generated price quote. Available inventory is temporarily held while the quote is active.</p>
+        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Buying core · Step 2", "إتمام الشراء · الخطوة ٢")}</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{t("Review your order", "مراجعة طلبك")}</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{t("This is a server-generated price quote. Available inventory is temporarily held while the quote is active.", "هذا عرض سعر أنشأه الخادم. يُحجز المخزون المتاح مؤقتًا ما دام العرض نشطًا.")}</p>
         {displayError && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-[var(--color-danger)]">{displayError}</p>}
         {isLoading ? <div className="mt-8 h-56 animate-pulse rounded-2xl bg-[var(--surface-soft)]" /> :
           quote ? <><div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
             <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
               <div className="border-b border-[var(--border)] bg-[var(--surface-soft)] px-5 py-4">
                 <p className="font-semibold text-[var(--color-ink-950)]">{quote.market.name}</p>
-                <p className="text-xs text-[var(--muted)]">Quote reference · {quote.id}</p>
+                <p className="text-xs text-[var(--muted)]">{t("Quote reference", "مرجع عرض السعر")} · {quote.id}</p>
               </div>
               <div className="divide-y divide-[var(--border)]">
                 {quote.lines.map((line) => <article key={line.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-5">
                   <div className="min-w-0">
                     <p className="font-semibold text-[var(--color-ink-950)]">{line.productName}</p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">Sold by {line.storeName}{line.variantName ? ` · ${line.variantName}` : ""} · Qty {line.quantity}</p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">{t("Sold by", "يُباع بواسطة")} {line.storeName}{line.variantName ? ` · ${line.variantName}` : ""} · {t("Qty", "الكمية")} {line.quantity}</p>
                     <p className="mt-1 text-xs text-[var(--muted)]">SKU {line.sku}</p>
-                    <p className="mt-2 text-sm text-[var(--muted)]">{money(line.unitAmountMinor, quote.currency.code, quote.currency.minorUnit)} each</p>
+                    <p className="mt-2 text-sm text-[var(--muted)]">{money(line.unitAmountMinor, quote.currency.code, quote.currency.minorUnit)} {t("each", "للوحدة")}</p>
                   </div>
                   <p className="font-semibold tabular-nums">{money(line.lineTotalMinor, quote.currency.code, quote.currency.minorUnit)}</p>
                 </article>)}
               </div>
             </section>
             <aside className="h-fit rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
-              <p className="text-sm font-semibold text-[var(--color-ink-950)]">Quote summary</p>
-              <div className="mt-5 flex justify-between gap-3 text-sm"><span className="text-[var(--muted)]">Items subtotal</span><span className="font-semibold tabular-nums">{money(quote.subtotalMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>
-              {BigInt(quote.discountMinor) > BigInt(0) && <div className="mt-3 flex justify-between gap-3 text-sm"><span className="text-[var(--muted)]">Coupon{quote.couponCode ? ` · ${quote.couponCode}` : ""}</span><span className="font-semibold tabular-nums">−{money(quote.discountMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>}
-              <div className="mt-4 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">Reservation status</p><p className={`mt-1 font-semibold ${quote.status === "ACTIVE" ? "text-[var(--color-forest-900)]" : "text-[var(--color-danger)]"}`}>{quote.status}</p><p className="mt-2 text-xs leading-5 text-[var(--muted)]">{quote.status === "ACTIVE" ? `Stock held until ${new Date(quote.expiresAt).toLocaleString()}.` : "This quote is no longer holding inventory. Return to your cart to create a fresh quote."}</p></div>
-              <button type="button" disabled={busy || quote.status !== "ACTIVE"} onClick={() => void releaseQuote()} className="mt-6 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{busy ? "Releasing…" : "Release reservation"}</button>
-              <p className="mt-4 text-xs leading-5 text-[var(--muted)]">No order has been created and no payment has been taken.</p>
+              <p className="text-sm font-semibold text-[var(--color-ink-950)]">{t("Quote summary", "ملخص عرض السعر")}</p>
+              <div className="mt-5 flex justify-between gap-3 text-sm"><span className="text-[var(--muted)]">{t("Items subtotal", "المجموع الفرعي للمنتجات")}</span><span className="font-semibold tabular-nums">{money(quote.subtotalMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>
+              {BigInt(quote.discountMinor) > BigInt(0) && <div className="mt-3 flex justify-between gap-3 text-sm"><span>{t("Coupon", "القسيمة")}{quote.couponCode ? ` · ${quote.couponCode}` : ""}</span><span className="font-semibold tabular-nums">−{money(quote.discountMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>}
+              <div className="mt-4 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">{t("Reservation status", "حالة الحجز")}</p><p className={`mt-1 font-semibold ${quote.status === "ACTIVE" ? "text-[var(--color-forest-900)]" : "text-[var(--color-danger)]"}`}>{quote.status}</p><p className="mt-2 text-xs leading-5 text-[var(--muted)]">{quote.status === "ACTIVE" ? t(`Stock held until ${new Date(quote.expiresAt).toLocaleString()}.`, `المخزون محجوز حتى ${new Date(quote.expiresAt).toLocaleString()}.`) : t("This quote is no longer holding inventory. Return to your cart to create a fresh quote.", "لم يعد هذا العرض يحجز المخزون. عُد إلى سلتك لإنشاء عرض جديد.")}</p></div>
+              <button type="button" disabled={busy || quote.status !== "ACTIVE"} onClick={() => void releaseQuote()} className="mt-6 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{busy ? t("Releasing…", "جارٍ الإلغاء…") : t("Release reservation", "إلغاء الحجز")}</button>
+              <p className="mt-4 text-xs leading-5 text-[var(--muted)]">{t("No order has been created and no payment has been taken.", "لم يُنشأ أي طلب ولم يتم تحصيل أي مبلغ.")}</p>
             </aside>
           </div>
           <div className="mt-6"><CheckoutDeliveryAddress quoteId={quote.id} quoteStatus={quote.status} /></div>
           <div className="mt-4"><CheckoutShippingOptions quoteId={quote.id} currencyCode={quote.currency.code} minorUnit={quote.currency.minorUnit} quoteStatus={quote.status} /></div>
           <div className="mt-4"><CheckoutTaxSummary quoteId={quote.id} currencyCode={quote.currency.code} minorUnit={quote.currency.minorUnit} quoteStatus={quote.status} /></div>
-          <div className="mt-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5"><p className="text-sm leading-6 text-[var(--muted)]">Placing the order creates one marketplace order and separate seller orders. Payment is not collected in this step.</p><button type="button" disabled={placingOrder || quote.status !== "ACTIVE"} onClick={() => void placeOrder()} className="mt-4 w-full rounded-xl bg-[var(--color-ink-800)] px-5 py-4 text-sm font-semibold text-white disabled:opacity-50">{placingOrder ? "Placing order…" : "Place order"}</button></div>
-          <div className="mt-4 rounded-2xl bg-[var(--surface-soft)] p-4 text-sm leading-6 text-[var(--muted)]">Order creation requires a delivery address, a shipping selection for each seller, and a configured tax calculation. Payment integration remains pending.</div></>
-          : <div className="mt-8 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center"><p className="font-semibold text-[var(--color-ink-950)]">Checkout quote unavailable</p><Link href="/cart" className="mt-4 inline-flex rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white">Return to cart</Link></div>
+          <div className="mt-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5"><p className="text-sm leading-6 text-[var(--muted)]">{t("Placing the order creates one marketplace order and separate seller orders. Payment is not collected in this step.", "يؤدي تقديم الطلب إلى إنشاء طلب للسوق وطلبات منفصلة للبائعين. لا يتم تحصيل الدفع في هذه الخطوة.")}</p><button type="button" disabled={placingOrder || quote.status !== "ACTIVE"} onClick={() => void placeOrder()} className="mt-4 w-full rounded-xl bg-[var(--color-ink-800)] px-5 py-4 text-sm font-semibold text-white disabled:opacity-50">{placingOrder ? t("Placing order…", "جارٍ تقديم الطلب…") : t("Place order", "قدّم الطلب")}</button></div>
+          <div className="mt-4 rounded-2xl bg-[var(--surface-soft)] p-4 text-sm leading-6 text-[var(--muted)]">{t("Order creation requires a delivery address, a shipping selection for each seller, and a configured tax calculation. Payment integration remains pending.", "يتطلب إنشاء الطلب عنوان توصيل واختيار شحن لكل بائع واحتساب الضريبة. تكامل الدفع غير متاح بعد.")}</div></>
+          : <div className="mt-8 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center"><p className="font-semibold text-[var(--color-ink-950)]">{t("Checkout quote unavailable", "عرض الشراء غير متاح")}</p><Link href="/cart" className="mt-4 inline-flex rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white">{t("Return to cart", "العودة إلى السلة")}</Link></div>
         }
       </div>
     </main>
