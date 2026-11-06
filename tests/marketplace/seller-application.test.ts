@@ -82,7 +82,7 @@ describe("marketplace seller lifecycle", () => {
   it("returns an existing matching store without duplicating audit on retry", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
     storeFindUnique.mockResolvedValue({
-      id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name:, slug: "shop", status: "DRAFT",
+      id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name: "Shop", slug: "shop", status: "DRAFT",
       markets: [{ marketId: "market-1" }]
     });
 
@@ -111,7 +111,7 @@ describe("marketplace seller lifecycle", () => {
     storeFindUnique
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({
-        id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name:, slug: "shop", status: "DRAFT",
+        id: "store-existing", sellerId: "seller-1", storeNumber: 202n, name: "Shop", slug: "shop", status: "DRAFT",
         markets: [{ marketId: "market-1" }]
       });
     storeCreate.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
