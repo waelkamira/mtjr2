@@ -13,6 +13,13 @@ test.describe("public marketplace journeys", () => {
   test("products, search and category discovery render", async ({ page }) => {
     await page.goto("/products");
     await expect(page.getByRole("heading", { name: /Browse products|تصفّح المنتجات/i })).toBeVisible();
+    const sponsored = page.locator("article").filter({ hasText: /Sponsored|إعلان ممول/ }).first();
+    await sponsored.scrollIntoViewIfNeeded();
+    await expect(sponsored).toBeVisible();
+    const clickResponse = page.waitForResponse((response) => response.url().includes("/api/advertising/events") && response.request().method() === "POST");
+    await sponsored.getByRole("link").click();
+    await clickResponse;
+    await expect(page).toHaveURL(/products/);
     await page.goto("/search?q=Nova");
     await expect(page.getByRole("heading", { name: /Search products|ابحث عن المنتجات/i })).toBeVisible();
     await page.goto("/categories");

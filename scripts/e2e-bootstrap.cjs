@@ -42,6 +42,27 @@ async function main() {
   const seller = await prisma.user.findUnique({ where: { emailNormalized: "electronics@demo.mtjr2.test" }, select: { id: true, sellerProfile: { select: { id: true, status: true } } } });
   if (!seller?.sellerProfile || seller.sellerProfile.status !== "ACTIVE") throw new Error("Demo seller fixture was not seeded.");
   await ensureRole(seller.id, "SELLER");
+  const store = await prisma.store.findFirst({
+    where: { sellerId: seller.sellerProfile.id, status: "ACTIVE" },
+    include: { markets: { where: { isEnabled: true }, include: { market: true }, orderBy: { marketId: "asc" } } }
+  });
+  if (!store?.markets.length) throw new Error("Demo seller store has no enabled market.");
+  const market = store.markets[0].market;
+  const product = await prisma.product.findFirst({
+    where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED", variants: { some: { isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } } } },
+    select: { id: true }
+  });
+  if (!product) throw new Error("Demo seller store has no approved product with a market price.");
+  await prisma.adCampaign.create({
+    data: {
+      storeId: store.id, productId: product.id, createdById: seller.id,
+      marketId: market.id, currencyCode: market.defaultCurrencyCode,
+      title: "E2E Sponsored Product", message: "Sponsored placement fixture",
+      status: "ACTIVE", startsAt: new Date(now.getTime() - 60 * 60 * 1000),
+      endsAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      budgetMinor: 50000n, dailyBudgetMinor: 10000n, cpcBidMinor: 100n
+    }
+  });
   const customer = await ensureUser("e2e-customer@mtjr2.test", "E2E Customer");
   await ensureRole(customer.id, "CUSTOMER");
   const admin = await ensureUser("e2e-superadmin@mtjr2.test", "E2E Super Admin");
