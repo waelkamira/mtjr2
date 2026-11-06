@@ -15,12 +15,18 @@ function isRateLimited(request: Request): boolean {
   const clientKey = forwardedValue?.split(",")[0]?.trim();
   // Without a configured/available trusted client identity, use one restrictive
   // shared bucket rather than trusting arbitrary forwarding headers.
-  const key = clientKey || "untrusted-client";
-  const limit = clientKey ? 12 : 3;
+  let key = clientKey || "untrusted-client";
+  let limit = clientKey ? 12 : 3;
   const now = Date.now();
 
   for (const [entryKey, entry] of requestWindows) {
     if (now - entry.startedAt >= 60_000) requestWindows.delete(entryKey);
+  }
+
+  // Bound memory even during a burst of distinct trusted client addresses.
+  if (!requestWindows.has(key) && requestWindows.size >= 10_000) {
+    key = "untrusted-client";
+    limit = 3;
   }
 
   const current = requestWindows.get(key);
