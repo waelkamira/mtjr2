@@ -47,7 +47,7 @@ export async function changeSellerAdCampaignStatus(id:string,action:"ACTIVATE"|"
  let next:AdCampaignStatus;
  if(action==="ACTIVATE"){if(item.status!==AdCampaignStatus.APPROVED)throw new Error("Only approved campaigns can be activated.");if(item.startsAt>now||item.endsAt<=now)throw new Error("Campaign is outside its approved schedule.");next=AdCampaignStatus.ACTIVE;}
  else if(action==="PAUSE"){if(item.status!==AdCampaignStatus.ACTIVE)throw new Error("Only active campaigns can be paused.");next=AdCampaignStatus.PAUSED;}
- else {if(![AdCampaignStatus.DRAFT,AdCampaignStatus.APPROVED,AdCampaignStatus.PAUSED].includes(item.status))throw new Error("This campaign cannot be archived in its current state.");next=AdCampaignStatus.ARCHIVED;}
+ else {if(!([AdCampaignStatus.DRAFT,AdCampaignStatus.APPROVED,AdCampaignStatus.PAUSED] as AdCampaignStatus[]).includes(item.status))throw new Error("This campaign cannot be archived in its current state.");next=AdCampaignStatus.ARCHIVED;}
  return prisma.$transaction(async tx=>{
   const changed=await tx.adCampaign.updateMany({where:{id,status:item.status},data:{status:next}});
   if(changed.count!==1)throw new Error("Campaign changed; reload and try again.");
