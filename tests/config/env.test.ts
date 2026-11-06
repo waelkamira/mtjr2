@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPublicRegistrationEnabled, parseEnvironment } from "../../src/lib/env";
+import { isAiAssistantEnabled, isPublicRegistrationEnabled, parseEnvironment } from "../../src/lib/env";
 
 const validEnvironment = {
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mtjr2_test?schema=public",
@@ -80,4 +80,26 @@ describe("parseEnvironment", () => {
   it("rejects an invalid public registration flag", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
+
+  it("keeps the AI assistant disabled by default and supports server-only Groq settings", () => {
+    const parsed = parseEnvironment(validEnvironment);
+    expect(parsed.AI_ASSISTANT_ENABLED).toBe("false");
+    expect(parsed.GROQ_MODEL).toBe("openai/gpt-oss-20b");
+    expect(parsed.GROQ_API_KEY).toBeUndefined();
+  });
+
+  it("does not enable the AI assistant without a Groq API key", () => {
+    const parsed = parseEnvironment({ ...validEnvironment, AI_ASSISTANT_ENABLED: "true" });
+    expect(isAiAssistantEnabled(parsed)).toBe(false);
+  });
+
+  it("enables the AI assistant only when explicitly enabled with a Groq key", () => {
+    const parsed = parseEnvironment({
+      ...validEnvironment,
+      AI_ASSISTANT_ENABLED: "true",
+      GROQ_API_KEY: "test-only-groq-secret"
+    });
+    expect(isAiAssistantEnabled(parsed)).toBe(true);
+  });
+
 });
