@@ -46,7 +46,7 @@ if(data.targetCategoryId&&!product.categories.some(category=>category.categoryId
  return prisma.$transaction(async tx=>{
   const item=await tx.adCampaign.create({data:{...data,budgetMinor:BigInt(data.budgetMinor),dailyBudgetMinor:BigInt(data.dailyBudgetMinor),cpcBidMinor:BigInt(data.cpcBidMinor),targetKeywords:data.targetKeywords.map(value=>value.toLocaleLowerCase()),createdById:actor.userId,message:data.message||null,status:AdCampaignStatus.DRAFT},select});
   await tx.auditLog.create({data:{actorType:AuditActorType.USER,actorId:actor.userId,action:"advertising.campaign.created",resource:"ad_campaign",resourceId:item.id,scopeType:"STORE",scopeId:data.storeId,occurredAt:now,metadata:{productId:data.productId,status:item.status}}});
-  return item;
+  return serializeCampaign(item);
  });
 }
 export async function submitSellerAdCampaign(id:string,now=new Date()){
