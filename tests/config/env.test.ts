@@ -80,4 +80,28 @@ describe("parseEnvironment", () => {
   it("rejects an invalid public registration flag", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
+
+  it("keeps the AI assistant disabled by default", () => {
+    const parsed = parseEnvironment(validEnvironment);
+    expect(parsed.AI_ASSISTANT_ENABLED).toBe("false");
+    expect(parsed.GROQ_MODEL).toBe("openai/gpt-oss-20b");
+    expect(parsed.GROQ_API_KEY).toBeUndefined();
+    expect(isAiAssistantEnabled(parsed)).toBe(false);
+  });
+
+  it("requires both explicit enablement and a Groq API key", () => {
+    expect(isAiAssistantEnabled(parseEnvironment({
+      ...validEnvironment,
+      AI_ASSISTANT_ENABLED: "true"
+    }))).toBe(false);
+    expect(isAiAssistantEnabled(parseEnvironment({
+      ...validEnvironment,
+      GROQ_API_KEY: "test-only-secret"
+    }))).toBe(false);
+    expect(isAiAssistantEnabled(parseEnvironment({
+      ...validEnvironment,
+      AI_ASSISTANT_ENABLED: "true",
+      GROQ_API_KEY: "test-only-secret"
+    }))).toBe(true);
+  });
 });
