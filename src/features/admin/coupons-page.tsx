@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { toast } from "sonner";
 
 type Coupon = {
   id: string;
@@ -72,9 +73,12 @@ export default function AdminCouponsPage() {
       if (!response.ok) throw new Error(data.error || "Coupon creation failed.");
       setCode(""); setValue(""); setCurrencyCode(""); setMaxRedemptions(""); setStartsAt(""); setExpiresAt("");
       setMessage(translate(locale, "Global coupon created and audited.", "تم إنشاء رمز الخصم العام وتسجيله في سجل التدقيق."));
+      toast.success(translate(locale, "Coupon created.", "تم إنشاء رمز الخصم."));
       setRevision((current) => current + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Coupon creation failed.", "تعذر إنشاء رمز الخصم."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Coupon creation failed.", "تعذر إنشاء رمز الخصم.");
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy("");
     }
@@ -91,9 +95,12 @@ export default function AdminCouponsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Coupon update failed.");
       setMessage(`${translate(locale, "Coupon", "رمز الخصم")} ${coupon.code} ${coupon.isActive ? translate(locale, "deactivated", "تم تعطيله") : translate(locale, "activated", "تم تفعيله")}.`);
+      toast.success(coupon.isActive ? translate(locale, "Coupon deactivated.", "تم تعطيل رمز الخصم.") : translate(locale, "Coupon activated.", "تم تفعيل رمز الخصم."));
       setRevision((current) => current + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Coupon update failed.", "تعذر تحديث رمز الخصم."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Coupon update failed.", "تعذر تحديث رمز الخصم.");
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy("");
     }
