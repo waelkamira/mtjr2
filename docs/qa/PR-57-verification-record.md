@@ -160,3 +160,18 @@ Latest UI code head: `ead4d610c38b03ed839a2e124522bc4d29840331`.
 2. The targeted Toast gaps above remain.
 3. Browser E2E and visual QA remain unperformed; the available connected browser interface is read-only and cannot drive the application.
 4. PR #57 remains Draft/open/unmerged. Do not merge until the product gaps and verification gates are closed.
+
+
+## Seller advertising campaign implementation (2026-11-07)
+
+PR #57 contains the initial campaign-management slice on commit `f82d75e6b80ba77820ef65ac012fdbf4837f0375`: Prisma model/migration, seller-scoped campaign service and routes, admin moderation service/routes, seller campaign page and admin review page, role permissions and navigation.
+
+This is a campaign approval workflow, **not a complete ad-serving product**. No campaign spend is collected; budget debit, billing, impressions/clicks, attribution, placements, targeting, delivery scheduler and live serving are not implemented. The UI states this explicitly.
+
+Security invariants encoded in the service:
+- Seller owner must match the store's Seller.ownerId, or delegated staff must hold exact STORE-scoped `ads:manage`.
+- Store and seller must be active; promoted product must belong to the same store and be ACTIVE + APPROVED.
+- Moderation requires `ads:moderate`; only SUBMITTED campaigns can be decided; rejection requires a reason.
+- State changes use conditional updates and audit records.
+
+Exact-head CI/PostgreSQL results and dedicated security tests are pending. PR remains Draft/open/unmerged pending verification, remaining Toast coverage and browser E2E/visual QA.

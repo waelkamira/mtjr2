@@ -132,3 +132,25 @@ This is a fresh schema-only recheck of commit `3f81e8153b753206812e8049ada90c5c4
 | `PromotionSeller` | Absent | No platform/seller campaign participation relation currently exists. |
 
 The seller advertising gap therefore remains real. Any implementation must be a distinct, store-scoped advertising domain with explicit lifecycle, moderation and policy checks; the existing global coupon capability must remain separate. This recheck does not claim that any seller advertising routes or UI have been implemented.
+
+
+## 13. Seller advertising campaign management — implementation added in PR #57
+
+Implemented in branch commit `f82d75e6b80ba77820ef65ac012fdbf4837f0375`; exact-head verification is pending.
+
+- Dedicated `AdCampaign` model and PostgreSQL migration, separate from global checkout coupons.
+- Store-scoped campaign tied to one product from that same store; only active, approved and published products are eligible.
+- Seller APIs: `GET/POST /api/seller/advertising/campaigns` and `PATCH /api/seller/advertising/campaigns/[campaignId]`.
+- Admin moderation APIs: `GET /api/admin/advertising/campaigns` and `PATCH /api/admin/advertising/campaigns/[campaignId]`.
+- Seller page `/seller/advertising`; moderation page `/admin/advertising`; links added to seller workspace and admin navigation.
+- Permissions: `ads:manage` for exact STORE-scoped delegated managers; `ads:moderate` for ADMIN/SUPER_ADMIN. Seller owners are checked against the store's actual Seller.ownerId.
+- Lifecycle: DRAFT → SUBMITTED → APPROVED/REJECTED → ACTIVE/PAUSED/ARCHIVED. Conditional writes protect transitions; sensitive changes create audit records.
+- Schedule has a database check constraint. Rejected submissions require a reason. A product must belong to the same store and be ACTIVE + APPROVED.
+- No billing, account debit, impression/click telemetry, attribution, placement inventory, targeting engine, delivery scheduler or live ad delivery is implemented. Approval does not charge the seller. Do not describe this as a complete ad-serving network.
+
+Verification gates:
+- [ ] Prisma validate/generate/migration deploy against PostgreSQL, typecheck, lint, tests and production build.
+- [ ] Seller A cannot read/mutate seller B campaigns; delegated managers need exact STORE scope.
+- [ ] Foreign product IDs, unapproved products, inactive stores, invalid schedules and unauthorized moderation are rejected.
+- [ ] Only submitted campaigns can be moderated; rejection requires a reason; concurrent decisions cannot overwrite the first.
+- [ ] Real-browser seller/admin flows and desktop/mobile visual QA.
