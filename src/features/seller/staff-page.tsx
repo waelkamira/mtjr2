@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -59,8 +60,9 @@ export default function SellerStaffPage() {
     try {
       await json(await fetch(path, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined }), translate(locale, "Request failed.", "فشل الطلب."));
       setMessage(success);
+      toast.success(success);
       await reload();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Request failed.", "فشل الطلب.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Request failed.", "فشل الطلب."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 

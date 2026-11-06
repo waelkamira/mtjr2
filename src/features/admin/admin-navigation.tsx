@@ -24,6 +24,7 @@ const links = [
   { href: "/admin/tax-rates", label: "Tax rates", ar: "معدلات الضرائب" },
   { href: "/admin/commissions", label: "Commissions", ar: "العمولات" },
   { href: "/admin/coupons", label: "Discount codes", ar: "رموز الخصم" },
+  { href: "/admin/advertising", label: "Advertising review", ar: "مراجعة الإعلانات" },
   { href: "/admin/control-panel", label: "Super Admin", ar: "إدارة المنصة", platformOnly: true }
 ];
 

@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Warehouse = { id: string; code: string; name: string };
 type Store = { id: string; name: string; warehouses: Warehouse[] };
@@ -53,6 +55,21 @@ export default function SellerInventoryPage() {
   const selectedStore = stores.find((store) => store.id === storeId);
   const warehouses = selectedStore?.warehouses ?? [];
   const variants = useMemo(() => products.flatMap((product) => product.variants.map((variant) => ({ ...variant, productName: product.name }))), [products]);
+  const inventoryTotals = inventory.reduce((total, row) => ({
+    onHand: total.onHand + row.quantityOnHand,
+    quarantined: total.quarantined + row.quantityQuarantined,
+    reserved: total.reserved + row.quantityReserved,
+    available: total.available + row.quantityAvailable,
+    lowStock: total.lowStock + (row.isLowStock ? 1 : 0)
+  }), { onHand: 0, quarantined: 0, reserved: 0, available: 0, lowStock: 0 });
+  const transferStatuses = transfers.reduce((counts, transfer) => {
+    counts[transfer.status] = (counts[transfer.status] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
+  const warehouseStock = warehouses.map((warehouse) => ({
+    label: warehouse.name,
+    value: inventory.filter((row) => row.warehouse.id === warehouse.id).reduce((sum, row) => sum + row.quantityAvailable, 0)
+  })).filter((row) => row.value > 0).slice(0, 8);
 
   const refreshStore = useCallback(async (id: string, q = "") => {
     if (!id) return;
@@ -101,9 +118,9 @@ export default function SellerInventoryPage() {
         body: JSON.stringify({ storeId, code: warehouseCode, name: warehouseName })
       }));
       setStores((current) => current.map((store) => store.id === storeId ? { ...store, warehouses: [...store.warehouses, warehouse] } : store));
-      setWarehouseCode(""); setWarehouseName("");       setNotice(translate(locale, "Warehouse created.", "تم إنشاء المستودع."));
+      setWarehouseCode(""); setWarehouseName("");       setNotice(translate(locale, "Warehouse created.", "تم إنشاء المستودع.")); toast.success(translate(locale, "Warehouse created.", "تم إنشاء المستودع."));
       if (!adjustWarehouseId) setAdjustWarehouseId(warehouse.id);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to create warehouse.", "تعذر إنشاء المستودع.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to create warehouse.", "تعذر إنشاء المستودع."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -114,9 +131,9 @@ export default function SellerInventoryPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ warehouseId: adjustWarehouseId, variantId: adjustVariantId, quantityDelta: Number(quantityDelta), idempotencyKey: crypto.randomUUID(), note: adjustNote || undefined })
       }));
-      setNotice(translate(locale, "Stock adjustment recorded.", "تم تسجيل تعديل المخزون."));
+      setNotice(translate(locale, "Stock adjustment recorded.", "تم تسجيل تعديل المخزون.")); toast.success(translate(locale, "Stock adjustment recorded.", "تم تسجيل تعديل المخزون."));
       await refreshStore(storeId, search);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to adjust stock.", "تعذر تعديل المخزون.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to adjust stock.", "تعذر تعديل المخزون."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -127,9 +144,9 @@ export default function SellerInventoryPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sourceWarehouseId, destinationWarehouseId, reference: transferReference || undefined, idempotencyKey: crypto.randomUUID(), items: [{ variantId: transferVariantId, quantity: Number(transferQuantity) }] })
       }));
-      setNotice(translate(locale, "Transfer draft created.", "تم إنشاء مسودة النقل."));
+      setNotice(translate(locale, "Transfer draft created.", "تم إنشاء مسودة النقل.")); toast.success(translate(locale, "Transfer draft created.", "تم إنشاء مسودة النقل."));
       await refreshStore(storeId, search);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to create transfer.", "تعذر إنشاء عملية النقل.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to create transfer.", "تعذر إنشاء عملية النقل."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -137,9 +154,9 @@ export default function SellerInventoryPage() {
     setBusy(true); setError(""); setNotice("");
     try {
       await readJson(await fetch(`/api/seller/inventory/transfers/${encodeURIComponent(id)}/${action}`, { method: "POST" }));
-      setNotice(action === "ship" ? translate(locale, "Transfer shipped; source stock was deducted.", "تم شحن النقل وخصم الكمية من مخزون المصدر.") : translate(locale, "Transfer received; destination stock was credited.", "تم استلام النقل وإضافة الكمية إلى مخزون الوجهة."));
+      setNotice(action === "ship" ? translate(locale, "Transfer shipped; source stock was deducted.", "تم شحن النقل وخصم الكمية من مخزون المصدر.") : translate(locale, "Transfer received; destination stock was credited.", "تم استلام النقل وإضافة الكمية إلى مخزون الوجهة.")); toast.success(action === "ship" ? translate(locale, "Transfer shipped.", "تم شحن عملية النقل.") : translate(locale, "Transfer received.", "تم استلام عملية النقل."));
       await refreshStore(storeId, search);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Unable to process transfer.", "تعذرت معالجة عملية النقل.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to process transfer.", "تعذرت معالجة عملية النقل."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -156,6 +173,25 @@ export default function SellerInventoryPage() {
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading inventory…", "جارٍ تحميل المخزون…")}</p> : <div className="mt-8 grid gap-6">
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <label className="grid max-w-md gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={field} value={storeId} onChange={(e) => { const id = e.target.value; const store = stores.find((item) => item.id === id); setStoreId(id); setInventory([]); setProducts([]); setTransfers([]); setAdjustWarehouseId(store?.warehouses[0]?.id ?? ""); setSourceWarehouseId(store?.warehouses[0]?.id ?? ""); setDestinationWarehouseId(store?.warehouses[1]?.id ?? ""); }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
+        </section>
+        <section aria-label="Inventory analytics" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <MetricBarChart title="Stock composition" description="Live totals for the selected store and current inventory filter." rows={[
+            { label: "Sellable on hand", value: inventoryTotals.onHand, color: "bg-sky-500" },
+            { label: "Reserved", value: inventoryTotals.reserved, color: "bg-amber-500" },
+            { label: "Quarantined", value: inventoryTotals.quarantined, color: "bg-rose-500" },
+            { label: "Available", value: inventoryTotals.available, color: "bg-emerald-500" }
+          ]} />
+          <MetricBarChart title="Inventory risk" description="Stock record counts from the currently loaded inventory list." rows={[
+            { label: "Low stock records", value: inventoryTotals.lowStock, color: "bg-rose-500" },
+            { label: "Healthy stock records", value: Math.max(0, inventory.length - inventoryTotals.lowStock), color: "bg-emerald-500" }
+          ]} />
+          <MetricBarChart title="Available stock by warehouse" rows={warehouseStock.map((row, index) => ({
+            ...row, color: ["bg-indigo-500", "bg-violet-500", "bg-cyan-500", "bg-teal-500", "bg-orange-500", "bg-fuchsia-500", "bg-blue-500", "bg-lime-500"][index]
+          }))} />
+          <MetricBarChart title="Internal transfer pipeline" rows={Object.entries(transferStatuses).map(([status, value], index) => ({
+            label: status.replaceAll("_", " ").toLowerCase(), value,
+            color: ["bg-sky-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500"][index % 5]
+          }))} />
         </section>
         <div className="grid gap-6 lg:grid-cols-3">
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6"><h2 className="text-lg font-semibold">{translate(locale, "Add warehouse", "إضافة مستودع")}</h2><form onSubmit={createWarehouse} className="mt-4 grid gap-3"><label className="grid gap-1 text-sm">{translate(locale, "Warehouse code", "رمز المستودع")}<input required minLength={2} maxLength={40} pattern="[A-Za-z0-9][A-Za-z0-9_-]+" className={field} value={warehouseCode} onChange={(e) => setWarehouseCode(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={120} className={field} value={warehouseName} onChange={(e) => setWarehouseName(e.target.value)} /></label><button disabled={busy || !storeId} className={button}>{translate(locale, "Create warehouse", "إنشاء مستودع")}</button></form></section>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -42,7 +43,8 @@ export default function ProductQaReportsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || translate(locale, "Moderation failed.", "تعذّر الإشراف."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Moderation failed.", "تعذّر الإشراف.")); }
+      toast.success(translate(locale, "Report decision saved.", "تم حفظ قرار البلاغ."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Moderation failed.", "تعذّر الإشراف."); setError(message); toast.error(message); }
     finally { setBusy(""); }
   }
   return <main className="min-h-screen bg-[var(--background)]">

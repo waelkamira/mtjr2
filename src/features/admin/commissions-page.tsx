@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -127,9 +128,10 @@ export default function CommissionsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Commission rule could not be saved.");
       setNotice(translate(locale, "Commission rule saved. Its rate applies only to payments succeeded during its effective period.", "تم حفظ قاعدة العمولة. يُطبّق معدلها على المدفوعات الناجحة خلال فترة سريانها فقط."));
+      toast.success(translate(locale, "Commission rule saved.", "تم حفظ قاعدة العمولة."));
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Commission rule could not be saved.", "تعذر حفظ قاعدة العمولة."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Commission rule could not be saved.", "تعذر حفظ قاعدة العمولة."); setError(message); toast.error(message);
     } finally {
       setBusy("");
     }
@@ -148,9 +150,10 @@ export default function CommissionsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Commission rule could not be deactivated.");
       setNotice(translate(locale, "Commission rule deactivated. Existing commission snapshots remain unchanged.", "تم إلغاء تفعيل قاعدة العمولة. لم تتغير سجلات العمولات السابقة."));
+      toast.success(translate(locale, "Commission rule deactivated.", "تم إلغاء تفعيل قاعدة العمولة."));
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Commission rule could not be deactivated.", "تعذر إلغاء تفعيل قاعدة العمولة."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Commission rule could not be deactivated.", "تعذر إلغاء تفعيل قاعدة العمولة."); setError(message); toast.error(message);
     } finally {
       setBusy("");
     }

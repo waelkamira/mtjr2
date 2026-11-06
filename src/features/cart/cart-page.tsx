@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { toast } from "sonner";
 
 type CartItem = {
   id: string;
@@ -72,8 +73,11 @@ export default function CartPage() {
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || t("Quantity could not be updated.", "تعذّر تحديث الكمية."));
       await refresh();
+      toast.success(t("Cart quantity updated.", "تم تحديث كمية المنتج في السلة."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Quantity could not be updated.", "تعذّر تحديث الكمية."));
+      const message = cause instanceof Error ? cause.message : t("Quantity could not be updated.", "تعذّر تحديث الكمية.");
+      setError(message);
+      toast.error(message);
     } finally { setBusyItem(""); }
   }
 
@@ -85,8 +89,11 @@ export default function CartPage() {
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || t("Item could not be removed.", "تعذّر حذف المنتج."));
       await refresh();
+      toast.success(t("Item removed from cart.", "تم حذف المنتج من السلة."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Item could not be removed.", "تعذّر حذف المنتج."));
+      const message = cause instanceof Error ? cause.message : t("Item could not be removed.", "تعذّر حذف المنتج.");
+      setError(message);
+      toast.error(message);
     } finally { setBusyItem(""); }
   }
 
@@ -105,9 +112,12 @@ export default function CartPage() {
       });
       const result = await response.json() as { quote?: { id: string }; error?: string };
       if (!response.ok || !result.quote) throw new Error(result.error || t("Unable to prepare checkout.", "تعذّر تجهيز إتمام الشراء."));
+      toast.success(t("Checkout is ready.", "أصبح إتمام الشراء جاهزاً."));
       router.push(`/checkout?quoteId=${encodeURIComponent(result.quote.id)}`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Unable to prepare checkout.", "تعذّر تجهيز إتمام الشراء."));
+      const message = cause instanceof Error ? cause.message : t("Unable to prepare checkout.", "تعذّر تجهيز إتمام الشراء.");
+      setError(message);
+      toast.error(message);
     } finally { setCheckingOutCartId(""); }
   }
 

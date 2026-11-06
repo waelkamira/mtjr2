@@ -2,8 +2,10 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type VendorOrder = {
   id: string; status: string; store: { id: string; name: string; slug: string }; shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
@@ -38,6 +40,15 @@ export default function SellerOrdersPage() {
   const [savingOrderId, setSavingOrderId] = useState<string | null>(null);
   const [shipmentDrafts, setShipmentDrafts] = useState<Record<string, { carrierName: string; trackingNumber: string; trackingUrl: string }>>({});
 
+  const statusCounts = orders.reduce((counts, order) => {
+    counts[order.status] = (counts[order.status] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
+  const storeCounts = orders.reduce((counts, order) => {
+    counts[order.store.name] = (counts[order.store.name] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
+
   async function updateOrderStatus(vendorOrderId: string, status: "PROCESSING" | "READY_TO_SHIP") {
     setSavingOrderId(vendorOrderId);
     setActionError("");
@@ -47,6 +58,7 @@ export default function SellerOrdersPage() {
       });
       const data = await response.json() as { vendorOrder?: { id: string; status: string }; error?: string };
       if (!response.ok || !data.vendorOrder) throw new Error(data.error || t("Order status could not be updated.", "تعذّر تحديث حالة الطلب."));
+      toast.success(t("Order status updated.", "تم تحديث حالة الطلب."));
       setOrders((current) => {
         const selected = current.find((order) => order.id === vendorOrderId);
         return current.map((order) => ({
@@ -58,7 +70,9 @@ export default function SellerOrdersPage() {
         }));
       });
     } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : t("Order status could not be updated.", "تعذّر تحديث حالة الطلب."));
+      const message = cause instanceof Error ? cause.message : t("Order status could not be updated.", "تعذّر تحديث حالة الطلب.");
+      setActionError(message);
+      toast.error(message);
     } finally {
       setSavingOrderId(null);
     }
@@ -83,8 +97,11 @@ export default function SellerOrdersPage() {
       const data = await response.json() as { shipment?: VendorOrder["shipment"]; error?: string };
       if (!response.ok || !data.shipment) throw new Error(data.error || t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة."));
       setOrders((current) => current.map((order) => order.id === vendorOrderId ? { ...order, status: "SHIPPED", shipment: data.shipment! } : order));
+      toast.success(t("Shipment recorded.", "تم تسجيل الشحنة."));
     } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة."));
+      const message = cause instanceof Error ? cause.message : t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة.");
+      setActionError(message);
+      toast.error(message);
     } finally {
       setSavingOrderId(null);
     }
@@ -105,9 +122,12 @@ export default function SellerOrdersPage() {
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع."));
+      toast.success(t("Tracking update recorded.", "تم تسجيل تحديث التتبع."));
       window.location.reload();
     } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع."));
+      const message = cause instanceof Error ? cause.message : t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع.");
+      setActionError(message);
+      toast.error(message);
     } finally { setSavingOrderId(null); }
   }
 
@@ -126,6 +146,18 @@ export default function SellerOrdersPage() {
   return <main className="min-h-screen bg-[var(--background)]"><header className="border-b border-[var(--border)] bg-[var(--surface)] shadow-clay-raised px-5 py-5"><div className="mx-auto flex max-w-6xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><Link href="/seller" className="text-sm">{t("Seller workspace", "مساحة البائع")}</Link></div></header>
     <div className="mx-auto max-w-6xl px-5 py-10"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Seller operations", "عمليات البائع")}</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Seller orders", "طلبات البائع")}</h1><p className="mt-2 text-sm text-[var(--muted)]">{t("Orders are separated by store. Paid orders can move through seller preparation and seller-entered shipment tracking.", "تُعرض الطلبات لكل متجر على حدة. يمكن متابعة الطلبات المدفوعة خلال تجهيز البائع وإدخال بيانات تتبع الشحنة.")}</p>
       {error && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}{actionError && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{actionError}</p>}
+      {!loading && orders.length > 0 && <section aria-label="Seller order analytics" className="mt-6 grid gap-4 md:grid-cols-2">
+        <MetricBarChart title="Orders by fulfillment status" description="Counts from the currently loaded seller order list (up to 100 records)." rows={Object.entries(statusCounts).map(([status, count], index) => ({
+          label: status.replaceAll("_", " ").toLowerCase(),
+          value: count,
+          color: ["bg-sky-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-cyan-500"][index % 6]
+        }))} />
+        <MetricBarChart title="Orders by store" description="Counts from the currently loaded seller order list (up to 100 records)." rows={Object.entries(storeCounts).slice(0, 8).map(([store, count], index) => ({
+          label: store,
+          value: count,
+          color: ["bg-indigo-500", "bg-fuchsia-500", "bg-teal-500", "bg-orange-500"][index % 4]
+        }))} />
+      </section>}
       <label className="mt-6 block max-w-xl text-xs font-medium">{t("Search orders", "ابحث عن الطلبات")}<input value={query} onChange={event=>setQuery(event.target.value)} maxLength={120} placeholder={t("Order number, product, SKU or store", "رقم الطلب أو المنتج أو SKU أو المتجر")} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised px-3 py-2.5 text-sm"/></label>
       {loading ? <div className="mt-6 h-48 animate-pulse rounded-3xl bg-[var(--surface-soft)]" /> : orders.length ? <div className="mt-6 space-y-4">{orders.map((vendor) => <article key={vendor.id} className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-6">
         <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs text-[var(--muted)]">{vendor.order.orderNumber} · {new Date(vendor.order.placedAt).toLocaleString(locale)}</p><h2 className="mt-1 text-lg font-semibold">{vendor.store.name}</h2></div><div className="text-right"><p className="font-semibold">{statusLabel(vendor.status)}</p><p className="mt-1 text-xs text-[var(--muted)]">{vendor.shippingServiceName}</p><p className="mt-1 text-sm tabular-nums">{money(vendor.totalMinor, vendor.order.currencyCode, vendor.order.currency.minorUnit)}</p></div></div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 type Product = {
   id: string; name: string; slug: string; description: string | null; createdAt: string;
@@ -60,10 +61,13 @@ export default function AdminProductsPage() {
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Product moderation failed.");
       setMessage(`Product ${decision === "approve" ? "approved" : "rejected"}. Approval alone does not publish the product; the store owner must publish it after satisfying catalog requirements.`);
+      toast.success(decision === "approve" ? "Product approved." : "Product rejected.");
       setReasons((current) => ({ ...current, [product.id]: "" }));
       setRevision((value) => value + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Product moderation failed.");
+      const message = cause instanceof Error ? cause.message : "Product moderation failed.";
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy("");
     }

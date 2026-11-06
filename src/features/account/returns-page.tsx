@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { toast } from "sonner";
 
 type EligibleItem = { id: string; productName: string; sku: string; orderedQuantity: number; availableQuantity: number };
 type EligibleOrder = { id: string; orderNumber: string; vendorOrders: Array<{ id: string; storeName: string; items: EligibleItem[] }> };
@@ -50,8 +51,9 @@ export default function CustomerReturnsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Return request could not be submitted.", "تعذّر إرسال طلب الإرجاع."));
       setNotice(t("Your return request has been submitted. No refund has been initiated.", "تم إرسال طلب الإرجاع. لم يبدأ أي استرداد للمبلغ."));
+      toast.success(t("Return request submitted.", "تم إرسال طلب الإرجاع."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Return request could not be submitted.", "تعذّر إرسال طلب الإرجاع.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Return request could not be submitted.", "تعذّر إرسال طلب الإرجاع."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -100,8 +101,9 @@ export default function AdminSupportPage() {
       if (!response.ok) throw new Error(data.error || translate(locale, "Update failed.", "تعذر التحديث."));
       await loadQueue();
       await loadTicket(selected);
+      toast.success(translate(locale, "Support ticket updated.", "تم تحديث تذكرة الدعم."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Update failed.", "تعذر التحديث."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Update failed.", "تعذر التحديث."); setError(message); toast.error(message);
     } finally { setBusy(false); }
   }
 
@@ -116,8 +118,9 @@ export default function AdminSupportPage() {
       setBody("");
       await loadTicket(selected);
       await loadQueue();
+      toast.success(translate(locale, "Reply sent.", "تم إرسال الرد."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Reply failed.", "تعذر إرسال الرد."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Reply failed.", "تعذر إرسال الرد."); setError(message); toast.error(message);
     } finally { setBusy(false); }
   }
 

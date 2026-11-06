@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type SellerReturn = {
   id: string;
@@ -66,6 +68,20 @@ export default function SellerReturnsPage() {
     return () => { active = false; };
   }, [locale]);
 
+  const returnStatusRows = Object.entries(items.reduce((counts, item) => {
+    counts[item.status] = (counts[item.status] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>)).map(([status, value], index) => ({
+    label: status.replaceAll("_", " ").toLowerCase(), value,
+    color: ["bg-amber-500", "bg-sky-500", "bg-emerald-500", "bg-rose-500", "bg-violet-500"][index % 5]
+  }));
+  const returnReasonRows = Object.entries(items.reduce((counts, item) => {
+    counts[item.reasonCode] = (counts[item.reasonCode] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([reason, value], index) => ({
+    label: reason.replaceAll("_", " ").toLowerCase(), value,
+    color: ["bg-fuchsia-500", "bg-orange-500", "bg-cyan-500", "bg-indigo-500", "bg-teal-500", "bg-pink-500"][index]
+  }));
   async function decide(item: SellerReturn, status: "APPROVED" | "REJECTED") {
     const key = item.id + ":" + item.storeId;
     setBusy(key); setError(""); setNotice("");
@@ -76,10 +92,10 @@ export default function SellerReturnsPage() {
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || translate(locale, "Return decision could not be saved.", "تعذر حفظ قرار الإرجاع."));
-      setNotice(status === "APPROVED" ? translate(locale, "Your store's return items were approved.", "تمت الموافقة على عناصر الإرجاع الخاصة بمتجرك.") : translate(locale, "Your store's return items were rejected.", "تم رفض عناصر الإرجاع الخاصة بمتجرك."));
+      setNotice(status === "APPROVED" ? translate(locale, "Your store's return items were approved.", "تمت الموافقة على عناصر الإرجاع الخاصة بمتجرك.") : translate(locale, "Your store's return items were rejected.", "تم رفض عناصر الإرجاع الخاصة بمتجرك.")); toast.success(status === "APPROVED" ? translate(locale, "Return items approved.", "تمت الموافقة على عناصر الإرجاع.") : translate(locale, "Return items rejected.", "تم رفض عناصر الإرجاع."));
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Return decision could not be saved.", "تعذر حفظ قرار الإرجاع."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Return decision could not be saved.", "تعذر حفظ قرار الإرجاع."); setError(message); toast.error(message);
     } finally { setBusy(""); }
   }
 
@@ -95,10 +111,10 @@ export default function SellerReturnsPage() {
       });
       const data = await response.json() as { error?: string; result?: { quarantinedQuantity?: number } };
       if (!response.ok) throw new Error(data.error || translate(locale, "Return receipt could not be recorded.", "تعذر تسجيل استلام المرتجع."));
-      setNotice(`${translate(locale, "Physical receipt recorded.", "تم تسجيل الاستلام الفعلي.")} ${data.result?.quarantinedQuantity ?? translate(locale, "Returned", "مرتجع")} ${translate(locale, "unit(s) are held in quarantine and are not sellable until inspected.", "وحدة قيد الحجر ولا يمكن بيعها حتى فحصها.")}`);
+      setNotice(`${translate(locale, "Physical receipt recorded.", "تم تسجيل الاستلام الفعلي.")} ${data.result?.quarantinedQuantity ?? translate(locale, "Returned", "مرتجع")} ${translate(locale, "unit(s) are held in quarantine and are not sellable until inspected.", "وحدة قيد الحجر ولا يمكن بيعها حتى فحصها.")}`); toast.success(translate(locale, "Return receipt recorded and quarantined.", "تم تسجيل استلام المرتجع ووضعه في الحجر."));
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Return receipt could not be recorded.", "تعذر تسجيل استلام المرتجع."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Return receipt could not be recorded.", "تعذر تسجيل استلام المرتجع."); setError(message); toast.error(message);
     } finally { setBusy(""); }
   }
 
@@ -115,7 +131,11 @@ export default function SellerReturnsPage() {
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Store returns", "مرتجعات المتجر")}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Review only the return items belonging to each store you own or are authorized to manage. A decision never changes another store's items.", "راجع عناصر الإرجاع التابعة للمتاجر التي تملكها أو لديك صلاحية إدارتها فقط. لا يؤثر القرار مطلقًا في عناصر المتاجر الأخرى.")}</p>
         <p className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-4 text-sm text-[var(--muted)]">{translate(locale, "Approval or rejection records the seller's decision. Physical receipt is recorded against a warehouse and placed in quarantine; it does not increase sellable stock or issue a refund.", "تسجل الموافقة أو الرفض قرار البائع. يُسجل الاستلام الفعلي في مستودع ويوضع في الحجر؛ ولا يزيد المخزون القابل للبيع أو يصدر استردادًا للمبلغ.")}</p>
-        {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
+        {!loading && !error && items.length > 0 && <section aria-label="Returns analytics" className="mt-6 grid gap-4 md:grid-cols-2">
+        <MetricBarChart title="Returns by status" rows={returnStatusRows} />
+        <MetricBarChart title="Return reasons" description="Most common reasons in the currently loaded seller returns." rows={returnReasonRows} />
+      </section>}
+      {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-4 text-sm">{notice}</p>}
         {loading ? <div className="mt-6 h-40 animate-pulse rounded-3xl bg-[var(--surface-soft)]" /> : items.length ? (
           <div className="mt-6 space-y-4">

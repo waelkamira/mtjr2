@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -77,10 +78,11 @@ export default function AdminCatalogProductsManagementPage() {
       const data = await response.json() as { archived?: number; error?: string };
       if (!response.ok) throw new Error(data.error || "Product archive failed.");
       setMessage(`${data.archived ?? 0} ${translate(locale, "product(s) archived. The action was written to the audit log.", "منتج تمت أرشفته. تم تسجيل الإجراء في سجل التدقيق.")}`);
+      toast.success(translate(locale, "Product archive completed.", "اكتملت أرشفة المنتجات."), { description: `${data.archived ?? 0}` });
       setReason("");
       setRevision((value) => value + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Product archive failed.", "تعذرت أرشفة المنتجات."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Product archive failed.", "تعذرت أرشفة المنتجات."); setError(message); toast.error(message);
     } finally {
       setBusy(false);
     }

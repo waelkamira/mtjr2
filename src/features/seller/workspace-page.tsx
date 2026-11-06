@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type Store = {
-  id: string; name: string; slug: string; status: string; isOwner: boolean;
+  id: string; storeNumber: string; name: string; slug: string; status: string; isOwner: boolean;
   markets: Array<{ market: { id: string; code: string; name: string; defaultCurrencyCode: string } }>;
   warehouses: Array<{ id: string; code: string; name: string; _count: { inventories: number } }>;
 };
@@ -120,6 +122,14 @@ export default function SellerWorkspacePage() {
           "Warehouse created.": "تم إنشاء المستودع.",
           "Shipping service created.": "تم إنشاء خدمة الشحن."
         } as Record<string, string>)[success] ?? success));
+      toast.success(result.alreadyCreated
+        ? translate(locale, "No duplicate store was created", "لم يتم إنشاء متجر مكرر")
+        : translate(locale, success, ({
+          "Your seller application has been submitted.": "تم إرسال طلبك لتصبح بائعًا.",
+          "Your draft store has been created.": "تم إنشاء مسودة متجرك.",
+          "Warehouse created.": "تم إنشاء المستودع.",
+          "Shipping service created.": "تم إنشاء خدمة الشحن."
+        } as Record<string, string>)[success] ?? success));
       await reload();
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 401) {
@@ -127,10 +137,21 @@ export default function SellerWorkspacePage() {
         return;
       }
       setError(cause instanceof Error ? cause.message : translate(locale, "The request failed.", "تعذر إكمال الطلب."));
+      toast.error(translate(locale, "The request could not be completed", "تعذر إكمال العملية"));
     } finally { setBusy(false); }
   }
 
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
+  const inventoryTotals = inventory.reduce((totals, row) => ({
+    onHand: totals.onHand + row.quantityOnHand,
+    reserved: totals.reserved + row.quantityReserved,
+    available: totals.available + row.quantityAvailable,
+    lowStock: totals.lowStock + (row.isLowStock ? 1 : 0)
+  }), { onHand: 0, reserved: 0, available: 0, lowStock: 0 });
+  const storeStatusCounts = (workspace?.stores ?? []).reduce((counts, store) => {
+    counts[store.status] = (counts[store.status] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
 
   return (
     <main className="min-h-screen bg-transparent">
@@ -141,7 +162,7 @@ export default function SellerWorkspacePage() {
 
         </div>
       </header>
-      <div className="mx-auto max-w-6xl px-5 py-10">
+      <div className="mx-auto max-w-6xl px-5 py-10"><div className="mb-6 flex flex-wrap justify-end"><Link href="/seller/advertising" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold">{translate(locale, "Advertising campaigns", "الحملات الإعلانية")}</Link></div>
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Your business", "أعمالك")}</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-lavender-950)]">{translate(locale, "Seller workspace", "مساحة عمل البائع")}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Manage your seller application, stores, active markets and warehouse stock. Every action is checked by the marketplace backend.", "أدِر طلبك كبائع ومتاجرك والأسواق النشطة ومخزون المستودعات. يتحقق النظام الخلفي للسوق من كل إجراء.")}</p>
@@ -168,7 +189,7 @@ export default function SellerWorkspacePage() {
           </section>
         ) : (
           <div className="mt-8 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
-            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+            <section className="rounded-3xl border border-white/80 bg-white/95 p-6 shadow-[0_12px_34px_rgba(15,23,42,.05)]">
               <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{translate(locale, "Seller status", "حالة البائع")}</h2><span className="rounded-full bg-[var(--color-sage-100)] px-3 py-1 text-xs font-semibold text-[var(--color-forest-900)]">{workspace.seller.status}</span></div>
               <p className="mt-3 text-sm text-[var(--muted)]">{workspace.seller.displayName ?? workspace.seller.legalName}</p>
               {workspace.seller.status === "PENDING" && <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6">{translate(locale, "Your application is awaiting review. Store creation becomes available after approval.", "طلبك بانتظار المراجعة. سيصبح إنشاء المتجر متاحًا بعد الموافقة.")}</p>}
@@ -187,9 +208,9 @@ export default function SellerWorkspacePage() {
               {!workspace.stores.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">{translate(locale, "No stores have been created yet.", "لم يتم إنشاء أي متاجر بعد.")}</p> : (
                 <>
                   <div className="mt-4"><Link href="/seller/messages" className="inline-flex rounded-xl bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white">{translate(locale, "Open store inbox", "فتح صندوق وارد المتجر")}</Link></div>
-                  <div className="mt-4 flex flex-wrap gap-2">{workspace.stores.map((store) => <button key={store.id} onClick={() => { setSelectedStoreId(store.id); localStorage.setItem("mtjr.activeStoreId", store.id); }} className={`rounded-xl border px-4 py-2 text-sm ${selectedStoreId === store.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-900)] text-white" : "border-[var(--border)]"}`}>{store.name}</button>)}</div>
+                  <div className="mt-4 flex flex-wrap gap-2">{workspace.stores.map((store) => <button key={store.id} onClick={() => { setSelectedStoreId(store.id); localStorage.setItem("mtjr.activeStoreId", store.id); }} className={`rounded-xl border px-4 py-2 text-sm ${selectedStoreId === store.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-900)] text-white" : "border-[var(--border)]"}`}>{store.name} · STR-{store.storeNumber.padStart(8, "0")}</button>)}</div>
                   {selectedStore && <div className="mt-6 border-t border-[var(--border)] pt-5">
-                    <div className="flex flex-wrap items-center justify-between gap-2"><div><div><h3 className="font-semibold">{selectedStore.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{selectedStore.slug} · {selectedStore.status}</p></div><div className="mt-2 flex flex-wrap gap-2"><Link href="/seller/products" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Manage products", "إدارة المنتجات")}</Link><Link href="/seller/orders" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Seller orders", "طلبات البائع")}</Link><Link href="/seller/inventory" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Inventory operations", "إدارة المخزون")}</Link><Link href="/seller/staff" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Team & access", "الفريق والصلاحيات")}</Link></div></div><span className="text-xs text-[var(--muted)]">{selectedStore.markets.length} {translate(locale, "active markets", "أسواق نشطة")}</span></div>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><div><div><h3 className="font-semibold">{selectedStore.name}</h3><p className="mt-1 text-xs font-semibold text-[var(--color-copper-700)]">STR-{selectedStore.storeNumber.padStart(8, "0")}</p><p className="mt-1 text-xs text-[var(--muted)]">/{selectedStore.slug} · {selectedStore.status}</p></div><div className="mt-2 flex flex-wrap gap-2"><Link href="/seller/products" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Manage products", "إدارة المنتجات")}</Link><Link href="/seller/orders" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Seller orders", "طلبات البائع")}</Link><Link href="/seller/inventory" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Inventory operations", "إدارة المخزون")}</Link><Link href="/seller/staff" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Team & access", "الفريق والصلاحيات")}</Link></div></div><span className="text-xs text-[var(--muted)]">{selectedStore.markets.length} {translate(locale, "active markets", "أسواق نشطة")}</span></div>
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       {selectedStore.warehouses.map((warehouse) => <div key={warehouse.id} className="rounded-xl bg-[var(--color-ivory-100)] p-4"><p className="font-medium">{warehouse.name}</p><p className="mt-1 text-xs text-[var(--muted)]">{warehouse.code} · {warehouse._count.inventories} {translate(locale, "inventory records", "سجل مخزون")}</p></div>)}
                     </div>
@@ -198,6 +219,26 @@ export default function SellerWorkspacePage() {
                       <label className="grid gap-1 text-xs">{translate(locale, "Code", "الرمز")}<input required minLength={2} maxLength={40} value={warehouseCode} onChange={(e) => setWarehouseCode(e.target.value.toUpperCase())} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                       <button disabled={busy} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Add warehouse", "إضافة مستودع")}</button>
                     </form>}
+                    <section aria-label="Seller analytics" className="mt-6 grid gap-4 sm:grid-cols-2">
+                      <MetricBarChart variant="donut" title="Inventory health" rows={[
+                        { label: "Healthy stock records", value: Math.max(0, inventory.length - inventoryTotals.lowStock), color: "bg-emerald-500" },
+                        { label: "Low stock records", value: inventoryTotals.lowStock, color: "bg-rose-500" }
+                      ]} />
+                      <MetricBarChart title="Inventory quantities" rows={[
+                        { label: "On hand", value: inventoryTotals.onHand, color: "bg-sky-500" },
+                        { label: "Reserved", value: inventoryTotals.reserved, color: "bg-amber-500" },
+                        { label: "Available", value: inventoryTotals.available, color: "bg-emerald-500" }
+                      ]} />
+                      <MetricBarChart variant="donut" title="Shipping services" rows={[
+                        { label: "Active services", value: shippingRates.filter((rate) => rate.isActive).length, color: "bg-teal-500" },
+                        { label: "Inactive services", value: shippingRates.filter((rate) => !rate.isActive).length, color: "bg-slate-500" }
+                      ]} />
+                      <MetricBarChart variant="donut" title="Store portfolio" rows={[
+                        { label: "Active stores", value: storeStatusCounts.ACTIVE ?? 0, color: "bg-green-500" },
+                        { label: "Draft stores", value: storeStatusCounts.DRAFT ?? 0, color: "bg-amber-500" },
+                        { label: "Suspended stores", value: storeStatusCounts.SUSPENDED ?? 0, color: "bg-rose-500" }
+                      ]} />
+                    </section>
                     <div className="mt-7 border-t border-[var(--border)] pt-6">
                       <h3 className="font-semibold">{translate(locale, "Shipping services", "خدمات الشحن")}</h3>
                       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Rates are scoped to a market and optional destination region. Enter the amount in the selected currency&apos;s minor units.", "ترتبط الأسعار بسوق ومنطقة وجهة اختيارية. أدخل المبلغ بأصغر وحدة للعملة المحددة.")}</p>

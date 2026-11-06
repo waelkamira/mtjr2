@@ -54,6 +54,8 @@ model User {
   platformPrivilegeReviews   PlatformPrivilegeRequest[] @relation("PlatformPrivilegeReviewer")
   sellerProfile           Seller?
   createdCommissionRules  CommissionRule[]          @relation("CommissionRuleCreator")
+  createdAdCampaigns      AdCampaign[]               @relation("AdCampaignCreator")
+  reviewedAdCampaigns     AdCampaign[]               @relation("AdCampaignReviewer")
   storeMemberships        SellerStaff[]            @relation("SellerStaffUser")
   sentStoreInvitations    SellerStaff[]            @relation("SellerStaffInviter")
   carts                   Cart[]
@@ -570,6 +572,7 @@ model Seller {
 
 model Store {
   id                         String                      @id @default(cuid())
+  storeNumber                BigInt                      @unique @default(autoincrement())
   sellerId                   String
   slug                       String                      @unique @db.VarChar(160)
   name                       String
@@ -589,6 +592,7 @@ model Store {
   vendorOrders               VendorOrder[]
   conversations              StoreConversation[]
   commissionTransactions     CommissionTransaction[]
+  adCampaigns                 AdCampaign[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
@@ -697,6 +701,7 @@ model BrandTranslation {
 
 model Product {
   id                  String                @id @default(cuid())
+  productNumber       BigInt                @unique @default(autoincrement())
   storeId             String
   brandId             String?
   slug                String                @db.VarChar(180)
@@ -723,6 +728,7 @@ model Product {
   favorites           Favorite[]
   recommendationsFrom Recommendation[]      @relation("RecommendationSource")
   recommendationsTo   Recommendation[]      @relation("RecommendationTarget")
+  adCampaigns         AdCampaign[]
 
   @@unique([storeId, slug])
   @@index([storeId, status, approvalStatus, createdAt])
@@ -2092,4 +2098,41 @@ model AiAssistantSetting {
   model               String   @default("openai/gpt-oss-20b") @db.VarChar(120)
   maxCompletionTokens Int      @default(900)
   updatedAt           DateTime @updatedAt
+}
+
+
+enum AdCampaignStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+model AdCampaign {
+  id String @id @default(cuid())
+  storeId String
+  productId String
+  createdById String
+  reviewedById String?
+  title String @db.VarChar(140)
+  message String? @db.VarChar(300)
+  status AdCampaignStatus @default(DRAFT)
+  moderationNote String? @db.VarChar(500)
+  startsAt DateTime
+  endsAt DateTime
+  submittedAt DateTime?
+  reviewedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  createdBy User @relation("AdCampaignCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedBy User? @relation("AdCampaignReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  @@index([storeId, status, createdAt])
+  @@index([status, submittedAt])
+  @@index([productId, status])
+  @@index([startsAt, endsAt, status])
 }

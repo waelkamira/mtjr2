@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type ReturnRow = { id: string; returnNumber: string; orderNumber: string; customer: string; customerEmail: string; status: string; reasonCode: string; reasonDetails: string | null; reviewNote: string | null; requestedAt: string; items: Array<{ productName: string; sku: string; orderedQuantity: number; quantity: number }> };
 export default function AdminReturnsPage() {
@@ -32,7 +33,8 @@ export default function AdminReturnsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Return update failed.");
       setNote(""); await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Return update failed."); }
+      toast.success(status === "APPROVED" ? "Return approved." : "Return rejected.");
+    } catch (cause) { const message = cause instanceof Error ? cause.message : "Return update failed."; setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
   return <main className="min-h-screen bg-[var(--background)]">

@@ -134,7 +134,7 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
       const existing = await tx.store.findUnique({
         where: { slug: data.slug },
         select: {
-          id: true, sellerId: true, name: true, slug: true, status: true,
+          id: true, sellerId: true, storeNumber: true, name: true, slug: true, status: true,
           markets: { where: { isEnabled: true }, select: { marketId: true } }
         }
       });
@@ -143,8 +143,8 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
           throw new Error("This store URL is already in use or its setup details differ.");
         }
         return {
-          id: existing.id, name: existing.name, slug: existing.slug, status: existing.status,
-          alreadyCreated: true
+          id: existing.id, storeNumber: existing.storeNumber.toString(), name: existing.name,
+          slug: existing.slug, status: existing.status, alreadyCreated: true
         };
       }
 
@@ -166,14 +166,14 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
           sellerId: seller.id, name: data.name, slug: data.slug, status: StoreStatus.DRAFT,
           markets: { create: marketIds.map((marketId) => ({ marketId, isEnabled: true })) }
         },
-        select: { id: true, name: true, slug: true, status: true }
+        select: { id: true, storeNumber: true, name: true, slug: true, status: true }
       });
       await tx.auditLog.create({ data: {
         actorType: AuditActorType.USER, actorId: actor.userId, action: "store.created",
         resource: "store", resourceId: store.id, scopeType: "STORE", scopeId: store.id,
         occurredAt: now, metadata: { slug: store.slug, marketIds }
       }});
-      return { ...store, alreadyCreated: false };
+      return { ...store, storeNumber: store.storeNumber.toString(), alreadyCreated: false };
     });
   } catch (error) {
     if (!isStoreSlugConflict(error) || !sellerId) throw error;
@@ -181,7 +181,7 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
     const existing = await prisma.store.findUnique({
       where: { slug: data.slug },
       select: {
-        id: true, sellerId: true, name: true, slug: true, status: true,
+        id: true, sellerId: true, storeNumber: true, name: true, slug: true, status: true,
         markets: { where: { isEnabled: true }, select: { marketId: true } }
       }
     });
@@ -190,7 +190,7 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
       throw new Error("This store URL is already in use or its setup details differ.");
     }
     return {
-      id: existing.id, name: existing.name, slug: existing.slug, status: existing.status,
+      id: existing.id, storeNumber: existing.storeNumber.toString(), name: existing.name, slug: existing.slug, status: existing.status,
       alreadyCreated: true
     };
   }
@@ -214,7 +214,7 @@ export async function getSellerWorkspace(now = new Date()) {
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {
-      id: true, name: true, slug: true, status: true,
+      id: true, storeNumber: true, name: true, slug: true, status: true,
       seller: { select: { ownerId: true } },
       markets: { where: { isEnabled: true }, select: { market: { select: { id: true, code: true, name: true, defaultCurrencyCode: true } } } },
       warehouses: {
@@ -228,6 +228,7 @@ export async function getSellerWorkspace(now = new Date()) {
     seller,
     stores: stores.map(({ seller: storeSeller, ...store }) => ({
       ...store,
+      storeNumber: store.storeNumber.toString(),
       isOwner: storeSeller.ownerId === actor.userId
     }))
   };

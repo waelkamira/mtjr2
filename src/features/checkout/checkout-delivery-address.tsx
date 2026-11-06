@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -105,8 +106,9 @@ export default function CheckoutDeliveryAddress({ quoteId, quoteStatus }: Props)
       if (!response.ok || !result.address) throw new Error(result.error || t("Unable to save delivery address.", "تعذّر حفظ عنوان التوصيل."));
       setCurrentAddress(result.address);
       setSuccess(t("Delivery address saved to this checkout quote.", "تم حفظ عنوان التوصيل لطلب الشراء هذا."));
+      toast.success(t("Delivery address saved.", "تم حفظ عنوان التوصيل."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Unable to save delivery address.", "تعذّر حفظ عنوان التوصيل."));
+      const message = cause instanceof Error ? cause.message : t("Unable to save delivery address.", "تعذّر حفظ عنوان التوصيل."); setError(message); toast.error(message);
     } finally {
       setBusy(false);
     }

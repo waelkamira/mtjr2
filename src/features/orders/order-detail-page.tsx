@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import StoreReviewForm from "@/features/orders/store-review-form";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { toast } from "sonner";
 
 type PaymentProvider = { key: string; displayName: string };
 
@@ -94,9 +95,12 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
       const data = await response.json() as { payment?: { checkoutUrl: string | null }; error?: string };
       if (!response.ok || !data.payment) throw new Error(data.error || t("Payment could not be started.", "تعذّر بدء الدفع."));
       if (!data.payment.checkoutUrl) throw new Error(t("The payment session is being prepared. Refresh this page shortly.", "جلسة الدفع قيد الإعداد. حدّث الصفحة بعد قليل."));
+      toast.success(t("Secure payment session created.", "تم إنشاء جلسة دفع آمنة."));
       window.location.assign(data.payment.checkoutUrl);
     } catch (cause) {
-      setPaymentError(cause instanceof Error ? cause.message : t("Payment could not be started.", "تعذّر بدء الدفع."));
+      const message = cause instanceof Error ? cause.message : t("Payment could not be started.", "تعذّر بدء الدفع.");
+      setPaymentError(message);
+      toast.error(message);
     } finally {
       setPaymentBusy("");
     }
@@ -113,10 +117,13 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || (action === "cancel" ? t("Order cancellation failed.", "تعذّر إلغاء الطلب.") : t("Order reorder failed.", "تعذّرت إعادة الطلب.")));
+      toast.success(action === "reorder" ? t("Items added to your cart.", "تمت إضافة المنتجات إلى سلتك.") : t("Order cancelled.", "تم إلغاء الطلب."));
       if (action === "reorder") router.push("/cart");
       else window.location.reload();
     } catch (cause) {
-      setOrderActionError(cause instanceof Error ? cause.message : (action === "cancel" ? t("Order cancellation failed.", "تعذّر إلغاء الطلب.") : t("Order reorder failed.", "تعذّرت إعادة الطلب.")));
+      const message = cause instanceof Error ? cause.message : (action === "cancel" ? t("Order cancellation failed.", "تعذّر إلغاء الطلب.") : t("Order reorder failed.", "تعذّرت إعادة الطلب."));
+      setOrderActionError(message);
+      toast.error(message);
     } finally {
       setOrderAction("");
     }

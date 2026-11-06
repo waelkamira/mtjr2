@@ -8,6 +8,7 @@ import CheckoutTaxSummary from "@/features/checkout/checkout-tax-summary";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { toast } from "sonner";
 
 type Quote = {
   id: string;
@@ -61,9 +62,12 @@ export default function CheckoutReviewPage() {
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || t("The reservation could not be released.", "تعذّر إلغاء الحجز."));
+      toast.success(t("Reservation released.", "تم تحرير الحجز."));
       router.push("/cart");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("The reservation could not be released.", "تعذّر إلغاء الحجز."));
+      const message = cause instanceof Error ? cause.message : t("The reservation could not be released.", "تعذّر إلغاء الحجز.");
+      setError(message);
+      toast.error(message);
     } finally { setBusy(false); }
   }
 
@@ -77,9 +81,12 @@ export default function CheckoutReviewPage() {
       });
       const result = await response.json() as { order?: { id: string }; error?: string };
       if (!response.ok || !result.order) throw new Error(result.error || t("The order could not be placed.", "تعذّر تقديم الطلب."));
+      toast.success(t("Your order has been placed.", "تم تقديم طلبك بنجاح."));
       router.push(`/orders/${encodeURIComponent(result.order.id)}`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("The order could not be placed.", "تعذّر تقديم الطلب."));
+      const message = cause instanceof Error ? cause.message : t("The order could not be placed.", "تعذّر تقديم الطلب.");
+      setError(message);
+      toast.error(message);
     } finally { setPlacingOrder(false); }
   }
 

@@ -116,3 +116,41 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## 12. Recheck against PR #57 branch (2026-11-06)
+
+This is a fresh schema-only recheck of commit `3f81e8153b753206812e8049ada90c5c4428a0e8`; it supersedes the older baseline counts above for current implementation decisions:
+
+| Model | Current schema finding | Meaning for seller marketing |
+|---|---|---|
+| `Coupon` | Present | A global checkout discount record; it has no `storeId`, seller owner, or seller campaign lifecycle. Do not expose it directly as a seller-owned campaign. |
+| `CouponRedemption` | Present | Checkout/order redemption history for Coupon; not an advertising impression/click or campaign attribution record. |
+| `Promotion` | Absent | No durable campaign entity currently exists. |
+| `PromotionProduct` | Absent | No campaign-to-product relation currently exists. |
+| `PromotionCategory` | Absent | No campaign-to-category relation currently exists. |
+| `PromotionSeller` | Absent | No platform/seller campaign participation relation currently exists. |
+
+The seller advertising gap therefore remains real. Any implementation must be a distinct, store-scoped advertising domain with explicit lifecycle, moderation and policy checks; the existing global coupon capability must remain separate. This recheck does not claim that any seller advertising routes or UI have been implemented.
+
+
+## 13. Seller advertising campaign management — implementation added in PR #57
+
+Implemented in PR #57. Exact-head CI and PostgreSQL integration passed on `f27767effd4ef6bdd141b529baa05eeb2b52a11d` (PR CI run `42298838565`; PostgreSQL integration run `42298838567`).
+
+- Dedicated `AdCampaign` model and PostgreSQL migration, separate from global checkout coupons.
+- Store-scoped campaign tied to one product from that same store; only active, approved and published products are eligible.
+- Seller APIs: `GET/POST /api/seller/advertising/campaigns` and `PATCH /api/seller/advertising/campaigns/[campaignId]`.
+- Admin moderation APIs: `GET /api/admin/advertising/campaigns` and `PATCH /api/admin/advertising/campaigns/[campaignId]`.
+- Seller page `/seller/advertising`; moderation page `/admin/advertising`; links added to seller workspace and admin navigation.
+- Permissions: `ads:manage` for exact STORE-scoped delegated managers; `ads:moderate` for ADMIN/SUPER_ADMIN. Seller owners are checked against the store's actual Seller.ownerId.
+- Lifecycle: DRAFT → SUBMITTED → APPROVED/REJECTED → ACTIVE/PAUSED/ARCHIVED. Conditional writes protect transitions; sensitive changes create audit records.
+- Schedule has a database check constraint. Rejected submissions require a reason. A product must belong to the same store and be ACTIVE + APPROVED.
+- No billing, account debit, impression/click telemetry, attribution, placement inventory, targeting engine, delivery scheduler or live ad delivery is implemented. Approval does not charge the seller. Do not describe this as a complete ad-serving network.
+
+Verification gates:
+- [ ] Prisma validate/generate/migration deploy against PostgreSQL, typecheck, lint, tests and production build.
+- [ ] Seller A cannot read/mutate seller B campaigns; delegated managers need exact STORE scope.
+- [ ] Foreign product IDs, unapproved products, inactive stores, invalid schedules and unauthorized moderation are rejected.
+- [ ] Only submitted campaigns can be moderated; rejection requires a reason; concurrent decisions cannot overwrite the first.
+- [ ] Real-browser seller/admin flows and desktop/mobile visual QA.

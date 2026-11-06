@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -69,7 +70,8 @@ export default function NotificationsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Notification could not be updated.", "تعذّر تحديث الإشعار."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Notification could not be updated.", "تعذّر تحديث الإشعار.")); }
+      toast.success(t("Notification marked as read.", "تم تحديد الإشعار كمقروء."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Notification could not be updated.", "تعذّر تحديث الإشعار."); setError(message); toast.error(message); }
     finally { setBusyId(""); }
   }
 
@@ -84,7 +86,8 @@ export default function NotificationsPage() {
       if (!response.ok) throw new Error(data.error || t("Notification preferences could not be saved.", "تعذّر حفظ تفضيلات الإشعارات."));
       setPreferences(data.preferences || []);
       setNotice(t("Your notification preferences have been saved.", "تم حفظ تفضيلات الإشعارات."));
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Notification preferences could not be saved.", "تعذّر حفظ تفضيلات الإشعارات.")); }
+      toast.success(t("Notification preferences saved.", "تم حفظ تفضيلات الإشعارات."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Notification preferences could not be saved.", "تعذّر حفظ تفضيلات الإشعارات."); setError(message); toast.error(message); }
     finally { setSavingPreferences(false); }
   }
 

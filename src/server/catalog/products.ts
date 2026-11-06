@@ -123,14 +123,14 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
           }))
         }
       },
-      select: { id: true, storeId: true, name: true, slug: true, status: true, approvalStatus: true }
+      select: { id: true, productNumber: true, storeId: true, name: true, slug: true, status: true, approvalStatus: true }
     });
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.created",
       resource: "product", resourceId: product.id, scopeType: "STORE", scopeId: store.id,
       occurredAt: now, metadata: { variantCount: data.variants.length, categoryCount: categoryIds.length, mediaCount: data.media.length }
     }});
-    return product;
+    return { ...product, productNumber: product.productNumber.toString() };
   });
 }
 
@@ -326,7 +326,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 100,
     select: {
-      id: true, name: true, slug: true, description: true, status: true, approvalStatus: true,
+      id: true, productNumber: true, name: true, slug: true, description: true, status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
       media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
       variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
@@ -334,6 +334,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
   });
   return products.map((product) => ({
     ...product,
+    productNumber: product.productNumber.toString(),
     variants: product.variants.map((variant) => ({
       ...variant,
       prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() }))

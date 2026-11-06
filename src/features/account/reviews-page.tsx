@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { toast } from "sonner";
 
 type ProductReview = {
   id: string; rating: number; title: string; body: string; status: string; createdAt: string;
@@ -52,8 +53,9 @@ export default function AccountReviewsPage() {
       const reviews = await refreshed.json() as { productItems?: ProductReview[]; storeItems?: StoreReview[] };
       setProductItems(reviews.productItems || []); setStoreItems(reviews.storeItems || []);
       setAppealMessage(t("Your appeal was sent to moderation.", "تم إرسال اعتراضك إلى فريق الإشراف."));
+      toast.success(t("Appeal submitted for moderation.", "تم إرسال الاعتراض للمراجعة."));
       setAppealReasons((current) => ({ ...current, [key]: "" }));
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Review appeal could not be submitted.", "تعذّر إرسال الاعتراض على التقييم.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Review appeal could not be submitted.", "تعذّر إرسال الاعتراض على التقييم."); setError(message); toast.error(message); }
     finally { setBusyAppealId(""); }
   }
   function appealControl(kind: "PRODUCT" | "STORE", id: string, status: string, appeals: Array<{ id: string; status: string }>) {

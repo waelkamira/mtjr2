@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Market = {
   id: string; code: string; name: string;
@@ -13,12 +15,12 @@ type Market = {
 type Category = { id: string; name: string; children: Category[] };
 type Brand = { id: string; name: string };
 type Product = {
-  id: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
+  id: string; productNumber: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
   media: Array<{ url: string; altText: string | null }>;
   variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
 };
-type Store = { id: string; name: string; markets: Array<{ market: { id: string } }> };
+type Store = { id: string; storeNumber: string; name: string; markets: Array<{ market: { id: string } }> };
 type Workspace = { stores: Store[] };
 
 async function json<T>(response: Response): Promise<T> {
@@ -62,6 +64,14 @@ export default function SellerProductsPage() {
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
+  const approvalCounts = products.reduce((counts, product) => {
+    counts[product.approvalStatus] = (counts[product.approvalStatus] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
+  const publicationCounts = products.reduce((counts, product) => {
+    counts[product.status] = (counts[product.status] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
 
   const loadProducts = useCallback(async (id: string, q = "") => {
     if (!id) return;
@@ -119,10 +129,12 @@ export default function SellerProductsPage() {
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
+      toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
       setName(""); setSlug(""); setDescription(""); setSku(""); setImageUrl(""); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
+      toast.error(translate(locale, "Product could not be created", "تعذر إنشاء المنتج"));
     } finally { setBusy(false); }
   }
 
@@ -137,9 +149,11 @@ export default function SellerProductsPage() {
       }));
       setEditingId("");
       setMessage(translate(locale, "Draft product updated and returned to pending review.", "تم تحديث مسودة المنتج وإعادتها إلى قائمة المراجعة."));
+      toast.success(translate(locale, "Product updated", "تم تحديث المنتج"));
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be updated.", "تعذر تحديث المنتج."));
+      toast.error(translate(locale, "Product could not be updated", "تعذر تحديث المنتج"));
     } finally { setBusy(false); }
   }
 
@@ -148,9 +162,11 @@ export default function SellerProductsPage() {
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, { method: "POST" }));
       setMessage(translate(locale, "Product published.", "تم نشر المنتج."));
+      toast.success(translate(locale, "Product published", "تم نشر المنتج"));
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be published.", "تعذر نشر المنتج."));
+      toast.error(translate(locale, "Product could not be published", "تعذر نشر المنتج"));
     } finally { setBusy(false); }
   }
 
@@ -173,7 +189,7 @@ export default function SellerProductsPage() {
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
             setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
-          }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
+          }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name} · STR-{store.storeNumber.padStart(8, "0")}</option>)}</select></label>
           {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
             <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
@@ -200,9 +216,21 @@ export default function SellerProductsPage() {
           </form>}
         </section>
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-          <h2 className="text-lg font-semibold">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2><label className="mt-4 block text-xs font-medium">{translate(locale, "Search this store catalog", "البحث في كتالوج المتجر")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product name, slug, SKU or barcode", "اسم المنتج أو المعرّف أو SKU أو الباركود")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>
+          <h2 className="text-lg font-semibold">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
+          {!loading && products.length > 0 && <section aria-label="Seller catalog analytics" className="mt-5 grid gap-4 md:grid-cols-2">
+            <MetricBarChart title="Product approval pipeline" description="Counts reflect the currently loaded product list and active search." rows={Object.entries(approvalCounts).map(([status, count], index) => ({
+              label: status.replaceAll("_", " ").toLowerCase(),
+              value: count,
+              color: ["bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-sky-500"][index % 4]
+            }))} />
+            <MetricBarChart title="Product publication status" description="Counts reflect the currently loaded product list and active search." rows={Object.entries(publicationCounts).map(([status, count], index) => ({
+              label: status.replaceAll("_", " ").toLowerCase(),
+              value: count,
+              color: ["bg-indigo-500", "bg-teal-500", "bg-slate-500", "bg-orange-500"][index % 4]
+            }))} />
+          </section>}<label className="mt-4 block text-xs font-medium">{translate(locale, "Search this store catalog", "البحث في كتالوج المتجر")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product name, slug, SKU or barcode", "اسم المنتج أو المعرّف أو SKU أو الباركود")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>
           {!products.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-5 text-sm text-[var(--muted)]">{search ? translate(locale, "No products match this search.", "لا توجد منتجات تطابق هذا البحث.") : translate(locale, "No products in this store yet.", "لا توجد منتجات في هذا المتجر بعد.")}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs">{translate(locale, product.status, product.status === "DRAFT" ? "مسودة" : product.status)}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{translate(locale, product.approvalStatus, product.approvalStatus === "PENDING" ? "قيد المراجعة" : product.approvalStatus === "APPROVED" ? "مقبول" : product.approvalStatus === "REJECTED" ? "مرفوض" : product.approvalStatus)}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">{translate(locale, "Review:", "ملاحظة المراجعة:")} {product.rejectionReason}</p>}</div>
+            <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs font-semibold text-[var(--color-copper-700)]">PRD-{product.productNumber.padStart(8, "0")}</p><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs">{translate(locale, product.status, product.status === "DRAFT" ? "مسودة" : product.status)}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{translate(locale, product.approvalStatus, product.approvalStatus === "PENDING" ? "قيد المراجعة" : product.approvalStatus === "APPROVED" ? "مقبول" : product.approvalStatus === "REJECTED" ? "مرفوض" : product.approvalStatus)}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">{translate(locale, "Review:", "ملاحظة المراجعة:")} {product.rejectionReason}</p>}</div>
             <div className="flex flex-wrap gap-2">
               {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
