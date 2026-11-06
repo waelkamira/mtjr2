@@ -162,7 +162,7 @@ export default function SellerWorkspacePage() {
 
         </div>
       </header>
-      <div className="mx-auto max-w-6xl px-5 py-10">
+      <div className="mx-auto max-w-6xl px-5 py-10"><div className="mb-6 flex flex-wrap justify-end"><Link href="/seller/advertising" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold">{translate(locale, "Advertising campaigns", "الحملات الإعلانية")}</Link></div>
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Your business", "أعمالك")}</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-lavender-950)]">{translate(locale, "Seller workspace", "مساحة عمل البائع")}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Manage your seller application, stores, active markets and warehouse stock. Every action is checked by the marketplace backend.", "أدِر طلبك كبائع ومتاجرك والأسواق النشطة ومخزون المستودعات. يتحقق النظام الخلفي للسوق من كل إجراء.")}</p>
