@@ -181,7 +181,7 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
     const existing = await prisma.store.findUnique({
       where: { slug: data.slug },
       select: {
-        id: true, sellerId: true, name: true, slug: true, status: true,
+        id: true, sellerId: true, storeNumber: true, name: true, slug: true, status: true,
         markets: { where: { isEnabled: true }, select: { marketId: true } }
       }
     });
