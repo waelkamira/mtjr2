@@ -18,11 +18,15 @@ test.describe("public marketplace journeys", () => {
     await expect(sponsored).toBeVisible();
     const token = await sponsored.getAttribute("data-ad-token");
     expect(token).toBeTruthy();
-    const eventResponse = await page.request.post("/api/advertising/events", {
-      data: { token, type: "CLICK", eventId: "playwrightadclickevent000000001" },
-      headers: { Origin: "http://127.0.0.1:3000" }
-    });
-    expect(eventResponse.ok()).toBeTruthy();
+    const eventResult = await page.evaluate(async (adToken) => {
+      const response = await fetch("/api/advertising/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: adToken, type: "CLICK", eventId: crypto.randomUUID().replace(/-/g, "") })
+      });
+      return { status: response.status, body: await response.json() };
+    }, token!);
+    expect(eventResult.status, JSON.stringify(eventResult.body)).toBe(200);
     await sponsored.getByRole("link").click();
     await expect(page).toHaveURL(/products/);
     await page.goto("/search?q=Nova");
