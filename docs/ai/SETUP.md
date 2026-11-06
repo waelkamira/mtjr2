@@ -24,7 +24,7 @@ Never commit `.env.local`, expose the key in a `NEXT_PUBLIC_*` variable, paste t
 - Public product search from Matjar's active/approved catalog.
 - Public product detail lookup by slug or product ID.
 - Current stock filtering when explicitly requested; normal catalog search does not imply in-stock status.
-- Signed-in customer's recent order summaries, resolved from the server session and rendered directly by Matjar. Order addresses and order details are not sent to Groq.
+- Signed-in customer's recent order and return summaries, resolved from the server session and rendered directly by Matjar. Private order/return details are not sent to Groq.
 - Direct handoff link to the existing `/account/support` route.
 - Arabic-first responses, with English support based on browser language.
 - No autonomous write operations and no paid provider fallback.
