@@ -282,7 +282,7 @@ export async function createSellerShipment(vendorOrderId: string, input: unknown
       }
     });
     const updated = await tx.vendorOrder.updateMany({
-      where: { id, status: VendorOrderStatus.READY_TO_SHIP },
+      where: { id, storeId: current.storeId, status: VendorOrderStatus.READY_TO_SHIP },
       data: { status: VendorOrderStatus.SHIPPED }
     });
     if (updated.count !== 1) throw new Error("Seller order changed while creating the shipment.");

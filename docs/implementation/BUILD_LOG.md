@@ -2394,7 +2394,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 ## 2026-11-06 — Identity and MFA rebuild
 
-- Password registration activates accounts immediately without email verification; Turnstile and persistent registration throttles provide bot/abuse controls. Historical verification-flow entries above are superseded.
+- At that checkpoint the branch temporarily activated accounts immediately after Turnstile; this was later identified as a verification regression and corrected in the 2026-11-06 Super Admin/AI entry below. Current password registration remains pending until email verification.
 - Password login returns a generic public credential failure for unknown accounts and incorrect passwords. Successful authentication redirects to the safe same-origin return path.
 - Added encrypted TOTP enrollment, replay-resistant code verification, one-time recovery codes, session-bound 12-hour MFA assurance, and mandatory MFA enrollment/verification for platform-wide administrators.
 - Added migration `20261106120000_identity_mfa`. Configure a stable `MFA_ENCRYPTION_KEY` before production MFA enrollment; changing the key makes stored TOTP secrets unreadable.
@@ -2429,3 +2429,31 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - `git diff --check` passed.
 - Browser smoke test of an unknown local URL displayed the branded 404 and home/product recovery links; at a 390px viewport the document/body widths remained 390px. A regular user visiting `/admin/commissions` received the expected permission-hidden 404. Authorized admin UI was not tested.
 - Full page-by-page action, responsive, state, and persistence verification remains open; all unverified existing pages remain `NEEDS_TESTING` rather than being marked complete.
+
+# 2026-11-06 — Super Admin command center and AI operations
+
+**Existing panel inspected and extended on `feat/super-admin-control-panel`**
+- Confirmed the existing `/admin/dashboard` and `/admin/control-panel` routes, access catalog, platform audit log, and two-person Super Admin privilege-request workflow. Updated the admin navigation so the Super Admin entry is rendered only for actors with `platform:manage`.
+- Added same-origin JSON mutation validation to privilege-request creation and decision endpoints.
+- Added the one-time first-Super-Admin bootstrap runbook and tightened the script to require an active, email-verified target account. The script validates the explicit database host/name, uses a serializable transaction/advisory lock, refuses if a platform grant already exists, and writes a system audit event.
+- Added a Super Admin AI settings page and API at `/admin/control-panel/ai-assistant`. The singleton `AiAssistantSetting` stores the enable flag and bounded completion-token limit; all changes are recorded in `AuditLog`. The provider key is exposed only as a configured/not-configured boolean.
+- Added the environment master kill switch and runtime resolver. The assistant is available only when the environment switch, provider key, and database enable flag are all present; a database read failure disables the assistant. The model remains fixed to `openai/gpt-oss-20b`.
+- Added migrations `20261106170000_ai_assistant_settings`, `20261106171000_ai_assistant_settings_constraints`, and `20261106172000_ai_assistant_settings_updated_at`.
+
+**Identity/security corrections found during branch review**
+- Restored pending registration with a single-use email-verification challenge, verification and resend endpoints, and a verification page. The raw token is sent only through the server-side email adapter; only its digest is stored.
+- Password login now requires an active account with a verified email and creates the session inside the same conditional database transaction that rechecks account status and password hash. MFA remains mandatory for platform administrators.
+- Google callback validation now checks numeric/safe token expiry and requires linked accounts to be active and email-verified.
+- Updated focused tests for registration, one-time verification, login/session races, AI settings redaction, environment kill switch, and order/shipment service contracts.
+
+**Remaining gaps**
+- Dashboard financial metrics remain partial: no canonical net revenue, payout exposure, refunds/disputes, settlement/reconciliation, or analytics/alerts pages.
+- AI conversation history, usage analytics, feedback, approved knowledge management, and shared/distributed rate limiting remain unimplemented.
+- The first-admin bootstrap is not an automated recovery workflow after an existing Super Admin assignment is lost.
+- PostgreSQL integration and browser journeys for Super Admin denial/access, privilege approval, AI enable/disable, MFA, and secret non-disclosure remain to be verified on the final PR head.
+
+**Verification**
+- CI run [42251382773](https://github.com/waelkamira/mtjr2/actions/runs/42251382773) passed on `4eefa77f74c9064a9934fd1053585fb1360283be`: Prisma validate, migration deploy, Prisma generate, typecheck, lint, unit tests, and production build.
+- Platform PostgreSQL Integration run [42251383098](https://github.com/waelkamira/mtjr2/actions/runs/42251383098) passed on the same commit: migration replay, baseline role/permission seed, PostgreSQL integration suite, demo catalog seed, and seed repeatability.
+- The browser E2E journeys listed above remain unverified; keep PR #35 in Draft until those are exercised.
+- No Vercel access, deployment, environment changes, production database changes, or live Groq API smoke test were performed.

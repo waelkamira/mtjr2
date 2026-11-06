@@ -6,7 +6,7 @@ import { clearLoginThrottle, consumeLoginAttempt } from "@/server/identity/login
 import { normalizeEmail } from "@/server/identity/normalize-email";
 import { getMfaAccessState } from "@/server/identity/mfa";
 import { verifyPassword } from "@/server/identity/password";
-import { createUserSession, type CreatedSession } from "@/server/identity/session";
+import { generateSessionToken, hashSessionToken, SESSION_TTL_SECONDS, type CreatedSession } from "@/server/identity/session";
 
 const INVALID_CREDENTIALS = "Email or password is incorrect.";
 const DUMMY_PASSWORD_HASH =
@@ -36,10 +36,11 @@ function digestLoginValue(kind: "identifier" | "ip", value: string): string {
 }
 
 /**
- * Authenticates an email/password pair. Call only after the HTTP boundary has
- * resolved the client IP through explicitly trusted proxy configuration.
- * Public failures use the same message for unknown accounts and wrong passwords.
- * Legacy pending accounts activate after valid credentials.
+ * Password login requires an active, email-verified account. The conditional
+ * user-row write and session creation share one transaction so a concurrent
+ * password change, suspension, or email-verification state change cannot
+ * race an already-issued session. MFA remains a separate mandatory step for
+ * platform administrators.
  */
 export async function loginWithPassword(
   input: LoginInput,
@@ -49,15 +50,8 @@ export async function loginWithPassword(
   const password = input.password;
   const ip = input.trustedIpAddress.trim();
 
-  if (
-    !email ||
-    email.length > 254 ||
-    typeof password !== "string" ||
-    password.length < 1 ||
-    password.length > 128 ||
-    !ip ||
-    ip.length > 64
-  ) {
+  if (!email || email.length > 254 || typeof password !== "string" ||
+      password.length < 1 || password.length > 128 || !ip || ip.length > 64) {
     return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
   }
 
@@ -74,94 +68,79 @@ export async function loginWithPassword(
 
   const user = await prisma.user.findUnique({
     where: { emailNormalized: email },
-    select: {
-      id: true,
-      passwordHash: true,
-      status: true
-    }
+    select: { id: true, passwordHash: true, status: true, emailVerifiedAt: true }
   });
 
-  // Always perform one scrypt verification, including for unknown users.
-  const passwordMatches = await verifyPassword(
-    password,
-    user?.passwordHash ?? DUMMY_PASSWORD_HASH
-  );
+  const passwordMatches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
   if (!user) {
     await prisma.loginAttempt.create({ data: { identifierHash, ipHash, succeeded: false, attemptedAt: now } });
     return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: INVALID_CREDENTIALS };
   }
 
-  let accountActivatedOnLogin = false;
-  let status = user.status;
-  if (status === UserStatus.PENDING && user.passwordHash && passwordMatches) {
-    const activated = await prisma.user.updateMany({
-      where: { id: user.id, status: UserStatus.PENDING },
-      data: { status: UserStatus.ACTIVE }
-    });
-    if (activated.count === 1) {
-      status = UserStatus.ACTIVE;
-      accountActivatedOnLogin = true;
-    } else {
-      const current = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { status: true }
-      });
-      status = current?.status ?? status;
-    }
-  }
-  const eligible = status === UserStatus.ACTIVE && user.passwordHash !== null;
+  const eligible = user.status === UserStatus.ACTIVE &&
+    user.emailVerifiedAt !== null && user.passwordHash !== null;
 
   if (!eligible || !passwordMatches) {
     await prisma.loginAttempt.create({
-      data: {
-        userId: user?.id ?? null,
-        identifierHash,
-        ipHash,
-        succeeded: false,
-        attemptedAt: now
-      }
+      data: { userId: user.id, identifierHash, ipHash, succeeded: false, attemptedAt: now }
     });
-    return { authenticated: false, reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
+    return {
+      authenticated: false,
+      reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS",
+      message: INVALID_CREDENTIALS
+    };
   }
 
   const mfa = await getMfaAccessState(user.id, now);
-  const session = await createUserSession(user.id, {
-    userAgent: input.userAgent,
-  }, now);
+  const token = generateSessionToken();
+  const expiresAt = new Date(now.getTime() + SESSION_TTL_SECONDS * 1000);
+  const session = await prisma.$transaction(async (tx) => {
+    // Conditional update locks the user row until the session is persisted.
+    // Password changes and account-state changes use the same row.
+    const current = await tx.user.updateMany({
+      where: {
+        id: user.id,
+        status: UserStatus.ACTIVE,
+        emailVerifiedAt: { not: null },
+        passwordHash: user.passwordHash
+      },
+      data: { lastLoginAt: now }
+    });
+    if (current.count !== 1) return null;
 
-  try {
-    await prisma.$transaction([
-      prisma.loginAttempt.create({
-        data: {
-          userId: user.id,
-          identifierHash,
-          ipHash,
-          succeeded: true,
-          attemptedAt: now
-        }
-      }),
-      prisma.user.update({
-        where: { id: user.id },
-        data: { lastLoginAt: now }
-      }),
-      prisma.auditLog.create({
-        data: {
-          actorType: AuditActorType.USER,
-          actorId: user.id,
-          action: "identity.login.succeeded",
-          resource: "user",
-          resourceId: user.id,
-          occurredAt: now,
-          metadata: { method: "password", accountActivatedOnLogin }
-        }
-      })
-    ]);
-  } catch (error) {
-    // Do not leave an issued session behind if the login audit/persistence
-    // transaction fails.
-    const { revokeUserSession } = await import("@/server/identity/session");
-    await revokeUserSession(session.token, now);
-    throw error;
+    await tx.userSession.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashSessionToken(token),
+        ipAddress: ip.slice(0, 64),
+        userAgent: input.userAgent?.slice(0, 512) || null,
+        createdAt: now,
+        lastSeenAt: now,
+        expiresAt
+      }
+    });
+    await tx.loginAttempt.create({
+      data: { userId: user.id, identifierHash, ipHash, succeeded: true, attemptedAt: now }
+    });
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER,
+        actorId: user.id,
+        action: "identity.login.succeeded",
+        resource: "user",
+        resourceId: user.id,
+        occurredAt: now,
+        metadata: { method: "password" }
+      }
+    });
+    return { token, expiresAt };
+  });
+
+  if (!session) {
+    await prisma.loginAttempt.create({
+      data: { userId: user.id, identifierHash, ipHash, succeeded: false, attemptedAt: now }
+    });
+    return { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS };
   }
 
   await clearLoginThrottle(email, ip);

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import {
   AuthenticationRequiredError,
   PermissionDeniedError
@@ -24,6 +25,8 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   try {
     const body: unknown = await request.json();
     const created = await createPlatformPrivilegeRequest(body);

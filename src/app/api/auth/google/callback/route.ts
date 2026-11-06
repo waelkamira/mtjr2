@@ -82,14 +82,14 @@ export async function GET(request: Request): Promise<Response> {
     const identity = await identityResponse.json() as { iss?: string; aud?: string; sub?: string; email?: string; email_verified?: string; name?: string; exp?: string };
     if ((identity.iss !== "https://accounts.google.com" && identity.iss !== "accounts.google.com") ||
         identity.aud !== env.GOOGLE_CLIENT_ID || !identity.sub || !identity.email ||
-        identity.email_verified !== "true" || !identity.exp || Number(identity.exp) * 1000 <= Date.now()) {
+        identity.email_verified !== "true" || !identity.exp || !/^\d+$/.test(identity.exp) || !Number.isSafeInteger(Number(identity.exp)) || Number(identity.exp) * 1000 <= Date.now()) {
       return oauthError("failed");
     }
     const email = identity.email.trim().toLowerCase();
     const now = new Date();
     const linked = await prisma.oAuthAccount.findUnique({
       where: { provider_providerAccountId: { provider: "google", providerAccountId: identity.sub } },
-      select: { userId: true, user: { select: { id: true, status: true } } }
+      select: { userId: true, user: { select: { id: true, status: true, emailVerifiedAt: true } } }
     });
     let userId: string;
     if (intent === "login") {
@@ -99,13 +99,13 @@ export async function GET(request: Request): Promise<Response> {
         const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
         return oauthError(existing ? "link_required" : "not_linked");
       }
-      if (linked.user.status !== UserStatus.ACTIVE) {
+      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) {
         return oauthError("inactive");
       }
       userId = linked.userId;
       await prisma.user.update({ where: { id: userId }, data: { lastLoginAt: now } });
     } else if (linked) {
-      if (linked.user.status !== UserStatus.ACTIVE) return oauthError("inactive");
+      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) return oauthError("inactive");
       userId = linked.userId;
     } else {
       const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });

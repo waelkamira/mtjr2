@@ -2085,3 +2085,11 @@ enum PlatformPrivilegeRequestStatus {
   APPROVED
   REJECTED
 }
+
+model AiAssistantSetting {
+  id                  String   @id @default("global")
+  enabled             Boolean  @default(false)
+  model               String   @default("openai/gpt-oss-20b") @db.VarChar(120)
+  maxCompletionTokens Int      @default(900)
+  updatedAt           DateTime @updatedAt
+}

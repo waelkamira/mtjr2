@@ -9,8 +9,12 @@ const validEnvironment = {
 };
 
 describe("parseEnvironment", () => {
-  it("accepts a valid PostgreSQL and application configuration", () => {
-    expect(parseEnvironment(validEnvironment)).toMatchObject(validEnvironment);
+  it("accepts valid PostgreSQL and application configuration with safe AI defaults", () => {
+    expect(parseEnvironment(validEnvironment)).toMatchObject({
+      ...validEnvironment,
+      AI_ASSISTANT_ENABLED: "false",
+      GROQ_MODEL: "openai/gpt-oss-20b"
+    });
   });
 
   it("supports the existing NEXT_PUBLIC_APP_URL local configuration", () => {
@@ -26,12 +30,15 @@ describe("parseEnvironment", () => {
     });
     expect(parsed.APP_URL).toBe(validEnvironment.APP_URL);
   });
+
   it("rejects a non-PostgreSQL database URL", () => {
     expect(() => parseEnvironment({ ...validEnvironment, DATABASE_URL: "https://example.com" })).toThrow(/DATABASE_URL.*PostgreSQL/);
   });
+
   it("rejects a short authentication secret without exposing its value", () => {
     expect(() => parseEnvironment({ ...validEnvironment, AUTH_SECRET: "short-secret" })).toThrow(/AUTH_SECRET/);
   });
+
   it("rejects an invalid server application URL", () => {
     expect(() => parseEnvironment({ ...validEnvironment, APP_URL: "not-a-url" })).toThrow(/APP_URL/);
   });
@@ -44,6 +51,7 @@ describe("parseEnvironment", () => {
     };
     expect(() => parseEnvironment(missingApplicationUrls)).toThrow(/APP_URL/);
   });
+
   it("enables registration by default in development and test only", () => {
     expect(parseEnvironment(validEnvironment).PUBLIC_REGISTRATION_ENABLED).toBe("true");
     expect(isPublicRegistrationEnabled(parseEnvironment(validEnvironment))).toBe(true);
@@ -51,10 +59,13 @@ describe("parseEnvironment", () => {
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production" }))).toBe(false);
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, NODE_ENV: "production", PUBLIC_REGISTRATION_ENABLED: "true" }))).toBe(false);
   });
+
   it("allows registration to be explicitly disabled outside production", () => {
     expect(isPublicRegistrationEnabled(parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "false" }))).toBe(false);
   });
+
   it("accepts blank optional provider credentials in local env files", () => {
+<<<<<<< HEAD
     expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", RESEND_API_KEY: "", RESEND_FROM_EMAIL: "" })).toMatchObject(validEnvironment);
   });
   it("accepts an optional contact email and rejects an invalid one", () => {
@@ -79,9 +90,37 @@ describe("parseEnvironment", () => {
 
   it("accepts blank optional Google OAuth credentials in local env files", () => {
     expect(parseEnvironment({ ...validEnvironment, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "" })).toMatchObject(validEnvironment);
+=======
+    expect(parseEnvironment({
+      ...validEnvironment,
+      GOOGLE_CLIENT_ID: "",
+      GOOGLE_CLIENT_SECRET: "",
+      RESEND_API_KEY: "",
+      RESEND_FROM_EMAIL: "",
+      GROQ_API_KEY: "",
+      TRUSTED_PROXY_IP_HEADER: ""
+    })).toMatchObject(validEnvironment);
+>>>>>>> 5dc32fe6055c1cf21876ac14f3888f1a16992696
   });
 
   it("rejects an invalid public registration flag", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
+  });
+
+  it("keeps the AI assistant disabled by default and accepts a server-only Groq key", () => {
+    expect(parseEnvironment(validEnvironment).AI_ASSISTANT_ENABLED).toBe("false");
+    expect(parseEnvironment({ ...validEnvironment, GROQ_API_KEY: "test-secret" })).toMatchObject({
+      AI_ASSISTANT_ENABLED: "false",
+      GROQ_API_KEY: "test-secret"
+    });
+  });
+
+  it("rejects invalid AI enable flags and never includes secret values in errors", () => {
+    expect(() => parseEnvironment({ ...validEnvironment, AI_ASSISTANT_ENABLED: "yes" })).toThrow(/AI_ASSISTANT_ENABLED/);
+    expect(() => parseEnvironment({ ...validEnvironment, GROQ_API_KEY: "" })).not.toThrow();
+  });
+
+  it("uses the safe default model when the configured model is blank", () => {
+    expect(parseEnvironment({ ...validEnvironment, GROQ_MODEL: " " }).GROQ_MODEL).toBe("openai/gpt-oss-20b");
   });
 });

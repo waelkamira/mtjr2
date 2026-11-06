@@ -62,8 +62,8 @@ function checkoutQuote() {
       line1: "Main Street 1", line2: null, city: "Amsterdam", region: null, postalCode: "1000AA"
     },
     lines: [
-      { id: "line-1", storeId: "store-1", lineTotalMinor: BigInt(10000), variantId: "variant-1", variant: { productId: "product-1" }, productName: "One", storeName: "One Store", sku: "ONE", variantName: null, quantity: 1, unitAmountMinor: BigInt(10000) },
-      { id: "line-2", storeId: "store-2", lineTotalMinor: BigInt(20000), variantId: "variant-2", variant: { productId: "product-2" }, productName: "Two", storeName: "Two Store", sku: "TWO", variantName: null, quantity: 1, unitAmountMinor: BigInt(20000) }
+      { id: "line-1", storeId: "store-1", lineTotalMinor: BigInt(10000), variantId: "variant-1", variant: { productId: "product-1", product: { categories: [] } }, productName: "One", storeName: "One Store", sku: "ONE", variantName: null, quantity: 1, unitAmountMinor: BigInt(10000) },
+      { id: "line-2", storeId: "store-2", lineTotalMinor: BigInt(20000), variantId: "variant-2", variant: { productId: "product-2", product: { categories: [] } }, productName: "Two", storeName: "Two Store", sku: "TWO", variantName: null, quantity: 1, unitAmountMinor: BigInt(20000) }
     ],
     shippingSelections: [
       { storeId: "store-1", amountMinor: BigInt(250), currencyCode: "EUR", destinationRegion: null, serviceName: "Standard", shippingRateId: "rate-1", minDeliveryDays: 2, maxDeliveryDays: 4 },

@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   consumeRegistrationAttempt: vi.fn(),
   verifyRegistrationChallenge: vi.fn(),
   createUserSession: vi.fn(),
+  sendVerificationEmail: vi.fn(),
   isPublicRegistrationEnabled: vi.fn()
 }));
 
@@ -22,6 +23,7 @@ vi.mock("@/lib/env", () => ({
   isPublicRegistrationEnabled: mocks.isPublicRegistrationEnabled
 }));
 vi.mock("@/server/identity/session-cookie", () => ({ setSessionCookie: mocks.setSessionCookie }));
+vi.mock("@/server/email/resend", () => ({ resendEmailAdapter: { sendVerificationEmail: mocks.sendVerificationEmail } }));
 vi.mock("@/server/identity/session", () => ({ createUserSession: mocks.createUserSession }));
 vi.mock("@/server/identity/login", () => ({ loginWithPassword: mocks.loginWithPassword }));
 vi.mock("@/server/identity/login-throttle", () => ({ consumeRegistrationAttempt: mocks.consumeRegistrationAttempt }));
@@ -57,8 +59,9 @@ describe("identity HTTP routes", () => {
       mfaSetupRequired: false
     });
     mocks.registerUser.mockResolvedValue({
-      userId: "user-1"
+      userId: "user-1", verificationToken: "v".repeat(43), verificationExpiresAt: new Date("2026-11-07T00:00:00.000Z")
     });
+    mocks.sendVerificationEmail.mockResolvedValue(undefined);
     mocks.consumeRegistrationAttempt.mockResolvedValue({ blocked: false });
     mocks.verifyRegistrationChallenge.mockResolvedValue(true);
     mocks.createUserSession.mockResolvedValue({
@@ -136,7 +139,7 @@ describe("identity HTTP routes", () => {
     expect(mocks.setSessionCookie).toHaveBeenCalledOnce();
   });
 
-  it("creates an active session immediately after a valid bot challenge", async () => {
+  it("sends a verification email and does not issue a session before email verification", async () => {
     const response = await register(request("/api/auth/register", {
       email: "buyer@example.test",
       password: "A-correct-password",
@@ -147,14 +150,23 @@ describe("identity HTTP routes", () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. You are now signed in." });
+    expect(await response.json()).toEqual({ message: "Account created. Check your email to verify your address." });
     expect(mocks.verifyRegistrationChallenge).toHaveBeenCalledWith("valid-token", "127.0.0.1");
     expect(mocks.registerUser).toHaveBeenCalledOnce();
-    expect(mocks.createUserSession).toHaveBeenCalledWith("user-1", {
-      ipAddress: "127.0.0.1",
-      userAgent: null
-    });
-    expect(mocks.setSessionCookie).toHaveBeenCalledOnce();
+    expect(mocks.sendVerificationEmail).toHaveBeenCalledWith("buyer@example.test", "v".repeat(43));
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
+  });
+
+  it("returns an accepted response when verification email delivery is temporarily unavailable", async () => {
+    mocks.sendVerificationEmail.mockRejectedValue(new Error("mail provider unavailable"));
+    const response = await register(request("/api/auth/register", {
+      email: "buyer@example.test", password: "A-correct-password", accountType: "CUSTOMER",
+      acceptedTerms: true, acceptedPrivacy: true, turnstileToken: "valid-token"
+    }));
+    expect(response.status).toBe(202);
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });
 
   it("rejects a failed bot challenge without creating an account", async () => {

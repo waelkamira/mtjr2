@@ -12,6 +12,7 @@ A ground-up implementation of a global, multi-vendor commerce platform.
 - Use transactions, idempotency, audit trails, and concurrency-safe operations for orders, payments, inventory, refunds, and payouts.
 - A capability is not complete until its user journey, persistence, authorization, error handling, and automated tests pass.
 - Record decisions, implementation status, blockers, and test evidence in this repository.
+- Keep `main` as the only source of truth; follow [repository consolidation and merge gates](docs/implementation/REPOSITORY_SOURCE_OF_TRUTH.md) before integrating any branch.
 
 ## Target architecture
 
@@ -105,6 +106,9 @@ A system may be marked **Complete** only when:
 - Vercel setup, environment variables, PostgreSQL migration procedure, trusted-proxy requirements, and the single Phase 2 production verification journey: [Vercel deployment guide](docs/deployment/VERCEL.md).
 - Vercel account/project connection and production secrets are not yet configured; do not treat the deployment gates as passed until evidence is recorded in the build log.
 
+## Matjar AI Assistant
+
+The implementation plan and release gates are documented in [`docs/ai/MATJAR_AI_ASSISTANT_PLAN.md`](docs/ai/MATJAR_AI_ASSISTANT_PLAN.md); local configuration and privacy instructions are in [`docs/ai/SETUP.md`](docs/ai/SETUP.md). The initial Groq-powered assistant implementation is being developed on `feat/matjar-ai-assistant`: global chat UI, public catalog search, session-scoped order summaries, server-only Groq integration, and input validation. It is disabled by default and requires server-side `GROQ_API_KEY` plus `AI_ASSISTANT_ENABLED=true` after CI and privacy/security acceptance. No paid provider fallback is configured.
 ## Documentation
 
 - `docs/architecture/` — architecture decisions, domain boundaries, and system blueprint.

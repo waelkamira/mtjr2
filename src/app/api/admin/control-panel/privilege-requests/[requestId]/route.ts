@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import {
   AuthenticationRequiredError,
   PermissionDeniedError
@@ -13,6 +14,8 @@ export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ requestId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   try {
     const { requestId } = await context.params;
     const body: unknown = await request.json();

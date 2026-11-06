@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   guestFindUnique: vi.fn(),
   orderFindFirst: vi.fn(),
   paymentFindUnique: vi.fn(),
+  paymentFindUniqueOrThrow: vi.fn(),
   paymentFindFirst: vi.fn(),
   paymentCreate: vi.fn(),
   paymentUpdate: vi.fn(),
@@ -32,6 +33,7 @@ vi.mock("@/lib/db/prisma", () => ({
     order: { findFirst: mocks.orderFindFirst },
     payment: {
       findUnique: mocks.paymentFindUnique,
+      findUniqueOrThrow: mocks.paymentFindUniqueOrThrow,
       findFirst: mocks.paymentFindFirst,
       create: mocks.paymentCreate,
       update: mocks.paymentUpdate,
@@ -95,12 +97,29 @@ describe("payment lifecycle safety", () => {
       status: PaymentStatus.INITIATING, amountMinor: BigInt("1500"), currencyCode: "EUR",
       checkoutUrl: null, expiresAt: null, idempotencyKey: "idempotency-key-1"
     });
-    mocks.paymentUpdate.mockResolvedValue({
+    mocks.paymentUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.paymentFindUniqueOrThrow.mockResolvedValue({
       id: "payment-1", orderId: "order-1", provider: "test_provider",
       status: PaymentStatus.REQUIRES_ACTION, amountMinor: BigInt("1500"), currencyCode: "EUR",
       checkoutUrl: "https://payments.example.test/checkout/session-1", expiresAt: null
     });
     mocks.transaction.mockImplementation(async (callback: (transaction: typeof tx) => unknown) => callback(tx));
+  });
+
+  it("does not overwrite a payment advanced by a webhook during a concurrent retry", async () => {
+    mocks.paymentUpdateMany.mockResolvedValue({ count: 0 });
+    mocks.paymentFindUniqueOrThrow.mockResolvedValue({
+      id: "payment-1", orderId: "order-1", provider: "test_provider",
+      status: PaymentStatus.SUCCEEDED, amountMinor: BigInt("1500"), currencyCode: "EUR",
+      checkoutUrl: "https://payments.example.test/checkout/session-1", expiresAt: null
+    });
+    const result = await startOrderPayment({
+      guestToken: "", orderId: "order-1", providerKey: "test_provider", idempotencyKey: "idempotency-key-1"
+    });
+    expect(mocks.paymentUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "payment-1", status: PaymentStatus.INITIATING }
+    }));
+    expect(result.status).toBe(PaymentStatus.SUCCEEDED);
   });
 
   it("requires an explicitly configured provider before reading or mutating an order", async () => {
