@@ -7,7 +7,8 @@
 3. Keep the account on Groq's Free plan. Do not add a payment method or upgrade to Developer if the requirement is zero API spend.
 4. Keep `GROQ_MODEL=openai/gpt-oss-20b`.
 5. Set `AI_ASSISTANT_ENABLED=true` only after verifying the account can call that model on the Free plan.
-6. Start the application with `npm run dev` and test product search, product details, guest order lookup, and signed-in order lookup.
+6. Configure `TRUSTED_PROXY_IP_HEADER` only when the deployment platform guarantees that it overwrites the selected header; supported values are `cf-connecting-ip` and `x-vercel-forwarded-for`. Never trust a client-controlled forwarding header.
+7. Start the application with `npm run dev` and test product search, product details, guest order lookup, and signed-in order lookup.
 
 Example local-only configuration:
 
@@ -31,7 +32,7 @@ Never commit `.env.local`, expose the key in a `NEXT_PUBLIC_*` variable, paste t
 
 ## Free-tier safeguards and limitations
 
-Groq free-plan quotas are limited and are subject to change. The application reports quota exhaustion and does not switch to another paid model. The in-process request throttle is only a best-effort guard and is not distributed across server instances. Production use requires shared rate limiting and usage monitoring.
+Groq free-plan quotas are limited and are subject to change. The application reports quota exhaustion and does not switch to another paid model. The in-process request throttle is only a best-effort guard and is not distributed across server instances. If no trusted proxy header is configured or present, all requests share a restrictive fallback bucket (3 requests/minute); this avoids trusting spoofable client headers but is unsuitable for normal multi-user production traffic. Production use requires a verified edge header, shared rate limiting, and usage monitoring.
 
 The model catalog page may display Developer-plan token prices even though Free-plan use is quota-limited. The owner must verify the current account tier and model access in Groq Console. Do not upgrade the account if zero API charges are required.
 
