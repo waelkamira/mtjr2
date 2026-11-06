@@ -152,7 +152,7 @@ Environment variable names and validation must be reconciled with the existing e
 ## Current progress log
 
 - 2026-11-06: Owner created a GroqCloud account and API key. The key has not been shared in chat and must remain private.
-- 2026-11-06: This implementation contract was added to the canonical repository documentation. No API key was committed, no Vercel environment was accessed, no database was changed, and no AI endpoint or UI is yet claimed implemented.
+- 2026-11-06: The implementation contract was added to the canonical repository documentation. The Groq API key was not committed, no hosting environment was configured, and no database migration was required.
 
 
 ## Implementation log
@@ -162,5 +162,5 @@ Environment variable names and validation must be reconciled with the existing e
 - 2026-11-06: Added a public-only chat endpoint. It retrieves up to five discoverable products through the existing catalog service and passes only public product names, descriptions, brand/store names, and market prices to Groq. It validates same-origin JSON requests, bounds request size, and uses a persistent HMAC-keyed per-IP request budget through the existing login throttle storage. Production requests fail closed unless a trusted client-IP header is configured. It does not query private customer data or accept model-generated database commands.
 - 2026-11-06: Added a floating Arabic chat panel to the global application layout. It displays product suggestions and verified catalog prices returned by the server.
 - 2026-11-06: Added environment, provider, and assistant-throttle unit tests. These tests have been committed but have not yet been executed in a trusted CI run.
-- Current scope limitation: this is a public catalog/FAQ-style assistant only. Authenticated order tracking, returns, support tickets, knowledge-base administration, conversation history, rate limiting, and Super Admin controls remain future phases.
+- Current scope limitation: this is a public catalog assistant only. There is no approved FAQ/policy knowledge base yet, so policy and support answers must be treated as unavailable. Authenticated order tracking, returns, support tickets, knowledge-base administration, conversation persistence, and Super Admin controls remain future phases. Persistent request throttling is implemented.
 - Safety: no API key was committed; no database migration was made; no hosting settings or deployment were changed; Vercel was not used intentionally.
