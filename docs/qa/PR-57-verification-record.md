@@ -54,3 +54,13 @@ A structural inventory of all 20 `src/app/api/seller/**/route.ts` modules on thi
 ## Latest docs-only commit
 
 The seller marketing specification was corrected after rechecking the live PR branch schema: `Coupon` and `CouponRedemption` already exist, but are global checkout discount/redemption records without store ownership. `Promotion`, `PromotionProduct`, `PromotionCategory` and `PromotionSeller` remain absent. The seller advertising system remains unimplemented and must not be represented by the global coupon system.
+
+
+## Latest head verification (2026-11-06)
+
+Latest PR head checked: `7ef528c72173a25c8c4150f5619c0cca19e8a19a`.
+
+- CI run [42290833425](https://github.com/waelkamira/mtjr2/actions/runs/42290822029): **passed**. The quality job completed successfully, including dependency install, Prisma validate/migrate/generate, typecheck, lint, unit tests and production build.
+- Platform PostgreSQL Integration run [42290833287](https://github.com/waelkamira/mtjr2/actions/runs/42290822029): **passed**. Both workflows are associated with the latest PR head.
+- Seller UI Toast source scan: all seven seller feature pages `products`, `workspace`, `inventory`, `questions`, `returns`, `reviews`, and `staff` import Sonner Toast and contain success/error feedback calls. This is source-level coverage for these seven seller pages only; it is not a claim of repository-wide coverage or proof every individual control is wired correctly.
+- The PR remains **Draft / open / unmerged**. Seller advertisements, route-by-route behavioral authorization tests, browser E2E and live-browser visual QA remain outstanding. CI success does not close those product/security verification gaps.
