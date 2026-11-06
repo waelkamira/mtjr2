@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHmac, timingSafeEqual, createHash } from "node:crypto";
-import { AdCampaignEventType, AdCampaignStatus, Prisma } from "@prisma/client";
+import { AdCampaignEventType, AdCampaignStatus, AdInvoiceStatus, AuditActorType, Prisma } from "@prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
@@ -182,4 +182,47 @@ export async function getAdminAdvertisingAnalytics(now = new Date()) {
     spendByCurrency: spendByCurrency.map((row) => ({ currencyCode: row.currencyCode, amountMinor: (row._sum.amountMinor ?? 0n).toString() })),
     invoicesByCurrency: invoicesByCurrency.map((row) => ({ currencyCode: row.currencyCode, status: row.status, amountMinor: (row._sum.amountMinor ?? 0n).toString(), count: row._count._all }))
   };
+}
+
+export async function listAdminAdInvoices(now = new Date()) {
+  await (await import("@/server/identity/permission-guard")).requirePermission({ permissionKey: "ads:moderate", now });
+  const rows = await prisma.adInvoice.findMany({
+    orderBy: [{ status: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
+    take: 200,
+    select: {
+      id: true, storeId: true, currencyCode: true, periodStart: true, periodEnd: true,
+      amountMinor: true, status: true, paymentReference: true, settledAt: true, dueAt: true,
+      currency: { select: { minorUnit: true } },
+      store: { select: { id: true, name: true, slug: true } }
+    }
+  });
+  return rows.map((row) => ({ ...row, amountMinor: row.amountMinor.toString() }));
+}
+
+export async function settleAdInvoice(id: string, paymentReference: string, now = new Date()) {
+  const actor = await (await import("@/server/identity/permission-guard")).requirePermission({ permissionKey: "ads:moderate", now });
+  const reference = paymentReference.trim();
+  if (reference.length < 3 || reference.length > 180) throw new Error("A verified external payment reference is required.");
+  return prisma.$transaction(async (tx) => {
+    const invoice = await tx.adInvoice.findUnique({ where: { id }, select: { id: true, status: true, storeId: true, amountMinor: true, currencyCode: true } });
+    if (!invoice) throw new Error("Advertising invoice not found.");
+    if (invoice.status !== AdInvoiceStatus.OPEN) throw new Error("Only open advertising invoices can be settled.");
+    const updated = await tx.adInvoice.updateMany({
+      where: { id, status: AdInvoiceStatus.OPEN },
+      data: { status: AdInvoiceStatus.SETTLED, paymentReference: reference, settledAt: now, settledById: actor.userId }
+    });
+    if (updated.count !== 1) throw new Error("Invoice state changed; reload and try again.");
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId, action: "advertising.invoice.settled",
+        resource: "ad_invoice", resourceId: id, scopeType: "STORE", scopeId: invoice.storeId,
+        occurredAt: now, metadata: { paymentReference: reference, amountMinor: invoice.amountMinor.toString(), currencyCode: invoice.currencyCode }
+      }
+    });
+    const result = await tx.adInvoice.findUniqueOrThrow({
+      where: { id },
+      select: { id: true, status: true, paymentReference: true, settledAt: true, amountMinor: true, currencyCode: true, dueAt: true }
+    });
+    return { ...result, amountMinor: result.amountMinor.toString() };
+  });
 }
