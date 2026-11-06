@@ -22,7 +22,8 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 
 import {
   clearLoginThrottle,
-  consumeLoginAttempt
+  consumeLoginAttempt,
+  consumeAiAssistantAttempt
 } from "../../src/server/identity/login-throttle";
 
 const now = new Date("2026-11-03T12:00:00.000Z");
@@ -50,6 +51,20 @@ describe("persistent login throttling", () => {
         blockedUntil: null
       })
     );
+  });
+
+
+  it("uses an isolated keyed bucket for public AI assistant requests", async () => {
+    await expect(consumeAiAssistantAttempt("203.0.113.44", now)).resolves.toEqual({ blocked: false });
+    const calls = txMock.loginRateLimitBucket.upsert.mock.calls;
+    expect(calls).toHaveLength(1);
+    expect(calls[0][0].where.keyHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(calls[0][0].where.keyHash).not.toContain("203.0.113.44");
+  });
+
+  it("rejects an empty AI client IP before database access", async () => {
+    await expect(consumeAiAssistantAttempt(" ", now)).rejects.toThrow(/trusted client IP/);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
   it("normalizes the identifier and stores only keyed digests", async () => {
