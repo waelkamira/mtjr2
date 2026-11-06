@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -120,6 +121,14 @@ export default function SellerWorkspacePage() {
           "Warehouse created.": "تم إنشاء المستودع.",
           "Shipping service created.": "تم إنشاء خدمة الشحن."
         } as Record<string, string>)[success] ?? success));
+      toast.success(result.alreadyCreated
+        ? translate(locale, "No duplicate store was created", "لم يتم إنشاء متجر مكرر")
+        : translate(locale, success, ({
+          "Your seller application has been submitted.": "تم إرسال طلبك لتصبح بائعًا.",
+          "Your draft store has been created.": "تم إنشاء مسودة متجرك.",
+          "Warehouse created.": "تم إنشاء المستودع.",
+          "Shipping service created.": "تم إنشاء خدمة الشحن."
+        } as Record<string, string>)[success] ?? success));
       await reload();
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 401) {
@@ -127,6 +136,7 @@ export default function SellerWorkspacePage() {
         return;
       }
       setError(cause instanceof Error ? cause.message : translate(locale, "The request failed.", "تعذر إكمال الطلب."));
+      toast.error(translate(locale, "The request could not be completed", "تعذر إكمال العملية"));
     } finally { setBusy(false); }
   }
 
