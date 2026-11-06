@@ -2394,7 +2394,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 ## 2026-11-06 — Identity and MFA rebuild
 
-- Password registration activates accounts immediately without email verification; Turnstile and persistent registration throttles provide bot/abuse controls. Historical verification-flow entries above are superseded.
+- At that checkpoint the branch temporarily activated accounts immediately after Turnstile; this was later identified as a verification regression and corrected in the 2026-11-06 Super Admin/AI entry below. Current password registration remains pending until email verification.
 - Password login returns a generic public credential failure for unknown accounts and incorrect passwords. Successful authentication redirects to the safe same-origin return path.
 - Added encrypted TOTP enrollment, replay-resistant code verification, one-time recovery codes, session-bound 12-hour MFA assurance, and mandatory MFA enrollment/verification for platform-wide administrators.
 - Added migration `20261106120000_identity_mfa`. Configure a stable `MFA_ENCRYPTION_KEY` before production MFA enrollment; changing the key makes stored TOTP secrets unreadable.
