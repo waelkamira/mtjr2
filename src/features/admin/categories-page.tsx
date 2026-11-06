@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -79,10 +80,11 @@ export default function AdminCategoriesPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Category save failed.");
       setMessage(editingId ? translate(locale, "Category updated.", "تم تحديث الفئة.") : translate(locale, "Category created.", "تم إنشاء الفئة."));
+      toast.success(editingId ? translate(locale, "Category updated.", "تم تحديث الفئة.") : translate(locale, "Category created.", "تم إنشاء الفئة."));
       reset();
       setRevision((value) => value + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Category save failed.", "تعذر حفظ الفئة."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Category save failed.", "تعذر حفظ الفئة."); setError(message); toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -102,11 +104,12 @@ export default function AdminCategoriesPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Category archive failed.");
       setMessage(`${translate(locale, "Category", "الفئة")} ${category.name} ${translate(locale, "archived. Historical product links were preserved.", "تمت أرشفتها. تم الاحتفاظ بروابط المنتجات السابقة.")}`);
+      toast.success(translate(locale, "Category archived.", "تمت أرشفة الفئة."));
       setArchiveReason("");
       if (editingId === category.id) reset();
       setRevision((value) => value + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Category archive failed.", "تعذرت أرشفة الفئة."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Category archive failed.", "تعذرت أرشفة الفئة."); setError(message); toast.error(message);
     } finally {
       setBusy(false);
     }

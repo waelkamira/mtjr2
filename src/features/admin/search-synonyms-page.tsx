@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type Synonym = { id: string; locale: string; term: string; synonym: string; isActive: boolean };
 
@@ -51,9 +52,10 @@ export default function AdminSearchSynonymsPage() {
       setTerm("");
       setSynonym("");
       setMessage("Synonym mapping created.");
+      toast.success("Synonym mapping created.");
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to create synonym mapping.");
+      const message = cause instanceof Error ? cause.message : "Unable to create synonym mapping."; setError(message); toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -71,8 +73,9 @@ export default function AdminSearchSynonymsPage() {
       }));
       await load();
       setMessage(isActive ? "Synonym mapping activated." : "Synonym mapping deactivated.");
+      toast.success(isActive ? "Synonym mapping activated." : "Synonym mapping deactivated.");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to update synonym mapping.");
+      const message = cause instanceof Error ? cause.message : "Unable to update synonym mapping."; setError(message); toast.error(message);
     } finally {
       setBusyId("");
     }
@@ -86,8 +89,9 @@ export default function AdminSearchSynonymsPage() {
       await readJson(await fetch(`/api/admin/search-synonyms/${encodeURIComponent(item.id)}`, { method: "DELETE" }));
       await load();
       setMessage("Synonym mapping deleted.");
+      toast.success("Synonym mapping deleted.");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to delete synonym mapping.");
+      const message = cause instanceof Error ? cause.message : "Unable to delete synonym mapping."; setError(message); toast.error(message);
     } finally {
       setBusyId("");
     }
