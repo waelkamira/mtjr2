@@ -16,7 +16,7 @@ type Settings = {
 
 export default function AiAssistantSettingsPage() {
   const { locale } = useLocale();
-  const t = (english: string, arabic: string) => translate(locale, english, arabic);
+  const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [draft, setDraft] = useState({ enabled: false, model: "openai/gpt-oss-20b", maxCompletionTokens: 900 });
   const [loading, setLoading] = useState(true);
@@ -24,13 +24,18 @@ export default function AiAssistantSettingsPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
+  const fetchSettings = useCallback(async () => {
+    const response = await fetch("/api/admin/control-panel/ai-assistant", { cache: "no-store" });
+    const data = await response.json() as Settings & { error?: string };
+    if (!response.ok) throw new Error(data.error || t("Unable to load assistant settings.", "تعذر تحميل إعدادات المساعد."));
+    return data;
+  }, [t]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/admin/control-panel/ai-assistant", { cache: "no-store" });
-      const data = await response.json() as Settings & { error?: string };
-      if (!response.ok) throw new Error(data.error || t("Unable to load assistant settings.", "تعذر تحميل إعدادات المساعد."));
+      const data = await fetchSettings();
       setSettings(data);
       setDraft({ enabled: data.enabled, model: data.model, maxCompletionTokens: data.maxCompletionTokens });
     } catch (cause) {
@@ -38,9 +43,22 @@ export default function AiAssistantSettingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [locale]);
+  }, [fetchSettings, t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    void fetchSettings().then((data) => {
+      if (!active) return;
+      setSettings(data);
+      setDraft({ enabled: data.enabled, model: data.model, maxCompletionTokens: data.maxCompletionTokens });
+      setError("");
+    }).catch((cause: unknown) => {
+      if (active) setError(cause instanceof Error ? cause.message : t("Unable to load assistant settings.", "تعذر تحميل إعدادات المساعد."));
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [fetchSettings, t]);
 
   async function save() {
     if (!settings || saving) return;
