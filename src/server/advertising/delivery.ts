@@ -132,3 +132,31 @@ export async function recordSponsoredAdEvent(input: {
     return { accepted: true, duplicate: false, chargedMinor: costMinor.toString() };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
+
+export async function generateAdInvoices(input: { periodStart: Date; periodEnd: Date; dueAt: Date }) {
+  if (input.periodStart >= input.periodEnd || input.dueAt < input.periodEnd) throw new Error("Invalid advertising invoice period.");
+  const totals = await prisma.adSpendLedgerEntry.groupBy({
+    by: ["storeId", "currencyCode"],
+    where: { createdAt: { gte: input.periodStart, lt: input.periodEnd } },
+    _sum: { amountMinor: true }
+  });
+  if (!totals.length) return { created: 0, stores: 0 };
+  const result = await prisma.adInvoice.createMany({
+    data: totals.filter((row) => (row._sum.amountMinor ?? 0n) > 0n).map((row) => ({
+      storeId: row.storeId, currencyCode: row.currencyCode, periodStart: input.periodStart,
+      periodEnd: input.periodEnd, dueAt: input.dueAt, amountMinor: row._sum.amountMinor!
+    })),
+    skipDuplicates: true
+  });
+  return { created: result.count, stores: totals.length };
+}
+
+export async function listSellerAdInvoices(storeId: string, now = new Date()) {
+  const actor = await (await import("@/server/identity/current-session")).requireCurrentSession(now);
+  const store = await prisma.store.findUnique({ where: { id: storeId }, select: { id: true, seller: { select: { ownerId: true } } } });
+  if (!store || (store.seller.ownerId !== actor.userId && !(await (await import("@/server/identity/permission-repository")).userHasScopedPermission(actor.userId, { permissionKey: "ads:manage", scope: { type: "STORE", id: storeId }, now })))) {
+    throw new Error("You do not have access to this store's advertising invoices.");
+  }
+  const rows = await prisma.adInvoice.findMany({ where: { storeId }, orderBy: [{ periodStart: "desc" }, { createdAt: "desc" }], take: 100, select: { id: true, currencyCode: true, periodStart: true, periodEnd: true, amountMinor: true, status: true, dueAt: true, createdAt: true } });
+  return rows.map((row) => ({ ...row, amountMinor: row.amountMinor.toString() }));
+}
