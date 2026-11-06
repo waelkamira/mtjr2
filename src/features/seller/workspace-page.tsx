@@ -5,6 +5,16 @@ import Link from "next/link";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import {
+  BoxPlot,
+  type ChartDatum,
+  ColumnChart,
+  HistogramChart,
+  HorizontalBarChart,
+  PieChart,
+  type ScatterDatum,
+  ScatterPlot
+} from "@/components/data-charts";
 
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type Store = {
@@ -23,6 +33,13 @@ type InventoryRow = {
   warehouse: { id: string; code: string; name: string };
   variant: { id: string; sku: string | null; name: string | null; product: { name: string; slug: string } };
 };
+type SellerOrder = {
+  id: string;
+  status: string;
+  store: { id: string; name: string };
+  order: { orderNumber: string; placedAt: string };
+  items: Array<{ productName: string; quantity: number }>;
+};
 
 class ApiError extends Error {
   constructor(message: string, readonly status: number) {
@@ -38,11 +55,15 @@ async function readJson<T>(response: Response): Promise<T> {
 
 export default function SellerWorkspacePage() {
   const { locale } = useLocale();
+  const emptyChartLabel = translate(locale, "No store data is available for this chart.", "لا تتوفر بيانات المتجر لهذا المخطط.");
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [markets, setMarkets] = useState<Market[]>([]);
   const [selectedMarketIds, setSelectedMarketIds] = useState<string[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState("");
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
+  const [sellerOrders, setSellerOrders] = useState<SellerOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState("");
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingMarketId, setShippingMarketId] = useState("");
   const [shippingName, setShippingName] = useState("");
@@ -103,6 +124,29 @@ export default function SellerWorkspacePage() {
     return () => { active = false; };
   }, [locale, selectedStoreId]);
 
+  useEffect(() => {
+    if (!selectedStoreId) return;
+    let active = true;
+    void Promise.resolve().then(async () => {
+      if (!active) return;
+      setOrdersLoading(true);
+      setOrdersError("");
+      try {
+        const result = await readJson<{ orders: SellerOrder[] }>(
+          await fetch("/api/seller/orders", { cache: "no-store" })
+        );
+        if (active) setSellerOrders(result.orders.filter((order) => order.store.id === selectedStoreId));
+      } catch (cause) {
+        if (active) setOrdersError(cause instanceof Error
+          ? cause.message
+          : translate(locale, "Order analytics could not be loaded.", "تعذر تحميل تحليلات الطلبات."));
+      } finally {
+        if (active) setOrdersLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, [locale, selectedStoreId]);
+
   async function submit(event: FormEvent<HTMLFormElement>, path: string, payload: unknown, success: string) {
     event.preventDefault();
     setBusy(true); setError(""); setMessage("");
@@ -131,6 +175,43 @@ export default function SellerWorkspacePage() {
   }
 
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
+  const selectedStoreOrders = sellerOrders.filter((order) => order.store.id === selectedStoreId);
+  const sellerStatusLabels: Record<string, string> = {
+    PENDING_PAYMENT: translate(locale, "Awaiting payment", "بانتظار الدفع"),
+    CONFIRMED: translate(locale, "Confirmed", "مؤكد"),
+    PROCESSING: translate(locale, "Processing", "قيد المعالجة"),
+    READY_TO_SHIP: translate(locale, "Ready to ship", "جاهز للشحن"),
+    SHIPPED: translate(locale, "Shipped", "تم الشحن"),
+    DELIVERED: translate(locale, "Delivered", "تم التوصيل"),
+    CANCELLED: translate(locale, "Cancelled", "ملغى")
+  };
+  const sellerOrderStatuses: ChartDatum[] = Object.entries(
+    selectedStoreOrders.reduce<Record<string, number>>((counts, order) => {
+      counts[order.status] = (counts[order.status] ?? 0) + 1;
+      return counts;
+    }, {})
+  ).map(([status, value]) => ({ label: sellerStatusLabels[status] ?? status, value }));
+  const ordersByDay = selectedStoreOrders.reduce<Record<string, number>>((counts, order) => {
+    const day = order.order.placedAt.slice(0, 10);
+    counts[day] = (counts[day] ?? 0) + 1;
+    return counts;
+  }, {});
+  const sellerDailyOrders: ChartDatum[] = Object.entries(ordersByDay)
+    .sort(([dayA], [dayB]) => dayA.localeCompare(dayB))
+    .slice(-30)
+    .map(([day, value]) => ({ label: day.slice(5), value }));
+  const topStockProducts: ChartDatum[] = Object.values(inventory.reduce<Record<string, ChartDatum>>((products, row) => {
+    const label = row.variant.product.name;
+    products[label] = { label, value: (products[label]?.value ?? 0) + row.quantityAvailable };
+    return products;
+  }, {})).sort((a, b) => b.value - a.value).slice(0, 8);
+  const stockScatter: ScatterDatum[] = inventory.slice(0, 100).map((row) => ({
+    label: row.variant.product.name,
+    x: row.quantityOnHand,
+    y: row.quantityReserved,
+    size: row.reorderPoint
+  }));
+  const lowStockCount = inventory.filter((row) => row.isLowStock).length;
 
   return (
     <main className="min-h-screen bg-transparent">
@@ -193,6 +274,63 @@ export default function SellerWorkspacePage() {
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       {selectedStore.warehouses.map((warehouse) => <div key={warehouse.id} className="rounded-xl bg-[var(--color-ivory-100)] p-4"><p className="font-medium">{warehouse.name}</p><p className="mt-1 text-xs text-[var(--muted)]">{warehouse.code} · {warehouse._count.inventories} {translate(locale, "inventory records", "سجل مخزون")}</p></div>)}
                     </div>
+                    <section aria-label={translate(locale, "Store analytics", "تحليلات المتجر")} className="mt-7 border-t border-[var(--border)] pt-6">
+                      <div className="flex flex-wrap items-end justify-between gap-2">
+                        <div>
+                          <h3 className="text-lg font-semibold">{translate(locale, "Store analytics", "تحليلات المتجر")}</h3>
+                          <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Charts use the latest order records and current inventory for this store.", "تعتمد المخططات على أحدث سجلات الطلبات والمخزون الحالي لهذا المتجر.")}</p>
+                        </div>
+                        {ordersLoading && <span role="status" className="text-xs text-[var(--muted)]">{translate(locale, "Loading order data…", "جارٍ تحميل بيانات الطلبات…")}</span>}
+                      </div>
+                      {ordersError && <p role="status" className="mt-3 rounded-xl bg-[var(--background)] p-3 text-xs text-[var(--muted)]">{translate(locale, "Order charts are temporarily unavailable.", "مخططات الطلبات غير متاحة مؤقتًا.")}</p>}
+                      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                        <ColumnChart
+                          title={translate(locale, "Orders by day · recent records", "الطلبات حسب اليوم · أحدث السجلات")}
+                          description={translate(locale, "Up to 100 accessible seller orders, grouped by date.", "حتى ١٠٠ طلب بائع متاح، مجمعة حسب التاريخ.")}
+                          data={sellerDailyOrders}
+                          emptyLabel={emptyChartLabel}
+                        />
+                        <PieChart
+                          title={translate(locale, "Order status mix", "توزيع حالات الطلبات")}
+                          data={sellerOrderStatuses}
+                          emptyLabel={emptyChartLabel}
+                        />
+                        <HorizontalBarChart
+                          title={translate(locale, "Available stock by product", "المخزون المتاح حسب المنتج")}
+                          description={translate(locale, "Top eight products by available units across this store’s warehouses.", "أعلى ثمانية منتجات حسب الوحدات المتاحة في مستودعات هذا المتجر.")}
+                          data={topStockProducts}
+                          emptyLabel={emptyChartLabel}
+                        />
+                        <HistogramChart
+                          title={translate(locale, "Available stock frequency", "تكرار كميات المخزون المتاح")}
+                          description={translate(locale, "Distribution across inventory records.", "توزيع سجلات المخزون حسب الكمية.")}
+                          values={inventory.map((row) => row.quantityAvailable)}
+                          emptyLabel={emptyChartLabel}
+                        />
+                        <ScatterPlot
+                          title={translate(locale, "On-hand vs reserved stock", "المخزون الفعلي مقابل المحجوز")}
+                          description={translate(locale, "Bubble size represents each SKU’s reorder point.", "يمثل حجم الفقاعة حد إعادة الطلب لكل رمز SKU.")}
+                          data={stockScatter}
+                          bubble
+                          emptyLabel={emptyChartLabel}
+                          xLabel={translate(locale, "On hand", "المخزون الفعلي")}
+                          yLabel={translate(locale, "Reserved", "المخزون المحجوز")}
+                        />
+                        <BoxPlot
+                          title={translate(locale, "Available stock distribution", "توزيع المخزون المتاح")}
+                          values={inventory.map((row) => row.quantityAvailable)}
+                          emptyLabel={emptyChartLabel}
+                        />
+                        <PieChart
+                          title={translate(locale, "Low-stock inventory share", "نسبة المخزون المنخفض")}
+                          data={[
+                            { label: translate(locale, "Low stock", "مخزون منخفض"), value: lowStockCount },
+                            { label: translate(locale, "Above reorder point", "أعلى من حد إعادة الطلب"), value: Math.max(0, inventory.length - lowStockCount) }
+                          ]}
+                          emptyLabel={emptyChartLabel}
+                        />
+                      </div>
+                    </section>
                     {selectedStore.isOwner && <form onSubmit={(event) => submit(event, "/api/seller/warehouses", { storeId: selectedStore.id, name: warehouseName, code: warehouseCode }, "Warehouse created.")} className="mt-5 grid gap-3 rounded-xl border border-dashed border-[var(--border)] p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
                       <label className="grid gap-1 text-xs">{translate(locale, "Warehouse name", "اسم المستودع")}<input required minLength={2} maxLength={120} value={warehouseName} onChange={(e) => setWarehouseName(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                       <label className="grid gap-1 text-xs">{translate(locale, "Code", "الرمز")}<input required minLength={2} maxLength={40} value={warehouseCode} onChange={(e) => setWarehouseCode(e.target.value.toUpperCase())} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>

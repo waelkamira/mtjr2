@@ -193,6 +193,7 @@ export async function getAdminDashboard(input: unknown, now = new Date()) {
       requestedReturns,
       openSupportTickets
     },
+    orderStatusCounts: [...counts.entries()].map(([status, count]) => ({ status, count })),
     dailyOrders,
     recentOrders: recentOrders.map((order) => ({
       ...order,

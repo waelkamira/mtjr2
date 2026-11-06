@@ -4,6 +4,17 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import {
+  BoxPlot,
+  type ChartDatum,
+  HistogramChart,
+  HorizontalBarChart,
+  LineAreaChart,
+  PieChart,
+  RadarChart,
+  type ScatterDatum,
+  ScatterPlot
+} from "@/components/data-charts";
 
 type Dashboard = {
   filters: {
@@ -42,6 +53,7 @@ type Dashboard = {
     requestedReturns: number;
     openSupportTickets: number;
   };
+  orderStatusCounts: Array<{ status: string; count: number }>;
   dailyOrders: Array<{ day: string; count: number }>;
   recentOrders: Array<{
     id: string;
@@ -70,8 +82,8 @@ function defaultFilters(): Filters {
   };
 }
 
-function money(amountMinor: string, currencyCode: string, minorUnit: number): string {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode }).format(
+function money(amountMinor: string, currencyCode: string, minorUnit: number, locale: "ar" | "en"): string {
+  return new Intl.NumberFormat(locale, { style: "currency", currency: currencyCode }).format(
     Number(amountMinor) / (10 ** minorUnit)
   );
 }
@@ -132,6 +144,7 @@ function MetricCard({
 
 export default function AdminDashboardPage() {
   const { locale } = useLocale();
+  const emptyChartLabel = translate(locale, "No chart data is available for this range.", "لا تتوفر بيانات للمخطط في هذه الفترة.");
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,6 +183,46 @@ export default function AdminDashboardPage() {
     [dashboard?.filters.stores, filters.sellerId]
   );
   const maxOrders = Math.max(1, ...(dashboard?.dailyOrders.map((day) => day.count) ?? [0]));
+  const dailyOrdersChart: ChartDatum[] = dashboard?.dailyOrders.map((day) => ({
+    label: day.day.slice(5),
+    value: day.count
+  })) ?? [];
+  const orderStatusLabels: Record<string, string> = {
+    PENDING_PAYMENT: translate(locale, "Pending payment", "بانتظار الدفع"),
+    CONFIRMED: translate(locale, "Confirmed", "مؤكد"),
+    PROCESSING: translate(locale, "Processing", "قيد المعالجة"),
+    PARTIALLY_FULFILLED: translate(locale, "Partially fulfilled", "منفذ جزئيًا"),
+    FULFILLED: translate(locale, "Fulfilled", "منفذ"),
+    COMPLETED: translate(locale, "Completed", "مكتمل"),
+    CANCELLED: translate(locale, "Cancelled", "ملغى")
+  };
+  const orderStatusChart: ChartDatum[] = dashboard?.orderStatusCounts.map((item) => ({
+    label: orderStatusLabels[item.status] ?? item.status,
+    value: item.count
+  })) ?? [];
+  const queueChart: ChartDatum[] = dashboard ? [
+    { label: translate(locale, "Product reviews", "مراجعات المنتجات"), value: dashboard.metrics.pendingProductReviews },
+    { label: translate(locale, "Store reviews", "مراجعات المتاجر"), value: dashboard.metrics.pendingStoreReviews },
+    { label: translate(locale, "Returns", "المرتجعات"), value: dashboard.metrics.requestedReturns },
+    { label: translate(locale, "Support tickets", "تذاكر الدعم"), value: dashboard.metrics.openSupportTickets }
+  ] : [];
+  const consecutiveDayPoints: ScatterDatum[] = (dashboard?.dailyOrders ?? []).slice(1).map((day, index) => {
+    const previousCount = dashboard?.dailyOrders[index]?.count ?? 0;
+    return {
+      label: `${dashboard?.dailyOrders[index]?.day} → ${day.day}`,
+      x: previousCount,
+      y: day.count,
+      size: Math.abs(day.count - previousCount)
+    };
+  });
+  const radarChart: ChartDatum[] = dashboard ? [
+    { label: translate(locale, "Orders", "الطلبات"), value: dashboard.metrics.totalOrders },
+    { label: translate(locale, "Payments", "المدفوعات"), value: dashboard.metrics.successfulPayments + dashboard.metrics.failedPayments + dashboard.metrics.pendingPayments },
+    { label: translate(locale, "Active users", "المستخدمون النشطون"), value: dashboard.metrics.activeUsers },
+    { label: translate(locale, "Products", "المنتجات"), value: dashboard.metrics.totalProducts },
+    { label: translate(locale, "Active stores", "المتاجر النشطة"), value: dashboard.metrics.activeStores },
+    { label: translate(locale, "Open support", "الدعم المفتوح"), value: dashboard.metrics.openSupportTickets }
+  ] : [];
 
   function updateFilter(key: keyof Filters, value: string) {
     setFilters((current) => ({ ...current, [key]: value, ...(key === "sellerId" ? { storeId: "" } : {}) }));
@@ -208,8 +261,8 @@ export default function AdminDashboardPage() {
             <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} />
             <MetricCard locale={locale} label="Orders being processed" value={dashboard.metrics.processingOrders} />
             <MetricCard locale={locale} label="Fulfilled or completed orders" value={dashboard.metrics.completedOrders} />
-            <MetricCard locale={locale} label="Gross order value" value={dashboard.metrics.grossOrderValueByCurrency.length ? dashboard.metrics.grossOrderValueByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2)).join(" · ") : "—"} detail="Placed orders excluding cancellations; includes orders not yet paid." />
-            <MetricCard locale={locale} label="Successful payments" value={dashboard.metrics.successfulPayments} detail={dashboard.metrics.successfulPaymentAmountByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2)).join(" · ") || "No successful payments in this range"} />
+            <MetricCard locale={locale} label="Gross order value" value={dashboard.metrics.grossOrderValueByCurrency.length ? dashboard.metrics.grossOrderValueByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2, locale)).join(" · ") : "—"} detail="Placed orders excluding cancellations; includes orders not yet paid." />
+            <MetricCard locale={locale} label="Successful payments" value={dashboard.metrics.successfulPayments} detail={dashboard.metrics.successfulPaymentAmountByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2, locale)).join(" · ") || "No successful payments in this range"} />
             <MetricCard locale={locale} label="Failed payments" value={dashboard.metrics.failedPayments} />
             <MetricCard locale={locale} label="Payments awaiting completion" value={dashboard.metrics.pendingPayments} />
             <MetricCard locale={locale} label="Active users" value={dashboard.metrics.activeUsers} />
@@ -247,9 +300,57 @@ export default function AdminDashboardPage() {
             </div>
           </section>
 
+          <section aria-label={translate(locale, "Analytics charts", "مخططات التحليلات")} className="mt-8 grid gap-5 lg:grid-cols-2">
+            <LineAreaChart
+              title={translate(locale, "Order trend · line and area", "اتجاه الطلبات · خط ومساحة")}
+              description={translate(locale, "Daily order counts show the trend; shaded area emphasizes volume.", "يعرض عدد الطلبات اليومي اتجاهها، وتبرز المساحة المظللة حجمها.")}
+              data={dailyOrdersChart}
+              emptyLabel={emptyChartLabel}
+            />
+            <PieChart
+              title={translate(locale, "Order status · share of total", "حالات الطلبات · النسبة من الإجمالي")}
+              description={translate(locale, "Each segment is a share of all orders in the selected period.", "يمثل كل جزء نسبة من إجمالي الطلبات في الفترة المحددة.")}
+              data={orderStatusChart}
+              emptyLabel={emptyChartLabel}
+            />
+            <HorizontalBarChart
+              title={translate(locale, "Administrative queues · horizontal bars", "قوائم العمل الإدارية · أشرطة أفقية")}
+              description={translate(locale, "Compare open work by operational category.", "قارن حجم العمل المفتوح حسب الفئة التشغيلية.")}
+              data={queueChart}
+              emptyLabel={emptyChartLabel}
+            />
+            <HistogramChart
+              title={translate(locale, "Daily order frequency · histogram", "توزيع تكرار الطلبات اليومية · مدرج تكراري")}
+              description={translate(locale, "Frequency distribution of daily order counts in the selected range.", "توزيع تكرار أعداد الطلبات اليومية ضمن الفترة المحددة.")}
+              values={dashboard.dailyOrders.map((day) => day.count)}
+              emptyLabel={emptyChartLabel}
+            />
+            <ScatterPlot
+              title={translate(locale, "Consecutive-day relationship · scatter plot", "العلاقة بين الأيام المتتالية · مبعثر")}
+              description={translate(locale, "Compare each day’s orders with the prior day; bubble size shows the absolute change.", "قارن طلبات كل يوم باليوم السابق؛ يوضح حجم الفقاعة مقدار التغير.")}
+              data={consecutiveDayPoints}
+              bubble
+              emptyLabel={emptyChartLabel}
+              xLabel={translate(locale, "Previous day orders", "طلبات اليوم السابق")}
+              yLabel={translate(locale, "Current day orders", "طلبات اليوم الحالي")}
+            />
+            <BoxPlot
+              title={translate(locale, "Daily orders · box plot", "الطلبات اليومية · مخطط الصندوق")}
+              description={translate(locale, "Summarizes daily order distribution and highlights outliers.", "يلخص توزيع الطلبات اليومية ويبرز القيم المتطرفة.")}
+              values={dashboard.dailyOrders.map((day) => day.count)}
+              emptyLabel={emptyChartLabel}
+            />
+            <RadarChart
+              title={translate(locale, "Platform activity · radar", "نشاط المنصة · رادار")}
+              description={translate(locale, "Normalized shape only: figures include both range-based and platform-wide counts, and are not percentages.", "شكل نسبي فقط: تشمل الأرقام مؤشرات للفترة وأخرى للمنصة ككل، وليست نسبًا مئوية.")}
+              data={radarChart}
+              emptyLabel={emptyChartLabel}
+            />
+          </section>
+
           <section className="mt-8 rounded-2xl border border-[var(--border)] bg-white p-5">
             <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{translate(locale, "Recent orders", "الطلبات الأخيرة")}</h2>
-            {dashboard.recentOrders.length ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-2 pr-4 font-medium">{translate(locale, "Order", "الطلب")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Status", "الحالة")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Total", "الإجمالي")}</th><th className="py-2 font-medium">{translate(locale, "Placed", "تاريخ الإنشاء")}</th></tr></thead><tbody>{dashboard.recentOrders.map((order) => <tr key={order.id} className="border-b border-[var(--border)] last:border-0"><td className="py-3 pr-4 font-medium">{order.orderNumber}</td><td className="py-3 pr-4">{order.status.replaceAll("_", " ")}</td><td className="py-3 pr-4">{money(order.totalMinor, order.currencyCode, currencyUnits.get(order.currencyCode) ?? 2)}</td><td className="py-3">{new Date(order.placedAt).toLocaleString()}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No orders match the selected filters.", "لا توجد طلبات تطابق عوامل التصفية المحددة.")}</p>}
+            {dashboard.recentOrders.length ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-2 pr-4 font-medium">{translate(locale, "Order", "الطلب")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Status", "الحالة")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Total", "الإجمالي")}</th><th className="py-2 font-medium">{translate(locale, "Placed", "تاريخ الإنشاء")}</th></tr></thead><tbody>            {dashboard.recentOrders.map((order) => <tr key={order.id} className="border-b border-[var(--border)] last:border-0"><td className="py-3 pr-4 font-medium">{order.orderNumber}</td><td className="py-3 pr-4">{order.status.replaceAll("_", " ")}</td><td className="py-3 pr-4">{money(order.totalMinor, order.currencyCode, currencyUnits.get(order.currencyCode) ?? 2, locale)}</td><td className="py-3">{new Date(order.placedAt).toLocaleString(locale)}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No orders match the selected filters.", "لا توجد طلبات تطابق عوامل التصفية المحددة.")}</p>}
           </section>
 
           <section className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5">

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import SiteNavigation from "@/components/site-navigation";
+import SiteFooter from "@/components/site-footer";
 import RegistrationNotice from "@/components/registration-notice";
 import SonnerToaster from "@/components/sonner-toaster";
 import { LocaleProvider } from "@/components/locale-provider";
 import { cookies } from "next/headers";
 import { defaultLocale, isLocale, localeCookieName } from "@/lib/locale";
+import { env } from "@/lib/env";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,6 +36,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <SiteNavigation />
           <RegistrationNotice />
           {children}
+          <SiteFooter locale={locale} contactEmail={env.CONTACT_EMAIL ?? env.RESEND_FROM_EMAIL ?? null} />
           <SonnerToaster />
         </LocaleProvider>
       </body>

@@ -100,6 +100,8 @@ function MenuIcon({ open }: { open: boolean }) {
 
 export default function SiteNavigationContent({ account }: { account: AccountSummary | null }) {
   const { locale } = useLocale();
+  const isAdministrator = account?.accountType === "Admin" || account?.accountType === "Super Admin";
+  const controlPanelHref = account?.accountType === "Super Admin" ? "/admin/control-panel" : "/admin/dashboard";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
@@ -176,6 +178,9 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
       }[link.label] ?? link.label)
     })),
     ...(account ? signedInLinks : []),
+    ...(isAdministrator
+      ? [{ href: controlPanelHref, label: translate(locale, "Control panel", "لوحة التحكم") }]
+      : []),
     ...publicLinks.slice(6).map((link) => ({
       ...link,
       label: translate(locale, link.label, { Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)
@@ -199,6 +204,14 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
         <MarketplaceSearchBox />
 
         <div className="hidden shrink-0 items-center gap-1 md:ml-auto md:flex md:gap-2">
+          {isAdministrator && (
+            <Link
+              href={controlPanelHref}
+              className="clay-interactive rounded-xl border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--color-onyx)] transition hover:bg-[var(--surface)]"
+            >
+              {translate(locale, "Control panel", "لوحة التحكم")}
+            </Link>
+          )}
           <Link
             href="/cart"
             className="clay-interactive rounded-xl px-3 py-2 text-sm font-semibold text-[var(--color-lavender-800)] transition hover:bg-[var(--color-lavender-100)]"
@@ -263,6 +276,11 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                   )}
                   <Link href="/account/profile" onClick={() => setAccountOpen(false)} className={menuLinkClass}>{translate(locale, "My profile", "ملفي الشخصي")}</Link>
                   <Link href="/account" onClick={() => setAccountOpen(false)} className={menuLinkClass}>{translate(locale, "My account", "حسابي")}</Link>
+                  {isAdministrator && (
+                    <Link href={controlPanelHref} onClick={() => setAccountOpen(false)} className={menuLinkClass}>
+                      {translate(locale, "Control panel", "لوحة التحكم")}
+                    </Link>
+                  )}
                   {logoutError && <p role="alert" className="px-3 py-2 text-xs text-[var(--color-danger)]">{logoutError}</p>}
                   <button
                     type="button"
@@ -390,6 +408,11 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 <>
                   <Link href="/account/profile" onClick={() => setMobileOpen(false)} className={menuLinkClass}>{translate(locale, "My profile", "ملفي الشخصي")}</Link>
                   <Link href="/account" onClick={() => setMobileOpen(false)} className={menuLinkClass}>{translate(locale, "My account", "حسابي")}</Link>
+                  {isAdministrator && (
+                    <Link href={controlPanelHref} onClick={() => setMobileOpen(false)} className={menuLinkClass}>
+                      {translate(locale, "Control panel", "لوحة التحكم")}
+                    </Link>
+                  )}
                   {logoutError && <p role="alert" className="px-3 py-2 text-xs text-[var(--color-danger)]">{logoutError}</p>}
                   <button
                     type="button"

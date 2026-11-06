@@ -107,6 +107,12 @@ describe("admin dashboard", () => {
     expect(result.metrics.processingOrders).toBe(3);
     expect(result.metrics.grossOrderValueByCurrency).toEqual([{ currencyCode: "USD", amountMinor: "12500" }]);
     expect(result.metrics.successfulPaymentAmountByCurrency).toEqual([{ currencyCode: "USD", amountMinor: "9000" }]);
+    expect(result.orderStatusCounts).toEqual([
+      { status: "PENDING_PAYMENT", count: 2 },
+      { status: "PROCESSING", count: 3 },
+      { status: "COMPLETED", count: 1 },
+      { status: "CANCELLED", count: 1 }
+    ]);
     expect(result.dailyOrders).toEqual([{ day: "2026-11-05", count: 1 }]);
     expect(result.unavailableMetrics.marketplaceRevenue).toContain("No posted commission");
     expect(result.recentOrders[0].totalMinor).toBe("2500");
