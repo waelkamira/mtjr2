@@ -26,7 +26,7 @@ const environmentSchema = z.object({
 
   GOOGLE_CLIENT_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
-  TRUSTED_PROXY_IP_HEADER: z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional(),
+  TRUSTED_PROXY_IP_HEADER: z.preprocess((value) => value === "" ? undefined : value, z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional()),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development")
 }).superRefine((value, context) => {
   if (!value.APP_URL && !value.NEXT_PUBLIC_APP_URL) {
