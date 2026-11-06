@@ -227,3 +227,16 @@ export async function consumeSearchAttempt(
     blocked: await consumeBucket(tx, key, 300, now)
   }));
 }
+
+/** Persistent per-IP budget for the public AI assistant; separate from login counters. */
+export async function consumeAiAssistantAttempt(
+  trustedIpAddress: string,
+  now = new Date()
+): Promise<{ blocked: boolean }> {
+  const ip = trustedIpAddress.trim();
+  if (!ip || ip.length > 64) throw new Error("A trusted client IP value is required.");
+  const key = digestSubject("ai-assistant-ip", ip);
+  return prisma.$transaction(async (tx) => ({
+    blocked: await consumeBucket(tx, key, 20, now)
+  }));
+}
