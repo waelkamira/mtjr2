@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Dashboard = {
   filters: {
@@ -124,33 +125,12 @@ function MetricCard({
       {detail && <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{translate(locale, detail, details[detail] || detail)}</p>}
     </>
   );
-  const className = "block rounded-2xl border border-[var(--border)] bg-white p-5";
+  const className = "group block rounded-3xl border border-white/80 bg-gradient-to-br from-white to-orange-50/50 p-5 shadow-[0_8px_28px_rgba(15,23,42,.045)] transition hover:-translate-y-0.5 hover:shadow-lg";
   return href
     ? <Link href={href} className={`${className} transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-copper-600)]`}>{content}</Link>
     : <div className={className}>{content}</div>;
 }
 
-function DistributionChart({ locale, title, rows }: { locale: "ar" | "en"; title: string; rows: Array<{ label: string; value: number; color: string }> }) {
-  const maximum = Math.max(1, ...rows.map((row) => row.value));
-  return (
-    <article className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-[var(--color-forest-950)]">{translate(locale, title, title)}</h3>
-      <div className="mt-4 space-y-4">
-        {rows.map((row) => (
-          <div key={row.label}>
-            <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
-              <span className="text-[var(--muted)]">{translate(locale, row.label, row.label)}</span>
-              <strong className="tabular-nums text-[var(--color-forest-950)]">{row.value.toLocaleString(locale)}</strong>
-            </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-[var(--color-ivory-100)]">
-              <div className={`h-full rounded-full ${row.color}`} style={{ width: `${Math.max(row.value > 0 ? 2 : 0, (row.value / maximum) * 100)}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </article>
-  );
-}
 
 export default function AdminDashboardPage() {
   const { locale } = useLocale();
@@ -203,7 +183,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-5 py-8 lg:px-8">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(249,115,22,.08),transparent_36%),radial-gradient(ellipse_at_top_right,rgba(139,92,246,.07),transparent_32%),#f8fafc] px-5 py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -213,7 +193,7 @@ export default function AdminDashboardPage() {
           <p className="text-sm text-[var(--muted)]">{translate(locale, "Live data from PostgreSQL · order filters apply to transaction metrics; currency totals are never combined", "بيانات مباشرة من PostgreSQL · تنطبق عوامل تصفية الطلبات على مؤشرات المعاملات؛ ولا يتم جمع إجماليات العملات المختلفة")}</p>
         </div>
 
-        <form onSubmit={submitFilters} className="mt-7 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 sm:grid-cols-2 lg:grid-cols-6">
+        <form onSubmit={submitFilters} className="mt-7 grid gap-3 rounded-3xl border border-white/80 bg-white/90 p-4 shadow-[0_12px_34px_rgba(15,23,42,.05)] backdrop-blur sm:grid-cols-2 lg:grid-cols-6">
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "From", "من")}<input required type="date" value={filters.from} onChange={(event) => updateFilter("from", event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Through", "إلى")}<input required type="date" value={filters.to} onChange={(event) => updateFilter("to", event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Country", "الدولة")}<select value={filters.countryCode} onChange={(event) => updateFilter("countryCode", event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">{translate(locale, "All countries", "جميع الدول")}</option>{dashboard?.filters.countries.map((country) => <option key={country.iso2} value={country.iso2}>{country.name}</option>)}</select></label>
@@ -225,7 +205,7 @@ export default function AdminDashboardPage() {
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {loading && !dashboard ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : dashboard && <>
-          <section aria-label="Marketplace metrics" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <section aria-label="Marketplace metrics" className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard locale={locale} label="Total orders" value={dashboard.metrics.totalOrders} detail={`${dashboard.metrics.previousPeriodOrders} in the previous equivalent period`} />
             <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} />
             <MetricCard locale={locale} label="Orders being processed" value={dashboard.metrics.processingOrders} />
@@ -248,8 +228,8 @@ export default function AdminDashboardPage() {
             <MetricCard locale={locale} label="Open support tickets" value={dashboard.metrics.openSupportTickets} href="/admin/support" />
           </section>
 
-          <section aria-label="Metric distributions" className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <DistributionChart locale={locale} title="Users" rows={[
+          <section aria-label="Metric distributions" className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <MetricBarChart variant="donut" title="Users" rows={[
               { label: "Active users", value: dashboard.metrics.activeUsers, color: "bg-sky-500" },
               { label: "New users in period", value: dashboard.metrics.newUsers, color: "bg-violet-500" }
             ]} />
@@ -296,13 +276,9 @@ export default function AdminDashboardPage() {
           </section>
 
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
+            <div className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_10px_34px_rgba(15,23,42,.05)]">
               <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{translate(locale, "Daily orders", "الطلبات اليومية")}</h2><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Number of orders placed; canceled orders are excluded from the bars.", "عدد الطلبات المقدمة؛ لا تشمل الأعمدة الطلبات الملغاة.")}</p></div><span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span></div>
-              <div className="mt-6 overflow-x-auto">
-                <div className="flex h-44 min-w-[420px] items-end gap-1 border-b border-l border-[var(--border)] px-2" style={{ minWidth: `${Math.max(420, dashboard.dailyOrders.length * 12)}px` }}>
-                  {dashboard.dailyOrders.map((day) => <div key={day.day} title={`${day.day}: ${day.count} ${translate(locale, "orders", "طلب")}`} aria-label={`${day.day}: ${day.count} ${translate(locale, "orders", "طلب")}`} className="group flex h-full min-w-0 flex-1 items-end"><div className="w-full rounded-t bg-[var(--color-copper-600)] transition-opacity group-hover:opacity-70" style={{ height: day.count === 0 ? "0%" : `${Math.max(3, (day.count / maxOrders) * 100)}%` }} /></div>)}
-                </div>
-              </div>
+              <div className="mt-4"><MetricBarChart title="Daily order trend" variant="area" rows={dashboard.dailyOrders.map((day) => ({ label: day.day.slice(5), value: day.count, color: "bg-orange-500" }))} /></div>
               <div className="mt-2 flex justify-between text-[10px] text-[var(--muted)]"><span>{dashboard.dailyOrders[0]?.day}</span><span>{dashboard.dailyOrders.at(-1)?.day}</span></div>
             </div>
             <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
