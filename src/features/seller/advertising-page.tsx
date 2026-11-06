@@ -8,7 +8,8 @@ import { translate } from "@/lib/locale";
 type Store={id:string;name:string;status:string};
 type Product={id:string;name:string;status:string;approvalStatus:string};
 type Market={id:string;name:string;defaultCurrencyCode:string;currencies:Array<{currency:{code:string;name:string;minorUnit:number}}>};
-type Invoice={id:string;currencyCode:string;currency:{minorUnit:number};periodStart:string;periodEnd:string;amountMinor:string;status:string;dueAt:string};\ntype Campaign={id:string;title:string;message:string|null;status:string;moderationNote:string|null;startsAt:string;endsAt:string;budgetMinor:string;dailyBudgetMinor:string;cpcBidMinor:string;spentMinor:string;impressionCount:string;clickCount:string;currencyCode:string|null;currency:{minorUnit:number}|null;product:{id:string;name:string}};
+type Invoice={id:string;currencyCode:string;currency:{minorUnit:number};periodStart:string;periodEnd:string;amountMinor:string;status:string;dueAt:string};
+type Campaign={id:string;title:string;message:string|null;status:string;moderationNote:string|null;startsAt:string;endsAt:string;budgetMinor:string;dailyBudgetMinor:string;cpcBidMinor:string;spentMinor:string;impressionCount:string;clickCount:string;currencyCode:string|null;currency:{minorUnit:number}|null;product:{id:string;name:string}};
 async function readJson<T>(r:Response):Promise<T>{const body=await r.json();if(!r.ok)throw new Error(body.error??"Request failed.");return body as T;}
 const states:Record<string,[string,string]>={DRAFT:["Draft","مسودة"],SUBMITTED:["In review","قيد المراجعة"],APPROVED:["Approved","معتمد"],REJECTED:["Rejected","مرفوض"],ACTIVE:["Active","نشط"],PAUSED:["Paused","متوقف"],ARCHIVED:["Archived","مؤرشف"]};
 export default function SellerAdvertisingPage(){
