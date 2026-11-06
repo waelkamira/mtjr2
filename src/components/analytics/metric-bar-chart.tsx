@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -37,6 +38,7 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
   centerLabel?: string;
 }) {
   const { locale } = useLocale();
+  const chartId = useId().replaceAll(":", "");
   const maximum = Math.max(1, ...rows.map((row) => row.value));
   const total = rows.reduce((sum, row) => sum + Math.max(0, row.value), 0);
   const segments = donutSegments(rows);
@@ -86,8 +88,8 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
           <div className="mb-2 flex items-end justify-between"><strong className="text-2xl font-black tabular-nums text-slate-800">{total.toLocaleString(locale)}</strong><span className="text-[10px] text-slate-400">{translate(locale, "Across selected period", "خلال الفترة المحددة")}</span></div>
           <svg viewBox="0 0 360 132" className="h-36 w-full overflow-visible" role="img" aria-label={title}>
             {[30, 60, 90, 120].map((y) => <line key={y} x1="12" x2="348" y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="3 5" />)}
-            {variant === "area" && <polygon points={area} fill="url(#analyticsArea)" />}
-            <defs><linearGradient id="analyticsArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#8b5cf6" stopOpacity=".28" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" /></linearGradient></defs>
+            {variant === "area" && <polygon points={area} fill={`url(#analyticsArea-${chartId})`} />}
+            <defs><linearGradient id={`analyticsArea-${chartId}`} x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#8b5cf6" stopOpacity=".28" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" /></linearGradient></defs>
             <polyline points={line} fill="none" stroke={variant === "area" ? "#8b5cf6" : "#f97316"} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
             {points.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="4" fill="white" stroke={palette[index % palette.length]} strokeWidth="2.5" />)}
           </svg>
@@ -96,9 +98,9 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
 
         {variant === "gauge" && <div className="relative mx-auto mt-3 h-36 max-w-xs overflow-hidden">
           <svg viewBox="0 0 340 180" className="h-full w-full" role="img" aria-label={title}>
-            <path d="M 58 150 A 112 112 0 0 1 282 150" fill="none" stroke="#f1f5f9" strokeWidth="20" strokeLinecap="round" />
-            <path d={`M 58 150 A 112 112 0 0 1 ${gaugeEnd[0]} ${gaugeEnd[1]}`} fill="none" stroke="url(#gaugeGradient)" strokeWidth="20" strokeLinecap="round" />
-            <defs><linearGradient id="gaugeGradient"><stop stopColor="#8b5cf6" /><stop offset="100%" stopColor="#f97316" /></linearGradient></defs>
+            <path d="M 58 150 A 112 112 0 0 0 282 150" fill="none" stroke="#f1f5f9" strokeWidth="20" strokeLinecap="round" />
+            <path d={`M 58 150 A 112 112 0 0 0 ${gaugeEnd[0]} ${gaugeEnd[1]}`} fill="none" stroke={`url(#gaugeGradient-${chartId})`} strokeWidth="20" strokeLinecap="round" />
+            <defs><linearGradient id={`gaugeGradient-${chartId}`}><stop stopColor="#8b5cf6" /><stop offset="100%" stopColor="#f97316" /></linearGradient></defs>
             <text x="170" y="122" textAnchor="middle" className="fill-slate-800 text-4xl font-black">{gaugePercent}%</text>
             <text x="170" y="145" textAnchor="middle" className="fill-slate-400 text-xs">{translate(locale, rows[0]?.label || "Progress", rows[0]?.label || "التقدم")}</text>
           </svg>
