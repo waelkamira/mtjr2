@@ -106,6 +106,7 @@ export async function answerCustomer(raw: unknown) {
 
   const first = await groqChat(messages, tools);
   let products: ProductCard[] = [];
+  let orders: Array<{ orderNumber: string; status: string; placedAt: string; total: string; currencyCode: string; shipments: Array<{ store: string; status: string; carrier: string | null; trackingUrl: string | null }> }> = [];
   if (first.tool_calls?.length) {
     const assistantMessage: GroqMessage = {
       role: "assistant",
@@ -122,22 +123,20 @@ export async function answerCustomer(raw: unknown) {
         toolResult = { products, count: products.length };
       } else if (call.function.name === "get_my_orders") {
         const orders = await listCustomerOrders();
-        toolResult = {
-          orders: orders.slice(0, 5).map((order) => ({
-            orderNumber: order.orderNumber,
-            status: order.status,
-            placedAt: order.placedAt,
-            total: order.totalMinor,
-            currencyCode: order.currencyCode,
-            minorUnit: order.currency.minorUnit,
-            shipments: order.vendorOrders.map((vendor) => ({
-              store: vendor.store.name,
-              status: vendor.status,
-              carrier: vendor.shipment?.carrierName ?? null,
-              trackingUrl: vendor.shipment?.trackingUrl ?? null
-            }))
+        orders = orders.slice(0, 5).map((order) => ({
+          orderNumber: order.orderNumber,
+          status: order.status,
+          placedAt: order.placedAt,
+          total: (Number(order.totalMinor) / (10 ** order.currency.minorUnit)).toFixed(order.currency.minorUnit),
+          currencyCode: order.currencyCode,
+          shipments: order.vendorOrders.map((vendor) => ({
+            store: vendor.store.name,
+            status: vendor.status,
+            carrier: vendor.shipment?.carrierName ?? null,
+            trackingUrl: vendor.shipment?.trackingUrl ?? null
           }))
-        };
+        }));
+        toolResult = { message: "The application will securely display the customer's own recent order summaries in the UI. Do not request or repeat order details." };
       } else {
         toolResult = { error: "Tool not available." };
       }
@@ -154,8 +153,8 @@ export async function answerCustomer(raw: unknown) {
       content: JSON.stringify(toolResult)
     });
     const final = await groqChat(messages);
-    return { message: final.content?.trim() || "عذراً، لم أتمكن من صياغة إجابة الآن.", products };
+    return { message: final.content?.trim() || "عذراً، لم أتمكن من صياغة إجابة الآن.", products, orders };
   }
 
-  return { message: first.content?.trim() || "عذراً، لم أتمكن من صياغة إجابة الآن.", products };
+  return { message: first.content?.trim() || "عذراً، لم أتمكن من صياغة إجابة الآن.", products, orders };
 }
