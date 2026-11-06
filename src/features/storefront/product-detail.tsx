@@ -6,6 +6,7 @@ import AuthReturnLink from "@/components/auth-return-link";
 import ProductReviews from "@/features/storefront/product-reviews";
 import StoreReviews from "@/features/storefront/store-reviews";
 import ProductQuestions from "@/features/storefront/product-questions";
+import SponsoredProductCard from "@/features/storefront/sponsored-product-card";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -29,6 +30,7 @@ type Price = { marketId: string; currencyCode: string; amountMinor: string; comp
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type ProductAttribute = { key: string; name: string; valueType: string; values: unknown[] };
 type VariantAttribute = { key: string; name: string; valueType: string; value: unknown };
+type Sponsored = { campaignId: string; token: string; product: { id: string; slug: string; name: string; description: string | null; brand: { name: string } | null; store: { id: string; name: string; slug: string }; media: Array<{ url: string; altText: string | null; isPrimary: boolean }>; variants: Array<{ prices: Array<{ amountMinor: string; currencyCode: string; currency: { minorUnit: number } }> }> } };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { id: string; name: string; slug: string };
@@ -46,7 +48,7 @@ function formatAttributeValue(value: unknown): string {
 export default function ProductDetail({ slug }: { slug: string }) {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);\n  const [sponsored, setSponsored] = useState<Sponsored[]>([]);
   const [selectedVariant, setSelectedVariant] = useState("");
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -102,6 +104,19 @@ export default function ProductDetail({ slug }: { slug: string }) {
   if (error || !product) return <main className="mx-auto min-h-screen max-w-3xl px-5 py-24 text-center"><p role="alert" className="text-lg">{error || t("Product not found.", "المنتج غير موجود.")}</p><Link href="/" className="mt-6 inline-block text-sm text-[var(--color-petrol-800)] underline">{t("Back to marketplace", "العودة إلى السوق")}</Link></main>;
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
+  useEffect(() => {
+    if (!product || !selectedMarketId) { setSponsored([]); return; }
+    let active = true;
+    fetch(`/api/advertising/sponsored?marketId=${encodeURIComponent(selectedMarketId)}&q=${encodeURIComponent(product.name)}`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Sponsored products unavailable.");
+        return response.json() as Promise<{ items: Sponsored[] }>;
+      })
+      .then((result) => { if (active) setSponsored(result.items.filter((item) => item.product.id !== product.id)); })
+      .catch(() => { if (active) setSponsored([]); });
+    return () => { active = false; };
+  }, [product?.id, product?.name, selectedMarketId]);
+
   const selectedMarketInfo = markets.find((item) => item.id === selectedMarketId);
   const price = variant?.prices.find((item) =>
     item.marketId === selectedMarketId &&
