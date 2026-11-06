@@ -62,7 +62,7 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
     listDiscoverableStores({ page: 1, limit: 100 }),
     listActiveMarkets()
   ]);
-  const sponsored = await listSponsoredCampaigns({ marketId: marketId ?? markets[0]?.id, categoryId, query: q, limit: 4 });
+  const sponsored = await listSponsoredCampaigns({ marketId: marketId ?? markets[0]?.id, categoryId, brandId, query: q, limit: 4 });
   const selectedMarket = markets.find((market) => market.id === marketId);
   const selectedCurrency = selectedMarket?.currencies.find(({ currency }) => currency.code === currencyCode)?.currency;
   const filters = {
