@@ -67,8 +67,8 @@ export async function changeSellerAdCampaignStatus(id:string,action:"ACTIVATE"|"
  if(action==="ACTIVATE"){
   if(item.status!==AdCampaignStatus.APPROVED)throw new Error("Only approved campaigns can be activated.");
   if(item.startsAt>now||item.endsAt<=now)throw new Error("Campaign is outside its approved schedule.");
-  const funded=await prisma.adCampaign.findUnique({where:{id},select:{budgetMinor:true,dailyBudgetMinor:true,cpcBidMinor:true,marketId:true,currencyCode:true}});
-  if(!funded||funded.budgetMinor<=0n||funded.dailyBudgetMinor<=0n||funded.cpcBidMinor<=0n||!funded.marketId||!funded.currencyCode)throw new Error("Campaign requires a valid market, currency and positive budget before activation.");
+  const funded=await prisma.adCampaign.findUnique({where:{id},select:{budgetMinor:true,dailyBudgetMinor:true,cpcBidMinor:true,spentMinor:true,marketId:true,currencyCode:true}});
+  if(!funded||funded.budgetMinor<=0n||funded.dailyBudgetMinor<=0n||funded.cpcBidMinor<=0n||funded.spentMinor>=funded.budgetMinor||!funded.marketId||!funded.currencyCode)throw new Error("Campaign requires a valid market, currency and positive budget before activation.");
   next=AdCampaignStatus.ACTIVE;
 }
  else if(action==="PAUSE"){if(item.status!==AdCampaignStatus.ACTIVE)throw new Error("Only active campaigns can be paused.");next=AdCampaignStatus.PAUSED;}

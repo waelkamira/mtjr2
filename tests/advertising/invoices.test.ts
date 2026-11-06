@@ -23,12 +23,12 @@ describe("advertising invoice ledger and settlement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.permission.mockResolvedValue({ userId: "admin-1" });
-    mocks.groupBy.mockResolvedValue([{ storeId: "store-1", currencyCode: "EUR", _sum: { amountMinor: 1250n } }]);
+    mocks.groupBy.mockResolvedValue([{ storeId: "store-1", currencyCode: "EUR", _sum: { amountMinor: BigInt(1250) } }]);
     mocks.createMany.mockResolvedValue({ count: 1 });
     mocks.transaction.mockImplementation(async (callback: (value: typeof tx) => unknown) => callback(tx));
-    mocks.invoiceFind.mockResolvedValue({ id: "invoice-1", status: "OPEN", storeId: "store-1", amountMinor: 1250n, currencyCode: "EUR" });
+    mocks.invoiceFind.mockResolvedValue({ id: "invoice-1", status: "OPEN", storeId: "store-1", amountMinor: BigInt(1250), currencyCode: "EUR" });
     mocks.invoiceUpdate.mockResolvedValue({ count: 1 });
-    mocks.invoiceFindOrThrow.mockResolvedValue({ id: "invoice-1", status: "SETTLED", paymentReference: "BANK-REF-123", settledAt: new Date("2026-11-07T12:00:00Z"), amountMinor: 1250n, currencyCode: "EUR", dueAt: new Date("2026-11-20T00:00:00Z") });
+    mocks.invoiceFindOrThrow.mockResolvedValue({ id: "invoice-1", status: "SETTLED", paymentReference: "BANK-REF-123", settledAt: new Date("2026-11-07T12:00:00Z"), amountMinor: BigInt(1250), currencyCode: "EUR", dueAt: new Date("2026-11-20T00:00:00Z") });
     mocks.audit.mockResolvedValue({});
   });
   it("creates idempotent monthly invoices from immutable spend ledger totals", async () => {
@@ -36,7 +36,7 @@ describe("advertising invoice ledger and settlement", () => {
     const periodEnd = new Date("2026-11-01T00:00:00Z");
     const result = await generateAdInvoices({ periodStart, periodEnd, dueAt: new Date("2026-11-15T00:00:00Z") });
     expect(result).toEqual({ created: 1, stores: 1 });
-    expect(mocks.createMany).toHaveBeenCalledWith(expect.objectContaining({ skipDuplicates: true, data: [expect.objectContaining({ amountMinor: 1250n, currencyCode: "EUR" })] }));
+    expect(mocks.createMany).toHaveBeenCalledWith(expect.objectContaining({ skipDuplicates: true, data: [expect.objectContaining({ amountMinor: BigInt(1250), currencyCode: "EUR" })] }));
   });
   it("requires a meaningful external payment reference and records settlement atomically", async () => {
     await expect(settleAdInvoice("invoice-1", "  ")).rejects.toThrow(/reference/i);

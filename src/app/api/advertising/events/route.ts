@@ -1,9 +1,13 @@
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { recordSponsoredAdEvent } from "@/server/advertising/delivery";\nimport { enforcePublicSearchBudget } from "@/server/search/search-request";
+import { recordSponsoredAdEvent } from "@/server/advertising/delivery";
+import { enforcePublicSearchBudget } from "@/server/search/search-request";
+import { enforcePublicSearchBudget } from "@/server/search/search-request";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request): Promise<Response> {
+  const limited = await enforcePublicSearchBudget(request);
+  if (limited) return limited;
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
   let body: unknown;

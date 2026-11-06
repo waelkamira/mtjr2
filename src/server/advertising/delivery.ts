@@ -95,7 +95,8 @@ export async function recordSponsoredAdEvent(input: {
   const payload = readToken(input.token, now);
   if (!payload || !/^[A-Za-z0-9_-]{16,80}$/.test(input.eventId)) throw new Error("Invalid or expired advertising event token.");
   const visitorIp = resolveTrustedClientIp(input.headers, env.TRUSTED_PROXY_IP_HEADER, env.NODE_ENV);
-  const visitorHash = visitorIp ? createHash("sha256").update(visitorIp).digest("hex") : null;\n  if (input.type === "CLICK" && !visitorHash) throw new Error("Trusted client IP is required before an advertising click can be billed.");
+  const visitorHash = visitorIp ? createHash("sha256").update(visitorIp).digest("hex") : null;
+  if (input.type === "CLICK" && !visitorHash) throw new Error("Trusted client IP is required before an advertising click can be billed.");
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${payload.campaignId}, 0))`);
     const campaign = await tx.adCampaign.findUnique({
@@ -107,6 +108,14 @@ export async function recordSponsoredAdEvent(input: {
     }
     const existing = await tx.adCampaignEvent.findUnique({ where: { campaignId_eventId: { campaignId: campaign.id, eventId: input.eventId } } });
     if (existing) return { accepted: true, duplicate: true, chargedMinor: existing.costMinor.toString() };
+    if (visitorHash) {
+      const dedupeStart = new Date(now.getTime() - (input.type === "CLICK" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000));
+      const recent = await tx.adCampaignEvent.findFirst({
+        where: { campaignId: campaign.id, type: input.type === "CLICK" ? AdCampaignEventType.CLICK : AdCampaignEventType.IMPRESSION, visitorHash, occurredAt: { gte: dedupeStart } },
+        select: { id: true }
+      });
+      if (recent) return { accepted: true, duplicate: true, chargedMinor: "0" };
+    }
     const dailyStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const daily = await tx.adSpendLedgerEntry.aggregate({
       where: { campaignId: campaign.id, createdAt: { gte: dailyStart } }, _sum: { amountMinor: true }
