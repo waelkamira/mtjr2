@@ -189,7 +189,7 @@ export default function SellerWorkspacePage() {
           </section>
         ) : (
           <div className="mt-8 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
-            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+            <section className="rounded-3xl border border-white/80 bg-white/95 p-6 shadow-[0_12px_34px_rgba(15,23,42,.05)]">
               <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{translate(locale, "Seller status", "حالة البائع")}</h2><span className="rounded-full bg-[var(--color-sage-100)] px-3 py-1 text-xs font-semibold text-[var(--color-forest-900)]">{workspace.seller.status}</span></div>
               <p className="mt-3 text-sm text-[var(--muted)]">{workspace.seller.displayName ?? workspace.seller.legalName}</p>
               {workspace.seller.status === "PENDING" && <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm leading-6">{translate(locale, "Your application is awaiting review. Store creation becomes available after approval.", "طلبك بانتظار المراجعة. سيصبح إنشاء المتجر متاحًا بعد الموافقة.")}</p>}
@@ -220,7 +220,7 @@ export default function SellerWorkspacePage() {
                       <button disabled={busy} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Add warehouse", "إضافة مستودع")}</button>
                     </form>}
                     <section aria-label="Seller analytics" className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <MetricBarChart title="Inventory health" rows={[
+                      <MetricBarChart variant="donut" title="Inventory health" rows={[
                         { label: "Healthy stock records", value: Math.max(0, inventory.length - inventoryTotals.lowStock), color: "bg-emerald-500" },
                         { label: "Low stock records", value: inventoryTotals.lowStock, color: "bg-rose-500" }
                       ]} />
@@ -229,11 +229,11 @@ export default function SellerWorkspacePage() {
                         { label: "Reserved", value: inventoryTotals.reserved, color: "bg-amber-500" },
                         { label: "Available", value: inventoryTotals.available, color: "bg-emerald-500" }
                       ]} />
-                      <MetricBarChart title="Shipping services" rows={[
+                      <MetricBarChart variant="donut" title="Shipping services" rows={[
                         { label: "Active services", value: shippingRates.filter((rate) => rate.isActive).length, color: "bg-teal-500" },
                         { label: "Inactive services", value: shippingRates.filter((rate) => !rate.isActive).length, color: "bg-slate-500" }
                       ]} />
-                      <MetricBarChart title="Store portfolio" rows={[
+                      <MetricBarChart variant="donut" title="Store portfolio" rows={[
                         { label: "Active stores", value: storeStatusCounts.ACTIVE ?? 0, color: "bg-green-500" },
                         { label: "Draft stores", value: storeStatusCounts.DRAFT ?? 0, color: "bg-amber-500" },
                         { label: "Suspended stores", value: storeStatusCounts.SUSPENDED ?? 0, color: "bg-rose-500" }
