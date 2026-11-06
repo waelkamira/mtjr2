@@ -1905,3 +1905,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The failure log identified the common cause in the test itself: vi.spyOn was wrapping Prisma Client proxy delegate methods. The profile route returned 404 under that spy, and vi.restoreAllMocks then left prisma.user.findUnique unavailable for later login/session/logout/password-reset cases. The test assertions were coupled to Prisma's internal delegate function shape rather than persisted behavior.
 - Removed the Prisma delegate spies. The profile update now verifies the saved PostgreSQL displayName directly; favorites and orders verify the current user's persisted rows after the scoped service calls. No application identity code or Prisma schema was changed for this test-harness correction.
 - The new test version must be rerun on its exact resulting SHA. Identity remains Implemented / unverified until General CI and PostgreSQL both pass on that SHA.
+
+
+## 2026-11-06 — Identity exact-head automated acceptance passed
+
+- On code/test SHA 8ecd8f6eddd42d2404e5b523e492743e442ed182, General CI run 42212333808 passed every step: npm install, Prisma validate, Prisma generate, TypeScript, ESLint, all unit tests and Next.js production build.
+- On the same SHA, PostgreSQL run 42212333827 passed PostgreSQL 16 startup, Prisma validate/generate, all 23 migrations on a disposable database, baseline seed (6 roles, 23 permissions, 67 role-permission links), and the identity integration suite: 7/7 tests passed.
+- The 7 integration tests cover registration/email verification/CUSTOMER role, real database session creation and revocation, buyer profile/address/favorites/orders scoping, pending seller with no seller permission, persistent login throttling, password reset and the HTTP logout handler including audit and cookie clearing.
+- The CI trigger correction and test harness fixes are included in this passing SHA. No application Prisma schema or migration change was needed.
+- This establishes the source/automated CI/PostgreSQL gate for the identity slice. It does not claim a live browser or real Google provider sign-in. Google still requires owner-provisioned GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and the exact NEXT_PUBLIC_APP_URL/api/auth/google/callback registration; real email delivery and trusted-proxy edge behavior also require the owner's external configuration.
+- No browser runtime was attached. No secret values were read or committed, no user/production database was contacted, and no deployment or production migration was performed. PR #15 remains already merged/closed; this follow-up remains on feat/returns-workflow without creating or merging a PR.

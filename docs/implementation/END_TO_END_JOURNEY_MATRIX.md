@@ -257,3 +257,12 @@ The latest reviewed starting SHA d5208538c46003d35f8374bc04bcd64678dc5303 had no
 ## PostgreSQL test harness correction — 2026-11-06
 
 On SHA 7872ea280e34ac6933cc6abcfea16f835c636c69, General CI passed completely. PostgreSQL migrations and seed passed, and the integration suite ran 7 cases: 3 passed, 4 failed. The failure traces all followed Prisma delegate spies in the buyer account test; the profile call returned 404 under the spy, and restoring the spies removed prisma.user.findUnique for subsequent tests. These were test-harness failures, not proven application authorization failures. The spies were removed and replaced with persisted-state assertions for profile update, favorites and orders. Re-run both workflows on the resulting SHA before claiming the buyer journey verified.
+
+
+## Identity automated acceptance result — 2026-11-06
+
+- Exact code/test SHA 8ecd8f6eddd42d2404e5b523e492743e442ed182: General CI run 42212333808 passed Prisma validate/generate, typecheck, lint, unit tests and production build.
+- Same exact SHA: PostgreSQL run 42212333827 passed all 23 disposable migrations, seed and 7/7 integration tests. The suite includes buyer registration/verification, CUSTOMER assignment, session lifecycle, account profile/address/favorites/orders, pending seller/no selling permission, throttling, password reset and the HTTP logout endpoint.
+- Seller permission remains absent while Seller.status=PENDING; the approval service is the only path that assigns the SELLER role, and store creation separately requires ACTIVE + store:manage.
+- Google RS256/JWKS, state, PKCE and nonce verifier unit tests passed as part of General CI. They use generated test keys; no real Google account or provider credential was exercised.
+- No live browser runtime was available. Real Google sign-in, verification-email delivery and trusted-proxy edge behavior remain external runtime acceptance items. Do not represent them as browser/provider tested.

@@ -344,3 +344,10 @@ Google's tokeninfo debugging endpoint is no longer used as the production ID-tok
 - General CI on SHA 7872ea280e34ac6933cc6abcfea16f835c636c69 passed Prisma validation/generation, typecheck, lint, unit tests and production build.
 - PostgreSQL deployed all migrations and seeded baseline roles/permissions. The integration suite executed but 4 of 7 cases failed after the buyer-account test used vi.spyOn against Prisma Client proxy methods; this corrupted subsequent delegate calls during test cleanup.
 - The integration assertions now avoid spying on Prisma delegate methods and instead check persisted profile, favorite and order state. Exact-head PostgreSQL rerun is pending; do not mark the buyer account journey Verified until it passes.
+
+
+## Identity acceptance evidence — 2026-11-06
+
+- General CI run 42212333808 passed on SHA 8ecd8f6eddd42d2404e5b523e492743e442ed182: Prisma validate/generate, typecheck, lint, unit tests and production build.
+- PostgreSQL run 42212333827 passed on the same SHA: all 23 migrations deployed to disposable PostgreSQL 16, baseline roles/permissions seeded, and 7/7 identity integration tests passed.
+- The automated source/DB acceptance gate is satisfied. Live browser behavior, actual Google provider consent/callback and real verification-email delivery were not exercised because the corresponding runtime/provider setup was not available. External requirements are recorded above; do not mark those live journeys tested.
