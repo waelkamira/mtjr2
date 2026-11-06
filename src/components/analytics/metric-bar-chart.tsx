@@ -47,8 +47,8 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
   const line = points.map((point) => `${point.x},${point.y}`).join(" ");
   const area = points.length ? `18,124 ${line} 342,124` : "";
   const gaugePercent = Math.min(100, Math.max(0, total ? rows[0]?.value ?? 0 : 0));
-  const gaugeAngle = -180 + gaugePercent * 1.8;
-  const gaugeEnd = polar(170, 150, 112, gaugeAngle + 180);
+  const gaugeAngle = 270 + gaugePercent * 1.8;
+  const gaugeEnd = polar(170, 150, 112, gaugeAngle);
 
   return (
     <article className="group min-w-0 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_38px_rgba(15,23,42,.09)]">
