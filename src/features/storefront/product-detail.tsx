@@ -48,7 +48,8 @@ function formatAttributeValue(value: unknown): string {
 export default function ProductDetail({ slug }: { slug: string }) {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
-  const [product, setProduct] = useState<Product | null>(null);\n  const [sponsored, setSponsored] = useState<Sponsored[]>([]);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [sponsored, setSponsored] = useState<Sponsored[]>([]);
   const [selectedVariant, setSelectedVariant] = useState("");
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -218,5 +219,11 @@ export default function ProductDetail({ slug }: { slug: string }) {
     <ProductReviews productId={product.id} />
     <StoreReviews storeId={product.store.id} storeName={product.store.name} />
     <ProductQuestions productId={product.id} />
+    {sponsored.length > 0 && <section className="mx-auto max-w-6xl px-5 pb-12">
+      <h2 className="mb-4 text-xl font-semibold">{t("Sponsored products you may like", "منتجات ممولة قد تعجبك")}</h2>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {sponsored.map((item) => <SponsoredProductCard key={item.campaignId} product={item.product} token={item.token} locale={locale} />)}
+      </div>
+    </section>}
   </main>;
 }
