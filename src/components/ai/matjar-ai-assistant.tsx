@@ -20,7 +20,15 @@ type Order = {
   currencyCode: string;
   shipments: Array<{ store: string; status: string; carrier: string | null; trackingUrl: string | null }>;
 };
-type Message = { role: "user" | "assistant"; content: string; products?: Product[]; orders?: Order[] };
+type ReturnRequest = {
+  returnNumber: string;
+  orderNumber: string;
+  status: string;
+  reasonCode: string;
+  requestedAt: string;
+  items: Array<{ productName: string; quantity: number }>;
+};
+type Message = { role: "user" | "assistant"; content: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[] };
 
 const suggestions = [
   "ابحث عن منتجات إلكترونية",
@@ -53,9 +61,9 @@ export default function MatjarAIAssistant() {
           history: messages.slice(-6).map(({ role, content }) => ({ role, content }))
         })
       });
-      const data = await response.json() as { message?: string; products?: Product[]; orders?: Order[]; error?: string };
+      const data = await response.json() as { message?: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[]; error?: string };
       if (!response.ok) throw new Error(data.error || "تعذر الاتصال بالمساعد.");
-      setMessages([...next, { role: "assistant", content: data.message || "", products: data.products || [], orders: data.orders || [] }]);
+      setMessages([...next, { role: "assistant", content: data.message || "", products: data.products || [], orders: data.orders || [], returns: data.returns || [] }]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "تعذر الاتصال بالمساعد.");
     } finally {
@@ -91,6 +99,16 @@ export default function MatjarAIAssistant() {
             {messages.map((item, index) => (
               <div key={index} className={item.role === "user" ? "mr-8 rounded-2xl rounded-bl-sm bg-[var(--color-lavender-800)] p-3 text-sm leading-6 text-white" : "ml-5 rounded-2xl rounded-br-sm bg-white p-3 text-sm leading-7 text-[var(--color-ink-800)] shadow-sm"}>
                 <p dir="auto" className="whitespace-pre-wrap">{item.content}</p>
+                {item.returns?.map((request) => (
+                  <div key={request.returnNumber} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--color-butter-50)] p-3 text-xs text-[var(--color-ink-800)]">
+                    <div className="flex items-center justify-between gap-2 font-bold">
+                      <span>{request.returnNumber}</span><span>{request.status}</span>
+                    </div>
+                    <p className="mt-1">طلب الشراء: {request.orderNumber}</p>
+                    <p className="mt-1">{request.items.map((item) => item.productName + " × " + item.quantity).join("، ")}</p>
+                    <p className="mt-1 text-[var(--muted)]">{new Date(request.requestedAt).toLocaleDateString()}</p>
+                  </div>
+                ))}
                 {item.orders?.map((order) => (
                   <div key={order.orderNumber} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--color-mint-50)] p-3 text-xs text-[var(--color-ink-800)]">
                     <div className="flex items-center justify-between gap-2 font-bold">
