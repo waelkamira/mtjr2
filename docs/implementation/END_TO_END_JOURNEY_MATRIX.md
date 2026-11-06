@@ -252,3 +252,8 @@ The latest reviewed starting SHA d5208538c46003d35f8374bc04bcd64678dc5303 had no
 - The disposable PostgreSQL job successfully started PostgreSQL 16, validated/generated Prisma, applied all 23 committed migrations and seeded six system roles, 23 permissions and 67 role-permission links. The integration suite then failed during module loading because Vitest did not resolve Next.js's server-only marker; zero test cases ran. An integration-only alias/stub was added, without changing production code.
 - The exact-head run did not prove buyer/seller integration success. Re-run General CI and PostgreSQL on the new SHA before accepting any of these journeys as Verified.
 - The PostgreSQL push filter now includes identity tests, account, favorites, orders and seller-application paths, in addition to the workflow's existing schema and server paths.
+
+
+## PostgreSQL test harness correction — 2026-11-06
+
+On SHA 7872ea280e34ac6933cc6abcfea16f835c636c69, General CI passed completely. PostgreSQL migrations and seed passed, and the integration suite ran 7 cases: 3 passed, 4 failed. The failure traces all followed Prisma delegate spies in the buyer account test; the profile call returned 404 under the spy, and restoring the spies removed prisma.user.findUnique for subsequent tests. These were test-harness failures, not proven application authorization failures. The spies were removed and replaced with persisted-state assertions for profile update, favorites and orders. Re-run both workflows on the resulting SHA before claiming the buyer journey verified.

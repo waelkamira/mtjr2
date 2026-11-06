@@ -337,3 +337,10 @@ Google's tokeninfo debugging endpoint is no longer used as the production ID-tok
 - General CI on e743a8afc30c1bad67c6bf164a50f5572874e3b2 reached Prisma validate/generate, then TypeScript failed on the nullable Google OAuth state argument and the wrong JsonWebKey type for Node crypto. Both source typing defects were corrected without changing OAuth validation policy.
 - PostgreSQL on e743a8afc30c1bad67c6bf164a50f5572874e3b2 deployed all 23 migrations and seeded baseline permissions successfully, but the integration suite stopped at module loading because the integration Vitest config did not resolve the Next.js server-only marker. An integration-only alias and stub were added so the logout HTTP handler can be exercised in Node tests.
 - The next exact-head CI/PostgreSQL results are required; this failure SHA is not an identity pass. No browser journey is claimed.
+
+
+## PostgreSQL integration test follow-up — 2026-11-06
+
+- General CI on SHA 7872ea280e34ac6933cc6abcfea16f835c636c69 passed Prisma validation/generation, typecheck, lint, unit tests and production build.
+- PostgreSQL deployed all migrations and seeded baseline roles/permissions. The integration suite executed but 4 of 7 cases failed after the buyer-account test used vi.spyOn against Prisma Client proxy methods; this corrupted subsequent delegate calls during test cleanup.
+- The integration assertions now avoid spying on Prisma delegate methods and instead check persisted profile, favorite and order state. Exact-head PostgreSQL rerun is pending; do not mark the buyer account journey Verified until it passes.

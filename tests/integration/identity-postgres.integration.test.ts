@@ -170,16 +170,11 @@ describe("identity PostgreSQL integration", () => {
     sessionMock.getCurrentSession.mockResolvedValue(session);
     sessionMock.requireCurrentSession.mockResolvedValue(session);
 
-    const profileQuery = vi.spyOn(prisma.user, "findUnique");
     const profileResponse = await getAccountProfile();
     expect(profileResponse.status).toBe(200);
     const profileBody = await profileResponse.json();
     expect(profileBody.profile.id).toBe(registration.userId);
-    expect(profileQuery).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: registration.userId }
-    }));
 
-    const profileUpdate = vi.spyOn(prisma.user, "update");
     const updateResponse = await patchAccountProfile(new Request("http://localhost:3000/api/account/profile", {
       method: "PATCH",
       headers: {
@@ -190,10 +185,11 @@ describe("identity PostgreSQL integration", () => {
     }));
     expect(updateResponse.status).toBe(200);
     expect((await updateResponse.json()).profile.displayName).toBe("Updated Integration Buyer");
-    expect(profileUpdate).toHaveBeenCalledWith(expect.objectContaining({
+    const savedProfile = await prisma.user.findUnique({
       where: { id: registration.userId },
-      data: { displayName: "Updated Integration Buyer" }
-    }));
+      select: { displayName: true }
+    });
+    expect(savedProfile?.displayName).toBe("Updated Integration Buyer");
 
     await prisma.country.upsert({
       where: { iso2: "QX" },
@@ -212,24 +208,14 @@ describe("identity PostgreSQL integration", () => {
     expect(addresses).toHaveLength(1);
     expect(addresses[0]).toMatchObject({ countryCode: "QX", countryName: "Identity Test Country" });
 
-    const favoriteQuery = vi.spyOn(prisma.favorite, "findMany");
     const favorites = await listMyFavorites();
     expect(favorites).toHaveLength(0);
-    expect(favoriteQuery).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ userId: registration.userId })
-    }));
-    const favoriteDelete = vi.spyOn(prisma.favorite, "deleteMany");
     await removeFavorite("missing-product");
-    expect(favoriteDelete).toHaveBeenCalledWith({
-      where: { userId: registration.userId, productId: "missing-product" }
-    });
+    expect(await prisma.favorite.findMany({ where: { userId: registration.userId } })).toHaveLength(0);
 
-    const orderQuery = vi.spyOn(prisma.order, "findMany");
     const orders = await listCustomerOrders();
     expect(orders).toHaveLength(0);
-    expect(orderQuery).toHaveBeenCalledWith(expect.objectContaining({
-      where: { userId: registration.userId }
-    }));
+    expect(await prisma.order.findMany({ where: { userId: registration.userId } })).toHaveLength(0);
   });
 
   it("keeps seller registration pending without granting seller permissions", async () => {

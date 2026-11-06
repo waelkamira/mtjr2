@@ -1896,3 +1896,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Prisma validate/generate, all 23 disposable PostgreSQL migrations and baseline seed succeeded on e743a8afc30c1bad67c6bf164a50f5572874e3b2. The integration suite itself did not execute.
 - No browser runtime was available. Google provider credentials/callback registration, real verification email delivery and trusted-edge IP header behavior remain external runtime requirements.
 - No application Prisma schema or migration changed. No user/production database, secret values or deployment configuration were accessed or modified.
+
+
+## 2026-11-06 — PostgreSQL integration assertions corrected
+
+- General CI run 42211921349 passed on SHA 7872ea280e34ac6933cc6abcfea16f835c636c69: Prisma validate/generate, TypeScript, ESLint, unit tests and production build all succeeded.
+- PostgreSQL run 42211921474 on the same SHA passed PostgreSQL 16 startup, Prisma validate/generate, all 23 disposable migrations and baseline role/permission seed (6 roles, 23 permissions, 67 links), then executed the identity integration suite: 3 passed, 4 failed.
+- The failure log identified the common cause in the test itself: vi.spyOn was wrapping Prisma Client proxy delegate methods. The profile route returned 404 under that spy, and vi.restoreAllMocks then left prisma.user.findUnique unavailable for later login/session/logout/password-reset cases. The test assertions were coupled to Prisma's internal delegate function shape rather than persisted behavior.
+- Removed the Prisma delegate spies. The profile update now verifies the saved PostgreSQL displayName directly; favorites and orders verify the current user's persisted rows after the scoped service calls. No application identity code or Prisma schema was changed for this test-harness correction.
+- The new test version must be rerun on its exact resulting SHA. Identity remains Implemented / unverified until General CI and PostgreSQL both pass on that SHA.
