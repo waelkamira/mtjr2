@@ -82,7 +82,7 @@ export async function GET(request: Request): Promise<Response> {
     const identity = await identityResponse.json() as { iss?: string; aud?: string; sub?: string; email?: string; email_verified?: string; name?: string; exp?: string };
     if ((identity.iss !== "https://accounts.google.com" && identity.iss !== "accounts.google.com") ||
         identity.aud !== env.GOOGLE_CLIENT_ID || !identity.sub || !identity.email ||
-        identity.email_verified !== "true" || !identity.exp || Number(identity.exp) * 1000 <= Date.now()) {
+        identity.email_verified !== "true" || !identity.exp || !/^\\d+$/.test(identity.exp) || !Number.isSafeInteger(Number(identity.exp)) || Number(identity.exp) * 1000 <= Date.now()) {
       return oauthError("failed");
     }
     const email = identity.email.trim().toLowerCase();
