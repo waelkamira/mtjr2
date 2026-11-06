@@ -125,7 +125,7 @@ describe("seller shipment dispatch", () => {
   it("returns the existing shipment on an identical dispatch retry", async () => {
     mocks.vendorOrderFindUnique.mockResolvedValue({
       ...readyOrder, status: "SHIPPED",
-      shipment: { id: "shipment-1", carrierName: "DHL", trackingNumber: "TRACK-123", trackingUrl: null, shippedAt: new Date("2026-11-05T10:00:00.000Z") }
+      shipment: { id: "shipment-1", carrierName: "DHL", trackingNumber: "TRACK-123", trackingUrl: null, shippedAt: new Date("2026-11-05T10:00:00.000Z"), events: [] }
     });
     const result = await createSellerShipment("vendor-1", { carrierName: "DHL", trackingNumber: "TRACK-123" });
     expect(result).toMatchObject({ id: "shipment-1", vendorOrderStatus: "SHIPPED", changed: false });
