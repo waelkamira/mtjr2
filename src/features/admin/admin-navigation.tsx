@@ -23,10 +23,11 @@ const links = [
   { href: "/admin/search-synonyms", label: "Search synonyms", ar: "مرادفات البحث" },
   { href: "/admin/tax-rates", label: "Tax rates", ar: "معدلات الضرائب" },
   { href: "/admin/commissions", label: "Commissions", ar: "العمولات" },
-  { href: "/admin/coupons", label: "Discount codes", ar: "رموز الخصم" }
+  { href: "/admin/coupons", label: "Discount codes", ar: "رموز الخصم" },
+  { href: "/admin/control-panel", label: "Super Admin", ar: "إدارة المنصة", platformOnly: true }
 ];
 
-export default function AdminNavigation() {
+export default function AdminNavigation({ canManagePlatform = false }: { canManagePlatform?: boolean }) {
   const pathname = usePathname();
   const { locale } = useLocale();
 
@@ -39,7 +40,7 @@ export default function AdminNavigation() {
         <span className="text-xs text-white/60">{translate(locale, "Administration", "الإدارة")}</span>
       </div>
       <nav aria-label={translate(locale, "Administration", "الإدارة")} className="flex gap-1 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:px-3">
-        {links.map((link) => {
+        {links.filter((link) => !("platformOnly" in link) || !link.platformOnly || canManagePlatform).map((link) => {
           const active = link.href === "/admin/dashboard"
             ? pathname === link.href || pathname === "/admin/control-panel"
             : pathname === link.href || pathname.startsWith(`${link.href}/`);
