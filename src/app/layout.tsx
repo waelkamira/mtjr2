@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import SiteNavigation from "@/components/site-navigation";
 import AuthJourney from "@/components/auth-journey";
+import MatjarAiChat from "@/features/ai/matjar-ai-chat";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <SiteNavigation />
         <AuthJourney />
+        <MatjarAiChat />
         {children}
       </body>
     </html>
