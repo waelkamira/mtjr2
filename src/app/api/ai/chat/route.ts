@@ -12,7 +12,8 @@ const inputSchema = z.object({
   locale: z.string().trim().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/).default("en")
 }).strict();
 
-function formatMinor(amount: bigint, minorUnit: number): string {
+function formatMinor(value: bigint | string, minorUnit: number): string {
+  const amount = BigInt(value);
   const divisor = 10n ** BigInt(minorUnit);
   const whole = amount / divisor;
   if (minorUnit === 0) return whole.toString();
