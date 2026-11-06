@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -72,9 +73,10 @@ export default function ProductReviews({ productId }: { productId: string }) {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Review could not be submitted.", "تعذّر إرسال التقييم."));
       setMessage(t("Your review was submitted and is awaiting moderation.", "أُرسل تقييمك وهو بانتظار المراجعة."));
+      toast.success(t("Review submitted for moderation.", "تم إرسال التقييم للمراجعة."));
       setTitle(""); setBody(""); setMediaUrls("");
       await Promise.all([loadReviews(), loadEligible()]);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Review could not be submitted.", "تعذّر إرسال التقييم.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Review could not be submitted.", "تعذّر إرسال التقييم."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -88,9 +90,12 @@ export default function ProductReviews({ productId }: { productId: string }) {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Review report could not be submitted.", "تعذّر إرسال بلاغ التقييم."));
       setReportMessage(t("Thank you. The review was sent to moderation.", "شكرًا لك. أُرسل التقييم إلى فريق الإشراف."));
+      toast.success(t("Review report submitted.", "تم إرسال بلاغ التقييم."));
       setReportId(""); setReportDetails("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Review report could not be submitted.", "تعذّر إرسال بلاغ التقييم."));
+      const message = cause instanceof Error ? cause.message : t("Review report could not be submitted.", "تعذّر إرسال بلاغ التقييم.");
+      setError(message);
+      toast.error(message);
     } finally { setReportBusy(false); }
   }
 

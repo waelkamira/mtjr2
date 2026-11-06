@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type Review = {
   id: string; rating: number; title: string; body: string; createdAt: string;
@@ -37,7 +38,8 @@ export default function AdminStoreReviewsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Store review could not be moderated.");
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Store review could not be moderated."); }
+      toast.success(decision === "PUBLISH" ? "Store review published." : "Store review rejected.");
+    } catch (cause) { const message = cause instanceof Error ? cause.message : "Store review could not be moderated."; setError(message); toast.error(message); }
     finally { setBusyId(""); }
   }
   return <main className="min-h-screen bg-[var(--background)]"><header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5"><div className="mx-auto flex max-w-6xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><div className="flex items-center gap-4"><Link href="/admin/reviews" className="text-sm">Product reviews</Link><Link href="/admin/questions" className="text-sm">Product Q&A</Link></div></div></header>

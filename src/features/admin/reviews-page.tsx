@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -63,7 +64,8 @@ export default function AdminReviewsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || translate(locale, "Review could not be moderated.", "تعذّر الإشراف على المراجعة."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Review could not be moderated.", "تعذّر الإشراف على المراجعة.")); }
+      toast.success(translate(locale, decision === "PUBLISH" ? "Review published." : "Review rejected.", decision === "PUBLISH" ? "تم نشر المراجعة." : "تم رفض المراجعة."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Review could not be moderated.", "تعذّر الإشراف على المراجعة."); setError(message); toast.error(message); }
     finally { setBusyId(""); }
   }
   async function resolveQueueItem(kind: "report" | "appeal", id: string, decision: "DISMISS" | "HIDE" | "UPHOLD" | "RESTORE") {
@@ -79,7 +81,8 @@ export default function AdminReviewsPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || translate(locale, "Review decision could not be saved.", "تعذر حفظ قرار المراجعة."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Review decision could not be saved.", "تعذر حفظ قرار المراجعة.")); }
+      toast.success(translate(locale, "Review queue decision saved.", "تم حفظ قرار قائمة المراجعات."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Review decision could not be saved.", "تعذر حفظ قرار المراجعة."); setError(message); toast.error(message); }
     finally { setBusyId(""); }
   }
   return <main className="min-h-screen bg-[var(--background)]">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -27,7 +28,7 @@ export default function CheckoutShippingOptions({ quoteId, currencyCode, minorUn
       const data = await response.json() as { groups?: Group[]; error?: string };
       if (!response.ok || !data.groups) throw new Error(data.error || t("Shipping options could not be loaded.", "تعذّر تحميل خيارات الشحن."));
       setGroups(data.groups); setLoaded(true);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Shipping options could not be loaded.", "تعذّر تحميل خيارات الشحن.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Shipping options could not be loaded.", "تعذّر تحميل خيارات الشحن."); setError(message); toast.error(message); }
     finally { setBusy(""); }
   }
 
@@ -40,8 +41,9 @@ export default function CheckoutShippingOptions({ quoteId, currencyCode, minorUn
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Shipping option could not be selected.", "تعذّر اختيار خيار الشحن."));
       setMessage(t("Shipping selection saved for this store.", "تم حفظ خيار الشحن لهذا المتجر."));
+      toast.success(t("Shipping option saved.", "تم حفظ خيار الشحن."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Shipping option could not be selected.", "تعذّر اختيار خيار الشحن.")); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Shipping option could not be selected.", "تعذّر اختيار خيار الشحن."); setError(message); toast.error(message); }
     finally { setBusy(""); }
   }
 
