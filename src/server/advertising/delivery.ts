@@ -36,7 +36,7 @@ export async function listSponsoredCampaigns(input: {
 }) {
   const now = input.now ?? new Date();
   if (!input.marketId) return [];
-  const tokens = (input.query ?? "").normalize("NFKC").toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  const tokens: string[] = (input.query ?? "").normalize("NFKC").toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
   const rows = await prisma.adCampaign.findMany({
     where: {
       status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now },
@@ -74,7 +74,7 @@ export async function listSponsoredCampaigns(input: {
   });
   return rows.filter((row) => {
     if (row.spentMinor >= row.budgetMinor) return false;
-    const dailySpent = row.spendEntries.reduce((sum, entry) => sum + entry.amountMinor, 0n);
+    const dailySpent = row.spendEntries.reduce((sum, entry) => sum + entry.amountMinor, BigInt(0));
     if (dailySpent >= row.dailyBudgetMinor) return false;
     if (row.targetKeywords.length && (!tokens.length || !row.targetKeywords.some((keyword) => tokens.includes(keyword.toLocaleLowerCase())))) return false;
     return Boolean(row.currencyCode) && row.product.variants.some((variant) => variant.prices.some((price) => price.currencyCode === row.currencyCode));
@@ -120,12 +120,12 @@ export async function recordSponsoredAdEvent(input: {
     const daily = await tx.adSpendLedgerEntry.aggregate({
       where: { campaignId: campaign.id, createdAt: { gte: dailyStart } }, _sum: { amountMinor: true }
     });
-    const dailySpent = daily._sum.amountMinor ?? 0n;
+    const dailySpent = daily._sum.amountMinor ?? BigInt(0);
     if (campaign.spentMinor >= campaign.budgetMinor) throw new Error("Campaign budget has been exhausted.");
-    let costMinor = 0n;
+    let costMinor = BigInt(0);
     if (input.type === "CLICK") {
       costMinor = campaign.cpcBidMinor;
-      if (costMinor <= 0n || campaign.spentMinor + costMinor > campaign.budgetMinor || dailySpent + costMinor > campaign.dailyBudgetMinor) {
+      if (costMinor <= BigInt(0) || campaign.spentMinor + costMinor > campaign.budgetMinor || dailySpent + costMinor > campaign.dailyBudgetMinor) {
         throw new Error("Campaign budget limit has been reached.");
       }
     }
@@ -135,8 +135,8 @@ export async function recordSponsoredAdEvent(input: {
     await tx.adCampaign.update({
       where: { id: campaign.id },
       data: input.type === "CLICK"
-        ? { spentMinor: { increment: costMinor }, clickCount: { increment: 1n } }
-        : { impressionCount: { increment: 1n } }
+        ? { spentMinor: { increment: costMinor }, clickCount: { increment: BigInt(1) } }
+        : { impressionCount: { increment: BigInt(1) } }
     });
     if (input.type === "CLICK") {
       await tx.adSpendLedgerEntry.create({
@@ -156,7 +156,7 @@ export async function generateAdInvoices(input: { periodStart: Date; periodEnd: 
   });
   if (!totals.length) return { created: 0, stores: 0 };
   const result = await prisma.adInvoice.createMany({
-    data: totals.filter((row) => (row._sum.amountMinor ?? 0n) > 0n).map((row) => ({
+    data: totals.filter((row) => (row._sum.amountMinor ?? BigInt(0)) > BigInt(0)).map((row) => ({
       storeId: row.storeId, currencyCode: row.currencyCode, periodStart: input.periodStart,
       periodEnd: input.periodEnd, dueAt: input.dueAt, amountMinor: row._sum.amountMinor!
     })),
@@ -186,10 +186,10 @@ export async function getAdminAdvertisingAnalytics(now = new Date()) {
   return {
     campaignCount: campaigns._count._all,
     activeCampaigns,
-    impressions: (campaigns._sum.impressionCount ?? 0n).toString(),
-    clicks: (campaigns._sum.clickCount ?? 0n).toString(),
-    spendByCurrency: spendByCurrency.map((row) => ({ currencyCode: row.currencyCode, amountMinor: (row._sum.amountMinor ?? 0n).toString() })),
-    invoicesByCurrency: invoicesByCurrency.map((row) => ({ currencyCode: row.currencyCode, status: row.status, amountMinor: (row._sum.amountMinor ?? 0n).toString(), count: row._count._all }))
+    impressions: (campaigns._sum.impressionCount ?? BigInt(0)).toString(),
+    clicks: (campaigns._sum.clickCount ?? BigInt(0)).toString(),
+    spendByCurrency: spendByCurrency.map((row) => ({ currencyCode: row.currencyCode, amountMinor: (row._sum.amountMinor ?? BigInt(0)).toString() })),
+    invoicesByCurrency: invoicesByCurrency.map((row) => ({ currencyCode: row.currencyCode, status: row.status, amountMinor: (row._sum.amountMinor ?? BigInt(0)).toString(), count: row._count._all }))
   };
 }
 
