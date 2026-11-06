@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type Store = {
@@ -141,6 +142,16 @@ export default function SellerWorkspacePage() {
   }
 
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
+  const inventoryTotals = inventory.reduce((totals, row) => ({
+    onHand: totals.onHand + row.quantityOnHand,
+    reserved: totals.reserved + row.quantityReserved,
+    available: totals.available + row.quantityAvailable,
+    lowStock: totals.lowStock + (row.isLowStock ? 1 : 0)
+  }), { onHand: 0, reserved: 0, available: 0, lowStock: 0 });
+  const storeStatusCounts = (workspace?.stores ?? []).reduce((counts, store) => {
+    counts[store.status] = (counts[store.status] ?? 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
 
   return (
     <main className="min-h-screen bg-transparent">
@@ -208,6 +219,26 @@ export default function SellerWorkspacePage() {
                       <label className="grid gap-1 text-xs">{translate(locale, "Code", "الرمز")}<input required minLength={2} maxLength={40} value={warehouseCode} onChange={(e) => setWarehouseCode(e.target.value.toUpperCase())} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                       <button disabled={busy} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Add warehouse", "إضافة مستودع")}</button>
                     </form>}
+                    <section aria-label="Seller analytics" className="mt-6 grid gap-4 sm:grid-cols-2">
+                      <MetricBarChart title="Inventory health" rows={[
+                        { label: "Healthy stock records", value: Math.max(0, inventory.length - inventoryTotals.lowStock), color: "bg-emerald-500" },
+                        { label: "Low stock records", value: inventoryTotals.lowStock, color: "bg-rose-500" }
+                      ]} />
+                      <MetricBarChart title="Inventory quantities" rows={[
+                        { label: "On hand", value: inventoryTotals.onHand, color: "bg-sky-500" },
+                        { label: "Reserved", value: inventoryTotals.reserved, color: "bg-amber-500" },
+                        { label: "Available", value: inventoryTotals.available, color: "bg-emerald-500" }
+                      ]} />
+                      <MetricBarChart title="Shipping services" rows={[
+                        { label: "Active services", value: shippingRates.filter((rate) => rate.isActive).length, color: "bg-teal-500" },
+                        { label: "Inactive services", value: shippingRates.filter((rate) => !rate.isActive).length, color: "bg-slate-500" }
+                      ]} />
+                      <MetricBarChart title="Store portfolio" rows={[
+                        { label: "Active stores", value: storeStatusCounts.ACTIVE ?? 0, color: "bg-green-500" },
+                        { label: "Draft stores", value: storeStatusCounts.DRAFT ?? 0, color: "bg-amber-500" },
+                        { label: "Suspended stores", value: storeStatusCounts.SUSPENDED ?? 0, color: "bg-rose-500" }
+                      ]} />
+                    </section>
                     <div className="mt-7 border-t border-[var(--border)] pt-6">
                       <h3 className="font-semibold">{translate(locale, "Shipping services", "خدمات الشحن")}</h3>
                       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Rates are scoped to a market and optional destination region. Enter the amount in the selected currency&apos;s minor units.", "ترتبط الأسعار بسوق ومنطقة وجهة اختيارية. أدخل المبلغ بأصغر وحدة للعملة المحددة.")}</p>
