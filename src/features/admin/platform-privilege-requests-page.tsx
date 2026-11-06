@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -54,8 +55,9 @@ export default function PlatformPrivilegeRequestsPage() {
       if (!response.ok) throw new Error(data.error || translate(locale, "Unable to submit request.", "تعذر إرسال الطلب."));
       setEmail(""); setReason(""); setNotice(translate(locale, "Privilege request submitted for independent review.", "تم إرسال طلب الامتياز للمراجعة المستقلة."));
       await load();
+      toast.success(translate(locale, "Privilege request submitted.", "تم إرسال طلب الصلاحيات."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Unable to submit request.", "تعذر إرسال الطلب."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to submit request.", "تعذر إرسال الطلب."); setError(message); toast.error(message);
     } finally { setSaving(false); }
   }
 
@@ -70,8 +72,9 @@ export default function PlatformPrivilegeRequestsPage() {
       if (!response.ok) throw new Error(data.error || translate(locale, "Unable to process decision.", "تعذرت معالجة القرار."));
       setNotice(decision === "APPROVE" ? translate(locale, "Request approved; platform access was granted.", "تمت الموافقة على الطلب ومنح صلاحية الوصول إلى المنصة.") : translate(locale, "Request rejected.", "تم رفض الطلب."));
       await load();
+      toast.success(translate(locale, "Privilege decision saved.", "تم حفظ قرار الصلاحيات."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Unable to process decision.", "تعذرت معالجة القرار."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to process decision.", "تعذرت معالجة القرار."); setError(message); toast.error(message);
     } finally { setSaving(false); }
   }
 

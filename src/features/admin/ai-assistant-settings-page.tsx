@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -77,8 +78,9 @@ export default function AiAssistantSettingsPage() {
       setSettings(data);
       setDraft({ enabled: data.enabled, model: data.model, maxCompletionTokens: data.maxCompletionTokens });
       setNotice(t("Settings saved and recorded in the platform audit log.", "تم حفظ الإعدادات وتسجيل التغيير في سجل تدقيق المنصة."));
+      toast.success(t("Assistant settings saved.", "تم حفظ إعدادات المساعد."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Unable to save assistant settings.", "تعذر حفظ إعدادات المساعد."));
+      const message = cause instanceof Error ? cause.message : t("Unable to save assistant settings.", "تعذر حفظ إعدادات المساعد."); setError(message); toast.error(message);
     } finally {
       setSaving(false);
     }
