@@ -19,7 +19,7 @@ type Product = {
   media: Array<{ url: string; altText: string | null }>;
   variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
 };
-type Store = { id: string; name: string; markets: Array<{ market: { id: string } }> };
+type Store = { id: string; storeNumber: string; name: string; markets: Array<{ market: { id: string } }> };
 type Workspace = { stores: Store[] };
 
 async function json<T>(response: Response): Promise<T> {
@@ -180,7 +180,7 @@ export default function SellerProductsPage() {
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
             setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
-          }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
+          }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name} · STR-{store.storeNumber.padStart(8, "0")}</option>)}</select></label>
           {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
             <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
