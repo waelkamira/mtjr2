@@ -30,7 +30,8 @@ const ADMIN_AREA_PERMISSIONS = [
   "roles:read",
   "roles:assign",
   "audit:read",
-  "platform:manage"
+  "platform:manage",
+  "ads:moderate"
 ] as const;
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
