@@ -1,6 +1,6 @@
 # Matjar AI Assistant — implementation plan
 
-**Status:** Approved direction; implementation not started.
+**Status:** AI-1 provider foundation implemented on `feat/matjar-ai-provider-foundation`; automated verification is pending. No chat endpoint, UI, catalog tools, customer tools, or Super Admin controls are implemented yet.
 **Provider:** GroqCloud API, using its free tier within the account's published rate limits.
 **Primary model candidate:** `openai/gpt-oss-20b` (tool calling supported). Keep the model configurable because provider model availability and free-tier limits can change.
 **Cost constraint:** No paid model/API plan and no paid vector database. The application must fail gracefully when the free quota is exhausted; it must never silently switch to a paid provider.
@@ -152,4 +152,5 @@ Environment variable names and validation must be reconciled with the existing e
 ## Current progress log
 
 - 2026-11-06: Owner created a GroqCloud account and API key. The key has not been shared in chat and must remain private.
-- 2026-11-06: This implementation contract was added to the canonical repository documentation. No API key was committed, no Vercel environment was accessed, no database was changed, and no AI endpoint or UI is yet claimed implemented.
+- 2026-11-06: This implementation contract was added to the canonical repository documentation. No API key was committed, no hosting environment was accessed, and no database was changed.
+- 2026-11-06: Added server-only Groq Chat Completions adapter with a configurable model, explicit 20-second timeout, bounded message/output sizes, safe 401/403/429/5xx handling, and no paid-provider fallback. Added `GROQ_API_KEY`, `GROQ_MODEL`, and fail-closed `AI_ASSISTANT_ENABLED` environment validation. The assistant remains disabled unless the owner explicitly enables it and supplies the server-side key. Added unit coverage for disabled-by-default behavior, missing credentials, secret handling, quota exhaustion, and context bounds. Changes are on `feat/matjar-ai-provider-foundation`; CI has not yet been observed.
