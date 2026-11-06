@@ -69,7 +69,7 @@ export default function MatjarAIAssistant() {
             {messages.length === 0 && (
               <div className="space-y-3">
                 <div className="rounded-2xl bg-white p-4 text-sm leading-7 text-[var(--color-ink-800)] shadow-sm">
-                  مرحباً بك في Matjar! اسألني عن المنتجات أو الأسعار أو كيفية استخدام المتجر.
+                  مرحباً بك في Matjar! اسألني عن المنتجات أو الأسعار أو كيفية استخدام المتجر. عند الاستفسار عن طلباتك، قد تتم معالجة ملخص الطلب المرتبط بحسابك عبر Groq لتوليد الإجابة. لا ترسل كلمات المرور أو بيانات الدفع.
                 </div>
                 {suggestions.map((suggestion) => (
                   <button key={suggestion} type="button" onClick={() => void send(suggestion)} className="block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-right text-xs text-[var(--color-lavender-800)] hover:bg-[var(--color-lavender-50)]">
