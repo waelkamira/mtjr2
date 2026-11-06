@@ -28,6 +28,7 @@ export default function MatjarAiChat() {
     setMessages((current) => [...current, { role: "user", content: text }]);
     setMessage("");
     setError("");
+    setProducts([]);
     setLoading(true);
 
     try {
