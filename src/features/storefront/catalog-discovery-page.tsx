@@ -6,6 +6,7 @@ import CatalogProductGrid from "@/features/storefront/catalog-product-grid";
 import CatalogListControls from "@/features/storefront/catalog-list-controls";
 import { getPreferredLocale } from "@/server/locale";
 import { translate } from "@/lib/locale";
+import { listSponsoredCampaigns } from "@/server/advertising/delivery";
 
 type SearchParams = {
   q?: string;
@@ -61,6 +62,7 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
     listDiscoverableStores({ page: 1, limit: 100 }),
     listActiveMarkets()
   ]);
+  const sponsored = await listSponsoredCampaigns({ marketId: marketId ?? markets[0]?.id, categoryId, query: q, limit: 4 });
   const selectedMarket = markets.find((market) => market.id === marketId);
   const selectedCurrency = selectedMarket?.currencies.find(({ currency }) => currency.code === currencyCode)?.currency;
   const filters = {
@@ -97,7 +99,7 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
       </form>
       <div className="mt-7 flex items-center justify-between text-sm text-[var(--muted)]"><span>{result.pagination.total} {t("matching products", "منتج مطابق")}</span>{q && <span>{t("Query:", "البحث:")} “{q}” · {t("Sorted by", "مرتبة حسب")} {sort === "relevance" ? t("relevance", "الصلة") : sort.replace("_", " ")}</span>}</div>
       <CatalogListControls action={action} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} params={filters} sort={sort} locale={locale} />
-      <CatalogProductGrid products={result.items} locale={locale} />
+      <CatalogProductGrid products={result.items} locale={locale} sponsored={sponsored} />
       <CatalogListControls action={action} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} params={filters} sort={sort} locale={locale} />
     </main>
   );

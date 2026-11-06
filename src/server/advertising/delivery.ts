@@ -1,0 +1,134 @@
+import "server-only";
+
+import { createHmac, timingSafeEqual, createHash } from "node:crypto";
+import { AdCampaignEventType, AdCampaignStatus, Prisma } from "@prisma/client";
+import { env } from "@/lib/env";
+import { prisma } from "@/lib/db/prisma";
+import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
+
+const TOKEN_TTL_MS = 30 * 60 * 1000;
+type TokenPayload = { campaignId: string; expiresAt: number; nonce: string };
+function signature(value: string) {
+  return createHmac("sha256", env.AUTH_SECRET).update(value).digest("base64url");
+}
+function makeToken(payload: TokenPayload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return body + "." + signature(body);
+}
+function readToken(token: string, now: Date): TokenPayload | null {
+  const [body, supplied, extra] = token.split(".");
+  if (!body || !supplied || extra) return null;
+  const expected = signature(body);
+  const a = Buffer.from(supplied);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as TokenPayload;
+    if (!payload.campaignId || !payload.nonce || !Number.isSafeInteger(payload.expiresAt) || payload.expiresAt <= now.getTime()) return null;
+    return payload;
+  } catch { return null; }
+}
+
+export async function listSponsoredCampaigns(input: {
+  marketId?: string; categoryId?: string; query?: string; limit?: number; now?: Date;
+}) {
+  const now = input.now ?? new Date();
+  if (!input.marketId) return [];
+  const tokens = (input.query ?? "").normalize("NFKC").toLocaleLowerCase().match(/[\\p{L}\\p{N}]+/gu) ?? [];
+  const rows = await prisma.adCampaign.findMany({
+    where: {
+      status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now },
+      marketId: input.marketId,
+      market: { status: "ACTIVE", country: { isActive: true }, currencies: { some: { isEnabled: true } } },
+      OR: [{ targetCategoryId: null }, ...(input.categoryId ? [{ targetCategoryId: input.categoryId }] : [])],
+      product: {
+        status: "ACTIVE", approvalStatus: "APPROVED",
+        store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: { some: { marketId: input.marketId, isEnabled: true } } },
+        variants: { some: { isActive: true, prices: { some: { marketId: input.marketId, currency: { isActive: true } } } } }
+      }
+    },
+    orderBy: [{ cpcBidMinor: "desc" }, { createdAt: "asc" }],
+    take: Math.min(24, Math.max(1, input.limit ?? 4)),
+    select: {
+      id: true, budgetMinor: true, dailyBudgetMinor: true, cpcBidMinor: true, spentMinor: true,
+      targetKeywords: true, product: {
+        select: {
+          id: true, slug: true, name: true, description: true,
+          brand: { select: { name: true } },
+          store: { select: { id: true, name: true, slug: true } },
+          media: { take: 4, orderBy: { createdAt: "asc" }, select: { url: true, altText: true, isPrimary: true } },
+          variants: {
+            where: { isActive: true },
+            take: 4,
+            select: { prices: { where: { marketId: input.marketId }, take: 1, select: { amountMinor: true, currencyCode: true, currency: { select: { minorUnit: true } } } } }
+          }
+        }
+      },
+      spendEntries: { where: { createdAt: { gte: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())) } }, select: { amountMinor: true } }
+    }
+  });
+  return rows.filter((row) => {
+    if (row.spentMinor >= row.budgetMinor) return false;
+    const dailySpent = row.spendEntries.reduce((sum, entry) => sum + entry.amountMinor, 0n);
+    if (dailySpent >= row.dailyBudgetMinor) return false;
+    if (row.targetKeywords.length && (!tokens.length || !row.targetKeywords.some((keyword) => tokens.includes(keyword.toLocaleLowerCase())))) return false;
+    return row.product.variants.some((variant) => variant.prices.length > 0);
+  }).slice(0, input.limit ?? 4).map((row) => ({
+    campaignId: row.id,
+    token: makeToken({ campaignId: row.id, expiresAt: now.getTime() + TOKEN_TTL_MS, nonce: createHash("sha256").update(row.id + ":" + now.getTime()).digest("hex").slice(0, 24) }),
+    product: {
+      ...row.product,
+      variants: row.product.variants.map((variant) => ({ prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() })) }))
+    }
+  }));
+}
+
+export async function recordSponsoredAdEvent(input: {
+  token: string; eventId: string; type: "IMPRESSION" | "CLICK"; headers: Headers; now?: Date;
+}) {
+  const now = input.now ?? new Date();
+  const payload = readToken(input.token, now);
+  if (!payload || !/^[A-Za-z0-9_-]{16,80}$/.test(input.eventId)) throw new Error("Invalid or expired advertising event token.");
+  const visitorIp = resolveTrustedClientIp(input.headers, env.TRUSTED_PROXY_IP_HEADER, env.NODE_ENV);
+  const visitorHash = visitorIp ? createHash("sha256").update(visitorIp).digest("hex") : null;
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${payload.campaignId}, 0))`);
+    const campaign = await tx.adCampaign.findUnique({
+      where: { id: payload.campaignId },
+      select: { id: true, storeId: true, currencyCode: true, status: true, startsAt: true, endsAt: true, budgetMinor: true, dailyBudgetMinor: true, cpcBidMinor: true, spentMinor: true }
+    });
+    if (!campaign || campaign.status !== AdCampaignStatus.ACTIVE || campaign.startsAt > now || campaign.endsAt <= now || !campaign.currencyCode) {
+      throw new Error("This advertising campaign is no longer deliverable.");
+    }
+    const existing = await tx.adCampaignEvent.findUnique({ where: { campaignId_eventId: { campaignId: campaign.id, eventId: input.eventId } } });
+    if (existing) return { accepted: true, duplicate: true, chargedMinor: existing.costMinor.toString() };
+    const dailyStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const daily = await tx.adSpendLedgerEntry.aggregate({
+      where: { campaignId: campaign.id, createdAt: { gte: dailyStart } }, _sum: { amountMinor: true }
+    });
+    const dailySpent = daily._sum.amountMinor ?? 0n;
+    if (campaign.spentMinor >= campaign.budgetMinor) throw new Error("Campaign budget has been exhausted.");
+    let costMinor = 0n;
+    if (input.type === "CLICK") {
+      costMinor = campaign.cpcBidMinor;
+      if (costMinor <= 0n || campaign.spentMinor + costMinor > campaign.budgetMinor || dailySpent + costMinor > campaign.dailyBudgetMinor) {
+        throw new Error("Campaign budget limit has been reached.");
+      }
+    }
+    const event = await tx.adCampaignEvent.create({
+      data: { campaignId: campaign.id, eventId: input.eventId, type: input.type === "CLICK" ? AdCampaignEventType.CLICK : AdCampaignEventType.IMPRESSION, visitorHash, costMinor, occurredAt: now }
+    });
+    await tx.adCampaign.update({
+      where: { id: campaign.id },
+      data: input.type === "CLICK"
+        ? { spentMinor: { increment: costMinor }, clickCount: { increment: 1n } }
+        : { impressionCount: { increment: 1n } }
+    });
+    if (input.type === "CLICK") {
+      await tx.adSpendLedgerEntry.create({
+        data: { campaignId: campaign.id, eventId: event.id, storeId: campaign.storeId, currencyCode: campaign.currencyCode, amountMinor: costMinor, createdAt: now }
+      });
+    }
+    return { accepted: true, duplicate: false, chargedMinor: costMinor.toString() };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
