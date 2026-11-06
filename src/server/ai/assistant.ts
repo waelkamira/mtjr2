@@ -7,7 +7,8 @@ import { groqChat, type GroqMessage } from "@/server/ai/groq-client";
 
 const productSearchInput = z.object({
   query: z.string().trim().min(2).max(120),
-  limit: z.number().int().min(1).max(5).default(4),\n  inStock: z.boolean().default(false)
+  limit: z.number().int().min(1).max(5).default(4),
+  inStock: z.boolean().default(false)
 }).strict();
 
 const tools = [{
@@ -19,7 +20,8 @@ const tools = [{
       type: "object",
       properties: {
         query: { type: "string", minLength: 2, maxLength: 120, description: "Short product search phrase in the customer's language." },
-        limit: { type: "integer", minimum: 1, maximum: 5 },\n        inStock: { type: "boolean", description: "Set true only when the customer explicitly asks for currently available/in-stock products." }
+        limit: { type: "integer", minimum: 1, maximum: 5 },
+        inStock: { type: "boolean", description: "Set true only when the customer explicitly asks for currently available/in-stock products." }
       },
       required: ["query"],
       additionalProperties: false
