@@ -16,7 +16,9 @@ export default function MetricBarChart({ title, rows, description }: {
     <article className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-[var(--color-forest-950)]">{translate(locale, title, title)}</h3>
       {description && <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, description, description)}</p>}
-      <div className="mt-4 space-y-4">
+      {rows.length === 0 ? (
+        <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-4 text-xs text-[var(--muted)]">{translate(locale, "No analytics data is available for this view yet.", "لا تتوفر بيانات إحصائية لهذا العرض حتى الآن.")}</p>
+      ) : <div className="mt-4 space-y-4">
         {rows.map((row) => (
           <div key={row.label}>
             <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
@@ -28,7 +30,7 @@ export default function MetricBarChart({ title, rows, description }: {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </article>
   );
 }
