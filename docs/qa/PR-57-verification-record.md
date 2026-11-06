@@ -190,3 +190,22 @@ Current implementation head: `f27767effd4ef6bdd141b529baa05eeb2b52a11d`.
 Toast coverage now includes the previously identified user-detail, notification preference/read, checkout delivery-address, Q&A report moderation and other admin/seller mutation surfaces. This remains a targeted feature inventory, not a claim that every mutation in every route and component has been exhaustively scanned.
 
 **Acceptance limitations remain:** no real-browser E2E or visual QA was run; the available connected browser integration in this session cannot drive the app. The campaign workflow manages draft/submission/moderation/activation states only. Live placement/delivery, campaign targeting, impressions/clicks, attribution, analytics and billing/debits remain future work. PR #57 is still Draft/open/unmerged.
+
+## Targeted mutation-feedback audit — 2026-11-07 (head `93ca465ae87a39a4d71874938e5799ae0c02ff43`)
+
+A fresh source-level scan was performed after the advertising campaign workflow and expanded Toast work landed.
+
+- Reviewed 15 admin feature modules: the mutation-bearing modules in scope now import Sonner and contain success/error feedback. `src/features/admin/products-page.tsx` was the remaining approval/rejection exception; commit `93ca465ae87a39a4d71874938e5799ae0c02ff43` adds success and failure Toast feedback.
+- Reviewed 16 seller/customer feature modules: mutation-bearing seller, seller-order, support, support-ticket, wishlist, review, return, notification and checkout surfaces in this set contain Toast feedback.
+- `src/features/account/questions-page.tsx` is read-only in this scan. `src/features/orders/customer-orders-page.tsx` only posts to logout, which is navigation/session termination and intentionally does not emit a success toast.
+- This is a bounded source scan of the listed feature modules, **not** a repository-wide inventory of every mutation component, API endpoint, or button. No claim of exhaustive repository-wide coverage is made.
+
+## Exact-head CI status
+
+- New code head: `93ca465ae87a39a4d71874938e5799ae0c02ff43`.
+- CI run [42303816983](https://github.com/waelkamira/mtjr2/actions/runs/42303816983) and Platform PostgreSQL Integration run [42303816853](https://github.com/waelkamira/mtjr2/actions/runs/42303816853) were started for this exact head. Their completion status must be checked before treating this head as verified.
+- The previous exact head `75a58e7496f4d00909e018c7d9b3d33f46a339cc` passed CI [42299338653](https://github.com/waelkamira/mtjr2/actions/runs/42299338653) and PostgreSQL Integration [42299338674](https://github.com/waelkamira/mtjr2/actions/runs/42299338674).
+
+## Merge status
+
+PR #57 remains Draft/open/unmerged. The campaign workflow is a campaign-management and moderation slice, not live ad delivery. Browser E2E, visual QA and the route-by-route authorization audit remain outstanding. Do not represent these as completed.
