@@ -5,6 +5,19 @@ import { answerCustomer, assistantInputSchema } from "@/server/ai/assistant";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const requestWindows = new Map<string, { startedAt: number; count: number }>();
+function isRateLimited(request: Request): boolean {
+  const key = (request.headers.get("x-vercel-forwarded-for") ?? "local-shared").split(",")[0].trim();
+  const now = Date.now();
+  const current = requestWindows.get(key);
+  if (!current || now - current.startedAt >= 60_000) {
+    requestWindows.set(key, { startedAt: now, count: 1 });
+    return false;
+  }
+  current.count += 1;
+  return current.count > 12;
+}
+
 export async function POST(request: Request): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
