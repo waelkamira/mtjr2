@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -98,8 +99,9 @@ export default function AdminUserDetailPage({ userId }: { userId: string }) {
       setReason("");
       setMessage(translate(locale, "Account status updated.", "تم تحديث حالة الحساب.") + ` ${data.result?.revokedSessions ?? 0} ` + translate(locale, "active session(s) revoked.", "جلسة نشطة تم إبطالها."));
       await load();
+      toast.success(translate(locale, "Account status updated.", "تم تحديث حالة الحساب."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Account status update failed.", "تعذر تحديث حالة الحساب."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Account status update failed.", "تعذر تحديث حالة الحساب."); setError(message); toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -127,8 +129,9 @@ export default function AdminUserDetailPage({ userId }: { userId: string }) {
       if (!response.ok) throw new Error(data.error || "Role assignment failed.");
       setMessage(`${role.name} ${translate(locale, "assigned. The change was recorded in the platform audit log.", "تم إسناده. سُجّل التغيير في سجل تدقيق المنصة.")}`);
       await load();
+      toast.success(translate(locale, "Role assigned.", "تم إسناد الدور."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Role assignment failed.", "تعذر إسناد الدور."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Role assignment failed.", "تعذر إسناد الدور."); setError(message); toast.error(message);
     } finally {
       setRoleBusy("");
     }
@@ -147,8 +150,9 @@ export default function AdminUserDetailPage({ userId }: { userId: string }) {
       if (!response.ok) throw new Error(data.error || "Role removal failed.");
       setMessage(`${assignment.role.name} ${translate(locale, "removed. The change was recorded in the platform audit log.", "تمت إزالته. سُجّل التغيير في سجل تدقيق المنصة.")}`);
       await load();
+      toast.success(translate(locale, "Role removed.", "تمت إزالة الدور."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Role removal failed.", "تعذرت إزالة الدور."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Role removal failed.", "تعذرت إزالة الدور."); setError(message); toast.error(message);
     } finally {
       setRoleBusy("");
     }
@@ -169,8 +173,9 @@ export default function AdminUserDetailPage({ userId }: { userId: string }) {
       setMessage(translate(locale, "Account anonymized. Store and product visibility was removed; financial, order, and audit records were preserved.", "تم إخفاء هوية الحساب وإزالة ظهور المتجر والمنتجات؛ وتم الاحتفاظ بالسجلات المالية وسجلات الطلبات والتدقيق."));
       setDeletionEmail(""); setDeletionReason("");
       await load();
+      toast.success(translate(locale, "Account anonymized.", "تم إخفاء هوية الحساب."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Account anonymization failed.", "تعذرت إزالة هوية الحساب."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Account anonymization failed.", "تعذرت إزالة هوية الحساب."); setError(message); toast.error(message);
     } finally {
       setDeleting(false);
     }
