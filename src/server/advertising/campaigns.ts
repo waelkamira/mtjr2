@@ -16,7 +16,7 @@ const createSchema=z.object({
 .refine(x=>BigInt(x.dailyBudgetMinor)<=BigInt(x.budgetMinor),{path:["dailyBudgetMinor"],message:"Daily budget cannot exceed total budget."})
 .refine(x=>BigInt(x.cpcBidMinor)<=BigInt(x.dailyBudgetMinor),{path:["cpcBidMinor"],message:"Cost per click cannot exceed the daily budget."});
 export type CreateAdCampaignInput=z.input<typeof createSchema>;
-const select={id:true,storeId:true,productId:true,marketId:true,currencyCode:true,budgetMinor:true,dailyBudgetMinor:true,cpcBidMinor:true,spentMinor:true,impressionCount:true,clickCount:true,targetCategoryId:true,targetBrandId:true,targetKeywords:true,title:true,message:true,status:true,moderationNote:true,startsAt:true,endsAt:true,submittedAt:true,reviewedAt:true,createdAt:true,updatedAt:true,product:{select:{id:true,name:true,slug:true}},store:{select:{id:true,name:true,slug:true}}} satisfies Prisma.AdCampaignSelect;
+const select={id:true,storeId:true,productId:true,marketId:true,currencyCode:true,budgetMinor:true,dailyBudgetMinor:true,cpcBidMinor:true,spentMinor:true,impressionCount:true,clickCount:true,targetCategoryId:true,targetBrandId:true,targetKeywords:true,currency:{select:{minorUnit:true}},title:true,message:true,status:true,moderationNote:true,startsAt:true,endsAt:true,submittedAt:true,reviewedAt:true,createdAt:true,updatedAt:true,product:{select:{id:true,name:true,slug:true}},store:{select:{id:true,name:true,slug:true}}} satisfies Prisma.AdCampaignSelect;
 function serializeCampaign<T extends {budgetMinor:bigint;dailyBudgetMinor:bigint;cpcBidMinor:bigint;spentMinor:bigint;impressionCount:bigint;clickCount:bigint}>(item:T){
  return {...item,budgetMinor:item.budgetMinor.toString(),dailyBudgetMinor:item.dailyBudgetMinor.toString(),cpcBidMinor:item.cpcBidMinor.toString(),spentMinor:item.spentMinor.toString(),impressionCount:item.impressionCount.toString(),clickCount:item.clickCount.toString()};
 }
@@ -77,7 +77,7 @@ export async function changeSellerAdCampaignStatus(id:string,action:"ACTIVATE"|"
   const changed=await tx.adCampaign.updateMany({where:{id,status:item.status},data:{status:next}});
   if(changed.count!==1)throw new Error("Campaign changed; reload and try again.");
   await tx.auditLog.create({data:{actorType:AuditActorType.USER,actorId:actor.userId,action:"advertising.campaign."+action.toLowerCase(),resource:"ad_campaign",resourceId:id,scopeType:"STORE",scopeId:item.storeId,occurredAt:now,metadata:{previousStatus:item.status,status:next}}});
-  return tx.adCampaign.findUniqueOrThrow({where:{id},select});
+  return serializeCampaign(await tx.adCampaign.findUniqueOrThrow({where:{id},select}));
  });
 }
 export async function listAdCampaignsForModeration(now=new Date()){
