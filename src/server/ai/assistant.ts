@@ -199,7 +199,9 @@ export async function answerCustomer(raw: unknown) {
             trackingUrl: vendor.shipment?.trackingUrl ?? null
           }))
         }));
-        toolResult = { message: "The application will securely display the customer's own recent order summaries in the UI. Do not request or repeat order details." };
+        toolResult = orders.length > 0
+          ? { message: "The application will securely display the customer's own recent order summaries in the UI. Do not request or repeat order details." }
+          : { message: "No recent orders were found for this signed-in customer." };
       } else {
         toolResult = { error: "Tool not available." };
       }
