@@ -43,4 +43,4 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
-      - run: npm run build
+      - run: npm run build\n      - name: Upload route and mutation audit reports\n        if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: api-and-ui-audit-reports\n          path: |\n            api-route-security-report.md\n            ui-mutation-toast-report.md
