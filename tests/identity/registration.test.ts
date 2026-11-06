@@ -1,9 +1,10 @@
+import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConsentType, Prisma, UserStatus } from "@prisma/client";
 
 const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
-    user: { create: vi.fn() },
+    user: { create: vi.fn(), updateMany: vi.fn() },
     seller: { create: vi.fn() },
     userConsent: { createMany: vi.fn() },
     verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
@@ -22,7 +23,8 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 
 import {
   IdentityConflictError,
-  registerUser
+  registerUser,
+  verifyUserEmail
 } from "../../src/server/identity/registration";
 
 const now = new Date("2026-11-03T12:00:00.000Z");
@@ -35,9 +37,11 @@ describe("registration", () => {
     );
     prismaMock.user.findFirst.mockResolvedValue(null);
     txMock.user.create.mockResolvedValue({ id: "user-1" });
+    txMock.user.updateMany.mockResolvedValue({ count: 1 });
     txMock.seller.create.mockResolvedValue({ id: "seller-1" });
     txMock.userConsent.createMany.mockResolvedValue({ count: 2 });
     txMock.verificationToken.create.mockResolvedValue({ id: "verification-1" });
+    txMock.verificationToken.updateMany.mockResolvedValue({ count: 1 });
   });
 
   it("creates a pending user with a hashed password and single-use verification challenge", async () => {
@@ -123,6 +127,41 @@ describe("registration", () => {
       select: { id: true }
     });
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("consumes a valid email challenge once and activates only the pending account", async () => {
+    const token = "v".repeat(43);
+    const expiresAt = new Date(now.getTime() + 60_000);
+    txMock.verificationToken.findUnique.mockResolvedValue({
+      id: "verification-1", userId: "user-1", purpose: "EMAIL_VERIFICATION",
+      expiresAt, consumedAt: null
+    });
+
+    await expect(verifyUserEmail(token, now)).resolves.toBe(true);
+
+    const digest = createHash("sha256").update(token, "utf8").digest("hex");
+    expect(txMock.verificationToken.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      where: { tokenHash: digest }
+    }));
+    expect(txMock.verificationToken.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "verification-1", purpose: "EMAIL_VERIFICATION", consumedAt: null, expiresAt: { gt: now } },
+      data: { consumedAt: now }
+    }));
+    expect(txMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", status: UserStatus.PENDING },
+      data: { status: UserStatus.ACTIVE, emailVerifiedAt: now }
+    });
+  });
+
+  it("rejects an expired email challenge without changing account state", async () => {
+    txMock.verificationToken.findUnique.mockResolvedValue({
+      id: "verification-1", userId: "user-1", purpose: "EMAIL_VERIFICATION",
+      expiresAt: new Date(now.getTime() - 1), consumedAt: null
+    });
+
+    await expect(verifyUserEmail("v".repeat(43), now)).resolves.toBe(false);
+    expect(txMock.verificationToken.updateMany).not.toHaveBeenCalled();
+    expect(txMock.user.updateMany).not.toHaveBeenCalled();
   });
 
   it("rejects a concurrent duplicate when the normalized-email unique index wins the race", async () => {
