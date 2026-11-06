@@ -54,7 +54,7 @@ describe("seller shipment tracking", () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "seller-1" });
     mocks.vendorFindUnique.mockResolvedValue({
       id: "vendor-1", orderId: "order-1", storeId: "store-1", status: "READY_TO_SHIP",
-      shipment: null, order: { orderNumber: "MTJ-ORDER-1", userId: "buyer-1" },
+      shipment: null, order: { status: "PROCESSING", orderNumber: "MTJ-ORDER-1", userId: "buyer-1" },
       store: { status: "ACTIVE", seller: { ownerId: "seller-1", status: "ACTIVE" } }
     });
     mocks.shipmentCreate.mockResolvedValue({ id: "shipment-1", status: "SHIPPED" });
@@ -109,7 +109,7 @@ describe("seller shipment tracking", () => {
   it("records delivery and completes the parent order when all seller orders are delivered", async () => {
     mocks.vendorFindUnique.mockResolvedValue({
       id: "vendor-1", orderId: "order-1", storeId: "store-1", status: "SHIPPED",
-      shipment: { id: "shipment-1", status: "OUT_FOR_DELIVERY" },
+      shipment: { id: "shipment-1", status: "OUT_FOR_DELIVERY", events: [] },
       order: { orderNumber: "MTJ-ORDER-1", userId: "buyer-1" },
       store: { status: "ACTIVE", seller: { ownerId: "seller-1", status: "ACTIVE" } }
     });
@@ -133,7 +133,7 @@ describe("seller shipment tracking", () => {
   it("rejects tracking updates that skip required forward stages", async () => {
     mocks.vendorFindUnique.mockResolvedValue({
       id: "vendor-1", orderId: "order-1", storeId: "store-1", status: "SHIPPED",
-      shipment: { id: "shipment-1", status: "SHIPPED" },
+      shipment: { id: "shipment-1", status: "SHIPPED", events: [] },
       order: { orderNumber: "MTJ-ORDER-1", userId: "buyer-1" },
       store: { status: "ACTIVE", seller: { ownerId: "seller-1", status: "ACTIVE" } }
     });
