@@ -154,3 +154,24 @@ Verification gates:
 - [ ] Foreign product IDs, unapproved products, inactive stores, invalid schedules and unauthorized moderation are rejected.
 - [ ] Only submitted campaigns can be moderated; rejection requires a reason; concurrent decisions cannot overwrite the first.
 - [ ] Real-browser seller/admin flows and desktop/mobile visual QA.
+
+## Advertising campaign management — separate implemented capability
+
+The platform now has a distinct `AdCampaign` domain. It is **not** the coupon/discount domain described above and must not reuse global coupon records as advertising campaigns.
+
+### Implemented lifecycle
+
+- Seller routes: `/seller/advertising` and `/api/seller/advertising/campaigns`.
+- Super Admin route: `/admin/advertising` and `/api/admin/advertising/campaigns`.
+- Campaigns are scoped to one store and one approved, published product owned by that store.
+- Lifecycle: `DRAFT → SUBMITTED → APPROVED/REJECTED → ACTIVE/PAUSED/ARCHIVED`.
+- Seller actions: create, submit, activate, pause and archive, subject to server-side state and schedule checks.
+- Platform moderation: approve or reject submitted campaigns; rejection requires a reason.
+- Dedicated `ads:manage` and `ads:moderate` permissions, store ownership/scoped access checks and audit records.
+- Prisma model and migration are included in the merged platform campaign implementation.
+
+### Explicitly not implemented
+
+This lifecycle does not deliver ads to shoppers. Live placements/ad serving, targeting, pacing/frequency caps, impression/click ingestion, event deduplication, attribution, campaign analytics and billing/debits are not implemented. Do not expose these as active controls or charge advertisers until the delivery/event pipeline, fraud controls, budget reservation and payment/ledger design have been separately implemented and tested.
+
+The current authoritative verification and remaining-work record is `docs/qa/PR-57-verification-record.md`.
