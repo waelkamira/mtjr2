@@ -76,13 +76,13 @@ export default function ProfilePage() {
   }));
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-5 py-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(236,72,153,.07),transparent_34%),radial-gradient(ellipse_at_top_right,rgba(59,130,246,.07),transparent_34%),#f8fafc] px-5 py-8">
+      <div className="mx-auto max-w-6xl">
         <Link href="/account" className="text-sm text-[var(--color-ink-600)]">← {t("My account", "حسابي")}</Link>
         <h1 className="mt-5 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Personal profile", "الملف الشخصي")}</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">{t("Manage the details associated with your marketplace account.", "أدر التفاصيل المرتبطة بحسابك في السوق.")}</p>
         {loading ? <p className="mt-8">{t("Loading profile…", "جارٍ تحميل الملف الشخصي…")}</p> : profile ? <>
-          <section className="mt-7 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
+          <section className="mt-7 rounded-3xl border border-white/80 bg-white/95 p-6 shadow-[0_12px_34px_rgba(15,23,42,.05)] sm:p-8">
             {error && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
             {notice && <p role="status" className="mb-4 rounded-xl bg-[var(--color-sage-100)] p-3 text-sm">{notice}</p>}
             <form onSubmit={save} className="space-y-5">
@@ -107,22 +107,22 @@ export default function ProfilePage() {
               <h2 className="text-xl font-semibold text-[var(--color-ink-950)]">{t("Your marketplace activity", "نشاطك في السوق")}</h2>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("Private statistics for your signed-in account only.", "إحصاءات خاصة بحسابك المسجل فقط.")}</p>
             </div>
-            <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 [t("Total orders", "إجمالي الطلبات"), analytics.totalOrders],
                 [t("Saved favorites", "المنتجات المفضلة"), analytics.favorites],
                 [t("Product reviews", "مراجعات المنتجات"), analytics.productReviews],
                 [t("Store reviews", "مراجعات المتاجر"), analytics.storeReviews]
-              ].map(([label, value]) => <div key={String(label)} className="rounded-2xl border border-[var(--border)] bg-white p-4"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>)}
+              ].map(([label, value]) => <div key={String(label)} className="rounded-3xl border border-white/80 bg-gradient-to-br from-white to-violet-50/70 p-5 shadow-[0_8px_24px_rgba(15,23,42,.045)]"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>)}
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <MetricBarChart title="Orders by status" rows={analytics.orderStatuses.map((row, index) => ({
+              <MetricBarChart variant="donut" title="Orders by status" rows={analytics.orderStatuses.map((row, index) => ({
                 label: row.status.replaceAll("_", " ").toLowerCase(),
                 value: row.count,
                 color: orderColors[index % orderColors.length]
               }))} />
-              <MetricBarChart title="Orders by month" rows={monthLabels.length ? monthLabels : [{ label: "No orders yet", value: 0, color: "bg-slate-400" }]} />
-              <MetricBarChart title="Customer engagement" rows={[
+              <MetricBarChart variant="area" title="Orders by month" rows={monthLabels.length ? monthLabels : [{ label: "No orders yet", value: 0, color: "bg-slate-400" }]} />
+              <MetricBarChart variant="bar" title="Customer engagement" rows={[
                 { label: "Saved favorites", value: analytics.favorites, color: "bg-pink-500" },
                 { label: "Product reviews", value: analytics.productReviews, color: "bg-violet-500" },
                 { label: "Store reviews", value: analytics.storeReviews, color: "bg-cyan-500" }
