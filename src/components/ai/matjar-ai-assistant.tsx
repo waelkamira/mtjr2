@@ -48,7 +48,7 @@ export default function MatjarAIAssistant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: value,
-          locale: typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("ar") ? "ar" : "en",
+          locale: /[\u0600-\u06FF]/.test(value) ? "ar" : "en",
           history: messages.slice(-6).map(({ role, content }) => ({ role, content }))
         })
       });
