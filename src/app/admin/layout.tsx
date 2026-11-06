@@ -34,17 +34,12 @@ const ADMIN_AREA_PERMISSIONS = [
 ] as const;
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
+  let canManagePlatform = false;
   try {
     const session = await requireAnyPermission(
       ADMIN_AREA_PERMISSIONS.map((permissionKey) => ({ permissionKey }))
     );
-    const canManagePlatform = await userHasPermission(session.userId, { permissionKey: "platform:manage" });
-    return (
-      <div className="min-h-screen bg-[var(--background)] lg:flex">
-        <AdminNavigation canManagePlatform={canManagePlatform} />
-        <div className="min-w-0 flex-1">{children}</div>
-      </div>
-    );
+    canManagePlatform = await userHasPermission(session.userId, { permissionKey: "platform:manage" });
   } catch (error) {
     if (error instanceof MfaEnrollmentRequiredError) {
       const returnTo = await getRequestedPagePath("/admin", "/admin/dashboard");
@@ -64,4 +59,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     throw error;
   }
 
+  return (
+    <div className="min-h-screen bg-[var(--background)] lg:flex">
+      <AdminNavigation canManagePlatform={canManagePlatform} />
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
 }
