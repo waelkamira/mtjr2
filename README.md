@@ -104,6 +104,10 @@ A system may be marked **Complete** only when:
 - Vercel setup, environment variables, PostgreSQL migration procedure, trusted-proxy requirements, and the single Phase 2 production verification journey: [Vercel deployment guide](docs/deployment/VERCEL.md).
 - Vercel account/project connection and production secrets are not yet configured; do not treat the deployment gates as passed until evidence is recorded in the build log.
 
+## Matjar AI Assistant
+
+The Groq-powered customer shopping/support assistant is specified in [`docs/ai/MATJAR_AI_ASSISTANT_PLAN.md`](docs/ai/MATJAR_AI_ASSISTANT_PLAN.md). The plan defines the free-tier-only provider policy, server-side secret handling, catalog and customer tools, privacy/authorization boundaries, Super Admin controls, and phased acceptance gates. This is a documented plan only; no AI endpoint, UI, database migration, or production secret has been added yet.
+
 ## Documentation
 
 - `docs/architecture/` — architecture decisions, domain boundaries, and system blueprint.
