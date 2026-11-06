@@ -143,8 +143,8 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
           throw new Error("This store URL is already in use or its setup details differ.");
         }
         return {
-          id: existing.id, name: existing.name, slug: existing.slug, status: existing.status,
-          alreadyCreated: true
+          id: existing.id, storeNumber: existing.storeNumber.toString(), name: existing.name,
+          slug: existing.slug, status: existing.status, alreadyCreated: true
         };
       }
 
