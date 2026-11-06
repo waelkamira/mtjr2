@@ -56,6 +56,7 @@ model User {
   createdCommissionRules  CommissionRule[]          @relation("CommissionRuleCreator")
   createdAdCampaigns      AdCampaign[]               @relation("AdCampaignCreator")
   reviewedAdCampaigns     AdCampaign[]               @relation("AdCampaignReviewer")
+  settledAdInvoices       AdInvoice[]                @relation("AdInvoiceSettler")
   storeMemberships        SellerStaff[]            @relation("SellerStaffUser")
   sentStoreInvitations    SellerStaff[]            @relation("SellerStaffInviter")
   carts                   Cart[]
@@ -2126,6 +2127,7 @@ enum AdCampaignEventType {
 
 enum AdInvoiceStatus {
   OPEN
+  SETTLED
   VOID
 }
 
@@ -2212,10 +2214,14 @@ model AdInvoice {
   periodEnd DateTime
   amountMinor BigInt
   status AdInvoiceStatus @default(OPEN)
+  paymentReference String? @db.VarChar(180)
+  settledAt DateTime?
+  settledById String?
   dueAt DateTime
   createdAt DateTime @default(now())
   store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
   currency Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  settledBy User? @relation("AdInvoiceSettler", fields: [settledById], references: [id], onDelete: SetNull)
   @@unique([storeId, currencyCode, periodStart])
   @@index([status, dueAt])
 }
