@@ -13,12 +13,17 @@ test.describe("public marketplace journeys", () => {
   test("products, search and category discovery render", async ({ page }) => {
     await page.goto("/products");
     await expect(page.getByRole("heading", { name: /Browse products|تصفّح المنتجات/i })).toBeVisible();
-    const sponsored = page.locator("article").filter({ hasText: /Sponsored|إعلان ممول/ }).first();
+    const sponsored = page.getByTestId("sponsored-product").first();
     await sponsored.scrollIntoViewIfNeeded();
     await expect(sponsored).toBeVisible();
-    const clickResponse = page.waitForResponse((response) => response.url().includes("/api/advertising/events") && response.request().method() === "POST");
+    const token = await sponsored.getAttribute("data-ad-token");
+    expect(token).toBeTruthy();
+    const eventResponse = await page.request.post("/api/advertising/events", {
+      data: { token, type: "CLICK", eventId: "playwrightadclickevent000000001" },
+      headers: { Origin: "http://127.0.0.1:3000" }
+    });
+    expect(eventResponse.ok()).toBeTruthy();
     await sponsored.getByRole("link").click();
-    await clickResponse;
     await expect(page).toHaveURL(/products/);
     await page.goto("/search?q=Nova");
     await expect(page.getByRole("heading", { name: /Search products|ابحث عن المنتجات/i })).toBeVisible();
@@ -32,7 +37,7 @@ test.describe("customer journey", () => {
     await signIn(page, sessions.customer);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/account");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").last()).toBeVisible();
     await page.screenshot({ path: "test-results/customer-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/account/orders");

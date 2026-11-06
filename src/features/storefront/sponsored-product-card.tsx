@@ -42,7 +42,7 @@ export default function SponsoredProductCard({ product, token, locale }: { produ
   const priceLabel = price
     ? new Intl.NumberFormat(locale, { style: "currency", currency: price.currencyCode }).format(Number(price.amountMinor) / (10 ** price.currency.minorUnit))
     : translate(locale, "Price unavailable", "السعر غير متاح");
-  return <article ref={root} className="clay-surface group overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-copper-300)] bg-[var(--surface)] shadow-sm">
+  return <article ref={root} data-testid="sponsored-product" data-ad-token={token} className="clay-surface group relative overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-copper-300)] bg-[var(--surface)] shadow-sm">
     <Link href={`/products/${encodeURIComponent(product.slug)}`} onClick={async (event) => { event.preventDefault(); await send(token, "CLICK"); router.push(`/products/${encodeURIComponent(product.slug)}`); }} className="block">
       <span className="absolute z-10 m-3 rounded-full bg-[var(--color-copper-700)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">{translate(locale, "Sponsored", "إعلان ممول")}</span>
       {image ? <img src={image.url} alt={image.altText ?? product.name} className="aspect-square w-full bg-[var(--surface-soft)] object-cover" /> : <div className="aspect-square bg-[var(--surface-soft)]" />}
