@@ -25,8 +25,6 @@ UPDATE "AdCampaign" SET "currencyCode" = (
 );
 -- Preserve old drafts safely; required budget fields are initialized to zero so they cannot spend.
 ALTER TABLE "AdCampaign"
-  ALTER COLUMN "marketId" SET NOT NULL,
-  ALTER COLUMN "currencyCode" SET NOT NULL,
   ADD CONSTRAINT "AdCampaign_budget_valid" CHECK ("budgetMinor" >= 0 AND "dailyBudgetMinor" >= 0 AND "cpcBidMinor" >= 0 AND "spentMinor" >= 0 AND "spentMinor" <= "budgetMinor"),
   ADD CONSTRAINT "AdCampaign_daily_budget_valid" CHECK ("dailyBudgetMinor" <= "budgetMinor"),
   ADD CONSTRAINT "AdCampaign_market_fkey" FOREIGN KEY ("marketId") REFERENCES "Market"(id) ON DELETE RESTRICT ON UPDATE CASCADE,

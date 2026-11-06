@@ -514,6 +514,7 @@ model Currency {
   coupons        Coupon[]         @relation("CouponCurrency")
   adCampaigns    AdCampaign[]
   adInvoices     AdInvoice[]
+  adSpendLedgerEntries AdSpendLedgerEntry[]
 
   shippingRates StoreShippingRate[]
 
@@ -597,6 +598,7 @@ model Store {
   commissionTransactions     CommissionTransaction[]
   adCampaigns                 AdCampaign[]
   adInvoices                  AdInvoice[]
+  adSpendLedgerEntries        AdSpendLedgerEntry[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
@@ -2133,8 +2135,8 @@ model AdCampaign {
   productId String
   createdById String
   reviewedById String?
-  marketId String
-  currencyCode String @db.Char(3)
+  marketId String?
+  currencyCode String? @db.Char(3)
   targetCategoryId String?
   targetBrandId String?
   targetKeywords String[] @default([])
@@ -2156,8 +2158,8 @@ model AdCampaign {
   updatedAt DateTime @updatedAt
   store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-  market Market @relation(fields: [marketId], references: [id], onDelete: Restrict)
-  currency Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  market Market? @relation(fields: [marketId], references: [id], onDelete: Restrict)
+  currency Currency? @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
   targetCategory Category? @relation(fields: [targetCategoryId], references: [id], onDelete: SetNull)
   targetBrand Brand? @relation(fields: [targetBrandId], references: [id], onDelete: SetNull)
   createdBy User @relation("AdCampaignCreator", fields: [createdById], references: [id], onDelete: Restrict)
