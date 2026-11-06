@@ -9,9 +9,11 @@
 
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
-| `User`, `UserSession`, `OAuthAccount`, `UserTwoFactor`, `UserTwoFactorRecoveryCode`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `LoginRateLimitBucket` | `src/server/identity/*`; `src/app/api/auth/*`; `/api/account/security/mfa` | Account lifecycle, encrypted TOTP secrets, one-time recovery codes, MFA-assured sessions, OAuth and abuse controls. Email-verification fields remain legacy-only; registration activates immediately. |
+| `User`, `UserSession`, `OAuthAccount`, `UserTwoFactor`, `UserTwoFactorRecoveryCode`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `LoginRateLimitBucket` | `src/server/identity/*`; `src/app/api/auth/*`; `/api/account/security/mfa` | Account lifecycle, single-use email verification challenges, encrypted TOTP secrets, one-time recovery codes, MFA-assured sessions, OAuth and abuse controls. Password registration remains pending until email verification. |
 | `Role`, `Permission`, `RolePermission`, `UserRoleAssignment` | `src/server/identity/authorization.ts`, `permission-guard.ts`, `permission-repository.ts`, `role-assignment.ts`, `role-scope.ts` | Global grants and exact resource-scoped grants. Resolve actor and scope on the server. |
-| `AuditLog` | Domain services that perform sensitive writes | Cross-cutting audit record; do not create duplicate audit tables per domain without a demonstrated need. |
+| `PlatformPrivilegeRequest` | `src/server/admin/platform-privilege-requests.ts`; `/api/admin/control-panel/privilege-requests` | Two-person Super Admin elevation approval; requester cannot approve their own request. First administrator bootstrap is separate and one-time. |
+| `AiAssistantSetting` | `src/server/admin/ai-assistant-settings.ts`, `src/server/ai/assistant-config.ts`; `/api/admin/control-panel/ai-assistant` | Singleton runtime enable flag, fixed approved model and bounded completion tokens. Environment master switch and server-only provider key remain authoritative; every change is audited. |
+| `AuditLog` | Domain services that perform sensitive writes | Cross-cutting audit record; do not create duplicate audit tables per domain without a demonstrated need. Super Admin privilege and AI settings changes use this model. |
 
 ## 2. Markets and seller/store foundation — Systems 02, 03, 12 and shared operations
 
