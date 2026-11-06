@@ -130,6 +130,28 @@ function MetricCard({
     : <div className={className}>{content}</div>;
 }
 
+function DistributionChart({ locale, title, rows }: { locale: "ar" | "en"; title: string; rows: Array<{ label: string; value: number; color: string }> }) {
+  const maximum = Math.max(1, ...rows.map((row) => row.value));
+  return (
+    <article className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-[var(--color-forest-950)]">{translate(locale, title, title)}</h3>
+      <div className="mt-4 space-y-4">
+        {rows.map((row) => (
+          <div key={row.label}>
+            <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+              <span className="text-[var(--muted)]">{translate(locale, row.label, row.label)}</span>
+              <strong className="tabular-nums text-[var(--color-forest-950)]">{row.value.toLocaleString(locale)}</strong>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-[var(--color-ivory-100)]">
+              <div className={`h-full rounded-full ${row.color}`} style={{ width: `${Math.max(row.value > 0 ? 2 : 0, (row.value / maximum) * 100)}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { locale } = useLocale();
   const [filters, setFilters] = useState<Filters>(defaultFilters);
@@ -224,6 +246,35 @@ export default function AdminDashboardPage() {
             <MetricCard locale={locale} label="Store reviews awaiting moderation" value={dashboard.metrics.pendingStoreReviews} href="/admin/store-reviews" />
             <MetricCard locale={locale} label="Return requests" value={dashboard.metrics.requestedReturns} href="/admin/returns" />
             <MetricCard locale={locale} label="Open support tickets" value={dashboard.metrics.openSupportTickets} href="/admin/support" />
+          </section>
+
+          <section aria-label="Metric distributions" className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <DistributionChart locale={locale} title="Users" rows={[
+              { label: "Active users", value: dashboard.metrics.activeUsers, color: "bg-sky-500" },
+              { label: "New users in period", value: dashboard.metrics.newUsers, color: "bg-violet-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Seller applications" rows={[
+              { label: "Active sellers", value: dashboard.metrics.activeSellers, color: "bg-emerald-500" },
+              { label: "Pending sellers", value: dashboard.metrics.pendingSellers, color: "bg-amber-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Stores" rows={[
+              { label: "Active stores", value: dashboard.metrics.activeStores, color: "bg-teal-500" },
+              { label: "Suspended stores", value: dashboard.metrics.suspendedStores, color: "bg-rose-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Products" rows={[
+              { label: "Total products", value: dashboard.metrics.totalProducts, color: "bg-indigo-500" },
+              { label: "Products awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-orange-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Orders" rows={[
+              { label: "Awaiting payment", value: dashboard.metrics.pendingOrders, color: "bg-amber-500" },
+              { label: "Being processed", value: dashboard.metrics.processingOrders, color: "bg-sky-500" },
+              { label: "Completed", value: dashboard.metrics.completedOrders, color: "bg-emerald-500" }
+            ]} />
+            <DistributionChart locale={locale} title="Payments" rows={[
+              { label: "Successful", value: dashboard.metrics.successfulPayments, color: "bg-emerald-500" },
+              { label: "Failed", value: dashboard.metrics.failedPayments, color: "bg-rose-500" },
+              { label: "Pending", value: dashboard.metrics.pendingPayments, color: "bg-amber-500" }
+            ]} />
           </section>
 
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
