@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
@@ -57,6 +58,7 @@ export default function SellerOrdersPage() {
       });
       const data = await response.json() as { vendorOrder?: { id: string; status: string }; error?: string };
       if (!response.ok || !data.vendorOrder) throw new Error(data.error || t("Order status could not be updated.", "تعذّر تحديث حالة الطلب."));
+      toast.success(t("Order status updated.", "تم تحديث حالة الطلب."));
       setOrders((current) => {
         const selected = current.find((order) => order.id === vendorOrderId);
         return current.map((order) => ({
@@ -68,7 +70,9 @@ export default function SellerOrdersPage() {
         }));
       });
     } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : t("Order status could not be updated.", "تعذّر تحديث حالة الطلب."));
+      const message = cause instanceof Error ? cause.message : t("Order status could not be updated.", "تعذّر تحديث حالة الطلب.");
+      setActionError(message);
+      toast.error(message);
     } finally {
       setSavingOrderId(null);
     }
@@ -93,8 +97,11 @@ export default function SellerOrdersPage() {
       const data = await response.json() as { shipment?: VendorOrder["shipment"]; error?: string };
       if (!response.ok || !data.shipment) throw new Error(data.error || t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة."));
       setOrders((current) => current.map((order) => order.id === vendorOrderId ? { ...order, status: "SHIPPED", shipment: data.shipment! } : order));
+      toast.success(t("Shipment recorded.", "تم تسجيل الشحنة."));
     } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة."));
+      const message = cause instanceof Error ? cause.message : t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة.");
+      setActionError(message);
+      toast.error(message);
     } finally {
       setSavingOrderId(null);
     }
@@ -115,9 +122,12 @@ export default function SellerOrdersPage() {
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع."));
+      toast.success(t("Tracking update recorded.", "تم تسجيل تحديث التتبع."));
       window.location.reload();
     } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع."));
+      const message = cause instanceof Error ? cause.message : t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع.");
+      setActionError(message);
+      toast.error(message);
     } finally { setSavingOrderId(null); }
   }
 

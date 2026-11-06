@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -57,8 +58,11 @@ export default function SupportTicketPage({ ticketId }: { ticketId: string }) {
       if (!response.ok) throw new Error(data.error || t("Reply failed.", "تعذّر إرسال الرد."));
       setBody("");
       await load();
+      toast.success(t("Reply sent.", "تم إرسال الرد."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Reply failed.", "تعذّر إرسال الرد."));
+      const message = cause instanceof Error ? cause.message : t("Reply failed.", "تعذّر إرسال الرد.");
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -88,8 +92,11 @@ export default function SupportTicketPage({ ticketId }: { ticketId: string }) {
       if (!finish.ok) throw new Error(result.error || t("The attachment could not pass security scanning.", "تعذّر اجتياز المرفق فحص الأمان."));
       setFile(null);
       await load();
+      toast.success(t("Attachment uploaded and passed security scanning.", "تم رفع المرفق واجتاز فحص الأمان."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Attachment upload failed.", "فشل رفع المرفق."));
+      const message = cause instanceof Error ? cause.message : t("Attachment upload failed.", "فشل رفع المرفق.");
+      setError(message);
+      toast.error(message);
     } finally {
       setUploadBusy(false);
     }

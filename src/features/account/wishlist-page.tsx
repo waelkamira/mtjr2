@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -48,6 +49,7 @@ export default function WishlistPage() {
         });
         if (merge.ok) {
           try { window.localStorage.removeItem(GUEST_WISHLIST_KEY); } catch { /* Retain cache if storage is restricted. */ }
+          toast.success(translate(locale, "Guest wishlist merged.", "تم دمج قائمة أمنيات الزائر."));
         } else if (merge.status !== 401) {
           const result = await merge.json().catch(() => ({})) as { error?: string };
           throw new Error(result.error || translate(locale, "Guest wishlist could not be merged.", "تعذّر دمج قائمة الأمنيات للزائر."));
@@ -71,7 +73,8 @@ export default function WishlistPage() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Favorite could not be removed.", "تعذّر إزالة العنصر من المفضلة."));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Favorite could not be removed.", "تعذّر إزالة العنصر من المفضلة.")); }
+      toast.success(t("Removed from wishlist.", "تمت إزالة المنتج من المفضلة."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Favorite could not be removed.", "تعذّر إزالة العنصر من المفضلة."); setError(message); toast.error(message); }
     finally { setBusyId(""); }
   }
   return <main className="min-h-screen bg-[var(--background)]"><header className="border-b border-[var(--border)] bg-[var(--surface)] shadow-clay-raised px-5 py-5"><div className="mx-auto flex max-w-5xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><Link href="/account/orders" className="text-sm">{t("My orders", "طلباتي")}</Link></div></header>

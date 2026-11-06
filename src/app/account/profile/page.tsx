@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
@@ -61,8 +62,11 @@ export default function ProfilePage() {
       if (!response.ok || !data.profile) throw new Error(data.error || t("Unable to update profile.", "تعذّر تحديث الملف الشخصي."));
       setProfile((current) => current ? { ...current, ...data.profile } : current);
       setNotice(t("Profile updated.", "تم تحديث الملف الشخصي."));
+      toast.success(t("Profile updated.", "تم تحديث الملف الشخصي."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Unable to update profile.", "تعذّر تحديث الملف الشخصي."));
+      const message = cause instanceof Error ? cause.message : t("Unable to update profile.", "تعذّر تحديث الملف الشخصي.");
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }

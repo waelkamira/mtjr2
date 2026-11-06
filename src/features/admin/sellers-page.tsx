@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -79,7 +80,8 @@ export default function AdminSellersPage() {
       if (!response.ok) throw new Error(result.error || translate(locale, "Seller review failed.", "تعذرت مراجعة البائع."));
       setReasons((current) => ({ ...current, [seller.id]: "" }));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Seller review failed.", "تعذرت مراجعة البائع.")); }
+      toast.success(translate(locale, decision === "APPROVE" ? "Seller approved." : "Seller rejected.", decision === "APPROVE" ? "تمت الموافقة على البائع." : "تم رفض البائع."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Seller review failed.", "تعذرت مراجعة البائع."); setError(message); toast.error(message); }
     finally { setBusy(""); }
   }
 
@@ -97,7 +99,8 @@ export default function AdminSellersPage() {
       if (!response.ok) throw new Error(result.error || translate(locale, "Store status update failed.", "تعذر تحديث حالة المتجر."));
       setReasons((current) => ({ ...current, [store.id]: "" }));
       await load();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Store status update failed.", "تعذر تحديث حالة المتجر.")); }
+      toast.success(translate(locale, nextStatus === "SUSPENDED" ? "Store suspended." : "Store reactivated.", nextStatus === "SUSPENDED" ? "تم تعليق المتجر." : "تمت إعادة تفعيل المتجر."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Store status update failed.", "تعذر تحديث حالة المتجر."); setError(message); toast.error(message); }
     finally { setBusy(""); }
   }
 
