@@ -2453,5 +2453,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - PostgreSQL integration and browser journeys for Super Admin denial/access, privilege approval, AI enable/disable, MFA, and secret non-disclosure remain to be verified on the final PR head.
 
 **Verification**
-- Latest full CI must pass Prisma validation/migration replay, generation, typecheck, lint, tests, and production build before merge. Do not mark the branch verified from earlier runs.
+- CI run [42251382773](https://github.com/waelkamira/mtjr2/actions/runs/42251382773) passed on `4eefa77f74c9064a9934fd1053585fb1360283be`: Prisma validate, migration deploy, Prisma generate, typecheck, lint, unit tests, and production build.
+- Platform PostgreSQL Integration run [42251383098](https://github.com/waelkamira/mtjr2/actions/runs/42251383098) passed on the same commit: migration replay, baseline role/permission seed, PostgreSQL integration suite, demo catalog seed, and seed repeatability.
+- The browser E2E journeys listed above remain unverified; keep PR #35 in Draft until those are exercised.
 - No Vercel access, deployment, environment changes, production database changes, or live Groq API smoke test were performed.
