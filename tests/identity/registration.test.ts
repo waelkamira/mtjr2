@@ -6,6 +6,7 @@ const { prismaMock, txMock } = vi.hoisted(() => {
     user: { create: vi.fn() },
     seller: { create: vi.fn() },
     userConsent: { createMany: vi.fn() },
+    verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     auditLog: { create: vi.fn() }
   };
   return {
@@ -36,29 +37,36 @@ describe("registration", () => {
     txMock.user.create.mockResolvedValue({ id: "user-1" });
     txMock.seller.create.mockResolvedValue({ id: "seller-1" });
     txMock.userConsent.createMany.mockResolvedValue({ count: 2 });
+    txMock.verificationToken.create.mockResolvedValue({ id: "verification-1" });
   });
 
-  it("creates an active user with a hashed password and required consents", async () => {
-    await expect(registerUser({
+  it("creates a pending user with a hashed password and single-use verification challenge", async () => {
+    const result = await registerUser({
       email: "  Buyer@Example.COM ",
       password: "correct horse battery staple 2026",
       displayName: " Buyer ",
       accountType: "CUSTOMER",
       acceptedTerms: true,
       acceptedPrivacy: true
-    }, now)).resolves.toEqual({ userId: "user-1" });
+    }, now);
+    expect(result.userId).toBe("user-1");
+    expect(result.verificationToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(result.verificationExpiresAt).toEqual(new Date(now.getTime() + 24 * 60 * 60 * 1000));
 
     expect(txMock.user.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: "buyer@example.com",
         emailNormalized: "buyer@example.com",
-        status: UserStatus.ACTIVE,
+        status: UserStatus.PENDING,
         displayName: "Buyer"
       })
     }));
     const createUserCall = txMock.user.create.mock.calls[0][0];
     expect(createUserCall.data.passwordHash).not.toContain("correct horse");
     expect(createUserCall.data.emailVerifiedAt).toBeUndefined();
+    expect(txMock.verificationToken.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ userId: "user-1", purpose: "EMAIL_VERIFICATION", tokenHash: expect.any(String), expiresAt: result.verificationExpiresAt })
+    }));
     expect(txMock.userConsent.createMany).toHaveBeenCalledWith({
       data: expect.arrayContaining([
         expect.objectContaining({ type: ConsentType.TERMS_OF_SERVICE, granted: true }),
