@@ -89,7 +89,7 @@ export async function GET(request: Request): Promise<Response> {
     const now = new Date();
     const linked = await prisma.oAuthAccount.findUnique({
       where: { provider_providerAccountId: { provider: "google", providerAccountId: identity.sub } },
-      select: { userId: true, user: { select: { id: true, status: true } } }
+      select: { userId: true, user: { select: { id: true, status: true, emailVerifiedAt: true } } }
     });
     let userId: string;
     if (intent === "login") {
@@ -99,13 +99,13 @@ export async function GET(request: Request): Promise<Response> {
         const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
         return oauthError(existing ? "link_required" : "not_linked");
       }
-      if (linked.user.status !== UserStatus.ACTIVE) {
+      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) {
         return oauthError("inactive");
       }
       userId = linked.userId;
       await prisma.user.update({ where: { id: userId }, data: { lastLoginAt: now } });
     } else if (linked) {
-      if (linked.user.status !== UserStatus.ACTIVE) return oauthError("inactive");
+      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) return oauthError("inactive");
       userId = linked.userId;
     } else {
       const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
