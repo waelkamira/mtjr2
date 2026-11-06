@@ -232,42 +232,42 @@ export default function AdminDashboardPage() {
               { label: "Active users", value: dashboard.metrics.activeUsers, color: "bg-sky-500" },
               { label: "New users in period", value: dashboard.metrics.newUsers, color: "bg-violet-500" }
             ]} />
-            <DistributionChart locale={locale} title="Seller applications" rows={[
+            <MetricBarChart variant="donut" title="Seller applications" rows={[
               { label: "Active sellers", value: dashboard.metrics.activeSellers, color: "bg-emerald-500" },
               { label: "Pending sellers", value: dashboard.metrics.pendingSellers, color: "bg-amber-500" }
             ]} />
-            <DistributionChart locale={locale} title="Stores" rows={[
+            <MetricBarChart variant="donut" title="Stores" rows={[
               { label: "Active stores", value: dashboard.metrics.activeStores, color: "bg-teal-500" },
               { label: "Suspended stores", value: dashboard.metrics.suspendedStores, color: "bg-rose-500" }
             ]} />
-            <DistributionChart locale={locale} title="Products" rows={[
+            <MetricBarChart variant="donut" title="Products" rows={[
               { label: "Total products", value: dashboard.metrics.totalProducts, color: "bg-indigo-500" },
               { label: "Products awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-orange-500" }
             ]} />
-            <DistributionChart locale={locale} title="Orders" rows={[
+            <MetricBarChart variant="donut" title="Orders" rows={[
               { label: "Awaiting payment", value: dashboard.metrics.pendingOrders, color: "bg-amber-500" },
               { label: "Being processed", value: dashboard.metrics.processingOrders, color: "bg-sky-500" },
               { label: "Completed", value: dashboard.metrics.completedOrders, color: "bg-emerald-500" }
             ]} />
-            <DistributionChart locale={locale} title="Payments" rows={[
+            <MetricBarChart variant="donut" title="Payments" rows={[
               { label: "Successful", value: dashboard.metrics.successfulPayments, color: "bg-emerald-500" },
               { label: "Failed", value: dashboard.metrics.failedPayments, color: "bg-rose-500" },
               { label: "Pending", value: dashboard.metrics.pendingPayments, color: "bg-amber-500" }
             ]} />
-            <DistributionChart locale={locale} title="Customer trust & reviews" rows={[
+            <MetricBarChart variant="donut" title="Customer trust & reviews" rows={[
               { label: "Product reviews awaiting moderation", value: dashboard.metrics.pendingProductReviews, color: "bg-fuchsia-500" },
               { label: "Store reviews awaiting moderation", value: dashboard.metrics.pendingStoreReviews, color: "bg-purple-500" }
             ]} />
-            <DistributionChart locale={locale} title="Customer care" rows={[
+            <MetricBarChart variant="donut" title="Customer care" rows={[
               { label: "Open support tickets", value: dashboard.metrics.openSupportTickets, color: "bg-cyan-500" },
               { label: "Requested returns", value: dashboard.metrics.requestedReturns, color: "bg-orange-500" }
             ]} />
-            <DistributionChart locale={locale} title="Order fulfillment pipeline" rows={[
+            <MetricBarChart variant="donut" title="Order fulfillment pipeline" rows={[
               { label: "Awaiting payment", value: dashboard.metrics.pendingOrders, color: "bg-yellow-500" },
               { label: "Processing", value: dashboard.metrics.processingOrders, color: "bg-blue-500" },
               { label: "Completed", value: dashboard.metrics.completedOrders, color: "bg-green-500" }
             ]} />
-            <DistributionChart locale={locale} title="Moderation workload" rows={[
+            <MetricBarChart variant="donut" title="Moderation workload" rows={[
               { label: "Products awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-amber-500" },
               { label: "Product reviews awaiting moderation", value: dashboard.metrics.pendingProductReviews, color: "bg-fuchsia-500" },
               { label: "Store reviews awaiting moderation", value: dashboard.metrics.pendingStoreReviews, color: "bg-violet-500" }
