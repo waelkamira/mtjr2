@@ -3,6 +3,8 @@ import { env, isAiAssistantEnabled } from "@/lib/env";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { listDiscoverableProducts } from "@/server/catalog/discovery";
 import { completeWithGroq, GroqProviderError, type GroqChatMessage } from "@/server/ai/groq-provider";
+import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
+import { consumeAiAssistantAttempt } from "@/server/identity/login-throttle";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,6 +51,18 @@ export async function POST(request: Request) {
   }
 
   const { message, locale } = parsed.data;
+  const trustedIp = resolveTrustedClientIp(request.headers, env.TRUSTED_PROXY_IP_HEADER, env.NODE_ENV);
+  if (!trustedIp) {
+    return Response.json({ error: "خدمة المساعد غير مهيأة لمعالجة الطلبات بأمان." }, { status: 503 });
+  }
+  try {
+    const throttle = await consumeAiAssistantAttempt(trustedIp);
+    if (throttle.blocked) {
+      return Response.json({ error: "وصلت إلى الحد المؤقت للرسائل. حاول بعد قليل." }, { status: 429 });
+    }
+  } catch {
+    return Response.json({ error: "خدمة المساعد غير متاحة مؤقتاً." }, { status: 503 });
+  }
   let products: Array<{
     id: string; name: string; slug: string; description: string;
     brand: string | null; store: string | null;
