@@ -1,8 +1,8 @@
 # Matjar AI Assistant — implementation plan
 
-**Status:** Approved direction; implementation not started.
+**Status:** Initial implementation committed on `feat/matjar-ai-assistant`; CI and production configuration remain pending.
 **Provider:** GroqCloud API, using its free tier within the account's published rate limits.
-**Primary model candidate:** `openai/gpt-oss-20b` (tool calling supported). Keep the model configurable because provider model availability and free-tier limits can change.
+**Initial model:** `openai/gpt-oss-20b` (tool calling supported in current Groq documentation). Keep the model configurable because provider model availability and free-tier limits can change.
 **Cost constraint:** No paid model/API plan and no paid vector database. The application must fail gracefully when the free quota is exhausted; it must never silently switch to a paid provider.
 
 ## Goals
@@ -153,3 +153,36 @@ Environment variable names and validation must be reconciled with the existing e
 
 - 2026-11-06: Owner created a GroqCloud account and API key. The key has not been shared in chat and must remain private.
 - 2026-11-06: This implementation contract was added to the canonical repository documentation. No API key was committed, no Vercel environment was accessed, no database was changed, and no AI endpoint or UI is yet claimed implemented.
+
+
+## Implementation progress — 2026-11-06
+
+### Implemented on `feat/matjar-ai-assistant`
+- Added server-only Groq Chat Completions client with configurable model, timeout, bounded completion, and safe handling for disabled configuration, provider authorization, provider rate limits, and provider failures.
+- Added validated server-side environment variables: `GROQ_API_KEY`, `GROQ_MODEL`, and `AI_ASSISTANT_ENABLED`. The assistant is disabled by default. No real key is stored in Git.
+- Added `POST /api/ai/chat` with same-origin JSON mutation checks, bounded input/history, no-store responses, and a per-instance request throttle. The throttle is a best-effort local guard, not a distributed production rate limiter.
+- Added the global floating storefront assistant UI in Arabic-first mode, product result cards, order summary cards, retry/error states, and a direct link to `/account/support`.
+- Added live public product search using the existing `listDiscoverableProducts` service. This preserves active/approved product and active store/seller visibility rules.
+- Added public product detail lookup and current-stock filtering using existing catalog services.
+- Added current-customer order and return lookup using `listCustomerOrders` and `getMyReturnCenter`, both of which resolve the authenticated server session. Only minimal summaries are returned to the browser; private order/return details are not sent to Groq.
+- Added input validation tests and configured CI to run on `feat/**` branches.
+- No Prisma schema or migration changes were needed.
+- No Vercel configuration, deployment, or environment secrets were changed.
+
+### Not yet production-complete
+- The branch must pass GitHub Actions typecheck, lint, unit tests, and production build; no pass is claimed until the run is inspected.
+- The owner must configure `GROQ_API_KEY` as a server-side runtime secret and set `AI_ASSISTANT_ENABLED=true`. Never paste the key into chat, commits, issues, or browser code.
+- Verify the actual account's free-tier model access and quotas. Quota exhaustion returns a temporary unavailable response; no paid fallback exists.
+- The current per-instance throttle is not a substitute for shared persistent rate limiting at scale.
+- AI knowledge retrieval for approved shipping/returns/payment/contact policies is not connected yet. The assistant must not invent these facts; customers are directed to the existing support center.
+- Support ticket creation/handoff is not performed by the model; customers use the existing `/account/support` workflow.
+- Super Admin configuration/analytics UI, durable conversation history, feedback/evaluation, privacy retention controls, and end-to-end browser tests remain pending.
+- Before enabling customer-specific order assistance publicly, review Groq's data-processing terms and the marketplace privacy notice for the applicable jurisdictions. The current design keeps order summaries in Matjar and sends only the tool name/result acknowledgement to Groq.
+
+### Next acceptance steps
+1. Inspect CI and fix all failures.
+2. Add durable distributed rate limiting and operational usage monitoring.
+3. Connect approved, reviewed policy/contact content.
+4. Add Super Admin controls with the repository's actual authorization conventions.
+5. Add explicit privacy/retention documentation and browser journey tests.
+6. Only then enable the assistant in the runtime environment.

@@ -106,8 +106,7 @@ A system may be marked **Complete** only when:
 
 ## Matjar AI Assistant
 
-The Groq-powered customer shopping/support assistant is specified in [`docs/ai/MATJAR_AI_ASSISTANT_PLAN.md`](docs/ai/MATJAR_AI_ASSISTANT_PLAN.md). The plan defines the free-tier-only provider policy, server-side secret handling, catalog and customer tools, privacy/authorization boundaries, Super Admin controls, and phased acceptance gates. This is a documented plan only; no AI endpoint, UI, database migration, or production secret has been added yet.
-
+The implementation plan and release gates are documented in [`docs/ai/MATJAR_AI_ASSISTANT_PLAN.md`](docs/ai/MATJAR_AI_ASSISTANT_PLAN.md); local configuration and privacy instructions are in [`docs/ai/SETUP.md`](docs/ai/SETUP.md). The initial Groq-powered assistant implementation is being developed on `feat/matjar-ai-assistant`: global chat UI, public catalog search, session-scoped order summaries, server-only Groq integration, and input validation. It is disabled by default and requires server-side `GROQ_API_KEY` plus `AI_ASSISTANT_ENABLED=true` after CI and privacy/security acceptance. No paid provider fallback is configured.
 ## Documentation
 
 - `docs/architecture/` — architecture decisions, domain boundaries, and system blueprint.

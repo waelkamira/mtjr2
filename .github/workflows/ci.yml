@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, "fix/**"]
+    branches: [main, "fix/**", "feat/**"]
   pull_request:
-    branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets", "feat/storefront-demo-experience", "feat/storefront-search-state", "feat/notification-preferences", "feat/returns-workflow"]
+    branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets", "feat/storefront-demo-experience", "feat/storefront-search-state", "feat/notification-preferences", "feat/returns-workflow", "feat/matjar-ai-assistant"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
