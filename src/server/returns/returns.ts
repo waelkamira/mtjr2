@@ -7,6 +7,13 @@ import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { requirePermission } from "@/server/identity/permission-guard";
 
+function displayRefundAmount(amountMinor: bigint, currencyCode: string, minorUnit: number) {
+  const scale = BigInt(10) ** BigInt(minorUnit);
+  const whole = amountMinor / scale;
+  const fraction = minorUnit ? (amountMinor % scale).toString().padStart(minorUnit, "0") : "";
+  return `${currencyCode} ${new Intl.NumberFormat("en").format(whole)}${minorUnit ? "." + fraction : ""}`;
+}
+
 const reasons = ["DAMAGED", "WRONG_ITEM", "NOT_AS_DESCRIBED", "CHANGED_MIND", "OTHER"] as const;
 const createSchema = z.object({
   orderId: z.string().trim().min(1).max(128),
@@ -38,7 +45,8 @@ export async function getMyReturnCenter(now = new Date()) {
       take: 100,
       include: {
         order: { select: { orderNumber: true } },
-        items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true } } } }
+        items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true } } } },
+        refund: { select: { status: true, amountMinor: true, currencyCode: true, currency: { select: { minorUnit: true } } } }
       }
     }),
     prisma.order.findMany({
@@ -77,6 +85,11 @@ export async function getMyReturnCenter(now = new Date()) {
       status: request.status, reasonCode: request.reasonCode, reasonDetails: request.reasonDetails,
       reviewNote: request.reviewNote, requestedAt: request.requestedAt.toISOString(),
       reviewedAt: request.reviewedAt?.toISOString() ?? null,
+      refund: request.refund ? {
+        status: request.refund.status,
+        amountMinor: request.refund.amountMinor.toString(),
+        amountDisplay: displayRefundAmount(request.refund.amountMinor, request.refund.currencyCode, request.refund.currency.minorUnit)
+      } : null,
       items: request.items.map((item) => ({ id: item.id, productName: item.orderItem.productName, sku: item.orderItem.sku, quantity: item.quantity, status: item.status, reviewNote: item.reviewNote }))
     })),
     eligibleOrders
