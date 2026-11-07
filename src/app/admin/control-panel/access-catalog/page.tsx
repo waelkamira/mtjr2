@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { StepUpRequiredError } from "@/server/identity/access-errors";
 import {
   AuthenticationRequiredError,
   PermissionDeniedError,
@@ -10,6 +11,7 @@ export default async function PlatformAccessCatalogRoute() {
   try {
     await requirePlatformManagement();
   } catch (error) {
+    if (error instanceof StepUpRequiredError) redirect("/mfa/verify?returnTo=%2Fadmin%2Fcontrol-panel%2Faccess-catalog");
     if (error instanceof AuthenticationRequiredError) {
       redirect("/login?returnTo=%2Fadmin%2Fcontrol-panel%2Faccess-catalog");
     }
