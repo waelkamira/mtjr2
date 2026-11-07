@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthReturnPath } from "@/lib/auth-return";
 
 export default function MfaStepUpPage({ initialReturnTo }: { initialReturnTo: string }) {
   const router = useRouter();
-  const [returnTo, setReturnTo] = useState(initialReturnTo);
+  const returnTo = getAuthReturnPath(initialReturnTo);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => { setReturnTo(getAuthReturnPath(initialReturnTo)); }, [initialReturnTo]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
