@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 type EligibleItem = { id: string; productName: string; sku: string; orderedQuantity: number; availableQuantity: number };
 type EligibleOrder = { id: string; orderNumber: string; vendorOrders: Array<{ id: string; storeName: string; items: EligibleItem[] }> };
-type ReturnRow = { id: string; returnNumber: string; orderNumber: string; status: string; reasonCode: string; reasonDetails: string | null; reviewNote: string | null; requestedAt: string; items: Array<{ productName: string; sku: string; quantity: number; status: string; reviewNote: string | null }> };
+type ReturnRow = { id: string; returnNumber: string; orderNumber: string; status: string; reasonCode: string; reasonDetails: string | null; reviewNote: string | null; requestedAt: string; refund: { status: string; amountMinor: string; amountDisplay: string } | null; items: Array<{ productName: string; sku: string; quantity: number; status: string; reviewNote: string | null }> };
 type Center = { eligibleOrders: EligibleOrder[]; requests: ReturnRow[] };
 
 export default function CustomerReturnsPage() {
