@@ -26,11 +26,13 @@ async function ensureUser(email, displayName) {
     update: { displayName, status: "ACTIVE", emailVerifiedAt: now, anonymizedAt: null }
   });
 }
-async function sessionFor(userId, mfa) {
+async function sessionFor(userId, mfa, platformStepUp = false) {
   const token = randomBytes(32).toString("base64url");
   await prisma.userSession.create({ data: {
     userId, tokenHash: hash(token), ipAddress: "127.0.0.1", userAgent: "Playwright E2E",
-    createdAt: now, lastSeenAt: now, expiresAt, mfaVerifiedAt: mfa ? now : null
+    createdAt: now, lastSeenAt: now, expiresAt, mfaVerifiedAt: mfa ? now : null,
+    stepUpVerifiedAt: platformStepUp ? now : null,
+    stepUpExpiresAt: platformStepUp ? new Date(now.getTime() + 10 * 60 * 1000) : null
   }});
   if (mfa) await prisma.userTwoFactor.upsert({
     where: { userId },
@@ -78,7 +80,7 @@ async function main() {
   const sessions = {
     customer: await sessionFor(customer.id, false),
     seller: await sessionFor(seller.id, true),
-    admin: await sessionFor(admin.id, true),
+    admin: await sessionFor(admin.id, true, true),
     categorySlug: product.categories[0]?.category.slug,
     detailProductSlug: detailProduct.slug
   };
