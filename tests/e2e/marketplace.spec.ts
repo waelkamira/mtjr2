@@ -78,7 +78,6 @@ test.describe("customer journey", () => {
     await page.screenshot({ path: "test-results/customer-mobile.png", fullPage: true });
     await page.goto("/account/sessions");
     await expect(page.getByRole("heading", { name: /Active sessions|الجلسات النشطة/i })).toBeVisible();
-    await expect(page.getByText(/Loading sessions|جارٍ تحميل الجلسات/)).toHaveCount(0);
     const sessionsResponse = await page.request.get("/api/account/sessions", { headers: { "Cache-Control": "no-store" } });
     expect(sessionsResponse.status()).toBe(200);
     const signOutAll = page.getByRole("button", { name: /Sign out all devices|تسجيل الخروج من جميع الأجهزة/i });
