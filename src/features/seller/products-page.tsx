@@ -48,7 +48,7 @@ export default function SellerProductsPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
-  type ProductImageDraft = { id: string; url: string; provider: string; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
+  type ProductImageDraft = { id: string; url: string; provider: string; mimeType: string; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
@@ -136,7 +136,7 @@ export default function SellerProductsPage() {
     }
 
     const drafts: ProductImageDraft[] = files.map((file) => ({
-      id: crypto.randomUUID(), url: "", provider: "", previewUrl: URL.createObjectURL(file), status: "uploading"
+      id: crypto.randomUUID(), url: "", provider: "", mimeType: file.type, previewUrl: URL.createObjectURL(file), status: "uploading"
     }));
     setUploadedImages((current) => [...current, ...drafts]);
     setUploadingImages(true);
@@ -150,7 +150,7 @@ export default function SellerProductsPage() {
         await fetch("/api/seller/products/media", { method: "POST", body: form })
       );
       setUploadedImages((current) => current.map((image) => image.id === drafts[index].id
-        ? { ...image, url: result.data.url, provider: result.data.provider, status: "ready" }
+        ? { ...image, url: result.data.url, provider: result.data.provider, mimeType: file.type, status: "ready" }
         : image));
       return result.data;
     }));
@@ -199,7 +199,7 @@ export default function SellerProductsPage() {
         body: JSON.stringify({
           storeId, name, slug, description, ...(brandId ? { brandId } : {}),
           categoryIds: categoryId ? [categoryId] : [],
-          media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, altText: name, sortOrder: index, isPrimary: index === 0 })),
+          media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, altText: name, sortOrder: index, isPrimary: index === 0 })),
           variants: [{ sku, prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "" })) }]
         })
       }));
