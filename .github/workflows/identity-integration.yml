@@ -6,6 +6,12 @@ on:
     branches: [main, "feat/buying-cart-core", "feat/checkout-quote-reservations", "feat/checkout-address-capture", "feat/store-shipping-options", "feat/checkout-tax-calculation", "feat/verified-purchase-reviews", "feat/wishlist-favorites", "feat/product-qa", "feat/customer-support-tickets", "feat/storefront-demo-experience", "feat/storefront-search-state", "feat/notification-preferences", "feat/returns-workflow"]
     paths:
       - "src/server/identity/**"
+      - "src/server/admin/**"
+      - "src/app/admin/control-panel/**"
+      - "src/app/api/admin/control-panel/**"
+      - "src/features/admin/platform-*.tsx"
+      - "scripts/bootstrap-super-admin.cjs"
+      - "tests/admin/**"
       - "src/app/api/auth/**"
       - "src/app/api/account/profile/**"
       - "src/app/api/account/security/**"
@@ -72,6 +78,12 @@ on:
     branches: [main]
     paths:
       - "src/server/identity/**"
+      - "src/server/admin/**"
+      - "src/app/admin/control-panel/**"
+      - "src/app/api/admin/control-panel/**"
+      - "src/features/admin/platform-*.tsx"
+      - "scripts/bootstrap-super-admin.cjs"
+      - "tests/admin/**"
       - "src/app/api/auth/**"
       - "src/app/api/admin/users/**/roles/**"
       - "prisma/schema.prisma"
