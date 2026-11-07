@@ -7,6 +7,8 @@ const {
   revokeMock,
   revokeAllMock,
   requireCurrentMock,
+  txUserSessionUpdateMock,
+  transactionMock,
   auditCreateMock
 } = vi.hoisted(() => ({
   cookieMock: vi.fn(),
@@ -15,6 +17,8 @@ const {
   revokeMock: vi.fn(),
   revokeAllMock: vi.fn(),
   requireCurrentMock: vi.fn(),
+  txUserSessionUpdateMock: vi.fn(),
+  transactionMock: vi.fn(),
   auditCreateMock: vi.fn()
 }));
 
@@ -29,7 +33,7 @@ vi.mock("@/server/identity/session", () => ({
 }));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: requireCurrentMock }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { auditLog: { create: auditCreateMock } }
+  prisma: { auditLog: { create: auditCreateMock }, $transaction: transactionMock }
 }));
 
 import { logoutAllSessions, logoutCurrentSession } from "../../src/server/identity/logout";
@@ -49,6 +53,8 @@ describe("logoutCurrentSession", () => {
     auditCreateMock.mockResolvedValue({});
     requireCurrentMock.mockResolvedValue(session);
     revokeAllMock.mockResolvedValue(3);
+    txUserSessionUpdateMock.mockResolvedValue({ count: 3 });
+    transactionMock.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({ userSession: { updateMany: txUserSessionUpdateMock }, auditLog: { create: auditCreateMock } }));
   });
 
   it("revokes the current session, audits it, and clears the cookie", async () => {
@@ -113,7 +119,8 @@ describe("logoutAllSessions", () => {
   it("revokes all sessions for the authenticated user, audits the action, and clears the current cookie", async () => {
     await expect(logoutAllSessions(now)).resolves.toBe(3);
     expect(requireCurrentMock).toHaveBeenCalledWith(now);
-    expect(revokeAllMock).toHaveBeenCalledWith("user-1", now);
+    expect(transactionMock).toHaveBeenCalledOnce();
+    expect(txUserSessionUpdateMock).toHaveBeenCalledWith({ where: { userId: "user-1", revokedAt: null }, data: { revokedAt: now } });
     expect(auditCreateMock).toHaveBeenCalledWith({
       data: expect.objectContaining({
         actorId: "user-1",
@@ -129,7 +136,7 @@ describe("logoutAllSessions", () => {
   it("does not clear the cookie or revoke sessions when authentication is not valid", async () => {
     requireCurrentMock.mockRejectedValue(new Error("not authenticated"));
     await expect(logoutAllSessions(now)).rejects.toThrow("not authenticated");
-    expect(revokeAllMock).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
     expect(clearCookieMock).not.toHaveBeenCalled();
   });
 });
