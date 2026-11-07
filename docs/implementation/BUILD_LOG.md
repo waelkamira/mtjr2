@@ -2540,3 +2540,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The old Cooking repository contains hardcoded Imgur client IDs and ImageKit credentials. They were not copied; exposed credentials should be rotated/revoked.
 - Added `IMGUR_CLIENT_ID` and `IMAGEKIT_PRIVATE_KEY` to `.env.example`. Configure these server-side in the deployment environment before uploads can succeed.
 - Source changes were committed through GitHub. Runtime provider uploads, typecheck, lint and browser journey are not claimed as passed in this session because no application runtime or provider credentials are available here.
+
+## 2026-11-08 — Ordered Imgur Client ID rotation
+
+- Added a server-only Imgur Client ID manager that mirrors Cooking's rotation algorithm.
+- IDs are read from `IMGUR_CLIENT_IDS` in the configured order (comma, semicolon, or newline separated).
+- Each ID is selected for up to 50 uploads before moving to the next ID. After all configured IDs are exhausted, the manager returns an explicit quota-exhausted error rather than reusing an ID early.
+- The ordered usage counters reset after one hour. `IMGUR_CLIENT_ID` remains as a single-ID compatibility fallback.
+- The rotation state is held in the warm Node.js process, matching Cooking's in-memory approach; independent serverless instances have independent counters. A shared distributed counter would be required for globally synchronized rotation across all instances.
+- No credentials from Cooking were copied. Configure newly issued Imgur Client IDs in Vercel as `IMGUR_CLIENT_IDS`.
