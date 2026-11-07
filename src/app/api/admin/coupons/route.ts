@@ -1,14 +1,15 @@
 import { z } from "zod";
 import { createCoupon, listCoupons } from "@/server/checkout/coupons";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
+import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/permission-guard";
 
 export const runtime = "nodejs";
 
 function failure(error: unknown): Response {
   if (error instanceof z.ZodError) return Response.json({ error: "Invalid coupon.", issues: error.issues }, { status: 400 });
   const message = error instanceof Error ? error.message : "Unable to manage coupons.";
-  if (/authentication required/i.test(message)) return Response.json({ error: "Authentication required." }, { status: 401 });
-  if (/permission|administration/i.test(message)) return Response.json({ error: message }, { status: 403 });
+  if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+  if (error instanceof PermissionDeniedError) return Response.json({ error: message }, { status: 403 });
   if (/unique constraint|already exists/i.test(message)) return Response.json({ error: "A coupon with this code already exists." }, { status: 409 });
   return Response.json({ error: "Unable to manage coupons." }, { status: 500 });
 }
