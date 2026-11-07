@@ -3,6 +3,7 @@ import { AuthenticationRequiredError, requireCurrentSession } from "@/server/ide
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { prisma } from "@/lib/db/prisma";
+import { getNextImgurClientId } from "@/server/media/imgur-client-manager";
 
 export const runtime = "nodejs";
 
@@ -28,8 +29,7 @@ async function canManageStore(userId: string, storeId: string) {
 }
 
 async function uploadToImgur(file: File) {
-  const clientId = process.env.IMGUR_CLIENT_ID?.trim();
-  if (!clientId) throw new Error("Imgur is not configured.");
+  const clientId = getNextImgurClientId();
   const form = new FormData();
   form.append("image", file, file.name);
   const response = await fetch("https://api.imgur.com/3/image", {
@@ -100,10 +100,10 @@ export async function POST(request: Request): Promise<Response> {
         // Provider failure is intentionally isolated; try the next configured service.
       }
     }
-    const configured = Boolean(process.env.IMGUR_CLIENT_ID || process.env.IMAGEKIT_PRIVATE_KEY);
+    const configured = Boolean(process.env.IMGUR_CLIENT_IDS || process.env.IMGUR_CLIENT_ID || process.env.IMAGEKIT_PRIVATE_KEY);
     return jsonError(configured
       ? "Image upload failed with all configured providers. Check provider credentials and limits."
-      : "Image upload is not configured. Add IMGUR_CLIENT_ID or IMAGEKIT_PRIVATE_KEY to the server environment.", configured ? 502 : 503);
+      : "Image upload is not configured. Add IMGUR_CLIENT_IDS or IMAGEKIT_PRIVATE_KEY to the server environment.", configured ? 502 : 503);
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return jsonError("Authentication required.", 401);
     return jsonError(error instanceof Error ? error.message : "Image upload failed.", 400);
