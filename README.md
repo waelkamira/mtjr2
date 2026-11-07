@@ -403,3 +403,18 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 ## 2026-11-07 — Financial lifecycle verification gate
 
 - Fixed Platform PostgreSQL Integration path filters so payment, webhook, refund, seller shipment, order and return code changes trigger disposable PostgreSQL verification. The corrected integration workflow passed migration replay, 3 files / 9 tests and repeatable demo seeding on main commit `0d0fab6f47fdf49396022331f77f5612616a8d44` ([run 42404238983](https://github.com/waelkamira/mtjr2/actions/runs/42404238983)). General CI passed on documentation/route-registry head `f05480a83fe3126f0183e51f990e47216fb14098` ([run 42404307099](https://github.com/waelkamira/mtjr2/actions/runs/42404307099)). Live payment/refund provider onboarding and carrier integration remain blocked on explicit launch-market, currency, merchant-account, payment-method and provider decisions.
+
+
+## Canonical main reconciliation — 2026-11-07
+
+The earlier sections above are chronological implementation notes; use the following as the current release-gate snapshot. The 49-system journey ledger has been reconciled with merged CI, PostgreSQL and browser evidence in [END_TO_END_JOURNEY_MATRIX.md](docs/implementation/END_TO_END_JOURNEY_MATRIX.md).
+
+- PR #64 merged Super Admin independent privilege review, mandatory MFA-after-elevation gating, and customer/seller/buyer/Super Admin browser journeys. Exact PR-head General CI, disposable PostgreSQL (3 files / 9 tests), and Browser E2E passed.
+- PR #68 merged anonymous API boundary hardening. Its 165 route/method cases, General CI and Browser E2E passed on exact PR head. This is not a substitute for role, ownership, staff-scope or cross-tenant authorization verification.
+- Advertising is delivered in product discovery, search, category discovery and product detail; event tracking, deduplication, campaign budgets, spend ledger, invoice generation and manual invoice settlement are implemented. No live advertising payment provider is connected.
+- Buyer checkout browser coverage reaches order confirmation through cart, address, shipping and tax; the resulting order is pending payment. No live payment provider is connected.
+- Financial PostgreSQL integration passed migration replay, 3 integration files / 9 tests and two repeatable demo-seed runs on `0d0fab6f47fdf49396022331f77f5612616a8d44` (run [42404238983](https://github.com/waelkamira/mtjr2/actions/runs/42404238983)). General CI passed on `f05480a83fe3126f0183e51f990e47216fb14098` (run [42404307099](https://github.com/waelkamira/mtjr2/actions/runs/42404307099)). These are preceding commits, not exact-head checks for the latest docs commit.
+- Latest observed main commit is `1d458f0b43db43012913c5351c9754daeb153062`. Its Vercel status is blocked by the provider's build/deployment rate limit. Do not interpret this as a successful deployment or an application compilation failure.
+- No production database, production secret, live payment/refund/carrier provider, or deployment setting was accessed or changed in this reconciliation.
+
+Remaining release gates: reconcile all 49 system rows individually; complete actor/ownership/store-scope and cross-tenant authorization tests; complete the missing route-level customer/seller/admin browser journeys; resolve Vercel quota; and explicitly decide launch-market/provider credentials before any live payment, refund or carrier integration. Do not mark the marketplace globally complete while these gates remain open.
