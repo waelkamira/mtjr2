@@ -97,6 +97,7 @@ export async function recordSponsoredAdEvent(input: {
   const visitorIp = resolveTrustedClientIp(input.headers, env.TRUSTED_PROXY_IP_HEADER, env.NODE_ENV);
   const visitorHash = visitorIp ? createHash("sha256").update(visitorIp).digest("hex") : null;
   if (input.type === "CLICK" && !visitorHash) throw new Error("Trusted client IP is required before an advertising click can be billed.");
+  // The campaign-scoped advisory lock serializes all budget/event mutations. Use READ COMMITTED so a waiter reads the latest committed budget after acquiring the lock; SERIALIZABLE can retain a pre-lock snapshot and spuriously abort a valid impression/click under normal concurrent page activity.
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT 1::int AS locked FROM (SELECT pg_advisory_xact_lock(hashtextextended(${payload.campaignId}, 0))) AS lock_result`);
     const campaign = await tx.adCampaign.findUnique({
@@ -144,7 +145,7 @@ export async function recordSponsoredAdEvent(input: {
       });
     }
     return { accepted: true, duplicate: false, chargedMinor: costMinor.toString() };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
 }
 
 export async function generateAdInvoices(input: { periodStart: Date; periodEnd: Date; dueAt: Date }) {

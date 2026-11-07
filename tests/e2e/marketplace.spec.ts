@@ -69,6 +69,47 @@ test.describe("public marketplace journeys", () => {
   });
 });
 
+test.describe("buyer checkout journey", () => {
+  test("places a pending-payment order through cart, address, shipping and tax", async ({ page }) => {
+    await signIn(page, sessions.buyer);
+    await page.goto("/products/" + encodeURIComponent(sessions.detailProductSlug));
+    const addToCart = page.getByRole("button", { name: /Add to cart|أضف إلى السلة/i });
+    await expect(addToCart).toBeEnabled({ timeout: 15000 });
+    await addToCart.click();
+    await expect(page.getByText(/Added to your cart|أُضيف إلى سلة التسوق/i)).toBeVisible();
+
+    await page.goto("/cart");
+    await expect(page.getByRole("heading", { name: /Shopping cart|سلة التسوق/i })).toBeVisible();
+    const reviewCheckout = page.getByRole("button", { name: /Review checkout|مراجعة إتمام الشراء/i });
+    await expect(reviewCheckout).toBeEnabled();
+    await reviewCheckout.click();
+    await expect(page.getByRole("heading", { name: /Review your order|مراجعة طلبك/i })).toBeVisible();
+
+    await page.getByLabel(/Recipient name|اسم المستلم/i).fill("E2E Buyer");
+    await page.getByLabel(/Phone \(international\)|رقم الهاتف/i).fill("+12025550123");
+    await page.getByLabel(/Address line 1|العنوان، السطر الأول/i).fill("10 E2E Test Street");
+    await page.getByLabel(/^City$|^المدينة$/i).fill("Seattle");
+    await page.getByLabel(/Region \/ State|المنطقة/i).fill("Washington");
+    await page.getByLabel(/Postal code|الرمز البريدي/i).fill("98101");
+    await page.getByRole("button", { name: /Save delivery address|احفظ عنوان التوصيل/i }).click();
+    await expect(page.getByText(/Saved to this quote|تم الحفظ لعرض السعر هذا/i)).toBeVisible();
+
+    await page.getByRole("button", { name: /Load shipping options|تحميل خيارات الشحن/i }).click();
+    await expect(page.getByText("E2E Standard Shipping")).toBeVisible();
+    await page.getByRole("button", { name: /^Choose$|^اختر$/i }).first().click();
+    await expect(page.getByRole("button", { name: /Selected|محدد/i })).toBeVisible();
+
+    await page.getByRole("button", { name: /Calculate tax and total|احسب الضريبة/i }).click();
+    await expect(page.getByText("E2E Market Tax")).toBeVisible();
+    await page.getByRole("button", { name: /Place order|قدّم الطلب/i }).click();
+
+    await expect(page).toHaveURL(/\/orders\/[^/?]+$/);
+    await expect(page.getByRole("heading", { name: /Thank you for your order|شكرًا لطلبك/i })).toBeVisible();
+    await expect(page.locator("main").getByText(/Pending payment|بانتظار الدفع/i).first()).toBeVisible();
+    await expect(page.getByText(/Payment is pending|الدفع قيد الانتظار/i)).toBeVisible();
+  });
+});
+
 test.describe("customer journey", () => {
   test("customer account and orders are accessible at desktop and mobile widths", async ({ page }) => {
     await signIn(page, sessions.customer);
