@@ -266,3 +266,17 @@ On SHA 7872ea280e34ac6933cc6abcfea16f835c636c69, General CI passed completely. P
 - Seller permission remains absent while Seller.status=PENDING; the approval service is the only path that assigns the SELLER role, and store creation separately requires ACTIVE + store:manage.
 - Google RS256/JWKS, state, PKCE and nonce verifier unit tests passed as part of General CI. They use generated test keys; no real Google account or provider credential was exercised.
 - No live browser runtime was available. Real Google sign-in, verification-email delivery and trusted-proxy edge behavior remain external runtime acceptance items. Do not represent them as browser/provider tested.
+
+
+## Identity exact-head acceptance — 2026-11-07
+
+| Area | Exact-head evidence on `3eddb74d92f4aa369a4e2e3917de2a2066381514` | Remaining boundary |
+|---|---|---|
+| General CI | [Run 42212894665](https://github.com/waelkamira/mtjr2/actions/runs/42212894665): quality job passed Prisma validate/generate, typecheck, lint, unit tests and production build. | No live browser runtime was available. |
+| PostgreSQL | [Run 42212894876](https://github.com/waelkamira/mtjr2/actions/runs/42212894876): PostgreSQL 16, all 23 disposable migrations, baseline seed (6 roles / 23 permissions / 67 links), and 7/7 integration tests passed. | Database is disposable CI only; no owner or production database was used. |
+| Buyer registration and verification | PostgreSQL asserts CUSTOMER assignment, PENDING user, both v1 consents, hashed verification token, and exactly one successful concurrent token consumer. | Real email delivery requires operator-provided Resend configuration. Production public registration is intentionally disabled by the current environment policy. |
+| Login, account and logout | Verified-user login/session lifecycle, throttling, profile read/update, address create/list, favorites/order scoped service calls, and HTTP logout/revocation/audit/cookie clearing are covered by the passing integration suite. | The favorites/orders test does not yet seed populated cross-user fixtures; no live browser persistence/redirect test was run. Login HTTP needs a trusted edge header configuration. |
+| Seller | PostgreSQL verifies SELLER registration creates a PENDING Seller with no role assignments and no `store:manage`. Seller approval and ACTIVE-only store creation have focused unit coverage. | No live admin-review/browser journey was run. |
+| Google OAuth | Generated-key tests exercise RS256/JWKS validation, audience, expiry, nonce, signature and malformed-token rejection; source review confirms state and PKCE S256 flow. | Real provider sign-in requires Google client credentials and the exact callback registration; no live Google account was used. |
+
+Automated source/CI/PostgreSQL acceptance is verified at the stated SHA. Browser, email-provider, trusted-proxy and real Google provider behavior remain untested external runtime gates; do not represent them as live-tested.
