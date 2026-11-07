@@ -114,6 +114,8 @@ describe("logoutAllSessions", () => {
     auditCreateMock.mockResolvedValue({});
     requireCurrentMock.mockResolvedValue(session);
     revokeAllMock.mockResolvedValue(3);
+    txUserSessionUpdateMock.mockResolvedValue({ count: 3 });
+    transactionMock.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({ userSession: { updateMany: txUserSessionUpdateMock }, auditLog: { create: auditCreateMock } }));
   });
 
   it("revokes all sessions for the authenticated user, audits the action, and clears the current cookie", async () => {
