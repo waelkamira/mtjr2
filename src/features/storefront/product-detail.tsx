@@ -104,8 +104,6 @@ export default function ProductDetail({ initialProduct, initialSponsored }: { in
     return () => { active = false; };
   }, [product?.id, product?.name, selectedMarketId]);
 
-  if (loading) return <main className="mx-auto min-h-screen max-w-6xl px-5 py-16"><div className="h-96 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /></main>;
-  if (error || !product) return <main className="mx-auto min-h-screen max-w-3xl px-5 py-24 text-center"><p role="alert" className="text-lg">{error || t("Product not found.", "المنتج غير موجود.")}</p><Link href="/" className="mt-6 inline-block text-sm text-[var(--color-petrol-800)] underline">{t("Back to marketplace", "العودة إلى السوق")}</Link></main>;
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
   const selectedMarketInfo = markets.find((item) => item.id === selectedMarketId);
