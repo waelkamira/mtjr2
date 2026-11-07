@@ -170,11 +170,11 @@ test.describe("Super Admin journey", () => {
     await expect(page.locator("main").last()).toBeVisible();
 
     await page.goto("/admin/control-panel/access-catalog");
-    await expect(page.getByRole("heading", { name: /Roles & permissions/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Roles & permissions|الأدوار والصلاحيات/i })).toBeVisible();
     await page.goto("/admin/control-panel/audit-log");
-    await expect(page.getByRole("heading", { name: /Platform audit log/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Platform audit log|سجل تدقيق المنصة/i })).toBeVisible();
     await page.goto("/admin/control-panel/ai-assistant");
-    await expect(page.getByRole("heading", { name: /AI assistant/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /AI assistant|المساعد الذكي/i })).toBeVisible();
     const aiSettingsResponse = await page.request.get("/api/admin/control-panel/ai-assistant");
     expect(aiSettingsResponse.status()).toBe(200);
     const aiSettings = await aiSettingsResponse.json() as Record<string, unknown>;
@@ -182,13 +182,13 @@ test.describe("Super Admin journey", () => {
     expect(JSON.stringify(aiSettings)).not.toContain("GROQ_API_KEY");
 
     await page.goto("/admin/control-panel/privilege-requests");
-    await page.getByLabel(/User email/i).fill(sessions.privilegeTargetEmail);
-    await page.getByLabel(/Business justification/i).fill("Independent E2E verification of the controlled Super Admin access workflow.");
-    await page.getByRole("button", { name: /Submit access request/i }).click();
-    await expect(page.getByRole("status")).toContainText(/Privilege request submitted/i);
+    await page.getByLabel(/User email|البريد الإلكتروني للمستخدم/i).fill(sessions.privilegeTargetEmail);
+    await page.getByLabel(/Business justification|مبررات العمل/i).fill("Independent E2E verification of the controlled Super Admin access workflow.");
+    await page.getByRole("button", { name: /Submit access request|إرسال طلب الوصول/i }).click();
+    await expect(page.getByRole("status")).toContainText(/Privilege request submitted|تم إرسال طلب الامتياز للمراجعة المستقلة/i);
 
     // The requester must not approve their own request.
-    await page.getByRole("button", { name: /Approve & grant access/i }).first().click();
+    await page.getByRole("button", { name: /Approve & grant access|الموافقة ومنح الصلاحية/i }).first().click();
     await expect(page.getByRole("alert")).toContainText(/requester cannot approve or reject/i);
 
     // The target has no platform access before approval.
@@ -199,8 +199,8 @@ test.describe("Super Admin journey", () => {
     // A second, independent Super Admin can review and approve the pending request.
     await signIn(page, sessions.adminReviewer);
     await page.goto("/admin/control-panel/privilege-requests");
-    await page.getByRole("button", { name: /Approve & grant access/i }).first().click();
-    await expect(page.getByRole("status")).toContainText(/Request approved/i);
+    await page.getByRole("button", { name: /Approve & grant access|الموافقة ومنح الصلاحية/i }).first().click();
+    await expect(page.getByRole("status")).toContainText(/Request approved|تمت الموافقة على الطلب ومنح صلاحية الوصول إلى المنصة/i);
     await expect(page.getByText("APPROVED").first()).toBeVisible();
 
     const auditResponse = await page.request.get("/api/admin/control-panel/audit-log?action=platform.privilege_request.created");
