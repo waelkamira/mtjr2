@@ -50,20 +50,27 @@ async function main() {
   if (!store?.markets.length) throw new Error("Demo seller store has no enabled market.");
   const market = store.markets[0].market;
   const product = await prisma.product.findFirst({
-    where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED", variants: { some: { isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } } } },
-    select: { id: true }
+    where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED", categories: { some: {} }, variants: { some: { isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } } } },
+    select: { id: true, slug: true, categories: { where: { isPrimary: true }, take: 1, select: { category: { select: { slug: true } } } } }
   });
-  if (!product) throw new Error("Demo seller store has no approved product with a market price.");
-  await prisma.adCampaign.create({
-    data: {
-      storeId: store.id, productId: product.id, createdById: seller.id,
-      marketId: market.id, currencyCode: market.defaultCurrencyCode,
-      title: "E2E Sponsored Product", message: "Sponsored placement fixture",
-      status: "ACTIVE", startsAt: new Date(now.getTime() - 60 * 60 * 1000),
-      endsAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-      budgetMinor: 50000n, dailyBudgetMinor: 10000n, cpcBidMinor: 100n
-    }
+  if (!product) throw new Error("Demo seller store has no approved categorized product with a market price.");
+  const detailProduct = await prisma.product.findFirst({
+    where: { storeId: store.id, id: { not: product.id }, status: "ACTIVE", approvalStatus: "APPROVED", variants: { some: { isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } } } },
+    select: { id: true, slug: true }
   });
+  if (!detailProduct) throw new Error("Demo seller store needs a second approved product for product-detail sponsored placement tests.");
+  for (const [index, adProduct] of [product, detailProduct].entries()) {
+    await prisma.adCampaign.create({
+      data: {
+        storeId: store.id, productId: adProduct.id, createdById: seller.id,
+        marketId: market.id, currencyCode: market.defaultCurrencyCode,
+        title: "E2E Sponsored Product " + (index + 1), message: "Sponsored placement fixture",
+        status: "ACTIVE", startsAt: new Date(now.getTime() - 60 * 60 * 1000),
+        endsAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        budgetMinor: 50000n, dailyBudgetMinor: 10000n, cpcBidMinor: 100n
+      }
+    });
+  }
   const customer = await ensureUser("e2e-customer@mtjr2.test", "E2E Customer");
   await ensureRole(customer.id, "CUSTOMER");
   const admin = await ensureUser("e2e-superadmin@mtjr2.test", "E2E Super Admin");
@@ -71,7 +78,9 @@ async function main() {
   const sessions = {
     customer: await sessionFor(customer.id, false),
     seller: await sessionFor(seller.id, true),
-    admin: await sessionFor(admin.id, true)
+    admin: await sessionFor(admin.id, true),
+    categorySlug: product.categories[0]?.category.slug,
+    detailProductSlug: detailProduct.slug
   };
   const target = path.join(process.cwd(), ".e2e-sessions.json");
   fs.writeFileSync(target, JSON.stringify(sessions), { mode: 0o600 });
