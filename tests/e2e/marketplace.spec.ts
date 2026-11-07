@@ -110,7 +110,7 @@ test.describe("Super Admin journey", () => {
     await page.goto("/admin/dashboard");
     await expect(page.locator("main")).toBeVisible();
     await page.goto("/admin/control-panel");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").last()).toBeVisible();
     await page.goto("/admin/advertising");
     await expect(page.getByRole("heading", { name: /Advertising review|مراجعة الإعلانات/i })).toBeVisible();
     await page.screenshot({ path: "test-results/admin-desktop.png", fullPage: true });
