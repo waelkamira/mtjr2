@@ -6,6 +6,7 @@ import AuthReturnLink from "@/components/auth-return-link";
 import ProductReviews from "@/features/storefront/product-reviews";
 import StoreReviews from "@/features/storefront/store-reviews";
 import ProductQuestions from "@/features/storefront/product-questions";
+import SponsoredProductCard from "@/features/storefront/sponsored-product-card";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -25,11 +26,12 @@ function writeGuestFavorite(productId: string, saved: boolean) {
   } catch { /* Browser storage may be unavailable. */ }
 }
 
-type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
+type Price = { marketId: string; currencyCode: string; amountMinor: string | bigint; compareAtMinor: string | bigint | null; currency: { minorUnit: number } };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type ProductAttribute = { key: string; name: string; valueType: string; values: unknown[] };
 type VariantAttribute = { key: string; name: string; valueType: string; value: unknown };
-type Product = {
+export type ProductDetailInitialSponsored = { campaignId: string; token: string; product: { id: string; slug: string; name: string; description: string | null; brand: { name: string } | null; store: { id: string; name: string; slug: string }; media: Array<{ url: string; altText: string | null; isPrimary: boolean }>; variants: Array<{ prices: Array<{ amountMinor: string; currencyCode: string; currency: { minorUnit: number } }> }> } };
+export type ProductDetailInitialProduct = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { id: string; name: string; slug: string };
   media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
@@ -43,16 +45,15 @@ function formatAttributeValue(value: unknown): string {
   return JSON.stringify(value) ?? "";
 }
 
-export default function ProductDetail({ slug }: { slug: string }) {
+export default function ProductDetail({ initialProduct, initialSponsored }: { initialProduct: ProductDetailInitialProduct; initialSponsored: ProductDetailInitialSponsored[] }) {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
-  const [product, setProduct] = useState<Product | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState("");
-  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const product = initialProduct;
+  const [sponsored, setSponsored] = useState<ProductDetailInitialSponsored[]>(initialSponsored);
+  const [selectedVariant, setSelectedVariant] = useState(initialProduct.variants[0]?.id ?? "");
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(Math.max(0, initialProduct.media.findIndex((item) => item.isPrimary)));
   const [markets, setMarkets] = useState<Market[]>([]);
-  const [selectedMarketId, setSelectedMarketId] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [selectedMarketId, setSelectedMarketId] = useState(initialProduct.variants[0]?.prices[0]?.marketId ?? "");
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
@@ -69,37 +70,40 @@ export default function ProductDetail({ slug }: { slug: string }) {
       if (!response.ok) throw new Error(t("Markets unavailable.", "الأسواق غير متاحة."));
       return response.json() as Promise<{ items: Market[] }>;
     }).then((result) => {
-      if (!active) return;
-      setMarkets(result.items);
-    }).catch(() => { /* Product details remain available if market reference data is temporarily unavailable. */ });
-    fetch(`/api/products/${encodeURIComponent(slug)}?locale=${locale}`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error(response.status === 404 ? t("This product is not available.", "هذا المنتج غير متاح.") : t("Product details could not be loaded.", "تعذّر تحميل تفاصيل المنتج."));
-        return response.json() as Promise<Product>;
-      })
-      .then((result) => {
-        if (!active) return;
-        setProduct(result);
-        fetch(`/api/favorites/${encodeURIComponent(result.id)}`, { cache: "no-store" })
-          .then(async (response) => {
-            if (response.status === 401) return { guest: true as const, isFavorite: readGuestWishlist().includes(result.id) };
-            if (!response.ok) return { guest: false as const, isFavorite: false };
-            const favorite = await response.json() as { isFavorite: boolean };
-            return { guest: false as const, isFavorite: favorite.isFavorite };
-          })
-          .then((favorite) => { if (active) { setGuestMode(favorite.guest); setIsFavorite(favorite.isFavorite); } })
-          .catch(() => { if (active) { setGuestMode(false); setIsFavorite(false); } });
-        setSelectedVariant(result.variants[0]?.id ?? "");
-        setSelectedMarketId(result.variants[0]?.prices[0]?.marketId ?? "");
-        setSelectedMediaIndex(Math.max(0, result.media.findIndex((item) => item.isPrimary)));
-      })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : t("Product details are unavailable.", "تفاصيل المنتج غير متاحة.")); })
-      .finally(() => { if (active) setLoading(false); });
+      if (active) setMarkets(result.items);
+    }).catch(() => { /* Server-rendered product data remains available if market references are temporarily unavailable. */ });
     return () => { active = false; };
-  }, [slug, locale, t]);
+  }, [t]);
 
-  if (loading) return <main className="mx-auto min-h-screen max-w-6xl px-5 py-16"><div className="h-96 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /></main>;
-  if (error || !product) return <main className="mx-auto min-h-screen max-w-3xl px-5 py-24 text-center"><p role="alert" className="text-lg">{error || t("Product not found.", "المنتج غير موجود.")}</p><Link href="/" className="mt-6 inline-block text-sm text-[var(--color-petrol-800)] underline">{t("Back to marketplace", "العودة إلى السوق")}</Link></main>;
+  useEffect(() => {
+    let active = true;
+    fetch(`/api/favorites/${encodeURIComponent(product.id)}`, { cache: "no-store" })
+      .then(async (response) => {
+        if (response.status === 401) return { guest: true as const, isFavorite: readGuestWishlist().includes(product.id) };
+        if (!response.ok) return { guest: false as const, isFavorite: false };
+        const favorite = await response.json() as { isFavorite: boolean };
+        return { guest: false as const, isFavorite: favorite.isFavorite };
+      })
+      .then((favorite) => { if (active) { setGuestMode(favorite.guest); setIsFavorite(favorite.isFavorite); } })
+      .catch(() => { if (active) { setGuestMode(false); setIsFavorite(false); } });
+    return () => { active = false; };
+  }, [product.id]);
+
+  useEffect(() => {
+    if (!product || !selectedMarketId) return;
+    let active = true;
+    const currentProductId = product.id;
+    const currentProductName = product.name;
+    fetch(`/api/advertising/sponsored?marketId=${encodeURIComponent(selectedMarketId)}&q=${encodeURIComponent(currentProductName)}`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Sponsored products unavailable.");
+        return response.json() as Promise<{ items: ProductDetailInitialSponsored[] }>;
+      })
+      .then((result) => { if (active) setSponsored(result.items.filter((item) => item.product.id !== currentProductId)); })
+      .catch(() => { if (active) setSponsored([]); });
+    return () => { active = false; };
+  }, [product?.id, product?.name, selectedMarketId]);
+
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
   const selectedMarketInfo = markets.find((item) => item.id === selectedMarketId);
@@ -203,5 +207,11 @@ export default function ProductDetail({ slug }: { slug: string }) {
     <ProductReviews productId={product.id} />
     <StoreReviews storeId={product.store.id} storeName={product.store.name} />
     <ProductQuestions productId={product.id} />
+    {sponsored.length > 0 && <section className="mx-auto max-w-6xl px-5 pb-12">
+      <h2 className="mb-4 text-xl font-semibold">{t("Sponsored products you may like", "منتجات ممولة قد تعجبك")}</h2>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {sponsored.map((item) => <SponsoredProductCard key={item.campaignId} product={item.product} token={item.token} locale={locale} />)}
+      </div>
+    </section>}
   </main>;
 }

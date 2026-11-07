@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("@/server/identity/request-security", () => ({ validateIdentityMutationRequest: () => null }));
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/locale/route";
 import { defaultLocale, isLocale, translate } from "@/lib/locale";
@@ -22,9 +23,10 @@ describe("locale preference", () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    expect(response.cookies.get("mtjr-locale")?.value).toBe("en");
-    expect(response.cookies.get("mtjr-locale")?.httpOnly).toBe(true);
-    expect(response.cookies.get("mtjr-locale")?.secure).toBe(true);
+    const cookie = response.headers.get("set-cookie") ?? "";
+    expect(cookie).toContain("mtjr-locale=en");
+    expect(cookie).toMatch(/HttpOnly/i);
+    expect(cookie).toMatch(/Secure/i);
   });
 
   it("rejects unsupported language codes", async () => {

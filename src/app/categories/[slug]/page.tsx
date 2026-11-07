@@ -6,6 +6,7 @@ import CatalogProductGrid from "@/features/storefront/catalog-product-grid";
 import CatalogListControls from "@/features/storefront/catalog-list-controls";
 import { getPreferredLocale } from "@/server/locale";
 import { translate } from "@/lib/locale";
+import { listSponsoredCampaigns } from "@/server/advertising/delivery";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; sort?: string }> };
 
@@ -29,7 +30,11 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
   const sort = search.sort === "name_asc" || search.sort === "name_desc" || (q && search.sort === "relevance")
     ? search.sort
     : q ? "relevance" : "newest";
-  const result = await listDiscoverableProducts({ categoryId: category.id, q: q || undefined, page, limit: 24, sort, locale });
+  const [result, markets] = await Promise.all([
+    listDiscoverableProducts({ categoryId: category.id, q: q || undefined, page, limit: 24, sort, locale }),
+    import("@/server/marketplace/market-query").then((module) => module.listActiveMarkets())
+  ]);
+  const sponsored = await listSponsoredCampaigns({ marketId: markets[0]?.id, categoryId: category.id, query: q, limit: 4 });
 
   return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
     <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Marketplace category", "فئة السوق")}</p>
@@ -37,7 +42,7 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
     {category.description && <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">{category.description}</p>}
     <p className="mt-5 text-xs text-[var(--muted)]">{result.pagination.total} {translate(locale, "published products", "منتج منشور")}</p>
     <CatalogListControls action={`/categories/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} locale={locale} />
-    <CatalogProductGrid products={result.items} locale={locale} />
+    <CatalogProductGrid products={result.items} locale={locale} sponsored={sponsored} />
     <CatalogListControls action={`/categories/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} locale={locale} />
 
   </main>;

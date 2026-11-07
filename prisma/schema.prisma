@@ -56,6 +56,7 @@ model User {
   createdCommissionRules  CommissionRule[]          @relation("CommissionRuleCreator")
   createdAdCampaigns      AdCampaign[]               @relation("AdCampaignCreator")
   reviewedAdCampaigns     AdCampaign[]               @relation("AdCampaignReviewer")
+  settledAdInvoices       AdInvoice[]                @relation("AdInvoiceSettler")
   storeMemberships        SellerStaff[]            @relation("SellerStaffUser")
   sentStoreInvitations    SellerStaff[]            @relation("SellerStaffInviter")
   carts                   Cart[]
@@ -512,6 +513,9 @@ model Currency {
   payments       Payment[]
   commissionTransactions CommissionTransaction[]
   coupons        Coupon[]         @relation("CouponCurrency")
+  adCampaigns    AdCampaign[]
+  adInvoices     AdInvoice[]
+  adSpendLedgerEntries AdSpendLedgerEntry[]
 
   shippingRates StoreShippingRate[]
 
@@ -537,6 +541,7 @@ model Market {
   orders              Order[]
   shippingRates       StoreShippingRate[]
   taxRates            MarketTaxRate[]
+  adCampaigns         AdCampaign[]
 
   @@index([countryId, status])
   @@index([defaultCurrencyCode])
@@ -593,6 +598,8 @@ model Store {
   conversations              StoreConversation[]
   commissionTransactions     CommissionTransaction[]
   adCampaigns                 AdCampaign[]
+  adInvoices                  AdInvoice[]
+  adSpendLedgerEntries        AdSpendLedgerEntry[]
 
   @@index([sellerId, status])
   @@index([status, createdAt])
@@ -646,6 +653,7 @@ model Category {
   productLinks ProductCategory[]
   commissionRules CommissionRule[]
   orderItems   OrderItem[]
+  adCampaigns  AdCampaign[]
 
   @@index([parentId, status, sortOrder])
   @@index([status, sortOrder])
@@ -679,6 +687,7 @@ model Brand {
   updatedAt    DateTime            @updatedAt
   translations BrandTranslation[]
   products     Product[]
+  adCampaigns  AdCampaign[]
 
   @@index([status, name])
 }
@@ -2111,12 +2120,34 @@ enum AdCampaignStatus {
   ARCHIVED
 }
 
+enum AdCampaignEventType {
+  IMPRESSION
+  CLICK
+}
+
+enum AdInvoiceStatus {
+  OPEN
+  SETTLED
+  VOID
+}
+
 model AdCampaign {
   id String @id @default(cuid())
   storeId String
   productId String
   createdById String
   reviewedById String?
+  marketId String?
+  currencyCode String? @db.Char(3)
+  targetCategoryId String?
+  targetBrandId String?
+  targetKeywords String[] @default([])
+  budgetMinor BigInt
+  dailyBudgetMinor BigInt
+  cpcBidMinor BigInt
+  spentMinor BigInt @default(0)
+  impressionCount BigInt @default(0)
+  clickCount BigInt @default(0)
   title String @db.VarChar(140)
   message String? @db.VarChar(300)
   status AdCampaignStatus @default(DRAFT)
@@ -2129,10 +2160,68 @@ model AdCampaign {
   updatedAt DateTime @updatedAt
   store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  market Market? @relation(fields: [marketId], references: [id], onDelete: Restrict)
+  currency Currency? @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  targetCategory Category? @relation(fields: [targetCategoryId], references: [id], onDelete: SetNull)
+  targetBrand Brand? @relation(fields: [targetBrandId], references: [id], onDelete: SetNull)
   createdBy User @relation("AdCampaignCreator", fields: [createdById], references: [id], onDelete: Restrict)
   reviewedBy User? @relation("AdCampaignReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  events AdCampaignEvent[]
+  spendEntries AdSpendLedgerEntry[]
   @@index([storeId, status, createdAt])
   @@index([status, submittedAt])
   @@index([productId, status])
   @@index([startsAt, endsAt, status])
+  @@index([marketId, status, startsAt, endsAt])
+  @@index([targetCategoryId, targetBrandId, status])
+}
+
+model AdCampaignEvent {
+  id String @id @default(cuid())
+  campaignId String
+  eventId String @db.VarChar(80)
+  type AdCampaignEventType
+  visitorHash String? @db.Char(64)
+  costMinor BigInt @default(0)
+  occurredAt DateTime @default(now())
+  campaign AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  spendEntry AdSpendLedgerEntry?
+  @@unique([campaignId, eventId])
+  @@index([campaignId, type, occurredAt])
+}
+
+model AdSpendLedgerEntry {
+  id String @id @default(cuid())
+  campaignId String
+  eventId String @unique
+  storeId String
+  currencyCode String @db.Char(3)
+  amountMinor BigInt
+  createdAt DateTime @default(now())
+  campaign AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  event AdCampaignEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  currency Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  @@index([storeId, currencyCode, createdAt])
+  @@index([campaignId, createdAt])
+}
+
+model AdInvoice {
+  id String @id @default(cuid())
+  storeId String
+  currencyCode String @db.Char(3)
+  periodStart DateTime
+  periodEnd DateTime
+  amountMinor BigInt
+  status AdInvoiceStatus @default(OPEN)
+  paymentReference String? @db.VarChar(180)
+  settledAt DateTime?
+  settledById String?
+  dueAt DateTime
+  createdAt DateTime @default(now())
+  store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  currency Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  settledBy User? @relation("AdInvoiceSettler", fields: [settledById], references: [id], onDelete: SetNull)
+  @@unique([storeId, currencyCode, periodStart])
+  @@index([status, dueAt])
 }

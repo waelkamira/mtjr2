@@ -4,7 +4,12 @@ import { validateIdentityMutationRequest } from "@/server/identity/request-secur
 import { createSellerAdCampaign, listSellerAdCampaigns } from "@/server/advertising/campaigns";
 
 export const runtime = "nodejs";
-const bodySchema=z.object({storeId:z.string().trim().min(1),productId:z.string().trim().min(1),title:z.string().trim().min(5).max(140),message:z.string().trim().max(300).optional(),startsAt:z.string().datetime(),endsAt:z.string().datetime()}).strict();
+const bodySchema=z.object({
+ storeId:z.string().trim().min(1),productId:z.string().trim().min(1),marketId:z.string().trim().min(1),currencyCode:z.string().trim().length(3),
+ budgetMinor:z.string().regex(/^[1-9]\d{0,14}$/),dailyBudgetMinor:z.string().regex(/^[1-9]\d{0,14}$/),cpcBidMinor:z.string().regex(/^[1-9]\d{0,14}$/),
+ targetCategoryId:z.string().trim().min(1).optional(),targetBrandId:z.string().trim().min(1).optional(),targetKeywords:z.array(z.string().trim().min(2).max(40)).max(8).default([]),
+ title:z.string().trim().min(5).max(140),message:z.string().trim().max(300).optional(),startsAt:z.string().datetime(),endsAt:z.string().datetime()
+}).strict();
 
 export async function GET(request:Request):Promise<Response>{
  const storeId=new URL(request.url).searchParams.get("storeId");
