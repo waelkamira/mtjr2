@@ -97,6 +97,17 @@ export async function registerUser(
         select: { id: true }
       });
 
+      if (parsed.accountType === "CUSTOMER") {
+        const customerRole = await tx.role.findUnique({
+          where: { key: "CUSTOMER" },
+          select: { id: true }
+        });
+        if (!customerRole) throw new Error("CUSTOMER role is missing; run the identity seed before registering customers.");
+        await tx.userRoleAssignment.create({
+          data: { userId: createdUser.id, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" }
+        });
+      }
+
       await tx.verificationToken.create({
         data: {
           userId: createdUser.id,
