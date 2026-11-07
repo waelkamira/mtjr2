@@ -155,6 +155,10 @@ test.describe("seller journey", () => {
 
 test.describe("Super Admin journey", () => {
   test("control center, governance tools, privilege approval and advertising render responsively", async ({ page }) => {
+    await signIn(page, sessions.customer);
+    const deniedAdminResponse = await page.goto("/admin/control-panel");
+    expect(deniedAdminResponse?.status()).toBe(404);
+
     await signIn(page, sessions.admin);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/admin/dashboard");
