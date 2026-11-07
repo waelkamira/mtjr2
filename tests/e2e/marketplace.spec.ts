@@ -46,8 +46,17 @@ test.describe("public marketplace journeys", () => {
     await page.goto("/categories/" + encodeURIComponent(sessions.categorySlug));
     await expect(page.getByTestId("sponsored-product").first()).toBeVisible();
     expect(sessions.detailProductSlug).toBeTruthy();
+    const detailResponse = await page.request.get("/api/products/" + encodeURIComponent(sessions.detailProductSlug) + "?locale=ar");
+    expect(detailResponse.status()).toBe(200);
+    const detailProduct = await detailResponse.json() as { name: string; variants: Array<{ prices: Array<{ marketId: string }> }> };
+    const detailMarketId = detailProduct.variants.flatMap((variant) => variant.prices).at(0)?.marketId;
+    expect(detailMarketId).toBeTruthy();
+    const detailAdsResponse = await page.request.get("/api/advertising/sponsored?marketId=" + encodeURIComponent(detailMarketId!));
+    expect(detailAdsResponse.status()).toBe(200);
+    expect((await detailAdsResponse.json() as { items: unknown[] }).items.length).toBeGreaterThan(0);
     await page.goto("/products/" + encodeURIComponent(sessions.detailProductSlug));
-    await expect(page.getByTestId("sponsored-product").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: detailProduct.name })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("sponsored-product").first()).toBeVisible({ timeout: 15000 });
   });
 });
 
