@@ -111,6 +111,8 @@ describe("registration", () => {
         status: "PENDING"
       }
     });
+    expect(txMock.role.findUnique).not.toHaveBeenCalled();
+    expect(txMock.userRoleAssignment.create).not.toHaveBeenCalled();
   });
 
   it("returns an identity conflict before hashing or inserting an existing email", async () => {
