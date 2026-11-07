@@ -105,7 +105,7 @@ export default function SupportTicketPage({ ticketId }: { ticketId: string }) {
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <header className="border-b border-[var(--border)] bg-white px-5 py-5">
-        <div className="mx-auto flex max-w-4xl justify-between">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
           <Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
           <Link href="/account/support" className="text-sm">{t("All support requests", "جميع طلبات الدعم")}</Link>
         </div>
