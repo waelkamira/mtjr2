@@ -18,21 +18,36 @@ test.describe("public marketplace journeys", () => {
     await expect(sponsored).toBeVisible();
     const token = await sponsored.getAttribute("data-ad-token");
     expect(token).toBeTruthy();
-    const eventResult = await page.evaluate(async (adToken) => {
-      const response = await fetch("/api/advertising/events", {
+    const eventId = crypto.randomUUID().replace(/-/g, "");
+    const eventResult = await page.evaluate(async ({ adToken, eventId }) => {
+      const send = () => fetch("/api/advertising/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: adToken, type: "CLICK", eventId: crypto.randomUUID().replace(/-/g, "") })
+        body: JSON.stringify({ token: adToken, type: "CLICK", eventId })
       });
-      return { status: response.status, body: await response.json() };
-    }, token!);
-    expect(eventResult.status, JSON.stringify(eventResult.body)).toBe(200);
+      const first = await send();
+      const firstBody = await first.json();
+      const replay = await send();
+      const replayBody = await replay.json();
+      return { status: first.status, firstBody, replayStatus: replay.status, replayBody };
+    }, { adToken: token!, eventId });
+    expect(eventResult.status, JSON.stringify(eventResult.firstBody)).toBe(200);
+    expect(eventResult.firstBody).toMatchObject({ accepted: true, duplicate: false });
+    expect(eventResult.replayStatus, JSON.stringify(eventResult.replayBody)).toBe(200);
+    expect(eventResult.replayBody).toMatchObject({ accepted: true, duplicate: true });
     await sponsored.getByRole("link").click();
     await expect(page).toHaveURL(/products/);
     await page.goto("/search?q=Nova");
     await expect(page.getByRole("heading", { name: /Search products|ابحث عن المنتجات/i })).toBeVisible();
+    await expect(page.getByTestId("sponsored-product").first()).toBeVisible();
     await page.goto("/categories");
     await expect(page.getByRole("heading", { name: /Shop by category|تسوّق حسب الفئة/i })).toBeVisible();
+    expect(sessions.categorySlug).toBeTruthy();
+    await page.goto("/categories/" + encodeURIComponent(sessions.categorySlug));
+    await expect(page.getByTestId("sponsored-product").first()).toBeVisible();
+    expect(sessions.detailProductSlug).toBeTruthy();
+    await page.goto("/products/" + encodeURIComponent(sessions.detailProductSlug));
+    await expect(page.getByTestId("sponsored-product").first()).toBeVisible();
   });
 });
 
