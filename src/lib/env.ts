@@ -18,6 +18,8 @@ const environmentSchema = z.object({
   AI_ASSISTANT_ENABLED: z.preprocess((value) => value === "" ? undefined : value, z.enum(["true", "false"]).default("false")),
   MFA_ENCRYPTION_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(32).optional()),
   CRON_SECRET: z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional(),
+  VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
+  VERCEL_URL: z.string().trim().min(1).optional(),
   PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
   RESEND_API_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   RESEND_FROM_EMAIL: z.preprocess((value) => value === "" ? undefined : value, z.string().email().optional()),
@@ -29,7 +31,8 @@ const environmentSchema = z.object({
   TRUSTED_PROXY_IP_HEADER: z.preprocess((value) => value === "" ? undefined : value, z.enum(["cf-connecting-ip", "x-vercel-forwarded-for"]).optional()),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development")
 }).superRefine((value, context) => {
-  if (!value.APP_URL && !value.NEXT_PUBLIC_APP_URL) {
+  const hasPreviewDeploymentUrl = value.VERCEL_ENV === "preview" && Boolean(value.VERCEL_URL);
+  if (!value.APP_URL && !value.NEXT_PUBLIC_APP_URL && !hasPreviewDeploymentUrl) {
     context.addIssue({
       code: "custom",
       path: ["APP_URL"],
@@ -70,7 +73,7 @@ export function parseEnvironment(
 
   return {
     ...result.data,
-    APP_URL: result.data.APP_URL ?? result.data.NEXT_PUBLIC_APP_URL!,
+    APP_URL: result.data.APP_URL ?? result.data.NEXT_PUBLIC_APP_URL ?? (result.data.VERCEL_ENV === "preview" && result.data.VERCEL_URL ? `https://${result.data.VERCEL_URL}` : undefined)!,
     PUBLIC_REGISTRATION_ENABLED: result.data.PUBLIC_REGISTRATION_ENABLED ?? (result.data.NODE_ENV === "production" ? "false" : "true")
   };
 }
