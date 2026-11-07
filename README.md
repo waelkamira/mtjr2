@@ -298,7 +298,7 @@ Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https:/
 Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR #11. This work is not visible on `main` until the stacked PR chain is reviewed and merged in order.
 
 - `prisma/seed.cjs` now supports an opt-in, repeatable demo marketplace fixture: Netherlands demo market (EUR), active demo seller/store, four illustrated categories, three brands, eight published products, product variants, EUR prices, product images, warehouse and on-hand stock.
-- Demo commerce data is seeded only when both `SEED_DEMO_CATALOG=true` and `ALLOW_DEMO_CATALOG_SEED=true` are supplied; it is explicitly blocked when `NODE_ENV=production`. The normal seed continues to create identity roles/permissions only.
+- Demo commerce data is seeded only with the explicit catalog flag or dashboard command, `ALLOW_DEMO_CATALOG_SEED=true`, and an isolated `DEMO_DATABASE_URL`; it is explicitly blocked when `NODE_ENV=production`. The normal seed continues to create identity roles/permissions only.
 - On a disposable/local development database only, run in PowerShell:
   ```powershell
   $env:ALLOW_DEMO_CATALOG_SEED="true"
@@ -310,6 +310,7 @@ Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR 
 - Storefront homepage now presents a visual category grid with imagery, featured-brand filters, visible sign-in/register, wishlist, order, cart, seller, messages and notification entry points. Existing product discovery search, market/category/brand filtering, sorting and pagination remain connected to the canonical APIs.
 - Product detail retains variant/market pricing, wishlist, store messaging and add-to-cart API actions.
 - No Prisma schema change was needed: all demo records use existing canonical models and constraints. No seed was run against any database during this implementation.
+- To test the platform overview with 20 or more matching records behind each metric card, apply migrations to an isolated demo database, set `DEMO_DATABASE_URL`, `ALLOW_DEMO_CATALOG_SEED=true`, and `NODE_ENV=development`, then run `npm run db:seed:demo-dashboard`. This creates demo orders, payments, reviews, returns, and support tickets as well as seller/store/product fixtures; it affects operational counts and must never target production. See [Demo catalog seed guide](./docs/implementation/DEMO_CATALOG_SEED.md).
 - The demo market is a fixture to make the storefront demonstrable; it is **not** a launch-country decision or tax/legal configuration. Checkout tax and payment still require explicit market/provider policy.
 
 ## Storefront release follow-up

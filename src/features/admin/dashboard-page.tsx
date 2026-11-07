@@ -55,6 +55,7 @@ type Dashboard = {
   };
   orderStatusCounts: Array<{ status: string; count: number }>;
   dailyOrders: Array<{ day: string; count: number }>;
+  metricSamples: Record<string, ChartDatum[]>;
   recentOrders: Array<{
     id: string;
     orderNumber: string;
@@ -88,18 +89,117 @@ function money(amountMinor: string, currencyCode: string, minorUnit: number, loc
   );
 }
 
+const metricCardColors = [
+  "#f97316", "#ef4444", "#f59e0b", "#22c55e", "#3b82f6",
+  "#14b8a6", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16",
+  "#d946ef", "#f43f5e", "#eab308", "#10b981", "#6366f1",
+  "#0ea5e9", "#a855f7", "#fb7185", "#65a30d", "#0891b2"
+] as const;
+
+type MetricChartType = "area" | "line" | "bar" | "donut";
+
+function MetricChart({
+  data,
+  color,
+  type,
+  highlightedIndex
+}: {
+  data: ChartDatum[];
+  color: string;
+  type: MetricChartType;
+  highlightedIndex?: number;
+}) {
+  const maximum = Math.max(0, ...data.map((item) => item.value));
+  const points = data.map((item, index) => {
+    const x = data.length <= 1 ? 80 : 6 + (index * 148) / (data.length - 1);
+    const y = 35 - (maximum ? (item.value / maximum) * 28 : 0);
+    return { x, y, item, index };
+  });
+
+  if (type === "donut") {
+    const scale = maximum ? maximum : 1;
+    const total = data.reduce((sum, item) => sum + item.value / scale, 0);
+    let offset = 0;
+    return (
+      <svg viewBox="0 0 160 44" className="h-10 w-full" aria-hidden="true">
+        <circle cx="80" cy="22" r="15" fill="none" stroke={`${color}20`} strokeWidth="8" />
+        {total > 0 && data.map((item, index) => {
+          const fraction = (item.value / scale) / total;
+          const dash = fraction * 2 * Math.PI * 15;
+          const circle = (
+            <circle
+              key={`${item.label}-${index}`}
+              cx="80"
+              cy="22"
+              r="15"
+              fill="none"
+              stroke={highlightedIndex === undefined || highlightedIndex === index ? color : `${color}55`}
+              strokeWidth="8"
+              strokeDasharray={`${dash} ${2 * Math.PI * 15 - dash}`}
+              strokeDashoffset={-offset}
+              transform="rotate(-90 80 22)"
+            />
+          );
+          offset += dash;
+          return circle;
+        })}
+      </svg>
+    );
+  }
+
+  if (type === "area" || type === "line") {
+    const line = points.map(({ x, y }) => `${x},${y}`).join(" ");
+    const area = points.length
+      ? `M ${points[0].x} 39 L ${points.map(({ x, y }) => `${x} ${y}`).join(" L ")} L ${points.at(-1)?.x} 39 Z`
+      : "";
+    return (
+      <svg viewBox="0 0 160 44" className="h-10 w-full" preserveAspectRatio="none" aria-hidden="true">
+        <line x1="4" x2="156" y1="39" y2="39" stroke={`${color}35`} />
+        {type === "area" && <path d={area} fill={color} opacity=".16" />}
+        <polyline points={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {points.map(({ x, y, item, index }) => (
+          <circle key={`${item.label}-${index}`} cx={x} cy={y} r="2" fill={highlightedIndex === undefined || highlightedIndex === index ? color : `${color}66`} />
+        ))}
+      </svg>
+    );
+  }
+
+  return (
+    <div className="flex h-10 items-end gap-1 border-b border-black/10 pt-2" aria-hidden="true">
+      {data.map((item, index) => (
+        <span
+          key={`${item.label}-${index}`}
+          className="min-w-1 flex-1 rounded-t-sm transition-[height] duration-300"
+          style={{
+            height: maximum ? `${(item.value / maximum) * 100}%` : "0%",
+            backgroundColor: highlightedIndex === undefined || highlightedIndex === index ? color : `${color}55`
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function MetricCard({
   locale,
   label,
   value,
   detail,
-  href
+  href,
+  chartData,
+  highlightedIndex,
+  chartType,
+  color
 }: {
   locale: "ar" | "en";
   label: string;
   value: string | number;
   detail?: string;
   href?: string;
+  chartData: ChartDatum[];
+  highlightedIndex?: number;
+  chartType: MetricChartType;
+  color: string;
 }) {
   const labels: Record<string, string> = {
     "Total orders": "إجمالي الطلبات",
@@ -129,17 +229,31 @@ function MetricCard({
     "No successful payments in this range": "لا توجد مدفوعات ناجحة في هذه الفترة",
     "Created within the selected date range.": "أُنشئت ضمن النطاق الزمني المحدد."
   };
+  const translatedLabel = translate(locale, label, labels[label] || label);
+  const chartDescription = `${translatedLabel}: ${value}. ${chartData.map((item) => `${item.label}: ${item.value}`).join("; ")}`;
   const content = (
-    <>
-      <p className="text-sm text-[var(--muted)]">{translate(locale, label, labels[label] || label)}</p>
+    <div className="flex h-full flex-col">
+      <span aria-hidden="true" className="mb-3 h-1 w-9 rounded-full" style={{ backgroundColor: color }} />
+      <p className="text-sm text-[var(--muted)]">{translatedLabel}</p>
       <p className="mt-2 text-2xl font-semibold text-[var(--color-forest-950)]">{value}</p>
       {detail && <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{translate(locale, detail, details[detail] || detail)}</p>}
-    </>
+      <div
+        role="img"
+        aria-label={`${chartDescription} Chart type: ${chartType}.`}
+        className="mt-auto pt-3"
+      >
+        <MetricChart data={chartData} color={color} type={chartType} highlightedIndex={highlightedIndex} />
+      </div>
+    </div>
   );
-  const className = "block rounded-2xl border border-[var(--border)] bg-white p-5";
+  const className = "block min-h-40 rounded-2xl border p-4 transition-shadow";
+  const style = {
+    borderColor: `${color}55`,
+    backgroundColor: `${color}0d`
+  };
   return href
-    ? <Link href={href} className={`${className} transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-copper-600)]`}>{content}</Link>
-    : <div className={className}>{content}</div>;
+    ? <Link href={href} style={style} className={`${className} hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-copper-600)]`}>{content}</Link>
+    : <div style={style} className={className}>{content}</div>;
 }
 
 export default function AdminDashboardPage() {
@@ -223,7 +337,6 @@ export default function AdminDashboardPage() {
     { label: translate(locale, "Active stores", "المتاجر النشطة"), value: dashboard.metrics.activeStores },
     { label: translate(locale, "Open support", "الدعم المفتوح"), value: dashboard.metrics.openSupportTickets }
   ] : [];
-
   function updateFilter(key: keyof Filters, value: string) {
     setFilters((current) => ({ ...current, [key]: value, ...(key === "sellerId" ? { storeId: "" } : {}) }));
   }
@@ -256,27 +369,27 @@ export default function AdminDashboardPage() {
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {loading && !dashboard ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : dashboard && <>
-          <section aria-label="Marketplace metrics" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard locale={locale} label="Total orders" value={dashboard.metrics.totalOrders} detail={`${dashboard.metrics.previousPeriodOrders} in the previous equivalent period`} />
-            <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} />
-            <MetricCard locale={locale} label="Orders being processed" value={dashboard.metrics.processingOrders} />
-            <MetricCard locale={locale} label="Fulfilled or completed orders" value={dashboard.metrics.completedOrders} />
-            <MetricCard locale={locale} label="Gross order value" value={dashboard.metrics.grossOrderValueByCurrency.length ? dashboard.metrics.grossOrderValueByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2, locale)).join(" · ") : "—"} detail="Placed orders excluding cancellations; includes orders not yet paid." />
-            <MetricCard locale={locale} label="Successful payments" value={dashboard.metrics.successfulPayments} detail={dashboard.metrics.successfulPaymentAmountByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2, locale)).join(" · ") || "No successful payments in this range"} />
-            <MetricCard locale={locale} label="Failed payments" value={dashboard.metrics.failedPayments} />
-            <MetricCard locale={locale} label="Payments awaiting completion" value={dashboard.metrics.pendingPayments} />
-            <MetricCard locale={locale} label="Active users" value={dashboard.metrics.activeUsers} />
-            <MetricCard locale={locale} label="New user accounts" value={dashboard.metrics.newUsers} detail="Created within the selected date range." />
-            <MetricCard locale={locale} label="Active sellers" value={dashboard.metrics.activeSellers} />
-            <MetricCard locale={locale} label="Pending seller applications" value={dashboard.metrics.pendingSellers} />
-            <MetricCard locale={locale} label="Active stores" value={dashboard.metrics.activeStores} />
-            <MetricCard locale={locale} label="Suspended stores" value={dashboard.metrics.suspendedStores} />
-            <MetricCard locale={locale} label="Total products" value={dashboard.metrics.totalProducts} />
-            <MetricCard locale={locale} label="Products awaiting approval" value={dashboard.metrics.pendingProducts} />
-            <MetricCard locale={locale} label="Product reviews awaiting moderation" value={dashboard.metrics.pendingProductReviews} href="/admin/reviews" />
-            <MetricCard locale={locale} label="Store reviews awaiting moderation" value={dashboard.metrics.pendingStoreReviews} href="/admin/store-reviews" />
-            <MetricCard locale={locale} label="Return requests" value={dashboard.metrics.requestedReturns} href="/admin/returns" />
-            <MetricCard locale={locale} label="Open support tickets" value={dashboard.metrics.openSupportTickets} href="/admin/support" />
+          <section aria-label="Marketplace metrics" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+            <MetricCard locale={locale} label="Total orders" value={dashboard.metrics.totalOrders} detail={`${dashboard.metrics.previousPeriodOrders} in the previous equivalent period`} chartData={dashboard.metricSamples.totalOrders} chartType="area" color={metricCardColors[0]} />
+            <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} chartData={dashboard.metricSamples.pendingOrders} chartType="line" color={metricCardColors[1]} />
+            <MetricCard locale={locale} label="Orders being processed" value={dashboard.metrics.processingOrders} chartData={dashboard.metricSamples.processingOrders} chartType="bar" color={metricCardColors[2]} />
+            <MetricCard locale={locale} label="Fulfilled or completed orders" value={dashboard.metrics.completedOrders} chartData={dashboard.metricSamples.completedOrders} chartType="donut" color={metricCardColors[3]} />
+            <MetricCard locale={locale} label="Gross order value" value={dashboard.metrics.grossOrderValueByCurrency.length ? dashboard.metrics.grossOrderValueByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2, locale)).join(" · ") : "—"} detail="Placed orders excluding cancellations; includes orders not yet paid." chartData={dashboard.metricSamples.grossOrderValue} chartType="donut" color={metricCardColors[4]} />
+            <MetricCard locale={locale} label="Successful payments" value={dashboard.metrics.successfulPayments} detail={dashboard.metrics.successfulPaymentAmountByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2, locale)).join(" · ") || "No successful payments in this range"} chartData={dashboard.metricSamples.successfulPayments} chartType="line" color={metricCardColors[5]} />
+            <MetricCard locale={locale} label="Failed payments" value={dashboard.metrics.failedPayments} chartData={dashboard.metricSamples.failedPayments} chartType="bar" color={metricCardColors[6]} />
+            <MetricCard locale={locale} label="Payments awaiting completion" value={dashboard.metrics.pendingPayments} chartData={dashboard.metricSamples.pendingPayments} chartType="area" color={metricCardColors[7]} />
+            <MetricCard locale={locale} label="Active users" value={dashboard.metrics.activeUsers} chartData={dashboard.metricSamples.activeUsers} chartType="area" color={metricCardColors[8]} />
+            <MetricCard locale={locale} label="New user accounts" value={dashboard.metrics.newUsers} detail="Created within the selected date range." chartData={dashboard.metricSamples.newUsers} chartType="bar" color={metricCardColors[9]} />
+            <MetricCard locale={locale} label="Active sellers" value={dashboard.metrics.activeSellers} chartData={dashboard.metricSamples.activeSellers} chartType="donut" color={metricCardColors[10]} />
+            <MetricCard locale={locale} label="Pending seller applications" value={dashboard.metrics.pendingSellers} chartData={dashboard.metricSamples.pendingSellers} chartType="line" color={metricCardColors[11]} />
+            <MetricCard locale={locale} label="Active stores" value={dashboard.metrics.activeStores} chartData={dashboard.metricSamples.activeStores} chartType="area" color={metricCardColors[12]} />
+            <MetricCard locale={locale} label="Suspended stores" value={dashboard.metrics.suspendedStores} chartData={dashboard.metricSamples.suspendedStores} chartType="bar" color={metricCardColors[13]} />
+            <MetricCard locale={locale} label="Total products" value={dashboard.metrics.totalProducts} chartData={dashboard.metricSamples.totalProducts} chartType="bar" color={metricCardColors[14]} />
+            <MetricCard locale={locale} label="Products awaiting approval" value={dashboard.metrics.pendingProducts} chartData={dashboard.metricSamples.pendingProducts} chartType="line" color={metricCardColors[15]} />
+            <MetricCard locale={locale} label="Product reviews awaiting moderation" value={dashboard.metrics.pendingProductReviews} href="/admin/reviews" chartData={dashboard.metricSamples.pendingProductReviews} chartType="donut" color={metricCardColors[16]} />
+            <MetricCard locale={locale} label="Store reviews awaiting moderation" value={dashboard.metrics.pendingStoreReviews} href="/admin/store-reviews" chartData={dashboard.metricSamples.pendingStoreReviews} chartType="bar" color={metricCardColors[17]} />
+            <MetricCard locale={locale} label="Return requests" value={dashboard.metrics.requestedReturns} href="/admin/returns" chartData={dashboard.metricSamples.requestedReturns} chartType="line" color={metricCardColors[18]} />
+            <MetricCard locale={locale} label="Open support tickets" value={dashboard.metrics.openSupportTickets} href="/admin/support" chartData={dashboard.metricSamples.openSupportTickets} chartType="area" color={metricCardColors[19]} />
           </section>
 
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">

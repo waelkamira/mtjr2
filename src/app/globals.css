@@ -149,6 +149,17 @@ html[dir="rtl"] .text-right { text-align: left; }
   color: var(--color-onyx);
 }
 
+button[class], button {
+  background: #ffffff;
+  color: #ffffff;
+  -webkit-text-stroke: 0.5px #454545;
+  text-shadow:
+    -1px -1px 0 #454545,
+    1px -1px 0 #454545,
+    -1px 1px 0 #454545,
+    1px 1px 0 #454545;
+}
+
 html body [data-sonner-toaster].clay-toaster[data-sonner-theme="light"] {
   font-family: var(--font-body);
   --normal-bg: var(--toast-surface);

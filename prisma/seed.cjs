@@ -3,6 +3,7 @@
 const { PrismaClient } = require("@prisma/client");
 
 const demoCatalogRequested = process.env.SEED_DEMO_CATALOG === "true";
+const demoDashboardRequested = process.env.SEED_DEMO_DASHBOARD === "true" || process.argv.includes("--demo-dashboard");
 
 function resolveDemoDatabaseUrl() {
   if (process.env.NODE_ENV === "production") {
@@ -22,7 +23,7 @@ function resolveDemoDatabaseUrl() {
   return value;
 }
 
-const prismaOptions = demoCatalogRequested
+const prismaOptions = demoCatalogRequested || demoDashboardRequested
   ? { datasources: { db: { url: resolveDemoDatabaseUrl() } } }
   : {};
 const prisma = new PrismaClient(prismaOptions);
@@ -494,6 +495,383 @@ async function seedDemoCatalog() {
 
 }
 
+async function seedDemoDashboard() {
+  const now = new Date();
+  const day = 86_400_000;
+  const sampleDate = (index) => new Date(now.getTime() - (19 - index) * day);
+  const [market, currency] = await Promise.all([
+    prisma.market.findUnique({ where: { code: "DEMO-US" } }),
+    prisma.currency.findUnique({ where: { code: "USD" } }),
+  ]);
+  if (!market || !currency) throw new Error("Demo dashboard requires the seeded DEMO-US market and USD currency.");
+
+  const customers = [];
+  for (let index = 0; index < 20; index += 1) {
+    const suffix = String(index + 1).padStart(2, "0");
+    const email = `dashboard-customer-${suffix}@demo.mtjr2.test`;
+    const createdAt = sampleDate(index);
+    customers.push(await prisma.user.upsert({
+      where: { email },
+      create: {
+        email, emailNormalized: email, displayName: `Demo Dashboard Customer ${suffix}`,
+        status: "ACTIVE", emailVerifiedAt: createdAt, createdAt
+      },
+      update: {
+        emailNormalized: email, displayName: `Demo Dashboard Customer ${suffix}`,
+        status: "ACTIVE", emailVerifiedAt: createdAt, createdAt
+      },
+    }));
+  }
+
+  const activeSellers = [];
+  for (let index = 0; index < 20; index += 1) {
+    const suffix = String(index + 1).padStart(2, "0");
+    const createdAt = sampleDate(index);
+    const ownerEmail = `dashboard-seller-${suffix}@demo.mtjr2.test`;
+    const owner = await prisma.user.upsert({
+      where: { email: ownerEmail },
+      create: {
+        email: ownerEmail, emailNormalized: ownerEmail, displayName: `Demo Dashboard Seller ${suffix}`,
+        status: "ACTIVE", emailVerifiedAt: createdAt, createdAt
+      },
+      update: {
+        emailNormalized: ownerEmail, displayName: `Demo Dashboard Seller ${suffix}`,
+        status: "ACTIVE", emailVerifiedAt: createdAt, createdAt
+      },
+    });
+    const seller = await prisma.seller.upsert({
+      where: { ownerId: owner.id },
+      create: {
+        ownerId: owner.id, status: "ACTIVE", displayName: `Demo Dashboard Seller ${suffix}`,
+        legalName: `Demo Dashboard Seller ${suffix}`, createdAt
+      },
+      update: { status: "ACTIVE", displayName: `Demo Dashboard Seller ${suffix}`, createdAt },
+    });
+    activeSellers.push(seller);
+
+    for (const [storeStatus, storeSuffix] of [["ACTIVE", "active"], ["SUSPENDED", "suspended"]]) {
+      const storeSlug = `demo-dashboard-${storeSuffix}-${suffix}`;
+      const store = await prisma.store.upsert({
+        where: { slug: storeSlug },
+        create: {
+          sellerId: seller.id, slug: storeSlug,
+          name: `Demo Dashboard ${storeSuffix} Store ${suffix}`,
+          status: storeStatus, createdAt
+        },
+        update: {
+          sellerId: seller.id, name: `Demo Dashboard ${storeStatus} Store ${suffix}`,
+          status: storeStatus, createdAt
+        },
+      });
+      await prisma.storeMarket.upsert({
+        where: { storeId_marketId: { storeId: store.id, marketId: market.id } },
+        create: { storeId: store.id, marketId: market.id, isEnabled: storeStatus === "ACTIVE" },
+        update: { isEnabled: storeStatus === "ACTIVE" },
+      });
+    }
+
+    const pendingOwnerEmail = `dashboard-pending-seller-${suffix}@demo.mtjr2.test`;
+    const pendingOwner = await prisma.user.upsert({
+      where: { email: pendingOwnerEmail },
+      create: {
+        email: pendingOwnerEmail, emailNormalized: pendingOwnerEmail,
+        displayName: `Demo Pending Seller ${suffix}`, status: "ACTIVE", createdAt
+      },
+      update: {
+        emailNormalized: pendingOwnerEmail, displayName: `Demo Pending Seller ${suffix}`,
+        status: "ACTIVE", createdAt
+      },
+    });
+    await prisma.seller.upsert({
+      where: { ownerId: pendingOwner.id },
+      create: {
+        ownerId: pendingOwner.id, status: "PENDING",
+        displayName: `Demo Pending Seller ${suffix}`, legalName: `Demo Pending Seller ${suffix}`, createdAt
+      },
+      update: { status: "PENDING", displayName: `Demo Pending Seller ${suffix}`, createdAt },
+    });
+  }
+
+  const activeStores = await prisma.store.findMany({
+    where: { slug: { startsWith: "demo-dashboard-active-" } },
+    orderBy: { slug: "asc" },
+    take: 20
+  });
+  if (activeStores.length !== 20) {
+    throw new Error(`Demo dashboard requires 20 active stores; found ${activeStores.length}.`);
+  }
+  const pendingProducts = [];
+  for (let index = 0; index < 20; index += 1) {
+    const suffix = String(index + 1).padStart(2, "0");
+    const store = activeStores[index % activeStores.length];
+    const createdAt = sampleDate(index);
+    pendingProducts.push(await prisma.product.upsert({
+      where: { storeId_slug: { storeId: store.id, slug: `dashboard-pending-product-${suffix}` } },
+      create: {
+        storeId: store.id, slug: `dashboard-pending-product-${suffix}`,
+        name: `Demo Pending Product ${suffix}`, description: "Dashboard QA fixture.",
+        status: "DRAFT", approvalStatus: "PENDING", createdAt
+      },
+      update: { name: `Demo Pending Product ${suffix}`, status: "DRAFT", approvalStatus: "PENDING", createdAt },
+    }));
+  }
+
+  const variants = [];
+  for (let index = 0; index < 20; index += 1) {
+    const suffix = String(index + 1).padStart(2, "0");
+    const createdAt = sampleDate(index);
+    const store = activeStores[index];
+    const product = await prisma.product.upsert({
+      where: { storeId_slug: { storeId: store.id, slug: `dashboard-order-product-${suffix}` } },
+      create: {
+        storeId: store.id, slug: `dashboard-order-product-${suffix}`,
+        name: `Demo Dashboard Order Product ${suffix}`,
+        status: "ACTIVE", approvalStatus: "APPROVED",
+        approvedAt: createdAt, publishedAt: createdAt, createdAt
+      },
+      update: {
+        name: `Demo Dashboard Order Product ${suffix}`,
+        status: "ACTIVE", approvalStatus: "APPROVED",
+        approvedAt: createdAt, publishedAt: createdAt, createdAt
+      },
+    });
+    const variant = await prisma.productVariant.upsert({
+      where: { sku: `DASHBOARD-DEMO-SKU-${suffix}` },
+      create: {
+        productId: product.id, sku: `DASHBOARD-DEMO-SKU-${suffix}`,
+        name: "Standard", optionValues: { option: "Standard" }, isActive: true, createdAt
+      },
+      update: { productId: product.id, name: "Standard", isActive: true, createdAt },
+    });
+    variants.push({ ...variant, product });
+  }
+
+  const scenarios = [
+    { key: "pending", status: "PENDING_PAYMENT", vendorStatus: "PENDING_PAYMENT" },
+    { key: "processing", status: "PROCESSING", vendorStatus: "PROCESSING" },
+    { key: "completed", status: "COMPLETED", vendorStatus: "DELIVERED" },
+  ];
+  const completedOrders = [];
+  for (const scenario of scenarios) {
+    for (let index = 0; index < 20; index += 1) {
+      const suffix = String(index + 1).padStart(2, "0");
+      const createdAt = sampleDate(index);
+      const customer = customers[index];
+      const variant = variants[index];
+      const store = await prisma.store.findUnique({ where: { id: variant.product.storeId } });
+      if (!store) throw new Error(`Missing demo store for variant ${variant.sku}.`);
+      const cart = await prisma.cart.upsert({
+        where: {
+          userId_marketId_currencyCode_status: {
+            userId: customer.id, marketId: market.id, currencyCode: currency.code, status: "CHECKED_OUT"
+          }
+        },
+        create: {
+          userId: customer.id, marketId: market.id, currencyCode: currency.code,
+          status: "CHECKED_OUT", createdAt
+        },
+        update: { createdAt },
+      });
+      const amountMinor = BigInt(2500 + index * 125);
+      const quoteKey = `demo-dashboard:${scenario.key}:${suffix}`;
+      const quote = await prisma.checkoutQuote.upsert({
+        where: { idempotencyKey: quoteKey },
+        create: {
+          cartId: cart.id, userId: customer.id, marketId: market.id, currencyCode: currency.code,
+          status: "CONVERTED", subtotalMinor: amountMinor, idempotencyKey: quoteKey,
+          expiresAt: new Date(createdAt.getTime() + day), createdAt
+        },
+        update: {
+          cartId: cart.id, userId: customer.id, marketId: market.id, currencyCode: currency.code,
+          status: "CONVERTED", subtotalMinor: amountMinor,
+          expiresAt: new Date(createdAt.getTime() + day), createdAt
+        },
+      });
+      const orderNumber = `DEMO-DASH-${scenario.key.toUpperCase()}-${suffix}`;
+      const order = await prisma.order.upsert({
+        where: { orderNumber },
+        create: {
+          orderNumber, quoteId: quote.id, userId: customer.id, marketId: market.id,
+          currencyCode: currency.code, status: scenario.status,
+          subtotalMinor: amountMinor, shippingMinor: 0n, taxMinor: 0n,
+          taxRuleName: "Demo tax", taxRateBasisPoints: 0, taxInclusive: false,
+          taxIncludesShipping: false, totalMinor: amountMinor,
+          idempotencyKey: `demo-dashboard-order:${scenario.key}:${suffix}`,
+          placedAt: createdAt, createdAt
+        },
+        update: {
+          quoteId: quote.id, userId: customer.id, status: scenario.status,
+          subtotalMinor: amountMinor, totalMinor: amountMinor, placedAt: createdAt, createdAt
+        },
+      });
+      await prisma.orderAddress.upsert({
+        where: { orderId: order.id },
+        create: {
+          orderId: order.id, recipientName: customer.displayName,
+          phone: "+12025550100", countryCode: "US", countryName: "United States",
+          line1: "100 Demo Street", city: "Demo City", postalCode: "00000", createdAt
+        },
+        update: {
+          recipientName: customer.displayName, countryCode: "US",
+          countryName: "United States", line1: "100 Demo Street",
+          city: "Demo City", postalCode: "00000", createdAt
+        },
+      });
+      const vendorOrder = await prisma.vendorOrder.upsert({
+        where: { orderId_storeId: { orderId: order.id, storeId: store.id } },
+        create: {
+          orderId: order.id, storeId: store.id, status: scenario.vendorStatus,
+          subtotalMinor: amountMinor, shippingMinor: 0n, taxMinor: 0n,
+          taxInclusive: false, shippingServiceName: "Demo standard shipping",
+          totalMinor: amountMinor, createdAt
+        },
+        update: { status: scenario.vendorStatus, subtotalMinor: amountMinor, totalMinor: amountMinor, createdAt },
+      });
+      let orderItem = await prisma.orderItem.findFirst({
+        where: { vendorOrderId: vendorOrder.id, sku: variant.sku }
+      });
+      if (!orderItem) {
+        orderItem = await prisma.orderItem.create({
+          data: {
+            vendorOrderId: vendorOrder.id, productId: variant.productId, variantId: variant.id,
+            productName: variant.product.name, sku: variant.sku, variantName: variant.name,
+            quantity: 1, unitAmountMinor: amountMinor, lineTotalMinor: amountMinor, createdAt
+          }
+        });
+      }
+
+      const paymentStatuses = scenario.key === "pending"
+        ? ["FAILED", "REQUIRES_ACTION"]
+        : scenario.key === "processing" ? ["SUCCEEDED"] : ["SUCCEEDED"];
+      for (const [paymentIndex, paymentStatus] of paymentStatuses.entries()) {
+        const paymentKey = `demo-dashboard-payment:${scenario.key}:${suffix}:${paymentIndex}`;
+        await prisma.payment.upsert({
+          where: { idempotencyKey: paymentKey },
+          create: {
+            orderId: order.id, provider: "demo", status: paymentStatus,
+            amountMinor, currencyCode: currency.code, idempotencyKey: paymentKey,
+            succeededAt: paymentStatus === "SUCCEEDED" ? createdAt : null,
+            createdAt: new Date(createdAt.getTime() + paymentIndex * 1000)
+          },
+          update: {
+            orderId: order.id, status: paymentStatus, amountMinor,
+            succeededAt: paymentStatus === "SUCCEEDED" ? createdAt : null,
+            createdAt: new Date(createdAt.getTime() + paymentIndex * 1000)
+          },
+        });
+      }
+
+      if (scenario.key === "completed") {
+        completedOrders.push({ order, orderItem, vendorOrder, customer, variant, store, createdAt, suffix });
+      }
+    }
+  }
+
+  for (const fixture of completedOrders) {
+    const productReviewKey = { userId: fixture.customer.id, productId: fixture.variant.productId };
+    await prisma.productReview.upsert({
+      where: { userId_productId: productReviewKey },
+      create: {
+        ...productReviewKey, orderItemId: fixture.orderItem.id, rating: 5,
+        title: `Demo product review ${fixture.suffix}`, body: "Dashboard QA fixture.",
+        status: "PENDING", createdAt: fixture.createdAt
+      },
+      update: {
+        orderItemId: fixture.orderItem.id, rating: 5,
+        title: `Demo product review ${fixture.suffix}`, body: "Dashboard QA fixture.",
+        status: "PENDING", createdAt: fixture.createdAt
+      },
+    });
+    await prisma.storeReview.upsert({
+      where: { vendorOrderId: fixture.vendorOrder.id },
+      create: {
+        storeId: fixture.store.id, userId: fixture.customer.id,
+        vendorOrderId: fixture.vendorOrder.id, rating: 5,
+        title: `Demo store review ${fixture.suffix}`, body: "Dashboard QA fixture.",
+        status: "PENDING", createdAt: fixture.createdAt
+      },
+      update: {
+        storeId: fixture.store.id, userId: fixture.customer.id, rating: 5,
+        title: `Demo store review ${fixture.suffix}`, body: "Dashboard QA fixture.",
+        status: "PENDING", createdAt: fixture.createdAt
+      },
+    });
+    await prisma.returnRequest.upsert({
+      where: { returnNumber: `DEMO-DASH-RETURN-${fixture.suffix}` },
+      create: {
+        returnNumber: `DEMO-DASH-RETURN-${fixture.suffix}`,
+        orderId: fixture.order.id, customerId: fixture.customer.id,
+        status: "REQUESTED", reasonCode: "OTHER",
+        reasonDetails: "Dashboard QA fixture.", requestedAt: fixture.createdAt, createdAt: fixture.createdAt
+      },
+      update: {
+        orderId: fixture.order.id, customerId: fixture.customer.id,
+        status: "REQUESTED", reasonCode: "OTHER",
+        reasonDetails: "Dashboard QA fixture.", requestedAt: fixture.createdAt, createdAt: fixture.createdAt
+      },
+    });
+  }
+
+  for (let index = 0; index < 20; index += 1) {
+    const suffix = String(index + 1).padStart(2, "0");
+    const createdAt = sampleDate(index);
+    await prisma.supportTicket.upsert({
+      where: { ticketNumber: `DEMO-DASH-TICKET-${suffix}` },
+      create: {
+        ticketNumber: `DEMO-DASH-TICKET-${suffix}`, customerId: customers[index].id,
+        subject: `Demo support request ${suffix}`, category: "GENERAL",
+        status: "OPEN", priority: "NORMAL", lastMessageAt: createdAt, createdAt
+      },
+      update: {
+        customerId: customers[index].id, subject: `Demo support request ${suffix}`,
+        category: "GENERAL", status: "OPEN", priority: "NORMAL",
+        lastMessageAt: createdAt, createdAt
+      },
+    });
+  }
+
+  const rangeStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 29 * day);
+  const [totalOrdersCount, pendingOrders, processingOrders, completedOrderCount, grossOrderValueCount,
+    successfulPayments, pendingPayments, failedPayments, activeUsersCount, newUsersCount,
+    activeSellerCount, pendingSellerCount, activeStoreCount, suspendedStoreCount, totalProductsCount,
+    pendingProductCount, pendingProductReviewCount, pendingStoreReviewCount, returnCount, ticketCount] = await Promise.all([
+    prisma.order.count({ where: { placedAt: { gte: rangeStart } } }),
+    prisma.order.count({ where: { status: "PENDING_PAYMENT", placedAt: { gte: rangeStart } } }),
+    prisma.order.count({ where: { status: "PROCESSING", placedAt: { gte: rangeStart } } }),
+    prisma.order.count({ where: { status: "COMPLETED", placedAt: { gte: rangeStart } } }),
+    prisma.order.count({ where: { status: { not: "CANCELLED" }, placedAt: { gte: rangeStart } } }),
+    prisma.payment.count({ where: { status: "SUCCEEDED", order: { is: { placedAt: { gte: rangeStart } } } } }),
+    prisma.payment.count({ where: { status: "REQUIRES_ACTION", order: { is: { placedAt: { gte: rangeStart } } } } }),
+    prisma.payment.count({ where: { status: "FAILED", order: { is: { placedAt: { gte: rangeStart } } } } }),
+    prisma.user.count({ where: { status: "ACTIVE" } }),
+    prisma.user.count({ where: { createdAt: { gte: rangeStart } } }),
+    prisma.seller.count({ where: { status: "ACTIVE" } }),
+    prisma.seller.count({ where: { status: "PENDING" } }),
+    prisma.store.count({ where: { status: "ACTIVE", slug: { startsWith: "demo-dashboard-" } } }),
+    prisma.store.count({ where: { status: "SUSPENDED", slug: { startsWith: "demo-dashboard-" } } }),
+    prisma.product.count(),
+    prisma.product.count({ where: { approvalStatus: "PENDING", slug: { startsWith: "dashboard-pending-product-" } } }),
+    prisma.productReview.count({ where: { status: "PENDING", title: { startsWith: "Demo product review " } } }),
+    prisma.storeReview.count({ where: { status: "PENDING", title: { startsWith: "Demo store review " } } }),
+    prisma.returnRequest.count({ where: { status: "REQUESTED", returnNumber: { startsWith: "DEMO-DASH-RETURN-" } } }),
+    prisma.supportTicket.count({ where: { status: "OPEN", ticketNumber: { startsWith: "DEMO-DASH-TICKET-" } } }),
+  ]);
+  const checkedCounts = {
+    totalOrders: totalOrdersCount, pendingOrders, processingOrders, completedOrders: completedOrderCount,
+    grossOrderValue: grossOrderValueCount, successfulPayments, pendingPayments, failedPayments,
+    activeUsers: activeUsersCount, newUsers: newUsersCount,
+    activeSellers: activeSellerCount, pendingSellers: pendingSellerCount,
+    activeStores: activeStoreCount, suspendedStores: suspendedStoreCount, totalProducts: totalProductsCount,
+    pendingProducts: pendingProductCount, pendingProductReviews: pendingProductReviewCount,
+    pendingStoreReviews: pendingStoreReviewCount, returns: returnCount, supportTickets: ticketCount,
+  };
+  const insufficient = Object.entries(checkedCounts).filter(([, count]) => count < 20);
+  if (insufficient.length) {
+    throw new Error(`Demo dashboard verification failed: ${insufficient.map(([name, count]) => `${name}=${count}`).join(", ")}.`);
+  }
+  console.log(`Demo dashboard verified: at least 20 database records for every metric card. ${JSON.stringify(checkedCounts)}`);
+}
+
 async function main() {
   await prisma.$transaction(async (tx) => {
     const permissionRows = new Map();
@@ -521,7 +899,8 @@ async function main() {
     }
   });
 
-  if (demoCatalogRequested) await seedDemoCatalog();
+  if (demoCatalogRequested || demoDashboardRequested) await seedDemoCatalog();
+  if (demoDashboardRequested) await seedDemoDashboard();
 
 
   const [roleCount, permissionCount, assignmentCount] = await Promise.all([
