@@ -12,7 +12,7 @@ function authorized(request: Request) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 export async function POST(request: Request): Promise<Response> {
-  if (!process.env.CRON_SECRET) return Response.json({ error: "Advertising invoice worker is not configured." }, { status: 503 });
+  // Missing configuration and invalid credentials both fail closed without disclosing worker state.
   if (!authorized(request)) return Response.json({ error: "Unauthorized." }, { status: 401 });
   const now = new Date();
   const periodEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));

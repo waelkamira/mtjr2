@@ -5,10 +5,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request): Promise<Response> {
-  if (!env.CRON_SECRET) {
-    return Response.json({ error: "Reservation cleanup is not configured." }, { status: 503 });
-  }
-  if (request.headers.get("authorization") !== `Bearer ${env.CRON_SECRET}`) {
+  // Do not disclose whether the reservation worker secret is configured.
+  if (!env.CRON_SECRET || request.headers.get("authorization") !== `Bearer ${env.CRON_SECRET}`) {
     return Response.json({ error: "Unauthorized." }, { status: 401 });
   }
   try {

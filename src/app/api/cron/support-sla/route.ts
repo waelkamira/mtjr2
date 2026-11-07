@@ -14,7 +14,7 @@ function authorized(request: Request) {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  if (!process.env.CRON_SECRET) return Response.json({ error: "SLA worker is not configured." }, { status: 503 });
+  // Missing configuration and invalid credentials both fail closed without disclosing worker state.
   if (!authorized(request)) return Response.json({ error: "Unauthorized." }, { status: 401 });
   try {
     return Response.json(await processSupportSlaEscalations(), { headers: { "Cache-Control": "no-store" } });

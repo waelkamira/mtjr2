@@ -37,12 +37,12 @@ describe("monthly advertising invoice worker authorization", () => {
     expect(mocks.generate).not.toHaveBeenCalled();
   });
 
-  it("fails closed when the worker secret is not configured", async () => {
+  it("rejects requests when the worker secret is not configured without disclosing configuration state", async () => {
     delete process.env.CRON_SECRET;
     const response = await POST(new Request("https://mtjr.example/api/cron/advertising-invoices", {
       method: "POST", headers: { authorization: "Bearer " + "c".repeat(48) }
     }));
-    expect(response.status).toBe(503);
+    expect(response.status).toBe(401);
     expect(mocks.generate).not.toHaveBeenCalled();
   });
 });
