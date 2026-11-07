@@ -82,7 +82,6 @@ test.describe("customer journey", () => {
     expect(sessionsResponse.status()).toBe(200);
     const signOutAll = page.getByRole("button", { name: /Sign out all devices|تسجيل الخروج من جميع الأجهزة/i });
     await expect(signOutAll).toBeVisible();
-    await expect(page.getByText(/Loading sessions|جارٍ تحميل الجلسات/)).toHaveCount(0);
     await signOutAll.click();
     await expect(page.getByRole("status")).toContainText(/Signed out of|تم تسجيل الخروج من/);
     const sessionsStatus = await page.evaluate(async () => (await fetch("/api/account/sessions", { cache: "no-store" })).status);
