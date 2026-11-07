@@ -10,7 +10,8 @@ import {
   resolveUserSession,
   revokeUserSession
 } from "@/server/identity/session";
-import { userHasPermission } from "@/server/identity/permission-repository";
+import { getUserAuthorizationGrants } from "@/server/identity/permission-repository";
+import { hasPermission } from "@/server/identity/authorization";
 import {
   clearLoginThrottle,
   consumeLoginAttempt
@@ -78,19 +79,15 @@ describe("identity PostgreSQL integration", () => {
       }
     });
 
-    await expect(
-      userHasPermission(userId, {
-        permissionKey: "catalog:manage",
-        scope: { type: "STORE", id: `store-${suffix}` }
-      })
-    ).resolves.toBe(true);
-
-    await expect(
-      userHasPermission(userId, {
-        permissionKey: "catalog:manage",
-        scope: { type: "STORE", id: "another-store" }
-      })
-    ).resolves.toBe(false);
+    const grants = await getUserAuthorizationGrants(userId);
+    expect(hasPermission(grants, {
+      permissionKey: "catalog:manage",
+      scope: { type: "STORE", id: `store-${suffix}` }
+    })).toBe(true);
+    expect(hasPermission(grants, {
+      permissionKey: "catalog:manage",
+      scope: { type: "STORE", id: "another-store" }
+    })).toBe(false);
 
     await expect(
       prisma.userRoleAssignment.create({
@@ -169,7 +166,7 @@ describe("identity PostgreSQL integration", () => {
     });
     expect(failed).toMatchObject({
       authenticated: false,
-      reason: "INVALID_PASSWORD"
+      reason: "INVALID_CREDENTIALS"
     });
 
     const authenticated = await loginWithPassword({
