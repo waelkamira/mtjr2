@@ -8,6 +8,7 @@ import StoreReviews from "@/features/storefront/store-reviews";
 import ProductQuestions from "@/features/storefront/product-questions";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import ProductLocationMap from "@/components/maps/product-location-map";
 
 const GUEST_WISHLIST_KEY = "mtjr:guest-wishlist:v1";
 function readGuestWishlist(): string[] {
@@ -32,6 +33,9 @@ type VariantAttribute = { key: string; name: string; valueType: string; value: u
 type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { id: string; name: string; slug: string };
+  mapLocation: { publicLatitude: number; publicLongitude: number } | null;
+  propertyDetails: { propertyType: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"; listingType: "SALE" | "RENT"; bedrooms: number | null; bathrooms: number | null; floorArea: string } | null;
+  categories: Array<{ id: string; name: string; slug: string }>;
   media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
   attributes: ProductAttribute[];
   variants: Array<{ id: string; name: string | null; sku: string | null; optionValues: unknown; attributes: VariantAttribute[]; prices: Price[] }>;
@@ -186,6 +190,29 @@ export default function ProductDetail({ slug }: { slug: string }) {
         {markets.length > 0 && <label className="mt-5 block text-sm font-medium">{t("Delivery market", "سوق التوصيل")}<select aria-label={t("Choose delivery market", "اختر سوق التوصيل")} value={selectedMarketId} onChange={(event) => setSelectedMarketId(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3"><option value="">{t("Select a market", "اختر سوقًا")}</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}</select></label>}
         <p className="mt-7 text-3xl font-bold tracking-tight text-[var(--color-petrol-900)]">{price && amount !== null ? new Intl.NumberFormat(locale, { style: "currency", currency: price.currencyCode }).format(amount) : t("Price unavailable", "السعر غير متاح")}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
+        {product.propertyDetails && <dl className="mt-7 grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:grid-cols-2">
+          <div><dt className="text-xs text-[var(--muted)]">{t("Property type", "نوع العقار")}</dt><dd className="mt-1 text-sm font-semibold">{t(
+            product.propertyDetails.propertyType === "APARTMENT" ? "Apartment" :
+              product.propertyDetails.propertyType === "HOUSE" ? "House / villa" :
+                product.propertyDetails.propertyType === "LAND" ? "Land" : "Commercial property",
+            product.propertyDetails.propertyType === "APARTMENT" ? "شقة" :
+              product.propertyDetails.propertyType === "HOUSE" ? "منزل / فيلا" :
+                product.propertyDetails.propertyType === "LAND" ? "أرض" : "عقار تجاري"
+          )}</dd></div>
+          <div><dt className="text-xs text-[var(--muted)]">{t("Listing type", "نوع العرض")}</dt><dd className="mt-1 text-sm font-semibold">{t(product.propertyDetails.listingType === "SALE" ? "For sale" : "For rent", product.propertyDetails.listingType === "SALE" ? "للبيع" : "للإيجار")}</dd></div>
+          {product.propertyDetails.bedrooms !== null && <div><dt className="text-xs text-[var(--muted)]">{t("Bedrooms", "غرف النوم")}</dt><dd className="mt-1 text-sm font-semibold">{product.propertyDetails.bedrooms}</dd></div>}
+          {product.propertyDetails.bathrooms !== null && <div><dt className="text-xs text-[var(--muted)]">{t("Bathrooms", "الحمامات")}</dt><dd className="mt-1 text-sm font-semibold">{product.propertyDetails.bathrooms}</dd></div>}
+          <div><dt className="text-xs text-[var(--muted)]">{t("Floor area", "المساحة")}</dt><dd className="mt-1 text-sm font-semibold">{product.propertyDetails.floorArea} m²</dd></div>
+        </dl>}
+        {product.mapLocation && <section className="mt-7">
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold"><span aria-hidden="true">⌖</span>{t("Approximate location", "الموقع التقريبي")}</h2>
+          <p className="mb-3 text-xs leading-5 text-[var(--muted)]">{t("The map pin is approximate to protect the seller's exact location.", "موقع الدبوس تقريبي لحماية الموقع الدقيق للبائع.")}</p>
+          <ProductLocationMap
+            value={{ latitude: product.mapLocation.publicLatitude, longitude: product.mapLocation.publicLongitude }}
+            readOnly
+            label={t("Approximate product location", "الموقع التقريبي للمنتج")}
+          />
+        </section>}
         {product.attributes.some((attribute) => attribute.values.length > 0) && <dl className="mt-7 grid gap-3 border-t border-[var(--border)] pt-5 sm:grid-cols-2">{product.attributes.flatMap((attribute) => attribute.values.map((value, index) => <div key={`${attribute.key}-${index}`}><dt className="text-xs font-medium text-[var(--muted)]">{attribute.name}</dt><dd className="mt-1 text-sm text-[var(--color-ink-700)]">{formatAttributeValue(value)}</dd></div>))}</dl>}
         {product.variants.length > 1 && <label className="mt-8 text-sm font-medium">{t("Choose an option", "اختر خيارًا")}<select value={selectedVariant} onChange={(event) => setSelectedVariant(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3">{product.variants.map((item) => <option key={item.id} value={item.id}>{item.name || item.sku || t("Variant", "الخيار")}</option>)}</select></label>}
         {variant?.attributes.length ? <dl className="mt-5 grid gap-3 sm:grid-cols-2">{variant.attributes.map((attribute) => <div key={attribute.key}><dt className="text-xs font-medium text-[var(--muted)]">{attribute.name}</dt><dd className="mt-1 text-sm text-[var(--color-ink-700)]">{formatAttributeValue(attribute.value)}</dd></div>)}</dl> : null}

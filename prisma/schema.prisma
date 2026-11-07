@@ -86,6 +86,7 @@ model User {
   productAnswerRevisions ProductAnswerRevision[]
   productQuestionReports ProductQuestionReport[] @relation("ProductQuestionReporter")
   moderatedProductQuestionReports ProductQuestionReport[] @relation("ProductQuestionReportModerator")
+
   @@index([status, createdAt])
   @@index([createdAt])
 }
@@ -315,6 +316,18 @@ enum ProductApprovalStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  LAND
+  COMMERCIAL
+}
+
+enum PropertyListingType {
+  SALE
+  RENT
 }
 
 enum ProductMediaType {
@@ -714,6 +727,8 @@ model Product {
   categories          ProductCategory[]
   translations        ProductTranslation[]
   media               ProductMedia[]
+  mapLocation         ProductMapLocation?
+  propertyDetails     ProductPropertyDetails?
   variants            ProductVariant[]
   identifiers         ProductIdentifier[]
   attributes          ProductAttribute[]
@@ -727,6 +742,29 @@ model Product {
   @@unique([storeId, slug])
   @@index([storeId, status, approvalStatus, createdAt])
   @@index([brandId, status])
+}
+
+model ProductMapLocation {
+  productId       String   @id
+  latitude        Float
+  longitude       Float
+  publicLatitude  Float
+  publicLongitude Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductPropertyDetails {
+  productId    String              @id
+  propertyType PropertyType
+  listingType  PropertyListingType
+  bedrooms     Int?
+  bathrooms    Int?
+  floorArea    Decimal             @db.Decimal(12, 2)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  product      Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model ProductCategory {
@@ -1907,7 +1945,6 @@ model SupportSlaPolicy {
   updatedAt            DateTime              @updatedAt
 }
 
-
 model StoreConversation {
   id             String         @id @default(cuid())
   customerId     String
@@ -2060,6 +2097,7 @@ model PaymentWebhookEvent {
   @@index([paymentId, receivedAt])
   @@index([processedAt, receivedAt])
 }
+
 model PlatformPrivilegeRequest {
   id             String                         @id @default(cuid())
   targetUserId   String

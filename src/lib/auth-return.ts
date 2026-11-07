@@ -19,6 +19,10 @@ export function rememberAuthReturnPath(path: string): void {
   try { window.sessionStorage.setItem(RETURN_KEY, safe); } catch { /* Storage can be disabled. */ }
 }
 
+export function rememberRegistrationNotice(notice: "created"): void {
+  try { window.sessionStorage.setItem(REGISTRATION_NOTICE_KEY, notice); } catch { /* Storage can be disabled. */ }
+}
+
 export function getAuthReturnPath(fallback: string): string {
   const origin = window.location.origin;
   const explicit = safeAuthReturnPath(new URLSearchParams(window.location.search).get("returnTo"), origin);

@@ -89,7 +89,7 @@ export async function GET(request: Request): Promise<Response> {
     const now = new Date();
     const linked = await prisma.oAuthAccount.findUnique({
       where: { provider_providerAccountId: { provider: "google", providerAccountId: identity.sub } },
-      select: { userId: true, user: { select: { id: true, status: true, emailVerifiedAt: true } } }
+      select: { userId: true, user: { select: { id: true, status: true } } }
     });
     let userId: string;
     if (intent === "login") {
@@ -99,13 +99,13 @@ export async function GET(request: Request): Promise<Response> {
         const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
         return oauthError(existing ? "link_required" : "not_linked");
       }
-      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) {
+      if (linked.user.status !== UserStatus.ACTIVE) {
         return oauthError("inactive");
       }
       userId = linked.userId;
       await prisma.user.update({ where: { id: userId }, data: { lastLoginAt: now } });
     } else if (linked) {
-      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) return oauthError("inactive");
+      if (linked.user.status !== UserStatus.ACTIVE) return oauthError("inactive");
       userId = linked.userId;
     } else {
       const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
@@ -117,7 +117,7 @@ export async function GET(request: Request): Promise<Response> {
 
       const created = await prisma.$transaction(async tx => {
         const user = await tx.user.create({
-          data: { email, emailNormalized: email, displayName: identity.name?.slice(0,80) ?? null, passwordHash: null, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+          data: { email, emailNormalized: email, displayName: identity.name?.slice(0,80) ?? null, passwordHash: null, status: UserStatus.ACTIVE },
           select: { id: true }
         });
         await tx.oAuthAccount.create({ data: { userId: user.id, provider: "google", providerAccountId: identity.sub! } });

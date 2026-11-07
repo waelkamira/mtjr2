@@ -9,7 +9,8 @@ import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
 const listSchema = z.object({
   locale: z.string().trim().min(2).max(16).default("ar"),
   page: z.coerce.number().int().min(1).max(1000).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(30)
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+  includeEmpty: z.enum(["true", "false"]).default("false")
 });
 
 type CategoryRow = {
@@ -89,10 +90,10 @@ export async function listActiveCategoryTree(input: unknown = {}) {
     depth += 1;
   }
 
-  const visibleRoots = keepCategoriesWithProducts(
-    buildCategoryTree(rows),
-    new Set(populatedCategories.map((item) => item.categoryId))
-  );
+  const tree = buildCategoryTree(rows);
+  const visibleRoots = query.includeEmpty === "true"
+    ? tree
+    : keepCategoriesWithProducts(tree, new Set(populatedCategories.map((item) => item.categoryId)));
   const start = (query.page - 1) * query.limit;
   return {
     items: visibleRoots.slice(start, start + query.limit),

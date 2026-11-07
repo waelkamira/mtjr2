@@ -36,11 +36,11 @@ function digestLoginValue(kind: "identifier" | "ip", value: string): string {
 }
 
 /**
- * Password login requires an active, email-verified account. The conditional
- * user-row write and session creation share one transaction so a concurrent
- * password change, suspension, or email-verification state change cannot
- * race an already-issued session. MFA remains a separate mandatory step for
- * platform administrators.
+ * Password login accepts active accounts and activates legacy pending accounts
+ * after successful password verification. The conditional user-row write and
+ * session creation share one transaction so concurrent password or account
+ * state changes cannot race an already-issued session. MFA remains mandatory
+ * for platform administrators.
  */
 export async function loginWithPassword(
   input: LoginInput,
@@ -68,7 +68,7 @@ export async function loginWithPassword(
 
   const user = await prisma.user.findUnique({
     where: { emailNormalized: email },
-    select: { id: true, passwordHash: true, status: true, emailVerifiedAt: true }
+    select: { id: true, passwordHash: true, status: true }
   });
 
   const passwordMatches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
@@ -77,8 +77,8 @@ export async function loginWithPassword(
     return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: INVALID_CREDENTIALS };
   }
 
-  const eligible = user.status === UserStatus.ACTIVE &&
-    user.emailVerifiedAt !== null && user.passwordHash !== null;
+  const eligible = (user.status === UserStatus.ACTIVE || user.status === UserStatus.PENDING) &&
+    user.passwordHash !== null;
 
   if (!eligible || !passwordMatches) {
     await prisma.loginAttempt.create({
@@ -100,11 +100,10 @@ export async function loginWithPassword(
     const current = await tx.user.updateMany({
       where: {
         id: user.id,
-        status: UserStatus.ACTIVE,
-        emailVerifiedAt: { not: null },
+        status: { in: [UserStatus.ACTIVE, UserStatus.PENDING] },
         passwordHash: user.passwordHash
       },
-      data: { lastLoginAt: now }
+      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
     });
     if (current.count !== 1) return null;
 

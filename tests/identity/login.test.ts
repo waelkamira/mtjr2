@@ -38,7 +38,6 @@ vi.mock("@/server/identity/mfa", () => ({ getMfaAccessState: mfaStateMock }));
 import { loginWithPassword } from "../../src/server/identity/login";
 
 const now = new Date("2026-11-03T12:00:00.000Z");
-const verifiedAt = new Date("2026-11-02T12:00:00.000Z");
 
 describe("password login service", () => {
   beforeEach(() => {
@@ -60,12 +59,12 @@ describe("password login service", () => {
     });
   });
 
-  it("issues a session only for an active email-verified account", async () => {
+  it("issues a session for an active account without requiring email verification", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: "user-1",
       passwordHash: "stored-hash",
       status: UserStatus.ACTIVE,
-      emailVerifiedAt: verifiedAt
+      emailVerifiedAt: null
     });
 
     const result = await loginWithPassword({
@@ -85,8 +84,8 @@ describe("password login service", () => {
     expect(verifyMock).toHaveBeenCalledWith("a-secure-password", "stored-hash");
     expect(prismaMock.$transaction).toHaveBeenCalledOnce();
     expect(txMock.user.updateMany).toHaveBeenCalledWith({
-      where: { id: "user-1", status: UserStatus.ACTIVE, emailVerifiedAt: { not: null }, passwordHash: "stored-hash" },
-      data: { lastLoginAt: now }
+      where: { id: "user-1", status: { in: [UserStatus.ACTIVE, UserStatus.PENDING] }, passwordHash: "stored-hash" },
+      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
     });
     expect(txMock.userSession.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -121,9 +120,9 @@ describe("password login service", () => {
     }));
   });
 
-  it("identifies an incorrect password for an existing verified account", async () => {
+  it("identifies an incorrect password for an existing account", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-1", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: verifiedAt
+      id: "user-1", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: null
     });
     verifyMock.mockResolvedValue(false);
 
@@ -139,7 +138,7 @@ describe("password login service", () => {
 
   it("does not issue a session to an inactive account", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-2", passwordHash: "stored-hash", status: UserStatus.SUSPENDED, emailVerifiedAt: verifiedAt
+      id: "user-2", passwordHash: "stored-hash", status: UserStatus.SUSPENDED, emailVerifiedAt: null
     });
 
     const result = await loginWithPassword({
@@ -150,7 +149,7 @@ describe("password login service", () => {
     expect(txMock.userSession.create).not.toHaveBeenCalled();
   });
 
-  it("does not activate or issue a session to an unverified pending account", async () => {
+  it("activates a legacy pending account after successful password verification", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: "user-pending", passwordHash: "stored-hash", status: UserStatus.PENDING, emailVerifiedAt: null
     });
@@ -159,14 +158,17 @@ describe("password login service", () => {
       email: "pending@example.com", password: "a-secure-password", trustedIpAddress: "203.0.113.10"
     }, now);
 
-    expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS" });
-    expect(prismaMock.$transaction).not.toHaveBeenCalled();
-    expect(txMock.userSession.create).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ authenticated: true, userId: "user-pending" });
+    expect(txMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-pending", status: { in: [UserStatus.ACTIVE, UserStatus.PENDING] }, passwordHash: "stored-hash" },
+      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
+    });
+    expect(txMock.userSession.create).toHaveBeenCalledOnce();
   });
 
   it("requires a second-factor challenge for an enrolled account", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-mfa", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: verifiedAt
+      id: "user-mfa", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: null
     });
     mfaStateMock.mockResolvedValue({
       enabled: true, required: true, platformRequired: true, enrollmentRequired: false
@@ -181,7 +183,7 @@ describe("password login service", () => {
 
   it("requires platform administrators without MFA to enroll before using privileged routes", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-admin", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: verifiedAt
+      id: "user-admin", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: null
     });
     mfaStateMock.mockResolvedValue({
       enabled: false, required: true, platformRequired: true, enrollmentRequired: true

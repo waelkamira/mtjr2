@@ -551,6 +551,8 @@ export async function getDiscoverableProduct(slug: string, locale = defaultLocal
           }
         }
       },
+      mapLocation: { select: { publicLatitude: true, publicLongitude: true } },
+      propertyDetails: true,
       media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { url: true, altText: true, isPrimary: true } },
       categories: {
         where: { category: { status: CatalogEntityStatus.ACTIVE } },

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import MarketplaceSearchBox from "@/features/storefront/marketplace-search-box";
-import AuthReturnLink from "@/components/auth-return-link";
 import LanguageSwitcher from "@/components/language-switcher";
 import { useLocale } from "@/components/locale-provider";
 import { translate, type Locale } from "@/lib/locale";
+import { currentReturnPath } from "@/lib/current-return-path";
 
 type AccountSummary = {
   name: string;
@@ -25,6 +25,43 @@ const publicLinks = [
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" }
 ];
+
+function NavigationButton({
+  href,
+  className,
+  children,
+  ariaLabel,
+  authReturn = false,
+  onNavigate
+}: {
+  href: string;
+  className: string;
+  children: ReactNode;
+  ariaLabel?: string;
+  authReturn?: boolean;
+  onNavigate?: () => void;
+}) {
+  const router = useRouter();
+
+  function navigate() {
+    onNavigate?.();
+    if (!authReturn) {
+      router.push(href);
+      return;
+    }
+
+    const destination = new URL(href, window.location.origin);
+    const returnTo = currentReturnPath();
+    if (returnTo !== "/") destination.searchParams.set("returnTo", returnTo);
+    router.push(`${destination.pathname}${destination.search}`);
+  }
+
+  return (
+    <button type="button" aria-label={ariaLabel} className={className} onClick={navigate}>
+      {children}
+    </button>
+  );
+}
 
 function localizeAccountType(locale: Locale, accountType: string) {
   const accountTypes: Record<string, string> = {
@@ -187,51 +224,52 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
     }))
   ];
 
-  const menuLinkClass =
-    "block rounded-xl px-4 py-3 text-sm font-medium text-[var(--color-ink-800)] transition hover:bg-[var(--color-lavender-50)] hover:text-[var(--color-lavender-950)] focus-visible:outline-offset-2";
+  // Updated buttonClass: transparent border by default, visible on hover, focus, and active
+  const buttonClass =
+    "rounded-xl border border-transparent bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--color-onyx)] shadow-[var(--shadow-clay)] transition hover:border-[var(--border)] focus-visible:border-[var(--border)] active:border-[var(--border)] hover:shadow-[var(--shadow-clay-hover)] disabled:cursor-wait disabled:opacity-60";
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/70 bg-[var(--surface)]/95 shadow-[var(--shadow-clay)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1440px] items-center gap-3 px-4 pr-16 py-3 sm:px-5 sm:pr-16 md:pr-0 lg:px-10">
-        <Link
+        <NavigationButton
           href="/"
           aria-label="Mtjr home"
-          className="hidden shrink-0 rounded-2xl px-3 py-2 text-2xl font-bold tracking-tight text-[var(--color-lavender-950)] drop-shadow-[0_2px_0_rgba(255,255,255,0.8)] md:inline-flex"
+          className={`${buttonClass} hidden shrink-0 px-3 py-2 text-2xl font-bold tracking-tight md:inline-flex`}
         >
           mtjr<span className="text-[var(--color-copper-600)]">.</span>
-        </Link>
+        </NavigationButton>
 
         <MarketplaceSearchBox />
 
         <div className="hidden shrink-0 items-center gap-1 md:ml-auto md:flex md:gap-2">
           {isAdministrator && (
-            <Link
+            <NavigationButton
               href={controlPanelHref}
-              className="clay-interactive rounded-xl border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--color-onyx)] transition hover:bg-[var(--surface)]"
+              className={buttonClass}
             >
               {translate(locale, "Control panel", "لوحة التحكم")}
-            </Link>
+            </NavigationButton>
           )}
-          <Link
+          <NavigationButton
             href="/cart"
-            className="clay-interactive rounded-xl px-3 py-2 text-sm font-semibold text-[var(--color-lavender-800)] transition hover:bg-[var(--color-lavender-100)]"
+            className={buttonClass}
           >
             {translate(locale, "Cart", "السلة")}
-          </Link>
+          </NavigationButton>
           {account && (
             <>
-              <Link
+              <NavigationButton
                 href="/account/favorites"
-                className="clay-interactive rounded-xl px-3 py-2 text-sm font-semibold text-[var(--color-lavender-800)] transition hover:bg-[var(--color-mint-100)]"
+                className={buttonClass}
               >
                 {translate(locale, "Favorites", "المفضلة")}
-              </Link>
-              <Link
+              </NavigationButton>
+              <NavigationButton
                 href="/account/orders"
-                className="clay-interactive rounded-xl px-3 py-2 text-sm font-semibold text-[var(--color-lavender-800)] transition hover:bg-[var(--color-mint-100)]"
+                className={buttonClass}
               >
                 {translate(locale, "Orders", "الطلبات")}
-              </Link>
+              </NavigationButton>
             </>
           )}
 
@@ -245,7 +283,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                   setAccountOpen((open) => !open);
                   setLogoutError("");
                 }}
-                className="clay-interactive flex max-w-[min(42vw,15rem)] items-center gap-2 rounded-2xl border border-white/80 bg-[var(--surface)] py-1.5 pl-1.5 pr-2.5 text-left shadow-[var(--shadow-clay)] transition hover:bg-[var(--color-lavender-50)] sm:gap-2.5 sm:pr-3"
+                className={`${buttonClass} flex max-w-[min(42vw,15rem)] items-center gap-2 text-left sm:gap-2.5`}
               >
                 <Avatar account={account} size="sm" />
                 <span className="min-w-0">
@@ -274,19 +312,19 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                   {account.accountTypeError && (
                     <p role="status" className="px-3 py-2 text-xs text-[var(--color-danger)]">{translate(locale, account.accountTypeError, "تعذر تحميل نوع حسابك.")}</p>
                   )}
-                  <Link href="/account/profile" onClick={() => setAccountOpen(false)} className={menuLinkClass}>{translate(locale, "My profile", "ملفي الشخصي")}</Link>
-                  <Link href="/account" onClick={() => setAccountOpen(false)} className={menuLinkClass}>{translate(locale, "My account", "حسابي")}</Link>
+                  <NavigationButton href="/account/profile" onNavigate={() => setAccountOpen(false)} className={`${buttonClass} w-full text-start`}>{translate(locale, "My profile", "ملفي الشخصي")}</NavigationButton>
+                  <NavigationButton href="/account" onNavigate={() => setAccountOpen(false)} className={`${buttonClass} w-full text-start`}>{translate(locale, "My account", "حسابي")}</NavigationButton>
                   {isAdministrator && (
-                    <Link href={controlPanelHref} onClick={() => setAccountOpen(false)} className={menuLinkClass}>
+                    <NavigationButton href={controlPanelHref} onNavigate={() => setAccountOpen(false)} className={`${buttonClass} w-full text-start`}>
                       {translate(locale, "Control panel", "لوحة التحكم")}
-                    </Link>
+                    </NavigationButton>
                   )}
                   {logoutError && <p role="alert" className="px-3 py-2 text-xs text-[var(--color-danger)]">{logoutError}</p>}
                   <button
                     type="button"
                     disabled={logoutBusy}
                     onClick={logout}
-                    className={`${menuLinkClass} w-full text-start text-[var(--color-danger)] disabled:cursor-wait disabled:opacity-60`}
+                    className={`${buttonClass} w-full text-start`}
                   >
                     {logoutBusy ? translate(locale, "Signing out…", "جارٍ تسجيل الخروج…") : translate(locale, "Sign out", "تسجيل الخروج")}
                   </button>
@@ -295,21 +333,23 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
             </div>
           ) : (
             <>
-              <AuthReturnLink
+              <NavigationButton
                 href="/login"
-                className="clay-interactive rounded-xl px-3 py-2 text-sm font-semibold text-[var(--color-lavender-800)] transition hover:bg-[var(--color-mint-100)]"
+                authReturn
+                className={buttonClass}
               >
                 {translate(locale, "Sign in", "تسجيل الدخول")}
-              </AuthReturnLink>
-              <AuthReturnLink
+              </NavigationButton>
+              <NavigationButton
                 href="/register"
-                className="clay-interactive inline-flex items-center gap-2 rounded-xl border border-white/70 bg-[var(--color-lavender-600)] px-4 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-clay)] transition hover:bg-[var(--action-hover)]"
+                authReturn
+                className={`${buttonClass} inline-flex items-center gap-2`}
               >
                 <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
                   <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4.75 16a5.25 5.25 0 0 1 10.5 0M16 5.5v5M13.5 8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 {translate(locale, "Join", "انضم")}
-              </AuthReturnLink>
+              </NavigationButton>
             </>
           )}
           <LanguageSwitcher />
@@ -319,10 +359,10 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
       <div className="mx-auto max-w-[1440px] px-4 pb-3 sm:px-5 lg:px-10">
         <nav aria-label={translate(locale, "Main navigation", "القائمة الرئيسية")} className="hidden gap-2 overflow-x-auto text-sm text-[var(--color-ink-600)] md:flex">
           {publicLinks.slice(0, 6).map((link) => (
-            <Link
+            <NavigationButton
               key={link.href}
               href={link.href}
-              className={`whitespace-nowrap rounded-full px-4 py-2 transition hover:bg-[var(--color-lavender-100)] hover:text-[var(--color-lavender-950)] ${link.href === "/" ? "clay-surface-inset font-semibold text-[var(--color-lavender-800)]" : ""}`}
+              className={`${buttonClass} whitespace-nowrap`}
             >
               {translate(locale, link.label, {
                 Home: "الرئيسية",
@@ -334,25 +374,25 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 Terms: "الشروط",
                 Privacy: "الخصوصية"
               }[link.label] ?? link.label)}
-            </Link>
+            </NavigationButton>
           ))}
           {account && signedInLinks.map((link) => (
-            <Link
+            <NavigationButton
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap rounded-full px-4 py-2 transition hover:bg-[var(--color-lavender-100)] hover:text-[var(--color-lavender-950)]"
+              className={`${buttonClass} whitespace-nowrap`}
             >
               {translate(locale, link.label, { Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)}
-            </Link>
+            </NavigationButton>
           ))}
           {publicLinks.slice(6).map((link) => (
-            <Link
+            <NavigationButton
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap rounded-full px-4 py-2 transition hover:bg-[var(--color-lavender-100)] hover:text-[var(--color-lavender-950)]"
+              className={buttonClass}
             >
               {link.label}
-            </Link>
+            </NavigationButton>
           ))}
         </nav>
 
@@ -363,7 +403,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
             aria-expanded={mobileOpen}
             aria-controls="mobile-main-navigation"
             onClick={() => setMobileOpen((open) => !open)}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--color-orange)] shadow-[var(--shadow-clay)]"
+            className={`${buttonClass} flex h-11 w-11 items-center justify-center`}
           >
             <MenuIcon open={mobileOpen} />
             <span className="sr-only">{mobileOpen
@@ -395,43 +435,43 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 </div>
               )}
               {mobileLinks.map((link) => (
-                <Link
+                <NavigationButton
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={menuLinkClass}
+                  onNavigate={() => setMobileOpen(false)}
+                  className={`${buttonClass} w-full text-left`}
                 >
                   {link.label}
-                </Link>
+                </NavigationButton>
               ))}
               {account ? (
                 <>
-                  <Link href="/account/profile" onClick={() => setMobileOpen(false)} className={menuLinkClass}>{translate(locale, "My profile", "ملفي الشخصي")}</Link>
-                  <Link href="/account" onClick={() => setMobileOpen(false)} className={menuLinkClass}>{translate(locale, "My account", "حسابي")}</Link>
+                  <NavigationButton href="/account/profile" onNavigate={() => setMobileOpen(false)} className={`${buttonClass} w-full text-left`}>{translate(locale, "My profile", "ملفي الشخصي")}</NavigationButton>
+                  <NavigationButton href="/account" onNavigate={() => setMobileOpen(false)} className={`${buttonClass} w-full text-left`}>{translate(locale, "My account", "حسابي")}</NavigationButton>
                   {isAdministrator && (
-                    <Link href={controlPanelHref} onClick={() => setMobileOpen(false)} className={menuLinkClass}>
+                    <NavigationButton href={controlPanelHref} onNavigate={() => setMobileOpen(false)} className={`${buttonClass} w-full text-left`}>
                       {translate(locale, "Control panel", "لوحة التحكم")}
-                    </Link>
+                    </NavigationButton>
                   )}
                   {logoutError && <p role="alert" className="px-3 py-2 text-xs text-[var(--color-danger)]">{logoutError}</p>}
                   <button
                     type="button"
                     disabled={logoutBusy}
                     onClick={logout}
-                    className={`${menuLinkClass} w-full text-left text-[var(--color-danger)] disabled:cursor-wait disabled:opacity-60`}
+                    className={`${buttonClass} w-full text-left`}
                   >
                     {logoutBusy ? translate(locale, "Signing out…", "جارٍ تسجيل الخروج…") : translate(locale, "Sign out", "تسجيل الخروج")}
                   </button>
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] p-2">
-                  <AuthReturnLink href="/login" className="rounded-xl bg-[var(--color-lavender-600)] px-3 py-3 text-center text-sm font-semibold text-white">{translate(locale, "Sign in", "تسجيل الدخول")}</AuthReturnLink>
-                  <AuthReturnLink href="/register" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] px-3 py-3 text-center text-sm font-semibold text-[var(--color-lavender-800)]">
+                  <NavigationButton href="/login" authReturn className={`${buttonClass} py-3`}>{translate(locale, "Sign in", "تسجيل الدخول")}</NavigationButton>
+                  <NavigationButton href="/register" authReturn className={`${buttonClass} inline-flex items-center justify-center gap-2 py-3`}>
                     <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
                       <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4.75 16a5.25 5.25 0 0 1 10.5 0M16 5.5v5M13.5 8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     {translate(locale, "Join", "انضم")}
-                  </AuthReturnLink>
+                  </NavigationButton>
                 </div>
               )}
             </nav>

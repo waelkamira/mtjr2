@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   storeFindUnique: vi.fn(),
   brandFindFirst: vi.fn(),
   categoryCount: vi.fn(),
+  categoryFindMany: vi.fn(),
   marketFindMany: vi.fn(),
   productCreate: vi.fn(),
   productFindUnique: vi.fn(),
@@ -43,6 +44,7 @@ describe("product lifecycle", () => {
     });
     mocks.brandFindFirst.mockResolvedValue({ id: "brand-1" });
     mocks.categoryCount.mockResolvedValue(1);
+    mocks.categoryFindMany.mockResolvedValue([{ slug: "phones-electronics" }]);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
@@ -52,7 +54,7 @@ describe("product lifecycle", () => {
     mocks.transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       store: { findUnique: mocks.storeFindUnique },
       brand: { findFirst: mocks.brandFindFirst },
-      category: { count: mocks.categoryCount },
+      category: { count: mocks.categoryCount, findMany: mocks.categoryFindMany },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
       product: {
@@ -68,6 +70,7 @@ describe("product lifecycle", () => {
     const result = await createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
       categoryIds: ["category-1"], brandId: "brand-1",
+      media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     });
     expect(result).toMatchObject({ id: "product-1", status: "DRAFT", approvalStatus: "PENDING" });
@@ -82,6 +85,7 @@ describe("product lifecycle", () => {
     });
     await expect(createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     })).rejects.toThrow(/enabled for this store/i);
     expect(mocks.productCreate).not.toHaveBeenCalled();
@@ -101,6 +105,52 @@ describe("product lifecycle", () => {
     }
   );
 
+  it("requires images and a map with property details for real-estate listings", async () => {
+    mocks.categoryFindMany.mockResolvedValue([{ slug: "real-estate" }]);
+    await expect(createDraftProduct({
+      storeId: "store-1",
+      name: "City apartment",
+      slug: "city-apartment",
+      categoryIds: ["category-1"],
+      media: [{ url: "https://images.example/home.jpg", isPrimary: true }],
+      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" },
+      variants: [{ sku: "HOME-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/map location/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a zero floor area for real-estate listings", async () => {
+    await expect(createDraftProduct({
+      storeId: "store-1",
+      name: "City apartment",
+      slug: "city-apartment",
+      categoryIds: ["category-1"],
+      mapLocation: { latitude: 33.51381, longitude: 36.27654 },
+      media: [{ url: "https://images.example/home.jpg", isPrimary: true }],
+      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "0" },
+      variants: [{ sku: "HOME-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/floor area must be greater than zero/i);
+    expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+
+  it("stores an exact seller map pin and a rounded public coordinate", async () => {
+    await createDraftProduct({
+      storeId: "store-1",
+      name: "Travel Mug",
+      slug: "travel-mug",
+      mapLocation: { latitude: 33.51381, longitude: 36.27654 },
+      media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    });
+    const createArg = mocks.productCreate.mock.calls[0][0];
+    expect(createArg.data.mapLocation.create).toEqual({
+      latitude: 33.51381,
+      longitude: 36.27654,
+      publicLatitude: 33.51,
+      publicLongitude: 36.28
+    });
+  });
+
   it("publishes only with the exact store-scoped catalog permission", async () => {
     const result = await publishProduct("product-1");
     expect(result).toMatchObject({ productId: "product-1", status: "ACTIVE" });
@@ -116,6 +166,7 @@ describe("product lifecycle", () => {
     mocks.userHasScopedPermission.mockResolvedValue(false);
     await expect(createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     })).rejects.toThrow(/catalog access/i);
     expect(mocks.productCreate).not.toHaveBeenCalled();

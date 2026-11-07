@@ -3,13 +3,10 @@ import "server-only";
 import { env } from "@/lib/env";
 
 /**
- * Reject cross-origin or non-JSON state-changing requests before any identity
- * mutation. All public identity mutations must call this before parsing bodies
- * or invoking domain services. Missing Origin fails closed.
+ * Reject cross-origin state-changing requests before any identity mutation.
+ * Missing Origin fails closed.
  */
-export function validateIdentityMutationRequest(
-  request: Request
-): Response | null {
+export function validateIdentityMutationOrigin(request: Request): Response | null {
   const origin = request.headers.get("origin");
   if (!origin) {
     return Response.json(
@@ -43,6 +40,14 @@ export function validateIdentityMutationRequest(
     );
   }
 
+  return null;
+}
+
+export function validateIdentityMutationRequest(
+  request: Request
+): Response | null {
+  const originRejected = validateIdentityMutationOrigin(request);
+  if (originRejected) return originRejected;
   const contentType = request.headers.get("content-type") ?? "";
   if (!/^application\/json(?:\s*;|$)/i.test(contentType)) {
     return Response.json(
@@ -51,5 +56,18 @@ export function validateIdentityMutationRequest(
     );
   }
 
+  return null;
+}
+
+export function validateIdentityImageUploadRequest(request: Request): Response | null {
+  const originRejected = validateIdentityMutationOrigin(request);
+  if (originRejected) return originRejected;
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!/^multipart\/form-data\s*;/i.test(contentType)) {
+    return Response.json(
+      { error: "Content-Type must be multipart/form-data." },
+      { status: 415 }
+    );
+  }
   return null;
 }

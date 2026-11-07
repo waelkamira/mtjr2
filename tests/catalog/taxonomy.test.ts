@@ -102,6 +102,17 @@ describe("listActiveCategoryTree pagination", () => {
     expect(result.pagination).toMatchObject({ total: 0, totalPages: 0 });
   });
 
+  it("can include empty active categories for seller listing forms", async () => {
+    mocks.categoryFindMany
+      .mockResolvedValueOnce([row("real-estate", null)])
+      .mockResolvedValueOnce([]);
+    mocks.productCategoryFindMany.mockResolvedValue([]);
+
+    const result = await listActiveCategoryTree({ includeEmpty: "true" });
+
+    expect(result.items.map((item) => item.slug)).toEqual(["real-estate"]);
+  });
+
   it("stops traversing when a malformed cycle points back to an already visited node", async () => {
     mocks.categoryFindMany
       .mockResolvedValueOnce([row("root", null)])

@@ -24,12 +24,25 @@ const createSchema = z.object({
   description: z.string().trim().max(12000).optional(),
   brandId: z.string().trim().min(1).optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).default([]),
+  mapLocation: z.object({
+    latitude: z.number().finite().min(-90).max(90),
+    longitude: z.number().finite().min(-180).max(180)
+  }).optional(),
+  propertyDetails: z.object({
+    propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
+    listingType: z.enum(["SALE", "RENT"]),
+    bedrooms: z.number().int().min(0).max(100).nullable().optional(),
+    bathrooms: z.number().int().min(0).max(100).nullable().optional(),
+    floorArea: z.string()
+      .regex(/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,2})?$/)
+      .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
+  }).optional(),
   media: z.array(z.object({
     url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
     altText: z.string().trim().max(300).optional(),
     sortOrder: z.number().int().min(0).max(1000).default(0),
     isPrimary: z.boolean().default(false)
-  })).max(30).default([]),
+  })).min(1).max(8),
   variants: z.array(z.object({
     sku: z.string().trim().min(1).max(100),
     barcode: z.string().trim().min(1).max(100).optional(),
@@ -41,7 +54,7 @@ const createSchema = z.object({
 
 export type CreateProductInput = z.input<typeof createSchema>;
 
-async function canManageStoreCatalog(userId: string, ownerId: string, storeId: string, now: Date) {
+export async function canManageStoreCatalog(userId: string, ownerId: string, storeId: string, now: Date) {
   if (ownerId === userId) return true;
   const [scopedManager, platformAdmin] = await Promise.all([
     userHasScopedPermission(userId, { permissionKey: "catalog:manage", scope: { type: "STORE", id: storeId }, now }),
@@ -89,6 +102,16 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
     }
+    const categories = categoryIds.length
+      ? await tx.category.findMany({ where: { id: { in: categoryIds } }, select: { slug: true } })
+      : [];
+    const isRealEstate = categories.some((category) => category.slug === "real-estate");
+    if (isRealEstate && (!data.propertyDetails || !data.mapLocation)) {
+      throw new Error("Real estate listings need property details and a map location.");
+    }
+    if (!isRealEstate && data.propertyDetails) {
+      throw new Error("Property details can only be added to a real-estate listing.");
+    }
 
     const allowedMarketIds = new Set(store.markets.map((market) => market.marketId));
     if (marketIds.some((id) => !allowedMarketIds.has(id))) throw new Error("Product prices may only target markets enabled for this store.");
@@ -111,6 +134,16 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         approvalStatus: ProductApprovalStatus.PENDING,
         categories: { create: categoryIds.map((categoryId, index) => ({ categoryId, isPrimary: index === 0, sortOrder: index })) },
         media: { create: data.media.map((item) => ({ ...item })) },
+        mapLocation: data.mapLocation ? { create: {
+          latitude: data.mapLocation.latitude,
+          longitude: data.mapLocation.longitude,
+          publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100,
+          publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100
+        } } : undefined,
+        propertyDetails: data.propertyDetails ? { create: {
+          ...data.propertyDetails,
+          floorArea: new Prisma.Decimal(data.propertyDetails.floorArea)
+        } } : undefined,
         variants: {
           create: data.variants.map((variant) => ({
             sku: variant.sku, barcode: variant.barcode, name: variant.name,
@@ -328,7 +361,10 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     select: {
       id: true, name: true, slug: true, description: true, status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
-      media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
+      mapLocation: { select: { latitude: true, longitude: true } },
+      propertyDetails: true,
+      categories: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { category: { select: { id: true, name: true, slug: true } } } },
+      media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 8, select: { url: true, altText: true, isPrimary: true } },
       variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
     }
   });
@@ -351,6 +387,7 @@ export async function listPendingProductReviews(now = new Date()) {
     take: 100,
     select: {
       id: true, name: true, slug: true, description: true, createdAt: true,
+      propertyDetails: true,
       store: { select: { id: true, name: true, seller: { select: { id: true, displayName: true, legalName: true } } } },
       media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
       variants: { where: { isActive: true }, select: { id: true, sku: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }

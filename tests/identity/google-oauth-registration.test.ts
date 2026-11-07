@@ -120,7 +120,7 @@ describe("Google OAuth registration gate", () => {
       user: {
         id: "existing-user",
         status: "ACTIVE",
-        emailVerifiedAt: new Date()
+        emailVerifiedAt: null
       }
     });
     mocks.transaction.mockResolvedValue(undefined);

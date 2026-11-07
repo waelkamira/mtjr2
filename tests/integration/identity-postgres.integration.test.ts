@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
-import { IdentityConflictError, registerUser, verifyUserEmail } from "@/server/identity/registration";
+import { IdentityConflictError, registerUser } from "@/server/identity/registration";
 import { loginWithPassword } from "@/server/identity/login";
 import { createPasswordResetChallenge, completePasswordReset } from "@/server/identity/password-reset";
 import { verifyPassword } from "@/server/identity/password";
@@ -38,7 +38,7 @@ describe("identity PostgreSQL integration", () => {
     await prisma.$disconnect();
   });
 
-  it("verifies a pending account, scopes permissions, and revokes a real database session", async () => {
+  it("registers an active account, scopes permissions, and revokes a real database session", async () => {
     const registration = await registerUser({
       email,
       password: "Correct-Horse-Battery-42!",
@@ -49,7 +49,6 @@ describe("identity PostgreSQL integration", () => {
     });
     userId = registration.userId;
     createdUserIds.add(registration.userId);
-    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
 
     await expect(registerUser({
       email: email.toUpperCase(),
@@ -66,7 +65,7 @@ describe("identity PostgreSQL integration", () => {
     });
 
     expect(active.status).toBe("ACTIVE");
-    expect(active.emailVerifiedAt).not.toBeNull();
+    expect(active.emailVerifiedAt).toBeNull();
     expect(active.consents).toHaveLength(2);
 
     const role = await prisma.role.findUniqueOrThrow({
@@ -164,7 +163,6 @@ describe("identity PostgreSQL integration", () => {
       acceptedPrivacy: true
     });
     createdUserIds.add(registration.userId);
-    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
     const superAdminRole = await prisma.role.findUniqueOrThrow({
       where: { key: "SUPER_ADMIN" }
     });
@@ -307,7 +305,6 @@ describe("identity PostgreSQL integration", () => {
       acceptedPrivacy: true
     });
     createdUserIds.add(registration.userId);
-    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
 
     const failed = await loginWithPassword({
       email: loginEmail,
@@ -372,7 +369,6 @@ describe("identity PostgreSQL integration", () => {
       acceptedPrivacy: true
     });
     createdUserIds.add(registration.userId);
-    await expect(verifyUserEmail(registration.verificationToken)).resolves.toBe(true);
 
     const activeSession = await createUserSession(registration.userId);
     const challenge = await createPasswordResetChallenge(resetEmail);

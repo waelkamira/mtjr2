@@ -120,6 +120,21 @@ export async function clearLoginThrottle(
   });
 }
 
+export async function consumeAuthenticatedActionAttempt(
+  userIdInput: string,
+  scopeInput: string,
+  limit: number,
+  now = new Date()
+): Promise<boolean> {
+  const userId = userIdInput.trim();
+  const scope = scopeInput.trim();
+  if (!userId || !scope || !Number.isInteger(limit) || limit < 1) {
+    throw new Error("A user, rate-limit scope, and positive limit are required.");
+  }
+  const keyHash = digestSubject("authenticated-action", JSON.stringify([scope, userId]));
+  return prisma.$transaction((tx) => consumeBucket(tx, keyHash, limit, now));
+}
+
 /**
  * Atomically consumes an attempt against an identifier/IP pair bucket and
  * an IP-wide bucket. Call before password hashing/verification. After
