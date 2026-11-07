@@ -51,7 +51,7 @@ async function main() {
   const market = store.markets[0].market;
   const product = await prisma.product.findFirst({
     where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED", categories: { some: {} }, variants: { some: { isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } } } },
-    select: { id: true, slug: true, categories: { where: { isPrimary: true }, take: 1, select: { category: { select: { slug: true } } } } }
+    select: { id: true, slug: true, categories: { take: 1, select: { category: { select: { slug: true } } } } }
   });
   if (!product) throw new Error("Demo seller store has no approved categorized product with a market price.");
   const detailProduct = await prisma.product.findFirst({
