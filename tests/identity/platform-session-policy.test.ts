@@ -7,7 +7,8 @@ vi.mock("@/server/identity/current-session", () => ({
 }));
 vi.mock("@/server/identity/mfa", () => ({ getMfaAccessState: mocks.getMfaAccessState }));
 
-import { AuthenticationRequiredError, MfaEnrollmentRequiredError, StepUpRequiredError } from "@/server/identity/access-errors";
+import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { MfaEnrollmentRequiredError, StepUpRequiredError } from "@/server/identity/access-errors";
 import { requirePlatformSessionStepUp } from "@/server/identity/platform-session-policy";
 
 const now = new Date("2026-11-07T12:00:00.000Z");
