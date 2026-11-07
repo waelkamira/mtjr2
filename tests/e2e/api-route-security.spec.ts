@@ -55,7 +55,8 @@ function shouldProbe(relative: string, method: string): boolean {
   if (relative.startsWith("auth/") || relative.startsWith("cart/") || relative.startsWith("checkout/")) return false;
   if (relative === "ai/chat/route.ts") return false;
 
-  if (relative === "locale/route.ts" || relative === "advertising/events/route.ts") return method !== "GET";
+  if (relative === "locale/route.ts") return method !== "GET";
+  if (relative === "advertising/events/route.ts") return false;
   if (relative.startsWith("cron/") || relative.startsWith("webhooks/")) return true;
   if (PUBLIC_GETS.has(relative) && method === "GET") return false;
   if (PROTECTED_PREFIXES.some((prefix) => relative.startsWith(prefix))) return true;
