@@ -265,3 +265,27 @@ Manual seller-entered tracking is not a carrier integration. Carrier webhooks, l
 
 
 2026-11-05: Seller return decisions now operate on `ReturnItem` rows scoped to the authorized store. A multi-store request remains pending until every store has decided; customer UI shows each line's status. Platform review synchronizes line status. No physical receipt, inventory restock or payment refund is performed.
+
+
+## 2026-11-07 — canonical-main evidence reconciliation
+
+The original 2026-11-04 baseline above is historical. Do not use its old per-system statements as the current status where later merged evidence below supersedes them. This reconciliation deliberately does not mark all 49 systems complete.
+
+| Scope | Current evidence on merged main | Remaining boundary |
+|---|---|---|
+| Identity and Super Admin governance (01, 25, 26, 40, 46) | PR #64 merged as `84ae9ecec4ecd2796533dd3551d346ee43fb5849`; exact PR head General CI, disposable PostgreSQL (3 files / 9 tests), and Browser E2E passed. E2E covers customer denial, independent privilege review, audit persistence, and mandatory MFA after elevation. | Full role/ownership/store-scope verification across all protected operations is not implied by this governance journey. |
+| Anonymous API boundary (cross-cutting) | PR #68 merged as `16b185f765d4e7dbf68ee25907c41d17efbbea45`; 165 route/method anonymous-boundary cases, General CI and Browser E2E passed on exact PR head `2207295893cde027e123518ea9b29a169dcc0cc0`. | Anonymous denial does not prove authenticated role, resource ownership, staff scope, or cross-tenant isolation. |
+| Advertising (20, 24, 43) | Sponsored placements are wired into product discovery, search, category discovery and product detail. Campaign targeting, signed event tokens, impression/click deduplication, budget enforcement, spend ledger, invoice generation, seller invoice listing and admin settlement/analytics exist on main. Campaign event writes use a campaign advisory lock and READ COMMITTED transaction isolation. | Live provider billing is not connected; invoice settlement is a manual external-payment confirmation. Browser evidence for ad placement/click replay is in the merged buyer E2E journey, but a live billing provider is not verified. |
+| Buying / checkout (04, 05) | Merged browser journey covers product → cart → checkout review → address → shipping → tax → order confirmation; the order is explicitly pending payment. Disposable PostgreSQL and General CI evidence are recorded for the exact merged Super Admin E2E head. | Payment collection/provider onboarding, paid-order lifecycle, and full cancel/refund/reconciliation recovery are not thereby complete. |
+| Financial lifecycle (05, 11, 15, 18, 29, 33, 34, 42) | Corrected PostgreSQL workflow ran on main `0d0fab6f47fdf49396022331f77f5612616a8d44`: all committed migrations deployed; 3 integration files / 9 tests passed; repeatable demo seed passed twice. General CI passed on `f05480a83fe3126f0183e51f990e47216fb14098`. | No live payment/refund provider or carrier was exercised. Manual refund/invoice operations must not be described as provider settlement. |
+| Security and mutation feedback (cross-cutting) | Exact PR #64 inventory: 105/105 state-changing API handlers with request/system-boundary evidence; 54/54 mutation-bearing UI files with success/error feedback. PR #68 separately covers anonymous route/method denial. | Static inventories and anonymous tests do not replace actor/tenant/ownership tests for every domain action. |
+
+### Current release-gate snapshot
+
+- Canonical default branch: `main`; no open pull requests were returned by the repository search on 2026-11-07.
+- Latest observed main commit: `1d458f0b43db43012913c5351c9754daeb153062` (documentation-only financial lifecycle verification update).
+- General CI passed on preceding main documentation/registry commit `f05480a83fe3126f0183e51f990e47216fb14098` (run [42404307099](https://github.com/waelkamira/mtjr2/actions/runs/42404307099)); PostgreSQL passed on `0d0fab6f47fdf49396022331f77f5612616a8d44` (run [42404238983](https://github.com/waelkamira/mtjr2/actions/runs/42404238983)). These are not exact-head results for `1d458f0`.
+- Vercel check on latest observed main commit `1d458f0` is FAILURE with the provider URL indicating the build/deployment rate limit. This is an external deployment gate, not evidence of an application build defect.
+- The current evidence does not establish production database migration, production secrets, live payment/refund/carrier integration, or successful deployment. None was changed or exercised in this audit.
+
+Next audit work must start by updating the individual 49 ledger rows against these merged facts, then finish actor/ownership/store-scope checks and route-level browser coverage. Do not turn the 165 anonymous cases, 105 API inventory, or 54 UI inventory into a blanket authorization-complete claim.
