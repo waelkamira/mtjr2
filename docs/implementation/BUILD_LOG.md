@@ -2473,3 +2473,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 - Replaced Google tokeninfo-only identity checks with local RS256/JWKS ID-token signature verification, audience/issuer/time/email checks, nonce binding, and constant-time OAuth state comparison.
 - Assign the seeded GLOBAL CUSTOMER role for password and Google customer registration; keep seller applications PENDING without seller permissions until approval. Added unit and PostgreSQL integration assertions.
+
+## 2026-11-07 — Super Admin MFA step-up
+
+- Added ten-minute, session-bound TOTP step-up verification for every global `platform:manage` authorization path. Codes are consumed atomically and cannot be replayed; successful verification is audited.
+- Added a same-origin verification API and localized step-up screen. Super Admin page entry points route administrators through MFA enrollment, ordinary MFA verification, and fresh step-up before continuing.
+- Added additive `UserSession.stepUpVerifiedAt` / `stepUpExpiresAt` fields and migration `20261107190000_platform_admin_mfa_step_up`; no duplicate MFA model was introduced.
+- Corrected the policy test to assert the canonical shared authentication error class and updated the isolated E2E admin fixture to carry a valid fresh step-up window. The fixture uses a disposable CI database only.
+- Verification on exact PR head `a53a02498b9982006f27d4636a7fd48f1cd019bc`: CI run [42397330866](https://github.com/waelkamira/mtjr2/actions/runs/42397330866) passed (Prisma validate/migrate/generate, typecheck, lint, unit tests, production build, API security inventory, and UI mutation-feedback inventory); Platform PostgreSQL Integration [42397330816](https://github.com/waelkamira/mtjr2/actions/runs/42397330816) passed; Browser E2E [42397330893](https://github.com/waelkamira/mtjr2/actions/runs/42397330893) passed including customer, seller, Super Admin, sponsored placements, and responsive checks.
+- Merged as PR #60 in commit `1501dcd169941a10d2bb780005bd7f86d63c1319`. The Vercel preview check remained unavailable due to the account's deployment quota; no Vercel deployment or production environment/database change was attempted.
