@@ -74,3 +74,5 @@ const lines = [
 const report = lines.join("\n") + "\n";
 fs.writeFileSync("api-route-security-report.md", report);
 process.stdout.write(report);
+
+if (unguardedMutations.length > 0) process.exitCode = 1;
