@@ -68,16 +68,18 @@ async function main() {
     create: { storeId: store.id, code: "E2E", name: "E2E Warehouse", isActive: true },
     update: { isActive: true }
   });
-  const detailVariant = await prisma.productVariant.findFirst({
+  const detailVariants = await prisma.productVariant.findMany({
     where: { productId: detailProduct.id, isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } },
     select: { id: true }
   });
-  if (!detailVariant) throw new Error("E2E product has no active market-priced variant.");
-  await prisma.inventory.upsert({
-    where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: detailVariant.id } },
-    create: { warehouseId: warehouse.id, variantId: detailVariant.id, quantityOnHand: 100 },
-    update: { quantityOnHand: 100, quantityQuarantined: 0, quantityReserved: 0 }
-  });
+  if (!detailVariants.length) throw new Error("E2E product has no active market-priced variant.");
+  for (const variant of detailVariants) {
+    await prisma.inventory.upsert({
+      where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: variant.id } },
+      create: { warehouseId: warehouse.id, variantId: variant.id, quantityOnHand: 100 },
+      update: { quantityOnHand: 100, quantityQuarantined: 0, quantityReserved: 0 }
+    });
+  }
 
   const shippingRate = await prisma.storeShippingRate.findFirst({
     where: { storeId: store.id, marketId: market.id, name: "E2E Standard Shipping" },
