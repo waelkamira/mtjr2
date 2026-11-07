@@ -16,6 +16,7 @@ const links = [
   { href: "/admin/payments", label: "Payments", ar: "المدفوعات" },
   { href: "/admin/logistics", label: "Shipments", ar: "الشحنات" },
   { href: "/admin/returns", label: "Returns", ar: "المرتجعات" },
+  { href: "/admin/refunds", label: "Refunds", ar: "استرداد المدفوعات" },
   { href: "/admin/support", label: "Customer support", ar: "دعم العملاء" },
   { href: "/admin/reviews", label: "Product reviews", ar: "مراجعات المنتجات" },
   { href: "/admin/store-reviews", label: "Store reviews", ar: "مراجعات المتاجر" },
