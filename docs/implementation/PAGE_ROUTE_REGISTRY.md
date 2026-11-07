@@ -330,7 +330,7 @@ The parent ReturnRequest can span several stores but has a single global status.
 | Surface | Route / operation | Server-side boundary | Persistence | Status |
 |---|---|---|---|---|
 | Shared admin shell | /admin/* | src/app/admin/layout.tsx requires an authenticated session and at least one explicit admin permission before rendering the shell; unauthenticated users are redirected to /login with a safe internal return path; users without admin access receive not-found. Each API remains independently guarded. | Existing UserSession, UserRoleAssignment, RolePermission, Permission | Implemented in source; exact-head CI and authenticated browser verification pending. |
-| Platform control panel | /admin/control-panel | Dedicated platform:manage check; ordinary operational ADMIN permissions do not imply platform management. | Existing global SUPER_ADMIN role grant / platform:manage permission | Implemented in source; exact-head CI and ADMIN-denial/SUPER_ADMIN-allow browser verification pending. |
+| Platform control panel | /admin/control-panel | Dedicated platform:manage check; ordinary operational ADMIN permissions do not imply platform management. | Existing global SUPER_ADMIN role grant / platform:manage permission | Verified in PR #64 exact-head Browser E2E and PostgreSQL-backed governance journey; deployed/production verification remains separate. |
 | First Super Admin bootstrap | npm run db:bootstrap-super-admin | Explicit operator opt-in and confirmation, exact expected PostgreSQL host/database, existing ACTIVE account, serialized one-time operation, refuses if any Super Admin assignment exists. Email verification is not required because registration activates accounts immediately by policy. | UserRoleAssignment + AuditLog in one transaction; no schema change | Requires operator-controlled target confirmation; never run automatically or from a public API. MFA enrollment is mandatory before privileged access. |
 | Ordinary role revocation | Existing role-assignment service/API | Refuses to revoke SUPER_ADMIN through delegated role-management flow. | Existing UserRoleAssignment + AuditLog | Implemented in source; focused integration verification pending. |
 
@@ -348,7 +348,7 @@ The parent ReturnRequest can span several stores but has a single global status.
 
 | Surface | Route | Guard | Backend | Status |
 |---|---|---|---|---|
-| Platform audit history | `/admin/control-panel/audit-log` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/audit-log` → `getPlatformAuditEvents` → existing Prisma `AuditLog`; no-store, validated filters, max 100 rows, keyset pagination. | Implemented; exact-head CI pending. |
+| Platform audit history | `/admin/control-panel/audit-log` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/audit-log` → `getPlatformAuditEvents` → existing Prisma `AuditLog`; no-store, validated filters, max 100 rows, keyset pagination. | Verified in PR #64 exact-head CI, PostgreSQL integration and Browser E2E; deployed/production verification remains separate. |
 
 The view is read-only. Audit history is not editable or deletable from this interface. Ordinary role assignment and revocation both protect any role carrying `platform:manage`.
 
@@ -356,7 +356,7 @@ The view is read-only. Audit history is not editable or deletable from this inte
 
 | Surface | Route | Guard | Backend | Status |
 |---|---|---|---|---|
-| Roles and permission inventory | `/admin/control-panel/access-catalog` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/access-catalog` → `getPlatformAccessCatalog` → Prisma Role, RolePermission, Permission and assignment counts. | Read-only inventory implemented; exact-head CI pending. |
+| Roles and permission inventory | `/admin/control-panel/access-catalog` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET /api/admin/control-panel/access-catalog` → `getPlatformAccessCatalog` → Prisma Role, RolePermission, Permission and assignment counts. | Verified in PR #64 exact-head CI, PostgreSQL integration and Browser E2E; deployed/production verification remains separate. |
 
 Audit metadata is redacted before API serialization. The access catalogue deliberately does not expose role mutation controls until approval and actor-separation safeguards are implemented.
 
@@ -364,7 +364,7 @@ Audit metadata is redacted before API serialization. The access catalogue delibe
 
 | Surface | Route | Guard | Backend | Status |
 |---|---|---|---|---|
-| Privilege request and review | `/admin/control-panel/privilege-requests` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET/POST /api/admin/control-panel/privilege-requests`, `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `platform-privilege-requests.ts`. | Implemented; full CI and all migrations passed in disposable PostgreSQL on code commit 4bd6f3d; not applied to user/production DB. |
+| Privilege request and review | `/admin/control-panel/privilege-requests` | Server page requires `platform:manage`; unauthenticated users return to login; unauthorized users receive not-found. | `GET/POST /api/admin/control-panel/privilege-requests`, `PATCH /api/admin/control-panel/privilege-requests/[requestId]` → `platform-privilege-requests.ts`. | Verified in PR #64 exact-head CI, PostgreSQL integration (9 tests) and Browser E2E, including independent reviewer approval; deployed/production verification remains separate. |
 
 The workflow grants only canonical `SUPER_ADMIN` after independent review. The requester cannot decide their own request. Assignment, decision and audit record are transactional. Target must be ACTIVE.
 
@@ -374,3 +374,8 @@ The workflow grants only canonical `SUPER_ADMIN` after independent review. The r
 |---|---|---|---|---|
 | Record dispatch | `/seller/orders` → Record dispatch | `POST /api/seller/orders/[vendorOrderId]/shipment` → `createSellerShipment` | Shipment, VendorOrder, VendorOrderStatusHistory, OrderStatusHistory, AuditLog | Implemented on `feat/shipment-tracking-current-main`; exact-head CI/PostgreSQL pending. Requires active owner or exact store-scoped `orders:manage`; only READY_TO_SHIP is accepted. |
 | View tracking details | `/orders/[orderId]` | Existing owned-order read serializer | Shipment joined through VendorOrder | Implemented on the same branch; customer sees seller-entered details only. No live carrier tracking is claimed. |
+
+
+## API anonymous boundary verification — 2026-11-07
+
+PR #68 added an automated anonymous boundary sweep covering 165 route/method combinations, with documented public/guest routes excluded and request-origin/trusted-proxy headers exercised. Exact-head General CI and Browser E2E passed; see Build Log. This sweep verifies unauthenticated boundaries only and does not replace per-role, resource ownership, or store-scope authorization checks.
