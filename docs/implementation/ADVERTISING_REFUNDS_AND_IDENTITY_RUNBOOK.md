@@ -38,3 +38,9 @@
 - Configure a dedicated production `AUTH_SECRET` (32+ characters) before production deployment. The preview-only secret must not be reused in production.
 - Configure a production stable URL and the required database, mail, MFA-encryption, OAuth, and payment-provider settings before enabling those integrations.
 - Do not treat a successful CI build as a production smoke test. Production deployment, live provider payment/refund calls, and external credential validation require the relevant production secrets and an explicit release window.
+
+## Google OAuth and registration policy
+
+- Google ID tokens are verified locally against Google's published RS256 JWKS; issuer, audience/authorized party, expiry, issued-at, verified email, and the one-time OAuth nonce are checked before linking or creating an account.
+- OAuth state comparison uses a constant-time comparison. Existing linked Google identities can sign in under the existing public-registration policy.
+- Customer registration receives the seeded GLOBAL CUSTOMER role. Seller registration creates a PENDING seller application and does not grant seller-management permissions before approval.
