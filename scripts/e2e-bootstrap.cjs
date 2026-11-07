@@ -61,6 +61,52 @@ async function main() {
     select: { id: true, slug: true }
   });
   if (!detailProduct) throw new Error("Demo seller store needs a second approved product for product-detail sponsored placement tests.");
+
+  // Keep one deterministic, purchasable product in the isolated E2E database.
+  const warehouse = await prisma.warehouse.upsert({
+    where: { storeId_code: { storeId: store.id, code: "E2E" } },
+    create: { storeId: store.id, code: "E2E", name: "E2E Warehouse", isActive: true },
+    update: { isActive: true }
+  });
+  const detailVariant = await prisma.productVariant.findFirst({
+    where: { productId: detailProduct.id, isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } },
+    select: { id: true }
+  });
+  if (!detailVariant) throw new Error("E2E product has no active market-priced variant.");
+  await prisma.inventory.upsert({
+    where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: detailVariant.id } },
+    create: { warehouseId: warehouse.id, variantId: detailVariant.id, quantityOnHand: 100 },
+    update: { quantityOnHand: 100, quantityQuarantined: 0, quantityReserved: 0 }
+  });
+
+  const shippingRate = await prisma.storeShippingRate.findFirst({
+    where: { storeId: store.id, marketId: market.id, name: "E2E Standard Shipping" },
+    select: { id: true }
+  });
+  const shippingData = {
+    currencyCode: market.defaultCurrencyCode, description: "Isolated checkout journey fixture",
+    amountMinor: 500n, destinationRegion: null, minDeliveryDays: 2, maxDeliveryDays: 4,
+    isActive: true, effectiveFrom: null, effectiveUntil: null, priority: 0
+  };
+  if (shippingRate) {
+    await prisma.storeShippingRate.update({ where: { id: shippingRate.id }, data: shippingData });
+  } else {
+    await prisma.storeShippingRate.create({ data: { storeId: store.id, marketId: market.id, name: "E2E Standard Shipping", ...shippingData } });
+  }
+
+  const taxRate = await prisma.marketTaxRate.findFirst({
+    where: { marketId: market.id, name: "E2E Market Tax" },
+    select: { id: true }
+  });
+  const taxData = {
+    destinationRegion: null, rateBasisPoints: 1000, isInclusive: false,
+    appliesToShipping: true, isActive: true, effectiveFrom: null, effectiveUntil: null, priority: 0
+  };
+  if (taxRate) {
+    await prisma.marketTaxRate.update({ where: { id: taxRate.id }, data: taxData });
+  } else {
+    await prisma.marketTaxRate.create({ data: { marketId: market.id, name: "E2E Market Tax", ...taxData } });
+  }
   for (const [index, adProduct] of [product, detailProduct].entries()) {
     await prisma.adCampaign.create({
       data: {
@@ -75,10 +121,13 @@ async function main() {
   }
   const customer = await ensureUser("e2e-customer@mtjr2.test", "E2E Customer");
   await ensureRole(customer.id, "CUSTOMER");
+  const buyer = await ensureUser("e2e-buyer@mtjr2.test", "E2E Buyer");
+  await ensureRole(buyer.id, "CUSTOMER");
   const admin = await ensureUser("e2e-superadmin@mtjr2.test", "E2E Super Admin");
   await ensureRole(admin.id, "SUPER_ADMIN");
   const sessions = {
     customer: await sessionFor(customer.id, false),
+    buyer: await sessionFor(buyer.id, false),
     seller: await sessionFor(seller.id, true),
     admin: await sessionFor(admin.id, true, true),
     categorySlug: product.categories[0]?.category.slug,
