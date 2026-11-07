@@ -3,7 +3,8 @@ import "server-only";
 import { AuditActorType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { clearSessionCookie, getSessionCookie } from "@/server/identity/session-cookie";
-import { resolveUserSession, revokeUserSession } from "@/server/identity/session";
+import { revokeAllUserSessions, resolveUserSession, revokeUserSession } from "@/server/identity/session";
+import { requireCurrentSession } from "@/server/identity/current-session";
 
 /**
  * Revokes the current cookie-backed session and clears the browser cookie.
@@ -33,6 +34,31 @@ export async function logoutCurrentSession(now = new Date()): Promise<void> {
     }
   } finally {
     // Clear even when the session is expired, already revoked, or lookup fails.
+    await clearSessionCookie();
+  }
+}
+
+/**
+ * Revokes every active session belonging to the authenticated user, including
+ * the current session, and clears the current browser cookie.
+ */
+export async function logoutAllSessions(now = new Date()): Promise<number> {
+  const actor = await requireCurrentSession(now);
+  try {
+    const revokedSessions = await revokeAllUserSessions(actor.userId, now);
+    await prisma.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER,
+        actorId: actor.userId,
+        action: "identity.logout_all.succeeded",
+        resource: "user_session",
+        resourceId: actor.id,
+        occurredAt: now,
+        metadata: { revokedSessions }
+      }
+    });
+    return revokedSessions;
+  } finally {
     await clearSessionCookie();
   }
 }
