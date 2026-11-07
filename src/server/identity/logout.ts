@@ -3,7 +3,7 @@ import "server-only";
 import { AuditActorType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { clearSessionCookie, getSessionCookie } from "@/server/identity/session-cookie";
-import { revokeAllUserSessions, resolveUserSession, revokeUserSession } from "@/server/identity/session";
+import { resolveUserSession, revokeUserSession } from "@/server/identity/session";
 import { requireCurrentSession } from "@/server/identity/current-session";
 
 /**
@@ -45,19 +45,24 @@ export async function logoutCurrentSession(now = new Date()): Promise<void> {
 export async function logoutAllSessions(now = new Date()): Promise<number> {
   const actor = await requireCurrentSession(now);
   try {
-    const revokedSessions = await revokeAllUserSessions(actor.userId, now);
-    await prisma.auditLog.create({
-      data: {
-        actorType: AuditActorType.USER,
-        actorId: actor.userId,
-        action: "identity.logout_all.succeeded",
-        resource: "user_session",
-        resourceId: actor.id,
-        occurredAt: now,
-        metadata: { revokedSessions }
-      }
+    return await prisma.$transaction(async (tx) => {
+      const result = await tx.userSession.updateMany({
+        where: { userId: actor.userId, revokedAt: null },
+        data: { revokedAt: now }
+      });
+      await tx.auditLog.create({
+        data: {
+          actorType: AuditActorType.USER,
+          actorId: actor.userId,
+          action: "identity.logout_all.succeeded",
+          resource: "user_session",
+          resourceId: actor.id,
+          occurredAt: now,
+          metadata: { revokedSessions: result.count }
+        }
+      });
+      return result.count;
     });
-    return revokedSessions;
   } finally {
     await clearSessionCookie();
   }
