@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { requirePlatformSessionStepUp } from "@/server/identity/platform-session-policy";
 import {
   hasPermission,
   hasAnyPermission,
@@ -55,6 +56,12 @@ export async function getUserAuthorizationGrants(
   );
 }
 
+async function enforcePlatformStepUp(userId: string, grants: AuthorizationGrant[], now = new Date()) {
+  if (grants.some((grant) => grant.permissionKey === "platform:manage" && grant.scopeType === "GLOBAL" && grant.scopeId === "GLOBAL")) {
+    await requirePlatformSessionStepUp(userId, now);
+  }
+}
+
 /**
  * Server-side convenience policy. The caller must resolve userId from the
  * authenticated session before invoking this function.
@@ -64,6 +71,7 @@ export async function userHasPermission(
   request: AuthorizationRequest
 ): Promise<boolean> {
   const grants = await getUserAuthorizationGrants(userId, request.now);
+  await enforcePlatformStepUp(userId, grants, request.now);
   return hasPermission(grants, request);
 }
 
@@ -74,6 +82,7 @@ export async function userHasAnyPermission(
   now = new Date()
 ): Promise<boolean> {
   const grants = await getUserAuthorizationGrants(userId, now);
+  await enforcePlatformStepUp(userId, grants, now);
   return hasAnyPermission(
     grants,
     requests.map((request) => ({ ...request, now: request.now ?? now }))
@@ -90,6 +99,7 @@ export async function userHasScopedPermission(
   request: AuthorizationRequest & { scope: { type: string; id: string } }
 ): Promise<boolean> {
   const grants = await getUserAuthorizationGrants(userId, request.now);
+  await enforcePlatformStepUp(userId, grants, request.now);
   const exactScopeGrants = grants.filter(
     (grant) => grant.scopeType === request.scope.type && grant.scopeId === request.scope.id
   );

@@ -11,7 +11,8 @@ import {
   createTotpCode,
   disableMfa,
   getMfaAccessState,
-  verifyMfaSession
+  verifyMfaSession,
+  verifyMfaStepUp
 } from "@/server/identity/mfa";
 import {
   createUserSession,
@@ -291,6 +292,26 @@ describe("identity PostgreSQL integration", () => {
         recoverySessionRow.id,
         recoveryCodes[0]
       )
+    ).resolves.toBe(false);
+
+    const stepUpSession = await createUserSession(registration.userId);
+    const stepUpSessionRow = await prisma.userSession.findUniqueOrThrow({
+      where: { tokenHash: hashSessionToken(stepUpSession.token) },
+      select: { id: true }
+    });
+    const stepUpAt = new Date(nextStep.getTime() + 30_000);
+    const stepUpCode = createTotpCode(enrollment.secret, stepUpAt);
+    await expect(
+      verifyMfaStepUp(registration.userId, stepUpSessionRow.id, stepUpCode, stepUpAt)
+    ).resolves.toBe(true);
+    const stepUpState = await prisma.userSession.findUniqueOrThrow({
+      where: { id: stepUpSessionRow.id },
+      select: { stepUpVerifiedAt: true, stepUpExpiresAt: true }
+    });
+    expect(stepUpState.stepUpVerifiedAt).toEqual(stepUpAt);
+    expect(stepUpState.stepUpExpiresAt?.getTime()).toBe(stepUpAt.getTime() + 10 * 60_000);
+    await expect(
+      verifyMfaStepUp(registration.userId, stepUpSessionRow.id, stepUpCode, stepUpAt)
     ).resolves.toBe(false);
   });
 
