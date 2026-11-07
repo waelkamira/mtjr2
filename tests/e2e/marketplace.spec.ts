@@ -154,13 +154,48 @@ test.describe("seller journey", () => {
 });
 
 test.describe("Super Admin journey", () => {
-  test("control center, analytics and advertising moderation render responsively", async ({ page }) => {
+  test("control center, governance tools, privilege approval and advertising render responsively", async ({ page }) => {
     await signIn(page, sessions.admin);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/admin/dashboard");
     await expect(page.locator("main").last()).toBeVisible();
     await page.goto("/admin/control-panel");
     await expect(page.locator("main").last()).toBeVisible();
+
+    await page.goto("/admin/control-panel/access-catalog");
+    await expect(page.getByRole("heading", { name: /Roles & permissions/i })).toBeVisible();
+    await page.goto("/admin/control-panel/audit-log");
+    await expect(page.getByRole("heading", { name: /Platform audit log/i })).toBeVisible();
+    await page.goto("/admin/control-panel/ai-assistant");
+    await expect(page.getByRole("heading", { name: /AI assistant/i })).toBeVisible();
+    const aiSettingsResponse = await page.request.get("/api/admin/control-panel/ai-assistant");
+    expect(aiSettingsResponse.status()).toBe(200);
+    const aiSettings = await aiSettingsResponse.json() as Record<string, unknown>;
+    expect(aiSettings).not.toHaveProperty("apiKey");
+    expect(JSON.stringify(aiSettings)).not.toContain("GROQ_API_KEY");
+
+    await page.goto("/admin/control-panel/privilege-requests");
+    await page.getByLabel(/User email/i).fill(sessions.privilegeTargetEmail);
+    await page.getByLabel(/Business justification/i).fill("Independent E2E verification of the controlled Super Admin access workflow.");
+    await page.getByRole("button", { name: /Submit access request/i }).click();
+    await expect(page.getByRole("status")).toContainText(/Privilege request submitted/i);
+
+    // The requester must not approve their own request.
+    await page.getByRole("button", { name: /Approve & grant access/i }).first().click();
+    await expect(page.getByRole("alert")).toContainText(/requester cannot approve or reject/i);
+
+    // A second, independent Super Admin can review and approve the pending request.
+    await signIn(page, sessions.adminReviewer);
+    await page.goto("/admin/control-panel/privilege-requests");
+    await page.getByRole("button", { name: /Approve & grant access/i }).first().click();
+    await expect(page.getByRole("status")).toContainText(/Request approved/i);
+    await expect(page.getByText("APPROVED").first()).toBeVisible();
+
+    const auditResponse = await page.request.get("/api/admin/control-panel/audit-log?action=platform.privilege_request.created");
+    expect(auditResponse.status()).toBe(200);
+    const auditPayload = await auditResponse.json() as { events?: Array<{ action: string }> };
+    expect(auditPayload.events?.some((event) => event.action === "platform.privilege_request.created")).toBe(true);
+
     await page.goto("/admin/advertising");
     await expect(page.getByRole("heading", { name: /Advertising review|مراجعة الإعلانات/i })).toBeVisible();
     await page.screenshot({ path: "test-results/admin-desktop.png", fullPage: true });
