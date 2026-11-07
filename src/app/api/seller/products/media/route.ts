@@ -48,12 +48,12 @@ async function uploadToImgur(file: File) {
     body: file,
     signal: AbortSignal.timeout(30_000)
   });
-  const payload = await response.json().catch(() => null) as { data?: { link?: string }; success?: boolean; } | null;
+  const payload = await response.json().catch(() => null) as { data?: { link?: string; deletehash?: string; width?: number; height?: number }; success?: boolean; } | null;
   const url = payload?.data?.link;
   if (!response.ok || !url || !url.startsWith("https://")) {
     throw new Error(`Imgur rejected the upload (HTTP ${response.status}).`);
   }
-  return { url, provider: "imgur" as const };
+  return { url, provider: "imgur" as const, storageKey: payload?.data?.deletehash ? `imgur:${payload.data.deletehash}` : undefined, mimeType: file.type, width: payload?.data?.width, height: payload?.data?.height };
 }
 
 async function uploadToImageKit(file: File) {
@@ -68,11 +68,32 @@ async function uploadToImageKit(file: File) {
     body: form,
     signal: AbortSignal.timeout(30_000)
   });
-  const payload = await response.json().catch(() => null) as { url?: string } | null;
+  const payload = await response.json().catch(() => null) as { url?: string; fileId?: string; width?: number; height?: number } | null;
   if (!response.ok || !payload?.url || !payload.url.startsWith("https://")) {
     throw new Error(`ImageKit rejected the upload (HTTP ${response.status}).`);
   }
-  return { url: payload.url, provider: "imagekit" as const };
+  return { url: payload.url, provider: "imagekit" as const, storageKey: payload.fileId ? `imagekit:${payload.fileId}` : undefined, mimeType: file.type, width: payload.width, height: payload.height };
+}
+
+async function uploadToCloudinary(file: File) {
+  // The unsigned preset is public by design; never send the legacy API secret to the browser or this endpoint.
+  const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME)?.trim();
+  const uploadPreset = (process.env.CLOUDINARY_UPLOAD_PRESET || process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_NAME)?.trim();
+  if (!cloudName || !uploadPreset) throw new Error("Cloudinary unsigned upload is not configured.");
+  const form = new FormData();
+  form.append("file", file, file.name || "product-image");
+  form.append("upload_preset", uploadPreset);
+  form.append("folder", "matjar/products");
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`, {
+    method: "POST",
+    body: form,
+    signal: AbortSignal.timeout(30_000)
+  });
+  const payload = await response.json().catch(() => null) as { secure_url?: string; public_id?: string; width?: number; height?: number } | null;
+  if (!response.ok || !payload?.secure_url?.startsWith("https://")) {
+    throw new Error(`Cloudinary rejected the upload (HTTP ${response.status}). Check that the configured preset allows unsigned uploads.`);
+  }
+  return { url: payload.secure_url, provider: "cloudinary" as const, storageKey: payload.public_id ? `cloudinary:${payload.public_id}` : undefined, mimeType: file.type, width: payload.width, height: payload.height };
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -106,6 +127,7 @@ export async function POST(request: Request): Promise<Response> {
   const errors: string[] = [];
   const imgurConfigured = Boolean(process.env.IMGUR_CLIENT_IDS?.trim() || process.env.IMGUR_CLIENT_ID?.trim());
   const imageKitConfigured = Boolean(process.env.IMAGEKIT_PRIVATE_KEY?.trim());
+  const cloudinaryConfigured = Boolean((process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME)?.trim() && (process.env.CLOUDINARY_UPLOAD_PRESET || process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_NAME)?.trim());
 
   if (imgurConfigured) {
     try {
@@ -129,11 +151,22 @@ export async function POST(request: Request): Promise<Response> {
     errors.push("ImageKit is not configured.");
   }
 
-  const configured = imgurConfigured || imageKitConfigured;
+  if (cloudinaryConfigured) {
+    try {
+      const result = await uploadToCloudinary(file);
+      return Response.json({ success: true, data: result }, { headers: { "Cache-Control": "no-store" } });
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : "Cloudinary upload failed.");
+    }
+  } else {
+    errors.push("Cloudinary unsigned upload is not configured.");
+  }
+
+  const configured = imgurConfigured || imageKitConfigured || cloudinaryConfigured;
   return jsonError(
     configured
       ? "Image upload providers are unavailable: " + errors.join(" ")
-      : "Image upload is not configured. Set IMGUR_CLIENT_IDS (or IMGUR_CLIENT_ID) and/or IMAGEKIT_PRIVATE_KEY in the server environment.",
+      : "Image upload is not configured. Set IMGUR_CLIENT_IDS, IMAGEKIT_PRIVATE_KEY, or CLOUDINARY_CLOUD_NAME with CLOUDINARY_UPLOAD_PRESET in the server environment.",
     configured ? 502 : 503
   );
 }
