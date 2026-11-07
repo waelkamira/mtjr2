@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import ProductDetail from "@/features/storefront/product-detail";
+import { listSponsoredCampaigns } from "@/server/advertising/delivery";
 import { getDiscoverableProduct } from "@/server/catalog/discovery";
 import { getPreferredLocale } from "@/server/locale";
 import { translate } from "@/lib/locale";
@@ -43,5 +45,21 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  return <ProductDetail slug={slug} />;
+  const locale = await getPreferredLocale();
+  const product = await getDiscoverableProduct(slug, locale);
+  if (!product) notFound();
+
+  const marketId = product.variants.flatMap((variant) => variant.prices).find((price) => price.marketId)?.marketId;
+  let sponsored = [];
+  if (marketId) {
+    try {
+      sponsored = await listSponsoredCampaigns({ marketId, query: product.name, limit: 4 });
+    } catch {
+      sponsored = [];
+    }
+  }
+  return <ProductDetail
+    initialProduct={product}
+    initialSponsored={sponsored.filter((item) => item.product.id !== product.id)}
+  />;
 }
