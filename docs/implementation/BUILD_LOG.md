@@ -2482,3 +2482,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Corrected the policy test to assert the canonical shared authentication error class and updated the isolated E2E admin fixture to carry a valid fresh step-up window. The fixture uses a disposable CI database only.
 - Verification on exact PR head `a53a02498b9982006f27d4636a7fd48f1cd019bc`: CI run [42397330866](https://github.com/waelkamira/mtjr2/actions/runs/42397330866) passed (Prisma validate/migrate/generate, typecheck, lint, unit tests, production build, API security inventory, and UI mutation-feedback inventory); Platform PostgreSQL Integration [42397330816](https://github.com/waelkamira/mtjr2/actions/runs/42397330816) passed; Browser E2E [42397330893](https://github.com/waelkamira/mtjr2/actions/runs/42397330893) passed including customer, seller, Super Admin, sponsored placements, and responsive checks.
 - Merged as PR #60 in commit `1501dcd169941a10d2bb780005bd7f86d63c1319`. The Vercel preview check remained unavailable due to the account's deployment quota; no Vercel deployment or production environment/database change was attempted.
+
+
+## 2026-11-07 — Super Admin independent approval and governance verification
+
+- Hardened the two-person privilege workflow so neither the requester nor the target account can approve or reject a platform-wide access request. Only a separate Super Admin reviewer can decide it; approval grants the canonical global `SUPER_ADMIN` role.
+- Added a disposable PostgreSQL lifecycle test covering requester self-review denial, target self-approval denial, independent approval, persisted role assignment, and audit history.
+- Extended browser E2E across the customer-denial boundary, access catalogue, platform audit log, AI assistant settings, privilege request creation, requester denial, independent reviewer approval, target access denial before approval, mandatory MFA enrollment after approval, and AI secret non-disclosure.
+- Clarified the two-person approval rule in the Super Admin UI. Added bilingual assertions for the Arabic-default browser environment and scoped error assertions to the page content to avoid matching Next.js' route announcer.
+- Expanded the identity PostgreSQL workflow path filters to include Super Admin service/API/UI, bootstrap, and identity/admin tests so future changes cannot silently skip the database gate.
+- The API security inventory on the exact PR head reported 105/105 state-changing handlers with request/system-boundary evidence and zero routes requiring review. The UI mutation inventory reported 54/54 mutation-bearing files with success/error feedback and zero files requiring review.
+
+**Verification**
+- Exact PR head `d023dfe4aeba1734834e14008c1991832ed090b6`: General CI [42401505157](https://github.com/waelkamira/mtjr2/actions/runs/42401505157) passed; Platform PostgreSQL Integration [42401505263](https://github.com/waelkamira/mtjr2/actions/runs/42401505263) passed (3 integration files, 9 tests); Browser E2E [42401505171](https://github.com/waelkamira/mtjr2/actions/runs/42401505171) passed (customer, buyer checkout, seller, and Super Admin governance journeys).
+- Merged as PR #64 in commit `84ae9ecec4ecd2796533dd3551d346ee43fb5849`.
+- No production database, Vercel settings, production secrets, or provider credentials were changed. Deployment and live external-provider smoke tests remain separate release gates.
