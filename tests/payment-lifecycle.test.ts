@@ -161,6 +161,36 @@ describe("payment lifecycle safety", () => {
     expect(mocks.getPaymentProvider().createIntent).not.toHaveBeenCalled();
   });
 
+  it("preserves a partially refunded payment when a later success webhook is replayed", async () => {
+    const occurredAt = new Date("2026-11-05T12:00:00.000Z");
+    mocks.txPaymentFindUnique
+      .mockResolvedValueOnce({ id: "payment-1", orderId: "order-1" })
+      .mockResolvedValueOnce({
+        id: "payment-1", orderId: "order-1", provider: "test_provider",
+        providerReference: "provider-ref-1", amountMinor: BigInt("1500"), currencyCode: "EUR",
+        status: PaymentStatus.PARTIALLY_REFUNDED, lastProviderEventAt: new Date("2026-11-05T11:00:00.000Z"),
+        succeededAt: new Date("2026-11-04T10:00:00.000Z"),
+        order: { status: OrderStatus.CONFIRMED, orderNumber: "ORD-1", userId: "buyer-1", vendorOrders: [] }
+      });
+    mocks.txWebhookEventCreate.mockResolvedValue({ id: "webhook-1" });
+
+    const result = await processVerifiedPaymentEvent({
+      providerKey: "test_provider",
+      event: {
+        eventId: "evt-late-success", eventType: "succeeded", providerReference: "provider-ref-1",
+        amountMinor: "1500", currencyCode: "EUR", occurredAt
+      },
+      payloadHash: "b".repeat(64)
+    });
+
+    expect(result).toMatchObject({ accepted: true, duplicate: false, paymentId: "payment-1", status: PaymentStatus.PARTIALLY_REFUNDED });
+    expect(tx.payment.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: PaymentStatus.PARTIALLY_REFUNDED })
+    }));
+    expect(mocks.txWebhookEventUpdate).toHaveBeenCalledOnce();
+  });
+
+
   it("rejects a verified webhook whose amount or currency does not match the stored payment", async () => {
     mocks.txPaymentFindUnique
       .mockResolvedValueOnce({ id: "payment-1", orderId: "order-1" })
