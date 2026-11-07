@@ -50,7 +50,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) notFound();
 
   const marketId = product.variants.flatMap((variant) => variant.prices).find((price) => price.marketId)?.marketId;
-  let sponsored = [];
+  let sponsored: Awaited<ReturnType<typeof listSponsoredCampaigns>> = [];
   if (marketId) {
     try {
       sponsored = await listSponsoredCampaigns({ marketId, query: product.name, limit: 4 });
