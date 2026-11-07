@@ -1,3 +1,4 @@
+import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/current-session";
 import { z } from "zod";
 import { createSearchSynonym, listSearchSynonyms } from "@/server/search/synonyms";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
@@ -7,8 +8,8 @@ export const runtime = "nodejs";
 function failure(error: unknown): Response {
   if (error instanceof z.ZodError) return Response.json({ error: "Invalid search synonym.", issues: error.issues }, { status: 400 });
   const message = error instanceof Error ? error.message : "Unable to manage search synonyms.";
-  if (/authentication required/i.test(message)) return Response.json({ error: "Authentication required." }, { status: 401 });
-  if (/permission|administration/i.test(message)) return Response.json({ error: message }, { status: 403 });
+  if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+  if (error instanceof PermissionDeniedError) return Response.json({ error: message }, { status: 403 });
   if (/already exists/i.test(message)) return Response.json({ error: message }, { status: 409 });
   return Response.json({ error: "Unable to manage search synonyms." }, { status: 500 });
 }
