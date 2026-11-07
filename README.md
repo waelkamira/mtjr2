@@ -381,3 +381,5 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 - See [Advertising, refunds, and identity operations](docs/implementation/ADVERTISING_REFUNDS_AND_IDENTITY_RUNBOOK.md) for the operating rules and deployment prerequisites.
 
 - Google OAuth validates RS256 ID-token signatures against Google's JWKS and binds the callback to a one-time nonce; customer registration receives the seeded CUSTOMER role while seller applications remain pending without seller permissions.
+
+- Super Admin global actions now require a fresh, non-replayed TOTP step-up tied to the active session, expiring after ten minutes. Successful checks are audited. Added the session migration and verification flow; PR #60 merged after CI, PostgreSQL integration, and browser E2E all passed. See [Build Log](docs/implementation/BUILD_LOG.md) for exact commit and run evidence.
