@@ -379,3 +379,5 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 - Return refunds are recorded through an idempotent, balance-limited manual finance workflow after warehouse receipt; payment-success webhook replays cannot overwrite refund states.
 - Account session management includes an audited sign-out-all-devices action.
 - See [Advertising, refunds, and identity operations](docs/implementation/ADVERTISING_REFUNDS_AND_IDENTITY_RUNBOOK.md) for the operating rules and deployment prerequisites.
+
+- Google OAuth validates RS256 ID-token signatures against Google's JWKS and binds the callback to a one-time nonce; customer registration receives the seeded CUSTOMER role while seller applications remain pending without seller permissions.
