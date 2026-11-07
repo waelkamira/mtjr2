@@ -36,18 +36,16 @@ async function hasValidImageSignature(file: File): Promise<boolean> {
   if (file.type === "image/png") return starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
   if (file.type === "image/gif") return starts(0x47, 0x49, 0x46, 0x38);
   if (file.type === "image/webp") return starts(0x52, 0x49, 0x46, 0x46) && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
-  if (file.type === "image/avif") return bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
+  if (file.type === "image/avif") return bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70 && ((bytes[8] === 0x61 && bytes[9] === 0x76 && bytes[10] === 0x69 && bytes[11] === 0x66) || (bytes[8] === 0x61 && bytes[9] === 0x76 && bytes[10] === 0x69 && bytes[11] === 0x73));
   return false;
 }
 
 async function uploadToImgur(file: File) {
   const clientId = getNextImgurClientId();
-  const form = new FormData();
-  form.append("image", file, file.name || "product-image");
   const response = await fetch("https://api.imgur.com/3/image", {
     method: "POST",
-    headers: { Authorization: `Client-ID ${clientId}` },
-    body: form,
+    headers: { Authorization: `Client-ID ${clientId}`, "Content-Type": file.type },
+    body: file,
     signal: AbortSignal.timeout(30_000)
   });
   const payload = await response.json().catch(() => null) as { data?: { link?: string }; success?: boolean; } | null;
