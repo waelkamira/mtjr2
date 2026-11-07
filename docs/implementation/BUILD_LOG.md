@@ -2497,3 +2497,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact PR head `d023dfe4aeba1734834e14008c1991832ed090b6`: General CI [42401505157](https://github.com/waelkamira/mtjr2/actions/runs/42401505157) passed; Platform PostgreSQL Integration [42401505263](https://github.com/waelkamira/mtjr2/actions/runs/42401505263) passed (3 integration files, 9 tests); Browser E2E [42401505171](https://github.com/waelkamira/mtjr2/actions/runs/42401505171) passed (customer, buyer checkout, seller, and Super Admin governance journeys).
 - Merged as PR #64 in commit `84ae9ecec4ecd2796533dd3551d346ee43fb5849`.
 - No production database, Vercel settings, production secrets, or provider credentials were changed. Deployment and live external-provider smoke tests remain separate release gates.
+
+
+## 2026-11-07 — Anonymous API boundary hardening (PR #68)
+
+- Corrected coupon and search-synonym admin read endpoints to return typed 401/403 responses for anonymous/unauthorized callers instead of generic 500 responses.
+- Hardened all four cron workers to fail closed with 401 when no valid cron credential is supplied, without disclosing whether the secret is configured.
+- Extended the anonymous API boundary sweep to exercise trusted-proxy and same-origin behavior; the suite covers 165 route/method combinations while explicitly excluding documented public/guest routes and accepting only explicit denial/validation/conflict/rate-limit outcomes.
+- Exact PR head: 2207295893cde027e123518ea9b29a169dcc0cc0. General CI [42403107066](https://github.com/waelkamira/mtjr2/actions/runs/42403107066) passed; Browser E2E [42403107025](https://github.com/waelkamira/mtjr2/actions/runs/42403107025) passed. Earlier failed/cancelled attempts were superseded by these successful exact-head runs.
+- Merged PR #68 as 16b185f765d4e7dbf68ee25907c41d17efbbea45. Main-branch CI was triggered after merge and is being checked separately.
+- This anonymous boundary sweep is not a substitute for per-role, ownership, or store-scope authorization tests. No production database, credentials, Vercel configuration, or deployment was changed.
