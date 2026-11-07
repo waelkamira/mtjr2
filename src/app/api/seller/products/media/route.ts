@@ -92,13 +92,11 @@ export async function POST(request: Request): Promise<Response> {
       { name: "Imgur", upload: () => uploadToImgur(file) },
       { name: "ImageKit", upload: () => uploadToImageKit(file) }
     ];
-    const failures: string[] = [];
     for (const provider of providers) {
       try {
         const result = await provider.upload();
         return Response.json({ success: true, data: result });
       } catch {
-        failures.push(provider.name);
       }
     }
     const configured = Boolean(process.env.IMGUR_CLIENT_ID || process.env.IMAGEKIT_PRIVATE_KEY);
