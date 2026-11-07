@@ -2,6 +2,10 @@ import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 
 const sessions = JSON.parse(fs.readFileSync(".e2e-sessions.json", "utf8")) as Record<string, string>;
+async function expectNoHorizontalOverflow(page: import("@playwright/test").Page) {
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+}
+
 async function signIn(page: import("@playwright/test").Page, token: string) {
   await page.context().addCookies([{
     name: "mtjr2_session", value: token, url: "http://127.0.0.1:3000",
@@ -70,7 +74,15 @@ test.describe("customer journey", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/account/orders");
     await expect(page.locator("main")).toBeVisible();
+    await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/customer-mobile.png", fullPage: true });
+    await page.goto("/account/sessions");
+    const signOutAll = page.getByRole("button", { name: /Sign out all devices|تسجيل الخروج من جميع الأجهزة/i });
+    await expect(signOutAll).toBeVisible();
+    await signOutAll.click();
+    await expect(page.getByRole("status")).toContainText(/Signed out of|تم تسجيل الخروج من/);
+    const sessionsStatus = await page.evaluate(async () => (await fetch("/api/account/sessions", { cache: "no-store" })).status);
+    expect(sessionsStatus).toBe(401);
   });
 });
 
@@ -86,6 +98,7 @@ test.describe("seller journey", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
     await expect(page.getByRole("heading", { name: /Advertising campaigns|الحملات الإعلانية/i })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-mobile.png", fullPage: true });
   });
 });
@@ -104,6 +117,7 @@ test.describe("Super Admin journey", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
     await expect(page.getByRole("heading", { name: /Advertising review|مراجعة الإعلانات/i })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/admin-mobile.png", fullPage: true });
   });
 });
