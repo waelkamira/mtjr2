@@ -430,7 +430,7 @@ export async function verifyMfaStepUp(
   code: string,
   now = new Date()
 ): Promise<boolean> {
-  if (!/^\\d{6}$/.test(code)) return false;
+  if (!/^\d{6}$/.test(code)) return false;
 
   try {
     return await prisma.$transaction(async (tx) => {
