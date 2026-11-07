@@ -44,10 +44,17 @@ const rows = walk(apiRoot).map((file) => {
   const isOAuthStart = relative === "auth/google/start/route.ts" && /randomBytes|code_challenge_method|mtjr_google_state/.test(allSource);
   const isPublicPreferenceMutation = relative === "locale/route.ts" && allSource.includes("validateIdentityMutationRequest(");
   const isCronOrWebhook = (relative.startsWith("cron/") || relative.startsWith("webhooks/")) && evidence.length > 0;
+  const hasMutationMethod = methods.some((method) => method !== "GET");
+  const hasRequestBoundary = allSource.includes("validateIdentityMutationRequest(") ||
+    (relative.startsWith("webhooks/") && allSource.includes("verifyWebhook(")) ||
+    (relative.startsWith("cron/") && allSource.includes("authorized(request)"));
+  const mutationBoundary = !hasMutationMethod ? "NOT_APPLICABLE" : hasRequestBoundary ? "PROTECTED" : "REVIEW_REQUIRED";
   const classification = isPublicRead ? "PUBLIC_READ_ALLOWLIST" : isPublicPreferenceMutation ? "PUBLIC_PREFERENCE_MUTATION_CSRF_GUARDED" : isOAuthStart ? "OAUTH_START_STATE_PKCE" : isPublicIdentity ? "IDENTITY_FLOW_GUARD" : isCronOrWebhook ? "SIGNED_SYSTEM_ENDPOINT" : evidence.length ? "SERVER_GUARD_EVIDENCE" : "REVIEW_REQUIRED";
-  return { relative, methods: [...new Set(methods)].join(","), classification, evidence: evidence.slice(0, 6).join("; ") };
+  return { relative, methods: [...new Set(methods)].join(","), classification, mutationBoundary, evidence: evidence.slice(0, 6).join("; ") };
 });
-const unresolved = rows.filter((row) => row.classification === "REVIEW_REQUIRED");
+const unresolved = rows.filter((row) => row.classification === "REVIEW_REQUIRED" || row.mutationBoundary === "REVIEW_REQUIRED");
+const mutations = rows.filter((row) => row.mutationBoundary !== "NOT_APPLICABLE");
+const unguardedMutations = mutations.filter((row) => row.mutationBoundary === "REVIEW_REQUIRED");
 const lines = [
   "# API route security inventory",
   "",
