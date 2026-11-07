@@ -42,7 +42,7 @@ const rows = walk(apiRoot).map((file) => {
   const isPublicRead = methods.length > 0 && methods.every((method) => method === "GET") && publicReads.has(relative);
   const isPublicIdentity = relative.startsWith("auth/") && evidence.length > 0;
   const isOAuthStart = relative === "auth/google/start/route.ts" && /randomBytes|code_challenge_method|mtjr_google_state/.test(allSource);
-  const isPublicPreferenceMutation = relative === "locale/route.ts" && /validateIdentityMutationRequest\\s*\\(/.test(allSource);
+  const isPublicPreferenceMutation = relative === "locale/route.ts" && allSource.includes("validateIdentityMutationRequest(");
   const isCronOrWebhook = (relative.startsWith("cron/") || relative.startsWith("webhooks/")) && evidence.length > 0;
   const classification = isPublicRead ? "PUBLIC_READ_ALLOWLIST" : isPublicPreferenceMutation ? "PUBLIC_PREFERENCE_MUTATION_CSRF_GUARDED" : isOAuthStart ? "OAUTH_START_STATE_PKCE" : isPublicIdentity ? "IDENTITY_FLOW_GUARD" : isCronOrWebhook ? "SIGNED_SYSTEM_ENDPOINT" : evidence.length ? "SERVER_GUARD_EVIDENCE" : "REVIEW_REQUIRED";
   return { relative, methods: [...new Set(methods)].join(","), classification, evidence: evidence.slice(0, 6).join("; ") };
