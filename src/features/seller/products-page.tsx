@@ -220,6 +220,7 @@ export default function SellerProductsPage() {
             const nextId = e.target.value;
             setStoreId(nextId);
             setProducts([]);
+            setUploadedImages([]);
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
             setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
