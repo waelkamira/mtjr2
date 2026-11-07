@@ -76,7 +76,13 @@ test.describe("customer journey", () => {
     await expect(page.locator("main")).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/customer-mobile.png", fullPage: true });
+    const sessionsLoaded = page.waitForResponse(response =>
+      response.url().includes("/api/account/sessions") && response.request().method() === "GET"
+    );
     await page.goto("/account/sessions");
+    await page.waitForLoadState("networkidle");
+    const sessionsResponse = await sessionsLoaded;
+    expect(sessionsResponse.status()).toBe(200);
     const signOutAll = page.getByRole("button", { name: /Sign out all devices|تسجيل الخروج من جميع الأجهزة/i });
     await expect(signOutAll).toBeVisible();
     await expect(page.getByText(/Loading sessions|جارٍ تحميل الجلسات/)).toHaveCount(0);
