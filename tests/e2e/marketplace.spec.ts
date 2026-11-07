@@ -189,7 +189,7 @@ test.describe("Super Admin journey", () => {
 
     // The requester must not approve their own request.
     await page.getByRole("button", { name: /Approve & grant access|الموافقة ومنح الصلاحية/i }).first().click();
-    await expect(page.getByRole("alert")).toContainText(/requester cannot approve or reject/i);
+    await expect(page.locator("main").getByRole("alert")).toContainText(/requester cannot approve or reject/i);
 
     // The target has no platform access before approval.
     await signIn(page, sessions.privilegeTarget);
