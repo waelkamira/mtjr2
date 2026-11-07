@@ -180,12 +180,13 @@ export default function SellerProductsPage() {
       const form = new FormData();
       form.append("file", image.file, image.file.name);
       form.append("storeId", storeId);
-      const result = await json<{ success: true; data: { url: string; provider: string } }>(
+      const result = await json<{ success: true; data: { url: string; provider: string; mimeType?: string; storageKey?: string; width?: number; height?: number } }>(
         await fetch("/api/seller/products/media", { method: "POST", body: form })
       );
       setUploadedImages((current) => current.map((entry) => entry.id === id
-        ? { ...entry, url: result.data.url, provider: result.data.provider, status: "ready", error: undefined }
+        ? { ...entry, url: result.data.url, provider: result.data.provider, mimeType: result.data.mimeType ?? image.file.type, storageKey: result.data.storageKey, width: result.data.width, height: result.data.height, status: "ready", error: undefined }
         : entry));
+      setError("");
       toast.success(translate(locale, "Image uploaded successfully.", "تم رفع الصورة بنجاح."));
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "فشل رفع الصورة.");
