@@ -76,7 +76,10 @@ test.describe("customer journey", () => {
     await expect(page.locator("main")).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/customer-mobile.png", fullPage: true });
+    page.on("pageerror", error => console.log("browser pageerror:", error.message));
+    page.on("console", message => { if (message.type() === "error") console.log("browser console error:", message.text()); });
     await page.goto("/account/sessions");
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("heading", { name: /Active sessions|الجلسات النشطة/i })).toBeVisible();
     const sessionsResponse = await page.request.get("/api/account/sessions", { headers: { "Cache-Control": "no-store" } });
     expect(sessionsResponse.status()).toBe(200);
