@@ -55,17 +55,21 @@ const rows = walk(apiRoot).map((file) => {
 const unresolved = rows.filter((row) => row.classification === "REVIEW_REQUIRED" || row.mutationBoundary === "REVIEW_REQUIRED");
 const mutations = rows.filter((row) => row.mutationBoundary !== "NOT_APPLICABLE");
 const unguardedMutations = mutations.filter((row) => row.mutationBoundary === "REVIEW_REQUIRED");
+const tick = String.fromCharCode(96);
 const lines = [
   "# API route security inventory",
   "",
-  `- Route handlers discovered: **${rows.length}**`,
-  `- Routes with explicit/indirect guard evidence: **${rows.length - unresolved.length}**`,
-  `- Public GET routes explicitly allowlisted: **${rows.filter((row) => row.classification === "PUBLIC_READ_ALLOWLIST").length}**`,
-  `- Routes requiring manual review: **${unresolved.length}**`,
+  "- Route handlers discovered: **" + rows.length + "**",
+  "- Routes with explicit/indirect guard evidence: **" + (rows.length - unresolved.length) + "**",
+  "- Public GET routes explicitly allowlisted: **" + rows.filter((row) => row.classification === "PUBLIC_READ_ALLOWLIST").length + "**",
+  "- Routes requiring manual review (classification or mutation boundary): **" + unresolved.length + "**",
+  "- State-changing routes discovered: **" + mutations.length + "**",
+  "- State-changing routes with request/system boundary evidence: **" + (mutations.length - unguardedMutations.length) + "**",
+  "- State-changing routes requiring review: **" + unguardedMutations.length + "**",
   "",
-  "| Route | Methods | Classification | Guard evidence |",
-  "|---|---|---|---|",
-  ...rows.map((row) => `| \`${row.relative}\` | ${row.methods || "none"} | ${row.classification} | ${row.evidence.replace(/\|/g, "\|")} |`)
+  "| Route | Methods | Classification | Mutation boundary | Guard evidence |",
+  "|---|---|---|---|---|",
+  ...rows.map((row) => "| " + tick + row.relative + tick + " | " + (row.methods || "none") + " | " + row.classification + " | " + row.mutationBoundary + " | " + row.evidence.replace(/\|/g, "\\|") + " |")
 ];
 const report = lines.join("\n") + "\n";
 fs.writeFileSync("api-route-security-report.md", report);
