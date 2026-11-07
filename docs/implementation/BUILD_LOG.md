@@ -2507,3 +2507,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact PR head: 2207295893cde027e123518ea9b29a169dcc0cc0. General CI [42403107066](https://github.com/waelkamira/mtjr2/actions/runs/42403107066) passed; Browser E2E [42403107025](https://github.com/waelkamira/mtjr2/actions/runs/42403107025) passed. Earlier failed/cancelled attempts were superseded by these successful exact-head runs.
 - Merged PR #68 as 16b185f765d4e7dbf68ee25907c41d17efbbea45. Main-branch CI was triggered after merge and is being checked separately.
 - This anonymous boundary sweep is not a substitute for per-role, ownership, or store-scope authorization tests. No production database, credentials, Vercel configuration, or deployment was changed.
+
+
+## 2026-11-07 — Financial lifecycle PostgreSQL gate correction
+
+- Found that the Platform PostgreSQL Integration workflow did not trigger on payment/refund/webhook/shipment service and route changes. Added explicit PR and main-push path filters for payment services, payment intent/webhook/admin APIs, seller shipment routes, refund/return/shipping/payment/order tests.
+- The corrected filter triggered the full disposable PostgreSQL workflow on main commit `0d0fab6f47fdf49396022331f77f5612616a8d44` (run [42404238983](https://github.com/waelkamira/mtjr2/actions/runs/42404238983)): all committed migrations deployed successfully, all existing PostgreSQL integration tests passed (3 files / 9 tests), and demo seed repeatability passed twice (80 products, 4 stores, 80 inventory rows).
+- General CI passed on the subsequent documentation/registry head `f05480a83fe3126f0183e51f990e47216fb14098` (run [42404307099](https://github.com/waelkamira/mtjr2/actions/runs/42404307099)): Prisma validation/migration deploy/generation, typecheck, lint, unit tests, production build, API security inventory and UI mutation-feedback inventory all succeeded.
+- The trigger correction makes future payment/refund/shipment changes run the PostgreSQL gate; it does not itself prove a live payment provider, refund provider, or carrier integration. No production database, live provider, Vercel configuration, or deployment was touched.
