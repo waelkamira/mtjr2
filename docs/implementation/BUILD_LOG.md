@@ -2562,3 +2562,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Verification boundary**
 - Source changes are committed to `main`. No live upload can succeed until at least one valid provider credential is configured server-side (`IMGUR_CLIENT_IDS` / `IMGUR_CLIENT_ID` or `IMAGEKIT_PRIVATE_KEY`). The earlier 503 response is consistent with no provider being configured; the new endpoint reports this explicitly.
 - Vercel project environment inventory contains legacy Cloudinary cloud-name and upload-preset values, but no `IMGUR_CLIENT_IDS` or `IMAGEKIT_PRIVATE_KEY`. Cloudinary is therefore the configured fallback candidate; its preset must allow unsigned uploads. No live provider upload or production browser test is claimed. The latest observed Vercel check is blocked by the account build-rate limit; typecheck/build must be checked on the exact resulting commit before marking this workflow verified.
+
+
+**Vercel production environment repair**
+- Added production `AUTH_SECRET` by reusing the existing 43-character `NEXTAUTH_SECRET` value rather than generating a new signing key. This avoids unnecessary key rotation and preserves compatibility with any existing cryptographic material.
+- Added the canonical production `APP_URL` required by the current application environment validator.
+- Added server-only `CLOUDINARY_CLOUD_NAME` and `CLOUDINARY_UPLOAD_PRESET` variables for Preview and Production, sourced from the existing Cloudinary configuration. The unsigned preset still needs to accept unsigned uploads for the live provider request to succeed.
+- These environment changes do not themselves prove a successful build or image upload. The first build attempt on commit `b438e2190e93ae89732da1ab1e8cb830898aa6b6` compiled the application bundle and completed TypeScript, then failed during page-data collection because Production lacked `AUTH_SECRET` (and `APP_URL` was also absent). A new deployment is required to verify the corrected environment.
