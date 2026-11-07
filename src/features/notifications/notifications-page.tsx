@@ -99,7 +99,7 @@ export default function NotificationsPage() {
     return "/notifications";
   }
 
-  return <main className="min-h-screen bg-[var(--background)]"><header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5"><div className="mx-auto flex max-w-4xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><Link href="/account/profile" className="text-sm">{t("My account", "حسابي")}</Link></div></header>
+  return <main className="min-h-screen bg-[var(--background)]"><header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5"><div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><Link href="/account/profile" className="text-sm">{t("My account", "حسابي")}</Link></div></header>
     <div className="mx-auto max-w-4xl px-5 py-10"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Account updates", "تحديثات الحساب")}</p><div className="mt-2 flex items-end justify-between gap-3"><h1 className="text-3xl font-semibold text-[var(--color-ink-950)]">{t("Notifications", "الإشعارات")}</h1><p className="text-sm text-[var(--muted)]">{unreadCount} {t("unread", "غير مقروء")}</p></div>
       {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
       {notice && <p role="status" className="mt-5 rounded-xl bg-[var(--color-sage-100)] p-4 text-sm text-[var(--color-ink-800)]">{notice}</p>}
