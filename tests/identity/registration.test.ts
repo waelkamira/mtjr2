@@ -6,6 +6,8 @@ const { prismaMock, txMock } = vi.hoisted(() => {
   const tx = {
     user: { create: vi.fn(), updateMany: vi.fn() },
     seller: { create: vi.fn() },
+    role: { findUnique: vi.fn() },
+    userRoleAssignment: { create: vi.fn() },
     userConsent: { createMany: vi.fn() },
     verificationToken: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     auditLog: { create: vi.fn() }
@@ -32,6 +34,7 @@ const now = new Date("2026-11-03T12:00:00.000Z");
 describe("registration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    txMock.role.findUnique.mockResolvedValue({ id: "customer-role-1" });
     prismaMock.$transaction.mockImplementation(
       (callback: (client: typeof txMock) => unknown) => callback(txMock)
     );
@@ -71,6 +74,10 @@ describe("registration", () => {
     expect(txMock.verificationToken.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ userId: "user-1", purpose: "EMAIL_VERIFICATION", tokenHash: expect.any(String), expiresAt: result.verificationExpiresAt })
     }));
+    expect(txMock.role.findUnique).toHaveBeenCalledWith({ where: { key: "CUSTOMER" }, select: { id: true } });
+    expect(txMock.userRoleAssignment.create).toHaveBeenCalledWith({
+      data: { userId: "user-1", roleId: "customer-role-1", scopeType: "GLOBAL", scopeId: "GLOBAL" }
+    });
     expect(txMock.userConsent.createMany).toHaveBeenCalledWith({
       data: expect.arrayContaining([
         expect.objectContaining({ type: ConsentType.TERMS_OF_SERVICE, granted: true }),
@@ -104,6 +111,8 @@ describe("registration", () => {
         status: "PENDING"
       }
     });
+    expect(txMock.role.findUnique).not.toHaveBeenCalled();
+    expect(txMock.userRoleAssignment.create).not.toHaveBeenCalled();
   });
 
   it("returns an identity conflict before hashing or inserting an existing email", async () => {

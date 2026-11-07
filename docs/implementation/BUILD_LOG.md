@@ -2457,3 +2457,19 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Platform PostgreSQL Integration run [42251383098](https://github.com/waelkamira/mtjr2/actions/runs/42251383098) passed on the same commit: migration replay, baseline role/permission seed, PostgreSQL integration suite, demo catalog seed, and seed repeatability.
 - The browser E2E journeys listed above remain unverified; keep PR #35 in Draft until those are exercised.
 - No Vercel access, deployment, environment changes, production database changes, or live Groq API smoke test were performed.
+
+
+## 2026-11-07 — Advertising, API security, and browser verification
+
+- Added sponsored ad delivery to product discovery, search, category discovery, and product detail.
+- Added campaign targeting/moderation, idempotent impression/click events, CPC spend ledger, total/daily budget enforcement, monthly store invoices, and manual external-reference settlement.
+- Added explicit API mutation-boundary and UI feedback inventories as CI gates.
+- Corrected missing same-origin checks on locale changes, customer return creation, and admin return review.
+- Fixed the monthly invoice worker Bearer token parsing and added authorization tests.
+- Product detail now receives server-rendered product and sponsored-ad data, avoiding a blank client-only loading state on direct navigation.
+- Browser E2E covers customer, seller, Super Admin, sponsored placements, click idempotency, and responsive layouts.
+- The latest completed CI audit artifact reported 159 API route handlers, 101 state-changing handlers with request/system boundary evidence, and zero unguarded state-changing routes. The UI feedback inventory reported 52/52 mutation-bearing files with an appropriate success/error feedback path.
+- Preview deployment requires a preview-only `AUTH_SECRET`; the application derives `APP_URL` from Vercel's unique preview URL only for Preview deployments. Production still requires its own dedicated `AUTH_SECRET` and stable `APP_URL`.
+
+- Replaced Google tokeninfo-only identity checks with local RS256/JWKS ID-token signature verification, audience/issuer/time/email checks, nonce binding, and constant-time OAuth state comparison.
+- Assign the seeded GLOBAL CUSTOMER role for password and Google customer registration; keep seller applications PENDING without seller permissions until approval. Added unit and PostgreSQL integration assertions.

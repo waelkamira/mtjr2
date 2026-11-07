@@ -370,3 +370,14 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 
 - Windows/PowerShell local setup using an isolated PostgreSQL `mtjr2_demo` database and the 80-product demo catalog: [Local development guide](docs/development/LOCAL_WINDOWS_SETUP.md).
 - The canonical application URL is server-only `APP_URL`; do not use a `NEXT_PUBLIC_*` prefix for server-side configuration.
+
+
+## Marketplace operations added (2026-11-07)
+
+- Sponsored advertising delivery is wired into product discovery, search, category discovery, and product detail, with campaign moderation, targeting, click/impression tracking, budget enforcement, and monthly invoice generation.
+- Advertising invoice settlement is a manual finance confirmation using an external payment reference; no provider charge is initiated by this workflow.
+- Return refunds are recorded through an idempotent, balance-limited manual finance workflow after warehouse receipt; payment-success webhook replays cannot overwrite refund states.
+- Account session management includes an audited sign-out-all-devices action.
+- See [Advertising, refunds, and identity operations](docs/implementation/ADVERTISING_REFUNDS_AND_IDENTITY_RUNBOOK.md) for the operating rules and deployment prerequisites.
+
+- Google OAuth validates RS256 ID-token signatures against Google's JWKS and binds the callback to a one-time nonce; customer registration receives the seeded CUSTOMER role while seller applications remain pending without seller permissions.
