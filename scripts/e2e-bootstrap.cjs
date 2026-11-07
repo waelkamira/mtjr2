@@ -137,6 +137,7 @@ async function main() {
     seller: await sessionFor(seller.id, true),
     admin: await sessionFor(admin.id, true, true),
     adminReviewer: await sessionFor(adminReviewer.id, true, true),
+    privilegeTarget: await sessionFor(privilegeTarget.id, false),
     privilegeTargetEmail: privilegeTarget.email,
     categorySlug: product.categories[0]?.category.slug,
     detailProductSlug: detailProduct.slug
