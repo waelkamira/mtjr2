@@ -3,11 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ getCurrentSession: vi.fn(), getMfaAccessState: vi.fn() }));
 vi.mock("@/server/identity/current-session", () => ({
   getCurrentSession: mocks.getCurrentSession,
-  AuthenticationRequiredError: class AuthenticationRequiredError extends Error {}
 }));
 vi.mock("@/server/identity/mfa", () => ({ getMfaAccessState: mocks.getMfaAccessState }));
 
-import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { AuthenticationRequiredError } from "@/server/identity/access-errors";
 import { MfaEnrollmentRequiredError, StepUpRequiredError } from "@/server/identity/access-errors";
 import { requirePlatformSessionStepUp } from "@/server/identity/platform-session-policy";
 
