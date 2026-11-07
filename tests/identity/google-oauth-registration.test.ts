@@ -10,7 +10,8 @@ const mocks = vi.hoisted(() => ({
   createUserSession: vi.fn(),
   setSessionCookie: vi.fn(),
   isPublicRegistrationEnabled: vi.fn(),
-  getMfaAccessState: vi.fn()
+  getMfaAccessState: vi.fn(),
+  verifyGoogleIdToken: vi.fn()
 }));
 
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
@@ -37,6 +38,7 @@ vi.mock("@/server/identity/session", () => ({
 vi.mock("@/server/identity/session-cookie", () => ({
   setSessionCookie: mocks.setSessionCookie
 }));
+vi.mock("@/server/identity/google-id-token", () => ({ verifyGoogleIdToken: mocks.verifyGoogleIdToken }));
 vi.mock("@/server/identity/mfa", () => ({
   getMfaAccessState: mocks.getMfaAccessState
 }));
@@ -57,6 +59,7 @@ function oauthCookies(
 ) {
   return createCookieStore({
     mtjr_google_state: "expected-state",
+    mtjr_google_nonce: "expected-nonce",
     mtjr_google_verifier: "verifier",
     mtjr_google_intent: intent,
     mtjr_google_account_type: accountType,
@@ -73,6 +76,11 @@ describe("Google OAuth registration gate", () => {
     vi.clearAllMocks();
     mocks.cookies.mockResolvedValue(oauthCookies("register"));
     mocks.isPublicRegistrationEnabled.mockReturnValue(false);
+    mocks.verifyGoogleIdToken.mockResolvedValue({
+      iss: "https://accounts.google.com", aud: "google-client", sub: "google-user",
+      email: "new@example.com", email_verified: true, exp: Math.floor(Date.now() / 1000) + 60,
+      iat: Math.floor(Date.now() / 1000), nonce: "expected-nonce", name: "New User"
+    });
     mocks.getMfaAccessState.mockResolvedValue({
       enabled: false,
       required: false,
