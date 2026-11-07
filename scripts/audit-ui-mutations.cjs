@@ -23,17 +23,18 @@ const rows = files.map((file) => ({ file, source: fs.readFileSync(file, "utf8") 
     return { file: relative, feedbackMode, successFeedback: delegated || backgroundTelemetry || successFeedback, errorFeedback: delegated || backgroundTelemetry || errorFeedback };
   });
 const incomplete = rows.filter((row) => !row.successFeedback || !row.errorFeedback);
+const tick = String.fromCharCode(96);
 const lines = [
   "# UI mutation feedback inventory",
   "",
-  \`- Mutation-bearing feature/component files detected: **\${rows.length}**\`,
-  \`- Files with an appropriate success and error feedback path: **\${rows.length - incomplete.length}**\`,
-  \`- Files requiring review: **\${incomplete.length}**\`,
+  "- Mutation-bearing feature/component files detected: **" + rows.length + "**",
+  "- Files with an appropriate success and error feedback path: **" + (rows.length - incomplete.length) + "**",
+  "- Files requiring review: **" + incomplete.length + "**",
   "",
   "| File | Feedback mode | Success feedback | Error feedback |",
   "|---|---|---:|---:|",
-  ...rows.map((row) => \`| \\\`\${row.file}\\\` | \${row.feedbackMode} | \${row.successFeedback ? "yes" : "no"} | \${row.errorFeedback ? "yes" : "no"} |\`)
+  ...rows.map((row) => "| " + tick + row.file + tick + " | " + row.feedbackMode + " | " + (row.successFeedback ? "yes" : "no") + " | " + (row.errorFeedback ? "yes" : "no") + " |")
 ];
-const report = lines.join("\\n") + "\\n";
+const report = lines.join(String.fromCharCode(10)) + String.fromCharCode(10);
 fs.writeFileSync("ui-mutation-toast-report.md", report);
 process.stdout.write(report);
