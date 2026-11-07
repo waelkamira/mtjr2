@@ -21,8 +21,8 @@ function getConfiguredIds(): string[] {
 /**
  * Mirrors Cooking's ordered quota rotation:
  * use the first Client ID for up to 50 uploads, then the next ID;
- * after all IDs are used, start again at the first ID.
- * The usage window resets after one hour.
+ * once every configured ID reaches 50 uploads, further Imgur uploads are
+ * blocked until the one-hour usage window resets to the first ID.
  */
 export function getNextImgurClientId(): string {
   const ids = getConfiguredIds();
