@@ -156,8 +156,10 @@ test.describe("seller journey", () => {
 test.describe("Super Admin journey", () => {
   test("control center, governance tools, privilege approval and advertising render responsively", async ({ page }) => {
     await signIn(page, sessions.customer);
-    const deniedAdminResponse = await page.goto("/admin/control-panel");
-    expect(deniedAdminResponse?.status()).toBe(404);
+    await page.goto("/admin/control-panel");
+    await expect(page.getByRole("heading", { name: /We couldn’t find that page|لم نتمكن من العثور على هذه الصفحة/i })).toBeVisible();
+    const deniedCatalogResponse = await page.request.get("/api/admin/control-panel/access-catalog");
+    expect(deniedCatalogResponse.status()).toBe(403);
 
     await signIn(page, sessions.admin);
     await page.setViewportSize({ width: 1440, height: 900 });
