@@ -2548,3 +2548,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Each ID is selected for up to 50 uploads before moving to the next ID. Once all configured IDs reach 50 uploads, Imgur selection is blocked until the one-hour window resets; the sequence then starts again from the first ID. `IMGUR_CLIENT_ID` remains as a single-ID compatibility fallback.
 - The rotation state is held in the warm Node.js process, matching Cooking's in-memory approach; independent serverless instances have independent counters. A shared distributed counter would be required for globally synchronized rotation across all instances.
 - No credentials from Cooking were copied. Configure newly issued Imgur Client IDs in Vercel as `IMGUR_CLIENT_IDS`.
+
+
+## 2026-11-08 — Seller product image upload recovery and preview workflow
+
+**Implemented**
+- Added a backward-compatible `POST /api/seller/products/images` endpoint that delegates to the canonical `/api/seller/products/media` handler, resolving the old/new endpoint mismatch without duplicating upload logic.
+- Reworked the shared upload handler to accept both `file` and legacy `image` multipart field names, preserve the authenticated store-ownership and scoped-permission checks, enforce a 10 MB limit, and validate actual JPEG/PNG/GIF/WebP/AVIF file signatures before forwarding bytes.
+- Matched Cooking's Imgur transport (raw file body) and retained ordered 50-uploads-per-ID rotation with ImageKit fallback. Provider failures now return actionable, sanitized HTTP diagnostics instead of swallowing every provider error.
+- Rebuilt the seller image picker around immediate local previews, per-image upload states, remove controls, ordering controls (first image is primary), multi-file upload, and a ten-image cap. Product creation is disabled until every selected image has uploaded successfully.
+- Persisted the MIME type alongside the URL in the existing Prisma `ProductMedia` model. The existing `type`, `isPrimary`, `sortOrder`, `altText`, and URL fields remain the canonical product media representation; no migration was required.
+
+**Verification boundary**
+- Source changes are committed to `main`. No live upload can succeed until at least one valid provider credential is configured server-side (`IMGUR_CLIENT_IDS` / `IMGUR_CLIENT_ID` or `IMAGEKIT_PRIVATE_KEY`). The earlier 503 response is consistent with no provider being configured; the new endpoint reports this explicitly.
+- No live Imgur/ImageKit upload or production browser test is claimed. CI/typecheck/build must be checked on the resulting exact commit before marking this workflow verified.
