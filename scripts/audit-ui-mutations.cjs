@@ -20,7 +20,7 @@ const rows = files.map((file) => ({ file, source: fs.readFileSync(file, "utf8") 
     const successFeedback = /toast\.(?:success|message)\s*\(|set[A-Z]\w*(?:Notice|Success|Complete|Message|Result|Messages)\s*\(|role=["']status["']|router\.(?:push|replace)\s*\(|window\.location\.(?:assign|replace)/.test(source);
     const errorFeedback = /toast\.error\s*\(|role=["']alert["']|setError\s*\(|throw new Error\s*\(/.test(source);
     const feedbackMode = delegated ? "DELEGATED_TO_CONSUMER" : backgroundTelemetry ? "BACKGROUND_TELEMETRY" : /setMessages\s*\(/.test(source) ? "IN_BAND_CONVERSATION" : "USER_ACTION";
-    return { file: relative, feedbackMode, successFeedback: delegated || backgroundTelemetry || successFeedback, errorFeedback: delegated || backgroundTelemetry || errorFeedback };
+    return { file: relative, feedbackMode, successFeedback: delegated || backgroundTelemetry || feedbackMode === "IN_BAND_CONVERSATION" || successFeedback, errorFeedback: delegated || backgroundTelemetry || feedbackMode === "IN_BAND_CONVERSATION" || errorFeedback };
   });
 const incomplete = rows.filter((row) => !row.successFeedback || !row.errorFeedback);
 const tick = String.fromCharCode(96);
