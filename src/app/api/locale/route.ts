@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { isLocale, localeCookieName } from "@/lib/locale";
+import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 
 const requestSchema = z.object({
   locale: z.string()
 });
 
 export async function POST(request: NextRequest) {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   let body: unknown;
   try {
     body = await request.json();
