@@ -55,9 +55,13 @@ jobs:
       - run: node scripts/e2e-bootstrap.cjs
       - run: npm install --no-save --package-lock=false @playwright/test
       - run: npx playwright install --with-deps chromium
-      - name: Start application
+      - name: Build production application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      - name: Start production application
         run: |
-          npm run dev > /tmp/mtjr2-next.log 2>&1 &
+          NODE_ENV=production npm run start > /tmp/mtjr2-next.log 2>&1 &
           for attempt in $(seq 1 60); do
             if curl --silent --fail http://127.0.0.1:3000/api/markets > /dev/null; then exit 0; fi
             sleep 2
