@@ -123,6 +123,8 @@ async function main() {
   }
   const customer = await ensureUser("e2e-customer@mtjr2.test", "E2E Customer");
   await ensureRole(customer.id, "CUSTOMER");
+  const unauthorizedCustomer = await ensureUser("e2e-unauthorized@mtjr2.test", "E2E Unauthorized Customer");
+  await ensureRole(unauthorizedCustomer.id, "CUSTOMER");
   const buyer = await ensureUser("e2e-buyer@mtjr2.test", "E2E Buyer");
   await ensureRole(buyer.id, "CUSTOMER");
   const admin = await ensureUser("e2e-superadmin@mtjr2.test", "E2E Super Admin");
@@ -133,6 +135,7 @@ async function main() {
   await ensureRole(privilegeTarget.id, "CUSTOMER");
   const sessions = {
     customer: await sessionFor(customer.id, false),
+    unauthorizedCustomer: await sessionFor(unauthorizedCustomer.id, false),
     buyer: await sessionFor(buyer.id, false),
     seller: await sessionFor(seller.id, true),
     admin: await sessionFor(admin.id, true, true),
