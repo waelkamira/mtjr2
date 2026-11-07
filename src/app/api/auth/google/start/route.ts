@@ -54,9 +54,11 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const state = randomBytes(32).toString("base64url");
+  const nonce = randomBytes(32).toString("base64url");
   const verifier = randomBytes(32).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
   store.set("mtjr_google_state", state, COOKIE_OPTIONS);
+  store.set("mtjr_google_nonce", nonce, COOKIE_OPTIONS);
   store.set("mtjr_google_verifier", verifier, COOKIE_OPTIONS);
   store.set("mtjr_google_intent", intent, COOKIE_OPTIONS);
   store.set("mtjr_google_return_to", encodeURIComponent(returnTo), COOKIE_OPTIONS);
@@ -84,6 +86,7 @@ export async function GET(request: Request): Promise<Response> {
   authorize.searchParams.set("response_type", "code");
   authorize.searchParams.set("scope", "openid email profile");
   authorize.searchParams.set("state", state);
+  authorize.searchParams.set("nonce", nonce);
   authorize.searchParams.set("code_challenge", challenge);
   authorize.searchParams.set("code_challenge_method", "S256");
   authorize.searchParams.set("prompt", "select_account");
