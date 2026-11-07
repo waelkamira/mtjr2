@@ -99,7 +99,7 @@ test.describe("buyer checkout journey", () => {
     await page.getByRole("button", { name: /^Choose$|^اختر$/i }).first().click();
     await expect(page.getByRole("button", { name: /Selected|محدد/i })).toBeVisible();
 
-    await page.getByRole("button", { name: /Calculate tax|احتساب الضريبة/i }).click();
+    await page.getByRole("button", { name: /Calculate tax and total|احسب الضريبة/i }).click();
     await expect(page.getByText("E2E Market Tax")).toBeVisible();
     await page.getByRole("button", { name: /Place order|قدّم الطلب/i }).click();
 
