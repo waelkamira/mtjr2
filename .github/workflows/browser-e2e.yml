@@ -37,6 +37,7 @@ jobs:
       AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
       APP_URL: http://127.0.0.1:3000
       NODE_ENV: development
+      TRUSTED_PROXY_IP_HEADER: cf-connecting-ip
       PUBLIC_REGISTRATION_ENABLED: "true"
     steps:
       - uses: actions/checkout@v4
