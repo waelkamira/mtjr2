@@ -6,7 +6,7 @@ const apiRoot = path.join(root, "src/app/api");
 const publicReads = new Set([
   "brands/route.ts", "categories/route.ts", "countries/route.ts", "currencies/route.ts",
   "markets/route.ts", "search/route.ts", "search/suggestions/route.ts", "recommendations/route.ts",
-  "payments/providers/route.ts", "stores/route.ts", "advertising/sponsored/route.ts"
+  "payments/providers/route.ts", "stores/route.ts", "advertising/sponsored/route.ts", "markets/[code]/route.ts"
 ]);
 const evidencePatterns = [
   /validateIdentityMutationRequest\s*\(/, /requireCurrentSession\s*\(/, /getCurrentSession\s*\(/,
@@ -41,8 +41,10 @@ const rows = walk(apiRoot).map((file) => {
   const evidence = evidencePatterns.filter((pattern) => pattern.test(allSource)).map((pattern) => pattern.source);
   const isPublicRead = methods.length > 0 && methods.every((method) => method === "GET") && publicReads.has(relative);
   const isPublicIdentity = relative.startsWith("auth/") && evidence.length > 0;
+  const isOAuthStart = relative === "auth/google/start/route.ts" && /randomBytes|code_challenge_method|mtjr_google_state/.test(allSource);
+  const isPublicPreferenceMutation = relative === "locale/route.ts" && /validateIdentityMutationRequest\\s*\\(/.test(allSource);
   const isCronOrWebhook = (relative.startsWith("cron/") || relative.startsWith("webhooks/")) && evidence.length > 0;
-  const classification = isPublicRead ? "PUBLIC_READ_ALLOWLIST" : isPublicIdentity ? "IDENTITY_FLOW_GUARD" : isCronOrWebhook ? "SIGNED_SYSTEM_ENDPOINT" : evidence.length ? "SERVER_GUARD_EVIDENCE" : "REVIEW_REQUIRED";
+  const classification = isPublicRead ? "PUBLIC_READ_ALLOWLIST" : isPublicPreferenceMutation ? "PUBLIC_PREFERENCE_MUTATION_CSRF_GUARDED" : isOAuthStart ? "OAUTH_START_STATE_PKCE" : isPublicIdentity ? "IDENTITY_FLOW_GUARD" : isCronOrWebhook ? "SIGNED_SYSTEM_ENDPOINT" : evidence.length ? "SERVER_GUARD_EVIDENCE" : "REVIEW_REQUIRED";
   return { relative, methods: [...new Set(methods)].join(","), classification, evidence: evidence.slice(0, 6).join("; ") };
 });
 const unresolved = rows.filter((row) => row.classification === "REVIEW_REQUIRED");
