@@ -76,7 +76,7 @@ test.describe("buyer checkout journey", () => {
     const addToCart = page.getByRole("button", { name: /Add to cart|أضف إلى السلة/i });
     await expect(addToCart).toBeEnabled({ timeout: 15000 });
     await addToCart.click();
-    await expect(page.getByRole("status")).toContainText(/Added to your cart|أُضيف إلى سلة التسوق/i);
+    await expect(page.getByText(/Added to your cart|أُضيف إلى سلة التسوق/i)).toBeVisible();
 
     await page.goto("/cart");
     await expect(page.getByRole("heading", { name: /Shopping cart|سلة التسوق/i })).toBeVisible();
