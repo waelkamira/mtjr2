@@ -5,7 +5,7 @@ import { verifyMfaStepUp } from "@/server/identity/mfa";
 
 export const runtime = "nodejs";
 
-const schema = z.object({ code: z.string().regex(/^\\d{6}$/) }).strict();
+const schema = z.object({ code: z.string().regex(/^\d{6}$/) }).strict();
 
 export async function POST(request: Request): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
