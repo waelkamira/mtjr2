@@ -97,6 +97,7 @@ export async function POST(request: Request): Promise<Response> {
         const result = await provider.upload();
         return Response.json({ success: true, data: result });
       } catch {
+        // Provider failure is intentionally isolated; try the next configured service.
       }
     }
     const configured = Boolean(process.env.IMGUR_CLIENT_ID || process.env.IMAGEKIT_PRIVATE_KEY);
