@@ -155,7 +155,7 @@ test.describe("seller journey", () => {
 
 test.describe("Super Admin journey", () => {
   test("control center, governance tools, privilege approval and advertising render responsively", async ({ page }) => {
-    await signIn(page, sessions.customer);
+    await signIn(page, sessions.unauthorizedCustomer);
     await page.goto("/admin/control-panel");
     await expect(page.getByRole("heading", { name: /We couldn’t find that page|لم نتمكن من العثور على هذه الصفحة/i })).toBeVisible();
     const deniedCatalogResponse = await page.request.get("/api/admin/control-panel/access-catalog");
