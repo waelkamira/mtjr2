@@ -2,6 +2,11 @@ import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 
 const sessions = JSON.parse(fs.readFileSync(".e2e-sessions.json", "utf8")) as Record<string, string>;
+
+test.beforeEach(async ({ page }) => {
+  // Simulate the trusted edge header overwritten by the hosting proxy.
+  await page.context().setExtraHTTPHeaders({ "cf-connecting-ip": "203.0.113.10" });
+});
 async function expectNoHorizontalOverflow(page: import("@playwright/test").Page) {
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 }
@@ -112,7 +117,7 @@ test.describe("Super Admin journey", () => {
     await signIn(page, sessions.admin);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/admin/dashboard");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").last()).toBeVisible();
     await page.goto("/admin/control-panel");
     await expect(page.locator("main").last()).toBeVisible();
     await page.goto("/admin/advertising");
