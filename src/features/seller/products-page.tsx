@@ -48,7 +48,7 @@ export default function SellerProductsPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
-  type ProductImageDraft = { id: string; url: string; provider: string; mimeType: string; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
+  type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
@@ -136,7 +136,7 @@ export default function SellerProductsPage() {
     }
 
     const drafts: ProductImageDraft[] = files.map((file) => ({
-      id: crypto.randomUUID(), url: "", provider: "", mimeType: file.type, previewUrl: URL.createObjectURL(file), status: "uploading"
+      id: crypto.randomUUID(), file, url: "", provider: "", mimeType: file.type, previewUrl: URL.createObjectURL(file), status: "uploading"
     }));
     setUploadedImages((current) => [...current, ...drafts]);
     setUploadingImages(true);
@@ -169,6 +169,31 @@ export default function SellerProductsPage() {
       toast.success(translate(locale, "Images uploaded successfully.", "تم رفع الصور بنجاح."));
     }
     setUploadingImages(false);
+  }
+
+  async function retryProductImage(id: string) {
+    const image = uploadedImages.find((entry) => entry.id === id);
+    if (!image || image.status !== "failed") return;
+    setUploadingImages(true);
+    setUploadedImages((current) => current.map((entry) => entry.id === id ? { ...entry, status: "uploading", error: undefined } : entry));
+    try {
+      const form = new FormData();
+      form.append("file", image.file, image.file.name);
+      form.append("storeId", storeId);
+      const result = await json<{ success: true; data: { url: string; provider: string } }>(
+        await fetch("/api/seller/products/media", { method: "POST", body: form })
+      );
+      setUploadedImages((current) => current.map((entry) => entry.id === id
+        ? { ...entry, url: result.data.url, provider: result.data.provider, status: "ready", error: undefined }
+        : entry));
+      toast.success(translate(locale, "Image uploaded successfully.", "تم رفع الصورة بنجاح."));
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "فشل رفع الصورة.");
+      setUploadedImages((current) => current.map((entry) => entry.id === id ? { ...entry, status: "failed", error: message } : entry));
+      toast.error(message);
+    } finally {
+      setUploadingImages(false);
+    }
   }
 
   function removeProductImage(id: string) {
@@ -292,6 +317,7 @@ export default function SellerProductsPage() {
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2 p-2 text-xs">
                     <span className={image.status === "ready" ? "text-emerald-700" : image.status === "failed" ? "text-red-700" : "text-[var(--muted)]"}>{image.status === "ready" ? image.provider : image.status === "failed" ? translate(locale, "Failed", "فشل") : translate(locale, "Processing", "قيد المعالجة")}</span>
+                    {image.status === "failed" && <button type="button" disabled={uploadingImages} onClick={() => retryProductImage(image.id)} className="rounded-md border border-red-200 px-2 py-1 font-semibold text-red-700 disabled:opacity-40">{translate(locale, "Retry", "إعادة المحاولة")}</button>}
                     <div className="flex gap-1">
                       <button type="button" disabled={index === 0} onClick={() => moveProductImage(image.id, -1)} className="rounded-md border border-[var(--border)] px-2 py-1 disabled:opacity-30" aria-label={translate(locale, "Move image left", "تحريك الصورة للأعلى")}>↑</button>
                       <button type="button" disabled={index === uploadedImages.length - 1} onClick={() => moveProductImage(image.id, 1)} className="rounded-md border border-[var(--border)] px-2 py-1 disabled:opacity-30" aria-label={translate(locale, "Move image right", "تحريك الصورة للأسفل")}>↓</button>
