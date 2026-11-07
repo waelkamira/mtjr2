@@ -190,6 +190,11 @@ test.describe("Super Admin journey", () => {
     await page.getByRole("button", { name: /Approve & grant access/i }).first().click();
     await expect(page.getByRole("alert")).toContainText(/requester cannot approve or reject/i);
 
+    // The target has no platform access before approval.
+    await signIn(page, sessions.privilegeTarget);
+    await page.goto("/admin/control-panel");
+    await expect(page.getByRole("heading", { name: /We couldn’t find that page|لم نتمكن من العثور على هذه الصفحة/i })).toBeVisible();
+
     // A second, independent Super Admin can review and approve the pending request.
     await signIn(page, sessions.adminReviewer);
     await page.goto("/admin/control-panel/privilege-requests");
@@ -201,6 +206,12 @@ test.describe("Super Admin journey", () => {
     expect(auditResponse.status()).toBe(200);
     const auditPayload = await auditResponse.json() as { events?: Array<{ action: string }> };
     expect(auditPayload.events?.some((event) => event.action === "platform.privilege_request.created")).toBe(true);
+
+    // Once access is granted, the target is still gated until MFA enrollment.
+    await signIn(page, sessions.privilegeTarget);
+    await page.goto("/admin/control-panel");
+    await expect(page).toHaveURL(/\/account\/security\?mfa=setup/);
+    await signIn(page, sessions.adminReviewer);
 
     await page.goto("/admin/advertising");
     await expect(page.getByRole("heading", { name: /Advertising review|مراجعة الإعلانات/i })).toBeVisible();
