@@ -393,3 +393,8 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 - Latest exact-head CI inventory: 105/105 state-changing API handlers have request/system-boundary evidence (0 requiring review); 54/54 mutation-bearing UI files have success and error feedback (0 requiring review).
 - PR #64 merged as `84ae9ecec4ecd2796533dd3551d346ee43fb5849` after General CI, disposable PostgreSQL integration (9 tests), and browser E2E passed. See [Build Log](docs/implementation/BUILD_LOG.md) for run links.
 - This is source/CI verification, not a production release. Production secrets, external provider credentials, Vercel deployment quota, and live provider smoke tests remain separate operational gates.
+
+
+## 2026-11-07 — API anonymous-boundary hardening
+
+- PR #68 is merged into main as 16b185f765d4e7dbf68ee25907c41d17efbbea45. Coupon/search-synonym admin reads and four cron workers now fail closed with explicit authorization responses. The 165 route/method anonymous boundary sweep, General CI, and Browser E2E passed on exact PR head 2207295893cde027e123518ea9b29a169dcc0cc0 (runs [42403107066](https://github.com/waelkamira/mtjr2/actions/runs/42403107066) and [42403107025](https://github.com/waelkamira/mtjr2/actions/runs/42403107025)). This does not replace role/ownership/store-scope testing. Main post-merge CI is pending; no production deployment or database access was performed.
