@@ -38,3 +38,5 @@ const lines = [
 const report = lines.join(String.fromCharCode(10)) + String.fromCharCode(10);
 fs.writeFileSync("ui-mutation-toast-report.md", report);
 process.stdout.write(report);
+
+if (incomplete.length > 0) process.exitCode = 1;
