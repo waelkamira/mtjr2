@@ -48,7 +48,8 @@ export default function SellerProductsPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
-  const [uploadedImages, setUploadedImages] = useState<Array<{ url: string; provider: string }>>([]);
+  type ProductImageDraft = { id: string; url: string; provider: string; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
+  const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
   const [categoryId, setCategoryId] = useState("");
@@ -119,34 +120,74 @@ export default function SellerProductsPage() {
   async function uploadProductImages(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     if (!files.length) return;
+    event.target.value = "";
     if (uploadedImages.length + files.length > 10) {
       toast.error(translate(locale, "A product can have up to 10 images.", "يمكن إضافة ١٠ صور كحد أقصى للمنتج."));
-      event.target.value = "";
       return;
     }
+    const invalid = files.find((file) => !["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"].includes(file.type) || file.size <= 0 || file.size > 10 * 1024 * 1024);
+    if (invalid) {
+      toast.error(translate(locale, "Use JPG, PNG, WebP, GIF or AVIF images up to 10 MB each.", "استخدم صور JPG أو PNG أو WebP أو GIF أو AVIF بحجم لا يتجاوز ١٠ ميغابايت للصورة."));
+      return;
+    }
+    if (!storeId) {
+      toast.error(translate(locale, "Choose a store before uploading images.", "اختر متجراً قبل رفع الصور."));
+      return;
+    }
+
+    const drafts: ProductImageDraft[] = files.map((file) => ({
+      id: crypto.randomUUID(), url: "", provider: "", previewUrl: URL.createObjectURL(file), status: "uploading"
+    }));
+    setUploadedImages((current) => [...current, ...drafts]);
     setUploadingImages(true);
     setError("");
-    try {
-      for (const file of files) {
-        if (!file.type.startsWith("image/")) throw new Error(translate(locale, "Only image files are allowed.", "يسمح بملفات الصور فقط."));
-        if (file.size > 10 * 1024 * 1024) throw new Error(translate(locale, "Each image must be 10 MB or smaller.", "يجب ألا يتجاوز حجم الصورة ١٠ ميغابايت."));
-        const form = new FormData();
-        form.append("file", file);
-        form.append("storeId", storeId);
-        const result = await json<{ success: true; data: { url: string; provider: string } }>(
-          await fetch("/api/seller/products/media", { method: "POST", body: form })
-        );
-        setUploadedImages((current) => [...current, result.data]);
-      }
+
+    const results = await Promise.allSettled(files.map(async (file, index) => {
+      const form = new FormData();
+      form.append("file", file, file.name);
+      form.append("storeId", storeId);
+      const result = await json<{ success: true; data: { url: string; provider: string } }>(
+        await fetch("/api/seller/products/media", { method: "POST", body: form })
+      );
+      setUploadedImages((current) => current.map((image) => image.id === drafts[index].id
+        ? { ...image, url: result.data.url, provider: result.data.provider, status: "ready" }
+        : image));
+      return result.data;
+    }));
+
+    const failed = results.filter((result) => result.status === "rejected");
+    if (failed.length) {
+      const firstError = failed[0].status === "rejected" && failed[0].reason instanceof Error
+        ? failed[0].reason.message
+        : translate(locale, "One or more images could not be uploaded.", "تعذر رفع صورة واحدة أو أكثر.");
+      setUploadedImages((current) => current.map((image) => drafts.some((draft) => draft.id === image.id) && image.status === "uploading"
+        ? { ...image, status: "failed", error: firstError }
+        : image));
+      setError(firstError);
+      toast.error(firstError);
+    } else {
       toast.success(translate(locale, "Images uploaded successfully.", "تم رفع الصور بنجاح."));
-    } catch (cause) {
-      const message = cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "فشل رفع الصورة.");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setUploadingImages(false);
-      event.target.value = "";
     }
+    setUploadingImages(false);
+  }
+
+  function removeProductImage(id: string) {
+    setUploadedImages((current) => {
+      const image = current.find((entry) => entry.id === id);
+      if (image) URL.revokeObjectURL(image.previewUrl);
+      return current.filter((entry) => entry.id !== id);
+    });
+  }
+
+  function moveProductImage(id: string, direction: -1 | 1) {
+    setUploadedImages((current) => {
+      const index = current.findIndex((image) => image.id === id);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= current.length) return current;
+      const next = [...current];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
   }
 
   async function createProduct(event: FormEvent<HTMLFormElement>) {
@@ -158,13 +199,13 @@ export default function SellerProductsPage() {
         body: JSON.stringify({
           storeId, name, slug, description, ...(brandId ? { brandId } : {}),
           categoryIds: categoryId ? [categoryId] : [],
-          media: uploadedImages.map((image, index) => ({ url: image.url, altText: name, sortOrder: index, isPrimary: index === 0 })),
+          media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, altText: name, sortOrder: index, isPrimary: index === 0 })),
           variants: [{ sku, prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "" })) }]
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
-      setName(""); setSlug(""); setDescription(""); setSku(""); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
+      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setSku(""); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -220,6 +261,7 @@ export default function SellerProductsPage() {
             const nextId = e.target.value;
             setStoreId(nextId);
             setProducts([]);
+            uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl));
             setUploadedImages([]);
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
@@ -240,18 +282,24 @@ export default function SellerProductsPage() {
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
               </label>
               {uploadedImages.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {uploadedImages.map((image, index) => <div key={image.url} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                  <div className="relative aspect-square">
-                    <img src={image.url} alt={`Product image ${index + 1}`} className="h-full w-full object-cover" />
-                    {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">{translate(locale, "Primary", "رئيسية")}</span>}
+                {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+                  <div className="relative aspect-square bg-[var(--surface-soft)]">
+                    <img src={image.previewUrl} alt={`Product image ${index + 1}`} className={`h-full w-full object-cover ${image.status === "uploading" ? "opacity-60" : ""}`} />
+                    {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2.5 py-1 text-[10px] font-bold text-white">{translate(locale, "Primary image", "الصورة الرئيسية")}</span>}
+                    {image.status === "uploading" && <span className="absolute inset-0 flex items-center justify-center bg-black/25 text-xs font-semibold text-white">{translate(locale, "Uploading…", "جارٍ الرفع…")}</span>}
+                    {image.status === "failed" && <span className="absolute inset-0 flex items-center justify-center bg-red-950/60 p-3 text-center text-xs font-semibold text-white">{translate(locale, "Upload failed", "فشل الرفع")}</span>}
+                    <button type="button" aria-label={translate(locale, "Remove image", "إزالة الصورة")} onClick={() => removeProductImage(image.id)} className="absolute right-2 top-2 rounded-full bg-black/70 px-2.5 py-1.5 text-xs font-bold text-white">×</button>
                   </div>
-                  <div className="flex items-center justify-between gap-2 p-2 text-xs">
-                    <span className="truncate text-[var(--muted)]">{image.provider}</span>
-                    <button type="button" onClick={() => setUploadedImages((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="rounded-lg px-2 py-1 font-semibold text-red-600">{translate(locale, "Remove", "إزالة")}</button>
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-2 text-xs">
+                    <span className={image.status === "ready" ? "text-emerald-700" : image.status === "failed" ? "text-red-700" : "text-[var(--muted)]"}>{image.status === "ready" ? image.provider : image.status === "failed" ? translate(locale, "Failed", "فشل") : translate(locale, "Processing", "قيد المعالجة")}</span>
+                    <div className="flex gap-1">
+                      <button type="button" disabled={index === 0} onClick={() => moveProductImage(image.id, -1)} className="rounded-md border border-[var(--border)] px-2 py-1 disabled:opacity-30" aria-label={translate(locale, "Move image left", "تحريك الصورة للأعلى")}>↑</button>
+                      <button type="button" disabled={index === uploadedImages.length - 1} onClick={() => moveProductImage(image.id, 1)} className="rounded-md border border-[var(--border)] px-2 py-1 disabled:opacity-30" aria-label={translate(locale, "Move image right", "تحريك الصورة للأسفل")}>↓</button>
+                    </div>
                   </div>
-                </div>)}
+                </article>)}
               </div>}
-              {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images uploaded yet. A primary image is required.", "لم يتم رفع صور بعد. الصورة الرئيسية مطلوبة.")}</p>}
+              {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
             <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
@@ -269,7 +317,7 @@ export default function SellerProductsPage() {
                 </div>;
               })}
             </div>
-            <button disabled={busy || uploadingImages || !uploadedImages.length || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <button disabled={busy || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
