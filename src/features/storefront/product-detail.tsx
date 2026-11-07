@@ -26,7 +26,7 @@ function writeGuestFavorite(productId: string, saved: boolean) {
   } catch { /* Browser storage may be unavailable. */ }
 }
 
-type Price = { marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } };
+type Price = { marketId: string; currencyCode: string; amountMinor: string | bigint; compareAtMinor: string | bigint | null; currency: { minorUnit: number } };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type ProductAttribute = { key: string; name: string; valueType: string; values: unknown[] };
 type VariantAttribute = { key: string; name: string; valueType: string; value: unknown };
