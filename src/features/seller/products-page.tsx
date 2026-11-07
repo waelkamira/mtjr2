@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -116,7 +116,7 @@ export default function SellerProductsPage() {
     return () => { active = false; window.clearTimeout(timer); };
   }, [storeId, search, loadProducts]);
 
-  async function uploadProductImages(event: React.ChangeEvent<HTMLInputElement>) {
+  async function uploadProductImages(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     if (!files.length) return;
     if (uploadedImages.length + files.length > 10) {
