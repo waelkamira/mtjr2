@@ -1,10 +1,13 @@
 import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/permission-guard";
+import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { reviewReturnRequest } from "@/server/returns/returns";
 
 export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ returnId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   try {
     const { returnId } = await context.params;
     return Response.json({ request: await reviewReturnRequest(returnId, await request.json()) }, { headers: { "Cache-Control": "private, no-store" } });
