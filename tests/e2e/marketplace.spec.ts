@@ -105,7 +105,7 @@ test.describe("buyer checkout journey", () => {
 
     await expect(page).toHaveURL(/\/orders\/[^/?]+$/);
     await expect(page.getByRole("heading", { name: /Thank you for your order|شكرًا لطلبك/i })).toBeVisible();
-    await expect(page.getByText(/Pending payment|بانتظار الدفع/i)).toBeVisible();
+    await expect(page.locator("main").getByText(/Pending payment|بانتظار الدفع/i).first()).toBeVisible();
     await expect(page.getByText(/Payment is pending|الدفع قيد الانتظار/i)).toBeVisible();
   });
 });
