@@ -160,7 +160,7 @@ export async function decidePlatformPrivilegeRequest(requestId: string, input: u
     if (!request || request.status !== PlatformPrivilegeRequestStatus.PENDING) {
       throw new PlatformPrivilegeRequestConflictError("This request is no longer pending.");
     }
-    if (!isIndependentPrivilegeReviewer(request.requestedById, actor.userId)) {
+    if (!isIndependentPrivilegeReviewer(request.requestedById, request.targetUserId, actor.userId)) {
       throw new PlatformPrivilegeRequestConflictError("A requester cannot approve or reject their own privilege request.");
     }
 
