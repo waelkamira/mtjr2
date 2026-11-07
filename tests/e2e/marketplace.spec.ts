@@ -86,13 +86,13 @@ test.describe("buyer checkout journey", () => {
     await expect(page.getByRole("heading", { name: /Review your order|مراجعة طلبك/i })).toBeVisible();
 
     await page.getByLabel(/Recipient name|اسم المستلم/i).fill("E2E Buyer");
-    await page.getByLabel(/Phone \(international\)|رقم الهاتف/i).fill("+31612345678");
+    await page.getByLabel(/Phone \(international\)|رقم الهاتف/i).fill("+12025550123");
     await page.getByLabel(/Address line 1|العنوان، السطر الأول/i).fill("10 E2E Test Street");
-    await page.getByLabel(/^City$|^المدينة$/i).fill("Amsterdam");
-    await page.getByLabel(/Region \/ State|المنطقة/i).fill("North Holland");
-    await page.getByLabel(/Postal code|الرمز البريدي/i).fill("1012AB");
+    await page.getByLabel(/^City$|^المدينة$/i).fill("Seattle");
+    await page.getByLabel(/Region \/ State|المنطقة/i).fill("Washington");
+    await page.getByLabel(/Postal code|الرمز البريدي/i).fill("98101");
     await page.getByRole("button", { name: /Save delivery address|احفظ عنوان التوصيل/i }).click();
-    await expect(page.getByText(/Delivery address saved to this checkout quote|تم حفظ عنوان التوصيل لعرض السعر هذا/i)).toBeVisible();
+    await expect(page.getByText(/Saved to this quote|تم الحفظ لعرض السعر هذا/i)).toBeVisible();
 
     await page.getByRole("button", { name: /Load shipping options|تحميل خيارات الشحن/i }).click();
     await expect(page.getByText("E2E Standard Shipping")).toBeVisible();
