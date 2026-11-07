@@ -398,3 +398,8 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 ## 2026-11-07 — API anonymous-boundary hardening
 
 - PR #68 is merged into main as 16b185f765d4e7dbf68ee25907c41d17efbbea45. Coupon/search-synonym admin reads and four cron workers now fail closed with explicit authorization responses. The 165 route/method anonymous boundary sweep, General CI, and Browser E2E passed on exact PR head 2207295893cde027e123518ea9b29a169dcc0cc0 (runs [42403107066](https://github.com/waelkamira/mtjr2/actions/runs/42403107066) and [42403107025](https://github.com/waelkamira/mtjr2/actions/runs/42403107025)). This does not replace role/ownership/store-scope testing. Main post-merge CI is pending; no production deployment or database access was performed.
+
+
+## 2026-11-07 — Financial lifecycle verification gate
+
+- Fixed Platform PostgreSQL Integration path filters so payment, webhook, refund, seller shipment, order and return code changes trigger disposable PostgreSQL verification. The corrected integration workflow passed migration replay, 3 files / 9 tests and repeatable demo seeding on main commit `0d0fab6f47fdf49396022331f77f5612616a8d44` ([run 42404238983](https://github.com/waelkamira/mtjr2/actions/runs/42404238983)). General CI passed on documentation/route-registry head `f05480a83fe3126f0183e51f990e47216fb14098` ([run 42404307099](https://github.com/waelkamira/mtjr2/actions/runs/42404307099)). Live payment/refund provider onboarding and carrier integration remain blocked on explicit launch-market, currency, merchant-account, payment-method and provider decisions.
