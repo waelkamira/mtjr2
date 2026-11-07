@@ -48,7 +48,7 @@ export default function SellerProductsPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
-  type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
+  type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
@@ -146,11 +146,11 @@ export default function SellerProductsPage() {
       const form = new FormData();
       form.append("file", file, file.name);
       form.append("storeId", storeId);
-      const result = await json<{ success: true; data: { url: string; provider: string } }>(
+      const result = await json<{ success: true; data: { url: string; provider: string; mimeType?: string; storageKey?: string; width?: number; height?: number } }>(
         await fetch("/api/seller/products/media", { method: "POST", body: form })
       );
       setUploadedImages((current) => current.map((image) => image.id === drafts[index].id
-        ? { ...image, url: result.data.url, provider: result.data.provider, mimeType: file.type, status: "ready" }
+        ? { ...image, url: result.data.url, provider: result.data.provider, mimeType: result.data.mimeType ?? file.type, storageKey: result.data.storageKey, width: result.data.width, height: result.data.height, status: "ready" }
         : image));
       return result.data;
     }));
@@ -224,7 +224,7 @@ export default function SellerProductsPage() {
         body: JSON.stringify({
           storeId, name, slug, description, ...(brandId ? { brandId } : {}),
           categoryIds: categoryId ? [categoryId] : [],
-          media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, altText: name, sortOrder: index, isPrimary: index === 0 })),
+          media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, storageKey: image.storageKey, width: image.width, height: image.height, altText: name, sortOrder: index, isPrimary: index === 0 })),
           variants: [{ sku, prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "" })) }]
         })
       }));
