@@ -21,7 +21,7 @@
 
 ## Manual return refunds
 
-- A refund can be requested only after the return workflow marks the return request as received and at least one captured payment is identified.
+- A refund can be requested only after the return workflow marks the return request as received and exactly one captured payment is identified.
 - The service reserves the refundable balance across pending and completed refunds, uses serializable transactions and an order-scoped advisory lock, and uses a deterministic idempotency key per return request.
 - Refund amounts are allocated to received return items from the order-item line totals. Shipping and tax are not automatically included.
 - The finance operator completes the refund only after issuing it outside Matjar, then records a unique external reference. Completion updates the payment to partially refunded or refunded without allowing a later/replayed payment-success webhook to erase that state.
@@ -30,7 +30,7 @@
 ## Account session security
 
 - The account session page lists active sessions and allows the signed-in user to revoke all sessions.
-- The operation requires an authenticated, MFA-verified session, validates the same-origin mutation boundary, revokes every active session for that user, writes an audit event, and clears the current browser cookie.
+- The operation requires an authenticated session that passes the current identity/MFA policy, validates the same-origin mutation boundary, revokes every active session for that user, writes an audit event, and clears the current browser cookie.
 
 ## Environment and deployment gates
 
