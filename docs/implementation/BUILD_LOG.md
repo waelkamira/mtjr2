@@ -2527,3 +2527,16 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Latest observed main commit at reconciliation start: `1d458f0b43db43012913c5351c9754daeb153062`. Its Vercel status reports provider build/deployment rate limiting. This is not a successful deployment and is not evidence of an application compilation failure. The successful CI runs above are on preceding commits, not this exact documentation head.
 - Updated README and END_TO_END_JOURNEY_MATRIX.md to identify the canonical evidence and open release gates. No application runtime code, Prisma schema/migrations, production database, production secrets, live provider credentials, Vercel configuration, or deployment was changed.
 - Next: update the 49 individual system rows from current merged evidence; prioritize authenticated actor/ownership/store-scope tests and missing browser journeys; recheck exact-head CI after docs changes; retry deployment only after the provider quota clears and required Preview secrets are configured.
+
+## 2026-11-08 — Seller product image uploads
+
+**Implemented**
+- Added an authenticated seller product image upload endpoint. Uploads are restricted to the active seller store owner, exact-store catalog managers, or authorized platform administrators.
+- Added server-side provider fallback: Imgur first, ImageKit second. Both use a consistent response shape; provider secrets are read only from server environment variables.
+- Replaced manual primary-image URL entry in the seller product creation form with multi-image file selection, previews, removal, primary-image ordering, upload progress state, and a 10-image limit.
+- Product creation now persists uploaded HTTPS media references through the existing catalog media model. No Prisma schema or database migration was introduced.
+
+**Security and verification notes**
+- The old Cooking repository contains hardcoded Imgur client IDs and ImageKit credentials. They were not copied; exposed credentials should be rotated/revoked.
+- Added `IMGUR_CLIENT_ID` and `IMAGEKIT_PRIVATE_KEY` to `.env.example`. Configure these server-side in the deployment environment before uploads can succeed.
+- Source changes were committed through GitHub. Runtime provider uploads, typecheck, lint and browser journey are not claimed as passed in this session because no application runtime or provider credentials are available here.
