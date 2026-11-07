@@ -383,3 +383,13 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 - Google OAuth validates RS256 ID-token signatures against Google's JWKS and binds the callback to a one-time nonce; customer registration receives the seeded CUSTOMER role while seller applications remain pending without seller permissions.
 
 - Super Admin global actions now require a fresh, non-replayed TOTP step-up tied to the active session, expiring after ten minutes. Successful checks are audited. Added the session migration and verification flow; PR #60 merged after CI, PostgreSQL integration, and browser E2E all passed. See [Build Log](docs/implementation/BUILD_LOG.md) for exact commit and run evidence.
+
+
+## Super Admin governance verification — 2026-11-07
+
+- Super Admin privilege elevation now enforces independent review: neither the requester nor the target can approve/reject; an independent Super Admin reviewer is required.
+- Browser and PostgreSQL tests verify denial before approval, independent approval, the persisted global role, audit history, and mandatory MFA enrollment before the newly elevated account can enter platform administration.
+- Access catalogue, audit log, and AI assistant settings pages are included in the Super Admin browser journey. The AI settings API does not expose the provider secret.
+- Latest exact-head CI inventory: 105/105 state-changing API handlers have request/system-boundary evidence (0 requiring review); 54/54 mutation-bearing UI files have success and error feedback (0 requiring review).
+- PR #64 merged as `84ae9ecec4ecd2796533dd3551d346ee43fb5849` after General CI, disposable PostgreSQL integration (9 tests), and browser E2E passed. See [Build Log](docs/implementation/BUILD_LOG.md) for run links.
+- This is source/CI verification, not a production release. Production secrets, external provider credentials, Vercel deployment quota, and live provider smoke tests remain separate operational gates.
