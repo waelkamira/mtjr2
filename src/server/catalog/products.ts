@@ -27,6 +27,9 @@ const createSchema = z.object({
   media: z.array(z.object({
     url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
     mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]).optional(),
+    storageKey: z.string().trim().max(1024).optional(),
+    width: z.number().int().positive().max(100000).optional(),
+    height: z.number().int().positive().max(100000).optional(),
     altText: z.string().trim().max(300).optional(),
     sortOrder: z.number().int().min(0).max(1000).default(0),
     isPrimary: z.boolean().default(false)
