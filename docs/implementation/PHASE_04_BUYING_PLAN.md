@@ -193,3 +193,11 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - Inventory movement, quarantine balance, item state, parent aggregation, and audit record commit in one serializable transaction. A repeated completed receipt is an idempotent no-op.
 - Seller returns UI requires a warehouse selection and displays quarantine separately in inventory. Admin approval/rejection no longer provides a bypass that could mark items received without a stock record.
 - This is physical receipt only. Inspection/release from quarantine, restock/disposal decisions, and payment refunds remain separate workflows.
+
+
+## Current exact-head verification update — 2026-11-07
+
+- Corrected the Platform PostgreSQL Integration workflow path filters so changes under `src/server/payments/**`, payment intent/webhook/admin routes, seller shipment routes, and payment/order/shipping/return tests trigger the disposable PostgreSQL gate on pull requests and main pushes.
+- The corrected workflow passed on main commit `0d0fab6f47fdf49396022331f77f5612616a8d44` ([run 42404238983](https://github.com/waelkamira/mtjr2/actions/runs/42404238983)): committed migrations deployed, the PostgreSQL integration suite passed (3 files / 9 tests), and demo seed repeatability passed.
+- General CI passed on the subsequent documentation/route-registry head `f05480a83fe3126f0183e51f990e47216fb14098` ([run 42404307099](https://github.com/waelkamira/mtjr2/actions/runs/42404307099)), including Prisma, typecheck, lint, unit tests, build, API security inventory and UI mutation-feedback inventory.
+- Payment provider onboarding, live charge/webhook smoke test, refunds through an actual provider, settlement/reconciliation, and shipment carrier integration remain deliberately blocked on owner-approved markets/currencies, merchant account, payment methods, and provider choice. No provider or launch market is to be guessed.
