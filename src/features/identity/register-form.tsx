@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import AuthReturnLink from "@/components/auth-return-link";
 import { currentReturnPath } from "@/lib/current-return-path";
-import { rememberRegistrationNotice } from "@/lib/auth-return";
 import RegistrationTurnstile from "@/features/identity/registration-turnstile";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -41,6 +40,10 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [oauthError, setOauthError] = useState(initialOAuthError);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [deliveryUnavailable, setDeliveryUnavailable] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendNotice, setResendNotice] = useState("");
 
   async function continueWithGoogle() {
     if (!acceptedTerms || !acceptedPrivacy) { setOauthError(t("Please accept both policy documents before continuing.", "اقبل وثيقتي السياسات قبل المتابعة.")); return; }
@@ -75,11 +78,26 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
     }
   }
 
+  async function resendVerificationEmail() {
+    if (!email.trim() || resending) return;
+    setResending(true); setError(""); setResendNotice("");
+    try {
+      const response = await fetch("/api/auth/verification/resend", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }), cache: "no-store"
+      });
+      const result = await response.json() as { message?: string; error?: string };
+      if (!response.ok) throw new Error(result.error || t("Unable to request a verification email.", "تعذر طلب رسالة التحقق."));
+      setResendNotice(result.message || t("If the account is eligible, a verification email will be sent.", "إذا كان الحساب مؤهلًا، فستُرسل رسالة تحقق."));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("Unable to request a verification email.", "تعذر طلب رسالة التحقق."));
+    } finally { setResending(false); }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !registrationAvailable) return;
+    if (busy || !registrationAvailable || registrationComplete) return;
     if (!turnstileToken) { setError(t("Please complete the bot check before creating an account.", "أكمل التحقق من الروبوت قبل إنشاء الحساب.")); return; }
-    const returnTo = currentReturnPath();
     setBusy(true);
     setError("");
     try {
@@ -91,8 +109,11 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
       });
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
-      rememberRegistrationNotice("created");
-      window.location.replace(returnTo);
+      setPassword("");
+      setRegistrationComplete(true);
+      setDeliveryUnavailable(response.status === 202);
+      setTurnstileToken("");
+      setTurnstileResetVersion((version) => version + 1);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
       setTurnstileToken("");
@@ -126,8 +147,9 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
             <div className="mx-auto w-full max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{t("Mtjr2 account · development", "حساب متجر ٢ · نسخة تطويرية")}</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{t("Create your account", "أنشئ حسابك")}</h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{t("Create an account to explore the marketplace and start shopping right away.", "أنشئ حسابًا لاستكشاف السوق وابدأ التسوق فورًا.")}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{t("Create an account to explore the marketplace. Verify your email before signing in.", "أنشئ حسابًا لاستكشاف السوق. تحقق من بريدك الإلكتروني قبل تسجيل الدخول.")}</p>
           {!registrationAvailable && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{t("Account registration is currently unavailable. Existing customers can still sign in.", "تسجيل الحسابات الجديدة غير متاح حاليًا. يمكن للعملاء الحاليين تسجيل الدخول.")}</p>}
+          {registrationComplete && <section role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><p className="font-semibold">{t("Your account has been created.", "تم إنشاء حسابك.")}</p><p className="mt-1">{deliveryUnavailable ? t("Email delivery is temporarily unavailable. Request a new verification email below before signing in.", "إرسال البريد غير متاح مؤقتًا. اطلب رسالة تحقق جديدة أدناه قبل تسجيل الدخول.") : t("Check your inbox and verify your email address before signing in.", "تحقق من صندوق الوارد وأكد بريدك الإلكتروني قبل تسجيل الدخول.")}</p><button type="button" onClick={() => void resendVerificationEmail()} disabled={resending} className="mt-3 rounded-lg bg-[var(--color-forest-900)] px-4 py-2 font-semibold text-white disabled:opacity-50">{resending ? t("Sending…", "جارٍ الإرسال…") : t("Resend verification email", "إعادة إرسال رسالة التحقق")}</button>{resendNotice && <p className="mt-3">{resendNotice}</p>}</section>}
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">{t("Development preview: these policy documents are initial project drafts, not final legal terms. Public production registration remains disabled.", "معاينة تطويرية: وثائق السياسات هذه مسودات أولية للمشروع وليست شروطًا قانونية نهائية. يظل التسجيل العام في الإنتاج معطلًا.")}</p>
           {oauthError && <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{localizeOAuthError(oauthError)}</p>}
           {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
@@ -167,9 +189,9 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
               <span>{t("I have read the", "قرأت")} <Link className="font-semibold text-[var(--color-forest-800)] underline" href="/privacy" target="_blank">{t("Privacy Notice", "إشعار الخصوصية")}</Link> ({t("version", "الإصدار")} v1).</span>
             </label>
             <RegistrationTurnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetVersion={turnstileResetVersion} />
-            <button className={buttonClass} disabled={!registrationAvailable || busy || !turnstileToken || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))}>{busy ? t("Creating account…", "جارٍ إنشاء الحساب…") : t("Create account", "إنشاء حساب")}</button>
+            <button className={buttonClass} disabled={!registrationAvailable || registrationComplete || busy || !turnstileToken || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))}>{busy ? t("Creating account…", "جارٍ إنشاء الحساب…") : t("Create account", "إنشاء حساب")}</button>
             <div className="flex items-center gap-3 py-1 text-xs text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--border)]" />{t("OR", "أو")}<span className="h-px flex-1 bg-[var(--border)]" /></div>
-            <button type="button" onClick={continueWithGoogle} disabled={!registrationAvailable || busy || !turnstileToken || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))} className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--color-ivory-100)] disabled:cursor-not-allowed disabled:opacity-50"><span className="text-base font-bold">G</span>{t("Continue with Google", "المتابعة باستخدام Google")}</button>
+            <button type="button" onClick={continueWithGoogle} disabled={!registrationAvailable || registrationComplete || busy || !turnstileToken || !acceptedTerms || !acceptedPrivacy || (accountType === "SELLER" && (!sellerLegalName.trim() || !sellerDisplayName.trim()))} className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--color-ivory-100)] disabled:cursor-not-allowed disabled:opacity-50"><span className="text-base font-bold">G</span>{t("Continue with Google", "المتابعة باستخدام Google")}</button>
           </form>
           <div className="mt-6 flex flex-wrap gap-x-2 gap-y-1 border-t border-[var(--border)] pt-5 text-sm text-[var(--muted)]">
             <span>{t("Already have an account?", "لديك حساب بالفعل؟")}</span>
