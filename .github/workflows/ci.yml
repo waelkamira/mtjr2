@@ -47,6 +47,9 @@ jobs:
       - name: Generate API route security inventory
         if: always()
         run: node scripts/audit-api-routes.cjs
+      - name: Generate API authorization boundary inventory
+        if: always()
+        run: node scripts/audit-api-authorization.cjs
       - name: Generate UI mutation feedback inventory
         if: always()
         run: node scripts/audit-ui-mutations.cjs
@@ -57,4 +60,5 @@ jobs:
           name: api-and-ui-audit-reports
           path: |
             api-route-security-report.md
+            api-authorization-boundary-report.md
             ui-mutation-toast-report.md
