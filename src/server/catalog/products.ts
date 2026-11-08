@@ -67,6 +67,28 @@ const createSchema = z.object({
 
 export type CreateProductInput = z.input<typeof createSchema>;
 
+async function hasCategoryAncestorSlug(
+  tx: Prisma.TransactionClient,
+  categories: Array<{ parentId: string | null; slug: string }>,
+  targetSlug: string
+) {
+  if (categories.some((category) => category.slug === targetSlug)) return true;
+  let parentIds = [...new Set(categories.map((category) => category.parentId).filter((id): id is string => Boolean(id)))];
+  const visited = new Set<string>();
+  for (let depth = 0; parentIds.length && depth < 12; depth += 1) {
+    parentIds = parentIds.filter((id) => !visited.has(id));
+    if (!parentIds.length) break;
+    parentIds.forEach((id) => visited.add(id));
+    const parents = await tx.category.findMany({
+      where: { id: { in: parentIds }, status: CatalogEntityStatus.ACTIVE },
+      select: { id: true, parentId: true, slug: true }
+    });
+    if (parents.some((category) => category.slug === targetSlug)) return true;
+    parentIds = parents.map((category) => category.parentId).filter((id): id is string => Boolean(id));
+  }
+  return false;
+}
+
 async function canManageStoreCatalog(userId: string, ownerId: string, storeId: string, now: Date) {
   if (ownerId === userId) return true;
   const [scopedManager, platformAdmin] = await Promise.all([
@@ -112,10 +134,10 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       if (!brand) throw new Error("The selected brand is not active.");
     }
     const selectedCategories = categoryIds.length
-      ? await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true } })
+      ? await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true, parentId: true } })
       : [];
     if (selectedCategories.length !== categoryIds.length) throw new Error("Every selected category must be active.");
-    const isRealEstate = selectedCategories.some((category) => category.slug === "real-estate");
+    const isRealEstate = await hasCategoryAncestorSlug(tx, selectedCategories, "real-estate");
     if (isRealEstate && (!data.propertyDetails || data.latitude === undefined || data.longitude === undefined)) {
       throw new Error("Real-estate listings require property details and map coordinates.");
     }
@@ -355,7 +377,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { slug: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
@@ -373,8 +395,8 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     if (data.propertyDetails !== undefined || data.latitude !== undefined || data.longitude !== undefined || categoryIds !== undefined) {
       const selectedCategories = categoryIds === undefined
         ? current.categories.map((entry) => entry.category)
-        : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { slug: true } });
-      const isRealEstate = selectedCategories.some((category) => category.slug === "real-estate");
+        : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true, parentId: true } });
+      const isRealEstate = await hasCategoryAncestorSlug(tx, selectedCategories, "real-estate");
       const nextLatitude = data.latitude === undefined ? current.latitude : data.latitude;
       const nextLongitude = data.longitude === undefined ? current.longitude : data.longitude;
       const hasPropertyDetails = data.propertyDetails === undefined ? Boolean(current.propertyDetails) : data.propertyDetails !== null;
