@@ -9,24 +9,24 @@
   --color-white: var(--snow);
   --color-black: var(--onyx);
 
-  --color-red-50: var(--snow);
-  --color-red-200: var(--color-line);
-  --color-red-300: var(--color-line);
-  --color-red-700: var(--onyx);
-  --color-red-800: var(--onyx);
-  --color-red-900: var(--onyx);
-  --color-amber-50: var(--snow);
-  --color-amber-200: var(--color-line);
-  --color-amber-300: var(--color-line);
-  --color-amber-700: var(--onyx);
-  --color-amber-800: var(--onyx);
-  --color-amber-900: var(--onyx);
-  --color-amber-950: var(--onyx);
-  --color-green-50: var(--snow);
-  --color-green-800: var(--onyx);
-  --color-emerald-50: var(--snow);
-  --color-emerald-800: var(--onyx);
-  --color-gray-100: var(--snow);
+  --color-red-50: var(--color-blush-50);
+  --color-red-200: var(--color-blush-300);
+  --color-red-300: var(--color-blush-300);
+  --color-red-700: var(--color-blush-800);
+  --color-red-800: #713d51;
+  --color-red-900: #5b3041;
+  --color-amber-50: var(--color-butter-50);
+  --color-amber-200: var(--color-butter-300);
+  --color-amber-300: var(--color-butter-300);
+  --color-amber-700: var(--color-butter-800);
+  --color-amber-800: #6f541c;
+  --color-amber-900: #5c4517;
+  --color-amber-950: #493711;
+  --color-green-50: var(--color-mint-50);
+  --color-green-800: var(--color-mint-800);
+  --color-emerald-50: var(--color-mint-50);
+  --color-emerald-800: var(--color-mint-800);
+  --color-gray-100: #f1eef3;
 
   --color-clay-lavender-950: var(--color-lavender-950);
   --color-clay-lavender-800: var(--color-lavender-800);
@@ -95,49 +95,51 @@
 :root {
   color-scheme: light;
 
-  --snow: #fff5f5;
-  --orange: #f0660d;
-  --onyx: #454545;
-  --color-lavender-950: var(--onyx);
-  --color-lavender-800: var(--onyx);
-  --color-lavender-700: var(--onyx);
-  --color-lavender-600: var(--orange);
-  --color-lavender-300: var(--snow);
-  --color-lavender-100: var(--snow);
-  --color-lavender-50: var(--snow);
+  --snow: #fffaf7;
+  --orange: #f06a24;
+  --onyx: #403d4b;
 
-  --color-mint-800: var(--onyx);
-  --color-mint-600: var(--orange);
-  --color-mint-300: var(--snow);
-  --color-mint-100: var(--snow);
-  --color-mint-50: var(--snow);
+  /* Soft clay palette: each dashboard module gets a distinct pastel family. */
+  --color-lavender-950: #403650;
+  --color-lavender-800: #62547e;
+  --color-lavender-700: #776895;
+  --color-lavender-600: #9384b5;
+  --color-lavender-300: #d9d1eb;
+  --color-lavender-100: #eee9f7;
+  --color-lavender-50: #f8f5fc;
 
-  --color-blush-800: var(--onyx);
-  --color-blush-600: var(--orange);
-  --color-blush-300: var(--snow);
-  --color-blush-100: var(--snow);
-  --color-blush-50: var(--snow);
+  --color-mint-800: #386b53;
+  --color-mint-600: #5e9878;
+  --color-mint-300: #c9e8d6;
+  --color-mint-100: #e7f4ec;
+  --color-mint-50: #f3faf6;
 
-  --color-peach-800: var(--onyx);
-  --color-peach-600: var(--orange);
-  --color-peach-300: var(--snow);
-  --color-peach-100: var(--snow);
-  --color-peach-50: var(--snow);
+  --color-blush-800: #89546a;
+  --color-blush-600: #c47d96;
+  --color-blush-300: #f0d0dc;
+  --color-blush-100: #f9eaf0;
+  --color-blush-50: #fdf5f8;
 
-  --color-butter-800: var(--onyx);
-  --color-butter-600: var(--orange);
-  --color-butter-300: var(--snow);
-  --color-butter-100: var(--snow);
-  --color-butter-50: var(--snow);
+  --color-peach-800: #955b36;
+  --color-peach-600: #ce8a5a;
+  --color-peach-300: #f2d2bb;
+  --color-peach-100: #faebdf;
+  --color-peach-50: #fff7f0;
 
-  --color-sky-700: var(--onyx);
-  --color-sky-100: var(--snow);
-  --color-white: var(--snow);
-  --color-ink-950: var(--onyx);
-  --color-ink-800: var(--onyx);
-  --color-ink-600: var(--onyx);
-  --color-ink-400: var(--onyx);
-  --color-line: rgb(69 69 69 / 14%);
+  --color-butter-800: #806321;
+  --color-butter-600: #b38e3f;
+  --color-butter-300: #eedda8;
+  --color-butter-100: #f8f0d2;
+  --color-butter-50: #fcf8e9;
+
+  --color-sky-700: #477b98;
+  --color-sky-100: #e4f1f8;
+  --color-white: #ffffff;
+  --color-ink-950: #302d39;
+  --color-ink-800: #484452;
+  --color-ink-600: #666170;
+  --color-ink-400: #928d9a;
+  --color-line: rgb(76 68 88 / 13%);
 
   /* Backwards-compatible names for existing platform components */
   --color-petrol-950: var(--color-lavender-950);
@@ -145,72 +147,72 @@
   --color-petrol-800: var(--onyx);
   --color-petrol-700: var(--onyx);
   --color-petrol-600: var(--onyx);
-  --color-violet-700: var(--orange);
+  --color-violet-700: var(--color-lavender-800);
   --color-violet-600: var(--color-lavender-600);
   --color-violet-100: var(--color-lavender-100);
   --color-mint-500: var(--color-mint-600);
   --color-orange-500: var(--orange);
   --color-orange-600: var(--orange);
-  --color-orange-100: var(--snow);
+  --color-orange-100: var(--color-peach-100);
   --color-cyan-300: var(--color-sky-100);
-  --color-cyan-100: var(--snow);
-  --color-ivory-50: var(--snow);
-  --color-ivory-100: var(--snow);
-  --color-ivory-200: var(--snow);
+  --color-cyan-100: var(--color-sky-100);
+  --color-ivory-50: #fffaf1;
+  --color-ivory-100: #fbf5e9;
+  --color-ivory-200: #f3ead8;
   --color-stone-300: var(--color-line);
   --color-stone-500: var(--onyx);
   --color-ink-900: var(--onyx);
   --color-ink-700: var(--onyx);
-  --color-forest-950: var(--onyx);
-  --color-forest-800: var(--orange);
-  --color-forest-700: var(--onyx);
-  --color-forest-900: var(--orange);
+  --color-forest-950: #263f38;
+  --color-forest-800: #3e7159;
+  --color-forest-700: #4f8068;
+  --color-forest-900: #315a48;
   --color-sage-600: var(--color-mint-800);
   --color-sage-500: var(--color-mint-600);
-  --color-sage-300: var(--color-line);
-  --color-sage-200: var(--color-line);
-  --color-sage-100: var(--snow);
+  --color-sage-300: var(--color-mint-300);
+  --color-sage-200: #d9ebdf;
+  --color-sage-100: var(--color-mint-100);
   --color-copper-600: var(--orange);
   --color-copper-500: var(--orange);
   --color-copper-700: var(--orange);
-  --color-copper-100: var(--snow);
+  --color-copper-100: var(--color-peach-100);
 
-  --color-success: var(--onyx);
-  --color-warning: var(--onyx);
-  --color-danger: var(--onyx);
-  --color-info: var(--onyx);
+  --color-success: #3e8a63;
+  --color-warning: #a97825;
+  --color-danger: #b84e61;
+  --color-info: #477b98;
 
-  /* The white, orange, and onyx palette also powers legacy surface aliases. */
-  --background: var(--snow);
+  /* Warm canvas, clean surfaces, and restrained orange brand accents. */
+  --background: #f7f5f8;
   --foreground: var(--onyx);
-  --muted: var(--onyx);
+  --muted: #777381;
   --border: var(--color-line);
-  --brand: var(--onyx);
+  --brand: var(--color-lavender-950);
   --action: var(--orange);
-  --action-hover: var(--orange);
+  --action-hover: #d85b1c;
   --accent: var(--orange);
-  --surface: var(--snow);
-  --surface-soft: var(--snow);
-  --surface-tint: var(--snow);
-  --surface-peach: var(--snow);
-  --surface-butter: var(--snow);
+  --surface: #fffefd;
+  --surface-soft: #f5f2f7;
+  --surface-tint: var(--color-lavender-50);
+  --surface-peach: var(--color-peach-50);
+  --surface-butter: var(--color-butter-50);
 
   /* Sonner notification surfaces */
   --toast-surface: var(--surface);
   --toast-text: var(--foreground);
   --toast-border: var(--color-line);
-  --toast-success-bg: var(--snow);
-  --toast-success-border: var(--orange);
-  --toast-success-text: var(--onyx);
-  --toast-info-bg: var(--snow);
-  --toast-info-border: var(--orange);
-  --toast-info-text: var(--onyx);
-  --toast-warning-bg: var(--snow);
-  --toast-warning-border: var(--orange);
-  --toast-warning-text: var(--onyx);
-  --toast-error-bg: var(--snow);
-  --toast-error-border: var(--orange);
-  --toast-error-text: var(--onyx);
+  --toast-success-bg: var(--color-mint-50);
+  --toast-success-border: var(--color-mint-600);
+  --toast-success-text: var(--color-mint-800);
+  --toast-info-bg: var(--color-sky-100);
+  --toast-info-border: var(--color-sky-700);
+  --toast-info-text: var(--color-sky-700);
+  --toast-warning-bg: var(--color-butter-50);
+  --toast-warning-border: var(--color-butter-600);
+  --toast-warning-text: var(--color-butter-800);
+  --toast-error-bg: var(--color-blush-50);
+  --toast-error-border: var(--color-blush-600);
+  --toast-error-text: var(--color-blush-800);
 
   /* Type */
   --font-body: "Avenir Next", "Trebuchet MS", "Segoe UI", Arial, sans-serif;
@@ -232,21 +234,21 @@
   --dashboard-gap: 1rem;
   --dashboard-padding: clamp(1rem, 2.5vw, 2rem);
 
-  /* Layered onyx shadows keep white surfaces distinct without adding color. */
+  /* Layered soft shadows and inner highlights create the clay surface depth. */
   --shadow-clay:
-    0 2px 5px rgb(69 69 69 / 4%),
-    0 10px 24px rgb(69 69 69 / 9%),
-    inset 0 1px 0 rgb(255 245 245 / 90%);
+    0 2px 6px rgb(67 56 81 / 5%),
+    0 12px 26px rgb(67 56 81 / 9%),
+    inset 0 1px 0 rgb(255 255 255 / 92%);
   --shadow-clay-hover:
-    0 4px 8px rgb(69 69 69 / 5%),
-    0 16px 34px rgb(69 69 69 / 14%),
-    inset 0 1px 0 rgb(255 245 245 / 95%);
+    0 5px 10px rgb(67 56 81 / 6%),
+    0 18px 36px rgb(67 56 81 / 13%),
+    inset 0 1px 0 rgb(255 255 255 / 96%);
   --shadow-clay-inset:
-    inset 0 1px 4px rgb(69 69 69 / 8%),
-    inset 0 -1px 0 rgb(255 245 245 / 90%);
+    inset 0 2px 6px rgb(67 56 81 / 7%),
+    inset 0 -1px 0 rgb(255 255 255 / 92%);
   --shadow-card: var(--shadow-clay);
-  --shadow-floating: 0 18px 44px rgb(69 69 69 / 16%), 0 3px 8px rgb(69 69 69 / 5%);
-  --shadow-glow: 0 8px 22px rgb(240 102 13 / 16%);
+  --shadow-floating: 0 18px 44px rgb(67 56 81 / 14%), 0 3px 8px rgb(67 56 81 / 5%);
+  --shadow-glow: 0 8px 22px rgb(240 106 36 / 18%);
 
   /* Standard icon tile shape and sizes; icon glyphs remain supplied by components */
   --icon-tile-radius: 0.875rem;
