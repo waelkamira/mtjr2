@@ -2592,3 +2592,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Corrected `tests/admin/sellers.test.ts` to return the current singular relation shape. The seller one-store test was also corrected after its first run exposed an assertion-regex mismatch (the service correctly returned `Each seller can own only one store...`).
 - New verification commit on PR #73: `38030c1edaf605f90a053fde065414d36632a99b`. Fresh CI, Platform PostgreSQL Integration, and Browser E2E runs were triggered for this corrected head. Results are pending; no merge or deployment has been performed.
 - The previous CI result of 439 passed / 1 failed is superseded by this test-fixture correction and must not be reported as a passing run until the fresh exact-head jobs complete.
+
+
+## 2026-11-08 — Exact-head CI and PostgreSQL integration passed
+- On PR #73 head `38030c1edaf605f90a053fde065414d36632a99b`, the complete CI quality job passed: Prisma validate, PostgreSQL migration replay, Prisma Client generation, TypeScript, ESLint, all 440 Vitest tests, production build, API route security inventory, and UI mutation feedback inventory.
+- The dedicated Platform PostgreSQL Integration workflow also passed: migration deployment, baseline permission seeding, integration tests, demo catalog seed, and seed repeatability.
+- Browser E2E is still running on the same PR head. Its isolated database migrations, Prisma generation, seller/admin fixture bootstrap, geography import, Playwright dependency installation, and Chromium installation have passed; production build and browser journeys are pending.
+- PR #73 is verification-only and no production deployment was requested. Do not merge it until browser E2E completes; PR #69 remains Draft and blocked by branch divergence (336 commits ahead / 79 behind current main).
