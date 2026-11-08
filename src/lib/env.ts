@@ -17,7 +17,7 @@ const environmentSchema = z.object({
   GROQ_MODEL: z.preprocess((value) => typeof value === "string" && value.trim() === "" ? undefined : value, z.string().trim().min(1).default("openai/gpt-oss-20b")),
   AI_ASSISTANT_ENABLED: z.preprocess((value) => value === "" ? undefined : value, z.enum(["true", "false"]).default("false")),
   MFA_ENCRYPTION_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(32).optional()),
-  CRON_SECRET: z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional(),
+  CRON_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional()),
   VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
   VERCEL_URL: z.string().trim().min(1).optional(),
   PUBLIC_REGISTRATION_ENABLED: z.enum(["true", "false"]).optional(),
