@@ -80,6 +80,7 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
     if (!turnstileToken) { setError(t("Please complete the bot check before creating an account.", "أكمل التحقق من الروبوت قبل إنشاء الحساب.")); return; }
     setBusy(true);
     setError("");
+    let redirecting = false;
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -87,15 +88,17 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
         body: JSON.stringify({ displayName, email, password, accountType, sellerLegalName: accountType === "SELLER" ? sellerLegalName : undefined, sellerDisplayName: accountType === "SELLER" ? sellerDisplayName : undefined, acceptedTerms, acceptedPrivacy, turnstileToken }),
         cache: "no-store"
       });
-      const result = await response.json() as { message?: string; error?: string };
+      const result = await response.json() as { message?: string; signedIn?: boolean; error?: string };
       if (!response.ok) throw new Error(result.error || t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
-      window.location.assign(currentReturnPath());
+      redirecting = true;
+      const returnTo = currentReturnPath();
+      window.location.assign(result.signedIn === false ? `/login?returnTo=${encodeURIComponent(returnTo)}` : returnTo);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
       setTurnstileToken("");
       setTurnstileResetVersion((version) => version + 1);
     } finally {
-      setBusy(false);
+      if (!redirecting) setBusy(false);
     }
   }
 
@@ -123,7 +126,7 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
             <div className="mx-auto w-full max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{t("Mtjr2 account · development", "حساب متجر ٢ · نسخة تطويرية")}</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{t("Create your account", "أنشئ حسابك")}</h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{t("Create an account to explore the marketplace. Verify your email before signing in.", "أنشئ حسابًا لاستكشاف السوق. تحقق من بريدك الإلكتروني قبل تسجيل الدخول.")}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{t("Create an account to explore the marketplace.", "أنشئ حسابًا لاستكشاف السوق.")}</p>
           {!registrationAvailable && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{t("Account registration is currently unavailable. Existing customers can still sign in.", "تسجيل الحسابات الجديدة غير متاح حاليًا. يمكن للعملاء الحاليين تسجيل الدخول.")}</p>}
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">{t("Development preview: these policy documents are initial project drafts, not final legal terms. Public production registration remains disabled.", "معاينة تطويرية: وثائق السياسات هذه مسودات أولية للمشروع وليست شروطًا قانونية نهائية. يظل التسجيل العام في الإنتاج معطلًا.")}</p>
           {oauthError && <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{localizeOAuthError(oauthError)}</p>}

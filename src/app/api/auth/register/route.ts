@@ -5,7 +5,7 @@ import { consumeRegistrationAttempt } from "@/server/identity/login-throttle";
 import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
 import { verifyRegistrationChallenge } from "@/server/identity/turnstile";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { createUserSession } from "@/server/identity/session";
+import { createUserSession, revokeUserSession } from "@/server/identity/session";
 import { setSessionCookie } from "@/server/identity/session-cookie";
 
 export const runtime = "nodejs";
@@ -51,12 +51,21 @@ export async function POST(request: Request): Promise<Response> {
 
     delete data.turnstileToken;
     const result = await registerUser(data as Parameters<typeof registerUser>[0]);
-    const session = await createUserSession(result.userId, {
-      ipAddress: trustedIpAddress,
-      userAgent: request.headers.get("user-agent")
-    });
-    await setSessionCookie(session.token, session.expiresAt);
-    return Response.json({ message: "Account created. Signed in successfully." }, { status: 201 });
+    let sessionToken: string | null = null;
+    try {
+      const session = await createUserSession(result.userId, {
+        ipAddress: trustedIpAddress,
+        userAgent: request.headers.get("user-agent")
+      });
+      sessionToken = session.token;
+      await setSessionCookie(session.token, session.expiresAt);
+      return Response.json({ message: "Account created. Signed in successfully.", signedIn: true }, { status: 201 });
+    } catch {
+      if (sessionToken) {
+        try { await revokeUserSession(sessionToken); } catch { /* The user can still sign in; never expose a partial session. */ }
+      }
+      return Response.json({ message: "Account created. Sign in to continue.", signedIn: false }, { status: 201 });
+    }
   } catch (error) {
     if (error instanceof IdentityConflictError) {
       return Response.json({ error: "An account with this email address already exists. Sign in or use password recovery instead.", code: "EMAIL_ALREADY_EXISTS" }, { status: 409 });
