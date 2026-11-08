@@ -527,12 +527,18 @@ export default function SellerWorkspacePage() {
             </section>
 
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {sellerMetrics.map((metric) => {
+              {sellerMetrics.map((metric, index) => {
+                const surface = [
+                  "bg-[linear-gradient(145deg,#d7eeeb,#a9d5d2)]",
+                  "bg-[linear-gradient(145deg,#e9edf2,#c9d9e2)]",
+                  "bg-[linear-gradient(145deg,#edf3f4,#d6e4e9)]",
+                  "bg-[linear-gradient(145deg,#e5e3f1,#c7c5df)]"
+                ][index % 4];
                 return (
-                  <article key={metric.label} className="group relative isolate overflow-hidden rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,rgba(235,246,249,.98),rgba(194,218,227,.92))] p-5 shadow-[0_12px_26px_rgba(37,65,84,.16),inset_0_2px_0_rgba(255,255,255,.95),inset_0_-3px_7px_rgba(54,84,101,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(37,65,84,.22)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
+                  <article key={metric.label} className={`group relative isolate overflow-hidden rounded-[1.8rem] border border-white/90 ${surface} p-5 shadow-[0_12px_26px_rgba(37,65,84,.16),inset_0_2px_0_rgba(255,255,255,.95),inset_0_-3px_7px_rgba(54,84,101,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(37,65,84,.22)]`}>
                     <div className="flex items-center gap-3">
-                      <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${metric.color}20`, color: metric.color }}>
-                        <span aria-hidden="true" className="text-lg leading-none">{metric.icon}</span>
+                      <span className="grid size-11 shrink-0 place-items-center rounded-[1rem] border border-white/75 bg-white/45 shadow-[0_5px_12px_rgba(35,62,81,.1),inset_0_1px_0_white]" style={{ color: metric.color }}>
+                        <span aria-hidden="true" className="text-xl leading-none">{metric.icon}</span>
                       </span>
                       <h3 className="text-sm font-semibold text-[var(--color-onyx)]">{metric.label}</h3>
                     </div>
