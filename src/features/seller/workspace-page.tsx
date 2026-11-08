@@ -410,27 +410,7 @@ export default function SellerWorkspacePage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(145deg,#dbe6eb_0%,#cbd9e0_48%,#e5edf0_100%)] text-[#1d3448]">
-      <div className="mx-auto grid max-w-[1840px] gap-4 px-3 py-3 sm:px-5 lg:grid-cols-[238px_minmax(0,1fr)] lg:gap-6 lg:px-6 lg:py-6">
-        <aside className="h-fit rounded-[2rem] border border-[#9fb4c2]/70 bg-[linear-gradient(155deg,#263f56_0%,#172f46_58%,#213b52_100%)] p-4 text-white shadow-[0_22px_45px_rgba(26,49,69,.30),inset_0_2px_0_rgba(255,255,255,.16)] lg:sticky lg:top-5">
-          <div className="flex items-center gap-3 px-2 py-3"><div className="grid size-14 shrink-0 place-items-center rounded-[1.25rem] border border-white/20 bg-[linear-gradient(145deg,#a9c7d4,#5b8197)] text-2xl font-black text-[#17344b]">M</div><div><p className="text-lg font-black">matjar</p><p className="text-[10px] tracking-[.18em] text-white/55">SELLER STUDIO</p></div></div>
-          <div className="my-4 rounded-[1.5rem] border border-white/10 bg-white/[.08] p-4"><div className="mx-auto grid size-16 place-items-center rounded-full border-4 border-[#9bb8c8] bg-[linear-gradient(145deg,#d6e4e9,#91adbd)] text-2xl font-black text-[#29475d]">{(workspace?.seller?.displayName ?? workspace?.seller?.legalName ?? "S").slice(0,1).toUpperCase()}</div><p className="mt-3 text-center text-sm font-extrabold">{workspace?.seller?.displayName ?? workspace?.seller?.legalName ?? translate(locale,"Your seller account","حساب البائع")}</p></div>
-          <nav aria-label={translate(locale,"Seller navigation","تنقل البائع")} className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
-            {[
-              ["/seller","⌂",translate(locale,"Dashboard","لوحة التحكم")],["/seller/products","▦",translate(locale,"Products","المنتجات")],["/seller/orders","▤",translate(locale,"Orders","الطلبات")],["/seller/inventory","▥",translate(locale,"Inventory","المخزون")],["/seller/messages","✉",translate(locale,"Messages","الرسائل")],["/seller/questions","?",translate(locale,"Questions","الأسئلة")],["/seller/returns","↶",translate(locale,"Returns","المرتجعات")],["/seller/staff","♙",translate(locale,"Team & access","الفريق والصلاحيات")]
-            ].map(([href,icon,label]) => <Link key={href} href={href} aria-current={href==="/seller"?"page":undefined} className={href==="/seller"?"flex items-center gap-3 rounded-2xl border border-white/40 bg-[linear-gradient(145deg,#d9e8ee,#9eb9c8)] px-3 py-3 text-sm font-extrabold text-[#203b50] shadow-[0_7px_15px_rgba(0,0,0,.18),inset_0_2px_0_white]":"flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-white/75 transition hover:bg-white/10 hover:text-white"}><span className="grid size-8 place-items-center rounded-xl bg-white/10 text-lg">{icon}</span><span>{label}</span></Link>)}
-          </nav>
-          <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-white/[.08] p-4"><p className="text-xs font-extrabold">{translate(locale,"Store status","حالة المتجر")}</p><p className="mt-2 text-[11px] text-white/65">{selectedStore?.name ?? translate(locale,"Complete your seller setup to get started.","أكمل إعداد حساب البائع للبدء.")}</p><span className="mt-3 inline-flex rounded-full bg-[#a7ddd1]/20 px-3 py-1 text-[10px] font-bold text-[#b9f4e5]">{selectedStore?.status ?? workspace?.seller?.status ?? "—"}</span></div>
-        </aside>
-        <div className="min-w-0">
       <div className="mx-auto max-w-[1680px] px-1 py-2 sm:px-2 lg:px-3 lg:py-3">
-        <header className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] border border-white/75 bg-[linear-gradient(145deg,rgba(235,245,248,.94),rgba(193,213,222,.88))] px-4 py-3 shadow-[0_9px_22px_rgba(35,61,80,.13),inset_0_2px_0_rgba(255,255,255,.92)] sm:px-5">
-          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-[linear-gradient(145deg,#e8f3f6,#b8d0db)] text-xl text-[#35566b] shadow-[0_5px_12px_rgba(38,67,87,.16),inset_0_2px_0_white]">⌂</span><div><p className="text-lg font-black tracking-tight text-[#2b465a]">{translate(locale,"Dashboard","لوحة التحكم")}</p><p className="text-[10px] font-semibold tracking-[.14em] text-[#718a99]">MATJAR · SELLER STUDIO</p></div></div>
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
-            <label className="hidden min-w-[190px] max-w-[330px] flex-1 items-center gap-2 rounded-full border border-white/80 bg-[#dce8ed] px-4 py-2.5 text-xs text-[#6c8493] shadow-[inset_0_3px_7px_rgba(43,69,88,.12),0_1px_0_white] md:flex"><span className="text-base">⌕</span><input aria-label={translate(locale,"Search seller workspace","ابحث في لوحة البائع")} placeholder={translate(locale,"Search products, orders…","ابحث عن المنتجات والطلبات...")} className="min-w-0 flex-1 bg-transparent text-[#29465b] outline-none placeholder:text-[#8297a3]" onKeyDown={(event) => { if (event.key === "Enter") { const target = event.currentTarget.value.trim(); if (target) window.location.href = "/seller/products?search=" + encodeURIComponent(target); } }} /></label>
-            <Link href="/seller/orders" aria-label={translate(locale,"Open orders","فتح الطلبات")} className="grid size-10 place-items-center rounded-full border border-white/80 bg-[linear-gradient(145deg,#e7f2f5,#bfd4dd)] text-lg text-[#35576b] shadow-[0_5px_12px_rgba(38,67,87,.15),inset_0_2px_0_white]">♧</Link>
-            <span className="grid size-10 place-items-center rounded-full border border-white/80 bg-[linear-gradient(145deg,#8cc9c5,#4f929a)] font-black text-white shadow-[0_6px_14px_rgba(38,94,105,.22),inset_0_2px_0_rgba(255,255,255,.5)]">{(workspace?.seller?.displayName ?? workspace?.seller?.legalName ?? "M").slice(0,1).toUpperCase()}</span>
-          </div>
-        </header>
         <div className="relative mb-7 overflow-hidden rounded-[2.25rem] border border-white/90 bg-[linear-gradient(145deg,#263f56_0%,#172f46_56%,#3f6878_100%)] p-6 text-white shadow-[0_20px_42px_rgba(26,49,69,.28),inset_0_2px_0_rgba(255,255,255,.22)] sm:p-9 lg:p-10">
           <div className="pointer-events-none absolute -right-10 -top-14 size-64 rounded-full bg-[#a7ddd1]/25 blur-3xl" /><div className="pointer-events-none absolute -bottom-24 left-[38%] size-72 rounded-full bg-[#b9f0df]/30 blur-3xl" />
           <div className="relative flex flex-wrap items-end justify-between gap-5">
@@ -696,8 +676,6 @@ export default function SellerWorkspacePage() {
           </div>
           </>
         )}
-      </div>
-        </div>
       </div>
     </main>
   );
