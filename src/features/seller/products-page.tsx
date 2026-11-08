@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Images, MapPin, Plus, Trash2 } from "lucide-react";
 import { useLocale } from "@/components/locale-provider";
@@ -61,6 +61,7 @@ export default function SellerProductsPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0);
+  const [imageManagerOpen, setImageManagerOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [mapLocation, setMapLocation] = useState<ProductCoordinates | null>(null);
   const [propertyType, setPropertyType] = useState("APARTMENT");
@@ -183,6 +184,32 @@ export default function SellerProductsPage() {
       }
     }
     setUploading(false);
+  }
+
+  async function uploadDroppedImages(files: File[]) {
+    if (!files.length) return;
+    if (!storeId) { setError(translate(locale, "Choose a store before uploading images.", "اختر متجرًا قبل رفع الصور.")); return; }
+    const remaining = Math.max(0, 8 - selectedImageCount);
+    if (!remaining) { setError(translate(locale, "A listing can include up to eight images.", "يمكن أن يتضمن الإعلان ثماني صور كحد أقصى.")); return; }
+    setUploading(true); setError("");
+    for (const file of files.slice(0, remaining)) {
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
+        setError(translate(locale, "Use JPEG, PNG, or WebP images no larger than 8 MB.", "استخدم صور JPEG أو PNG أو WebP بحجم لا يتجاوز 8 ميغابايت."));
+        continue;
+      }
+      const body = new FormData(); body.append("storeId", storeId); body.append("file", file);
+      try {
+        const uploaded = await json<Omit<UploadedImage, "name">>(await fetch("/api/seller/products/images", { method: "POST", body }));
+        setUploadedImages((current) => [...current, { ...uploaded, name: file.name }]);
+        setMessage(translate(locale, "Image uploaded successfully.", "تم رفع الصورة بنجاح."));
+      } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "تعذر رفع الصورة.")); break; }
+    }
+    setUploading(false);
+  }
+
+  function handleImageDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    void uploadDroppedImages(Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("image/")));
   }
 
   async function replaceSelectedImage(event: ChangeEvent<HTMLInputElement>) {
@@ -323,7 +350,7 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video link (YouTube / TikTok)", "رابط الفيديو (يوتيوب / تيك توك)")}<input type="url" maxLength={2048} className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Available quantity", "الكمية المتاحة")}<input required type="number" min="0" max="100000000" step="1" className={inputClass} value={initialStock} onChange={(e) => setInitialStock(e.target.value)} /></label>
             </div>
-            <section className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
+            {!imageManagerOpen ? <button type="button" onClick={() => setImageManagerOpen(true)} className="flex w-full items-center justify-between gap-4 rounded-2xl border border-dashed border-[var(--color-copper-600)] bg-[var(--surface-soft)] p-5 text-left transition hover:bg-[var(--color-sage-100)]"><span className="flex items-center gap-3"><Images aria-hidden="true" className="size-6 text-[var(--color-copper-600)]" /><span><span className="block text-sm font-semibold">{translate(locale, "Open image studio", "فتح استوديو الصور")}</span><span className="mt-1 block text-xs text-[var(--muted)]">{translate(locale, "Upload, preview, replace, remove and choose the cover image.", "ارفع الصور وعاينها واستبدلها واحذفها وحدد صورة الغلاف.")}</span></span></span><span className="rounded-full bg-[var(--color-forest-900)] px-4 py-2 text-xs font-semibold text-white">{selectedImageCount}/8</span></button> : <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6"><div role="dialog" aria-modal="true" aria-labelledby="product-image-studio-title" className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-white/20 bg-[var(--surface)] p-4 shadow-2xl sm:p-7"><div className="mb-5 flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[var(--color-copper-600)]">{translate(locale, "Media workspace", "مساحة إدارة الوسائط")}</p><h3 id="product-image-studio-title" className="mt-1 text-xl font-bold">{translate(locale, "Product image studio", "استوديو صور المنتج")}</h3><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Up to eight images · JPEG, PNG or WebP · 8 MB maximum per image", "حتى ثماني صور · JPEG أو PNG أو WebP · 8 ميغابايت كحد أقصى للصورة")}</p></div><button type="button" onClick={() => setImageManagerOpen(false)} className="rounded-xl border border-[var(--border)] px-3 py-2 text-sm font-semibold">{translate(locale, "Done", "تم")}</button></div><section onDragOver={(event) => event.preventDefault()} onDrop={handleImageDrop} className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4"> 
               <div className="flex items-center gap-2">
                 <Images aria-hidden="true" className="size-5 text-[var(--color-copper-600)]" />
                 <h3 className="text-sm font-semibold">{translate(locale, "Listing images", "صور الإعلان")}</h3>
@@ -364,8 +391,8 @@ export default function SellerProductsPage() {
                   })}
                 </div>
               </div>
-              <p className="text-xs text-[var(--muted)]">{selectedImageCount}/8 {translate(locale, "images selected; the first image is the cover.", "صور محددة؛ الصورة الأولى هي الغلاف.")}</p>
-            </section>
+              <p className="text-xs text-[var(--muted)]">{selectedImageCount}/8 {translate(locale, "images selected; the selected image becomes the cover.", "صور محددة؛ الصورة المحددة تصبح صورة الغلاف.")}</p><p className="rounded-xl border border-dashed border-[var(--color-copper-600)]/50 bg-[var(--surface-soft)] p-3 text-center text-xs text-[var(--muted)]">{translate(locale, "Drop image files anywhere in this panel to upload them.", "اسحب ملفات الصور إلى أي مكان داخل هذه النافذة لرفعها.")}</p>
+            </section></div></div>}
             <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             {categoryId && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold">{translate(locale, "Additional category details", "تفاصيل إضافية حسب الفئة")}</h3><button type="button" onClick={() => setCustomFields((items) => [...items, { key: "", value: "" }])} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Add field", "إضافة حقل")}</button></div><p className="text-xs text-[var(--muted)]">{translate(locale, "Add specifications such as model, year, condition, material, size or any category-specific detail.", "أضف المواصفات مثل الطراز والسنة والحالة والخامة والمقاس أو أي تفاصيل خاصة بالفئة.")}</p>{customFields.map((field, index) => <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]"><input aria-label={translate(locale, "Field name", "اسم الحقل")} className={inputClass} value={field.key} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, key: e.target.value } : item))} placeholder={translate(locale, "Field name", "اسم الحقل")} /><input aria-label={translate(locale, "Field value", "قيمة الحقل")} className={inputClass} value={field.value} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} placeholder={translate(locale, "Value", "القيمة")} /><button type="button" onClick={() => setCustomFields((items) => items.filter((_, i) => i !== index))} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">{translate(locale, "Remove", "حذف")}</button></div>)}</section> }
             {isRealEstate && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
