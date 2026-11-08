@@ -409,7 +409,7 @@ export default function SellerWorkspacePage() {
                 <p className="mt-1 text-sm text-[var(--muted)]">/{selectedStore.slug} · {selectedStore.status}</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link href="/seller/products" className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#65aeb0,#3c858f)] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(38,94,105,.25),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:shadow-[var(--shadow-clay-hover)]">
+                <Link href="/seller/products#create-product" className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#65aeb0,#3c858f)] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(38,94,105,.25),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:shadow-[var(--shadow-clay-hover)]">
                   <span aria-hidden="true" className="text-base leading-none">＋</span>
                   {translate(locale, "Create new listing", "إنشاء منتج جديد")}
                 </Link>
