@@ -254,7 +254,11 @@ export async function answerCustomer(raw: unknown) {
     } catch (error) {
       toolResult = {
         error: error instanceof Error && /sign in/i.test(error.message)
-          ? "The customer must sign in first. Direct them to /login and /account/orders."
+          ? call.function.name === "get_my_support_tickets"
+            ? "The customer must sign in first. Direct them to /login and /account/support."
+            : call.function.name === "get_my_returns"
+              ? "The customer must sign in first. Direct them to /login and /account/returns."
+              : "The customer must sign in first. Direct them to /login and /account/orders."
           : "The requested information is unavailable to this customer."
       };
     }
