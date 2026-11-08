@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,9 +26,7 @@ type Cart = {
 };
 
 function formatMoney(amountMinor: string, currencyCode: string, minorUnit: number) {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode }).format(
-    Number(amountMinor) / (10 ** minorUnit)
-  );
+  return formatMinorUnits(amountMinor, currencyCode, minorUnit);
 }
 
 export default function CartPage() {
