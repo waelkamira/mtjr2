@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
 export default function SellerTopbar() {
   const { locale } = useLocale();
+  const pathname = usePathname();
+  const section = pathname === "/seller" ? translate(locale, "Dashboard", "لوحة التحكم") : pathname.startsWith("/seller/products") ? translate(locale, "Products", "المنتجات") : pathname.split("/").filter(Boolean).at(-1)?.replaceAll("-", " ") ?? "Seller";
   return (
     <header className="sticky top-0 z-20 hidden h-[var(--dashboard-topbar-height)] items-center justify-between border-b border-[#d6e0e7] bg-[#eaf1f4]/90 px-8 shadow-[0_8px_24px_rgba(42,67,87,.08),inset_0_1px_0_rgba(255,255,255,.9)] backdrop-blur-xl lg:flex">
       <div>
