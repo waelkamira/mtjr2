@@ -40,21 +40,6 @@ function flatten(items: Category[], prefix = ""): Array<{ id: string; slug: stri
   ]);
 }
 
-function parseJsonObjectInput(value: string, label: string, required = false): Record<string, unknown> | null {
-  const trimmed = value.trim();
-  if (!trimmed) return required ? {} : null;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(trimmed);
-  } catch {
-    throw new Error(`${label} must contain valid JSON.`);
-  }
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error(`${label} must be a JSON object.`);
-  }
-  return parsed as Record<string, unknown>;
-}
-
 export default function SellerProductsPage() {
   const { locale } = useLocale();
   const [stores, setStores] = useState<Store[]>([]);
@@ -397,6 +382,12 @@ export default function SellerProductsPage() {
         if (field.value.trim()) result[field.key] = field.value.trim();
         return result;
       }, {});
+      if (editIsRealEstate && !editMapLocation) {
+        throw new Error(translate(locale, "Choose a location on the map for this real-estate listing.", "حدد موقع العقار على الخريطة."));
+      }
+      if (editIsRealEstate && !editFloorArea.trim()) {
+        throw new Error(translate(locale, "Enter the property floor area.", "أدخل مساحة العقار."));
+      }
       const mapLocation = editMapLocation;
       const propertyDetails = editIsRealEstate ? {
         propertyType: editPropertyType,
@@ -604,8 +595,8 @@ export default function SellerProductsPage() {
             {editIsRealEstate && <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><legend className="px-1 text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</legend><div className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1 text-sm">{translate(locale, "Property type", "نوع العقار")}<select required className={inputClass} value={editPropertyType} onChange={(e) => setEditPropertyType(e.target.value)}><option value="APARTMENT">{translate(locale, "Apartment", "شقة")}</option><option value="HOUSE">{translate(locale, "House / villa", "منزل / فيلا")}</option><option value="LAND">{translate(locale, "Land", "أرض")}</option><option value="COMMERCIAL">{translate(locale, "Commercial property", "عقار تجاري")}</option></select></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Listing type", "نوع العرض")}<select required className={inputClass} value={editListingType} onChange={(e) => setEditListingType(e.target.value)}><option value="SALE">{translate(locale, "For sale", "للبيع")}</option><option value="RENT">{translate(locale, "For rent", "للإيجار")}</option></select></label>
-              <label className="grid gap-1 text-sm">{translate(locale, "Bedrooms", "غرف النوم")}<input type="number" min="0" max="100" className={inputClass} value={editBedrooms} onChange={(e) => setEditBedrooms(e.target.value)} /></label>
-              <label className="grid gap-1 text-sm">{translate(locale, "Bathrooms", "الحمامات")}<input type="number" min="0" max="100" className={inputClass} value={editBathrooms} onChange={(e) => setEditBathrooms(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Bedrooms", "غرف النوم")}<input type="number" min="0" max="100" step="1" className={inputClass} value={editBedrooms} onChange={(e) => setEditBedrooms(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Bathrooms", "الحمامات")}<input type="number" min="0" max="100" step="1" className={inputClass} value={editBathrooms} onChange={(e) => setEditBathrooms(e.target.value)} /></label>
               <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input required type="number" min="0.01" max="999999999" step="0.01" className={inputClass} value={editFloorArea} onChange={(e) => setEditFloorArea(e.target.value)} /></label>
             </div></fieldset>}
             <section className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><h4 className="text-sm font-semibold">{translate(locale, "Product location", "موقع المنتج")}</h4><p className="text-xs text-[var(--muted)]">{translate(locale, "The public listing shows an approximate area; exact coordinates remain private.", "يعرض الإعلان منطقة تقريبية، بينما تبقى الإحداثيات الدقيقة خاصة.")}</p><ProductLocationMap value={editMapLocation} onChange={setEditMapLocation} label={translate(locale, "Choose product location on map", "اختر موقع المنتج على الخريطة")} />{editMapLocation && <div className="flex items-center justify-between gap-3 text-xs text-[var(--muted)]"><span>{editMapLocation.latitude.toFixed(5)}, {editMapLocation.longitude.toFixed(5)}</span><button type="button" onClick={() => setEditMapLocation(null)} className="rounded-lg border border-[var(--border)] px-3 py-1.5 font-semibold">{translate(locale, "Clear location", "مسح الموقع")}</button></div>}</section>
