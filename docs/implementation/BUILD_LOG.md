@@ -2769,3 +2769,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The workflow's `npm test` script is Vitest, not Playwright. The dedicated Browser E2E workflow already existed but its push trigger excluded canonical `main`, so the seller catalog/map browser journey was not automatically exercised by normal main pushes.
 - Updated `.github/workflows/browser-e2e.yml` to run on pushes to `main` as well as feature branches, preserving pull-request and manual triggers. This enables the isolated PostgreSQL + seeded geography/Akaar catalog + production-server Chromium journey (including seller product authoring, hierarchy zoom and wheel zoom) to run against canonical main.
 - The Browser E2E run triggered by this workflow change is pending; browser journey is not yet claimed as passed. Vercel remains independently blocked by its reported 24-hour build-rate limit.
+
+
+## 2026-11-08 — Geography E2E coordinate-aware assertion
+
+- Follow-up review found the governorate zoom assertion was unconditional, unlike the district/subdistrict/locality assertions. The picker correctly leaves the map focus unchanged when a geography record has no coordinates; the test now asserts zoom 7 only when both governorate coordinates exist.
+- This is a test reliability correction, not a change to geography runtime behavior. Exact-head CI and Browser E2E are pending on the preceding main commit; this new test commit will trigger fresh runs.
