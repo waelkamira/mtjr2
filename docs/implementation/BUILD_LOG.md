@@ -2798,3 +2798,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact-SHA Browser E2E run `42494633661` completed successfully; Chromium journeys and responsive screenshot artifacts uploaded.
 - Exact-SHA CI run `42494633784` completed successfully: Prisma validate/migrate/generate, TypeScript, ESLint, Vitest, production build, API security inventory and UI mutation-feedback inventory.
 - Vercel status remains a provider-side build-rate limit (`build-rate-limit`), not an application build failure. No Vercel environment or deployment configuration was changed.
+
+
+## 2026-11-08 — Canonical-main baseline audit and task-sequence start
+
+**Canonical repository:** `waelkamira/mtjr2`  
+**Canonical branch:** `main`  
+**Audited source SHA:** `256769c65bf07df599b0a92b8d489d4281222060`
+
+- Confirmed repository default branch is `main`; no open pull requests were returned by GitHub for this repository. This audit does not use or recommend merging historical branches; all follow-up work starts from the current canonical source.
+- Exact-head General CI run [42499746345](https://github.com/waelkamira/mtjr2/actions/runs/42499746345) passed on the audited SHA. Its completed steps include Prisma validate, migration deploy against CI PostgreSQL, Prisma generate, TypeScript typecheck, ESLint, Vitest, production build, API route security inventory generation, and UI mutation-feedback inventory generation.
+- Exact-head Browser E2E run [42499746035](https://github.com/waelkamira/mtjr2/actions/runs/42499746035) passed on the same SHA. The workflow migrated and seeded an isolated PostgreSQL database, built and started the production application, ran Chromium Playwright journeys, and uploaded browser reports and responsive screenshots.
+- The current head's Vercel status is failed, but the repository's deployment policy explicitly excludes Vercel deployment from this work. This provider check is not treated as a source-code CI failure and no deployment was attempted.
+- Recent seller workspace work is present on main: real draft create/edit persistence, seller shipping-service edits, one-store-per-seller enforcement, image-upload browser feedback, responsive dashboard captures, and Syrian geography/Leaflet interactions. Exact-head seller workspace CI/E2E evidence is also recorded in the preceding closeout entry.
+- Latest identity correction on this head adds explicit MFA policy coverage: pending seller applicants are not forced into MFA enrollment before approval; active sellers are required to enroll, while platform administrators retain their privileged MFA requirement.
+- This audit is a baseline and evidence reconciliation, not a claim that all platform phases or journeys are complete. The next sequential task is the remaining identity/security closeout, including trusted-edge configuration evidence and the deployment HTTP journey; external secrets and production deployment must remain untouched unless separately authorized.
