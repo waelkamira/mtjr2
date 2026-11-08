@@ -2497,3 +2497,22 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Source and migration files were committed to the feature branch.
 - Automated typecheck, unit tests, Prisma migration execution, and browser/device journeys have not been run in this editing session. Do not treat this commit as a verified deployment.
 - Existing Vercel deployment rate-limit restrictions may still prevent a hosted build/deploy; check the current commit status separately.
+
+
+## 2026-11-08 — Seller product editor and shipping form follow-up
+
+**Changes**
+- Expanded draft-product updates to accept and persist city, district, contact phone, HTTPS video URL, category-specific JSON fields, brand, category assignments, map coordinates, and property details.
+- Map coordinates are stored with the same exact/private and rounded/public coordinate split used during product creation.
+- Seller catalog responses now include the listing metadata needed to prefill the editor.
+- Expanded the seller draft editor with fields for location/contact/video, brand, multiple categories, custom fields, map coordinates, and property details.
+- Added unit-test coverage for the expanded metadata update path and its nested map/property persistence calls.
+- Removed duplicate `categoryIds` keys from product test fixtures and made generic fixtures use a category without mandatory category presets.
+- Confirmed from `src/server/marketplace/market-query.ts` and `src/app/api/markets/route.ts` that the markets API includes `defaultCurrency.minorUnit` and currency minor-unit metadata. The shipping form's minor-unit conversion therefore has a corresponding API field; no additional endpoint change is required.
+
+**Verification and blockers**
+- GitHub/Vercel status for the latest previously deployed commit reported a Vercel build-rate-limit failure. No new deployment was available for the latest source changes during this review.
+- No local checkout or repository shell was available in this session. TypeScript, lint, Vitest, Prisma validation/generation, PostgreSQL migration rehearsal, and browser/device visual checks have **not** been run for these latest edits.
+- The seller edit form currently exposes nested custom fields, map location, and property details as JSON text areas. Product media and variant/price/inventory editing are not yet part of the existing-product editor; the image studio currently supports the create-draft flow. These are remaining UX/product-scope gaps, not verified complete.
+- The one-store-per-seller migration has not been applied to any database. Check for existing duplicate seller ownership and take a backup before applying it.
+- The feature branch remains divergent from `main`; merge/rebase is intentionally deferred until the 50-ahead/58-behind diff is reconciled and conflicts/security-sensitive changes are reviewed.
