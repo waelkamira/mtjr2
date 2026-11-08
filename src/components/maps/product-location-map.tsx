@@ -34,10 +34,15 @@ export default function ProductLocationMap({ value, onChange, readOnly = false, 
     void import("leaflet").then((leaflet) => {
       if (!active || !elementRef.current) return;
       const center = valueRef.current ?? defaultCenter;
-      const map = leaflet.map(elementRef.current, { scrollWheelZoom: false })
+      const map = leaflet.map(elementRef.current, { scrollWheelZoom: false, zoomControl: false, keyboard: true, preferCanvas: true })
         .setView([center.latitude, center.longitude], valueRef.current ? 13 : 6);
+      leaflet.control.zoom({ position: "topright" }).addTo(map);
+      leaflet.control.scale({ position: "bottomleft", metric: true, imperial: false, maxWidth: 120 }).addTo(map);
       leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        minZoom: 3,
         maxZoom: 19,
+        updateWhenIdle: true,
+        keepBuffer: 3,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       mapRef.current = map;
@@ -100,5 +105,8 @@ export default function ProductLocationMap({ value, onChange, readOnly = false, 
     }
   }, [value?.latitude, value?.longitude, value]);
 
-  return <div ref={elementRef} role="application" aria-label={label} className="h-72 w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] sm:h-80" />;
+  return <div className="product-location-map relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] shadow-sm">
+    <div className="pointer-events-none absolute left-3 top-3 z-[500] rounded-full border border-white/70 bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm">انقر على الخريطة لتحديد الموقع</div>
+    <div ref={elementRef} role="application" aria-label={label} className="h-80 w-full sm:h-[22rem]" />
+  </div>;
 }
