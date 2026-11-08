@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import LeafletLocationMap from "@/components/maps/leaflet-location-map";
-import { translate } from "@/lib/locale";
+import { translate, type Locale } from "@/lib/locale";
 
 type GeoItem = {
   id: string;
@@ -25,7 +25,7 @@ type LocationValue = {
   longitude?: number;
 };
 type Props = {
-  locale: string;
+  locale: Locale;
   value: LocationValue;
   onChange: (value: LocationValue) => void;
 };
