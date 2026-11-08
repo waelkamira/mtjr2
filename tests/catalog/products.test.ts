@@ -48,7 +48,7 @@ describe("product lifecycle", () => {
     });
     mocks.brandFindFirst.mockResolvedValue({ id: "brand-1" });
     mocks.categoryCount.mockResolvedValue(1);
-    mocks.categoryFindMany.mockResolvedValue([{ slug: "general" }]);
+    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "general" }]);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
@@ -126,7 +126,7 @@ describe("product lifecycle", () => {
   );
 
   it("requires images and a map with property details for real-estate listings", async () => {
-    mocks.categoryFindMany.mockResolvedValue([{ slug: "real-estate" }]);
+    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
     await expect(createDraftProduct({
       storeId: "store-1",
       name: "City apartment",
