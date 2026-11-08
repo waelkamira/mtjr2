@@ -113,27 +113,6 @@ export async function updateUserAddress(addressIdInput: string, input: unknown) 
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
-/** Marks one owned address as default and clears the previous default atomically. */
-export async function setDefaultUserAddress(addressIdInput: string) {
-  const session = await requireCurrentSession();
-  const addressId = z.string().trim().min(1).max(128).parse(addressIdInput);
-  return prisma.$transaction(async (tx) => {
-    await lockAddressBook(tx, session.userId);
-    const existing = await tx.userAddress.findFirst({
-      where: { id: addressId, userId: session.userId },
-      select: { id: true }
-    });
-    if (!existing) throw new Error("Saved address not found.");
-    await tx.userAddress.updateMany({ where: { userId: session.userId, isDefault: true }, data: { isDefault: false } });
-    const changed = await tx.userAddress.updateMany({
-      where: { id: addressId, userId: session.userId },
-      data: { isDefault: true }
-    });
-    if (changed.count !== 1) throw new Error("Saved address changed. Reload and try again.");
-    return { id: addressId, isDefault: true };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
-}
-
 /** Deletes only an owned address and promotes the newest remaining address if the default was removed. */
 export async function deleteUserAddress(addressIdInput: string) {
   const session = await requireCurrentSession();
