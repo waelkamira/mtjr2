@@ -69,6 +69,11 @@ describe("product lifecycle", () => {
   it("creates variants and minor-unit prices atomically in the store's enabled market", async () => {
     const result = await createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+     description: "Product description",
+     city: "Damascus",
+     district: "Central",
+     contactPhone: "+963900000000",
+     categoryIds: ["category-1"],
       categoryIds: ["category-1"], brandId: "brand-1",
       media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
@@ -85,6 +90,11 @@ describe("product lifecycle", () => {
     });
     await expect(createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      description: "Product description",
+      city: "Damascus",
+      district: "Central",
+      contactPhone: "+963900000000",
+      categoryIds: ["category-1"],
       media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     })).rejects.toThrow(/enabled for this store/i);
@@ -98,6 +108,11 @@ describe("product lifecycle", () => {
         storeId: "store-1",
         name: "Travel Mug",
         slug: "travel-mug",
+        description: "Product description",
+        city: "Damascus",
+        district: "Central",
+        contactPhone: "+963900000000",
+        categoryIds: ["category-1"],
         media: [{ url, isPrimary: true }],
         variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
       })).rejects.toThrow(/media URLs must use HTTPS/i);
@@ -111,6 +126,11 @@ describe("product lifecycle", () => {
       storeId: "store-1",
       name: "City apartment",
       slug: "city-apartment",
+     description: "Product description",
+     city: "Damascus",
+     district: "Central",
+     contactPhone: "+963900000000",
+     categoryIds: ["category-1"],
       categoryIds: ["category-1"],
       media: [{ url: "https://images.example/home.jpg", isPrimary: true }],
       propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" },
@@ -124,6 +144,11 @@ describe("product lifecycle", () => {
       storeId: "store-1",
       name: "City apartment",
       slug: "city-apartment",
+     description: "Product description",
+     city: "Damascus",
+     district: "Central",
+     contactPhone: "+963900000000",
+     categoryIds: ["category-1"],
       categoryIds: ["category-1"],
       mapLocation: { latitude: 33.51381, longitude: 36.27654 },
       media: [{ url: "https://images.example/home.jpg", isPrimary: true }],
@@ -138,6 +163,11 @@ describe("product lifecycle", () => {
       storeId: "store-1",
       name: "Travel Mug",
       slug: "travel-mug",
+      description: "Product description",
+      city: "Damascus",
+      district: "Central",
+      contactPhone: "+963900000000",
+      categoryIds: ["category-1"],
       mapLocation: { latitude: 33.51381, longitude: 36.27654 },
       media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
@@ -166,6 +196,11 @@ describe("product lifecycle", () => {
     mocks.userHasScopedPermission.mockResolvedValue(false);
     await expect(createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      description: "Product description",
+      city: "Damascus",
+      district: "Central",
+      contactPhone: "+963900000000",
+      categoryIds: ["category-1"],
       media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     })).rejects.toThrow(/catalog access/i);
