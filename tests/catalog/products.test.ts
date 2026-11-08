@@ -235,7 +235,7 @@ describe("product lifecycle", () => {
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
     await updateDraftProduct("product-1", {
       city: "Damascus", district: "Central", contactPhone: "+963900000000",
-      videoUrl: "https://video.example/item", customFields: { model: "X1" }, categoryIds: ["category-1"],
+      videoUrl: "https://video.example/item", customFields: { model: "X1", adType: "SALE", rooms: "2", livingrooms: "1", area: "85.5", propertyType: "APARTMENT", bathrooms: "1" }, categoryIds: ["category-1"],
       mapLocation: { latitude: 33.5, longitude: 36.2 },
       propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" }
     });
