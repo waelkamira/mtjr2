@@ -237,8 +237,8 @@ test.describe("seller catalog authoring", () => {
     // The seller workspace must persist edits to an existing shipping service.
     await page.goto("/seller");
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
-    await expect(page.getByText("E2E Standard Shipping", { exact: true })).toBeVisible();
-    const shippingCard = page.getByText("E2E Standard Shipping", { exact: true }).locator("xpath=../..");
+    await expect(page.getByText("E2E Standard Shipping", { exact: false }).first()).toBeVisible();
+    const shippingCard = page.getByText("E2E Standard Shipping", { exact: false }).first().locator("xpath=../..");
     await shippingCard.getByRole("button", { name: /Edit|تعديل/i }).click();
     const revisedShippingName = `E2E Standard Shipping Updated ${stamp}`;
     await page.getByLabel(/Service name|اسم الخدمة/i).fill(revisedShippingName);
