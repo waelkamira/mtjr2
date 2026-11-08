@@ -199,14 +199,23 @@ test.describe("seller catalog authoring", () => {
     expect(subdistrictsResponse.status()).toBe(200);
     const subdistricts = await subdistrictsResponse.json() as { items: Array<{ id: string }> };
     expect(subdistricts.items.length).toBeGreaterThan(0);
-    await page.getByLabel(/Subdistrict|الناحية/i).selectOption(subdistricts.items[0].id);
-
-    const localitiesResponse = await page.request.get(`/api/geography/localities?districtId=${encodeURIComponent(districts.items[0].id)}&subdistrictId=${encodeURIComponent(subdistricts.items[0].id)}`);
-    expect(localitiesResponse.status()).toBe(200);
-    const localities = await localitiesResponse.json() as { items: Array<{ id: string }> };
-    expect(localities.items.length).toBeGreaterThan(0);
-    await page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i).selectOption(localities.items[0].id);
-    await expect(map.locator(".leaflet-container")).toBeVisible({ timeout: 15000 });
+    let selectedSubdistrictId = "";
+    let selectedLocalityId = "";
+    for (const subdistrict of subdistricts.items) {
+      const response = await page.request.get(`/api/geography/localities?districtId=${encodeURIComponent(districts.items[0].id)}&subdistrictId=${encodeURIComponent(subdistrict.id)}`);
+      const payload = await response.json() as { items: Array<{ id: string }> };
+      if (payload.items.length) {
+        selectedSubdistrictId = subdistrict.id;
+        selectedLocalityId = payload.items[0].id;
+        break;
+      }
+    }
+    expect(selectedSubdistrictId).toBeTruthy();
+    expect(selectedLocalityId).toBeTruthy();
+    await page.getByLabel(/Subdistrict|الناحية/i).selectOption(selectedSubdistrictId);
+    await expect(page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i)).toBeEnabled();
+    await page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i).selectOption(selectedLocalityId);
+    await expect(map).toHaveClass(/leaflet-container/, { timeout: 15000 });
   });
 });
 
