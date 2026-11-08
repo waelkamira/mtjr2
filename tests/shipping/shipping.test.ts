@@ -7,12 +7,14 @@ const mocks = vi.hoisted(() => ({
   storeFindUnique: vi.fn(),
   marketFindFirst: vi.fn(),
   shippingRateCreate: vi.fn(),
+  shippingRateFindFirst: vi.fn(),
+  shippingRateUpdate: vi.fn(),
   auditCreate: vi.fn()
 }));
 const tx = {
   store: { findUnique: mocks.storeFindUnique },
   market: { findFirst: mocks.marketFindFirst },
-  storeShippingRate: { create: mocks.shippingRateCreate },
+  storeShippingRate: { create: mocks.shippingRateCreate, findFirst: mocks.shippingRateFindFirst, update: mocks.shippingRateUpdate },
   auditLog: { create: mocks.auditCreate }
 };
 vi.mock("server-only", () => ({}));
@@ -25,7 +27,7 @@ vi.mock("@/server/identity/permission-repository", () => ({
   userHasPermission: mocks.userHasPermission
 }));
 
-import { createStoreShippingRate } from "@/server/shipping/shipping";
+import { createStoreShippingRate, updateStoreShippingRate } from "@/server/shipping/shipping";
 
 describe("store shipping configuration", () => {
   beforeEach(() => {
@@ -35,6 +37,8 @@ describe("store shipping configuration", () => {
       id: "store-1", seller: { ownerId: "owner-1", status: "ACTIVE" }
     });
     mocks.marketFindFirst.mockResolvedValue({ id: "market-1" });
+    mocks.shippingRateFindFirst.mockResolvedValue({ id: "rate-1" });
+    mocks.shippingRateUpdate.mockImplementation(async ({ data }) => ({ id: "rate-1", storeId: "store-1", ...data, amountMinor: BigInt(data.amountMinor), isActive: true, priority: data.priority ?? 0 }));
     mocks.shippingRateCreate.mockImplementation(async ({ data }) => ({
       id: "rate-1", ...data, amountMinor: BigInt(data.amountMinor), isActive: true, priority: 0
     }));
@@ -54,6 +58,29 @@ describe("store shipping configuration", () => {
     }));
     expect(result.amountMinor).toBe("499");
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("updates only a rate owned by the authorized store and audits the change", async () => {
+    const result = await updateStoreShippingRate("rate-1", {
+      storeId: "store-1", marketId: "market-1", currencyCode: "EUR",
+      name: "Express", description: "Tracked delivery", amountMinor: "799",
+      minDeliveryDays: 1, maxDeliveryDays: 2, priority: 5
+    });
+    expect(mocks.shippingRateFindFirst).toHaveBeenCalledWith({
+      where: { id: "rate-1", storeId: "store-1" }, select: { id: true }
+    });
+    expect(mocks.shippingRateUpdate).toHaveBeenCalledOnce();
+    expect(result.amountMinor).toBe("799");
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("does not update a shipping rate belonging to another store", async () => {
+    mocks.shippingRateFindFirst.mockResolvedValue(null);
+    await expect(updateStoreShippingRate("foreign-rate", {
+      storeId: "store-1", marketId: "market-1", currencyCode: "EUR",
+      name: "Express", amountMinor: "799"
+    })).rejects.toThrow(/not found/i);
+    expect(mocks.shippingRateUpdate).not.toHaveBeenCalled();
   });
 
   it("rejects invalid delivery windows before writing", async () => {
