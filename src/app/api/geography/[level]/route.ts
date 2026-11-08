@@ -54,8 +54,18 @@ export async function GET(
         prisma.syriaSubdistrict.count({ where })
       ]);
     } else if (level === "localities") {
-      if (!query.subdistrictId) return Response.json({ error: "subdistrictId is required." }, { status: 400 });
-      const where = { subdistrictId: query.subdistrictId, ...nameFilter };
+      if (!query.subdistrictId && !query.districtId && !query.governorateId) {
+        return Response.json({ error: "A governorate, district or subdistrict filter is required." }, { status: 400 });
+      }
+      if (query.subdistrictId && !query.districtId) {
+        return Response.json({ error: "districtId is required with subdistrictId so unassigned localities can be included safely." }, { status: 400 });
+      }
+      const where = {
+        ...(query.governorateId ? { governorateId: query.governorateId } : {}),
+        ...(query.districtId ? { districtId: query.districtId } : {}),
+        ...(query.subdistrictId ? { OR: [{ subdistrictId: query.subdistrictId }, { subdistrictId: null }] } : {}),
+        ...(query.q ? { AND: [nameFilter] } : {})
+      };
       [items, total] = await Promise.all([
         prisma.syriaLocality.findMany({ where, orderBy: [{ nameAr: "asc" }, { nameEn: "asc" }], skip, take: query.limit, select: { id: true, governorateId: true, districtId: true, subdistrictId: true, nameAr: true, nameEn: true, kind: true, latitude: true, longitude: true } }),
         prisma.syriaLocality.count({ where })
