@@ -37,7 +37,18 @@ async function main() {
   const subdistrictIds = new Set(subdistricts.map((row) => row.id));
   for (const row of districts) if (!governorateIds.has(row.governorateId)) throw new Error(`Unknown governorate ${row.governorateId} in district ${row.id}`);
   for (const row of subdistricts) if (!governorateIds.has(row.governorateId) || !districtIds.has(row.districtId)) throw new Error(`Invalid parent chain for subdistrict ${row.id}`);
-  for (const row of localities) if (!governorateIds.has(row.governorateId) || !districtIds.has(row.districtId) || !subdistrictIds.has(row.subdistrictId)) throw new Error(`Invalid parent chain for locality ${row.id}`);
+  for (const row of localities) {
+    if (!governorateIds.has(row.governorateId)) throw new Error(`Unknown governorate for locality ${row.id}`);
+    if (row.districtId && !districtIds.has(row.districtId)) throw new Error(`Unknown district for locality ${row.id}`);
+    if (row.subdistrictId && !subdistrictIds.has(row.subdistrictId)) throw new Error(`Unknown subdistrict for locality ${row.id}`);
+    if (row.subdistrictId && row.districtId) {
+      const parent = subdistricts.find((entry) => entry.id === row.subdistrictId);
+      if (!parent || parent.districtId !== row.districtId || parent.governorateId !== row.governorateId) {
+        throw new Error(`Inconsistent parent chain for locality ${row.id}`);
+      }
+    }
+    if (!row.kind) throw new Error(`Locality ${row.id} has no required kind classification.`);
+  }
 
   const existing = await prisma.syriaGovernorate.count();
   if (existing > 0) {
@@ -49,8 +60,8 @@ async function main() {
     const d = await tx.syriaDistrict.createMany({ data: districts.map((row) => ({ id: row.id, governorateId: row.governorateId, ...common(row) })), skipDuplicates: true });
     const sd = await tx.syriaSubdistrict.createMany({ data: subdistricts.map((row) => ({ id: row.id, governorateId: row.governorateId, districtId: row.districtId, ...common(row) })), skipDuplicates: true });
     const loc = await tx.syriaLocality.createMany({ data: localities.map((row) => ({
-      id: row.id, governorateId: row.governorateId, districtId: row.districtId, subdistrictId: row.subdistrictId,
-      ...common(row), kind: row.kind ?? null
+      id: row.id, governorateId: row.governorateId, districtId: row.districtId ?? null, subdistrictId: row.subdistrictId ?? null,
+      ...common(row), kind: row.kind
     })), skipDuplicates: true });
     return { governorates: g.count, districts: d.count, subdistricts: sd.count, localities: loc.count };
   }, { timeout: 120000, maxWait: 10000 });
