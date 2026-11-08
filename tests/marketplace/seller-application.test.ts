@@ -101,7 +101,7 @@ describe("marketplace seller lifecycle", () => {
 
     const result = await createSellerStore({ name: "Shop", slug: "shop", marketIds: ["market-1", "market-1"] });
 
-    expect(result).toMatchObject({ id: "store-existing", status: "DRAFT", alreadyCreated: true });
+    expect(result).toMatchObject({ id: "store-existing", storeNumber: "203", status: "DRAFT", alreadyCreated: true });
     expect(storeCreate).not.toHaveBeenCalled();
     expect(marketFindMany).not.toHaveBeenCalled();
     expect(auditCreate).not.toHaveBeenCalled();
@@ -117,7 +117,7 @@ describe("marketplace seller lifecycle", () => {
 
     const result = await createSellerStore({ name: "Second shop", slug: "second-shop", marketIds: ["market-1"] });
 
-    expect(result).toMatchObject({ id: "owned-store", alreadyCreated: true });
+    expect(result).toMatchObject({ id: "owned-store", storeNumber: "202", alreadyCreated: true });
     expect(storeFindFirst).toHaveBeenCalledTimes(2);
     expect(auditCreate).not.toHaveBeenCalled();
   });
