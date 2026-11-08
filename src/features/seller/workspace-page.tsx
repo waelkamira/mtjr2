@@ -375,7 +375,7 @@ export default function SellerWorkspacePage() {
               <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200/80">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
             </div>
-            {selectedStore && <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-xs text-white shadow-[inset_0_1px_0_rgba(255,255,255,.16)]"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-bold text-[var(--color-mint-800)]">{selectedStore.name}</span><span className="text-[var(--color-mint-800)]/70">{selectedStore.status}</span></div>}
+            {selectedStore && <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-xs text-white shadow-[inset_0_1px_0_rgba(255,255,255,.16)]"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-bold text-white">{selectedStore.name}</span><span className="text-white/75">{selectedStore.status}</span></div>}
           </div>
         </div>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
