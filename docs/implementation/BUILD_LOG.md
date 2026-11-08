@@ -2619,3 +2619,22 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Marked fields supplied by the active category preset as required, matching the service's required-field validation; preserved extra legacy/custom fields as optional so sellers can clear them.
 - The custom-field merge now uses a null-prototype object and safely treats keys such as `__proto__` and `constructor` as ordinary data.
 - Added regression assertions for optional legacy fields and prototype-like keys. These tests are committed but have not yet been executed.
+
+## 2026-11-08 — Restore verified-email identity security from current main
+
+**Security findings**
+- The continuing feature branch had drifted from current main in identity flows: password registration created ACTIVE accounts and issued sessions immediately, and password login accepted accounts without a verified email.
+- The branch's Google OAuth start flow did not issue a nonce, and its callback validated ID tokens through Google's tokeninfo endpoint rather than verifying the RS256 signature against Google's published keys. It also did not require a linked account's emailVerifiedAt state.
+- The branch had lost the email-verification route, resend route, page, UI component, and server-side resend challenge issuer.
+
+**Corrections**
+- Restored the current main registration service: new password accounts remain PENDING, receive a hashed single-use 24-hour verification challenge, and only become ACTIVE after the challenge is atomically consumed.
+- Restored registration API email delivery through the server-only Resend adapter. Registration no longer issues a session before email verification; delivery failure returns an accepted response without exposing account secrets.
+- Restored the verification page/API and generic, throttled resend endpoint. Resend responses do not reveal whether an account exists or is eligible.
+- Restored password login's active + emailVerifiedAt requirement and conditional transactional user-row update before session creation.
+- Restored Google OAuth nonce generation and local RS256 ID-token signature/claim verification, including issuer, audience, expiry, issued-at, nonce and verified-email checks. Existing linked Google accounts must be active and verified.
+- Restored the verification UI and added the matching regression tests from current main for registration, login and Google OAuth flows.
+- Preserved branch-specific image-upload request validation, authenticated-action throttling, CONTACT_EMAIL configuration and Vercel preview URL support while restoring the security behavior.
+
+**Verification status**
+- Source and tests are committed to the continuing feature branch. No test/typecheck/lint/Prisma/browser run is available for this latest set yet. The Vercel deployment quota remains a blocker; do not claim the identity restoration has passed CI until exact-head checks run.
