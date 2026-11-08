@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
-type Store = { id: string; name: string };\ntype Row = { id: string; subject: string; customerName: string; unread: boolean };
+type Store = { id: string; name: string };
+type Row = { id: string; subject: string; customerName: string; unread: boolean };
 type Conv = {
   subject: string;
   customer: { email: string; displayName: string | null };
