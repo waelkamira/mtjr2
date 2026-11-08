@@ -352,7 +352,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
         statusHistory: { orderBy: { createdAt: "asc" } },
-        payments: { select: { id: true } },
+        payments: { select: { id: true, status: true } },
         vendorOrders: { orderBy: { createdAt: "asc" }, include: {
           store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } },
           statusHistory: { orderBy: { createdAt: "asc" } },
@@ -370,7 +370,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
           currency: { select: { minorUnit: true, symbol: true } },
           address: true,
           statusHistory: { orderBy: { createdAt: "asc" } },
-          payments: { select: { id: true } },
+          payments: { select: { id: true, status: true } },
           vendorOrders: { include: {
             store: { select: { id: true, name: true, slug: true } }, items: true,
             statusHistory: { orderBy: { createdAt: "asc" } },
@@ -401,7 +401,7 @@ export async function getOwnedOrder(guestToken: string, orderId: string, now = n
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
       statusHistory: { orderBy: { createdAt: "asc" } },
-      payments: { select: { id: true } },
+      payments: { select: { id: true, status: true } },
       vendorOrders: { orderBy: { createdAt: "asc" }, include: {
         store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } },
         statusHistory: { orderBy: { createdAt: "asc" } },
@@ -423,7 +423,7 @@ export async function listCustomerOrders(now = new Date()) {
       currency: { select: { minorUnit: true, symbol: true } },
       address: true,
       statusHistory: { orderBy: { createdAt: "asc" } },
-      payments: { select: { id: true } },
+      payments: { select: { id: true, status: true } },
       vendorOrders: { orderBy: { createdAt: "asc" }, include: {
         store: { select: { id: true, name: true, slug: true } }, items: { orderBy: { createdAt: "asc" } },
         statusHistory: { orderBy: { createdAt: "asc" } },
@@ -454,7 +454,7 @@ export async function cancelOwnedOrder(guestToken: string, orderId: string, now 
       where: { id, ...ownerWhere(owner) },
       select: {
         id: true, orderNumber: true, status: true, userId: true,
-        payments: { select: { id: true } },
+        payments: { select: { id: true, status: true } },
         vendorOrders: { select: { id: true, status: true } }
       }
     });
