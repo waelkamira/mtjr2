@@ -60,9 +60,21 @@ export async function POST(request: Request): Promise<Response> {
       body: formData,
       signal: AbortSignal.timeout(30_000)
     });
-    const payload = await response.json().catch(() => null) as { fileId?: string; isPrivateFile?: boolean } | null;
+    const payload = await response.json().catch(() => null) as { fileId?: string } | null;
     if (!response.ok || !payload?.fileId) {
       return Response.json({ error: "The private identity upload could not be confirmed." }, { status: 502 });
+    }
+
+    // Never return a file reference to the browser until ImageKit confirms privacy and owner tags.
+    const detailsResponse = await fetch(`https://api.imagekit.io/v1/files/${encodeURIComponent(payload.fileId)}/details`, {
+      headers: { Authorization: "Basic " + Buffer.from(privateKey + ":").toString("base64") },
+      signal: AbortSignal.timeout(10000),
+      cache: "no-store"
+    });
+    if (!detailsResponse.ok) return Response.json({ error: "The uploaded identity document could not be verified." }, { status: 502 });
+    const details = await detailsResponse.json() as { isPrivateFile?: boolean; tags?: string[] | null };
+    if (!details.isPrivateFile || !(details.tags ?? []).includes("matjar-seller-identity") || !(details.tags ?? []).includes("user-" + actor.userId)) {
+      return Response.json({ error: "The uploaded identity document failed privacy and ownership verification." }, { status: 502 });
     }
     return Response.json({ fileId: payload.fileId }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch {
