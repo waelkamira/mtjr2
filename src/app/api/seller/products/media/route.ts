@@ -71,7 +71,7 @@ async function uploadToImgur(file: File) {
   if (!response.ok || !url || !url.startsWith("https://")) {
     throw new Error(`Imgur rejected the upload (HTTP ${response.status}).`);
   }
-  return { url, provider: "imgur" as const, storageKey: payload?.data?.deletehash ? `imgur:${payload.data.deletehash}` : undefined, mimeType: file.type, width: payload?.data?.width, height: payload?.data?.height };
+  return { url, provider: "imgur" as const, storageKey: payload?.data?.deletehash ? `imgur:${clientId}:${payload.data.deletehash}` : undefined, mimeType: file.type, width: payload?.data?.width, height: payload?.data?.height };
 }
 
 async function uploadToImageKit(file: File) {
