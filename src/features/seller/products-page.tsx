@@ -16,7 +16,7 @@ type Market = {
 type Category = { id: string; name: string; slug: string; children: Category[] };
 type Brand = { id: string; name: string };
 type Product = {
-  id: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
+  id: string; name: string; slug: string; description: string | null; city: string | null; district: string | null; contactPhone: string | null; videoUrl: string | null; customFields: unknown; brandId: string | null; status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
   mapLocation: ProductCoordinates | null;
   propertyDetails: { propertyType: string; listingType: string; bedrooms: number | null; bathrooms: number | null; floorArea: string } | null;
@@ -83,6 +83,15 @@ export default function SellerProductsPage() {
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editDistrict, setEditDistrict] = useState("");
+  const [editContactPhone, setEditContactPhone] = useState("");
+  const [editVideoUrl, setEditVideoUrl] = useState("");
+  const [editBrandId, setEditBrandId] = useState("");
+  const [editCategoryIds, setEditCategoryIds] = useState<string[]>([]);
+  const [editCustomFields, setEditCustomFields] = useState("{}");
+  const [editMapLocation, setEditMapLocation] = useState("");
+  const [editPropertyDetails, setEditPropertyDetails] = useState("");
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
   const isRealEstate = categoryOptions.find((category) => category.id === categoryId)?.slug === "real-estate";
@@ -303,7 +312,15 @@ export default function SellerProductsPage() {
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, slug: editSlug, description: editDescription })
+        body: JSON.stringify({
+          name: editName, slug: editSlug, description: editDescription,
+          city: editCity || null, district: editDistrict || null,
+          contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
+          brandId: editBrandId || null, categoryIds: editCategoryIds,
+          customFields: JSON.parse(editCustomFields),
+          mapLocation: editMapLocation.trim() ? JSON.parse(editMapLocation) : null,
+          propertyDetails: editPropertyDetails.trim() ? JSON.parse(editPropertyDetails) : null
+        })
       }));
       setEditingId("");
       setMessage(translate(locale, "Draft product updated and returned to pending review.", "تم تحديث مسودة المنتج وإعادتها إلى قائمة المراجعة."));
@@ -472,7 +489,7 @@ export default function SellerProductsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditCity(product.city ?? ""); setEditDistrict(product.district ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? ""); setEditBrandId(product.brandId ?? ""); setEditCategoryIds(product.categories.map((entry) => entry.category.id)); setEditCustomFields(JSON.stringify(product.customFields ?? {}, null, 2)); setEditMapLocation(product.mapLocation ? JSON.stringify(product.mapLocation, null, 2) : ""); setEditPropertyDetails(product.propertyDetails ? JSON.stringify(product.propertyDetails, null, 2) : ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
@@ -481,6 +498,17 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={180} className={inputClass} value={editName} onChange={(e) => setEditName(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Slug", "المعرّف")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={editSlug} onChange={(e) => setEditSlug(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} /></label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">{translate(locale, "City", "المدينة")}<input maxLength={120} className={inputClass} value={editCity} onChange={(e) => setEditCity(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "District", "المنطقة")}<input maxLength={120} className={inputClass} value={editDistrict} onChange={(e) => setEditDistrict(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "هاتف التواصل")}<input maxLength={40} className={inputClass} value={editContactPhone} onChange={(e) => setEditContactPhone(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" className={inputClass} value={editVideoUrl} onChange={(e) => setEditVideoUrl(e.target.value)} /></label>
+            </div>
+            <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={editBrandId} onChange={(e) => setEditBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Categories", "الفئات")}<select multiple className={inputClass + " min-h-28"} value={editCategoryIds} onChange={(e) => setEditCategoryIds(Array.from(e.target.selectedOptions, (option) => option.value))}>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Category-specific fields (JSON)", "حقول الفئة (JSON)")}<textarea rows={4} className={inputClass} value={editCustomFields} onChange={(e) => setEditCustomFields(e.target.value)} /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Map location (JSON; blank to clear)", "الموقع على الخريطة (JSON؛ اتركه فارغاً للمسح)")}<textarea rows={3} className={inputClass} value={editMapLocation} onChange={(e) => setEditMapLocation(e.target.value)} placeholder='{"latitude":33.5,"longitude":36.2}' /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Property details (JSON; blank to clear)", "تفاصيل العقار (JSON؛ اتركه فارغاً للمسح)")}<textarea rows={4} className={inputClass} value={editPropertyDetails} onChange={(e) => setEditPropertyDetails(e.target.value)} /></label>
             <div className="flex gap-2"><button disabled={busy} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" onClick={() => setEditingId("")} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
           </form>}
         </section>
