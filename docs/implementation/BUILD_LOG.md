@@ -2687,3 +2687,9 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Added the feature branch to the PostgreSQL integration workflow's pull-request and push filters, including advertising, catalog, seller, identity, migration, and browser paths.
 - Restored the route-security/UI-mutation inventory scripts and the isolated E2E session bootstrap script required by those workflows.
 - Workflow files are committed, but no successful run has yet been observed for the latest head. The commit-status wrapper currently reports only the Vercel quota failure; do not infer CI success from the workflow configuration alone.
+
+**Identity governance and session lifecycle follow-up**
+- Restored the current platform privilege-request policy and service, including current-main safeguards for sensitive role/permission changes and approval workflow.
+- Restored the authenticated sign-out-all API and session invalidation service, plus account sessions UI controls.
+- Added current-main unit/API/PostgreSQL integration regression tests for logout-all and privilege-request policy.
+- Updated the admin layout to route stale Super Admin step-up sessions to the dedicated ten-minute MFA re-verification page before showing protected admin content.
