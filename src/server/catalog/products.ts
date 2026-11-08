@@ -302,7 +302,7 @@ const updateProductSchema = z.object({
     bathrooms: z.number().int().min(0).max(100).nullable().optional(),
     floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,2})?$/)
       .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
-  }).nullable().optional()
+  }).nullable().optional(),
   media: z.array(z.object({
     url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
     storageKey: z.string().trim().min(1).max(512).nullable().optional(),
