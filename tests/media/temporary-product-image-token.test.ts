@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 import { createTemporaryProductImageDeleteToken, verifyTemporaryProductImageDeleteToken } from "@/server/media/temporary-product-image-token";
 
 describe("temporary product image delete capability", () => {
