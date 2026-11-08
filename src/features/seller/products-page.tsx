@@ -348,7 +348,7 @@ export default function SellerProductsPage() {
           storeId, name, slug, description, contactPhone: contactPhone || undefined, videoUrl: videoUrl || undefined, ...(brandId ? { brandId } : {}),
           ...(isRealEstate ? { propertyDetails: { propertyType, listingType, bedrooms: bedrooms === "" ? null : Number(bedrooms), bathrooms: bathrooms === "" ? null : Number(bathrooms), floorArea } } : {}),
           categoryIds: categoryId ? [categoryId] : [],
-          attributes: categoryAttributes.flatMap((attribute) => {
+          attributes: categoryAttributes.filter((attribute) => !attribute.variantLevel).flatMap((attribute) => {
             const value = attributeValues[attribute.id];
             return value === undefined || value === "" || (Array.isArray(value) && value.length === 0)
               ? []
@@ -356,7 +356,7 @@ export default function SellerProductsPage() {
           }),
           ...productLocation,
           media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, storageKey: image.storageKey, width: image.width, height: image.height, altText: name, sortOrder: index, isPrimary: index === 0 })),
-          variants: [{ sku, ...(barcode.trim() ? { barcode: barcode.trim() } : {}), prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "", ...(marketPrices[market.id]?.compareAtMinor ? { compareAtMinor: marketPrices[market.id].compareAtMinor } : {}) })) }]
+          variants: [{ sku, ...(barcode.trim() ? { barcode: barcode.trim() } : {}), optionValues: Object.fromEntries(categoryAttributes.filter((attribute) => attribute.variantLevel && attributeValues[attribute.id] !== undefined && attributeValues[attribute.id] !== "" && (!Array.isArray(attributeValues[attribute.id]) || (attributeValues[attribute.id] as string[]).length > 0)).map((attribute) => [attribute.key, attributeValues[attribute.id]])), prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "", ...(marketPrices[market.id]?.compareAtMinor ? { compareAtMinor: marketPrices[market.id].compareAtMinor } : {}) })) }]
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
@@ -611,7 +611,7 @@ export default function SellerProductsPage() {
               {loadingCategoryAttributes ? <p className="text-xs text-[var(--muted)]">{translate(locale, "Loading category fields…", "جارٍ تحميل خصائص الفئة…")}</p>
                 : categoryAttributes.length === 0 ? <p className="text-xs text-[var(--muted)]">{translate(locale, "No additional attributes are configured for this category yet.", "لم تُعرّف خصائص إضافية لهذه الفئة بعد.")}</p>
                 : <div className="grid gap-3 sm:grid-cols-2">
-                  {categoryAttributes.map((attribute) => {
+                  {categoryAttributes.filter((attribute) => !attribute.variantLevel).map((attribute) => {
                     const current = attributeValues[attribute.id];
                     const label = <span>{attribute.label}{attribute.required && <span className="ms-1 text-red-600">*</span>}</span>;
                     if (attribute.valueType === "BOOLEAN") return <label key={attribute.id} className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm">{label}<input type="checkbox" checked={current === true} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.checked }))} /></label>;
@@ -620,6 +620,19 @@ export default function SellerProductsPage() {
                     return <label key={attribute.id} className="grid gap-1 text-sm">{label}<input required={attribute.required} type={attribute.valueType === "NUMBER" ? "number" : "text"} step={attribute.valueType === "NUMBER" ? "any" : undefined} className={inputClass} value={current === undefined ? "" : String(current)} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: attribute.valueType === "NUMBER" ? (event.target.value === "" ? "" : Number(event.target.value)) : event.target.value }))} placeholder={attribute.description ?? ""} /></label>;
                   })}
                 </div>}
+            </section>}
+            {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+              <div><h3 className="text-sm font-extrabold text-[#2d4a60]">{translate(locale, "Variant options", "خيارات المتغير")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "These values are saved on the SKU variant, such as size or color.", "تُحفظ هذه القيم على متغير رمز SKU، مثل المقاس أو اللون.")}</p></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
+                  const current = attributeValues[attribute.id];
+                  const label = <span>{attribute.label}{attribute.required && <span className="ms-1 text-red-600">*</span>}</span>;
+                  if (attribute.valueType === "BOOLEAN") return <label key={attribute.id} className="flex items-center gap-2 rounded-2xl border border-white/80 bg-[#f0f6f7] p-3 text-sm shadow-[inset_0_1px_0_white]">{label}<input type="checkbox" checked={current === true} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.checked }))} /></label>;
+                  if (attribute.valueType === "SELECT") return <label key={attribute.id} className="grid gap-1 text-sm">{label}<select required={attribute.required} className={inputClass} value={typeof current === "string" ? current : ""} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.value }))}><option value="">{translate(locale, "Choose…", "اختر…")}</option>{attribute.options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
+                  if (attribute.valueType === "MULTI_SELECT") return <fieldset key={attribute.id} className="grid gap-2 rounded-2xl border border-white/80 bg-[#f0f6f7] p-3 shadow-[inset_0_1px_0_white]"><legend className="px-1 text-sm font-medium">{label}</legend>{attribute.options.map((option) => <label key={option} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Array.isArray(current) && current.includes(option)} onChange={(event) => setAttributeValues((values) => { const selected = Array.isArray(values[attribute.id]) ? values[attribute.id] as string[] : []; return { ...values, [attribute.id]: event.target.checked ? [...selected, option] : selected.filter((item) => item !== option) }; })} />{option}</label>)}</fieldset>;
+                  return <label key={attribute.id} className="grid gap-1 text-sm">{label}<input required={attribute.required} type={attribute.valueType === "NUMBER" ? "number" : "text"} step={attribute.valueType === "NUMBER" ? "any" : undefined} className={inputClass} value={current === undefined ? "" : String(current)} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: attribute.valueType === "NUMBER" ? (event.target.value === "" ? "" : Number(event.target.value)) : event.target.value }))} placeholder={attribute.description ?? ""} /></label>;
+                })}
+              </div>
             </section>}
             <SyriaLocationPicker locale={locale} value={productLocation} onChange={setProductLocation} />
             {isRealEstate && <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
