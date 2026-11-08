@@ -171,6 +171,10 @@ export default function SellerWorkspacePage() {
       })
       .catch((cause: unknown) => {
         if (!active) return;
+        if (cause instanceof ApiError && cause.status === 401) {
+          setAuthenticationRequired(true);
+          return;
+        }
         setSellerAnalytics(null);
         setAnalyticsError(cause instanceof Error
           ? cause.message
@@ -291,7 +295,7 @@ export default function SellerWorkspacePage() {
       label: translate(locale, "Gross sales", "إجمالي المبيعات"),
       value: analyticsLoading || analyticsError ? "—" : grossSalesSummary,
       compact: true,
-      description: translate(locale, "Shown separately by currency; unpaid and cancelled orders are excluded.", "تُعرض كل عملة بشكل مستقل؛ ولا تشمل الطلبات غير المدفوعة أو الملغاة."),
+      description: translate(locale, "Gross order value before refunds, shown separately by currency; unpaid and cancelled orders are excluded.", "إجمالي قيمة الطلبات قبل المرتجعات، مع فصل العملات واستبعاد الطلبات غير المدفوعة والملغاة."),
       color: "#CE8A5A",
       icon: "↗"
     },
