@@ -2516,7 +2516,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No local checkout or repository shell was available in this session. TypeScript, lint, Vitest, Prisma validation/generation, PostgreSQL migration rehearsal, and browser/device visual checks have **not** been run for these latest edits.
 - The seller edit form currently exposes nested custom fields, map location, and property details as JSON text areas. Product media and variant/price/inventory editing are not yet part of the existing-product editor; the image studio currently supports the create-draft flow. These are remaining UX/product-scope gaps, not verified complete.
 - The one-store-per-seller migration has not been applied to any database. Check for existing duplicate seller ownership and take a backup before applying it.
-- The feature branch remains divergent from `main` (78 commits ahead and 58 behind at the latest comparison); merge/rebase is intentionally deferred until the diff is reconciled and conflicts/security-sensitive changes are reviewed.
+- The feature branch remains divergent from `main` (58 commits behind at the latest comparison; the branch remains divergent); merge/rebase is intentionally deferred until the diff is reconciled and conflicts/security-sensitive changes are reviewed.
 
 
 **Follow-up static review**
