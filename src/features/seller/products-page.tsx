@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, ImagePlus, Images, MapPin, Pencil, Star, Trash2, Up
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import ProductLocationMap, { type ProductCoordinates } from "@/components/maps/product-location-map";
+import SyriaLocationPicker from "@/components/maps/syria-location-picker";
 import { toMinorUnits } from "@/lib/money";
 import { buildCategoryFieldsForEdit, getCategoryFieldPresets, mergeEditedCategoryFields } from "@/lib/catalog/category-field-presets";
 
@@ -68,6 +69,7 @@ export default function SellerProductsPage() {
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [mapLocation, setMapLocation] = useState<ProductCoordinates | null>(null);
+  const [mapFocus, setMapFocus] = useState<{ coordinates: ProductCoordinates; zoom: number; key: string } | null>(null);
   const [propertyType, setPropertyType] = useState("APARTMENT");
   const [listingType, setListingType] = useState("SALE");
   const [bedrooms, setBedrooms] = useState("");
@@ -314,7 +316,7 @@ export default function SellerProductsPage() {
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
-      setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setBarcode(""); setWeightGrams(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
+      setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setBarcode(""); setWeightGrams(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null); setMapFocus(null);
       setPropertyType("APARTMENT"); setListingType("SALE"); setBedrooms(""); setBathrooms(""); setFloorArea("");
       setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
@@ -463,8 +465,7 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea required maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
             <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Barcode (optional)", "الباركود (اختياري)")}<input maxLength={100} className={inputClass} value={barcode} onChange={(e) => setBarcode(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Weight (grams)", "الوزن (غرام)")}<input type="number" min="0" max="1000000" step="1" className={inputClass} value={weightGrams} onChange={(e) => setWeightGrams(e.target.value)} /></label></div>
             <div className="grid gap-3 rounded-2xl border border-[var(--border)] p-4 sm:grid-cols-2">
-              <label className="grid gap-1 text-sm">{translate(locale, "City", "المدينة")}<input required maxLength={120} className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} placeholder={translate(locale, "e.g. Damascus", "مثال: دمشق")} /></label>
-              <label className="grid gap-1 text-sm">{translate(locale, "District / area", "المنطقة / الحي")}<input required maxLength={120} className={inputClass} value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={translate(locale, "e.g. Al Mazzeh", "مثال: المزة")} /></label>
+              <div className="sm:col-span-2"><SyriaLocationPicker inputClass={inputClass} onCityChange={setCity} onDistrictChange={setDistrict} onFocus={(coordinates, zoom) => setMapFocus({ coordinates, zoom, key: `${coordinates.latitude}:${coordinates.longitude}:${zoom}` })} /></div>
               <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "رقم الهاتف للتواصل")}<input required type="tel" minLength={6} maxLength={40} className={inputClass} value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Video link (YouTube / TikTok)", "رابط الفيديو (يوتيوب / تيك توك)")}<input type="url" maxLength={2048} className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Available quantity", "الكمية المتاحة")}<input required type="number" min="0" max="100000000" step="1" className={inputClass} value={initialStock} onChange={(e) => setInitialStock(e.target.value)} /></label>
@@ -532,6 +533,7 @@ export default function SellerProductsPage() {
               <ProductLocationMap
                 value={mapLocation}
                 onChange={setMapLocation}
+                focus={mapFocus}
                 label={translate(locale, "Choose product location on map", "اختر موقع المنتج على الخريطة")}
               />
               {mapLocation && <div className="flex items-center justify-between gap-3 text-xs text-[var(--muted)]">
