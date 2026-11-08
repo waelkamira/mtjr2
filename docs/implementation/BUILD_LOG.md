@@ -2676,3 +2676,8 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - These are source-level integrations only. No local TypeScript, lint, Vitest, Prisma validation/generation, migration replay, or browser execution has occurred in this editing session.
 - The continuing branch is significantly divergent from main; the open integration PR remains Draft. Reconcile all remaining overlapping files before merging.
 - Vercel still has no deployment for the latest feature head due the daily deployment quota. The one-store migration has not been applied to any database.
+
+**Advertising invoice scheduling**
+- Added a Vercel Cron schedule for 02:00 UTC on the first day of each month and added authenticated GET support (Vercel Cron's request method) while retaining POST for manual/controlled invocation.
+- Both methods use the same constant-time bearer-secret check and return a generic 401 when CRON_SECRET is missing or invalid.
+- Added a regression test for the authenticated GET worker path. Actual hosted scheduling still requires CRON_SECRET to be configured in the Vercel project and a successful deployment.
