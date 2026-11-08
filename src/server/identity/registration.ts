@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { AuditActorType, ConsentType, Prisma, SellerStatus, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
@@ -31,9 +31,17 @@ export class IdentityConflictError extends Error {
 
 export interface RegistrationResult {
   userId: string;
+  /** Pass only to a trusted email-delivery adapter; never return from an API. */
+  verificationToken: string;
+  verificationExpiresAt: Date;
 }
 
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const VERIFICATION_PURPOSE = "EMAIL_VERIFICATION";
+
+function createVerificationToken(): string {
+  return randomBytes(32).toString("base64url");
+}
 
 function digestToken(token: string): string {
   return createHash("sha256").update(token, "utf8").digest("hex");
@@ -47,9 +55,8 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 /**
- * Creates an active account immediately after the caller has verified the
- * registration challenge. Email verification is intentionally not required.
- * Seller applications remain pending and receive no seller permissions.
+ * Creates a pending account and a single-use email-verification challenge.
+ * The raw challenge is returned only to the trusted caller that sends email.
  */
 export async function registerUser(
   input: RegistrationInput,
@@ -74,6 +81,8 @@ export async function registerUser(
   if (existingUser) throw new IdentityConflictError();
 
   const passwordHash = await hashPassword(parsed.password);
+  const verificationToken = createVerificationToken();
+  const verificationExpiresAt = new Date(now.getTime() + VERIFICATION_TTL_MS);
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -83,7 +92,7 @@ export async function registerUser(
           emailNormalized,
           passwordHash,
           displayName: parsed.displayName,
-          status: UserStatus.ACTIVE
+          status: UserStatus.PENDING
         },
         select: { id: true }
       });
@@ -98,6 +107,15 @@ export async function registerUser(
           data: { userId: createdUser.id, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" }
         });
       }
+
+      await tx.verificationToken.create({
+        data: {
+          userId: createdUser.id,
+          tokenHash: digestToken(verificationToken),
+          purpose: VERIFICATION_PURPOSE,
+          expiresAt: verificationExpiresAt
+        }
+      });
 
       if (parsed.accountType === "SELLER") {
         await tx.seller.create({ data: { ownerId: createdUser.id, legalName: parsed.sellerLegalName, displayName: parsed.sellerDisplayName, status: SellerStatus.PENDING } });
@@ -124,12 +142,16 @@ export async function registerUser(
         ]
       });
 
-      await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.registration.created", resource: "user", resourceId: createdUser.id, occurredAt: now, metadata: { emailVerificationRequired: false } } });
+      await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.registration.created", resource: "user", resourceId: createdUser.id, occurredAt: now, metadata: { emailVerificationRequired: true } } });
 
       return createdUser;
     });
 
-    return { userId: user.id };
+    return {
+      userId: user.id,
+      verificationToken,
+      verificationExpiresAt
+    };
   } catch (error) {
     if (isUniqueConstraintError(error)) throw new IdentityConflictError();
     throw error;

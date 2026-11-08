@@ -36,11 +36,11 @@ function digestLoginValue(kind: "identifier" | "ip", value: string): string {
 }
 
 /**
- * Password login requires an active, email-verified account. The conditional
- * user-row write and session creation share one transaction so a concurrent
- * password change, suspension, or email-verification state change cannot
- * race an already-issued session. MFA remains a separate mandatory step for
- * platform administrators.
+ * Password login accepts active accounts without requiring email verification.
+ * Legacy pending accounts are activated only after successful password proof.
+ * The conditional user-row write and session creation share one transaction,
+ * so concurrent password changes or account suspensions cannot race a session.
+ * MFA remains a separate mandatory step for platform administrators.
  */
 export async function loginWithPassword(
   input: LoginInput,
@@ -77,8 +77,8 @@ export async function loginWithPassword(
     return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: INVALID_CREDENTIALS };
   }
 
-  const eligible = user.status === UserStatus.ACTIVE &&
-    user.emailVerifiedAt !== null && user.passwordHash !== null;
+  const eligible = (user.status === UserStatus.ACTIVE || user.status === UserStatus.PENDING) &&
+    user.passwordHash !== null;
 
   if (!eligible || !passwordMatches) {
     await prisma.loginAttempt.create({
@@ -100,13 +100,19 @@ export async function loginWithPassword(
     const current = await tx.user.updateMany({
       where: {
         id: user.id,
-        status: UserStatus.ACTIVE,
-        emailVerifiedAt: { not: null },
+        status: user.status,
         passwordHash: user.passwordHash
       },
-      data: { lastLoginAt: now }
+      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
     });
     if (current.count !== 1) return null;
+
+    if (user.status === UserStatus.PENDING) {
+      await tx.verificationToken.updateMany({
+        where: { userId: user.id, purpose: "EMAIL_VERIFICATION", consumedAt: null },
+        data: { consumedAt: now }
+      });
+    }
 
     await tx.userSession.create({
       data: {
