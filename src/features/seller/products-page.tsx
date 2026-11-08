@@ -397,7 +397,7 @@ export default function SellerProductsPage() {
           contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
           ...(editIsRealEstate ? {
             propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea },
-            ...editProductLocation
+            latitude: editProductLocation.latitude, longitude: editProductLocation.longitude
           } : {}),
           media: editMedia.map(({ id: _id, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 }))
         })
