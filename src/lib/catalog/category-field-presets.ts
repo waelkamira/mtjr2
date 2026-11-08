@@ -1,4 +1,4 @@
-export type CategoryFieldPreset = { key: string; label: string; value: string; required?: boolean };
+export type CategoryFieldPreset = { key: string; label: string; value: string; required?: boolean; options?: string[] };
 
 const categoryFieldPresets: Record<string, Array<[string, string]>> = {
   "real-estate": [["adType","بيع / إيجار"],["rooms","الغرف"],["livingrooms","الصالونات"],["area","المساحة"],["propertyType","نوع العقار"],["bathrooms","الحمامات"]],
@@ -25,6 +25,60 @@ const categoryFieldPresets: Record<string, Array<[string, string]>> = {
   jobs: [["title","المسمى الوظيفي"],["company","الشركة"],["location","المحافظة"],["salary","الراتب"],["employmentType","نوع الوظيفة"],["jobCategory","مجال الوظيفة"],["educationLevel","المؤهل العلمي"],["experience","الخبرة المطلوبة"],["skills","المهارات المطلوبة"],["description","وصف الوظيفة"],["deadline","آخر موعد للتقديم"]]
 };
 
+
+const commonFieldOptions: Record<string, string[]> = {
+  condition: ["جديد", "مستعمل - بحالة ممتازة", "مستعمل - بحالة جيدة", "مستعمل - بحالة مقبولة", "مستعمل - بحاجة إلى صيانة"],
+  color: ["أسود", "أبيض", "رمادي", "فضي", "ذهبي", "بني", "بيج", "أحمر", "أزرق", "أخضر", "أصفر", "وردي", "بنفسجي", "متعدد الألوان", "أخرى"],
+  gender: ["رجالي", "نسائي", "أطفال", "للجنسين"],
+  season: ["شتوي", "صيفي", "ربيعي", "خريفي", "طوال العام"],
+  size: ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "مقاسات أطفال", "مقاس موحد", "أخرى"],
+  adType: ["بيع", "إيجار"],
+  rooms: ["استوديو", "1", "2", "3", "4", "5", "6", "أكثر من 6"],
+  livingrooms: ["0", "1", "2", "3", "4", "5", "أكثر من 5"],
+  bathrooms: ["1", "2", "3", "4", "5", "أكثر من 5"],
+  propertyType: ["شقة", "منزل", "فيلا", "أرض", "مزرعة", "مكتب", "محل تجاري", "مستودع", "معمل", "أخرى"],
+  fuelType: ["بنزين", "ديزل", "كهرباء", "هجين", "غاز"],
+  year: Array.from({ length: 57 }, (_, index) => String(new Date().getFullYear() - index)),
+  mileage: ["0", "حتى 10,000", "10,001–30,000", "30,001–50,000", "50,001–75,000", "75,001–100,000", "100,001–150,000", "150,001–200,000", "أكثر من 200,000"],
+  brand: ["Apple", "Samsung", "Xiaomi", "Huawei", "Oppo", "Vivo", "Realme", "Nokia", "Sony", "LG", "Lenovo", "HP", "Dell", "Asus", "Acer", "MSI", "Toyota", "Hyundai", "Kia", "Nissan", "Mercedes-Benz", "BMW", "Volkswagen", "Renault", "Peugeot", "أخرى"],
+  storage: ["16 GB", "32 GB", "64 GB", "128 GB", "256 GB", "512 GB", "1 TB", "2 TB", "أخرى"],
+  ram: ["2 GB", "4 GB", "6 GB", "8 GB", "12 GB", "16 GB", "24 GB", "32 GB", "64 GB", "أخرى"],
+  camera: ["كاميرا واحدة", "كاميرتان", "ثلاث كاميرات", "أربع كاميرات", "أكثر من أربع"],
+  battery: ["أقل من 3000 mAh", "3000 mAh", "4000 mAh", "5000 mAh", "6000 mAh", "أكثر من 6000 mAh"],
+  material: ["خشب طبيعي", "خشب MDF", "معدن", "قطن", "صوف", "جلد طبيعي", "جلد صناعي", "بوليستر", "زجاج", "بلاستيك", "رخام", "سيراميك", "أخرى"],
+  style: ["حديث", "كلاسيكي", "ريفي", "بسيط", "صناعي", "اسكندنافي", "شرقي", "فاخر", "أخرى"],
+  dimensions: ["صغير", "متوسط", "كبير", "كبير جداً", "مقاس مخصص"],
+  assembly: ["مجمّع بالكامل", "يحتاج تجميعاً بسيطاً", "يحتاج تجميعاً كاملاً", "خدمة التجميع غير متوفرة"],
+  type: ["ملابس", "أحذية", "حقائب", "إكسسوارات", "أجهزة", "معدات", "أثاث", "أخرى"],
+  productType: ["جديد", "مستعمل", "قطعة", "مجموعة", "مستلزم", "أخرى"],
+  capacity: ["صغير", "متوسط", "كبير", "قابل للتعديل", "أخرى"],
+  screenSize: ["أقل من 10 بوصات", "10–13 بوصة", "14–15 بوصة", "16–17 بوصة", "18 بوصة فأكثر"],
+  resolution: ["HD", "Full HD", "2K", "4K", "8K", "أخرى"],
+  operatingSystem: ["Windows", "macOS", "Linux", "Android", "iOS", "ChromeOS", "بدون نظام", "أخرى"],
+  connectivity: ["Wi-Fi", "Bluetooth", "Wi-Fi وBluetooth", "Ethernet", "USB", "أخرى"],
+  platform: ["PlayStation", "Xbox", "Nintendo", "PC", "Android", "iOS", "متعددة المنصات"],
+  language: ["العربية", "الإنجليزية", "الفرنسية", "الألمانية", "التركية", "متعدد اللغات", "أخرى"],
+  format: ["ورقي", "إلكتروني", "صوتي", "مجموعة"],
+  employmentType: ["دوام كامل", "دوام جزئي", "عن بُعد", "عقد مؤقت", "عمل حر", "تدريب"],
+  educationLevel: ["بدون شهادة", "ثانوية", "دبلوم", "بكالوريوس", "ماجستير", "دكتوراه"],
+  experience: ["بدون خبرة", "أقل من سنة", "1–3 سنوات", "3–5 سنوات", "5–10 سنوات", "أكثر من 10 سنوات"],
+  wrapping: ["تغليف عادي", "تغليف فاخر", "بدون تغليف"],
+  delivery: ["متاح", "غير متاح", "حسب الاتفاق"]
+};
+
+const categorySpecificOptions: Record<string, Record<string, string[]>> = {
+  phones: { brand: ["Apple", "Samsung", "Huawei", "Xiaomi", "Oppo", "Realme", "Vivo", "Nokia", "Honor", "OnePlus", "أخرى"] },
+  cars: { brand: ["Toyota", "Hyundai", "Kia", "Nissan", "Mercedes-Benz", "BMW", "Volkswagen", "Renault", "Peugeot", "Ford", "Chevrolet", "Mitsubishi", "Suzuki", "Lexus", "Jeep", "أخرى"] },
+  fashion: { type: ["ملابس", "أحذية", "حقائب", "إكسسوارات", "ملابس داخلية", "أحزمة", "نظارات", "ساعات", "أخرى"], clothingType: ["تيشيرت", "قميص", "بنطال", "جاكيت", "بدلة", "تنورة", "فستان", "ملابس رياضية", "ملابس داخلية", "أخرى"] },
+  furniture: { type: ["كنبة", "كرسي", "طاولة", "سرير", "خزانة", "مكتب", "رف", "دولاب", "أثاث حديقة", "أخرى"], dimensions: ["صغير", "متوسط", "كبير", "ضخم", "مقاس خاص"] },
+  books: { genre: ["رواية", "تاريخ", "علوم", "أدب", "دين", "أطفال", "تعليم", "تقنية", "إدارة وأعمال", "أخرى"] },
+  realEstate: { propertyType: ["بيت", "شقة", "أرض", "مزرعة", "فيلا", "معمل", "مكتب", "محل تجاري", "غير ذلك"] },
+  agriculture: { type: ["بذور", "شتلات", "نباتات", "فواكه", "خضروات", "معدات زراعية", "أسمدة", "تربة", "أخرى"] },
+  shoes: { type: ["حذاء رياضي", "حذاء رسمي", "حذاء يومي", "صندل", "حذاء أطفال", "أخرى"] },
+  bags: { productType: ["حقيبة يد", "حقيبة ظهر", "حقيبة سفر", "حقيبة مدرسية", "حقيبة لابتوب", "محفظة", "أخرى"] },
+  jobs: { employmentType: ["دوام كامل", "دوام جزئي", "عن بُعد", "عقد مؤقت", "عمل حر", "تدريب"] }
+};
+
 export function getCategoryFieldPresets(slug: string): CategoryFieldPreset[] {
   const normalized = slug.toLowerCase();
   const aliases: Record<string, string> = {
@@ -37,7 +91,12 @@ export function getCategoryFieldPresets(slug: string): CategoryFieldPreset[] {
     "employment": "jobs"
   };
   const key = aliases[normalized] ?? normalized;
-  return (categoryFieldPresets[key] ?? []).map(([fieldKey, label]) => ({ key: fieldKey, label, value: "" }));
+  return (categoryFieldPresets[key] ?? []).map(([fieldKey, label]) => ({
+    key: fieldKey,
+    label,
+    value: "",
+    options: categorySpecificOptions[key]?.[fieldKey] ?? commonFieldOptions[fieldKey]
+  }));
 }
 
 /** Build an editable field list without discarding previously saved custom keys. */
