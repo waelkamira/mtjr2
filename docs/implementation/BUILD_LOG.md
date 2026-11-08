@@ -2702,3 +2702,11 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Added category-specific select options to the existing Akaar-aligned Matjar category presets and rendered them as selects in create/edit draft forms.
 - Documented CC BY 4.0 attribution and the important limitation that not every Syrian city has a verified neighborhood list in the source; the runtime no longer depends on an external API or daily request quota.
 - Verification is pending: Prisma migration replay, typecheck, lint, unit tests, and browser journey have not yet run successfully on the latest commit.
+
+
+## 2026-11-08 — Product image provider deletion follow-up
+- Added provider-side deletion for ImageKit assets using the server-only private API key and for Imgur assets using an optional account OAuth access token (IMGUR_ACCESS_TOKEN); a public Imgur Client-ID is never treated as deletion authorization.
+- Draft product media replacement now records removed storage keys inside the database transaction and calls the provider only after the database commit succeeds, avoiding deletion of images still referenced by a rolled-back product edit.
+- Added unit coverage for ImageKit deletion, missing Imgur OAuth configuration, malformed storage keys, and catalog-level removal behavior.
+- Provider deletion failures are logged after unlinking; a durable retry/outbox is still required before claiming guaranteed cleanup. Existing Imgur assets need a valid owner access token to be removed.
+- Verification remains pending on this head: GitHub Actions has not reported a run for the latest commit, and Vercel is blocked by the daily deployment quota.
