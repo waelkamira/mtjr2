@@ -209,12 +209,12 @@ export async function changeAdminUserStatus(userId: string, input: unknown, now 
 
     const changed = await tx.user.updateMany({
       where: { id, status: target.status },
-      data: { status: data.status }
+      data: { status: data.status, adminStatusReason: data.status === UserStatus.ACTIVE ? null : data.reason }
     });
     if (changed.count !== 1) throw new Error("The account changed concurrently. Reload and retry.");
 
     let revokedSessions = 0;
-    if (data.status === UserStatus.SUSPENDED || data.status === UserStatus.DISABLED) {
+    if (data.status !== UserStatus.ACTIVE) {
       const revoked = await tx.userSession.updateMany({
         where: { userId: id, revokedAt: null },
         data: { revokedAt: now }

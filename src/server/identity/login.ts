@@ -68,7 +68,7 @@ export async function loginWithPassword(
 
   const user = await prisma.user.findUnique({
     where: { emailNormalized: email },
-    select: { id: true, passwordHash: true, status: true, emailVerifiedAt: true }
+    select: { id: true, passwordHash: true, status: true, adminStatusReason: true }
   });
 
   const passwordMatches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
@@ -77,7 +77,8 @@ export async function loginWithPassword(
     return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: INVALID_CREDENTIALS };
   }
 
-  const eligible = (user.status === UserStatus.ACTIVE || user.status === UserStatus.PENDING) &&
+  const eligible = (user.status === UserStatus.ACTIVE ||
+    (user.status === UserStatus.PENDING && user.adminStatusReason === null)) &&
     user.passwordHash !== null;
 
   if (!eligible || !passwordMatches) {
@@ -101,9 +102,10 @@ export async function loginWithPassword(
       where: {
         id: user.id,
         status: user.status,
-        passwordHash: user.passwordHash
+        passwordHash: user.passwordHash,
+        adminStatusReason: user.adminStatusReason
       },
-      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
+      data: { status: UserStatus.ACTIVE, adminStatusReason: null, lastLoginAt: now }
     });
     if (current.count !== 1) return null;
 

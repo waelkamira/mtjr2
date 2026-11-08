@@ -35,6 +35,7 @@ model User {
   passwordHash            String?
   displayName             String?
   status                  UserStatus               @default(PENDING)
+  adminStatusReason       String?
   anonymizedAt            DateTime?
   emailVerifiedAt         DateTime?
   lastLoginAt             DateTime?

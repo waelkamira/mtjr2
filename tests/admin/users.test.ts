@@ -74,7 +74,7 @@ describe("admin user management", () => {
 
     expect(mocks.userUpdateMany).toHaveBeenCalledWith({
       where: { id: "buyer-1", status: "ACTIVE" },
-      data: { status: "SUSPENDED" }
+      data: { status: "SUSPENDED", adminStatusReason: "Confirmed account abuse" }
     });
     expect(mocks.sessionUpdateMany).toHaveBeenCalledWith({
       where: { userId: "buyer-1", revokedAt: null },
@@ -94,6 +94,24 @@ describe("admin user management", () => {
       })
     }));
     expect(result).toMatchObject({ previousStatus: "ACTIVE", status: "SUSPENDED", revokedSessions: 2 });
+  });
+
+  it("records a reason and revokes sessions for an administrator-set pending hold", async () => {
+    const now = new Date("2026-11-05T00:00:00Z");
+    const result = await changeAdminUserStatus("buyer-1", {
+      status: "PENDING",
+      reason: "Requires manual review"
+    }, now);
+
+    expect(mocks.userUpdateMany).toHaveBeenCalledWith({
+      where: { id: "buyer-1", status: "ACTIVE" },
+      data: { status: "PENDING", adminStatusReason: "Requires manual review" }
+    });
+    expect(mocks.sessionUpdateMany).toHaveBeenCalledWith({
+      where: { userId: "buyer-1", revokedAt: null },
+      data: { revokedAt: now }
+    });
+    expect(result).toMatchObject({ previousStatus: "ACTIVE", status: "PENDING", revokedSessions: 2 });
   });
 
   it("does not allow status changes to self or a super administrator", async () => {
