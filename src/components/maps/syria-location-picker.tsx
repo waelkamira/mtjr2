@@ -15,6 +15,7 @@ export type SyriaPlace = {
 };
 type Level = "governorates" | "districts" | "subdistricts" | "localities";
 type Props = {
+  district: string;
   onCityChange: (value: string) => void;
   onDistrictChange: (value: string) => void;
   onFocus: (coordinates: { latitude: number; longitude: number }, zoom: number) => void;
@@ -29,7 +30,7 @@ async function loadLevel(level: Level, params: Record<string, string> = {}) {
   return payload as { items: SyriaPlace[]; pagination: { totalPages?: number } | null };
 }
 
-export default function SyriaLocationPicker({ onCityChange, onDistrictChange, onFocus, inputClass }: Props) {
+export default function SyriaLocationPicker({ district, onCityChange, onDistrictChange, onFocus, inputClass }: Props) {
   const [governorates, setGovernorates] = useState<SyriaPlace[]>([]);
   const [districts, setDistricts] = useState<SyriaPlace[]>([]);
   const [subdistricts, setSubdistricts] = useState<SyriaPlace[]>([]);
@@ -105,7 +106,7 @@ export default function SyriaLocationPicker({ onCityChange, onDistrictChange, on
     <label className="grid gap-1 text-sm">الناحية<select disabled={!districtId || loading} className={inputClass} value={subdistrictId} onChange={(event) => { const id = event.target.value; setSubdistrictId(id); setSearch(""); onCityChange(""); onDistrictChange(""); focus(subdistricts.find((item) => item.id === id), 11); }}><option value="">اختر الناحية</option>{subdistricts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
     <label className="grid gap-1 text-sm"><span className="flex items-center gap-2">المدينة / البلدة<Search aria-hidden="true" className="size-3.5 text-[var(--muted)]" /></span><input className={inputClass} disabled={!subdistrictId} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث عن مدينة أو بلدة..." /><select disabled={!subdistrictId || loading} className={inputClass} value={cityPlaceId} onChange={(event) => { const id = event.target.value; const place = cityPlaces.find((item) => item.id === id); setCityPlaceId(id); setNeighborhoodId(""); setManualNeighborhood(""); onCityChange(place?.name ?? ""); onDistrictChange(selectedSubdistrict?.name ?? selectedDistrict?.name ?? ""); focus(place, 14); if (place && subdistrictId) { loadLevel("localities", { subdistrictId, kind: "locality" }).then((result) => setNeighborhoods(result.items)).catch(() => setNeighborhoods([])); } }}><option value="">اختر المدينة / البلدة</option>{cityPlaces.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.kind === "city" ? "مدينة" : item.kind === "town" ? "بلدة" : "قرية"}</option>)}</select></label>
     <label className="grid gap-1 text-sm">الحي / المحلة<select disabled={!cityPlaceId || loading} className={inputClass} value={neighborhoodId} onChange={(event) => { const id = event.target.value; const place = neighborhoods.find((item) => item.id === id); setNeighborhoodId(id); onDistrictChange(place?.name ?? ""); focus(place, 15); }}><option value="">اختر الحي (إن توفر)</option>{neighborhoods.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-    {!neighborhoods.length && cityPlaceId && <label className="grid gap-1 text-sm">اسم الحي (إذا لم يكن مدرجاً)<input className={inputClass} maxLength={120} value={manualNeighborhood} onChange={(event) => { setManualNeighborhood(event.target.value); onDistrictChange(event.target.value); }} placeholder="اكتب اسم الحي" /></label>}
+    {!neighborhoods.length && cityPlaceId && <label className="grid gap-1 text-sm">اسم الحي (إذا لم يكن مدرجاً)<input className={inputClass} maxLength={120} value={manualNeighborhood || district} onChange={(event) => { setManualNeighborhood(event.target.value); onDistrictChange(event.target.value); }} placeholder="اكتب اسم الحي" /></label>}
     {selectedGovernorate && <p className="text-xs text-[var(--muted)]">المحافظة: {selectedGovernorate.name}{selectedDistrict ? ` · ${selectedDistrict.name}` : ""}{selectedSubdistrict ? ` · ${selectedSubdistrict.name}` : ""}{selectedCityPlace ? ` · ${selectedCityPlace.name}` : ""}{selectedNeighborhood ? ` · ${selectedNeighborhood.name}` : ""}</p>}
     {loading && <p className="text-xs text-[var(--muted)]">جارٍ تحميل المواقع…</p>}
     {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
