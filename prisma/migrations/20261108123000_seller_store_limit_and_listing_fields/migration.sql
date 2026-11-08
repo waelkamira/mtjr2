@@ -9,6 +9,8 @@ BEGIN
   END IF;
 END $$;
 
+DROP INDEX IF EXISTS "Store_sellerId_status_idx";
+
 CREATE UNIQUE INDEX "Store_sellerId_key" ON "Store"("sellerId");
 
 ALTER TABLE "Product"
