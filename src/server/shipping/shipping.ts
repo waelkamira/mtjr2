@@ -126,7 +126,7 @@ export async function listStoreShippingRates(storeId: string, now = new Date()) 
   }
   const rates = await prisma.storeShippingRate.findMany({
     where: { storeId: store.id }, orderBy: [{ priority: "asc" }, { createdAt: "desc" }], take: 200,
-    select: { id: true, marketId: true, market: { select: { code: true, name: true } }, currencyCode: true, name: true, description: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, effectiveFrom: true, effectiveUntil: true, priority: true }
+    select: { id: true, marketId: true, market: { select: { code: true, name: true } }, currencyCode: true, currency: { select: { minorUnit: true } }, name: true, description: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, effectiveFrom: true, effectiveUntil: true, priority: true }
   });
   return rates.map((rate) => ({ ...rate, amountMinor: rate.amountMinor.toString() }));
 }
