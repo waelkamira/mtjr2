@@ -28,7 +28,15 @@ type ReturnRequest = {
   requestedAt: string;
   items: Array<{ productName: string; quantity: number }>;
 };
-type Message = { role: "user" | "assistant"; content: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[] };
+type SupportTicket = {
+  ticketNumber: string;
+  subject: string;
+  status: string;
+  priority: string;
+  updatedAt: string;
+  messageCount: number;
+};
+type Message = { role: "user" | "assistant"; content: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[]; supportTickets?: SupportTicket[] };
 
 const suggestions = [
   "ابحث عن منتجات إلكترونية",
@@ -61,9 +69,9 @@ export default function MatjarAIAssistant() {
           history: messages.slice(-6).map(({ role, content }) => ({ role, content: content.slice(0, 1200) }))
         })
       });
-      const data = await response.json() as { message?: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[]; error?: string };
+      const data = await response.json() as { message?: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[]; supportTickets?: SupportTicket[]; error?: string };
       if (!response.ok) throw new Error(data.error || "تعذر الاتصال بالمساعد.");
-      setMessages([...next, { role: "assistant", content: data.message || "", products: data.products || [], orders: data.orders || [], returns: data.returns || [] }]);
+      setMessages([...next, { role: "assistant", content: data.message || "", products: data.products || [], orders: data.orders || [], returns: data.returns || [], supportTickets: data.supportTickets || [] }]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "تعذر الاتصال بالمساعد.");
     } finally {
@@ -108,6 +116,16 @@ export default function MatjarAIAssistant() {
                     <p className="mt-1">{request.items.map((item) => item.productName + " × " + item.quantity).join("، ")}</p>
                     <p className="mt-1 text-[var(--muted)]">{new Date(request.requestedAt).toLocaleDateString()}</p>
                   </div>
+                ))}
+                {item.supportTickets?.map((ticket) => (
+                  <Link key={ticket.ticketNumber} href="/account/support" className="mt-3 block rounded-xl border border-[var(--border)] bg-[var(--color-lavender-50)] p-3 text-xs text-[var(--color-ink-800)] hover:bg-[var(--color-lavender-100)]">
+                    <div className="flex items-center justify-between gap-2 font-bold">
+                      <span>{ticket.ticketNumber}</span><span>{ticket.status}</span>
+                    </div>
+                    <p className="mt-1 font-semibold">{ticket.subject}</p>
+                    <p className="mt-1 text-[var(--muted)]">{ticket.messageCount} رسالة · {new Date(ticket.updatedAt).toLocaleDateString()}</p>
+                    <span className="mt-2 inline-block font-semibold underline">فتح مركز الدعم</span>
+                  </Link>
                 ))}
                 {item.orders?.map((order) => (
                   <div key={order.orderNumber} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--color-mint-50)] p-3 text-xs text-[var(--color-ink-800)]">
