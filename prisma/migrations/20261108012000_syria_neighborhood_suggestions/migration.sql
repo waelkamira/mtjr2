@@ -15,3 +15,7 @@ CREATE TABLE "SyriaNeighborhood" (
 CREATE INDEX "SyriaNeighborhood_governorateId_verificationStatus_cityGroupNameAr_idx" ON "SyriaNeighborhood"("governorateId", "verificationStatus", "cityGroupNameAr");
 CREATE INDEX "SyriaNeighborhood_governorateId_nameAr_idx" ON "SyriaNeighborhood"("governorateId", "nameAr");
 ALTER TABLE "SyriaNeighborhood" ADD CONSTRAINT "SyriaNeighborhood_governorateId_fkey" FOREIGN KEY ("governorateId") REFERENCES "SyriaGovernorate"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "Product" ADD COLUMN "neighborhoodId" TEXT;
+CREATE INDEX "Product_neighborhoodId_idx" ON "Product"("neighborhoodId");
+ALTER TABLE "Product" ADD CONSTRAINT "Product_neighborhoodId_fkey" FOREIGN KEY ("neighborhoodId") REFERENCES "SyriaNeighborhood"("id") ON DELETE SET NULL ON UPDATE CASCADE;
