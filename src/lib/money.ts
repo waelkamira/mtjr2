@@ -3,7 +3,7 @@ export function toMinorUnits(amountInput: string, minorUnit: number): string {
     throw new Error("Currency precision is invalid.");
   }
   const amount = amountInput.trim();
-  const match = /^(0|[1-9][0-9]*)(?:\\.([0-9]+))?$/.exec(amount);
+  const match = /^(0|[1-9][0-9]*)(?:\.([0-9]+))?$/.exec(amount);
   if (!match) throw new Error("Enter a valid non-negative shipping amount.");
   const fraction = match[2] ?? "";
   if (fraction.length > minorUnit) {
