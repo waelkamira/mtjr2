@@ -21,6 +21,7 @@ describe("Matjar AI support ticket tool", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.listMySupportTickets.mockResolvedValue([{
+      id: "ticket-1",
       ticketNumber: "SUP-20261108-A1B2C3D4",
       subject: "Order delivery question",
       status: "OPEN",
@@ -45,6 +46,7 @@ describe("Matjar AI support ticket tool", () => {
 
     expect(mocks.listMySupportTickets).toHaveBeenCalledOnce();
     expect(result.supportTickets).toEqual([{
+      id: "ticket-1",
       ticketNumber: "SUP-20261108-A1B2C3D4",
       subject: "Order delivery question",
       status: "OPEN",
