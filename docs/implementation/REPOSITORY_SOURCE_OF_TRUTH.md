@@ -5,19 +5,37 @@
 **Canonical branch:** `main`  
 **Canonical Prisma schema:** `prisma/schema.prisma`
 
-## 2026-11-08 — Latest consolidation update
+## 2026-11-08 — Closed-PR reconciliation and customer-address repair
 
-The earlier audit below is historical. The PR #69 seller/catalog follow-up has now been resolved:
+The closed pull requests were checked by their actual merged state, their changed files, and content comparison against current `main`. A closed PR is not assumed to be merged.
 
-- PR [#69](https://github.com/waelkamira/mtjr2/pull/69) is **closed, not merged**. Its stale 336-commit branch was deliberately not merged wholesale.
-- PR [#76](https://github.com/waelkamira/mtjr2/pull/76) extracted the remaining compatible work onto current `main` and was **squash-merged** as `c914cc6d2172f1c88e97b220ac9a59094e915d5c`.
-- Exact source head `ee8471143155349a870d0a9976785f7e23eb95c7` passed all three workflows: CI run `42471523233`, Platform PostgreSQL Integration run `42471523223`, and Browser E2E run `42471523220`.
-- The successful checks covered Prisma validation/migration deployment/generation, TypeScript, ESLint, unit tests, production build, PostgreSQL integration and repeatable demo seed, browser Playwright journeys, API security inventory, and UI mutation-feedback inventory.
-- The merged commit is present in `main`; comparison reports `main` one commit ahead and zero behind that merge commit.
-- PR #70 is also merged and remains the canonical Syrian geography, Leaflet, and category-attribute implementation. PR #76 reuses it rather than duplicating it.
-- No production database was migrated and no Vercel deployment was initiated.
+- PR [#77](https://github.com/waelkamira/mtjr2/pull/77) safely reconstructed the remaining useful customer-address correction from closed, unmerged PR #22 and was squash-merged as `881fc9ed5bf3e807b2f4013e991899463adee76b`.
+- Exact source head `64044d409da434486ccaff5a6574f7e9ee5a3b45` passed CI run `42475854889`, Platform PostgreSQL Integration run `42475854901`, and Browser E2E run `42475854837`. All three completed successfully.
+- The fix aligns `/api/countries` (ISO-2 `iso2`) with `/api/account/addresses` (ISO-2 `countryCode` and flattened `countryName` response). The previous page used incompatible country identifiers and response fields.
+- The same change adds focused service tests for session-derived ownership, active-country lookup, default-address handling, and response shape.
+- The merge commit is present on `main`; comparing `main` to `881fc9e` reports identical refs.
+- No production database migration or Vercel deployment was performed.
 
-**Disposition:** PR #69 integration is complete. Do not reopen or re-merge its stale branch. Continue new work from the latest `main` only.
+### Closed, unmerged PR dispositions
+
+| Closed PRs | Finding | Final disposition |
+|---|---|---|
+| #2–#14 | Their feature trees are already represented on `main`, have no remaining code diff, or contain only obsolete workflow/UI changes superseded by later implementations. | Do not merge old branches. |
+| #16–#17 | Seller return visibility and the per-vendor return design were reconstructed in #19 and #20. | Already represented on `main`. |
+| #22 | Identity/OAuth token verification and customer-role corrections are present through later merged identity work, including #59. The saved-address UI still had a country-contract mismatch. | Address defect repaired and tested in #77; old branch remains unmerged. |
+| #26 | Seller shipment creation and buyer tracking were rebuilt on current `main` in #41. | Already represented on `main`. |
+| #37 | Phase roadmap documentation was superseded by #38 and #39. | Already represented on `main`. |
+| #40 | Webhook retry/signature test coverage exists in the current payment webhook test suite under its canonical path. | No unique test to port. |
+| #47 | Manual return refunds were reconstructed and merged in #59, including the migration, finance operations, and refund lifecycle tests. | Old branch remains unmerged; functionality is on `main`. |
+| #51–#52 | Stale identity/Super Admin rebuilds overlap the merged control center and canonical MFA/privilege workflow (#35, #60, #62). | Do not merge alternate schema or migrations. |
+| #55–#56 | Groq provider foundation is included in #54; #56 is explicitly a superseded audit note. | Already represented or obsolete. |
+| #63, #65 | Independent reviewer policy and PostgreSQL/browser regression coverage were integrated through #62 and #64. | Already represented on `main`. |
+| #67 | Anonymous API boundary sweep and fixes were integrated through #68. | Already represented on `main`. |
+| #69, #75 | Superseded by the clean product/catalog extraction in #76. | Old branches remain unmerged. |
+| #71–#74 | Verification-only branches or changes already present on `main`; #72 gallery recovery/store-lock logic and #74 multipart guard are present in current source. | No stale verification branch merged. |
+| #77 | Focused reconstruction of the address contract fix. | Merged and exact-head verified. |
+
+**Current open integration decisions:** none identified among the closed PRs reviewed in this reconciliation. This does not mean all 49 platform systems or all customer/seller/admin journeys are complete; use the journey matrix for those remaining implementation and release gaps.
 
 ## Non-negotiable repository rule
 
