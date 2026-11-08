@@ -223,7 +223,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <input className={fieldClass + " mt-0 min-w-0"} value={localityQuery} onChange={(event) => setLocalityQuery(event.target.value)} placeholder={labels.search} />
         <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[var(--color-ink-800)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{labels.searchButton}</button>
       </div>}
-      {value.latitude !== undefined && value.longitude !== undefined && neighborhoodSuggestions.length > 0 && <label className="block text-sm font-medium">{translate(locale, "Nearby neighbourhood suggestions", "أحياء قريبة مقترحة")}
+      {neighborhoodSuggestions.length > 0 && <label className="block text-sm font-medium">{translate(locale, "Nearby neighbourhood suggestions", "أحياء قريبة مقترحة")}
         <select className={fieldClass} value={selectedNeighborhoodId} onChange={(event) => {
           const selected = neighborhoodSuggestions.find((item) => item.id === event.target.value);
           setSelectedNeighborhoodId(event.target.value);
