@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   storeFindUnique: vi.fn(),
   brandFindFirst: vi.fn(),
   categoryCount: vi.fn(),
+  categoryAttributeFindMany: vi.fn(),
+  localityFindUnique: vi.fn(),
   marketFindMany: vi.fn(),
   productCreate: vi.fn(),
   productFindUnique: vi.fn(),
@@ -43,6 +45,8 @@ describe("product lifecycle", () => {
     });
     mocks.brandFindFirst.mockResolvedValue({ id: "brand-1" });
     mocks.categoryCount.mockResolvedValue(1);
+    mocks.categoryAttributeFindMany.mockResolvedValue([]);
+    mocks.localityFindUnique.mockResolvedValue(null);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", productNumber: BigInt("101"), storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
@@ -53,6 +57,8 @@ describe("product lifecycle", () => {
       store: { findUnique: mocks.storeFindUnique },
       brand: { findFirst: mocks.brandFindFirst },
       category: { count: mocks.categoryCount },
+      categoryAttribute: { findMany: mocks.categoryAttributeFindMany },
+      syriaLocality: { findUnique: mocks.localityFindUnique },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
       product: {
@@ -74,6 +80,65 @@ describe("product lifecycle", () => {
     const createArg = mocks.productCreate.mock.calls[0][0];
     expect(createArg.data.variants.create[0].prices.create[0].amountMinor).toBe(BigInt("2499"));
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("validates and persists category-scoped typed attributes", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-color",
+      isRequired: true,
+      options: ["Black", "Blue"],
+      attribute: { valueType: "SELECT" }
+    }]);
+    await createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      categoryIds: ["category-1"],
+      attributes: [{ attributeDefinitionId: "attribute-color", value: "Black" }],
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    });
+    expect(mocks.productCreate.mock.calls[0][0].data.attributes.create).toEqual([{
+      attributeDefinitionId: "attribute-color",
+      values: { create: { value: "Black" } }
+    }]);
+  });
+
+  it("rejects category attributes that are not configured for the selected category", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([]);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      categoryIds: ["category-1"],
+      attributes: [{ attributeDefinitionId: "foreign-attribute", value: "anything" }],
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/does not belong to the selected category/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("requires mandatory category fields before creating a draft", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-color",
+      isRequired: true,
+      options: ["Black", "Blue"],
+      attribute: { valueType: "SELECT" }
+    }]);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      categoryIds: ["category-1"],
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/required category attributes/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("persists a selected Syrian locality and map coordinates", async () => {
+    mocks.localityFindUnique.mockResolvedValue({ id: "sy-locality-1" });
+    await createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      localityId: "sy-locality-1", neighborhood: "المزة",
+      latitude: 33.505004, longitude: 36.278227,
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    });
+    expect(mocks.productCreate.mock.calls[0][0].data).toMatchObject({
+      localityId: "sy-locality-1", neighborhood: "المزة",
+      latitude: 33.505004, longitude: 36.278227
+    });
   });
 
   it("rejects a price targeting a market not enabled for the store", async () => {
