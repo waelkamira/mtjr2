@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -46,11 +47,7 @@ function scopeLabel(locale: ReturnType<typeof useLocale>["locale"], rule: Pick<R
 }
 
 function formatMinorAmount(amountMinor: string, currencyCode: string, minorUnit: number) {
-  const amount = BigInt(amountMinor);
-  const divisor = BigInt(10 ** minorUnit);
-  const whole = amount / divisor;
-  const fraction = (amount % divisor).toString().padStart(minorUnit, "0");
-  return `${whole}${minorUnit ? `.${fraction}` : ""} ${currencyCode}`;
+  return formatMinorUnits(amountMinor, currencyCode, minorUnit);
 }
 
 export default function CommissionsPage() {
