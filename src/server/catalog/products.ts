@@ -326,10 +326,6 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (!brand) throw new Error("The selected brand is not active.");
     }
     const categoryIds = data.categoryIds === undefined ? undefined : [...new Set(data.categoryIds)];
-    if (categoryIds?.length) {
-      const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
-      if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
-    }
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT },
       data: {
