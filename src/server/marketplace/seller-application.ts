@@ -83,8 +83,29 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
     return await prisma.$transaction(async (tx) => {
       const existing = await tx.seller.findUnique({ where: { ownerId: actor.userId }, select: { id: true, status: true } });
       if (existing) {
-        if (existing.status !== SellerStatus.PENDING) throw new Error("A seller application already exists for this account.");
-        return { sellerId: existing.id, status: existing.status, alreadySubmitted: true };
+        if (existing.status === SellerStatus.PENDING) {
+          return { sellerId: existing.id, status: existing.status, alreadySubmitted: true };
+        }
+        if (existing.status !== SellerStatus.REJECTED) throw new Error("An active or suspended seller application already exists for this account.");
+        const updated = await tx.seller.updateMany({
+          where: { id: existing.id, ownerId: actor.userId, status: SellerStatus.REJECTED },
+          data: {
+            legalName: data.legalName, displayName: data.displayName, contactName: data.contactName,
+            contactEmail: data.contactEmail, phoneNumber: data.phoneNumber, residence: data.residence,
+            businessType: data.businessType, sellingCategories: data.sellingCategories,
+            intendedProducts: data.intendedProducts, description: data.description,
+            facebookUrl: data.facebookUrl || null, youtubeUrl: data.youtubeUrl || null, twitterUrl: data.twitterUrl || null,
+            identityDocumentFileId: data.identityDocumentFileId || null,
+            latitude: data.latitude, longitude: data.longitude, status: SellerStatus.PENDING
+          }
+        });
+        if (updated.count !== 1) throw new Error("The rejected application changed concurrently. Reload and try again.");
+        await tx.auditLog.create({ data: {
+          actorType: AuditActorType.USER, actorId: actor.userId, action: "seller.application.resubmitted",
+          resource: "seller", resourceId: existing.id, occurredAt: now,
+          metadata: { previousStatus: SellerStatus.REJECTED, status: SellerStatus.PENDING }
+        }});
+        return { sellerId: existing.id, status: SellerStatus.PENDING, alreadySubmitted: false, resubmitted: true };
       }
       const seller = await tx.seller.create({
         data: {
