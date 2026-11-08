@@ -42,7 +42,7 @@ const mapping = {
 };
 
 function englishKey(value) {
-  return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\\s+/g, " ").trim();
+  return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 async function ensureTranslation(tx, categoryId, locale, name) {
   await tx.categoryTranslation.upsert({
