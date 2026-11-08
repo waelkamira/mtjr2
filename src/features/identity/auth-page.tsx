@@ -13,6 +13,7 @@ type AuthMode = "login" | "forgot" | "reset";
 type ApiResult = {
   message?: string;
   error?: string;
+  code?: string;
   mfaRequired?: boolean;
   mfaSetupRequired?: boolean;
 };
@@ -27,7 +28,15 @@ async function postJson(path: string, payload: unknown, t: (english: string, ara
   let result: ApiResult;
   try { result = await response.json() as ApiResult; }
   catch { throw new Error(t("The server returned an unreadable response. Please try again.", "أعاد الخادم استجابة غير مقروءة. حاول مجددًا.")); }
-  if (!response.ok) throw new Error(result.error || result.message || t("The request could not be completed.", "تعذّر إكمال الطلب."));
+  if (!response.ok) {
+    const loginErrors: Record<string, string> = {
+      EMAIL_NOT_FOUND: t("No account was found with that email address.", "لم نعثر على حساب بهذا البريد الإلكتروني."),
+      INVALID_PASSWORD: t("The password is incorrect.", "كلمة المرور غير صحيحة."),
+      INVALID_CREDENTIALS: t("Email or password is incorrect.", "البريد الإلكتروني أو كلمة المرور غير صحيحين."),
+      RATE_LIMITED: t("Too many attempts. Try again later.", "محاولات كثيرة. حاول مرة أخرى لاحقًا.")
+    };
+    throw new Error((result.code && loginErrors[result.code]) || result.error || result.message || t("The request could not be completed.", "تعذّر إكمال الطلب."));
+  }
   return result;
 }
 
