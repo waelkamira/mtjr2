@@ -371,3 +371,10 @@ Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEM
 
 - Windows/PowerShell local setup using an isolated PostgreSQL `mtjr2_demo` database and the 80-product demo catalog: [Local development guide](docs/development/LOCAL_WINDOWS_SETUP.md).
 - The canonical application URL is server-only `APP_URL`; do not use a `NEXT_PUBLIC_*` prefix for server-side configuration.
+## Recent seller, advertising, and identity integration work
+
+The continuing feature branch includes a seller advertising workflow with campaign budgets and keyword/category/brand targeting, moderation, labeled sponsored placements in discovery/search/category/product-detail views, impression/click tracking, spend ledgers, monthly invoices, and audited manual settlement. Seller-entered campaign budgets use normal currency amounts and are converted to minor units using the selected currency's precision.
+
+The branch also restores verified-email password registration, cryptographic Google OIDC token validation with nonce, and fresh MFA step-up for sensitive platform-administrator actions. Seller catalog work includes the one-store-per-seller constraint, listing/map/property metadata, image-gallery editing, human-readable product prices, and legacy custom-field preservation.
+
+**Release status:** this work is not yet verified for deployment. The branch must be reconciled with current main; exact-head CI, TypeScript/lint/Vitest, Prisma validation and migration replay, and browser journeys remain outstanding. The one-store migration has not been applied. Vercel deployment is currently blocked by the daily deployment quota. See [BUILD_LOG.md](docs/implementation/BUILD_LOG.md) for the detailed changes and blockers.
