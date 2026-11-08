@@ -1,0 +1,560 @@
+{
+  "source": "waelkamira/Akaar",
+  "generatedFromCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+  "categories": [
+    {
+      "categoryAr": "كتب",
+      "sourcePath": "components/categoryFields/كتب.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "3a7f631419ac6e7322b70aab3488fb84046801b0",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "genre",
+          "labelAr": "التصنيف الأدبي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "author",
+          "labelAr": "المؤلف/المترجم",
+          "placeholderAr": "اسم المؤلف أو المترجم",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "publisher",
+          "labelAr": "دار النشر",
+          "placeholderAr": "اسم دار النشر",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "language",
+          "labelAr": "اللغة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "format",
+          "labelAr": "نوع النسخة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "edition",
+          "labelAr": "الطبعة",
+          "placeholderAr": "رقم الطبعة وسنة النشر",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "isbn",
+          "labelAr": "رقم ISBN",
+          "placeholderAr": "أدخل رقم ISBN إن وجد",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "كمبيوتر",
+      "sourcePath": "components/categoryFields/كمبيوتر.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "fe05be517816dc740a6de4b6c88331502f8085f1",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع الجهاز",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "processor",
+          "labelAr": "المعالج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "ram",
+          "labelAr": "الذاكرة العشوائية (RAM)",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "storage",
+          "labelAr": "وحدة التخزين",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "graphicsCard",
+          "labelAr": "كرت الشاشة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "screenSize",
+          "labelAr": "حجم الشاشة (بالبوصة)",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "operatingSystem",
+          "labelAr": "نظام التشغيل",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "مجوهرات",
+      "sourcePath": "components/categoryFields/مجوهرات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "d4507da3ec41b1bd9f3e7ec96207a253455656a3",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع المجوهرات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "metalType",
+          "labelAr": "نوع المعدن",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "karat",
+          "labelAr": "العيار",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "gemstone",
+          "labelAr": "الحجر الكريم",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "style",
+          "labelAr": "النمط التصميمي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "gender",
+          "labelAr": "الجنس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "occasion",
+          "labelAr": "المناسبة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "مطبخ",
+      "sourcePath": "components/categoryFields/مطبخ.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "d122c709a36b6a9a6496769e1d8776010c98bcf7",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "furnitureType",
+          "labelAr": "نوع الأثاث",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "tableShape",
+          "labelAr": "شكل الطاولة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "applianceType",
+          "labelAr": "نوع الجهاز",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "cooktopType",
+          "labelAr": "نوع الموقد",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "capacity",
+          "labelAr": "السعة",
+          "placeholderAr": "باللتر أو القدم المكعب",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "style",
+          "labelAr": "النمط",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "dimensions",
+          "labelAr": "الأبعاد",
+          "placeholderAr": "الطول x العرض x الارتفاع",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "موضة",
+      "sourcePath": "components/categoryFields/موضة.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "68e80849c00002bc74cd9528e03dfdd2cb77723d",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "clothingType",
+          "labelAr": "نوع الملابس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "gender",
+          "labelAr": "الجنس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "size",
+          "labelAr": "المقاس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة المصنوعة منها",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "season",
+          "labelAr": "الموسم",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "هدايا",
+      "sourcePath": "components/categoryFields/هدايا.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "9609b84de4a6370c866c8308655ad7308c16a130",
+      "fields": [
+        {
+          "key": "giftCategory",
+          "labelAr": "فئة الهدية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "wrapping",
+          "labelAr": "التغليف",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "personalization",
+          "labelAr": "التخصيص",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "delivery",
+          "labelAr": "التوصيل",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "هواتف",
+      "sourcePath": "components/categoryFields/هواتف.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "39439a8366ad7616ed01ac49d101c3811762de60",
+      "fields": [
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "model",
+          "labelAr": "الموديل",
+          "placeholderAr": "مثال: جالكسي S23، آيفون 15، ريدمي نوت 12",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "storage",
+          "labelAr": "سعة التخزين",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "ram",
+          "labelAr": "الذاكرة العشوائية (RAM)",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "camera",
+          "labelAr": "الكاميرا",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "battery",
+          "labelAr": "سعة البطارية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "وظائف",
+      "sourcePath": "components/categoryFields/وظائف.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "053350c8d6b4d54df35773960644f9c77b44837c",
+      "fields": [
+        {
+          "key": "title",
+          "labelAr": "المسمى الوظيفي",
+          "placeholderAr": "مثال: مهندس برمجيات، محاسب، مدير مبيعات",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "company",
+          "labelAr": "الشركة",
+          "placeholderAr": "اسم الشركة أو المؤسسة",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "location",
+          "labelAr": "المحافظة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "salary",
+          "labelAr": "الراتب",
+          "placeholderAr": "يرجى تحديد الراتب بالليرة السورية",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "employmentType",
+          "labelAr": "نوع الوظيفة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "jobCategory",
+          "labelAr": "مجال الوظيفة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "educationLevel",
+          "labelAr": "المؤهل العلمي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "experience",
+          "labelAr": "الخبرة المطلوبة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "skills",
+          "labelAr": "المهارات المطلوبة",
+          "placeholderAr": "مثال: لغة انكليزية، برمجة، إدارة مشاريع...",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "description",
+          "labelAr": "وصف الوظيفة",
+          "placeholderAr": "أدخل وصفاً مفصلاً للوظيفة والمهام المطلوبة",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "deadline",
+          "labelAr": "آخر موعد للتقديم",
+          "placeholderAr": "حدد تاريخ انتهاء التقديم",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    }
+  ]
+}
