@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
@@ -29,9 +30,7 @@ function formatPrice(price: ProductPrice | undefined, markets: Market[], locale:
   if (!price) return translate(locale, "Price unavailable", "السعر غير متاح");
   const currency = markets.flatMap((market) => [market.defaultCurrency]).find((item) => item.code === price.currencyCode);
   const minorUnit = price.currency.minorUnit ?? currency?.minorUnit ?? 2;
-  return new Intl.NumberFormat(locale, { style: "currency", currency: price.currencyCode }).format(
-    Number(price.amountMinor) / (10 ** minorUnit)
-  );
+  return formatMinorUnits(price.amountMinor, price.currencyCode, minorUnit, locale);
 }
 
 export default function StorefrontHomePage() {
