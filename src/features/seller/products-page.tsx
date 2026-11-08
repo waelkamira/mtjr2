@@ -210,7 +210,7 @@ export default function SellerProductsPage() {
     setUploading(false);
   }
 
-  function handleImageDrop(event: DragEvent<HTMLDivElement>) {
+  function handleImageDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault();
     void uploadDroppedImages(Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("image/")));
   }
