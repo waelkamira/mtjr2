@@ -21,7 +21,7 @@ const addressInput = z.object({
 const addressSelect = { iso2: true, name: true } as const;
 
 /** Serializes mutations to one customer's address book so concurrent writes cannot create multiple defaults. */
-async function lockAddressBook(tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0], userId: string) {
+async function lockAddressBook(tx: Prisma.TransactionClient, userId: string) {
   await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${`user-address-book:${userId}`}, 0))`);
 }
 
