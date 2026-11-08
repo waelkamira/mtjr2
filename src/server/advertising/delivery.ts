@@ -38,7 +38,7 @@ export async function listSponsoredCampaigns(input: {
   if (!input.marketId) return [];
   const tokens: string[] = (input.query ?? "").normalize("NFKC").toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
   const matchesKeyword = (keyword: string) => {
-    const words = keyword.normalize("NFKC").toLocaleLowerCase().match(/[\\p{L}\\p{N}]+/gu) ?? [];
+    const words = keyword.normalize("NFKC").toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
     return words.length > 0 && tokens.some((_, index) => words.every((word, offset) => tokens[index + offset] === word));
   };
   const categoryIds = [...new Set([input.categoryId, ...(input.categoryIds ?? [])].filter((value): value is string => Boolean(value)))].slice(0, 20);
