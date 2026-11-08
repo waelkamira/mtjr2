@@ -14,7 +14,9 @@ type ImgurGlobal = typeof globalThis & {
 };
 
 function getConfiguredIds(): string[] {
-  const configured = process.env.IMGUR_CLIENT_IDS ?? process.env.IMGUR_CLIENT_ID ?? "";
+  // A blank rotation list must not mask the single-ID compatibility setting.
+  const rotationList = process.env.IMGUR_CLIENT_IDS?.trim();
+  const configured = rotationList || process.env.IMGUR_CLIENT_ID?.trim() || "";
   return [...new Set(configured.split(/[;,\n]/).map((id) => id.trim()).filter(Boolean))];
 }
 
@@ -26,7 +28,7 @@ function getConfiguredIds(): string[] {
  */
 export function getNextImgurClientId(): string {
   const ids = getConfiguredIds();
-  if (!ids.length) throw new Error("Imgur is not configured. Set IMGUR_CLIENT_IDS.");
+  if (!ids.length) throw new Error("Imgur is not configured. Set IMGUR_CLIENT_IDS or IMGUR_CLIENT_ID.");
 
   const now = Date.now();
   const idsKey = ids.join(",");
@@ -40,7 +42,6 @@ export function getNextImgurClientId(): string {
 
   const availableIndex = state.usage.findIndex((count) => count < REQUEST_LIMIT_PER_ID);
   if (availableIndex === -1) {
-    // All IDs have consumed their hourly allowance. Do not silently overrun quotas.
     throw new Error("All configured Imgur Client IDs have reached their hourly upload limit.");
   }
 
