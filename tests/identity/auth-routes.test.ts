@@ -98,11 +98,11 @@ describe("identity HTTP routes", () => {
     expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });
 
-  it("uses the same public error code for unknown-account and incorrect-password failures", async () => {
+  it("returns the distinct public reason for an unknown email", async () => {
     mocks.loginWithPassword.mockResolvedValue({
       authenticated: false,
       reason: "EMAIL_NOT_FOUND",
-      message: "Email or password is incorrect."
+      message: "No account was found with this email address."
     });
 
     const response = await login(request("/api/auth/login", {
@@ -112,9 +112,30 @@ describe("identity HTTP routes", () => {
 
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({
-      error: "Email or password is incorrect.",
-      code: "INVALID_CREDENTIALS"
+      error: "No account was found with this email address.",
+      code: "EMAIL_NOT_FOUND"
     });
+    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
+  });
+
+  it("returns a distinct public reason for an incorrect password", async () => {
+    mocks.loginWithPassword.mockResolvedValue({
+      authenticated: false,
+      reason: "INVALID_PASSWORD",
+      message: "The password is incorrect."
+    });
+
+    const response = await login(request("/api/auth/login", {
+      email: "buyer@example.test",
+      password: "incorrect"
+    }));
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({
+      error: "The password is incorrect.",
+      code: "INVALID_PASSWORD"
+    });
+    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });
 
   it("sets a session cookie but does not signal completed sign-in before MFA", async () => {
