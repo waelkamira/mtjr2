@@ -118,13 +118,13 @@ export default function MatjarAIAssistant() {
                   </div>
                 ))}
                 {item.supportTickets?.map((ticket) => (
-                  <Link key={ticket.ticketNumber} href="/account/support" className="mt-3 block rounded-xl border border-[var(--border)] bg-[var(--color-lavender-50)] p-3 text-xs text-[var(--color-ink-800)] hover:bg-[var(--color-lavender-100)]">
+                  <Link key={ticket.ticketNumber} href={`/account/support/${encodeURIComponent(ticket.id)}`} className="mt-3 block rounded-xl border border-[var(--border)] bg-[var(--color-lavender-50)] p-3 text-xs text-[var(--color-ink-800)] hover:bg-[var(--color-lavender-100)]">
                     <div className="flex items-center justify-between gap-2 font-bold">
                       <span>{ticket.ticketNumber}</span><span>{ticket.status}</span>
                     </div>
                     <p className="mt-1 font-semibold">{ticket.subject}</p>
                     <p className="mt-1 text-[var(--muted)]">{ticket.messageCount} رسالة · {new Date(ticket.updatedAt).toLocaleDateString()}</p>
-                    <span className="mt-2 inline-block font-semibold underline">فتح مركز الدعم</span>
+                    <span className="mt-2 inline-block font-semibold underline">فتح التذكرة</span>
                   </Link>
                 ))}
                 {item.orders?.map((order) => (
