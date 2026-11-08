@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -541,7 +542,7 @@ export default function SellerProductsPage() {
           <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f5fbfc,#c7dce3)] text-2xl text-[#42677b] shadow-[0_8px_18px_rgba(35,62,81,.13),inset_0_2px_0_white]" aria-hidden="true">▦</span>
           <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#66899b]">{translate(locale, "CATALOG MANAGEMENT", "إدارة الكتالوج")}</p><h1 className="mt-1 text-2xl font-black tracking-tight text-[#263d50] sm:text-3xl">{translate(locale, "Products", "المنتجات")}</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-[#647d8d]">{translate(locale, "Create, organize and maintain your store listings. Category-specific fields and publication rules are applied from the catalog.", "أنشئ منتجات متجرك ونظّمها وأدرها. تُحمّل خصائص كل فئة وتُطبق قواعد النشر من الكتالوج.")}</p></div>
         </div>
-        <a href="#create-product" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#a8d9d4,#75b8b8)] px-5 py-3 text-sm font-extrabold text-[#24485a] shadow-[0_7px_16px_rgba(38,94,105,.18),inset_0_2px_0_rgba(255,255,255,.85)] transition hover:-translate-y-0.5">＋ {translate(locale, "New product", "منتج جديد")}</a>
+        <Link href="#create-product" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#a8d9d4,#75b8b8)] px-5 py-3 text-sm font-extrabold text-[#24485a] shadow-[0_7px_16px_rgba(38,94,105,.18),inset_0_2px_0_rgba(255,255,255,.85)] transition hover:-translate-y-0.5">＋ {translate(locale, "New product", "منتج جديد")}</Link>
       </header>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
