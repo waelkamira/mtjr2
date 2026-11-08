@@ -47,12 +47,9 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
         displayName: true,
         createdAt: true,
         owner: { select: { id: true, email: true, displayName: true, status: true } },
-        stores: {
-          orderBy: { createdAt: "desc" },
-          take: 10,
+        store: {
           select: { id: true, name: true, slug: true, status: true, createdAt: true }
-        },
-        _count: { select: { stores: true } }
+        }
       }
     })
   ]);
@@ -60,8 +57,8 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
     items: items.map((item) => ({
       ...item,
       createdAt: item.createdAt.toISOString(),
-      stores: item.stores.map((store) => ({ ...store, createdAt: store.createdAt.toISOString() })),
-      storeCount: item._count.stores
+      stores: item.store ? [{ ...item.store, createdAt: item.store.createdAt.toISOString() }] : [],
+      storeCount: item.store ? 1 : 0
     })),
     page: filters.page,
     limit: filters.limit,
