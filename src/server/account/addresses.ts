@@ -8,7 +8,7 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 const addressInput = z.object({
   label: z.string().trim().max(80).optional().nullable(),
   recipientName: z.string().trim().min(2).max(160),
-  phone: z.string().trim().regex(/^\\+[1-9]\\d{7,14}$/, "Use an international phone number, e.g. +31612345678."),
+  phone: z.string().trim().regex(/^\+[1-9]\d{7,14}$/, "Use an international phone number, e.g. +31612345678."),
   countryCode: z.string().trim().length(2).toUpperCase(),
   line1: z.string().trim().min(3).max(200),
   line2: z.string().trim().max(200).optional().nullable(),
