@@ -63,10 +63,9 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
       preferCanvas: true
     });
     const tileUrl = process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-    L.tileLayer(tileUrl, {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    const attribution = process.env.NEXT_PUBLIC_MAP_ATTRIBUTION
+      || '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors';
+    L.tileLayer(tileUrl, { maxZoom: 19, attribution }).addTo(map);
 
     const icon = L.divIcon({
       className: "mtjr-leaflet-marker",
