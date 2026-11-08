@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
-import { CartStatus, CheckoutQuoteStatus, InventoryMovementType, InventoryReservationStatus, OrderStatus, Prisma, ShipmentTrackingStatus, VendorOrderStatus } from "@prisma/client";
+import { CartStatus, CheckoutQuoteStatus, InventoryMovementType, InventoryReservationStatus, OrderStatus, PaymentStatus, Prisma, ShipmentTrackingStatus, VendorOrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { getCheckoutQuote } from "@/server/checkout/quotes";
@@ -43,7 +43,7 @@ function serializeOrder(order: {
   taxRuleName: string; taxRateBasisPoints: number; taxInclusive: boolean; taxIncludesShipping: boolean; taxDestinationRegion: string | null;
   placedAt: Date;
   statusHistory?: Array<{ status: OrderStatus; note: string | null; createdAt: Date }>;
-  payments?: Array<{ id: string }>;
+  payments?: Array<{ id: string; status: PaymentStatus }>;
   address: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   vendorOrders: Array<{
     id: string; status: VendorOrderStatus; store: { id: string; name: string; slug: string };
@@ -62,7 +62,7 @@ function serializeOrder(order: {
     subtotalMinor: order.subtotalMinor.toString(), couponCode: order.couponCode,
     discountMinor: order.discountMinor.toString(), shippingMinor: order.shippingMinor.toString(),
     taxMinor: order.taxMinor.toString(), totalMinor: order.totalMinor.toString(), tax: { ruleName: order.taxRuleName, rateBasisPoints: order.taxRateBasisPoints, inclusive: order.taxInclusive, includesShipping: order.taxIncludesShipping, destinationRegion: order.taxDestinationRegion }, placedAt: order.placedAt.toISOString(),
-    canCancel: order.status === OrderStatus.PENDING_PAYMENT && (order.payments?.length ?? 0) === 0,
+    canCancel: order.status === OrderStatus.PENDING_PAYMENT && (order.payments ?? []).every((payment) => payment.status === PaymentStatus.FAILED || payment.status === PaymentStatus.CANCELLED),
     statusHistory: (order.statusHistory ?? []).map((event) => ({
       status: event.status, note: event.note, createdAt: event.createdAt.toISOString()
     })),
@@ -119,7 +119,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         currency: { select: { minorUnit: true, symbol: true } },
         address: true,
         statusHistory: { orderBy: { createdAt: "asc" } },
-        payments: { select: { id: true } },
+        payments: { select: { id: true, status: true } },
         vendorOrders: { include: {
           store: { select: { id: true, name: true, slug: true } }, items: true,
           statusHistory: { orderBy: { createdAt: "asc" } },
@@ -510,7 +510,7 @@ export async function cancelOwnedOrder(guestToken: string, orderId: string, now 
     await tx.orderStatusHistory.create({
       data: {
         orderId: order.id, status: OrderStatus.CANCELLED,
-        note: "Customer canceled before starting payment; inventory was restored.",
+        note: "Customer canceled after all payment attempts were absent or terminal; inventory was restored.",
         actorId: "userId" in owner ? owner.userId : null, createdAt: now
       }
     });
