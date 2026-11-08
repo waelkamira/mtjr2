@@ -34,20 +34,20 @@ async function main() {
 
   const governorateIds = new Set(governorates.map((row) => row.id));
   const districtIds = new Set(districts.map((row) => row.id));
-  const subdistrictIds = new Set(subdistricts.map((row) => row.id));
+  const subdistrictById = new Map(subdistricts.map((row) => [row.id, row]));
+  const subdistrictIds = new Set(subdistrictById.keys());
   for (const row of districts) if (!governorateIds.has(row.governorateId)) throw new Error(`Unknown governorate ${row.governorateId} in district ${row.id}`);
   for (const row of subdistricts) if (!governorateIds.has(row.governorateId) || !districtIds.has(row.districtId)) throw new Error(`Invalid parent chain for subdistrict ${row.id}`);
   for (const row of localities) {
     if (!governorateIds.has(row.governorateId)) throw new Error(`Unknown governorate for locality ${row.id}`);
     if (row.districtId && !districtIds.has(row.districtId)) throw new Error(`Unknown district for locality ${row.id}`);
     if (row.subdistrictId && !subdistrictIds.has(row.subdistrictId)) throw new Error(`Unknown subdistrict for locality ${row.id}`);
-    if (row.subdistrictId && row.districtId) {
-      const parent = subdistricts.find((entry) => entry.id === row.subdistrictId);
-      if (!parent || parent.districtId !== row.districtId || parent.governorateId !== row.governorateId) {
-        throw new Error(`Inconsistent parent chain for locality ${row.id}`);
-      }
+    const parent = row.subdistrictId ? subdistrictById.get(row.subdistrictId) : null;
+    if (row.subdistrictId && !parent) throw new Error(`Unknown subdistrict for locality ${row.id}`);
+    if (parent && (parent.governorateId !== row.governorateId || (row.districtId && parent.districtId !== row.districtId))) {
+      throw new Error(`Inconsistent parent chain for locality ${row.id}`);
     }
-    if (!row.kind) throw new Error(`Locality ${row.id} has no required kind classification.`);
+    if (!["city", "town", "village", "locality"].includes(row.kind)) throw new Error(`Locality ${row.id} has an unsupported kind classification.`);
   }
 
   const existing = await prisma.syriaGovernorate.count();
@@ -60,7 +60,9 @@ async function main() {
     const d = await tx.syriaDistrict.createMany({ data: districts.map((row) => ({ id: row.id, governorateId: row.governorateId, ...common(row) })), skipDuplicates: true });
     const sd = await tx.syriaSubdistrict.createMany({ data: subdistricts.map((row) => ({ id: row.id, governorateId: row.governorateId, districtId: row.districtId, ...common(row) })), skipDuplicates: true });
     const loc = await tx.syriaLocality.createMany({ data: localities.map((row) => ({
-      id: row.id, governorateId: row.governorateId, districtId: row.districtId ?? null, subdistrictId: row.subdistrictId ?? null,
+      id: row.id, governorateId: row.governorateId,
+      districtId: row.districtId ?? (row.subdistrictId ? subdistrictById.get(row.subdistrictId)?.districtId : null) ?? null,
+      subdistrictId: row.subdistrictId ?? null,
       ...common(row), kind: row.kind
     })), skipDuplicates: true });
     return { governorates: g.count, districts: d.count, subdistricts: sd.count, localities: loc.count };
