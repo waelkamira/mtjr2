@@ -8,6 +8,7 @@ import { userHasPermission, userHasScopedPermission } from "@/server/identity/pe
 import { requirePermission } from "@/server/identity/permission-guard";
 import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
 import { getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
+import { deleteProductImage } from "@/server/storage/product-images";
 
 const priceSchema = z.object({
   marketId: z.string().trim().min(1),
@@ -335,7 +336,8 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const id = z.string().trim().min(1).parse(productId);
   const data = updateProductSchema.parse(input);
   const actor = await requireCurrentSession(now);
-  return prisma.$transaction(async (tx) => {
+  const removedStorageKeys: string[] = [];
+  const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
       select: {
@@ -432,6 +434,14 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
     }
     if (data.media !== undefined) {
+      const existingMedia = await tx.productMedia.findMany({
+        where: { productId: id, type: "IMAGE" },
+        select: { storageKey: true }
+      });
+      const retainedKeys = new Set(data.media.map((media) => media.storageKey).filter((key): key is string => Boolean(key)));
+      for (const media of existingMedia) {
+        if (media.storageKey && !retainedKeys.has(media.storageKey)) removedStorageKeys.push(media.storageKey);
+      }
       await tx.productMedia.deleteMany({ where: { productId: id, type: "IMAGE" } });
       await tx.productMedia.createMany({
         data: data.media.map((media) => ({ productId: id, type: "IMAGE", ...media }))
@@ -444,6 +454,23 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     }});
     return { productId: id, approvalStatus: ProductApprovalStatus.PENDING };
   });
+
+  // Provider deletion happens only after the database transaction commits, so a
+  // failed product save can never leave a still-referenced image missing.
+  for (const storageKey of removedStorageKeys) {
+    try {
+      const deletion = await deleteProductImage(storageKey);
+      if (deletion === "unsupported") {
+        console.warn("Product image was unlinked but provider deletion is not configured.", { provider: storageKey.split(":")[0] });
+      }
+    } catch (error) {
+      console.error("Product image provider deletion failed after unlink.", {
+        provider: storageKey.split(":")[0],
+        message: error instanceof Error ? error.message : "Unknown provider error."
+      });
+    }
+  }
+  return result;
 }
 
 /** Platform reviewer rejects only pending draft products and must provide a reason. */
