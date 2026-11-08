@@ -48,14 +48,30 @@ describe("marketplace seller lifecycle", () => {
   });
 
   it("submits one authenticated-user application and audits it atomically", async () => {
-    const result = await submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" });
+    const result = await submitSellerApplication({
+      legalName: "Example Trading BV", displayName: "Example Store",
+      contactName: "Alex Example", contactEmail: "SELLER@example.com", phoneNumber: "+33123456789",
+      residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
+      facebookUrl: "https://facebook.com/example", latitude: 48.8566, longitude: 2.3522
+    });
     expect(result).toMatchObject({ sellerId: "seller-1", status: "PENDING", alreadySubmitted: false });
     expect(auditCreate).toHaveBeenCalledOnce();
+    expect(sellerCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({
+      contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
+      businessType: "STORE", latitude: 48.8566, longitude: 2.3522
+    }) }));
   });
 
   it("returns the existing pending application on retry", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-existing", status: "PENDING" });
-    const result = await submitSellerApplication({ legalName: "Example Trading BV", displayName: "Example Store" });
+    const result = await submitSellerApplication({
+      legalName: "Example Trading BV", displayName: "Example Store",
+      contactName: "Alex Example", contactEmail: "SELLER@example.com", phoneNumber: "+33123456789",
+      residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
+      facebookUrl: "https://facebook.com/example", latitude: 48.8566, longitude: 2.3522
+    });
     expect(result.alreadySubmitted).toBe(true);
     expect(sellerCreate).not.toHaveBeenCalled();
   });
