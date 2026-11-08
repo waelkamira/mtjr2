@@ -17,7 +17,9 @@
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:watch": "vitest",
-    "db:bootstrap-super-admin": "node scripts/bootstrap-super-admin.cjs"
+    "db:bootstrap-super-admin": "node scripts/bootstrap-super-admin.cjs",
+    "db:sync-syria-geography": "node scripts/sync-syria-geography.mjs",
+    "db:seed-akaar-attributes": "node scripts/seed-akaar-category-attributes.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",
