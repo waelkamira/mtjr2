@@ -2761,3 +2761,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Fixed the seller navigation to use Next.js `Link`. Removed the redundant effect-body state update; selection handlers already clear neighbourhood suggestions when the selected geography/focus changes, while the effect remains responsible for the external neighbourhood fetch.
 - Fix commits were written directly to `main`: `6be4de2e3dd6356f7c6a909f8825a0ba15d5ea18` and `5262a9789cdd5f0c6cfb258f0fd438d9b53d2c55`. Exact-head rerun is pending; do not claim lint, unit tests, build or browser E2E passed until the new run reports them.
 - Vercel separately reports `Deployment rate limited — retry in 24 hours`; this is a provider quota failure, not an application build diagnosis. No Vercel settings, production secrets or production database were changed.
+
+
+## 2026-11-08 — Seller/map quality gates and browser E2E trigger
+
+- Exact-head GitHub Actions run [42492922015](https://github.com/waelkamira/mtjr2/actions/runs/42492922015) for `6084b01c3a78a3608643c0f7e33064c09308eb6f` completed successfully: Prisma validate, migration deploy, Prisma generate, TypeScript typecheck, ESLint, Vitest (`npm test`), production build, API-route security inventory, UI mutation-feedback inventory, and artifact upload all passed.
+- The workflow's `npm test` script is Vitest, not Playwright. The dedicated Browser E2E workflow already existed but its push trigger excluded canonical `main`, so the seller catalog/map browser journey was not automatically exercised by normal main pushes.
+- Updated `.github/workflows/browser-e2e.yml` to run on pushes to `main` as well as feature branches, preserving pull-request and manual triggers. This enables the isolated PostgreSQL + seeded geography/Akaar catalog + production-server Chromium journey (including seller product authoring, hierarchy zoom and wheel zoom) to run against canonical main.
+- The Browser E2E run triggered by this workflow change is pending; browser journey is not yet claimed as passed. Vercel remains independently blocked by its reported 24-hour build-rate limit.
