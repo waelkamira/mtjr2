@@ -163,6 +163,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   const fieldClass = "mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-sm text-[var(--color-ink-900)] outline-none transition focus:border-[var(--color-forest-500)] focus:ring-2 focus:ring-[var(--color-forest-500)]/10 disabled:cursor-not-allowed disabled:opacity-50";
   const name = (item: GeoItem) => item.nameAr || item.nameEn;
+  const kindLabel = (kind?: string | null) => {
+    if (!kind) return "";
+    if (!ar) return kind;
+    return ({ city: "مدينة", town: "بلدة", village: "قرية", locality: "تجمع سكاني" } as Record<string, string>)[kind] ?? "موقع";
+  };
 
   return (
     <section className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
@@ -192,7 +197,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <label className="block text-sm font-medium">{labels.locality}
           <select className={fieldClass} value={value.localityId ?? ""} disabled={!subdistrictId || busy} onChange={(event) => chooseLocality(event.target.value)}>
             <option value="">{labels.choose}</option>
-            {localities.map((item) => <option key={item.id} value={item.id}>{name(item)}{item.kind ? ` · ${item.kind}` : ""}</option>)}
+            {localities.map((item) => <option key={item.id} value={item.id}>{name(item)}{item.kind ? ` · ${kindLabel(item.kind)}` : ""}</option>)}
           </select>
         </label>
       </div>
