@@ -14,12 +14,13 @@ Apply committed migrations first, then run:
 
 ```bash
 npm run db:sync-syria-geography
+npm run db:sync-syria-neighborhoods
 npm run db:seed-akaar-attributes
 ```
 
 The geography importer downloads only the pinned v0.1.5 source files, validates counts and parent IDs, and inserts records additively with duplicate protection. It does not call the public API per seller request. It does not delete existing location rows or rewrite product location references.
 
-The category importer uses the 22 field-definition files in the Akaar repository at commit `7d3374c2b885895dffa824db850f709bebd516c8`. It stores normalized field definitions and per-category option sets in `AttributeDefinition` and `CategoryAttribute`. Category field names are namespaced to avoid global-key collisions. Property and jobs fields are retained in the source JSON but deliberately not inserted into ordinary product categories; they belong to their separate listing/workflow domains.
+The neighbourhood suggestion importer uses Akaar's `components/lists/Cities.jsx` at commit `7d3374c2b885895dffa824db850f709bebd516c8`. It removes placeholder entries, exact official locality-name matches, duplicate names and candidates outside a city-specific radius. Because the legacy list mixes urban neighbourhoods with nearby settlements and is not an authoritative boundary dataset, all imported rows are marked `CANDIDATE`; the UI labels them as unverified suggestions. They are never presented as official administrative records. The current Akaar list does not include a separate city group for As-Suwayda, and the Rif Dimashq group is too geographically broad to safely treat as a neighbourhood directory.\n\nThe category importer uses the 22 field-definition files in the Akaar repository at commit `7d3374c2b885895dffa824db850f709bebd516c8`. It stores normalized field definitions and per-category option sets in `AttributeDefinition` and `CategoryAttribute`. Category field names are namespaced to avoid global-key collisions. Property and jobs fields are retained in the source JSON but deliberately not inserted into ordinary product categories; they belong to their separate listing/workflow domains.
 
 ## Runtime contract
 
@@ -27,6 +28,7 @@ The category importer uses the 22 field-definition files in the Akaar repository
 - `GET /api/geography/districts?governorateId=...`
 - `GET /api/geography/subdistricts?districtId=...`
 - `GET /api/geography/localities?subdistrictId=...`
+- `GET /api/geography/neighborhoods?governorateId=...&nearLat=...&nearLng=...` (nearby candidate suggestions only)
 - `GET /api/categories/:categoryId/attributes?locale=ar|en`
 
 All geography endpoints are backed by the local PostgreSQL reference tables. They are paginated and filtered by their parent IDs. Product writes validate category membership, required values, typed values and selected locality server-side.
