@@ -30,7 +30,7 @@ describe("admin seller and store operations", () => {
     mocks.requirePermission.mockResolvedValue({ userId: "admin-1" });
     mocks.sellerCount.mockResolvedValue(1);
     mocks.sellerFindMany.mockResolvedValue([{
-      id: "seller-1", status: "ACTIVE", legalName: "Seller Inc.", displayName: "Seller",
+      id: "seller-1", status: "ACTIVE", legalName: "Seller Inc.", displayName: "Seller", identityDocumentFileId: "private-file-1",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       owner: { id: "owner-1", email: "owner@example.test", displayName: "Owner", status: "ACTIVE" },
       store: { id: "store-1", name: "Store", slug: "store", status: "ACTIVE", createdAt: new Date("2026-01-01T00:00:00.000Z") }
@@ -55,7 +55,8 @@ describe("admin seller and store operations", () => {
       take: 10,
       where: expect.objectContaining({ status: "ACTIVE" })
     }));
-    expect(result).toMatchObject({ page: 2, limit: 10, total: 1, items: [{ storeCount: 1 }] });
+    expect(result).toMatchObject({ page: 2, limit: 10, total: 1, items: [{ storeCount: 1, hasIdentityDocument: true }] });
+    expect(result.items[0]).not.toHaveProperty("identityDocumentFileId");
   });
 
   it("suspends a store with an audit record and rechecks the current state", async () => {
