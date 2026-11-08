@@ -207,6 +207,7 @@ test.describe("seller catalog authoring", () => {
     let selectedSubdistrictId = "";
     let selectedSubdistrictHasCoordinates = false;
     let selectedLocalityId = "";
+    let selectedLocalityHasCoordinates = false;
     for (const subdistrict of subdistricts.items) {
       const response = await page.request.get(`/api/geography/localities?districtId=${encodeURIComponent(selectedDistrict.id)}&subdistrictId=${encodeURIComponent(subdistrict.id)}`);
       const payload = await response.json() as { items: Array<{ id: string; latitude: number | null; longitude: number | null }> };
@@ -215,6 +216,7 @@ test.describe("seller catalog authoring", () => {
         selectedSubdistrictId = subdistrict.id;
         selectedSubdistrictHasCoordinates = subdistrict.latitude !== null && subdistrict.longitude !== null;
         selectedLocalityId = locality.id;
+        selectedLocalityHasCoordinates = locality.latitude !== null && locality.longitude !== null;
         break;
       }
     }
@@ -227,7 +229,7 @@ test.describe("seller catalog authoring", () => {
     await expect(page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i)).toBeEnabled();
     await page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i).selectOption(selectedLocalityId);
     await expect(map).toHaveClass(/leaflet-container/, { timeout: 15000 });
-    await expect(map).toHaveAttribute("data-map-zoom", "15", { timeout: 10000 });
+    if (selectedLocalityHasCoordinates) await expect(map).toHaveAttribute("data-map-zoom", "15", { timeout: 10000 });
 
     const zoomBeforeWheel = Number(await map.getAttribute("data-map-zoom"));
     await map.hover();
