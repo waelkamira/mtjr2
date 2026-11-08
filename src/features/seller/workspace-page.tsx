@@ -454,8 +454,15 @@ export default function SellerWorkspacePage() {
             </div>
           </section>
         ) : (!workspace?.seller || workspace.seller.status === "REJECTED") ? (
-          <section className="mt-8 max-w-2xl rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_12px_28px_rgba(40,65,84,.11),inset_0_1px_0_white] sm:p-8">
-            <h2 className="text-xl font-semibold">{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
+          <section className="mt-8 max-w-5xl rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#e7f1f4,#cbdde4)] p-5 shadow-[0_18px_38px_rgba(35,62,81,.16),inset_0_2px_0_white,inset_0_-3px_8px_rgba(48,76,94,.07)] sm:p-8">
+            <div className="mb-6 rounded-[1.6rem] border border-white/80 bg-[linear-gradient(120deg,#263f56,#3f6878)] p-5 text-white shadow-[0_12px_25px_rgba(26,49,69,.2),inset_0_2px_0_rgba(255,255,255,.18)] sm:p-6">
+              <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale,"SELLER APPLICATION","طلب فتح متجر")}</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight">{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d7e7ed]">{translate(locale,"A guided application for your business, products and store location. Complete each section so our marketplace team can review it.","طلب منظم للتعريف بنشاطك ومنتجاتك وموقع متجرك. أكمل الأقسام ليتمكن فريق السوق من مراجعة طلبك.")}</p>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {["01 · Business","02 · Products","03 · Location","04 · Profile"].map((step,index)=><div key={step} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-[10px] font-bold text-white/90"><span className="me-1 text-[#a9ded7]">●</span>{translate(locale,step,["01 · النشاط","02 · المنتجات","03 · الموقع","04 · الملف"][index])}</div>)}
+              </div>
+            </div>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{workspace?.seller?.status === "REJECTED" ? translate(locale, "Your previous application was not approved. Correct the information below and submit it again for a new review.", "لم تتم الموافقة على طلبك السابق. صحح البيانات أدناه ثم أعد إرساله للمراجعة.") : translate(locale, "Complete the business details below. Your application will remain pending until reviewed by the marketplace team.", "أكمل بيانات نشاطك التجاري أدناه. سيظل طلبك قيد المراجعة حتى يراجعه فريق السوق.")}</p>
             <form onSubmit={(event) => {
               if (sellerLatitude === null || sellerLongitude === null) {
