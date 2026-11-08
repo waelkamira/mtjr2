@@ -113,7 +113,7 @@ describe("password login service", () => {
     expect(result).toMatchObject({
       authenticated: false,
       reason: "EMAIL_NOT_FOUND",
-      message: "Email or password is incorrect."
+      message: "No account was found with this email address."
     });
     expect(verifyMock).toHaveBeenCalledOnce();
     expect(verifyMock.mock.calls[0][1]).toMatch(/^scrypt\$32768\$8\$1\$/);
