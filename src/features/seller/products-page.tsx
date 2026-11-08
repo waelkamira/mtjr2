@@ -137,7 +137,9 @@ export default function SellerProductsPage() {
       setMarkets(marketResult.items);
       setCategories(categoryResult.items);
       setBrands(brandResult.items);
-      const initialStore = workspace.stores[0];
+      let preferredStoreId = "";
+      try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage can be unavailable in restricted browsers. */ }
+      const initialStore = workspace.stores.find((store) => store.id === preferredStoreId) ?? workspace.stores[0];
       if (initialStore) {
         setStoreId(initialStore.id);
         const enabled = new Set(initialStore.markets.map((entry) => entry.market.id));
@@ -152,6 +154,7 @@ export default function SellerProductsPage() {
   useEffect(() => {
     if (!categoryId) return;
     let active = true;
+    setLoadingCategoryAttributes(true);
     fetch(`/api/categories/${encodeURIComponent(categoryId)}/attributes?locale=${encodeURIComponent(locale)}`, { cache: "no-store" })
       .then((response) => json<{ items: CategoryAttribute[] }>(response))
       .then((result) => { if (active) setCategoryAttributes(result.items); })
@@ -545,6 +548,7 @@ export default function SellerProductsPage() {
               if (image.deleteToken) void deleteTemporaryProductImage(image.deleteToken);
             });
             setStoreId(nextId);
+            try { localStorage.setItem("mtjr.activeStoreId", nextId); } catch { /* Storage can be unavailable in restricted browsers. */ }
             setProducts([]);
             setUploadedImages([]);
             const nextStore = stores.find((store) => store.id === nextId);
