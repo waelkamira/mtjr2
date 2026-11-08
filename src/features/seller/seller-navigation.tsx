@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
-type IconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications";
+type IconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping";
 type Tone = "lavender" | "mint" | "peach" | "butter" | "blush" | "sky";
 
 const groups: Array<{
@@ -18,7 +18,8 @@ const groups: Array<{
       { href: "/seller", label: "Overview", ar: "نظرة عامة", icon: "home", tone: "lavender" },
       { href: "/seller/products", label: "Products", ar: "المنتجات", icon: "package", tone: "mint" },
       { href: "/seller/orders", label: "Orders", ar: "الطلبات", icon: "orders", tone: "peach" },
-      { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" }
+      { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" },
+      { href: "/seller/shipping", label: "Shipping", ar: "الشحن", icon: "shipping", tone: "sky" }
     ]
   },
   {
@@ -64,6 +65,7 @@ function SellerIcon({ name }: { name: IconName }) {
       {name === "ads" && <><path d="M4 14V9l12-4v13L4 14Z" /><path d="m7 14 2 6h3l-2-5M19 9l2-2M19 14l2 2" /></>}
       {name === "team" && <><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-1.5a5.5 5.5 0 0 1 11 0V20M16 5.5a3 3 0 0 1 0 5.8M17 15a4.5 4.5 0 0 1 3.5 4.4V20" /></>}
       {name === "notifications" && <><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" /></>}
+      {name === "shipping" && <><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z" /><circle cx="7.5" cy="18" r="1.8" /><circle cx="17.5" cy="18" r="1.8" /></>}
     </svg>
   );
 }
