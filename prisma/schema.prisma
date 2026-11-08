@@ -2319,8 +2319,8 @@ model SyriaGovernorate {
   sourceVersion String            @db.VarChar(20)
   sourceIds     String[]
   aliases       Json?
-  sourceReferences Json?
-  sourceStatus  String?           @db.VarChar(24)
+  sourceReferences Json
+  sourceStatus  String            @db.VarChar(24)
   districts     SyriaDistrict[]
   subdistricts  SyriaSubdistrict[]
   localities    SyriaLocality[]
