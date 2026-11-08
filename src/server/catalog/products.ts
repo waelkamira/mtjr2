@@ -444,7 +444,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     select: {
       id: true, productNumber: true, name: true, slug: true, description: true, status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
-      media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
+      media: { where: { type: "IMAGE" }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 10, select: { id: true, url: true, storageKey: true, mimeType: true, width: true, height: true, altText: true, sortOrder: true, isPrimary: true } },
       variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
     }
   });
