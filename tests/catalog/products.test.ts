@@ -182,7 +182,7 @@ describe("product lifecycle", () => {
       categoryIds: ["category-1"],
       attributes: [{ attributeDefinitionId: "attribute-color", value: "Red" }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
-    })).rejects.toThrow(/select an available option/i);
+    })).rejects.toThrow(/selected attribute value is invalid/i);
     expect(mocks.productCreate).not.toHaveBeenCalled();
   });
 
