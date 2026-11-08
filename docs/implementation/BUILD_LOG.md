@@ -2538,7 +2538,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Aligned update-time category preset validation with creation-time primary-category behavior and added tests for missing required fields and cover-image invariants.
 
 **Verification notes**
-- The previously recorded Vercel TypeScript errors were in stale `createDraftProduct` test fixtures. The current branch fixtures now include the required description, location, contact, and category fields, but this later state has not been built.
+- The first post-fixture-fix Vercel build (commit `59ba19fb1208f7c1ac949d6fa085a6cfebccf2f8`) exposed two additional TypeScript errors: BigInt literal syntax in `src/lib/money.ts` is incompatible with the repository's `ES2017` target. Replaced BigInt literals with `BigInt(...)` constructor calls in commit `8491a7df0039fd2ed4f0ac8cf713431b789576e8`. The seven stale `createDraftProduct` fixture call sites now include required fields. Neither correction has been verified by a subsequent build.
 - Vercel's latest recorded quota response is the free-tier `api-deployments-free-per-day` limit (over 100 deployments in 24 hours). Do not force another deployment until the quota resets or the project plan is changed.
 - Gallery removal currently removes the database association only; the remote Imgur/ImageKit file is not deleted. See remaining work above.
-- No TypeScript, Vitest, lint, Prisma migration, PostgreSQL, or browser/device test has been executed for this latest change set.
+- No TypeScript, Vitest, lint, Prisma migration, PostgreSQL, or browser/device test has been executed for this latest change set. The build log for commit `59ba19f` is the only observed compiler run for the later changes; it reported only the two BigInt-target errors above.
+
+
+**Additional seller-store safeguards**
+- Added unit tests for returning an already-owned store without creating a second store, and for recovering a concurrent duplicate seller-store create through the unique `sellerId` constraint.
+- Updated the seller application test transaction mocks to include the new `store.findFirst` lookup.
+- The one-store rule is enforced by the Prisma unique constraint and service-level idempotent response. It still requires a safe production migration after checking duplicate seller ownership.
