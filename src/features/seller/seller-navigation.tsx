@@ -74,7 +74,7 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="hidden min-h-screen w-[276px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-clay)] lg:sticky lg:top-0 lg:flex lg:h-screen">
+      <aside className="hidden min-h-screen w-[276px] shrink-0 flex-col border-e border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-clay)] lg:sticky lg:top-0 lg:flex lg:h-screen">
         <div className="border-b border-[var(--border)] px-6 py-6">
           <Link href="/seller" className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[var(--color-lavender-100)] text-[var(--color-lavender-800)] shadow-[var(--shadow-clay)]">
