@@ -544,6 +544,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
       city: true, district: true, contactPhone: true, videoUrl: true,
       localityId: true, neighborhoodId: true, neighborhood: true, latitude: true, longitude: true,
       propertyDetails: { select: { propertyType: true, listingType: true, bedrooms: true, bathrooms: true, floorArea: true } },
+      brand: { select: { id: true, name: true } },
       categories: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { category: { select: { id: true, name: true, slug: true } } } },
       status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
