@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const API_ROOT = path.join(process.cwd(), "src/app/api");
+const sessions = JSON.parse(fs.readFileSync(".e2e-sessions.json", "utf8")) as Record<string, string>;
 const PUBLIC_GETS = new Set([
   "brands/route.ts",
   "categories/route.ts",
@@ -112,5 +113,43 @@ test.describe("API route unauthenticated security boundary", () => {
       failures,
       `Anonymous requests must not succeed. Probed ${probes.length} route/method pairs. Failures: ${JSON.stringify(failures, null, 2)}`
     ).toEqual([]);
+  });
+});
+
+
+test.describe("API role authorization boundary", () => {
+  test("buyers and sellers cannot read platform-admin or seller-only resources", async ({ request }) => {
+    const probes = [
+      { actor: "buyer", token: sessions.buyer, method: "GET", url: "/api/admin/users" },
+      { actor: "buyer", token: sessions.buyer, method: "GET", url: "/api/admin/dashboard" },
+      { actor: "buyer", token: sessions.buyer, method: "GET", url: "/api/admin/sellers" },
+      { actor: "buyer", token: sessions.buyer, method: "GET", url: "/api/seller/stores" },
+      { actor: "buyer", token: sessions.buyer, method: "GET", url: "/api/seller/orders" },
+      { actor: "seller", token: sessions.seller, method: "GET", url: "/api/admin/users" },
+      { actor: "seller", token: sessions.seller, method: "GET", url: "/api/admin/dashboard" }
+    ];
+    const allowedDenialStatuses = new Set([401, 403, 404]);
+    const failures: Array<{ actor: string; url: string; status: number; body: string }> = [];
+
+    for (const probe of probes) {
+      const response = await request.fetch(probe.url, {
+        method: probe.method,
+        headers: {
+          Cookie: "mtjr2_session=" + probe.token,
+          "cf-connecting-ip": "203.0.113.10",
+          "Cache-Control": "no-store"
+        }
+      });
+      if (!allowedDenialStatuses.has(response.status())) {
+        failures.push({
+          actor: probe.actor,
+          url: probe.url,
+          status: response.status(),
+          body: (await response.text()).slice(0, 240)
+        });
+      }
+    }
+
+    expect(failures, "A buyer or seller must not cross into another role's API boundary.").toEqual([]);
   });
 });
