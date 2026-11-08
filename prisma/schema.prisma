@@ -664,6 +664,7 @@ model Category {
   commissionRules CommissionRule[]
   orderItems   OrderItem[]
   adCampaigns  AdCampaign[]
+  attributeLinks CategoryAttribute[]
 
   @@index([parentId, status, sortOrder])
   @@index([status, sortOrder])
@@ -741,6 +742,10 @@ model Product {
   variants            ProductVariant[]
   identifiers         ProductIdentifier[]
   attributes          ProductAttribute[]
+  localityId          String?
+  latitude            Float?
+  longitude           Float?
+  locality            SyriaLocality?         @relation(fields: [localityId], references: [id], onDelete: SetNull)
   orderItems          OrderItem[]
   reviews             ProductReview[]
   questions           ProductQuestion[]
@@ -866,6 +871,7 @@ model AttributeDefinition {
   translations   AttributeTranslation[]
   productValues  ProductAttribute[]
   variantValues  VariantAttribute[]
+  categoryLinks CategoryAttribute[]
 
   @@index([isFilterable, valueType])
 }
@@ -2280,4 +2286,104 @@ model AdInvoice {
   settledBy User? @relation("AdInvoiceSettler", fields: [settledById], references: [id], onDelete: SetNull)
   @@unique([storeId, currencyCode, periodStart])
   @@index([status, dueAt])
+}
+
+
+model CategoryAttribute {
+  id                    String              @id @default(cuid())
+  categoryId            String
+  attributeDefinitionId String
+  sortOrder             Int                 @default(0)
+  isRequired            Boolean             @default(false)
+  isVariantLevel        Boolean             @default(false)
+  options               Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  category              Category            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  attribute             AttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, attributeDefinitionId])
+  @@index([categoryId, sortOrder])
+  @@index([attributeDefinitionId])
+}
+
+model SyriaGovernorate {
+  id            String            @id
+  nameEn        String
+  nameAr        String?
+  latitude      Float?
+  longitude     Float?
+  sourceVersion String            @db.VarChar(20)
+  sourceIds     String[]
+  aliases       Json?
+  districts     SyriaDistrict[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([nameAr])
+  @@index([nameEn])
+}
+
+model SyriaDistrict {
+  id            String            @id
+  governorateId String
+  nameEn        String
+  nameAr        String?
+  latitude      Float?
+  longitude     Float?
+  sourceVersion String            @db.VarChar(20)
+  sourceIds     String[]
+  aliases       Json?
+  governorate   SyriaGovernorate  @relation(fields: [governorateId], references: [id], onDelete: Cascade)
+  subdistricts  SyriaSubdistrict[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([governorateId, nameAr])
+  @@index([governorateId, nameEn])
+}
+
+model SyriaSubdistrict {
+  id            String            @id
+  governorateId String
+  districtId    String
+  nameEn        String
+  nameAr        String?
+  latitude      Float?
+  longitude     Float?
+  sourceVersion String            @db.VarChar(20)
+  sourceIds     String[]
+  aliases       Json?
+  governorate   SyriaGovernorate  @relation(fields: [governorateId], references: [id], onDelete: Cascade)
+  district      SyriaDistrict     @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  localities    SyriaLocality[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([governorateId, districtId, nameAr])
+  @@index([districtId, nameEn])
+}
+
+model SyriaLocality {
+  id            String            @id
+  governorateId String
+  districtId    String
+  subdistrictId String
+  nameEn        String
+  nameAr        String?
+  kind          String?
+  latitude      Float?
+  longitude     Float?
+  sourceVersion String            @db.VarChar(20)
+  sourceIds     String[]
+  aliases       Json?
+  subdistrict   SyriaSubdistrict  @relation(fields: [subdistrictId], references: [id], onDelete: Cascade)
+  products      Product[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([governorateId, districtId, subdistrictId])
+  @@index([subdistrictId, nameAr])
+  @@index([subdistrictId, nameEn])
+  @@index([kind])
 }
