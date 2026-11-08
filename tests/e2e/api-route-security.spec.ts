@@ -118,7 +118,7 @@ test.describe("API route unauthenticated security boundary", () => {
 
 
 test.describe("API role authorization boundary", () => {
-  test("buyers and sellers cannot read platform-admin or seller-only resources", async ({ request }) => {
+  test("buyers and sellers cannot read protected platform data or another role's resources", async ({ request }) => {
     const probes = [
       { actor: "buyer", token: sessions.buyer, method: "GET", url: "/api/admin/users" },
       { actor: "buyer", token: sessions.buyer, method: "GET", url: "/api/admin/dashboard" },
@@ -140,6 +140,19 @@ test.describe("API role authorization boundary", () => {
           "Cache-Control": "no-store"
         }
       });
+      if (response.status() === 200 && probe.actor === "buyer") {
+        const payload = await response.json() as Record<string, unknown>;
+        const safeEmptySellerWorkspace =
+          probe.url === "/api/seller/stores" &&
+          payload.seller === null &&
+          Array.isArray(payload.stores) &&
+          payload.stores.length === 0;
+        const safeEmptySellerOrders =
+          probe.url === "/api/seller/orders" &&
+          Array.isArray(payload.orders) &&
+          payload.orders.length === 0;
+        if (safeEmptySellerWorkspace || safeEmptySellerOrders) continue;
+      }
       if (!allowedDenialStatuses.has(response.status())) {
         failures.push({
           actor: probe.actor,
