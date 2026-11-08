@@ -2653,3 +2653,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Current-main seller API error handling was tightened in this work. PostgreSQL integration run `42468235175` completed successfully, including Prisma validation/generation, migration replay, baseline permission seed, integration tests, demo catalog seed, and seed repeatability.
 - Exact-head CI run `42468235212` has passed dependency installation, Prisma validation, migration deploy, Prisma generation, TypeScript typecheck, and ESLint. Vitest is still running at the time of this entry; build and route/UI audit steps have not yet completed. Do not treat the workflow as fully green until the remaining steps finish.
 - No Vercel deployment, production database mutation, or PR merge was performed.
+
+
+## 2026-11-08 — CI regression follow-up
+
+- Exact-head CI on commit `5d825d8906fa53ef0e6ef426c64b9b6fd8fb4841` passed dependency installation, Prisma validation, migration deploy, Prisma generation, TypeScript typecheck, ESLint, and both route/UI audit generators (167/167 API routes with guard evidence; 107/107 state-changing routes with mutation-boundary evidence; zero inventory items flagged for manual review).
+- Vitest reported 447 passing tests and one failing test. The failure was a stale Vitest mock in `tests/catalog/products.test.ts`: the production service now throws the shared typed `PermissionDeniedError`, but that test's mocked `current-session` module did not export the class. This was a test-double defect, not a production authorization failure.
+- Fixed the mock export in commit `0cdeee69fb81998db175a4bac43f8c2d14547288`. Exact-head CI run `42468433339` is now running against that fix. Build remains gated on Vitest success.
