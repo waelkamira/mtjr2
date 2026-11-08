@@ -290,11 +290,11 @@ const updateProductSchema = z.object({
   categoryIds: z.array(z.string().trim().min(1)).max(30).optional(),
   media: z.array(z.object({
     url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
-    storageKey: z.string().trim().max(1024).optional(),
-    mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]).optional(),
-    width: z.number().int().positive().max(100000).optional(),
-    height: z.number().int().positive().max(100000).optional(),
-    altText: z.string().trim().max(300).optional(),
+    storageKey: z.string().trim().max(1024).nullable().optional(),
+    mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]).nullable().optional(),
+    width: z.number().int().positive().max(100000).nullable().optional(),
+    height: z.number().int().positive().max(100000).nullable().optional(),
+    altText: z.string().trim().max(300).nullable().optional(),
     sortOrder: z.number().int().min(0).max(1000).default(0),
     isPrimary: z.boolean().default(false)
   }).strict()).max(30).optional()
