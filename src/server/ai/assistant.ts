@@ -151,7 +151,7 @@ export async function answerCustomer(raw: unknown) {
   let products: ProductCard[] = [];
   let returns: Array<{ returnNumber: string; orderNumber: string; status: string; reasonCode: string; requestedAt: string; items: Array<{ productName: string; quantity: number }> }> = [];
   let orders: Array<{ orderNumber: string; status: string; placedAt: string; total: string; currencyCode: string; shipments: Array<{ store: string; status: string; carrier: string | null; trackingUrl: string | null }> }> = [];
-  let supportTickets: Array<{ ticketNumber: string; subject: string; status: string; priority: string; updatedAt: string; messageCount: number }> = [];
+  let supportTickets: Array<{ id: string; ticketNumber: string; subject: string; status: string; priority: string; updatedAt: string; messageCount: number }> = [];
   if (first.tool_calls?.length) {
     const assistantMessage: GroqMessage = {
       role: "assistant",
