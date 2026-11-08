@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCategoryFieldsForEdit, getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
+import { buildCategoryFieldsForEdit, getCategoryFieldPresets, mergeEditedCategoryFields } from "@/lib/catalog/category-field-presets";
 
 describe("Akaar-compatible category field presets", () => {
   it("provides all required real-estate and vehicle listing details", () => {
@@ -54,5 +54,27 @@ describe("editable category field preservation", () => {
     buildCategoryFieldsForEdit("unknown-category", saved, current);
     expect(saved).toEqual({ custom: "saved" });
     expect(current).toEqual([{ key: "custom", value: "edited" }]);
+  });
+});
+
+describe("custom field update merge", () => {
+  it("preserves nested legacy JSON while updating and clearing visible scalar fields", () => {
+    const saved = {
+      rooms: "3",
+      legacyText: "keep until cleared",
+      structuredLegacy: { source: "Akaar", values: [1, 2] }
+    };
+    const merged = mergeEditedCategoryFields(saved, [
+      { key: "rooms", value: "4" },
+      { key: "legacyText", value: " " },
+      { key: "newField", value: "new value" }
+    ]);
+
+    expect(merged).toEqual({
+      rooms: "4",
+      structuredLegacy: { source: "Akaar", values: [1, 2] },
+      newField: "new value"
+    });
+    expect(saved.structuredLegacy).toEqual({ source: "Akaar", values: [1, 2] });
   });
 });
