@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import CheckoutDeliveryAddress from "@/features/checkout/checkout-delivery-address";
@@ -23,7 +24,7 @@ type Quote = {
 };
 
 function money(amountMinor: string, code: string, minorUnit: number) {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: code }).format(Number(amountMinor) / (10 ** minorUnit));
+  return formatMinorUnits(amountMinor, code, minorUnit);
 }
 
 export default function CheckoutReviewPage() {
