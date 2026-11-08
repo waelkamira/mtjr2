@@ -188,8 +188,16 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setError("");
     if (!id) return;
     setBusy(true);
-    try { const result = await loadLevel("subdistricts", { districtId: id }); if (request === selectionRequest.current) setSubdistricts(result.items); }
-    catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load subdistricts."); }
+    try {
+      const [subdistrictResult, localityResult] = await Promise.all([
+        loadLevel("subdistricts", { districtId: id }),
+        loadLevel("localities", { districtId: id, limit: "100" })
+      ]);
+      if (request === selectionRequest.current) {
+        setSubdistricts(subdistrictResult.items);
+        setLocalities(localityResult.items);
+      }
+    } catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load subdistricts."); }
     finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
