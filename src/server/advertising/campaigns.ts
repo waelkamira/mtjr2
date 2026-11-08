@@ -42,7 +42,6 @@ if(!market||!storeMarket?.isEnabled)throw new Error("Choose an active market ena
 if(!product)throw new Error("Choose an approved, published product belonging to this store.");
 if(data.targetBrandId&&product.brandId!==data.targetBrandId)throw new Error("The selected brand does not match the advertised product.");
 if(data.targetCategoryId&&!product.categories.some(category=>category.categoryId===data.targetCategoryId))throw new Error("The selected category does not match the advertised product.");
- if(!product)throw new Error("Choose an approved, published product belonging to this store.");
  return prisma.$transaction(async tx=>{
   const item=await tx.adCampaign.create({data:{...data,budgetMinor:BigInt(data.budgetMinor),dailyBudgetMinor:BigInt(data.dailyBudgetMinor),cpcBidMinor:BigInt(data.cpcBidMinor),targetKeywords:data.targetKeywords.map(value=>value.toLocaleLowerCase()),createdById:actor.userId,message:data.message||null,status:AdCampaignStatus.DRAFT},select});
   await tx.auditLog.create({data:{actorType:AuditActorType.USER,actorId:actor.userId,action:"advertising.campaign.created",resource:"ad_campaign",resourceId:item.id,scopeType:"STORE",scopeId:data.storeId,occurredAt:now,metadata:{productId:data.productId,status:item.status}}});
