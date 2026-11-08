@@ -2606,3 +2606,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - All three verification workflows are green on that head: CI, Platform PostgreSQL Integration, and Browser E2E. CI includes all 440 Vitest tests and production build.
 - The functional source and corrected seller/admin test fixture are present on current main; subsequent main-only commits since the verification head contain documentation updates only. No production deployment was triggered.
 - PR #69 remains unmerged and Draft: latest comparison is 336 commits ahead / 81 behind main, so it still requires a real rebase/three-way reconciliation before safe integration.
+
+
+## 2026-11-08 — Fix multipart image-upload request validation
+- A follow-up code-path audit found the shared mutation guard required `application/json`, while seller image uploads send `multipart/form-data`; the upload route therefore could be rejected before its authenticated upload handler parsed the form.
+- Split same-origin/Fetch-Metadata validation from body-type validation. JSON mutation routes retain the JSON-only guard; image upload routes now use a dedicated multipart guard that requires a multipart boundary and preserves same-origin checks.
+- Updated both `/api/seller/products/media` and the backward-compatible `/api/seller/products/images` endpoint. Added unit coverage for JSON acceptance, multipart rejection on JSON endpoints, multipart acceptance on upload endpoints, and missing/cross-origin rejection.
+- These changes were committed directly to main; they are not verified yet. A fresh exact-head CI, PostgreSQL integration, and Browser E2E run is required before considering this fix complete.
