@@ -402,22 +402,44 @@ export default function SellerWorkspacePage() {
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Store performance", "أداء المتجر")}</h2>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Live order activity and stock for the selected store.", "نشاط الطلبات والمخزون المباشر للمتجر المحدد.")}</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Sales, order health, catalog performance and stock for the selected store.", "المبيعات وحالة الطلبات وأداء الكتالوج والمخزون للمتجر المحدد.")}</p>
                 </div>
-                {ordersLoading && <span role="status" className="text-xs text-[var(--muted)]">{translate(locale, "Loading order data…", "جارٍ تحميل بيانات الطلبات…")}</span>}
+                {analyticsLoading && <span role="status" className="rounded-full bg-[var(--color-lavender-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-lavender-800)]">{translate(locale, "Refreshing store analytics…", "جارٍ تحديث تحليلات المتجر…")}</span>}
               </div>
-              {ordersError && <p role="status" className="mb-4 rounded-xl bg-[var(--background)] p-3 text-xs text-[var(--muted)]">{translate(locale, "Order charts are temporarily unavailable.", "مخططات الطلبات غير متاحة مؤقتًا.")}</p>}
+              {analyticsError && <p role="status" className="mb-4 rounded-xl border border-[var(--color-blush-300)] bg-[var(--color-blush-50)] p-3 text-xs text-[var(--color-blush-800)]">{translate(locale, "Store analytics are temporarily unavailable for this account or store.", "تحليلات المتجر غير متاحة مؤقتًا لهذا الحساب أو المتجر.")}</p>}
               {inventoryError && <p role="status" className="mb-4 rounded-xl bg-[var(--background)] p-3 text-xs text-[var(--muted)]">{translate(locale, "Inventory charts are temporarily unavailable.", "مخططات المخزون غير متاحة مؤقتًا.")}</p>}
+              {salesCurrencies.length > 1 && (
+                <div className="mb-4 flex justify-end">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink-600)]">
+                    {translate(locale, "Sales currency", "عملة المبيعات")}
+                    <select value={activeSalesCurrency?.currencyCode ?? ""} onChange={(event) => setSelectedSalesCurrency(event.target.value)} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs shadow-[var(--shadow-clay)]">
+                      {salesCurrencies.map((entry) => <option key={entry.currencyCode} value={entry.currencyCode}>{entry.currencyCode}</option>)}
+                    </select>
+                  </label>
+                </div>
+              )}
               <div className="grid gap-5 lg:grid-cols-2">
                 <LineAreaChart
-                  title={translate(locale, "Orders over time", "الطلبات بمرور الوقت")}
-                  description={translate(locale, "Daily order counts from the latest accessible seller orders.", "عدد الطلبات اليومية من أحدث طلبات البائع المتاحة.")}
+                  title={translate(locale, "Daily orders", "الطلبات اليومية")}
+                  description={translate(locale, "All eligible seller orders in the selected 30-day period.", "جميع طلبات البائع المؤهلة خلال فترة الثلاثين يومًا المحددة.")}
                   data={sellerDailyOrders}
                   emptyLabel={emptyChartLabel}
                 />
                 <PieChart
                   title={translate(locale, "Orders by status", "الطلبات حسب الحالة")}
                   data={sellerOrderStatuses}
+                  emptyLabel={emptyChartLabel}
+                />
+                <LineAreaChart
+                  title={activeSalesCurrency ? `${translate(locale, "Gross sales", "إجمالي المبيعات")} · ${activeSalesCurrency.currencyCode}` : translate(locale, "Gross sales", "إجمالي المبيعات")}
+                  description={translate(locale, "Completed and active order value in one currency. No currency conversion is applied.", "قيمة الطلبات المكتملة والنشطة بعملة واحدة دون إجراء تحويل للعملات.")}
+                  data={sellerDailySales}
+                  emptyLabel={emptyChartLabel}
+                />
+                <HorizontalBarChart
+                  title={translate(locale, "Top-selling products", "المنتجات الأكثر مبيعًا")}
+                  description={translate(locale, "Products ranked by units sold, not mixed-currency revenue.", "ترتيب المنتجات حسب الوحدات المباعة، وليس الإيرادات بعملات مختلطة.")}
+                  data={topSellingProducts}
                   emptyLabel={emptyChartLabel}
                 />
                 <div className="lg:col-span-2">
