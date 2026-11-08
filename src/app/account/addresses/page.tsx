@@ -142,7 +142,7 @@ export default function AddressesPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(`/api/account/addresses/${encodeURIComponent(address.id)}`, { method: "DELETE" });
+      const response = await fetch(`/api/account/addresses/${encodeURIComponent(address.id)}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: "{}" });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Unable to delete address.", "تعذر حذف العنوان."));
       await reloadAddresses();
