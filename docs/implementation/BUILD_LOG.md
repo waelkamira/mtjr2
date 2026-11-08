@@ -2633,3 +2633,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The API security inventory now discovers **167 route handlers**, with **0 routes requiring manual review** and **0 state-changing routes requiring review**. The UI mutation feedback inventory found 54 files with appropriate success/error feedback paths.
 - Browser E2E passed **7/7** journeys, including the anonymous route-security sweep across 166 route/method probes, buyer checkout, customer responsive account, seller workspace, Akaar category fields/Syrian geography/Leaflet map, and Super Admin control center/advertising.
 - The multipart image upload guard now preserves same-origin checks, authenticates before exposing upload content-type requirements, and accepts multipart requests on both current and backward-compatible endpoints. No production deployment was triggered.
+
+
+## 2026-11-08 — Seller API error semantics and authorization hardening
+
+- Corrected product creation API error mapping so catalog-access denial is returned as HTTP 403 rather than being misreported as HTTP 400. Public product listing continues to enforce the public-search request budget.
+- Tightened seller shipping-rate error handling. Shipping service authorization failures now use the shared typed `PermissionDeniedError`; the route returns 403 only for an actual authorization denial, 401 for missing authentication, 400 for invalid input or an unsupported store market/currency, and 500 for unexpected service/database failures. Previously, the GET handler returned 403 for every exception, hiding operational failures as permission problems.
+- Added `tests/api/seller-shipping-rates-route.test.ts` to cover permission denial, authentication, missing store identifier, and unexpected GET/POST failures.
+- The disposable PostgreSQL integration workflow triggered by the preceding API commit completed successfully: Prisma validation/generation, committed migration replay, baseline permission seeding, integration tests, demo catalog seed, and seed repeatability all passed. This run predates the typed shipping error-mapping change and is not evidence for that new route behavior.
+- Exact-head general CI was triggered on the new test commit and is pending. No passing typecheck/lint/unit/build claim is made for these latest changes until that run completes.
+- No production database, Vercel configuration, or deployment was changed.
