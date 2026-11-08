@@ -234,7 +234,7 @@ describe("product lifecycle", () => {
   });
 
   it("updates all editable listing metadata and stores category fields as JSON", async () => {
-    mocks.categoryFindMany.mockResolvedValue([{ slug: "real-estate" }]);
+    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
     await updateDraftProduct("product-1", {
       city: "Damascus", district: "Central", contactPhone: "+963900000000",
