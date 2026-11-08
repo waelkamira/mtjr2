@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { AlertTriangle, Boxes, ClipboardList, PackagePlus } from "lucide-react";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -241,7 +240,7 @@ export default function SellerWorkspacePage() {
             ? translate(locale, "Latest accessible orders for this store.", "أحدث الطلبات المتاحة لهذا المتجر.")
             : translate(locale, "No orders yet.", "لا توجد طلبات بعد."),
       color: "#F0660D",
-      icon: ClipboardList
+      icon: "☷"
     },
     {
       label: translate(locale, "Orders to fulfill", "طلبات بانتظار التجهيز"),
@@ -254,7 +253,7 @@ export default function SellerWorkspacePage() {
             ? translate(locale, "Confirmed, processing, and ready-to-ship orders.", "الطلبات المؤكدة وقيد المعالجة والجاهزة للشحن.")
             : translate(locale, "Nothing to fulfill right now.", "لا توجد طلبات للتجهيز حاليًا."),
       color: "#D88363",
-      icon: PackagePlus
+      icon: "＋"
     },
     {
       label: translate(locale, "Available units", "الوحدات المتاحة"),
@@ -267,7 +266,7 @@ export default function SellerWorkspacePage() {
             ? translate(locale, "Across this store’s warehouse records.", "في سجلات مستودعات هذا المتجر.")
             : translate(locale, "No inventory records yet.", "لا توجد سجلات مخزون بعد."),
       color: "#688B72",
-      icon: Boxes
+      icon: "▦"
     },
     {
       label: translate(locale, "Low-stock records", "سجلات المخزون المنخفض"),
@@ -282,7 +281,7 @@ export default function SellerWorkspacePage() {
               ? translate(locale, "No inventory is below its reorder point.", "لا يوجد مخزون دون حد إعادة الطلب.")
               : translate(locale, "No inventory records yet.", "لا توجد سجلات مخزون بعد."),
       color: "#8CA5B5",
-      icon: AlertTriangle
+      icon: "⚠"
     }
   ];
 
@@ -331,7 +330,7 @@ export default function SellerWorkspacePage() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <Link href="/seller/products" className="inline-flex items-center gap-2 rounded-xl bg-[#F0660D] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-clay)] transition hover:shadow-[var(--shadow-clay-hover)]">
-                  <PackagePlus aria-hidden="true" className="size-4" />
+                  <span aria-hidden="true" className="text-base leading-none">＋</span>
                   {translate(locale, "Create new listing", "إنشاء منتج جديد")}
                 </Link>
                 <Link href="/seller/orders" className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--color-onyx)] shadow-[var(--shadow-clay)] transition hover:shadow-[var(--shadow-clay-hover)]">
@@ -342,12 +341,11 @@ export default function SellerWorkspacePage() {
 
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric) => {
-                const Icon = metric.icon;
                 return (
                   <article key={metric.label} className="group relative overflow-hidden rounded-2xl border bg-white/90 p-5 shadow-[0_12px_32px_rgba(23,44,34,.07)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(23,44,34,.11)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
                     <div className="flex items-center gap-3">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${metric.color}20`, color: metric.color }}>
-                        <Icon aria-hidden="true" className="size-5" />
+                        <span aria-hidden="true" className="text-lg leading-none">{metric.icon}</span>
                       </span>
                       <h3 className="text-sm font-semibold text-[var(--color-onyx)]">{metric.label}</h3>
                     </div>
