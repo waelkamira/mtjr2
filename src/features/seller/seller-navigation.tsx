@@ -92,7 +92,7 @@ export default function SellerNavigation() {
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
           {groups.map((group) => (
             <section key={group.title}>
-              <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-[var(--muted)]">{translate(locale, group.title, group.ar)}</h2>
+              <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-slate-300/60">{translate(locale, group.title, group.ar)}</h2>
               <div className="space-y-1">
                 {group.links.map((link) => {
                   const active = link.href === "/seller"
@@ -101,8 +101,8 @@ export default function SellerNavigation() {
                   return (
                     <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
                       className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all duration-200 ${active
-                        ? "bg-[var(--color-lavender-50)] font-bold text-[var(--color-ink-950)] ring-1 ring-[var(--color-lavender-300)] shadow-[var(--shadow-clay-inset)]"
-                        : "text-[var(--color-ink-600)] hover:bg-[var(--surface-soft)] hover:text-[var(--color-ink-950)]"}`}>
+                        ? "bg-[linear-gradient(135deg,#d8edf0,#b7d8df)] font-bold text-[#23394d] ring-1 ring-white/70 shadow-[0_8px_20px_rgba(9,24,38,.24),inset_0_1px_0_rgba(255,255,255,.9)]"
+                        : "text-slate-200/85 hover:bg-white/10 hover:text-white"}`}>
                       <span className={`grid size-9 shrink-0 place-items-center rounded-xl transition-transform group-hover:-translate-y-0.5 ${toneClasses[link.tone]}`}>
                         <SellerIcon name={link.icon} />
                       </span>
