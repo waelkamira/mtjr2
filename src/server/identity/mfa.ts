@@ -7,7 +7,7 @@ import {
   randomBytes,
   timingSafeEqual
 } from "node:crypto";
-import { AuditActorType, UserStatus } from "@prisma/client";
+import { AuditActorType, SellerStatus, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/lib/env";
 import { verifyPassword } from "@/server/identity/password";
@@ -196,7 +196,7 @@ export async function getMfaAccessState(
       },
       select: { id: true }
     }),
-    prisma.seller.findUnique({ where: { ownerId: userId }, select: { id: true } }),
+    prisma.seller.findUnique({ where: { ownerId: userId }, select: { status: true } }),
     prisma.userRoleAssignment.findFirst({
       where: {
         userId,
@@ -212,7 +212,7 @@ export async function getMfaAccessState(
     })
   ]);
   const enabled = factor?.enabledAt !== null && factor?.enabledAt !== undefined;
-  const privilegedAccount = Boolean(platformGrant || administratorGrant || sellerProfile || storeScopedGrant);
+  const privilegedAccount = Boolean(platformGrant || administratorGrant || sellerProfile?.status === SellerStatus.ACTIVE || storeScopedGrant);
   const enrollmentRequired = privilegedAccount && !enabled;
 
   return {

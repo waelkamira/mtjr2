@@ -416,3 +416,87 @@ test.describe("Super Admin journey", () => {
     await page.screenshot({ path: "test-results/admin-mobile.png", fullPage: true });
   });
 });
+
+test.describe("seller onboarding and approval journey", () => {
+  test("applicant submits, admin approves, and seller creates one store", async ({ page }) => {
+    await signIn(page, sessions.sellerApplicant);
+    await page.goto("/seller");
+    await expect(page.getByRole("heading", { name: /Apply to become a seller|تقدّم لتصبح بائعًا/i })).toBeVisible();
+    await page.getByLabel(/Legal business name|الاسم القانوني للنشاط التجاري/i).fill("E2E Seller Legal Entity");
+    await page.getByLabel(/Storefront display name|اسم العرض للمتجر/i).fill("E2E Public Seller");
+    const applicationResponsePromise = page.waitForResponse((response) =>
+      response.url().endsWith("/api/seller/applications") && response.request().method() === "POST"
+    );
+    await page.getByRole("button", { name: /Submit application|إرسال الطلب/i }).click();
+    const applicationResponse = await applicationResponsePromise;
+    const applicationBody = await applicationResponse.json() as { error?: string; status?: string; alreadySubmitted?: boolean };
+    expect(applicationResponse.status(), JSON.stringify(applicationBody)).toBe(201);
+    expect(applicationBody.status).toBe("PENDING");
+
+    const pendingWorkspace = await page.request.get("/api/seller/stores");
+    const pendingWorkspaceBody = await pendingWorkspace.json() as { seller?: { status: string }; stores?: unknown[]; error?: string };
+    expect(pendingWorkspace.status(), JSON.stringify(pendingWorkspaceBody)).toBe(200);
+    const pendingData = pendingWorkspaceBody as { seller: { status: string }; stores: unknown[] };
+    expect(pendingData.seller.status).toBe("PENDING");
+    expect(pendingData.stores).toHaveLength(0);
+    await page.reload();
+    await expect(page.getByText("PENDING").first()).toBeVisible();
+
+    const duplicateApplication = await page.evaluate(async () => {
+      const response = await fetch("/api/seller/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ legalName: "E2E Seller Legal Entity", displayName: "E2E Public Seller" })
+      });
+      return { status: response.status, body: await response.json() as { alreadySubmitted?: boolean } };
+    });
+    expect(duplicateApplication.status).toBe(200);
+    expect(duplicateApplication.body.alreadySubmitted).toBe(true);
+
+    await signIn(page, sessions.admin);
+    await page.goto("/admin/sellers");
+    const sellerCard = page.locator("article").filter({ hasText: "E2E Public Seller" });
+    await expect(sellerCard).toBeVisible();
+    await expect(sellerCard).toContainText("PENDING");
+    page.on("dialog", (dialog) => dialog.accept());
+    await sellerCard.getByRole("button", { name: /^Approve$|^موافقة$/i }).click();
+    await expect(sellerCard).toContainText("ACTIVE");
+
+    await signIn(page, sessions.sellerApplicant);
+    await page.goto("/seller");
+    await expect(page.getByText("ACTIVE").first()).toBeVisible();
+    await page.getByLabel(/^Store name$|^اسم المتجر$/i).fill("E2E Applicant Store");
+    await page.getByLabel(/Store URL slug|معرّف رابط المتجر/i).fill("e2e-applicant-store");
+    const marketsResponse = await page.request.get("/api/markets");
+    expect(marketsResponse.status()).toBe(200);
+    const marketData = await marketsResponse.json() as { items: Array<{ id: string }> };
+    const marketId = marketData.items[0]?.id;
+    expect(marketId).toBeTruthy();
+    await page.getByRole("checkbox").first().check();
+    await page.getByRole("button", { name: /Create draft store|إنشاء متجر كمسودة/i }).click();
+    await expect(page.getByText(/Your draft store has been created|تم إنشاء مسودة متجرك/i)).toBeVisible();
+    await expect(page.getByText("E2E Applicant Store")).toBeVisible();
+
+    const retryStore = await page.evaluate(async (payload) => {
+      const response = await fetch("/api/seller/stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      return { status: response.status, body: await response.json() as { alreadyCreated?: boolean } };
+    }, { name: "E2E Applicant Store", slug: "e2e-applicant-store", marketIds: [marketId] });
+    expect(retryStore.status).toBe(200);
+    expect(retryStore.body.alreadyCreated).toBe(true);
+
+    const secondStore = await page.evaluate(async (payload) => {
+      const response = await fetch("/api/seller/stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      return { status: response.status, body: await response.json() as { error?: string } };
+    }, { name: "Second E2E Store", slug: "second-e2e-store", marketIds: [marketId] });
+    expect(secondStore.status).toBe(400);
+    expect(secondStore.body.error).toContain("Each seller can own only one store");
+  });
+});

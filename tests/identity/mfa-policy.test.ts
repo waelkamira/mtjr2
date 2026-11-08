@@ -25,14 +25,25 @@ describe("privileged account MFA policy", () => {
     mocks.sellerFindUnique.mockResolvedValue(null);
   });
 
-  it("requires MFA enrollment for a seller profile", async () => {
-    mocks.sellerFindUnique.mockResolvedValue({ id: "seller-1" });
+  it("requires MFA enrollment for an active seller profile", async () => {
+    mocks.sellerFindUnique.mockResolvedValue({ status: "ACTIVE" });
     await expect(getMfaAccessState("seller-owner-1")).resolves.toMatchObject({
       enabled: false,
       required: true,
       platformRequired: false,
       privilegedAccountRequired: true,
       enrollmentRequired: true
+    });
+  });
+
+  it("does not require MFA while a seller application is pending review", async () => {
+    mocks.sellerFindUnique.mockResolvedValue({ status: "PENDING" });
+    await expect(getMfaAccessState("seller-applicant-1")).resolves.toMatchObject({
+      enabled: false,
+      required: false,
+      platformRequired: false,
+      privilegedAccountRequired: false,
+      enrollmentRequired: false
     });
   });
 
