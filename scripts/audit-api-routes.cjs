@@ -30,13 +30,13 @@ function collect(source, file, depth = 0, seen = new Set()) {
   seen.add(file);
   let result = source;
   const imports = [
-    ...[...source.matchAll(/from\\s+["']@\\/(server\\/[^"']+)["']/g)].map((match) => path.join(root, "src", match[1])),
-    ...[...source.matchAll(/from\\s+["'](\\.{1,2}\\/[^"']+)["']/g)].map((match) => path.resolve(path.dirname(file), match[1]))
+    ...[...source.matchAll(/from\s+["']@\/(server\/[^"']+)["']/g)].map((match) => path.join(root, "src", match[1])),
+    ...[...source.matchAll(/from\s+["'](\.{1,2}\/[^"']+)["']/g)].map((match) => path.resolve(path.dirname(file), match[1]))
   ];
   for (const base of imports) {
     const candidates = [base + ".ts", path.join(base, "route.ts"), path.join(base, "index.ts"), base + ".tsx"];
     const target = candidates.find((candidate) => fs.existsSync(candidate));
-    if (target) result += "\\n" + collect(fs.readFileSync(target, "utf8"), target, depth + 1, seen);
+    if (target) result += "\n" + collect(fs.readFileSync(target, "utf8"), target, depth + 1, seen);
   }
   return result;
 }
@@ -53,9 +53,9 @@ const rows = walk(apiRoot).map((file) => {
   const isCronOrWebhook = (relative.startsWith("cron/") || relative.startsWith("webhooks/")) && evidence.length > 0;
   const hasMutationMethod = methods.some((method) => method !== "GET");
   const hasRequestBoundary =
-    /validateIdentityMutationRequest\\s*\\(\\s*request\\s*\\)/.test(allSource) ||
-    /validateIdentityMutationOrigin\\s*\\(\\s*request\\s*\\)/.test(allSource) ||
-    /validateIdentityImageUploadRequest\\s*\\(\\s*request\\s*\\)/.test(allSource) ||
+    /validateIdentityMutationRequest\s*\(\s*request\s*\)/.test(allSource) ||
+    /validateIdentityMutationOrigin\s*\(\s*request\s*\)/.test(allSource) ||
+    /validateIdentityImageUploadRequest\s*\(\s*request\s*\)/.test(allSource) ||
     (relative.startsWith("webhooks/") && allSource.includes("verifyWebhook(")) ||
     (relative.startsWith("cron/") && allSource.includes("authorized(request)"));
   const mutationBoundary = !hasMutationMethod ? "NOT_APPLICABLE" : hasRequestBoundary ? "PROTECTED" : "REVIEW_REQUIRED";
