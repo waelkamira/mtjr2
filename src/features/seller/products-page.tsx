@@ -549,8 +549,11 @@ export default function SellerProductsPage() {
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(420px,.92fr)_minmax(520px,1.08fr)]">
-        <section id="create-product" className="scroll-mt-24 rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#e7f1f4,#cbdde4)] p-6 shadow-[0_16px_34px_rgba(35,62,81,.17),inset_0_2px_0_white,inset_0_-3px_8px_rgba(48,76,94,.07)] sm:p-7">
-          <h2 className="text-xl font-extrabold tracking-tight text-[#2d4a60]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2>
+        <section id="create-product" className="scroll-mt-24 rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#e7f1f4,#cbdde4)] p-5 shadow-[0_16px_34px_rgba(35,62,81,.17),inset_0_2px_0_white,inset_0_-3px_8px_rgba(48,76,94,.07)] sm:p-7">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-3 rounded-[1.5rem] border border-white/75 bg-[linear-gradient(120deg,#d8e9ed,#e7eef1_58%,#dfe8ed)] p-4 shadow-[inset_0_2px_0_white,0_6px_15px_rgba(37,65,84,.09)]">
+            <div><p className="text-[10px] font-extrabold tracking-[.18em] text-[#628493]">{translate(locale,"PRODUCT STUDIO","استوديو المنتجات")}</p><h2 className="mt-1 text-xl font-black tracking-tight text-[#2d4a60]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2><p className="mt-1 max-w-lg text-xs leading-5 text-[#718899]">{translate(locale,"Build a complete listing with category-aware details, variants, pricing and a polished image gallery.","أنشئ إعلاناً متكاملاً يتضمن خصائص الفئة والمتغيرات والأسعار ومعرض صور احترافياً.")}</p></div>
+            <span className="rounded-full border border-white/80 bg-[#b9d6df] px-3 py-1.5 text-[10px] font-extrabold text-[#35566b] shadow-[inset_0_1px_0_white,0_3px_8px_rgba(43,69,88,.1)]">{translate(locale,"DRAFT WORKFLOW","مسار المسودة")}</span>
+          </div>
           <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
             const nextId = e.target.value;
             uploadedImages.forEach((image) => {
@@ -565,7 +568,7 @@ export default function SellerProductsPage() {
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
             setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
           }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name} · STR-{store.storeNumber.padStart(8, "0")}</option>)}</select></label>
-          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
+          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="mt-4 grid gap-4">
             <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
