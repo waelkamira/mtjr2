@@ -81,6 +81,7 @@ describe("product lifecycle", () => {
      description: "Product description",
      city: "Damascus",
      district: "Central",
+     geography: { governorateId: "sy-damascus", districtId: "sy-damascus-damascus", subdistrictId: "sy-damascus-damascus-damascus", localityId: "sy-damascus-city", source: "opensyria", sourceVersion: "v0.1.5" },
      contactPhone: "+963900000000",
      categoryIds: ["category-1"], brandId: "brand-1",
       media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
@@ -89,6 +90,7 @@ describe("product lifecycle", () => {
     expect(result).toMatchObject({ id: "product-1", productNumber: "101", status: "DRAFT", approvalStatus: "PENDING" });
     const createArg = mocks.productCreate.mock.calls[0][0];
     expect(createArg.data.variants.create[0].prices.create[0].amountMinor).toBe(BigInt("2499"));
+    expect(createArg.data.geography).toMatchObject({ governorateId: "sy-damascus", localityId: "sy-damascus-city", source: "opensyria", sourceVersion: "v0.1.5" });
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
@@ -238,13 +240,14 @@ describe("product lifecycle", () => {
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
     await updateDraftProduct("product-1", {
       city: "Damascus", district: "Central", contactPhone: "+963900000000",
+      geography: { governorateId: "sy-damascus", districtId: "sy-damascus-damascus", source: "opensyria", sourceVersion: "v0.1.5" },
       videoUrl: "https://video.example/item", customFields: { model: "X1", adType: "SALE", rooms: "2", livingrooms: "1", area: "85.5", propertyType: "APARTMENT", bathrooms: "1" }, categoryIds: ["category-1"],
       mapLocation: { latitude: 33.5, longitude: 36.2 },
       propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" },
       media: [{ url: "https://images.example/updated.jpg", storageKey: "updated-key", mimeType: "image/jpeg", altText: "Updated image", sortOrder: 0, isPrimary: true }]
     });
     const updateData = mocks.productUpdateMany.mock.calls[0][0].data;
-    expect(updateData).toMatchObject({ city: "Damascus", district: "Central", contactPhone: "+963900000000", videoUrl: "https://video.example/item" });
+    expect(updateData).toMatchObject({ city: "Damascus", district: "Central", contactPhone: "+963900000000", videoUrl: "https://video.example/item", geography: { governorateId: "sy-damascus", districtId: "sy-damascus-damascus", source: "opensyria", sourceVersion: "v0.1.5" } });
     expect(updateData.customFields).toMatchObject({ model: "X1", adType: "SALE", propertyType: "APARTMENT" });
     expect(mocks.productMapLocationUpsert).toHaveBeenCalledOnce();
     expect(mocks.productPropertyDetailsUpsert).toHaveBeenCalledOnce();
