@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,7 +41,7 @@ export default function SponsoredProductCard({ product, token, locale }: { produ
   const image = product.media.find((item) => item.isPrimary) ?? product.media[0];
   const price = product.variants.flatMap((variant) => variant.prices)[0];
   const priceLabel = price
-    ? new Intl.NumberFormat(locale, { style: "currency", currency: price.currencyCode }).format(Number(price.amountMinor) / (10 ** price.currency.minorUnit))
+    ? formatMinorUnits(price.amountMinor, price.currencyCode, price.currency.minorUnit, locale)
     : translate(locale, "Price unavailable", "السعر غير متاح");
   return <article ref={root} data-testid="sponsored-product" data-ad-token={token} className="clay-surface group relative overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-copper-300)] bg-[var(--surface)] shadow-sm">
     <Link href={`/products/${encodeURIComponent(product.slug)}`} onClick={async (event) => { event.preventDefault(); await send(token, "CLICK"); router.push(`/products/${encodeURIComponent(product.slug)}`); }} className="block">
