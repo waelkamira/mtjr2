@@ -2584,3 +2584,16 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Added focused service tests for seller-owned rate creation, rate updates constrained to the owning store, authorization denial for another seller, and invalid delivery-day windows.
 - Updated the shipping-rate creation API to return HTTP 403 for access-denied attempts instead of misclassifying them as HTTP 400 validation failures.
 - Updated the seller shipping form copy to ask for a normal currency amount; the server continues to persist integer minor units.
+
+## 2026-11-08 — Follow-up static audit fixes
+
+**Changes**
+- Preserved seller-entered custom product fields when opening and saving existing drafts, including fields not present in the current category preset list. Changing the primary category now carries forward existing values instead of silently dropping them.
+- Corrected ImageKit media metadata handling: the provider's `fileType` describes a broad file category (for example, `image`), not a guaranteed MIME type. The upload service now stores the already-validated request MIME type (`image/jpeg`, `image/png`, or `image/webp`) so draft media passes the catalog update schema.
+- Strengthened the ImageKit unit fixture to return `fileType: "image"`, covering the provider response shape that exposed the MIME mismatch.
+- Removed an obsolete duplicate image-storage test file whose expectations described a previous upload contract (no durable storage key/dimensions and deduplication behavior that is not implemented). Current upload tests live in `tests/storage/product-images.test.ts`.
+- Product create/update APIs now return HTTP 403 when catalog authorization is denied instead of reporting the denial as a client validation error.
+- Generalized shared currency parser error messages so product prices are not incorrectly described as shipping amounts.
+
+**Verification status**
+- These are source-level corrections committed to the feature branch. Automated tests, typecheck, lint, Prisma validation, migration execution, and browser checks have still not run because this session has no repository runtime/checkout and the Vercel deployment quota previously blocked builds. Do not interpret this static review as a passing build.
