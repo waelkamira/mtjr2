@@ -76,15 +76,15 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="hidden min-h-screen w-[276px] shrink-0 flex-col border-e border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-clay)] lg:sticky lg:top-0 lg:flex lg:h-screen">
-        <div className="border-b border-[var(--border)] px-6 py-6">
+      <aside className="hidden min-h-screen w-[276px] shrink-0 flex-col border-e border-[#24394d] bg-[linear-gradient(180deg,#304b63_0%,#203449_100%)] text-slate-100 shadow-[12px_0_32px_rgba(25,44,63,.16)] lg:sticky lg:top-0 lg:flex lg:h-screen">
+        <div className="border-b border-white/10 px-6 py-6">
           <Link href="/seller" className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[var(--color-lavender-100)] text-[var(--color-lavender-800)] shadow-[var(--shadow-clay)]">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" /><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" /></svg>
             </span>
             <span>
-              <span className="block text-[22px] font-black tracking-tight text-[var(--color-ink-950)]">matjar<span className="text-[var(--orange)]">.</span></span>
-              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.18em] text-[var(--muted)]">{translate(locale, "Seller studio", "استوديو البائع")}</span>
+              <span className="block text-[22px] font-black tracking-tight text-slate-50">matjar<span className="text-[var(--orange)]">.</span></span>
+              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.18em] text-slate-300/70">{translate(locale, "Seller studio", "استوديو البائع")}</span>
             </span>
           </Link>
         </div>
@@ -116,8 +116,8 @@ export default function SellerNavigation() {
           ))}
         </nav>
 
-        <div className="border-t border-[var(--border)] p-4">
-          <Link href="/" className="flex items-center justify-between rounded-2xl bg-[var(--color-peach-50)] px-4 py-3 text-sm font-semibold text-[var(--color-peach-800)] transition hover:shadow-[var(--shadow-clay)]">
+        <div className="border-t border-white/10 p-4">
+          <Link href="/" className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.14)] transition hover:shadow-[var(--shadow-clay)]">
             <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
           </Link>
           <p className="mt-3 px-2 text-[10px] leading-5 text-[var(--muted)]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
