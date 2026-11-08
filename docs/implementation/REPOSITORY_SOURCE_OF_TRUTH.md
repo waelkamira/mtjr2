@@ -5,13 +5,6 @@
 **Canonical branch:** `main`  
 **Canonical Prisma schema:** `prisma/schema.prisma`
 
-# Repository source of truth and consolidation status
-
-**Audit date:** 2026-11-05  
-**Audited baseline:** `main` at `5f5d1da7d8fd8d6c7ea4f1981ef39acf9de578d3`  
-**Canonical branch:** `main`  
-**Canonical Prisma schema:** `prisma/schema.prisma`
-
 ## 2026-11-08 — Latest consolidation update
 
 The earlier audit below is historical. The PR #69 seller/catalog follow-up has now been resolved:
