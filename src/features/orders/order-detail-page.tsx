@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,7 +31,7 @@ type Order = {
 };
 
 function money(value: string, code: string, minorUnit: number) {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: code }).format(Number(value) / (10 ** minorUnit));
+  return formatMinorUnits(value, code, minorUnit);
 }
 
 export default function OrderDetailPage({ orderId }: { orderId: string }) {
@@ -138,7 +139,7 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
         <p className="mt-2 text-sm text-[var(--muted)]">{t("Order", "الطلب")} {order.orderNumber} · {new Date(order.placedAt).toLocaleString(locale)}</p>
         <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-6">
           <div className="flex flex-wrap justify-between gap-3"><div><p className="text-sm text-[var(--muted)]">{t("Order status", "حالة الطلب")}</p><p className="mt-1 font-semibold">{statusLabel(order.status)}</p></div><div className="text-right"><p className="text-sm text-[var(--muted)]">{t("Total", "الإجمالي")}</p><p className="mt-1 text-2xl font-semibold tabular-nums">{money(order.totalMinor, order.currencyCode, order.currency.minorUnit)}</p></div></div>
-          <div className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm"><div className="flex justify-between"><span className="text-[var(--muted)]">{t("Items", "المنتجات")}</span><strong>{money(order.subtotalMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>{Number(order.discountMinor) > 0 && <div className="flex justify-between"><span className="text-[var(--muted)]">{t("Discount", "الخصم")}{order.couponCode ? ` · ${order.couponCode}` : ""}</span><strong>−{money(order.discountMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>}<div className="flex justify-between"><span className="text-[var(--muted)]">{t("Shipping", "الشحن")}</span><strong>{money(order.shippingMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><div className="flex justify-between"><span className="text-[var(--muted)]">{t("Tax", "الضريبة")} · {order.tax.ruleName} ({(order.tax.rateBasisPoints / 100).toFixed(2)}%)</span><strong>{money(order.taxMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><p className="text-xs text-[var(--muted)]">{order.tax.inclusive ? t("Included in listed prices", "مشمولة في الأسعار المعروضة") : t("Added to subtotal", "تُضاف إلى المجموع الفرعي")}{order.tax.destinationRegion ? ` · ${order.tax.destinationRegion}` : ""}</p></div>
+          <div className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm"><div className="flex justify-between"><span className="text-[var(--muted)]">{t("Items", "المنتجات")}</span><strong>{money(order.subtotalMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>{BigInt(order.discountMinor) > BigInt(0) && <div className="flex justify-between"><span className="text-[var(--muted)]">{t("Discount", "الخصم")}{order.couponCode ? ` · ${order.couponCode}` : ""}</span><strong>−{money(order.discountMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>}<div className="flex justify-between"><span className="text-[var(--muted)]">{t("Shipping", "الشحن")}</span><strong>{money(order.shippingMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><div className="flex justify-between"><span className="text-[var(--muted)]">{t("Tax", "الضريبة")} · {order.tax.ruleName} ({(order.tax.rateBasisPoints / 100).toFixed(2)}%)</span><strong>{money(order.taxMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><p className="text-xs text-[var(--muted)]">{order.tax.inclusive ? t("Included in listed prices", "مشمولة في الأسعار المعروضة") : t("Added to subtotal", "تُضاف إلى المجموع الفرعي")}{order.tax.destinationRegion ? ` · ${order.tax.destinationRegion}` : ""}</p></div>
           <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-3 text-sm leading-6 text-[var(--muted)]">{order.status === "PENDING_PAYMENT" ? t("Your order has been recorded. Payment is pending; fulfillment remains locked until the provider verifies payment.", "تم تسجيل طلبك. الدفع قيد الانتظار، وسيظل التنفيذ متوقفًا حتى يتحقق مزود الخدمة من الدفع.") : order.status === "CANCELLED" ? t("This order was canceled before payment. Its stock was restored and any coupon redemption was released.", "أُلغي هذا الطلب قبل الدفع. أُعيد مخزونه وأُلغي استخدام أي قسيمة.") : t("Payment has been confirmed for this order.", "تم تأكيد الدفع لهذا الطلب.")}</p>
         </div>
         {order.status === "PENDING_PAYMENT" && <section className="mt-5 rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-6">
