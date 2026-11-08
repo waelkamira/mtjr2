@@ -18,6 +18,8 @@ type NeighborhoodSuggestion = {
   verificationStatus: "CANDIDATE" | "VERIFIED"; source: string; distanceKm: number;
 };
 type LocationValue = {
+  city?: string;
+  district?: string;
   localityId?: string;
   neighborhoodId?: string;
   neighborhood?: string;
@@ -109,8 +111,8 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   async function chooseDistrict(id: string) {
     setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
-    onChange({});
     const item = districts.find((entry) => entry.id === id);
+    onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
     if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 9 });
     setError("");
     if (!id) return;
@@ -122,8 +124,8 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   async function chooseSubdistrict(id: string) {
     setSubdistrictId(id); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
-    onChange({});
     const item = subdistricts.find((entry) => entry.id === id);
+    onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
     if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 11 });
     setError("");
     if (!id) return;
@@ -146,7 +148,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
     setSelectedNeighborhoodId("");
     setNeighborhoodSuggestions([]);
+    const selectedSubdistrict = subdistricts.find((entry) => entry.id === subdistrictId);
+    const selectedDistrict = districts.find((entry) => entry.id === districtId);
     onChange({
+      city: item ? (item.nameAr || item.nameEn) : undefined,
+      district: selectedSubdistrict ? (selectedSubdistrict.nameAr || selectedSubdistrict.nameEn) : selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined,
       localityId: id || undefined,
       ...(hasCoordinates ? { latitude: item!.latitude!, longitude: item!.longitude! } : {})
     });
