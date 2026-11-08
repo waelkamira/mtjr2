@@ -1,4 +1,4 @@
-export type CategoryFieldPreset = { key: string; label: string; value: string };
+export type CategoryFieldPreset = { key: string; label: string; value: string; required?: boolean };
 
 const categoryFieldPresets: Record<string, Array<[string, string]>> = {
   "real-estate": [["adType","بيع / إيجار"],["rooms","الغرف"],["livingrooms","الصالونات"],["area","المساحة"],["propertyType","نوع العقار"],["bathrooms","الحمامات"]],
@@ -55,11 +55,11 @@ export function buildCategoryFieldsForEdit(
   const values = { ...saved, ...current };
   const presets = getCategoryFieldPresets(slug);
   const knownKeys = new Set(presets.map((field) => field.key));
-  const standard = presets.map((field) => ({ ...field, value: String(values[field.key] ?? "") }));
+  const standard = presets.map((field) => ({ ...field, required: true, value: String(values[field.key] ?? "") }));
   const additional = Object.entries(values)
     .filter(([key]) => !knownKeys.has(key))
     .filter(([, value]) => ["string", "number", "boolean"].includes(typeof value))
-    .map(([key, value]) => ({ key, label: key, value: String(value) }));
+    .map(([key, value]) => ({ key, label: key, required: false, value: String(value) }));
   return [...standard, ...additional];
 }
 
