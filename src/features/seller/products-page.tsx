@@ -100,7 +100,7 @@ export default function SellerProductsPage() {
   const [editMedia, setEditMedia] = useState<Product["media"]>([]);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
-  const editIsRealEstate = categoryOptions.find((category) => category.id === editCategoryIds[0])?.slug === "real-estate";
+  const editIsRealEstate = editCategoryIds.some((id) => categoryOptions.find((category) => category.id === id)?.slug === "real-estate");
   const isRealEstate = categoryOptions.find((category) => category.id === categoryId)?.slug === "real-estate";
   const imagePreviews = [
     ...uploadedImages.map((image) => ({ url: image.url, name: image.name, provider: image.provider })),
