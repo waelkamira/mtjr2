@@ -10,7 +10,10 @@ const publicReads = new Set([
   "categories/[categoryId]/attributes/route.ts", "geography/[level]/route.ts"
 ]);
 const evidencePatterns = [
-  /validateIdentityMutationRequest\s*\(/, /requireCurrentSession\s*\(/, /getCurrentSession\s*\(/,
+  /validateIdentityMutationRequest\s*\(\s*request\s*\)/,
+  /validateIdentityMutationOrigin\s*\(\s*request\s*\)/,
+  /validateIdentityImageUploadRequest\s*\(\s*request\s*\)/,
+  /requireCurrentSession\s*\(/, /getCurrentSession\s*\(/,
   /requirePermission\s*\(/, /requireAnyPermission\s*\(/, /requirePlatformManagement\s*\(/,
   /userHasPermission\s*\(/, /userHasScopedPermission\s*\(/, /authorized\s*\(\s*request/,
   /verifyWebhook\s*\(/, /processVerifiedPaymentEvent\s*\(/, /getSessionCookie\s*\(/,
@@ -26,9 +29,12 @@ function collect(source, file, depth = 0, seen = new Set()) {
   if (depth > 4 || seen.has(file)) return "";
   seen.add(file);
   let result = source;
-  for (const match of source.matchAll(/from\s+["']@\/(server\/[^"']+)["']/g)) {
-    const relative = match[1];
-    const candidates = [path.join(root, "src", relative + ".ts"), path.join(root, "src", relative, "index.ts"), path.join(root, "src", relative + ".tsx")];
+  const imports = [
+    ...[...source.matchAll(/from\s+["']@\/(server\/[^"']+)["']/g)].map((match) => path.join(root, "src", match[1])),
+    ...[...source.matchAll(/from\s+["'](\.{1,2}\/[^"']+)["']/g)].map((match) => path.resolve(path.dirname(file), match[1]))
+  ];
+  for (const base of imports) {
+    const candidates = [base + ".ts", path.join(base, "route.ts"), path.join(base, "index.ts"), base + ".tsx"];
     const target = candidates.find((candidate) => fs.existsSync(candidate));
     if (target) result += "\n" + collect(fs.readFileSync(target, "utf8"), target, depth + 1, seen);
   }
@@ -46,7 +52,10 @@ const rows = walk(apiRoot).map((file) => {
   const isPublicPreferenceMutation = relative === "locale/route.ts" && allSource.includes("validateIdentityMutationRequest(");
   const isCronOrWebhook = (relative.startsWith("cron/") || relative.startsWith("webhooks/")) && evidence.length > 0;
   const hasMutationMethod = methods.some((method) => method !== "GET");
-  const hasRequestBoundary = allSource.includes("validateIdentityMutationRequest(") ||
+  const hasRequestBoundary =
+    /validateIdentityMutationRequest\s*\(\s*request\s*\)/.test(allSource) ||
+    /validateIdentityMutationOrigin\s*\(\s*request\s*\)/.test(allSource) ||
+    /validateIdentityImageUploadRequest\s*\(\s*request\s*\)/.test(allSource) ||
     (relative.startsWith("webhooks/") && allSource.includes("verifyWebhook(")) ||
     (relative.startsWith("cron/") && allSource.includes("authorized(request)"));
   const mutationBoundary = !hasMutationMethod ? "NOT_APPLICABLE" : hasRequestBoundary ? "PROTECTED" : "REVIEW_REQUIRED";
