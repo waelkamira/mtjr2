@@ -2705,3 +2705,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Opened PR #77 and squash-merged it as `881fc9ed5bf3e807b2f4013e991899463adee76b`. Exact source head `64044d409da434486ccaff5a6574f7e9ee5a3b45` passed CI run `42475854889`, disposable PostgreSQL integration run `42475854901`, and Browser E2E run `42475854837`.
 - Prisma validation, migration deploy/generation, typecheck, ESLint, unit tests, production build, API/UI inventories, PostgreSQL integration/repeatable seed, and browser E2E all completed successfully on the exact PR head.
 - No production database migration, production secret change, Vercel setting change, or deployment was performed.
+
+
+
+## 2026-11-08 — Password registration and immediate-session policy merged
+
+- Merged PR #78 into canonical `main` as `fde3b47b098b1f15ed40a141b6c66b9a6c237946`.
+- Password registration now creates an ACTIVE customer account and attempts to issue the authenticated server session and HttpOnly cookie in the same HTTP journey. If session creation/cookie setup fails after account creation, the response clearly states that the account exists and directs the user to sign in; partial session tokens are revoked where possible.
+- Email verification is no longer a prerequisite for password registration or eligible password login. Existing legacy PENDING registrations may activate after valid password proof, while administrator-imposed PENDING holds are preserved using the audited status reason.
+- Seller applications remain pending review and do not receive seller permissions during registration.
+- The initial exact PR head `5c035f05371161f0d2e7a6c2bca600e1d3ebdb72` passed General CI runs [42489542922](https://github.com/waelkamira/mtjr2/actions/runs/42489542922) and [42489548427](https://github.com/waelkamira/mtjr2/actions/runs/42489548427), disposable PostgreSQL [42489548337](https://github.com/waelkamira/mtjr2/actions/runs/42489548337), and Browser E2E [42489548167](https://github.com/waelkamira/mtjr2/actions/runs/42489548167). The follow-up test correction was included before merge.
+- The merge triggered fresh `main` checks: General CI [42489984972](https://github.com/waelkamira/mtjr2/actions/runs/42489984972), platform PostgreSQL [42489984985](https://github.com/waelkamira/mtjr2/actions/runs/42489984985), and clean migration replay [42489985055](https://github.com/waelkamira/mtjr2/actions/runs/42489985055). Their results must be checked before claiming exact-merge-head verification.
+- No production database, provider secret, Vercel setting, or deployment was changed. Phase 2 remains open for real provider/proxy configuration and the single deployed HTTP journey.
