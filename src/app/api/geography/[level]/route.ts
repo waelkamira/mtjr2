@@ -9,6 +9,9 @@ const querySchema = z.object({
   districtId: z.string().trim().min(1).max(100).optional(),
   subdistrictId: z.string().trim().min(1).max(100).optional(),
   q: z.string().trim().max(100).optional(),
+  nearLat: z.coerce.number().min(-90).max(90).optional(),
+  nearLng: z.coerce.number().min(-180).max(180).optional(),
+  radiusKm: z.coerce.number().min(1).max(50).default(15),
   page: z.coerce.number().int().min(1).max(1000).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(100)
 }).strict();
@@ -57,6 +60,28 @@ export async function GET(
         prisma.syriaLocality.findMany({ where, orderBy: [{ nameAr: "asc" }, { nameEn: "asc" }], skip, take: query.limit, select: { id: true, governorateId: true, districtId: true, subdistrictId: true, nameAr: true, nameEn: true, kind: true, latitude: true, longitude: true } }),
         prisma.syriaLocality.count({ where })
       ]);
+    } else if (level === "neighborhoods") {
+      if (!query.governorateId || query.nearLat === undefined || query.nearLng === undefined) {
+        return Response.json({ error: "governorateId, nearLat and nearLng are required." }, { status: 400 });
+      }
+      const candidates = await prisma.syriaNeighborhood.findMany({
+        where: { governorateId: query.governorateId, verificationStatus: { in: ["CANDIDATE", "VERIFIED"] } },
+        orderBy: [{ cityGroupNameAr: "asc" }, { nameAr: "asc" }],
+        take: 1000,
+        select: { id: true, nameAr: true, cityGroupNameAr: true, latitude: true, longitude: true, verificationStatus: true, source: true }
+      });
+      const radians = (value: number) => value * Math.PI / 180;
+      const distance = (lat: number, lng: number) => {
+        const dLat = radians(lat - query.nearLat!);
+        const dLng = radians(lng - query.nearLng!);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(query.nearLat!)) * Math.cos(radians(lat)) * Math.sin(dLng / 2) ** 2;
+        return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
+      const nearby = candidates.map((item) => ({ ...item, distanceKm: distance(item.latitude, item.longitude) }))
+        .filter((item) => item.distanceKm <= query.radiusKm)
+        .sort((left, right) => left.distanceKm - right.distanceKm);
+      total = nearby.length;
+      items = nearby.slice(skip, skip + query.limit);
     } else {
       return Response.json({ error: "Unknown geography level." }, { status: 404 });
     }
