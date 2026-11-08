@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import SellerNavigation from "@/features/seller/seller-navigation";
 
 export default function SellerLayout({ children }: { children: ReactNode }) {
@@ -11,7 +12,7 @@ export default function SellerLayout({ children }: { children: ReactNode }) {
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[var(--color-copper-600)]">MATJAR / SELLER CENTER</p>
             <p className="mt-0.5 text-sm font-semibold text-[var(--color-onyx)]">Seller operations</p>
           </div>
-          <a href="/" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-ink-700)] hover:bg-[var(--background)]">View marketplace ↗</a>
+          <Link href="/" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-ink-700)] hover:bg-[var(--background)]">View marketplace ↗</Link>
         </header>
         {children}
       </div>
