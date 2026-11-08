@@ -137,6 +137,17 @@ on:
       - "src/app/api/categories/**"
       - "src/app/api/markets/**"
       - "src/features/storefront/**"
+      - "src/server/advertising/**"
+      - "src/app/api/advertising/**"
+      - "src/app/api/admin/advertising/**"
+      - "src/app/api/seller/advertising/**"
+      - "src/app/api/cron/advertising-invoices/**"
+      - "src/features/admin/advertising-page.tsx"
+      - "src/features/seller/advertising-page.tsx"
+      - "src/app/admin/advertising/**"
+      - "src/app/seller/advertising/**"
+      - "tests/advertising/**"
+      - "vercel.json"
       - ".github/workflows/identity-integration.yml"
 
 concurrency:
