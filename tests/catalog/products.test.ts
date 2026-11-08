@@ -248,7 +248,7 @@ describe("product lifecycle", () => {
     expect(updateData.customFields).toMatchObject({ model: "X1", adType: "SALE", propertyType: "APARTMENT" });
     expect(mocks.productMapLocationUpsert).toHaveBeenCalledOnce();
     expect(mocks.productPropertyDetailsUpsert).toHaveBeenCalledOnce();
-    expect(mocks.productMediaDeleteMany).toHaveBeenCalledOnce();
+    expect(mocks.productMediaDeleteMany).toHaveBeenCalledWith({ where: { productId: "product-1", type: "IMAGE" } });
     expect(mocks.productMediaCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({ productId: "product-1", url: "https://images.example/updated.jpg", isPrimary: true })] });
   });
 
