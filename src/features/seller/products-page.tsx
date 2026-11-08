@@ -232,6 +232,41 @@ export default function SellerProductsPage() {
     void uploadProductImageFiles(files);
   }
 
+  async function replaceProductImage(id: string, event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    const current = uploadedImages.find((entry) => entry.id === id);
+    if (!file || !current) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"].includes(file.type) || file.size <= 0 || file.size > 10 * 1024 * 1024) {
+      toast.error(translate(locale, "Use JPG, PNG, WebP, GIF or AVIF images up to 10 MB.", "استخدم صور JPG أو PNG أو WebP أو GIF بحجم لا يتجاوز ١٠ ميغابايت."));
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setUploadingImages(true);
+    try {
+      const form = new FormData();
+      form.append("file", file, file.name);
+      form.append("storeId", storeId);
+      const result = await json<{ success: true; data: { url: string; provider: string; mimeType?: string; storageKey?: string; deleteToken?: string; width?: number; height?: number } }>(
+        await fetch("/api/seller/products/media", { method: "POST", body: form })
+      );
+      setUploadedImages((items) => items.map((item) => item.id === id ? {
+        ...item, file, previewUrl, url: result.data.url, provider: result.data.provider,
+        mimeType: result.data.mimeType ?? file.type, storageKey: result.data.storageKey,
+        deleteToken: result.data.deleteToken, width: result.data.width, height: result.data.height,
+        status: "ready", error: undefined
+      } : item));
+      URL.revokeObjectURL(current.previewUrl);
+      await deleteTemporaryProductImage(current.deleteToken);
+      toast.success(translate(locale, "Image replaced successfully.", "تم استبدال الصورة بنجاح."));
+    } catch (cause) {
+      URL.revokeObjectURL(previewUrl);
+      toast.error(cause instanceof Error ? cause.message : translate(locale, "Image could not be replaced.", "تعذر استبدال الصورة."));
+    } finally {
+      setUploadingImages(false);
+    }
+  }
+
   async function retryProductImage(id: string) {
     const image = uploadedImages.find((entry) => entry.id === id);
     if (!image || image.status !== "failed") return;
@@ -241,7 +276,7 @@ export default function SellerProductsPage() {
       const form = new FormData();
       form.append("file", image.file, image.file.name);
       form.append("storeId", storeId);
-      const result = await json<{ success: true; data: { url: string; provider: string; mimeType?: string; storageKey?: string; width?: number; height?: number } }>(
+      const result = await json<{ success: true; data: { url: string; provider: string; mimeType?: string; storageKey?: string; deleteToken?: string; width?: number; height?: number } }>(
         await fetch("/api/seller/products/media", { method: "POST", body: form })
       );
       setUploadedImages((current) => current.map((entry) => entry.id === id
@@ -486,7 +521,12 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
             </div>
             <label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label>
-            <div className="grid gap-3 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] p-4">
+            <div
+              className="grid gap-4 rounded-[1.75rem] border border-dashed border-[var(--border)] bg-[var(--surface-soft)] p-4 shadow-[var(--shadow-clay-inset)] transition-colors hover:border-[var(--color-orange)] sm:p-5"
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => { event.preventDefault(); void uploadProductImageFiles(Array.from(event.dataTransfer.files)); }}
+              aria-label={translate(locale, "Product image upload area", "منطقة رفع صور المنتج")}
+            >
               <div>
                 <p className="text-sm font-semibold">{translate(locale, "Product images", "صور المنتج")}</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Upload up to 10 JPG, PNG, WebP, GIF or AVIF images. The first image is the primary image. Imgur is tried first, then ImageKit.", "ارفع حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF. الصورة الأولى هي الرئيسية. تتم تجربة Imgur ثم ImageKit.")}</p>
@@ -502,7 +542,7 @@ export default function SellerProductsPage() {
                     {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2.5 py-1 text-[10px] font-bold text-white">{translate(locale, "Primary image", "الصورة الرئيسية")}</span>}
                     {image.status === "uploading" && <span className="absolute inset-0 flex items-center justify-center bg-black/25 text-xs font-semibold text-white">{translate(locale, "Uploading…", "جارٍ الرفع…")}</span>}
                     {image.status === "failed" && <span className="absolute inset-0 flex items-center justify-center bg-red-950/60 p-3 text-center text-xs font-semibold text-white">{translate(locale, "Upload failed", "فشل الرفع")}</span>}
-                    <button type="button" aria-label={translate(locale, "Remove image", "إزالة الصورة")} onClick={() => removeProductImage(image.id)} className="absolute right-2 top-2 rounded-full bg-black/70 px-2.5 py-1.5 text-xs font-bold text-white">×</button>
+                    <button type="button" aria-label={translate(locale, "Remove image", "إزالة الصورة")} disabled={uploadingImages || image.status === "uploading"} onClick={() => removeProductImage(image.id)} className="absolute right-2 top-2 rounded-full bg-black/70 px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-40">×</button>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2 p-2 text-xs">
                     <span className={image.status === "ready" ? "text-emerald-700" : image.status === "failed" ? "text-red-700" : "text-[var(--muted)]"}>{image.status === "ready" ? image.provider : image.status === "failed" ? translate(locale, "Failed", "فشل") : translate(locale, "Processing", "قيد المعالجة")}</span>
