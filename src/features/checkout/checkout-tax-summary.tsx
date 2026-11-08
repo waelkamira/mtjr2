@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useState } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -27,7 +28,7 @@ export default function CheckoutTaxSummary({ quoteId, quoteStatus, currencyCode,
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   function money(value?: string) {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode }).format(Number(value || "0") / (10 ** minorUnit));
+    return formatMinorUnits(value || "0", currencyCode, minorUnit);
   }
   async function calculate() {
     setBusy(true); setError("");
@@ -49,7 +50,7 @@ export default function CheckoutTaxSummary({ quoteId, quoteStatus, currencyCode,
       {!result.configured ? <p className="text-sm text-[var(--muted)]">{result.message}</p> : <>
         <p className="text-sm text-[var(--muted)]">{result.rule?.name} · {(Number(result.rule?.rateBasisPoints || 0) / 100).toFixed(2)}% · {result.rule?.isInclusive ? t("Tax inclusive", "الضريبة مشمولة") : t("Tax exclusive", "الضريبة غير مشمولة")}</p>
         <div className="mt-3 space-y-2 text-sm">
-          {Number(result.discountMinor || "0") > 0 && <div className="flex justify-between"><span>{t("Coupon", "قسيمة")}{result.couponCode ? ` · ${result.couponCode}` : ""}</span><strong>−{money(result.discountMinor)}</strong></div>}
+          {BigInt(result.discountMinor || "0") > BigInt(0) && <div className="flex justify-between"><span>{t("Coupon", "قسيمة")}{result.couponCode ? ` · ${result.couponCode}` : ""}</span><strong>−{money(result.discountMinor)}</strong></div>}
           <div className="flex justify-between"><span>{t("Shipping", "الشحن")}</span><strong>{money(result.shippingMinor)}</strong></div>
           <div className="flex justify-between"><span>{t("Tax", "الضريبة")}</span><strong>{money(result.taxAmountMinor)}</strong></div>
           <div className="flex justify-between border-t border-[var(--border)] pt-3 text-base"><span className="font-semibold">{t("Estimated total", "الإجمالي التقديري")}</span><strong>{money(result.amountDueMinor)}</strong></div>
