@@ -80,15 +80,32 @@ describe("customer order management", () => {
     expect(mocks.redemptionDeleteMany).toHaveBeenCalledWith({ where: { orderId: "order-1" } });
   });
 
-  it("refuses cancellation once any payment attempt exists", async () => {
+  it("refuses cancellation while a payment attempt is active", async () => {
     mocks.orderFindFirst.mockResolvedValue({
       id: "order-1", orderNumber: "MTJ-ORDER-1", status: "PENDING_PAYMENT", userId: "buyer-1",
-      payments: [{ id: "payment-1" }], vendorOrders: [{ id: "vendor-1", status: "PENDING_PAYMENT" }]
+      payments: [{ id: "payment-1", status: "REQUIRES_ACTION" }], vendorOrders: [{ id: "vendor-1", status: "PENDING_PAYMENT" }]
     });
 
-    await expect(cancelOwnedOrder("", "order-1")).rejects.toThrow("payment attempt exists");
+    await expect(cancelOwnedOrder("", "order-1")).rejects.toThrow("active or successful payment attempt exists");
     expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
     expect(mocks.orderUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("allows cancellation after every payment attempt has failed or been canceled", async () => {
+    mocks.orderFindFirst.mockResolvedValue({
+      id: "order-1", orderNumber: "MTJ-ORDER-1", status: "PENDING_PAYMENT", userId: "buyer-1",
+      payments: [
+        { id: "payment-failed", status: "FAILED" },
+        { id: "payment-canceled", status: "CANCELLED" }
+      ],
+      vendorOrders: [{ id: "vendor-1", status: "PENDING_PAYMENT" }]
+    });
+
+    const result = await cancelOwnedOrder("", "order-1");
+
+    expect(result).toMatchObject({ status: "CANCELLED", changed: true });
+    expect(mocks.inventoryUpdateMany).toHaveBeenCalledOnce();
+    expect(mocks.orderUpdateMany).toHaveBeenCalledOnce();
   });
 
   it("reorders only the original order's still-linked product options", async () => {
