@@ -355,7 +355,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, categories: { select: { category: { select: { slug: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { slug: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
@@ -375,12 +375,14 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         ? current.categories.map((entry) => entry.category)
         : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { slug: true } });
       const isRealEstate = selectedCategories.some((category) => category.slug === "real-estate");
-      if (isRealEstate && data.propertyDetails === null) throw new Error("Real-estate listings must retain property details.");
-      if (!isRealEstate && data.propertyDetails && data.propertyDetails !== null) throw new Error("Property details can only be added to a real-estate listing.");
       const nextLatitude = data.latitude === undefined ? current.latitude : data.latitude;
       const nextLongitude = data.longitude === undefined ? current.longitude : data.longitude;
+      const hasPropertyDetails = data.propertyDetails === undefined ? Boolean(current.propertyDetails) : data.propertyDetails !== null;
       if ((nextLatitude == null) !== (nextLongitude == null)) throw new Error("Latitude and longitude must be supplied together.");
-      if (isRealEstate && (nextLatitude == null || nextLongitude == null)) throw new Error("Real-estate listings must retain map coordinates.");
+      if (isRealEstate && (!hasPropertyDetails || nextLatitude == null || nextLongitude == null)) {
+        throw new Error("Real-estate listings must retain property details and map coordinates.");
+      }
+      if (!isRealEstate && data.propertyDetails && data.propertyDetails !== null) throw new Error("Property details can only be added to a real-estate listing.");
     }
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT },
@@ -406,6 +408,14 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (categoryIds.length) await tx.productCategory.createMany({
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
       });
+    }
+    if (categoryIds !== undefined && !categoryIds.some((categoryId) => current.categories.some((entry) => entry.category.slug === "real-estate" && entry.categoryId === categoryId))) {
+      const targetCategories = categoryIds.length
+        ? await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { slug: true } })
+        : [];
+      if (!targetCategories.some((category) => category.slug === "real-estate")) {
+        await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
+      }
     }
     if (data.propertyDetails !== undefined) {
       if (data.propertyDetails === null) {
@@ -527,6 +537,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
   return products.map((product) => ({
     ...product,
     productNumber: product.productNumber.toString(),
+    propertyDetails: product.propertyDetails ? { ...product.propertyDetails, floorArea: product.propertyDetails.floorArea.toString() } : null,
     variants: product.variants.map((variant) => ({
       ...variant,
       prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() }))
