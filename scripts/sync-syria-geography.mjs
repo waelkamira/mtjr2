@@ -21,10 +21,10 @@ function common(record) {
     latitude: record.centroid?.latitude ?? null,
     longitude: record.centroid?.longitude ?? null,
     sourceVersion: VERSION,
-    sourceIds: Array.isArray(record.sourceIds) ? record.sourceIds : [],
+    sourceIds: record.sourceIds,
     aliases: record.aliases ?? undefined,
-    sourceReferences: record.sourceReferences ?? undefined,
-    sourceStatus: record.sourceStatus ?? null
+    sourceReferences: record.sourceReferences,
+    sourceStatus: record.sourceStatus
   };
 }
 
@@ -38,6 +38,12 @@ async function main() {
   const districtIds = new Set(districts.map((row) => row.id));
   const subdistrictById = new Map(subdistricts.map((row) => [row.id, row]));
   const subdistrictIds = new Set(subdistrictById.keys());
+  const allSourceRows = [...governorates, ...districts, ...subdistricts, ...localities];
+  for (const row of allSourceRows) {
+    if (!Array.isArray(row.sourceIds) || row.sourceIds.length === 0) throw new Error(`Geography record ${row.id} has no approved source IDs.`);
+    if (!Array.isArray(row.sourceReferences) || row.sourceReferences.length === 0) throw new Error(`Geography record ${row.id} has no source references.`);
+    if (typeof row.sourceStatus !== "string" || !row.sourceStatus) throw new Error(`Geography record ${row.id} has no source review status.`);
+  }
   for (const row of districts) if (!governorateIds.has(row.governorateId)) throw new Error(`Unknown governorate ${row.governorateId} in district ${row.id}`);
   for (const row of subdistricts) if (!governorateIds.has(row.governorateId) || !districtIds.has(row.districtId)) throw new Error(`Invalid parent chain for subdistrict ${row.id}`);
   for (const row of localities) {
