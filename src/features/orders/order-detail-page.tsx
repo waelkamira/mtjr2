@@ -3,7 +3,7 @@
 import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import StoreReviewForm from "@/features/orders/store-review-form";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -50,7 +50,9 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
     return t(english, arabic);
   };
   const router = useRouter();
-  const [order, setOrder] = useState<Order | null>(null);
+  const searchParams = useSearchParams();
+  const returnedFromPayment = searchParams.get("payment") === "success";
+  const [order, setOrder = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [paymentProviders, setPaymentProviders] = useState<PaymentProvider[]>([]);
@@ -61,16 +63,29 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
 
   useEffect(() => {
     let active = true;
-    fetch(`/api/orders/${encodeURIComponent(orderId)}`, { cache: "no-store" })
-      .then(async (response) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    async function loadOrder(attempt = 0) {
+      try {
+        const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, { cache: "no-store" });
         const data = await response.json() as { order?: Order; error?: string };
         if (!response.ok || !data.order) throw new Error(data.error || t("Order could not be loaded.", "تعذّر تحميل الطلب."));
-        if (active) setOrder(data.order);
-      })
-      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : t("Order could not be loaded.", "تعذّر تحميل الطلب.")); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [orderId, t]);
+        if (!active) return;
+        setOrder(data.order);
+        setError("");
+        // Stripe redirects before its webhook is guaranteed to finish. Refresh briefly
+        // until the server confirms payment; the browser return URL never marks an order paid.
+        if (returnedFromPayment && data.order.status === "PENDING_PAYMENT" && attempt < 6) {
+          timer = setTimeout(() => { void loadOrder(attempt + 1); }, 2000);
+        }
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : t("Order could not be loaded.", "تعذّر تحميل الطلب."));
+      } finally {
+        if (active && attempt === 0) setLoading(false);
+      }
+    }
+    void loadOrder();
+    return () => { active = false; if (timer) clearTimeout(timer); };
+  }, [orderId, returnedFromPayment, t]);
 
   useEffect(() => {
     let active = true;
