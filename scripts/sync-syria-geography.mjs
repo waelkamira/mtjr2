@@ -58,16 +58,24 @@ async function main() {
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const g = await tx.syriaGovernorate.createMany({ data: governorates.map((row) => ({ id: row.id, ...common(row) })), skipDuplicates: true });
-    const d = await tx.syriaDistrict.createMany({ data: districts.map((row) => ({ id: row.id, governorateId: row.governorateId, ...common(row) })), skipDuplicates: true });
-    const sd = await tx.syriaSubdistrict.createMany({ data: subdistricts.map((row) => ({ id: row.id, governorateId: row.governorateId, districtId: row.districtId, ...common(row) })), skipDuplicates: true });
-    const loc = await tx.syriaLocality.createMany({ data: localities.map((row) => ({
+    async function insertBatches(model, rows) {
+      let count = 0;
+      for (let offset = 0; offset < rows.length; offset += 500) {
+        const batch = await model.createMany({ data: rows.slice(offset, offset + 500), skipDuplicates: true });
+        count += batch.count;
+      }
+      return count;
+    }
+    const g = await insertBatches(tx.syriaGovernorate, governorates.map((row) => ({ id: row.id, ...common(row) })));
+    const d = await insertBatches(tx.syriaDistrict, districts.map((row) => ({ id: row.id, governorateId: row.governorateId, ...common(row) })));
+    const sd = await insertBatches(tx.syriaSubdistrict, subdistricts.map((row) => ({ id: row.id, governorateId: row.governorateId, districtId: row.districtId, ...common(row) })));
+    const loc = await insertBatches(tx.syriaLocality, localities.map((row) => ({
       id: row.id, governorateId: row.governorateId,
       districtId: row.districtId ?? (row.subdistrictId ? subdistrictById.get(row.subdistrictId)?.districtId : null) ?? null,
       subdistrictId: row.subdistrictId ?? null,
       ...common(row), kind: row.kind
-    })), skipDuplicates: true });
-    return { governorates: g.count, districts: d.count, subdistricts: sd.count, localities: loc.count };
+    })));
+    return { governorates: g, districts: d, subdistricts: sd, localities: loc };
   }, { timeout: 120000, maxWait: 10000 });
   console.info("OpenSyria import complete:", result);
   console.info("Source: OpenSyria data-geography", VERSION, "https://github.com/Open-Syria/data-geography");
