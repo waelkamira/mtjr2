@@ -107,6 +107,21 @@ describe("marketplace seller lifecycle", () => {
     expect(auditCreate).not.toHaveBeenCalled();
   });
 
+  it("recovers a concurrent second-store attempt through the seller unique constraint", async () => {
+    sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
+    const existingStore = { id: "owned-store", name: "Shop", slug: "shop", status: "DRAFT" };
+    storeFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(existingStore);
+    storeCreate.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+      code: "P2002", clientVersion: "6.19.0", meta: { target: ["sellerId"] }
+    }));
+
+    const result = await createSellerStore({ name: "Second shop", slug: "second-shop", marketIds: ["market-1"] });
+
+    expect(result).toMatchObject({ id: "owned-store", alreadyCreated: true });
+    expect(storeFindFirst).toHaveBeenCalledTimes(2);
+    expect(auditCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects a matching slug when the owner or setup differs", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
     storeFindUnique.mockResolvedValue({
