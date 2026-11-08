@@ -23,7 +23,7 @@ export async function deleteProductImage(storageKey: string): Promise<DeleteResu
     if (storedImgurClientId && !/^[A-Za-z0-9_-]{4,160}$/.test(storedImgurClientId)) throw new Error("Invalid Imgur Client ID.");
     const token = process.env.IMGUR_ACCESS_TOKEN?.trim();
     const configuredClientId = (process.env.IMGUR_CLIENT_IDS?.trim() || process.env.IMGUR_CLIENT_ID?.trim() || "")
-      .split(/[;,\\n]/).map((value) => value.trim()).find(Boolean);
+      .split(/[;,\n]/).map((value) => value.trim()).find(Boolean);
     const clientId = storedImgurClientId || configuredClientId;
     const authorization = storedImgurClientId
       ? `Client-ID ${storedImgurClientId}`
