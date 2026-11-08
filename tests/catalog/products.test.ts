@@ -78,6 +78,7 @@ describe("product lifecycle", () => {
       syriaNeighborhood: { findUnique: mocks.neighborhoodFindUnique },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
+      productPropertyDetails: { upsert: mocks.productPropertyDetailsUpsert, deleteMany: mocks.productPropertyDetailsDeleteMany },
       productMedia: { findMany: mocks.productMediaFindMany, deleteMany: mocks.productMediaDeleteMany, createMany: mocks.productMediaCreateMany },
       product: {
         create: mocks.productCreate,
@@ -98,6 +99,63 @@ describe("product lifecycle", () => {
     const createArg = mocks.productCreate.mock.calls[0][0];
     expect(createArg.data.variants.create[0].prices.create[0].amountMinor).toBe(BigInt("2499"));
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("persists structured property details while using the existing private product coordinates", async () => {
+    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
+    await createDraftProduct({
+      storeId: "store-1", name: "City apartment", slug: "city-apartment",
+      categoryIds: ["category-1"],
+      city: "Damascus", district: "Mazzeh", contactPhone: "+963900000000",
+      videoUrl: "https://video.example/listing",
+      latitude: 33.51381, longitude: 36.27654,
+      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", bedrooms: 2, bathrooms: 1, floorArea: "85.50" },
+      variants: [{ sku: "HOME-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "12000000" }] }]
+    });
+    const data = mocks.productCreate.mock.calls[0][0].data;
+    expect(data).toMatchObject({
+      city: "Damascus", district: "Mazzeh", contactPhone: "+963900000000",
+      videoUrl: "https://video.example/listing", latitude: 33.51381, longitude: 36.27654,
+      propertyDetails: { create: { propertyType: "APARTMENT", listingType: "SALE", bedrooms: 2, bathrooms: 1 } }
+    });
+    expect(data.propertyDetails.create.floorArea.toString()).toBe("85.5");
+  });
+
+  it("requires coordinates and structured details for real-estate drafts", async () => {
+    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "City apartment", slug: "city-apartment",
+      categoryIds: ["category-1"],
+      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" },
+      variants: [{ sku: "HOME-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "12000000" }] }]
+    })).rejects.toThrow(/property details and map coordinates/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects property details for non-real-estate categories", async () => {
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      categoryIds: ["category-1"],
+      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "20" },
+      variants: [{ sku: "MUG-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/only be added to a real-estate listing/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("updates structured property details transactionally", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT", latitude: 33.5, longitude: 36.2,
+      categories: [{ category: { slug: "real-estate" } }],
+      store: { seller: { ownerId: "seller-1" } }
+    });
+    await updateDraftProduct("product-1", {
+      propertyDetails: { propertyType: "HOUSE", listingType: "RENT", bedrooms: 3, bathrooms: 2, floorArea: "120" },
+      contactPhone: "+963900000000", videoUrl: "https://video.example/house"
+    });
+    expect(mocks.productPropertyDetailsUpsert).toHaveBeenCalledOnce();
+    expect(mocks.productUpdateMany.mock.calls[0][0].data).toMatchObject({
+      contactPhone: "+963900000000", videoUrl: "https://video.example/house"
+    });
   });
 
   it("validates and persists category-scoped typed attributes", async () => {
