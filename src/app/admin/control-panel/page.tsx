@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { MfaEnrollmentRequiredError, MfaVerificationRequiredError, StepUpRequiredError } from "@/server/identity/access-errors";
 import AdminDashboardPage from "@/features/admin/dashboard-page";
 import Link from "next/link";
 import { getPreferredLocale } from "@/server/locale";
@@ -14,6 +15,9 @@ export default async function AdminControlPanelRoute() {
   try {
     await requirePlatformManagement();
   } catch (error) {
+    if (error instanceof MfaEnrollmentRequiredError) redirect("/account/security?mfa=setup&returnTo=%2Fadmin%2Fcontrol-panel");
+    if (error instanceof MfaVerificationRequiredError) redirect("/account/security?mfa=verify&returnTo=%2Fadmin%2Fcontrol-panel");
+    if (error instanceof StepUpRequiredError) redirect("/mfa/verify?returnTo=%2Fadmin%2Fcontrol-panel");
     if (error instanceof AuthenticationRequiredError) {
       redirect("/login?returnTo=%2Fadmin%2Fcontrol-panel");
     }
