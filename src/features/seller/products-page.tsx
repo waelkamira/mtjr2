@@ -51,6 +51,12 @@ export default function SellerProductsPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [initialStock, setInitialStock] = useState("1");
+  const [customFields, setCustomFields] = useState<Array<{ key: string; value: string }>>([]);
   const [sku, setSku] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -179,6 +185,30 @@ export default function SellerProductsPage() {
     setUploading(false);
   }
 
+  async function replaceSelectedImage(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file || !storeId) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
+      setError(translate(locale, "Use JPEG, PNG, or WebP images no larger than 8 MB.", "استخدم صورة JPEG أو PNG أو WebP بحجم لا يتجاوز 8 ميغابايت."));
+      return;
+    }
+    setUploading(true); setError("");
+    try {
+      const body = new FormData(); body.append("storeId", storeId); body.append("file", file);
+      const uploaded = await json<Omit<UploadedImage, "name">>(await fetch("/api/seller/products/images", { method: "POST", body }));
+      const replacement = { ...uploaded, name: file.name };
+      if (activePreviewIndex < uploadedImages.length) {
+        setUploadedImages((current) => current.map((image, index) => index === activePreviewIndex ? replacement : image));
+      } else {
+        setUploadedImages((current) => [...current, replacement]); setImageUrl("");
+      }
+      setMessage(translate(locale, "Image replaced successfully.", "تم استبدال الصورة بنجاح."));
+    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Image replacement failed.", "تعذر استبدال الصورة.")); }
+    finally { setUploading(false); }
+  }
+
   async function createProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const draftImages = [
@@ -203,7 +233,10 @@ export default function SellerProductsPage() {
       const product = await json<{ id: string }>(await fetch("/api/products", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          storeId, name, slug, description, ...(brandId ? { brandId } : {}),
+          storeId, name, slug, description, city, district, contactPhone, videoUrl: videoUrl || undefined,
+          initialStock: Number(initialStock),
+          customFields: Object.fromEntries(customFields.filter((field) => field.key.trim() && field.value.trim()).map((field) => [field.key.trim(), field.value.trim()])),
+          ...(brandId ? { brandId } : {}),
           categoryIds: categoryId ? [categoryId] : [],
           media,
           ...(mapLocation ? { mapLocation } : {}),
@@ -220,7 +253,7 @@ export default function SellerProductsPage() {
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
-      setName(""); setSlug(""); setDescription(""); setSku(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
+      setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
       setPropertyType("APARTMENT"); setListingType("SALE"); setBedrooms(""); setBathrooms(""); setFloorArea("");
       setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
@@ -283,12 +316,20 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label>
+            <div className="grid gap-3 rounded-2xl border border-[var(--border)] p-4 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">{translate(locale, "City", "المدينة")}<input maxLength={120} className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} placeholder={translate(locale, "e.g. Damascus", "مثال: دمشق")} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "District / area", "المنطقة / الحي")}<input maxLength={120} className={inputClass} value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={translate(locale, "e.g. Al Mazzeh", "مثال: المزة")} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "رقم الهاتف للتواصل")}<input type="tel" maxLength={40} className={inputClass} value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Video link (YouTube / TikTok)", "رابط الفيديو (يوتيوب / تيك توك)")}<input type="url" maxLength={2048} className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Available quantity", "الكمية المتاحة")}<input required type="number" min="0" max="100000000" step="1" className={inputClass} value={initialStock} onChange={(e) => setInitialStock(e.target.value)} /></label>
+            </div>
             <section className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
               <div className="flex items-center gap-2">
                 <Images aria-hidden="true" className="size-5 text-[var(--color-copper-600)]" />
                 <h3 className="text-sm font-semibold">{translate(locale, "Listing images", "صور الإعلان")}</h3>
               </div>
-              <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Upload up to eight JPEG, PNG, or WebP images. Imgur is used first; ImageKit is the fallback.", "ارفع حتى ثماني صور JPEG أو PNG أو WebP. يُستخدم Imgur أولًا ثم ImageKit عند تعذره.")}</p>
+              <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or choose files. Preview, replace, reorder and remove each image before saving.", "اسحب الصور إلى هنا أو اخترها. عاين كل صورة واستبدلها ورتبها واحذفها قبل الحفظ.")}</p>
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || busy || !activePreview} onChange={replaceSelectedImage} className="sr-only" />{translate(locale, "Replace selected image", "استبدال الصورة المحددة")}</label>
               <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold">
                 <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || busy || selectedImageCount >= 8} onChange={uploadImages} className="sr-only" />
                 <Images aria-hidden="true" className="size-4" />
@@ -300,9 +341,9 @@ export default function SellerProductsPage() {
                   {activePreview
                     ? <img src={activePreview.url} alt={activePreview.name} className="size-full object-contain" />
                     : <div className="flex flex-col items-center gap-2 text-[var(--muted)]"><Images aria-hidden="true" className="size-10" /><span className="text-sm">{translate(locale, "Your main image preview will appear here", "ستظهر معاينة الصورة الرئيسية هنا")}</span></div>}
-                  {activePreview && imagePreviews.length > 1 && <>
-                    <button type="button" onClick={() => setSelectedPreviewIndex((activePreviewIndex - 1 + imagePreviews.length) % imagePreviews.length)} aria-label={translate(locale, "Previous image", "الصورة السابقة")} className="absolute left-3 top-1/2 rounded-full bg-white/90 p-2 shadow"><ChevronLeft aria-hidden="true" className="size-5" /></button>
-                    <button type="button" onClick={() => setSelectedPreviewIndex((activePreviewIndex + 1) % imagePreviews.length)} aria-label={translate(locale, "Next image", "الصورة التالية")} className="absolute right-3 top-1/2 rounded-full bg-white/90 p-2 shadow"><ChevronRight aria-hidden="true" className="size-5" /></button>
+                  {activePreview && <>
+                    {imagePreviews.length > 1 && <><button type="button" onClick={() => setSelectedPreviewIndex((activePreviewIndex - 1 + imagePreviews.length) % imagePreviews.length)} aria-label={translate(locale, "Previous image", "الصورة السابقة")} className="absolute left-3 top-1/2 rounded-full bg-white/90 p-2 shadow"><ChevronLeft aria-hidden="true" className="size-5" /></button>
+                    <button type="button" onClick={() => setSelectedPreviewIndex((activePreviewIndex + 1) % imagePreviews.length)} aria-label={translate(locale, "Next image", "الصورة التالية")} className="absolute right-3 top-1/2 rounded-full bg-white/90 p-2 shadow"><ChevronRight aria-hidden="true" className="size-5" /></button></>}
                     <button type="button" disabled={busy || uploading} onClick={() => {
                       if (activePreviewIndex < uploadedImages.length) {
                         setUploadedImages((current) => current.filter((_, index) => index !== activePreviewIndex));
@@ -326,6 +367,7 @@ export default function SellerProductsPage() {
               <p className="text-xs text-[var(--muted)]">{selectedImageCount}/8 {translate(locale, "images selected; the first image is the cover.", "صور محددة؛ الصورة الأولى هي الغلاف.")}</p>
             </section>
             <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            {categoryId && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold">{translate(locale, "Additional category details", "تفاصيل إضافية حسب الفئة")}</h3><button type="button" onClick={() => setCustomFields((items) => [...items, { key: "", value: "" }])} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Add field", "إضافة حقل")}</button></div><p className="text-xs text-[var(--muted)]">{translate(locale, "Add specifications such as model, year, condition, material, size or any category-specific detail.", "أضف المواصفات مثل الطراز والسنة والحالة والخامة والمقاس أو أي تفاصيل خاصة بالفئة.")}</p>{customFields.map((field, index) => <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]"><input aria-label={translate(locale, "Field name", "اسم الحقل")} className={inputClass} value={field.key} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, key: e.target.value } : item))} placeholder={translate(locale, "Field name", "اسم الحقل")} /><input aria-label={translate(locale, "Field value", "قيمة الحقل")} className={inputClass} value={field.value} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} placeholder={translate(locale, "Value", "القيمة")} /><button type="button" onClick={() => setCustomFields((items) => items.filter((_, i) => i !== index))} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">{translate(locale, "Remove", "حذف")}</button></div>)}</section> }
             {isRealEstate && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
               <h3 className="text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</h3>
               <div className="grid gap-3 sm:grid-cols-2">
