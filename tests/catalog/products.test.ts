@@ -241,7 +241,7 @@ describe("product lifecycle", () => {
     });
     const updateData = mocks.productUpdateMany.mock.calls[0][0].data;
     expect(updateData).toMatchObject({ city: "Damascus", district: "Central", contactPhone: "+963900000000", videoUrl: "https://video.example/item" });
-    expect(updateData.customFields).toEqual({ model: "X1" });
+    expect(updateData.customFields).toMatchObject({ model: "X1", adType: "SALE", propertyType: "APARTMENT" });
     expect(mocks.productMapLocationUpsert).toHaveBeenCalledOnce();
     expect(mocks.productPropertyDetailsUpsert).toHaveBeenCalledOnce();
   });
