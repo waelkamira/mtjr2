@@ -134,7 +134,7 @@ describe("password login service", () => {
     }, now);
 
     expect(result).toMatchObject({
-      authenticated: false, reason: "INVALID_PASSWORD", message: "Email or password is incorrect."
+      authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect."
     });
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
