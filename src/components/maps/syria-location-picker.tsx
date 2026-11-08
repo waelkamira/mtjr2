@@ -82,10 +82,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         ? { latitude: value.latitude, longitude: value.longitude, zoom: 14 }
         : null
     );
-    if (!governorateId || !searchPoint) {
-      setNeighborhoodSuggestions([]);
-      return;
-    }
+    if (!governorateId || !searchPoint) return;
     let active = true;
     const radiusKm = searchPoint.zoom <= 7 ? "30" : searchPoint.zoom <= 10 ? "18" : searchPoint.zoom <= 12 ? "10" : "5";
     const query = new URLSearchParams({
