@@ -8,9 +8,20 @@ import { translate } from "@/lib/locale";
 export default function SellerTopbar() {
   const { locale } = useLocale();
   const pathname = usePathname();
-  const section = pathname === "/seller" ? translate(locale, "Dashboard", "لوحة التحكم") : pathname.startsWith("/seller/products") ? translate(locale, "Products", "المنتجات") : pathname.split("/").filter(Boolean).at(-1)?.replaceAll("-", " ") ?? "Seller";
+  const section = pathname === "/seller" ? translate(locale, "Dashboard", "لوحة التحكم")
+    : pathname.startsWith("/seller/products") ? translate(locale, "Products", "المنتجات")
+    : pathname.startsWith("/seller/orders") ? translate(locale, "Orders", "الطلبات")
+    : pathname.startsWith("/seller/inventory") ? translate(locale, "Inventory", "المخزون")
+    : pathname.startsWith("/seller/shipping") ? translate(locale, "Shipping", "الشحن")
+    : pathname.startsWith("/seller/returns") ? translate(locale, "Returns", "المرتجعات")
+    : pathname.startsWith("/seller/messages") ? translate(locale, "Messages", "الرسائل")
+    : pathname.startsWith("/seller/questions") ? translate(locale, "Product questions", "أسئلة المنتجات")
+    : pathname.startsWith("/seller/reviews") ? translate(locale, "Reviews", "التقييمات")
+    : pathname.startsWith("/seller/advertising") ? translate(locale, "Advertising", "الإعلانات")
+    : pathname.startsWith("/seller/staff") ? translate(locale, "Team & access", "الفريق والصلاحيات")
+    : translate(locale, "Seller studio", "استوديو البائع");
   return (
-    <header className="sticky top-0 z-20 hidden h-[var(--dashboard-topbar-height)] items-center justify-between border-b border-[#d6e0e7] bg-[#eaf1f4]/90 px-8 shadow-[0_8px_24px_rgba(42,67,87,.08),inset_0_1px_0_rgba(255,255,255,.9)] backdrop-blur-xl lg:flex">
+    <header className="sticky top-0 z-20 flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-[#d6e0e7] bg-[#eaf1f4]/95 px-4 py-3 shadow-[0_8px_24px_rgba(42,67,87,.08),inset_0_1px_0_rgba(255,255,255,.9)] backdrop-blur-xl sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
       <div>
         <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#55748b]">MATJAR / SELLER STUDIO</p>
         <p className="mt-1 text-sm font-semibold text-[#24394d]">{translate(locale, "Your business, beautifully organized.", "أعمالك التجارية، منظمة بوضوح وأناقة.")}</p>
