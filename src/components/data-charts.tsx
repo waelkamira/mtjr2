@@ -14,14 +14,14 @@ export type ScatterDatum = {
 };
 
 const palette = [
-  "#F0660D",
-  "#FF9A4D",
-  "#F7C078",
-  "#454545",
-  "#688B72",
-  "#8CA5B5",
-  "#D88363",
-  "#A890C0"
+  "#9384B5",
+  "#5E9878",
+  "#CE8A5A",
+  "#B38E3F",
+  "#C47D96",
+  "#477B98",
+  "#F06A24",
+  "#776895"
 ];
 
 export function chartColor(index: number) {
