@@ -2625,3 +2625,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The authentication-first upload ordering passed the browser journey for seller, customer, and Super Admin pages, but the broad anonymous-route E2E initially exposed a stale inventory rule: the legacy `/seller/products/images` alias delegates to `/seller/products/media`, and the audit script did not follow relative route imports or recognize the new multipart/origin guards.
 - Updated `scripts/audit-api-routes.cjs` to follow relative handler imports, recognize `validateIdentityMutationOrigin` and `validateIdentityImageUploadRequest`, and require actual request-argument guard calls. This is an audit-reporting correction; the route behavior remains unchanged.
 - The first E2E attempt on the multipart guard failed only because unauthenticated image POST probes received 415 before auth. The route ordering was corrected; the second run passed all seven Playwright journeys. The remaining CI failure was the inventory script's false positive and is now corrected. A fresh verification run is pending.
+
+
+## 2026-11-08 — Multipart upload guard and route inventory fully verified
+- Fresh verification on PR #74 head `45bfaddd2b450bfda866048b160f0dff255b7ff6` passed both complete workflows: CI and Browser E2E.
+- CI passed Prisma validate, migration replay, client generation, TypeScript, ESLint, **445 tests across 94 test files**, and production build.
+- The API security inventory now discovers **167 route handlers**, with **0 routes requiring manual review** and **0 state-changing routes requiring review**. The UI mutation feedback inventory found 54 files with appropriate success/error feedback paths.
+- Browser E2E passed **7/7** journeys, including the anonymous route-security sweep across 166 route/method probes, buyer checkout, customer responsive account, seller workspace, Akaar category fields/Syrian geography/Leaflet map, and Super Admin control center/advertising.
+- The multipart image upload guard now preserves same-origin checks, authenticates before exposing upload content-type requirements, and accepts multipart requests on both current and backward-compatible endpoints. No production deployment was triggered.
