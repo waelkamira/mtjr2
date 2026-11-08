@@ -17,7 +17,7 @@ type Market = {
 type Category = { id: string; name: string; slug: string; children: Category[] };
 type Brand = { id: string; name: string };
 type Product = {
-  id: string; name: string; slug: string; description: string | null; city: string | null; district: string | null; contactPhone: string | null; videoUrl: string | null; customFields: unknown; brandId: string | null; status: string; approvalStatus: string;
+  id: string; productNumber: string; name: string; slug: string; description: string | null; city: string | null; district: string | null; contactPhone: string | null; videoUrl: string | null; customFields: unknown; brandId: string | null; status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
   mapLocation: ProductCoordinates | null;
   propertyDetails: { propertyType: string; listingType: string; bedrooms: number | null; bathrooms: number | null; floorArea: string } | null;
@@ -566,7 +566,7 @@ export default function SellerProductsPage() {
               {product.media.length > 0 && <div className="grid w-24 shrink-0 grid-cols-2 gap-1">
                 {product.media.slice(0, 4).map((media) => <img key={media.url} src={media.url} alt={media.altText ?? product.name} className="aspect-square w-full rounded-md object-cover" />)}
               </div>}
-              <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p>
+              <div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">PRD-{product.productNumber.padStart(8, "0")} · /{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p>
                 {product.categories[0] && <p className="mt-1 text-xs text-[var(--muted)]">{product.categories[0].category.name}</p>}
                 {product.propertyDetails && <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, product.propertyDetails.propertyType, ({
                   APARTMENT: "شقة", HOUSE: "منزل / فيلا", LAND: "أرض", COMMERCIAL: "عقار تجاري"
