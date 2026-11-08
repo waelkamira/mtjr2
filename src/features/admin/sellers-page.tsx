@@ -12,6 +12,7 @@ type SellerRow = {
   contactName: string | null; contactEmail: string | null; phoneNumber: string | null; residence: string | null;
   businessType: string | null; sellingCategories: string | null; intendedProducts: string | null; description: string | null;
   facebookUrl: string | null; youtubeUrl: string | null; twitterUrl: string | null; latitude: number | null; longitude: number | null;
+  hasIdentityDocument: boolean;
   owner: { id: string; email: string; displayName: string | null; status: string };
   stores: StoreRow[]; storeCount: number;
 };
@@ -123,6 +124,7 @@ export default function AdminSellersPage() {
         <p><strong>{translate(locale, "Contact person", "الشخص المسؤول")}:</strong> {seller.contactName || "—"}</p>
         <p><strong>{translate(locale, "Contact email", "بريد التواصل")}:</strong> {seller.contactEmail || "—"}</p>
         <p><strong>{translate(locale, "Phone", "الهاتف")}:</strong> {seller.phoneNumber || "—"}</p>
+        <div className="flex items-center gap-2"><strong>{translate(locale, "Identity document", "وثيقة الهوية")}:</strong>{seller.hasIdentityDocument ? <a href={`/api/admin/sellers/${encodeURIComponent(seller.id)}/identity-document`} target="_blank" rel="noreferrer" className="font-semibold text-[var(--color-copper-700)] underline">{translate(locale, "View secure document", "عرض الوثيقة بشكل آمن")}</a> : <span className="text-[var(--muted)]">{translate(locale, "Not provided", "لم تُرفق")}</span>}</div>
         <p><strong>{translate(locale, "Business type", "نوع النشاط")}:</strong> {seller.businessType || "—"}</p>
         <p className="sm:col-span-2"><strong>{translate(locale, "Business address", "عنوان النشاط")}:</strong> {seller.residence || "—"}</p>
         <p className="sm:col-span-2"><strong>{translate(locale, "Product categories", "فئات المنتجات")}:</strong> {seller.sellingCategories || "—"}</p>
