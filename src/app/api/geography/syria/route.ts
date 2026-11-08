@@ -97,7 +97,7 @@ export async function GET(request: Request) {
           ? { latitude, longitude }
           : null,
       };
-    }).filter((record) => record.id && record.name);
+    }).filter((record) => record.id && record.name && (!kind || record.kind === kind));
 
     return NextResponse.json({
       items,
