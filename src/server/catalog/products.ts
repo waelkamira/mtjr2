@@ -165,28 +165,46 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     const categoryAttributeRows = categoryIds.length
       ? await tx.categoryAttribute.findMany({
           where: { categoryId: { in: categoryIds } },
-          select: { attributeDefinitionId: true, isRequired: true, options: true, attribute: { select: { valueType: true } } }
+          select: { attributeDefinitionId: true, isRequired: true, options: true, attribute: { select: { key: true, valueType: true, variantLevel: true } } }
         })
       : [];
     const allowedAttributes = new Map(categoryAttributeRows.map((row) => [row.attributeDefinitionId, row]));
+    const productAttributesByKey = new Map(categoryAttributeRows.filter((row) => !row.attribute.variantLevel).map((row) => [row.attribute.key, row]));
+    const variantAttributesByKey = new Map(categoryAttributeRows.filter((row) => row.attribute.variantLevel).map((row) => [row.attribute.key, row]));
     const submittedAttributes = new Map(data.attributes.map((item) => [item.attributeDefinitionId, item.value]));
     if (submittedAttributes.size !== data.attributes.length) throw new Error("A product attribute was submitted more than once.");
-    for (const [attributeId, value] of submittedAttributes) {
-      const definition = allowedAttributes.get(attributeId);
-      if (!definition) throw new Error("A submitted attribute does not belong to the selected category.");
+    const validateAttributeValue = (definition: (typeof categoryAttributeRows)[number], value: unknown) => {
       const options = Array.isArray(definition.options) ? definition.options : [];
       if (definition.attribute.valueType === "TEXT" && (typeof value !== "string" || value.length > 2000)) throw new Error("A text attribute must contain at most 2,000 characters.");
       if (definition.attribute.valueType === "NUMBER" && (typeof value !== "number" || !Number.isFinite(value))) throw new Error("A numeric attribute must contain a valid number.");
       if (definition.attribute.valueType === "BOOLEAN" && typeof value !== "boolean") throw new Error("A boolean attribute must contain true or false.");
       if (definition.attribute.valueType === "SELECT" && (typeof value !== "string" || !options.includes(value))) throw new Error("A selected attribute value is invalid.");
       if (definition.attribute.valueType === "MULTI_SELECT" && (!Array.isArray(value) || value.length > 100 || value.some((entry) => typeof entry !== "string" || !options.includes(entry)) || new Set(value).size !== value.length)) throw new Error("A multi-select attribute value is invalid.");
+    };
+    const hasAttributeValue = (value: unknown) => value !== undefined && value !== null && value !== "" &&
+      !(typeof value === "string" && !value.trim()) && !(Array.isArray(value) && value.length === 0);
+    for (const [attributeId, value] of submittedAttributes) {
+      const definition = allowedAttributes.get(attributeId);
+      if (!definition || definition.attribute.variantLevel) throw new Error("A submitted product attribute does not belong to the selected category or is variant-level.");
+      validateAttributeValue(definition, value);
+    }
+    for (const variant of data.variants) {
+      for (const [key, value] of Object.entries(variant.optionValues ?? {})) {
+        const definition = variantAttributesByKey.get(key);
+        if (!definition) throw new Error("A submitted variant option does not belong to the selected category.");
+        validateAttributeValue(definition, value);
+      }
     }
     for (const row of categoryAttributeRows) {
-      if (row.isRequired) {
-        const value = submittedAttributes.get(row.attributeDefinitionId);
-        if (value === undefined || value === null || value === "" || (typeof value === "string" && !value.trim()) || (Array.isArray(value) && value.length === 0)) {
-          throw new Error("Please complete all required category attributes.");
+      if (!row.isRequired) continue;
+      if (row.attribute.variantLevel) {
+        for (const variant of data.variants) {
+          if (!hasAttributeValue(variant.optionValues?.[row.attribute.key])) {
+            throw new Error("Please complete all required variant options for every SKU.");
+          }
         }
+      } else if (!hasAttributeValue(submittedAttributes.get(row.attributeDefinitionId))) {
+        throw new Error("Please complete all required category attributes.");
       }
     }
 
