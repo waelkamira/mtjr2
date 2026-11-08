@@ -743,6 +743,7 @@ model Product {
   identifiers         ProductIdentifier[]
   attributes          ProductAttribute[]
   localityId          String?
+  neighborhood        String?               @db.VarChar(120)
   latitude            Float?
   longitude           Float?
   locality            SyriaLocality?         @relation(fields: [localityId], references: [id], onDelete: SetNull)
