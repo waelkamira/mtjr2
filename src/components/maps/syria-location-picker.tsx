@@ -19,6 +19,7 @@ type NeighborhoodSuggestion = {
 };
 type LocationValue = {
   localityId?: string;
+  neighborhoodId?: string;
   neighborhood?: string;
   latitude?: number;
   longitude?: number;
@@ -157,7 +158,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }
 
   function updateCoordinates(coords: { latitude: number; longitude: number }) {
-    onChange({ ...value, ...coords });
+    onChange({ ...value, neighborhoodId: undefined, ...coords });
     setFocus({ ...coords, zoom: 15 });
   }
 
@@ -210,7 +211,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
           const selected = neighborhoodSuggestions.find((item) => item.id === event.target.value);
           setSelectedNeighborhoodId(event.target.value);
           if (selected) {
-            onChange({ ...value, neighborhood: selected.nameAr, latitude: selected.latitude, longitude: selected.longitude });
+            onChange({ ...value, neighborhoodId: selected.id, neighborhood: selected.nameAr, latitude: selected.latitude, longitude: selected.longitude });
             setFocus({ latitude: selected.latitude, longitude: selected.longitude, zoom: 16 });
           }
         }}>
@@ -220,7 +221,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <span className="mt-1 block text-xs font-normal leading-5 text-amber-700">{translate(locale, "Suggestions are imported from Akaar's legacy list and are not yet officially verified. Confirm the name and pin before saving.", "هذه اقتراحات مستوردة من قائمة Akaar القديمة ولم تُعتمد رسمياً بعد. تحقق من الاسم والدبوس قبل الحفظ.")}</span>
       </label>}
       <label className="block text-sm font-medium">{labels.neighborhood}
-        <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => { setSelectedNeighborhoodId(""); onChange({ ...value, neighborhood: event.target.value || undefined }); }} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
+        <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => { setSelectedNeighborhoodId(""); onChange({ ...value, neighborhoodId: undefined, neighborhood: event.target.value || undefined }); }} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
         <span className="mt-1 block text-xs font-normal leading-5 text-[var(--muted)]">{translate(locale, "You can choose a nearby suggestion or enter the local name manually. Neighbourhood is stored separately from the official locality.", "يمكنك اختيار اقتراح قريب أو كتابة الاسم المحلي يدوياً. يُحفظ الحي منفصلاً عن التجمع الإداري الرسمي.")}</span>
       </label>
       {busy && <p role="status" className="text-xs text-[var(--muted)]">{labels.loading}</p>}
