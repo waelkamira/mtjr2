@@ -265,7 +265,11 @@ export async function approveProduct(productId: string, now = new Date()) {
       throw new Error("Only pending draft products can be approved.");
     }
     const nextLocalityId = data.localityId === undefined ? current.localityId : data.localityId;
-    const nextNeighborhoodId = data.neighborhoodId === undefined ? current.neighborhoodId : data.neighborhoodId;
+    const localityChanged = data.localityId !== undefined && data.localityId !== current.localityId;
+    const neighborhoodNameChanged = data.neighborhood !== undefined && data.neighborhood !== current.neighborhood;
+    const nextNeighborhoodId = data.neighborhoodId === undefined
+      ? localityChanged || neighborhoodNameChanged ? null : current.neighborhoodId
+      : data.neighborhoodId;
     const selectedLocality = nextLocalityId
       ? await tx.syriaLocality.findUnique({ where: { id: nextLocalityId }, select: { id: true, governorateId: true } })
       : null;
@@ -397,7 +401,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
