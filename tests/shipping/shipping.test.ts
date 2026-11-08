@@ -21,7 +21,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { $transaction: vi.fn(async (callback: (value: typeof tx) => unknown) => callback(tx)) }
 }));
-vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
+vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession, PermissionDeniedError: class PermissionDeniedError extends Error {} }));
 vi.mock("@/server/identity/permission-repository", () => ({
   userHasScopedPermission: mocks.userHasScopedPermission,
   userHasPermission: mocks.userHasPermission
@@ -72,6 +72,15 @@ describe("store shipping configuration", () => {
     expect(mocks.shippingRateUpdate).toHaveBeenCalledOnce();
     expect(result.amountMinor).toBe("799");
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("rejects edits from a user without store-scoped shipping permission", async () => {
+    mocks.requireCurrentSession.mockResolvedValue({ userId: "intruder-1" });
+    await expect(updateStoreShippingRate("rate-1", {
+      storeId: "store-1", marketId: "market-1", currencyCode: "EUR",
+      name: "Express", amountMinor: "799"
+    })).rejects.toThrow(/shipping configuration access/i);
+    expect(mocks.shippingRateUpdate).not.toHaveBeenCalled();
   });
 
   it("does not update a shipping rate belonging to another store", async () => {
