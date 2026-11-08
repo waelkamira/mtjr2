@@ -280,7 +280,7 @@ export default function SellerProductsPage() {
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
-      setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
+      setImageManagerOpen(false); setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
       setPropertyType("APARTMENT"); setListingType("SALE"); setBedrooms(""); setBathrooms(""); setFloorArea("");
       setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
