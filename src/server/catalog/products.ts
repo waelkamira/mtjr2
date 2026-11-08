@@ -251,6 +251,13 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
           create: data.variants.map((variant) => ({
             sku: variant.sku, barcode: variant.barcode, name: variant.name,
             optionValues: variant.optionValues as Prisma.InputJsonValue | undefined,
+            attributes: {
+              create: Object.entries(variant.optionValues ?? {}).map(([key, value]) => {
+                const definition = variantAttributesByKey.get(key);
+                if (!definition) throw new Error("A submitted variant option does not belong to the selected category.");
+                return { attributeDefinitionId: definition.attributeDefinitionId, value: value as Prisma.InputJsonValue };
+              })
+            },
             prices: { create: variant.prices.map((price) => ({
               marketId: price.marketId, currencyCode: price.currencyCode,
               amountMinor: BigInt(price.amountMinor),
