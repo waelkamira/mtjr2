@@ -264,6 +264,23 @@ export async function approveProduct(productId: string, now = new Date()) {
     if (!product || product.approvalStatus !== ProductApprovalStatus.PENDING || product.status !== CatalogEntityStatus.DRAFT) {
       throw new Error("Only pending draft products can be approved.");
     }
+    const nextLocalityId = data.localityId === undefined ? current.localityId : data.localityId;
+    const nextNeighborhoodId = data.neighborhoodId === undefined ? current.neighborhoodId : data.neighborhoodId;
+    const selectedLocality = nextLocalityId
+      ? await tx.syriaLocality.findUnique({ where: { id: nextLocalityId }, select: { id: true, governorateId: true } })
+      : null;
+    if (nextLocalityId && !selectedLocality) throw new Error("The selected Syrian locality is unavailable.");
+    if (nextNeighborhoodId) {
+      if (!selectedLocality) throw new Error("Choose the city or locality before selecting a neighbourhood.");
+      const selectedNeighborhood = await tx.syriaNeighborhood.findUnique({
+        where: { id: nextNeighborhoodId },
+        select: { id: true, governorateId: true }
+      });
+      if (!selectedNeighborhood || selectedNeighborhood.governorateId !== selectedLocality.governorateId) {
+        throw new Error("The selected neighbourhood does not belong to the selected governorate.");
+      }
+    }
+
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT, approvalStatus: ProductApprovalStatus.PENDING },
       data: { approvalStatus: ProductApprovalStatus.APPROVED, approvedAt: now }
@@ -338,6 +355,9 @@ const updateProductSchema = z.object({
   description: z.string().trim().max(12000).nullable().optional(),
   city: z.string().trim().min(1).max(120).nullable().optional(),
   district: z.string().trim().max(120).nullable().optional(),
+  localityId: z.string().trim().min(1).nullable().optional(),
+  neighborhoodId: z.string().trim().min(1).nullable().optional(),
+  neighborhood: z.string().trim().max(120).nullable().optional(),
   contactPhone: z.string().trim().min(6).max(40).nullable().optional(),
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
   latitude: z.number().finite().min(-90).max(90).nullable().optional(),
@@ -377,7 +397,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
@@ -392,7 +412,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
     }
-    if (data.propertyDetails !== undefined || data.latitude !== undefined || data.longitude !== undefined || categoryIds !== undefined) {
+    if (data.propertyDetails !== undefined || data.latitude !== undefined || data.longitude !== undefined || data.localityId !== undefined || data.neighborhoodId !== undefined || categoryIds !== undefined) {
       const selectedCategories = categoryIds === undefined
         ? current.categories.map((entry) => entry.category)
         : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true, parentId: true } });
@@ -417,6 +437,9 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         ...(data.description !== undefined ? { description: data.description } : {}),
         ...(data.city !== undefined ? { city: data.city } : {}),
         ...(data.district !== undefined ? { district: data.district } : {}),
+        ...(data.localityId !== undefined ? { localityId: data.localityId } : {}),
+        ...(data.neighborhoodId !== undefined ? { neighborhoodId: data.neighborhoodId } : {}),
+        ...(data.neighborhood !== undefined ? { neighborhood: data.neighborhood } : {}),
         ...(data.contactPhone !== undefined ? { contactPhone: data.contactPhone } : {}),
         ...(data.videoUrl !== undefined ? { videoUrl: data.videoUrl } : {}),
         ...(data.latitude !== undefined ? { latitude: data.latitude } : {}),
