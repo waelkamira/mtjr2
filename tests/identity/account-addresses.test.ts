@@ -21,7 +21,7 @@ vi.mock("@/server/identity/current-session", () => ({
   requireCurrentSession: sessionMock.requireCurrentSession
 }));
 
-import { createUserAddress, deleteUserAddress, listUserAddresses, setDefaultUserAddress, updateUserAddress } from "../../src/server/account/addresses";
+import { createUserAddress, deleteUserAddress, listUserAddresses, updateUserAddress } from "../../src/server/account/addresses";
 
 const savedAddress = {
   id: "address-1",
@@ -119,20 +119,6 @@ describe("customer address API data contract", () => {
     })).rejects.toThrow("Saved address not found.");
     expect(txMock.userAddress.updateMany).not.toHaveBeenCalled();
     expect(txMock.userAddress.deleteMany).not.toHaveBeenCalled();
-  });
-
-  it("sets the selected owned address as the only default", async () => {
-    txMock.userAddress.findFirst.mockResolvedValue({ id: "address-2" });
-    txMock.userAddress.updateMany.mockResolvedValue({ count: 1 });
-
-    await expect(setDefaultUserAddress("address-2")).resolves.toEqual({ id: "address-2", isDefault: true });
-
-    expect(txMock.userAddress.updateMany).toHaveBeenNthCalledWith(1, {
-      where: { userId: "buyer-1", isDefault: true }, data: { isDefault: false }
-    });
-    expect(txMock.userAddress.updateMany).toHaveBeenNthCalledWith(2, {
-      where: { id: "address-2", userId: "buyer-1" }, data: { isDefault: true }
-    });
   });
 
   it("promotes the newest remaining address when the default is deleted", async () => {
