@@ -409,15 +409,15 @@ export default function SellerWorkspacePage() {
   ];
 
   return (
-    <main className="min-h-full bg-transparent text-[#263d50]">
-      <div className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
-        <div className="relative mb-7 overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(125deg,#38556d_0%,#2b4359_58%,#3f6170_100%)] p-6 text-white shadow-[0_18px_38px_rgba(35,57,76,.2),inset_0_1px_0_rgba(255,255,255,.22)] sm:p-8">
-          <div className="pointer-events-none absolute -right-10 -top-14 size-48 rounded-full bg-[var(--color-peach-100)]/80 blur-2xl" />
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(196,181,253,.34),transparent_34%),radial-gradient(ellipse_at_top_right,rgba(167,243,208,.28),transparent_30%),linear-gradient(180deg,#f7f5ff_0%,#f4f8fb_52%,#fff8f4_100%)] text-[#26344b]">
+      <div className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
+        <div className="relative mb-7 overflow-hidden rounded-[2.25rem] border border-white/90 bg-[linear-gradient(115deg,#66558f_0%,#8174b2_48%,#5b9d9b_100%)] p-6 text-white shadow-[0_24px_55px_rgba(92,79,139,.22),inset_0_2px_0_rgba(255,255,255,.35)] sm:p-9 lg:p-10">
+          <div className="pointer-events-none absolute -right-10 -top-14 size-64 rounded-full bg-[#f8d7e8]/70 blur-3xl" /><div className="pointer-events-none absolute -bottom-24 left-[38%] size-72 rounded-full bg-[#b9f0df]/30 blur-3xl" />
           <div className="relative flex flex-wrap items-end justify-between gap-5">
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#b9dce1]">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200/80">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/75">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-white drop-shadow-sm sm:text-5xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 sm:text-base">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
             </div>
             {selectedStore && <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-xs text-white shadow-[inset_0_1px_0_rgba(255,255,255,.16)]"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-bold text-white">{selectedStore.name}</span><span className="text-white/75">{selectedStore.status}</span></div>}
           </div>
@@ -512,7 +512,7 @@ export default function SellerWorkspacePage() {
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric) => {
                 return (
-                  <article key={metric.label} className="group relative overflow-hidden rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,.82),rgba(218,232,238,.9))] p-5 shadow-[0_10px_24px_rgba(39,63,81,.12),inset_0_1px_0_white] transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-clay-hover)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
+                  <article key={metric.label} className="group relative isolate overflow-hidden rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(239,235,255,.88))] p-5 shadow-[0_14px_30px_rgba(83,72,125,.10),inset_0_2px_0_white,inset_0_-2px_5px_rgba(125,111,171,.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(83,72,125,.16)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
                     <div className="flex items-center gap-3">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${metric.color}20`, color: metric.color }}>
                         <span aria-hidden="true" className="text-lg leading-none">{metric.icon}</span>
@@ -582,7 +582,7 @@ export default function SellerWorkspacePage() {
             </section>
           </>}
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
+          <div className="mt-9 grid gap-6 xl:grid-cols-[.78fr_1.22fr]">
             <section className="rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_12px_28px_rgba(40,65,84,.11),inset_0_1px_0_white]">
               <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-extrabold tracking-tight text-[#2d4a60]">{translate(locale, "Seller status", "حالة البائع")}</h2><span className="rounded-full bg-[var(--color-sage-100)] px-3 py-1 text-xs font-semibold text-[var(--color-forest-900)]">{workspace.seller.status}</span></div>
               <p className="mt-3 text-sm text-[var(--muted)]">{workspace.seller.displayName ?? workspace.seller.legalName}</p>
