@@ -81,7 +81,7 @@ describe("seller temporary product image deletion API", () => {
 
   it("rejects invalid or expired tokens before contacting the provider", async () => {
     mocks.verifyDeleteToken.mockReturnValueOnce(null);
-    const response = await DELETE(request({ storeId: "store-1", deleteToken: "expired-token" }));
+    const response = await DELETE(request({ storeId: "store-1", deleteToken: "expired-temporary-image-token" }));
     expect(response.status).toBe(403);
     expect(mocks.deleteProductImage).not.toHaveBeenCalled();
   });
