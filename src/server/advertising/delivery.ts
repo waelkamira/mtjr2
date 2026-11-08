@@ -32,7 +32,7 @@ function readToken(token: string, now: Date): TokenPayload | null {
 }
 
 export async function listSponsoredCampaigns(input: {
-  marketId?: string; categoryId?: string; brandId?: string; query?: string; limit?: number; now?: Date;
+  marketId?: string; categoryId?: string; categoryIds?: string[]; brandId?: string; query?: string; limit?: number; now?: Date;
 }) {
   const now = input.now ?? new Date();
   if (!input.marketId) return [];
@@ -43,7 +43,7 @@ export async function listSponsoredCampaigns(input: {
       marketId: input.marketId,
       market: { status: "ACTIVE", country: { isActive: true }, currencies: { some: { isEnabled: true } } },
       AND: [
-        { OR: [{ targetCategoryId: null }, ...(input.categoryId ? [{ targetCategoryId: input.categoryId }] : [])] },
+        { OR: [{ targetCategoryId: null }, ...(categoryIds.length ? [{ targetCategoryId: { in: categoryIds } }] : [])] },
         { OR: [{ targetBrandId: null }, ...(input.brandId ? [{ targetBrandId: input.brandId }] : [])] }
       ],
       product: {
