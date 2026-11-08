@@ -48,13 +48,7 @@ All future implementation work should start from the latest `main`, use a focuse
 
 ## Current open integration decisions
 
-| PR / branch | Current disposition | Required next action |
-|---|---|---|
-| [#47 — manual return refund ledger](https://github.com/waelkamira/mtjr2/pull/47) | Original branch is stale and not mergeable against current `main`. Its useful changes were reconstructed additively on `integration/manual-return-refunds-main` (6 commits ahead, 0 behind at this audit). The reconstructed branch has no exact-head CI or PostgreSQL result. | Review the reconstructed diff against current `main`, run exact-head General CI and disposable PostgreSQL integration, then merge only if both pass. No provider refund call is implemented; finance confirms an externally processed refund. |
-| [#22 — identity/account follow-up](https://github.com/waelkamira/mtjr2/pull/22) | Draft, not mergeable, and not verified on its latest head `d5208538c46003d35f8374bc04bcd64678dc5303`. Earlier commits passed checks, but that evidence does not cover the latest head. | Review its identity-only changes and run fresh exact-head CI plus PostgreSQL integration before any merge decision. |
-| [#35 — Super Admin control panel](https://github.com/waelkamira/mtjr2/pull/35) | Draft, large and diverged (186 files; 10,284 additions; 1,098 deletions). Explicitly deferred from this consolidation. | Leave untouched until separately requested; reconcile its schema and migrations against the then-current `main` before any future review. |
-
-No pull request or branch is considered merge-ready merely because a prior commit or a related branch passed CI.
+No unresolved decisions remain among the closed pull requests reviewed in the 2026-11-08 reconciliation. This is separate from the unfinished product systems and release gates recorded in the journey matrix.
 
 ## Verified work already represented on main
 
