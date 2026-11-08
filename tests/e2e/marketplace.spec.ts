@@ -119,7 +119,7 @@ test.describe("customer journey", () => {
     await page.screenshot({ path: "test-results/customer-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/account/orders");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").last()).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/customer-mobile.png", fullPage: true });
     await page.goto("/account/sessions");
@@ -141,7 +141,7 @@ test.describe("seller journey", () => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/seller");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").last()).toBeVisible();
     await page.goto("/seller/advertising");
     await expect(page.getByRole("heading", { name: /Advertising campaigns|الحملات الإعلانية/i })).toBeVisible();
     await page.screenshot({ path: "test-results/seller-desktop.png", fullPage: true });
@@ -150,6 +150,72 @@ test.describe("seller journey", () => {
     await expect(page.getByRole("heading", { name: /Advertising campaigns|الحملات الإعلانية/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-mobile.png", fullPage: true });
+  });
+});
+
+test.describe("seller catalog authoring", () => {
+  test("loads Akaar category fields, Syrian administrative locations and Leaflet map", async ({ page }) => {
+    await signIn(page, sessions.seller);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/seller/products");
+    await expect(page.getByRole("heading", { name: /Products|المنتجات/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Create product draft|إنشاء مسودة منتج/i })).toBeVisible();
+
+    const categoryResponse = await page.request.get("/api/categories?limit=100&includeEmpty=true");
+    expect(categoryResponse.status()).toBe(200);
+    const categoryPayload = await categoryResponse.json() as { items: Array<{ id: string; slug: string; children?: Array<{ id: string; slug: string }> }> };
+    const phoneRoot = categoryPayload.items.find((item) => item.slug === "phones-electronics");
+    const phoneCategory = phoneRoot?.children?.find((item) => item.slug === "phones");
+    expect(phoneCategory).toBeTruthy();
+    const locale = await page.locator("html").getAttribute("lang") || "en";
+    const attributesResponse = await page.request.get(`/api/categories/${encodeURIComponent(phoneCategory!.id)}/attributes?locale=${encodeURIComponent(locale)}`);
+    expect(attributesResponse.status()).toBe(200);
+    const attributes = await attributesResponse.json() as { items: Array<{ label: string; required: boolean }> };
+    expect(attributes.items.length).toBeGreaterThan(0);
+
+    await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
+    await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
+    await expect(page.getByText(attributes.items[0].label, { exact: false }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Product location in Syria|موقع المنتج في سوريا/i })).toBeVisible();
+    const map = page.getByRole("application", { name: /Product location map|خريطة تحديد موقع المنتج/i });
+    await expect(map).toBeVisible();
+    await expect(page.getByLabel(/Governorate|المحافظة/i)).toBeVisible();
+
+    const governoratesResponse = await page.request.get("/api/geography/governorates");
+    expect(governoratesResponse.status()).toBe(200);
+    const governorates = await governoratesResponse.json() as { pagination: { total: number }; items: Array<{ id: string; nameAr: string | null; nameEn: string; latitude: number | null; longitude: number | null }> };
+    expect(governorates.pagination.total).toBe(14);
+    const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
+    expect(damascus).toBeTruthy();
+    await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
+
+    const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
+    expect(districtsResponse.status()).toBe(200);
+    const districts = await districtsResponse.json() as { items: Array<{ id: string }> };
+    expect(districts.items.length).toBeGreaterThan(0);
+    await page.getByLabel(/District|المنطقة/i).selectOption(districts.items[0].id);
+
+    const subdistrictsResponse = await page.request.get(`/api/geography/subdistricts?districtId=${encodeURIComponent(districts.items[0].id)}`);
+    expect(subdistrictsResponse.status()).toBe(200);
+    const subdistricts = await subdistrictsResponse.json() as { items: Array<{ id: string }> };
+    expect(subdistricts.items.length).toBeGreaterThan(0);
+    let selectedSubdistrictId = "";
+    let selectedLocalityId = "";
+    for (const subdistrict of subdistricts.items) {
+      const response = await page.request.get(`/api/geography/localities?districtId=${encodeURIComponent(districts.items[0].id)}&subdistrictId=${encodeURIComponent(subdistrict.id)}`);
+      const payload = await response.json() as { items: Array<{ id: string }> };
+      if (payload.items.length) {
+        selectedSubdistrictId = subdistrict.id;
+        selectedLocalityId = payload.items[0].id;
+        break;
+      }
+    }
+    expect(selectedSubdistrictId).toBeTruthy();
+    expect(selectedLocalityId).toBeTruthy();
+    await page.getByLabel(/Subdistrict|الناحية/i).selectOption(selectedSubdistrictId);
+    await expect(page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i)).toBeEnabled();
+    await page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i).selectOption(selectedLocalityId);
+    await expect(map).toHaveClass(/leaflet-container/, { timeout: 15000 });
   });
 });
 

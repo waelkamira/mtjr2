@@ -1,0 +1,1085 @@
+{
+  "source": "waelkamira/Akaar",
+  "generatedFromCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+  "categories": [
+    {
+      "categoryAr": "دراجات",
+      "sourcePath": "components/categoryFields/دراجات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "1939032607522790df25fed2fd30ca9521175865",
+      "fields": [
+        {
+          "key": "bikeType",
+          "labelAr": "نوع الدراجة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "دراجة جبلية",
+            "دراجة طريق",
+            "دراجة مدينة",
+            "دراجة هوائية كهربائية",
+            "دراجة ثابتة",
+            "دراجة أطفال",
+            "دراجة تندم",
+            "دراجة شحن",
+            "سكوتر كهربائي",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "motorcycleType",
+          "labelAr": "نوع الدراجة النارية",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "رياضية",
+            "كلاسيكية",
+            "طرق وعرة",
+            "سكوتر",
+            "كروزر",
+            "تاورنج",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "engineType",
+          "labelAr": "نوع المحرك",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "بنزين",
+            "كهربائي",
+            "هايبرد",
+            "ديزل"
+          ]
+        },
+        {
+          "key": "engineSize",
+          "labelAr": "سعة المحرك (للنارية)",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "50-125 سي سي",
+            "126-250 سي سي",
+            "251-500 سي سي",
+            "501-750 سي سي",
+            "751-1000 سي سي",
+            "أكثر من 1000 سي سي"
+          ]
+        },
+        {
+          "key": "batteryRange",
+          "labelAr": "مدى البطارية (للدراجات الكهربائية)",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "أقل من 50 كم",
+            "50-100 كم",
+            "101-150 كم",
+            "أكثر من 150 كم"
+          ]
+        },
+        {
+          "key": "frameMaterial",
+          "labelAr": "مادة الهيكل",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "ألومنيوم",
+            "كربون",
+            "حديد",
+            "تيتانيوم",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "suspensionType",
+          "labelAr": "نوع التعليق",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "أمامي فقط",
+            "أمامي وخلفي",
+            "بدون تعليق"
+          ]
+        },
+        {
+          "key": "brakeType",
+          "labelAr": "نوع الفرامل",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "قرصية أمامية",
+            "قرصية أمامية وخلفية",
+            "حذاء فرامل"
+          ]
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "أسود",
+            "أبيض",
+            "أحمر",
+            "أزرق",
+            "أخضر",
+            "فضي",
+            "أصفر",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - ممتازة",
+            "مستعمل - جيدة",
+            "بحاجة لصيانة"
+          ]
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "هارلي ديفيدسون",
+            "هوندا",
+            "ياماها",
+            "كاواساكي",
+            "تريك",
+            "جاينت",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "year",
+          "labelAr": "سنة الصنع",
+          "placeholderAr": "أدخل سنة الصنع",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "رياضة",
+      "sourcePath": "components/categoryFields/رياضة.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "66d29c79d0bfd90c582cfdc9dd540ed3097b219f",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "معدات رياضية",
+            "ملابس رياضية",
+            "أحذية رياضية",
+            "مستلزمات رياضية",
+            "مكملات رياضية",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "sport",
+          "labelAr": "الرياضة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "كرة سلة",
+            "كرة قدم",
+            "جري",
+            "ركوب الدراجات",
+            "رفع الأثقال",
+            "تنس",
+            "سباحة",
+            "كرة طائرة",
+            "هوكي",
+            "ملاكمة",
+            "تنس الطاولة",
+            "جولف",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "equipmentType",
+          "labelAr": "نوع المعدات",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "كرات رياضية",
+            "أحزمة وأثقال",
+            "مضارب",
+            "قفازات",
+            "شبكات وأهداف",
+            "أجهزة رياضية",
+            "معدات حماية",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "clothingType",
+          "labelAr": "نوع الملابس",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "تيشرت رياضية",
+            "سراويل رياضية",
+            "جوارب رياضية",
+            "سترات رياضية",
+            "ملابس سباحة",
+            "ملابس تدريب",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "size",
+          "labelAr": "المقاس",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "XXXL",
+            "مقاسات أطفال",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "نايكي",
+            "أديداس",
+            "بوما",
+            "أندر آرمور",
+            "ريبوك",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة المصنوعة منها",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "بوليستر",
+            "قطن",
+            "نايلون",
+            "مطاط",
+            "جلد",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - بحالة ممتازة",
+            "مستعمل - بحالة جيدة",
+            "مستعمل - بحالة مقبولة",
+            "أخرى"
+          ]
+        }
+      ]
+    },
+    {
+      "categoryAr": "زراعة",
+      "sourcePath": "components/categoryFields/زراعة.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "35cd0ed8eb12acfd29460c26bcd1b02c920165d6",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "نباتات",
+            "بذور",
+            "أدوات زراعية",
+            "معدات زراعية",
+            "أسمدة ومبيدات",
+            "تربة وبيئات زراعية",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "plantType",
+          "labelAr": "نوع النبات",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "نباتات زينة",
+            "أشجار فواكه",
+            "خضروات",
+            "أعشاب ونباتات عطرية",
+            "نباتات طبية",
+            "حبوب",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "fruitType",
+          "labelAr": "نوع الفاكهة (إن وجدت)",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "تفاح",
+            "برتقال",
+            "ليمون",
+            "زيتون",
+            "عنب",
+            "رمان",
+            "توت",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "vegetableType",
+          "labelAr": "نوع الخضار (إن وجدت)",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "طماطم",
+            "خيار",
+            "باذنجان",
+            "فلفل",
+            "بصل",
+            "ثوم",
+            "بطاطا",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "growthCondition",
+          "labelAr": "ظروف النمو",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "شمس كاملة",
+            "ظل جزئي",
+            "ظل كامل",
+            "داخل المنزل",
+            "بيت بلاستيكي",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "wateringNeeds",
+          "labelAr": "احتياجات الري",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "ري يومي",
+            "ري كل يومين",
+            "ري أسبوعي",
+            "ري قليل",
+            "ري حسب الطقس",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "soilType",
+          "labelAr": "نوع التربة المناسبة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "تربة طينية",
+            "تربة رملية",
+            "تربة صفراء",
+            "بيتموس",
+            "بيئة مائية",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "season",
+          "labelAr": "الموسم المناسب",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "شتوي",
+            "صيفي",
+            "ربيعي",
+            "خريفي",
+            "طوال السنة",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "harvestTime",
+          "labelAr": "وقت الحصاد",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "30 يوم",
+            "3 أشهر",
+            "6 أشهر",
+            "سنة",
+            "عدة سنوات",
+            "أخرى"
+          ]
+        }
+      ]
+    },
+    {
+      "categoryAr": "سيارات",
+      "sourcePath": "components/categoryFields/سيارات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "d90b49711b06f400749f02e107a80b5cbafcda1f",
+      "fields": [
+        {
+          "key": "adType",
+          "labelAr": "بيع/أجار",
+          "placeholderAr": "بيع/أجار",
+          "valueType": "SELECT",
+          "options": [
+            "بيع",
+            "أجار"
+          ]
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "تويوتا",
+          "valueType": "SELECT",
+          "options": [
+            "تويوتا Toyota",
+            "فورد Ford",
+            "شيفروليه Chevrolet",
+            "هوندا Honda",
+            "نيسان Nissan",
+            "هيونداي Hyundai",
+            "كيا Kia",
+            "فولكسفاغن Volkswagen",
+            "مرسيدس-بنز Mercedes-Benz",
+            "بي إم دبليو BMW",
+            "أودي Audi",
+            "رينو Renault",
+            "بيجو Peugeot",
+            "سوزوكي Suzuki",
+            "مازدا Mazda",
+            "ميتسوبيشي Mitsubishi",
+            "لكزس Lexus",
+            "جيب Jeep",
+            "دودج Dodge",
+            "فيات Fiat",
+            "فولفو Volvo",
+            "سوبارو Subaru",
+            "جاغوار Jaguar",
+            "لاند روفر Land Rover",
+            "تيسلا Tesla",
+            "بورش Porsche",
+            "ميني Mini",
+            "سانغ يونغ SsangYong",
+            "دايهاتسو Daihatsu",
+            "إيسوزو Isuzu",
+            "أوبل Opel",
+            "سيات SEAT",
+            "سكودا Skoda",
+            "ألفا روميو Alfa Romeo",
+            "فيراري Ferrari",
+            "لامبورغيني Lamborghini",
+            "بنتلي Bentley",
+            "رولز رويس Rolls-Royce",
+            "أستون مارتن Aston Martin",
+            "ماكلارين McLaren",
+            "لوتس Lotus",
+            "مازيراتي Maserati",
+            "كاديلاك Cadillac",
+            "لينكولن Lincoln",
+            "كرايسلر Chrysler",
+            "رام RAM",
+            "جي إم سي GMC",
+            "بونتياك Pontiac",
+            "هولدين Holden",
+            "بروتون Proton",
+            "بيرلاي Perodua",
+            "تاتا Tata",
+            "ماهيندرا Mahindra",
+            "ماروتي سوزوكي Maruti Suzuki",
+            "فاو FAW",
+            "جاك JAC",
+            "جريت وول Great Wall",
+            "بريليانس Brilliance",
+            "تشانجان Changan",
+            "جيلي Geely",
+            "بورغوارد Borgward",
+            "دونغفنغ Dongfeng",
+            "زوتي Zotye",
+            "ليفان Lifan",
+            "هافال Haval",
+            "فوتون Foton",
+            "سينوفا Sinova",
+            "روز رايز Roewe",
+            "إم جي MG",
+            "لادا Lada",
+            "غاز GAZ",
+            "فاز VAZ",
+            "سايبا Saipa",
+            "إيران خودرو Iran Khodro",
+            "أبولو Apollo",
+            "أرتيجا Artega",
+            "أرييل Ariel",
+            "أستون مارتن Aston Martin",
+            "ألفا روميو Alfa Romeo",
+            "أوبل Opel",
+            "أودي Audi",
+            "أوروس Aurus",
+            "أوسكار Osca",
+            "أوليسيس Ulysse",
+            "إدون Edon",
+            "إسكاليد Escalade",
+            "إف سي في FCV",
+            "إكستريم Extreme",
+            "إلكتروميكانيكا Electromeccanica",
+            "إم جي MG",
+            "إم في أي MVI",
+            "إميريتي Emirati",
+            "إنفينيتي Infiniti",
+            "إي دي إس EDS",
+            "إي تي في ETV",
+            "إيجل Eagle",
+            "إيكو Eco",
+            "إيماك Emak",
+            "إيفوك Evoke",
+            "إيكاروس Ikarus",
+            "إيلو Elio",
+            "إيماك Emak",
+            "أباريث Abarth",
+            "أراش Arash",
+            "أرتينجا Artega",
+            "أرينو Arrinera",
+            "أستون مارتن Aston Martin",
+            "ألفا روميو Alfa Romeo",
+            "أميركان لايفان American LaFrance",
+            "أميريكان موتورز American Motors",
+            "أوبل Opel",
+            "أوتوموبيلي تورينو Automobili Torino",
+            "أوتوموبيلي لامبورغيني Automobili Lamborghini",
+            "أوتوموبيلي ماتيراتسي Automobili Matarazzi",
+            "أوتوموبيلي نوتشيولا Automobili Nucciola",
+            "غير ذلك"
+          ]
+        },
+        {
+          "key": "model",
+          "labelAr": "الموديل",
+          "placeholderAr": "الموديل",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "year",
+          "labelAr": "السنة",
+          "placeholderAr": "السنة",
+          "valueType": "SELECT",
+          "options": [
+            "2026",
+            "2025",
+            "2024",
+            "2023",
+            "2022",
+            "2021",
+            "2020",
+            "2019",
+            "2018",
+            "2017",
+            "2016",
+            "2015",
+            "2014",
+            "2013",
+            "2012",
+            "2011",
+            "2010",
+            "2009",
+            "2008",
+            "2007",
+            "2006",
+            "2005",
+            "2004",
+            "2003",
+            "2002",
+            "2001",
+            "2000",
+            "1999",
+            "1998",
+            "1997",
+            "1996",
+            "1995",
+            "1994",
+            "1993",
+            "1992",
+            "1991",
+            "1990",
+            "1989",
+            "1988",
+            "1987",
+            "1986",
+            "1985",
+            "1984",
+            "1983",
+            "1982",
+            "1981",
+            "1980",
+            "1979",
+            "1978",
+            "1977",
+            "1976",
+            "1975",
+            "1974",
+            "1973",
+            "1972",
+            "1971",
+            "1970",
+            "1969",
+            "1968",
+            "1967",
+            "1966",
+            "1965",
+            "1964",
+            "1963",
+            "1962",
+            "1961",
+            "1960",
+            "1959",
+            "1958",
+            "1957",
+            "1956",
+            "1955",
+            "1954",
+            "1953",
+            "1952",
+            "1951",
+            "1950"
+          ]
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "الحالة",
+          "valueType": "SELECT",
+          "options": [
+            "جديدة",
+            "مستعملة"
+          ]
+        },
+        {
+          "key": "fuelType",
+          "labelAr": "الوقود",
+          "placeholderAr": "الوقود",
+          "valueType": "SELECT",
+          "options": [
+            "بنزين",
+            "ديزل",
+            "كهرباء",
+            "هجين"
+          ]
+        },
+        {
+          "key": "mileage",
+          "labelAr": "الكيلومترات",
+          "placeholderAr": "الكيلومترات",
+          "valueType": "SELECT",
+          "options": [
+            "0",
+            "50",
+            "100",
+            "1000",
+            "5000",
+            "10000",
+            "20000",
+            "30000",
+            "40000",
+            "50000",
+            "60000",
+            "70000",
+            "80000",
+            "90000",
+            "100000",
+            "150000",
+            "200000",
+            "250000",
+            "300000",
+            "350000",
+            "400000",
+            "450000",
+            "500000",
+            "550000",
+            "600000",
+            "650000",
+            "700000",
+            "750000",
+            "800000",
+            "850000",
+            "900000",
+            "950000",
+            "1000000",
+            "2000000",
+            "3000000",
+            "4000000",
+            "5000000"
+          ]
+        }
+      ]
+    },
+    {
+      "categoryAr": "صحة",
+      "sourcePath": "components/categoryFields/صحة.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "288d5b56c365a69222bb9323fc64e56091a0119c",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "فيتامينات ومكملات",
+            "أدوية بدون وصفة",
+            "إسعافات أولية",
+            "العناية الشخصية",
+            "منتجات تنظيف المنزل",
+            "العناية بالفم",
+            "العناية بالبشرة",
+            "مستلزمات طبية",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "healthCategory",
+          "labelAr": "التصنيف الصحي",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "دعم المناعة",
+            "صحة المفاصل",
+            "تحسين النوم",
+            "صحة الجهاز الهضمي",
+            "صحة القلب",
+            "زيادة الطاقة",
+            "إنقاص الوزن",
+            "صحة العظام",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "productForm",
+          "labelAr": "شكل المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "أقراص",
+            "كبسولات",
+            "سائل",
+            "مسحوق",
+            "جل",
+            "كريم",
+            "بخاخ",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "personalCareType",
+          "labelAr": "نوع العناية الشخصية",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "صابون",
+            "شامبو",
+            "بلسم",
+            "غسول الجسم",
+            "مزيل العرق",
+            "مستحضرات حلاقة",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "cleaningType",
+          "labelAr": "نوع المنظفات",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "منظفات أرضيات",
+            "منظفات زجاج",
+            "منظفات مطابخ",
+            "منظفات حمامات",
+            "معطرات جو",
+            "مناديل مبللة",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "oralCareType",
+          "labelAr": "نوع العناية بالفم",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "معجون أسنان",
+            "فرشاة أسنان",
+            "غسول فم",
+            "خيط أسنان",
+            "مبيض أسنان",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "sizeVolume",
+          "labelAr": "الحجم/الكمية",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "50 مل",
+            "100 مل",
+            "200 مل",
+            "500 مل",
+            "1 لتر",
+            "أكثر من 1 لتر"
+          ]
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "ديتول",
+            "فاين",
+            "كولجيت",
+            "سنسوداين",
+            "بانادول",
+            "ناتشورال",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "specialFeatures",
+          "labelAr": "مميزات خاصة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "عضوي",
+            "خالي من الكحول",
+            "مناسب للحساسية",
+            "نباتي",
+            "خالي من البارابين",
+            "أخرى"
+          ]
+        }
+      ]
+    },
+    {
+      "categoryAr": "طفلك",
+      "sourcePath": "components/categoryFields/طفلك.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "e8594ed29f1ff1919bb849df48181c8a2275d3b1",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "مقاعد سيارات",
+            "عربات أطفال",
+            "ملابس أطفال",
+            "ألعاب تعليمية",
+            "أثاث أطفال",
+            "أدوات تغذية",
+            "مستلزمات الاستحمام",
+            "مستلزمات النوم",
+            "حفاضات ومنتجات العناية",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "subType",
+          "labelAr": "التفاصيل",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "كرسي سيارة أمامي",
+            "كرسي سيارة خلفي",
+            "عربة توأم",
+            "عربة خفيفة",
+            "ملابس حديثي الولادة",
+            "ألعاب استحمام",
+            "سرير أطفال",
+            "كرسي هزاز",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "ageRange",
+          "labelAr": "الفئة العمرية",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "حديثي الولادة (0-3 أشهر)",
+            "رضيع (3-12 شهراً)",
+            "طفل صغير (1-3 سنوات)",
+            "ما قبل المدرسة (3-5 سنوات)",
+            "أكبر من 5 سنوات",
+            "مناسب لجميع الأعمار"
+          ]
+        },
+        {
+          "key": "gender",
+          "labelAr": "الجنس",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "ذكر",
+            "أنثى",
+            "للجنسين"
+          ]
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "قطن",
+            "بوليستر",
+            "بلاستيك",
+            "خشب",
+            "سيليكون",
+            "معدن",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "safetyCertification",
+          "labelAr": "شهادات السلامة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "مطابق لمعايير السلامة",
+            "شهادة CE",
+            "شهادة ASTM",
+            "غير معروف"
+          ]
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - بحالة ممتازة",
+            "مستعمل - بحالة جيدة",
+            "مستعمل - بحاجة لتنظيف",
+            "أخرى"
+          ]
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": null,
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "عقارات",
+      "sourcePath": "components/categoryFields/عقارات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "5c3caa942a2bbd2548ebdb88efcd8a6b8b2c0c81",
+      "fields": [
+        {
+          "key": "adType",
+          "labelAr": "بيع/أجار",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "بيع",
+            "أجار"
+          ]
+        },
+        {
+          "key": "rooms",
+          "labelAr": "الغرف",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "غير ذلك"
+          ]
+        },
+        {
+          "key": "livingrooms",
+          "labelAr": "الصالونات",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "غير ذلك"
+          ]
+        },
+        {
+          "key": "area",
+          "labelAr": "المساحة",
+          "placeholderAr": "200 م²",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "propertyType",
+          "labelAr": "نوع العقار",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "بيت",
+            "شقة",
+            "أرض",
+            "مزرعة",
+            "فيلا",
+            "معمل",
+            "غير ذلك"
+          ]
+        },
+        {
+          "key": "bathrooms",
+          "labelAr": "الحمامات",
+          "placeholderAr": "-اختر-",
+          "valueType": "SELECT",
+          "options": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "غير ذلك"
+          ]
+        }
+      ]
+    }
+  ]
+}

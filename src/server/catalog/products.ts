@@ -24,6 +24,15 @@ const createSchema = z.object({
   description: z.string().trim().max(12000).optional(),
   brandId: z.string().trim().min(1).optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).default([]),
+  attributes: z.array(z.object({
+    attributeDefinitionId: z.string().trim().min(1),
+    value: z.unknown()
+  }).strict()).max(100).default([]),
+  localityId: z.string().trim().min(1).optional(),
+  neighborhoodId: z.string().trim().min(1).optional(),
+  neighborhood: z.string().trim().max(120).optional(),
+  latitude: z.number().finite().min(-90).max(90).optional(),
+  longitude: z.number().finite().min(-180).max(180).optional(),
   media: z.array(z.object({
     url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
     mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]).optional(),
@@ -94,6 +103,51 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
     }
 
+    if ((data.latitude === undefined) !== (data.longitude === undefined)) {
+      throw new Error("Latitude and longitude must be supplied together.");
+    }
+    const selectedLocality = data.localityId
+      ? await tx.syriaLocality.findUnique({ where: { id: data.localityId }, select: { id: true, governorateId: true } })
+      : null;
+    if (data.localityId && !selectedLocality) throw new Error("The selected Syrian locality is unavailable.");
+    if (data.neighborhoodId) {
+      if (!selectedLocality) throw new Error("Choose the city or locality before selecting a neighbourhood.");
+      const selectedNeighborhood = await tx.syriaNeighborhood.findUnique({
+        where: { id: data.neighborhoodId },
+        select: { id: true, governorateId: true }
+      });
+      if (!selectedNeighborhood || selectedNeighborhood.governorateId !== selectedLocality.governorateId) {
+        throw new Error("The selected neighbourhood does not belong to the selected governorate.");
+      }
+    }
+    const categoryAttributeRows = categoryIds.length
+      ? await tx.categoryAttribute.findMany({
+          where: { categoryId: { in: categoryIds } },
+          select: { attributeDefinitionId: true, isRequired: true, options: true, attribute: { select: { valueType: true } } }
+        })
+      : [];
+    const allowedAttributes = new Map(categoryAttributeRows.map((row) => [row.attributeDefinitionId, row]));
+    const submittedAttributes = new Map(data.attributes.map((item) => [item.attributeDefinitionId, item.value]));
+    if (submittedAttributes.size !== data.attributes.length) throw new Error("A product attribute was submitted more than once.");
+    for (const [attributeId, value] of submittedAttributes) {
+      const definition = allowedAttributes.get(attributeId);
+      if (!definition) throw new Error("A submitted attribute does not belong to the selected category.");
+      const options = Array.isArray(definition.options) ? definition.options : [];
+      if (definition.attribute.valueType === "TEXT" && (typeof value !== "string" || value.length > 2000)) throw new Error("A text attribute must contain at most 2,000 characters.");
+      if (definition.attribute.valueType === "NUMBER" && (typeof value !== "number" || !Number.isFinite(value))) throw new Error("A numeric attribute must contain a valid number.");
+      if (definition.attribute.valueType === "BOOLEAN" && typeof value !== "boolean") throw new Error("A boolean attribute must contain true or false.");
+      if (definition.attribute.valueType === "SELECT" && (typeof value !== "string" || !options.includes(value))) throw new Error("A selected attribute value is invalid.");
+      if (definition.attribute.valueType === "MULTI_SELECT" && (!Array.isArray(value) || value.length > 100 || value.some((entry) => typeof entry !== "string" || !options.includes(entry)) || new Set(value).size !== value.length)) throw new Error("A multi-select attribute value is invalid.");
+    }
+    for (const row of categoryAttributeRows) {
+      if (row.isRequired) {
+        const value = submittedAttributes.get(row.attributeDefinitionId);
+        if (value === undefined || value === null || value === "" || (typeof value === "string" && !value.trim()) || (Array.isArray(value) && value.length === 0)) {
+          throw new Error("Please complete all required category attributes.");
+        }
+      }
+    }
+
     const allowedMarketIds = new Set(store.markets.map((market) => market.marketId));
     if (marketIds.some((id) => !allowedMarketIds.has(id))) throw new Error("Product prices may only target markets enabled for this store.");
 
@@ -113,7 +167,16 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         storeId: store.id, brandId: data.brandId, name: data.name, slug: data.slug,
         description: data.description, status: CatalogEntityStatus.DRAFT,
         approvalStatus: ProductApprovalStatus.PENDING,
+        localityId: data.localityId,
+        neighborhoodId: data.neighborhoodId,
+        neighborhood: data.neighborhood,
+        latitude: data.latitude,
+        longitude: data.longitude,
         categories: { create: categoryIds.map((categoryId, index) => ({ categoryId, isPrimary: index === 0, sortOrder: index })) },
+        attributes: { create: data.attributes.map((item) => ({
+          attributeDefinitionId: item.attributeDefinitionId,
+          values: { create: { value: item.value as Prisma.InputJsonValue } }
+        })) },
         media: { create: data.media.map((item) => ({ ...item })) },
         variants: {
           create: data.variants.map((variant) => ({

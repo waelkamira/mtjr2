@@ -11,7 +11,8 @@ export async function GET(request: NextRequest): Promise<Response> {
     const result = await listActiveCategoryTree({
       locale: isLocale(requestedLocale) ? requestedLocale : defaultLocale,
       page: request.nextUrl.searchParams.get("page") ?? "1",
-      limit: request.nextUrl.searchParams.get("limit") ?? "30"
+      limit: request.nextUrl.searchParams.get("limit") ?? "30",
+      includeEmpty: request.nextUrl.searchParams.get("includeEmpty") ?? "false"
     });
     return Response.json(result, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
   } catch (error) {
