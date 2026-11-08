@@ -2457,3 +2457,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Platform PostgreSQL Integration run [42251383098](https://github.com/waelkamira/mtjr2/actions/runs/42251383098) passed on the same commit: migration replay, baseline role/permission seed, PostgreSQL integration suite, demo catalog seed, and seed repeatability.
 - The browser E2E journeys listed above remain unverified; keep PR #35 in Draft until those are exercised.
 - No Vercel access, deployment, environment changes, production database changes, or live Groq API smoke test were performed.
+
+## 2026-11-08 — Product image storage rebuild and ImageKit 403 diagnosis
+
+**Rebuilt**
+- Replaced the product-image provider module with a small provider adapter that validates the actual JPEG/PNG/WebP file signature, enforces the 8 MB limit, sanitizes filenames, applies timeouts, validates returned HTTPS URLs, and records provider-specific storage identifiers.
+- Removed process-local successful-upload caching and in-flight deduplication. Upload success is no longer reused across users/requests merely because file bytes match.
+- Kept the server-side ImageKit Basic Auth flow (private key as the username and an empty password) and Imgur fallback. Provider failures now retain HTTP status, a bounded provider message, and request ID in server logs without exposing raw provider responses to the browser.
+- ImageKit HTTP 403 is classified as a provider configuration/permission/quota failure (503 to the application), not as a generic 502 gateway failure. The seller receives an actionable configuration message.
+- Product media creation now accepts and persists the existing Prisma `ProductMedia.storageKey`, `mimeType`, `width`, and `height` columns. The seller product flow forwards this metadata returned by the upload endpoint.
+- Added focused regression tests for MIME/signature validation, ImageKit success metadata, ImageKit 403 classification, and missing provider configuration.
+
+**ImageKit 403 operational requirement**
+- ImageKit documents HTTP 403 for failed account authentication, expired public/private keys, disabled accounts, or exhausted storage/upload limits. Restricted API keys must grant Media Read & Write for uploads.
+- Verify the private key in the ImageKit dashboard and replace the deployment's `IMAGEKIT_PRIVATE_KEY` with the current private key. Do not use a public key or client-side key. Check the account's storage/upload quota.
+- This repository-only change cannot validate or repair the external ImageKit account credential. No live upload, local typecheck, unit-test run, production deployment, or browser journey is claimed here; run CI against this exact branch head and perform one real seller upload after correcting the provider configuration.
