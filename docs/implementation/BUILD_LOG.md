@@ -3019,3 +3019,6 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 
 - Dashboard data completeness: added a live recent-orders panel for the active store. It reads the existing seller-orders API, filters to the selected store, displays the five latest order numbers/statuses/totals/dates, respects the analytics orders permission flag, and links to the full order workspace. No duplicate order endpoint or new database model was introduced. Commit: `0bb96d32533a0db04840d0a6fc75ea648e36118c`.
+
+
+- Sidebar polish: added a compact business-workspace identity panel and a direct growth/campaign shortcut while preserving all existing seller navigation routes. Commit: `a6a14952d30bd2889c09ba61799db66aaa792147`.
