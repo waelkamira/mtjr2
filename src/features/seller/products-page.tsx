@@ -35,6 +35,7 @@ type Product = {
 };
 type Store = { id: string; storeNumber: string; name: string; markets: Array<{ market: { id: string } }> };
 type Workspace = { stores: Store[] };
+type EditableProductMedia = Product["media"][number] & { deleteToken?: string };
 
 async function json<T>(response: Response): Promise<T> {
   const data = await response.json();
@@ -63,7 +64,7 @@ export default function SellerProductsPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
-  type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
+  type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
@@ -97,7 +98,7 @@ export default function SellerProductsPage() {
   const [editBathrooms, setEditBathrooms] = useState("");
   const [editFloorArea, setEditFloorArea] = useState("");
   const [editCategoryId, setEditCategoryId] = useState("");
-  const [editMedia, setEditMedia] = useState<Product["media"]>([]);
+  const [editMedia, setEditMedia] = useState<EditableProductMedia[]>([]);
   const [editMediaUploading, setEditMediaUploading] = useState(false);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
@@ -173,10 +174,8 @@ export default function SellerProductsPage() {
     return () => { active = false; window.clearTimeout(timer); };
   }, [storeId, search, loadProducts]);
 
-  async function uploadProductImages(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
+  async function uploadProductImageFiles(files: File[]) {
     if (!files.length) return;
-    event.target.value = "";
     if (uploadedImages.length + files.length > 10) {
       toast.error(translate(locale, "A product can have up to 10 images.", "يمكن إضافة ١٠ صور كحد أقصى للمنتج."));
       return;
@@ -202,11 +201,11 @@ export default function SellerProductsPage() {
       const form = new FormData();
       form.append("file", file, file.name);
       form.append("storeId", storeId);
-      const result = await json<{ success: true; data: { url: string; provider: string; mimeType?: string; storageKey?: string; width?: number; height?: number } }>(
+      const result = await json<{ success: true; data: { url: string; provider: string; mimeType?: string; storageKey?: string; deleteToken?: string; width?: number; height?: number } }>(
         await fetch("/api/seller/products/media", { method: "POST", body: form })
       );
       setUploadedImages((current) => current.map((image) => image.id === drafts[index].id
-        ? { ...image, url: result.data.url, provider: result.data.provider, mimeType: result.data.mimeType ?? file.type, storageKey: result.data.storageKey, width: result.data.width, height: result.data.height, status: "ready" }
+        ? { ...image, url: result.data.url, provider: result.data.provider, mimeType: result.data.mimeType ?? file.type, storageKey: result.data.storageKey, deleteToken: result.data.deleteToken, width: result.data.width, height: result.data.height, status: "ready" }
         : image));
       return result.data;
     }));
@@ -227,6 +226,12 @@ export default function SellerProductsPage() {
     setUploadingImages(false);
   }
 
+  function uploadProductImages(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    void uploadProductImageFiles(files);
+  }
+
   async function retryProductImage(id: string) {
     const image = uploadedImages.find((entry) => entry.id === id);
     if (!image || image.status !== "failed") return;
@@ -240,7 +245,7 @@ export default function SellerProductsPage() {
         await fetch("/api/seller/products/media", { method: "POST", body: form })
       );
       setUploadedImages((current) => current.map((entry) => entry.id === id
-        ? { ...entry, url: result.data.url, provider: result.data.provider, mimeType: result.data.mimeType ?? image.file.type, storageKey: result.data.storageKey, width: result.data.width, height: result.data.height, status: "ready", error: undefined }
+        ? { ...entry, url: result.data.url, provider: result.data.provider, mimeType: result.data.mimeType ?? image.file.type, storageKey: result.data.storageKey, deleteToken: result.data.deleteToken, width: result.data.width, height: result.data.height, status: "ready", error: undefined }
         : entry));
       setError("");
       toast.success(translate(locale, "Image uploaded successfully.", "تم رفع الصورة بنجاح."));
@@ -253,12 +258,25 @@ export default function SellerProductsPage() {
     }
   }
 
+  async function deleteTemporaryProductImage(deleteToken?: string) {
+    if (!deleteToken || !storeId) return;
+    try {
+      const result = await json<{ deleted: boolean; warning?: string }>(await fetch("/api/seller/products/media", {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, deleteToken })
+      }));
+      if (!result.deleted && result.warning) toast.warning(translate(locale, "The image was removed from this draft, but the provider could not delete the remote file.", "تمت إزالة الصورة من المسودة، لكن مزود التخزين لم يتمكن من حذف الملف البعيد."));
+    } catch {
+      toast.warning(translate(locale, "The image was removed from this draft, but remote cleanup could not be confirmed.", "تمت إزالة الصورة من المسودة، لكن تعذر تأكيد حذف الملف البعيد."));
+    }
+  }
+
   function removeProductImage(id: string) {
-    setUploadedImages((current) => {
-      const image = current.find((entry) => entry.id === id);
-      if (image) URL.revokeObjectURL(image.previewUrl);
-      return current.filter((entry) => entry.id !== id);
-    });
+    const image = uploadedImages.find((entry) => entry.id === id);
+    if (!image) return;
+    setUploadedImages((current) => current.filter((entry) => entry.id !== id));
+    URL.revokeObjectURL(image.previewUrl);
+    void deleteTemporaryProductImage(image.deleteToken);
   }
 
   function moveProductImage(id: string, direction: -1 | 1) {
@@ -274,6 +292,14 @@ export default function SellerProductsPage() {
 
   async function createProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (uploadingImages || uploadedImages.some((image) => image.status === "uploading")) {
+      setError(translate(locale, "Wait for image uploads to finish before saving the product.", "انتظر حتى يكتمل رفع الصور قبل حفظ المنتج."));
+      return;
+    }
+    if (uploadedImages.some((image) => image.status === "failed")) {
+      setError(translate(locale, "Retry or remove failed images before saving the product.", "أعد محاولة رفع الصور الفاشلة أو احذفها قبل حفظ المنتج."));
+      return;
+    }
     if (isRealEstate && (productLocation.latitude == null || productLocation.longitude == null || !floorArea || Number(floorArea) <= 0)) {
       setError(translate(locale, "Real-estate listings need a map location and a positive floor area.", "تحتاج الإعلانات العقارية إلى موقع على الخريطة ومساحة موجبة."));
       return;
@@ -330,13 +356,14 @@ export default function SellerProductsPage() {
         const form = new FormData();
         form.append("file", file, file.name);
         form.append("storeId", storeId);
-        const result = await json<{ success: true; data: { url: string; storageKey?: string; mimeType?: string; width?: number; height?: number } }>(
+        const result = await json<{ success: true; data: { url: string; storageKey?: string; deleteToken?: string; mimeType?: string; width?: number; height?: number } }>(
           await fetch("/api/seller/products/media", { method: "POST", body: form })
         );
         return {
           id: crypto.randomUUID(),
           url: result.data.url,
           storageKey: result.data.storageKey ?? null,
+          deleteToken: result.data.deleteToken,
           mimeType: result.data.mimeType ?? file.type,
           width: result.data.width ?? null,
           height: result.data.height ?? null,
@@ -369,9 +396,11 @@ export default function SellerProductsPage() {
   }
 
   function removeEditProductImage(id: string) {
+    const removed = editMedia.find((item) => item.id === id);
     setEditMedia((current) => current.filter((item) => item.id !== id).map((item, index) => ({
       ...item, sortOrder: index, isPrimary: index === 0
     })));
+    if (removed?.deleteToken) void deleteTemporaryProductImage(removed.deleteToken);
   }
 
   function moveEditProductImage(id: string, direction: -1 | 1) {
@@ -400,7 +429,7 @@ export default function SellerProductsPage() {
             propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea },
             latitude: editProductLocation.latitude, longitude: editProductLocation.longitude
           } : {}),
-          media: editMedia.map(({ id: _id, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 }))
+          media: editMedia.map(({ id: _id, deleteToken: _deleteToken, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 }))
         })
       }));
       setEditingId("");
@@ -610,7 +639,7 @@ export default function SellerProductsPage() {
                 </article>)}
               </div> : <p className="rounded-lg bg-[var(--surface-soft)] p-4 text-xs text-[var(--muted)]">{translate(locale, "No images yet. Add at least one image to make the product easier to recognize.", "لا توجد صور بعد. أضف صورة واحدة على الأقل لتسهيل التعرف على المنتج.")}</p>}
             </section>
-            <div className="flex gap-2"><button disabled={busy || editMediaUploading} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" disabled={busy || editMediaUploading} onClick={() => { setEditingId(""); setEditMedia([]); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
+            <div className="flex gap-2"><button disabled={busy || editMediaUploading} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" disabled={busy || editMediaUploading} onClick={() => { editMedia.forEach((item) => { if (item.deleteToken) void deleteTemporaryProductImage(item.deleteToken); }); setEditingId(""); setEditMedia([]); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
           </form>}
         </section>
       </div>}
