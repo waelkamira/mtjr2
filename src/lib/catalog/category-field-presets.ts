@@ -62,3 +62,21 @@ export function buildCategoryFieldsForEdit(
     .map(([key, value]) => ({ key, label: key, value: String(value) }));
   return [...standard, ...additional];
 }
+
+/** Apply scalar editor values while preserving non-scalar legacy JSON fields. */
+export function mergeEditedCategoryFields(
+  savedValues: unknown,
+  currentFields: Array<{ key: string; value: string }>
+): Record<string, unknown> {
+  const result: Record<string, unknown> = savedValues && typeof savedValues === "object" && !Array.isArray(savedValues)
+    ? { ...(savedValues as Record<string, unknown>) }
+    : {};
+  for (const field of currentFields) {
+    const key = field.key.trim();
+    if (!key) continue;
+    const value = field.value.trim();
+    if (value) result[key] = value;
+    else delete result[key];
+  }
+  return result;
+}
