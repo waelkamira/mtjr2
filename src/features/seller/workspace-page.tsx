@@ -258,28 +258,43 @@ export default function SellerWorkspacePage() {
   const sellerMetrics = [
     {
       label: translate(locale, "Seller orders", "طلبات البائع"),
-      value: ordersLoading || ordersError ? "—" : formatMetric(selectedStoreOrders.length),
-      description: ordersLoading
-        ? translate(locale, "Loading recent order data…", "جارٍ تحميل بيانات الطلبات الأخيرة…")
-        : ordersError
-          ? translate(locale, "Order data is temporarily unavailable.", "بيانات الطلبات غير متاحة مؤقتًا.")
-          : selectedStoreOrders.length
-            ? translate(locale, "Latest accessible orders for this store.", "أحدث الطلبات المتاحة لهذا المتجر.")
-            : translate(locale, "No orders yet.", "لا توجد طلبات بعد."),
-      color: "#F0660D",
-      icon: "☷"
+      value: analyticsLoading || analyticsError || sellerAnalytics?.metrics.totalOrders == null ? "—" : formatMetric(sellerAnalytics.metrics.totalOrders),
+      description: analyticsLoading
+        ? translate(locale, "Loading store sales and order data…", "جارٍ تحميل بيانات المبيعات والطلبات…")
+        : analyticsError
+          ? translate(locale, "Order analytics are temporarily unavailable.", "تحليلات الطلبات غير متاحة مؤقتًا.")
+          : translate(locale, "Confirmed, processing, shipped and delivered orders in this period.", "الطلبات المؤكدة وقيد المعالجة والشحن والتسليم خلال هذه الفترة."),
+      color: "#9384B5",
+      icon: "▤"
+    },
+    {
+      label: translate(locale, "Gross sales", "إجمالي المبيعات"),
+      value: analyticsLoading || analyticsError ? "—" : grossSalesSummary,
+      description: translate(locale, "Shown separately by currency; unpaid and cancelled orders are excluded.", "تُعرض كل عملة بشكل مستقل؛ ولا تشمل الطلبات غير المدفوعة أو الملغاة."),
+      color: "#CE8A5A",
+      icon: "↗"
+    },
+    {
+      label: translate(locale, "Active products", "المنتجات النشطة"),
+      value: analyticsLoading || analyticsError || sellerAnalytics?.metrics.activeProducts == null ? "—" : formatMetric(sellerAnalytics.metrics.activeProducts),
+      description: sellerAnalytics?.metrics.pendingProducts == null
+        ? translate(locale, "Catalog access is not available for this role.", "صلاحية عرض الكتالوج غير متاحة لهذا الدور.")
+        : translate(locale, "{count} products are awaiting approval.", "{count} منتجات بانتظار الموافقة.").replace("{count}", formatMetric(sellerAnalytics.metrics.pendingProducts)),
+      color: "#5E9878",
+      icon: "▧"
+    },
+    {
+      label: translate(locale, "Returns awaiting review", "مرتجعات بانتظار المراجعة"),
+      value: analyticsLoading || analyticsError || sellerAnalytics?.metrics.requestedReturns == null ? "—" : formatMetric(sellerAnalytics.metrics.requestedReturns),
+      description: translate(locale, "Customer return requests for this store.", "طلبات إرجاع العملاء الخاصة بهذا المتجر."),
+      color: "#C47D96",
+      icon: "↶"
     },
     {
       label: translate(locale, "Orders to fulfill", "طلبات بانتظار التجهيز"),
-      value: ordersLoading || ordersError ? "—" : formatMetric(fulfillmentOrderCount),
-      description: ordersLoading
-        ? translate(locale, "Loading order data…", "جارٍ تحميل بيانات الطلبات…")
-        : ordersError
-          ? translate(locale, "Order data is temporarily unavailable.", "بيانات الطلبات غير متاحة مؤقتًا.")
-          : fulfillmentOrderCount
-            ? translate(locale, "Confirmed, processing, and ready-to-ship orders.", "الطلبات المؤكدة وقيد المعالجة والجاهزة للشحن.")
-            : translate(locale, "Nothing to fulfill right now.", "لا توجد طلبات للتجهيز حاليًا."),
-      color: "#D88363",
+      value: analyticsLoading || analyticsError ? "—" : formatMetric(fulfillmentOrderCount),
+      description: translate(locale, "Confirmed, processing, and ready-to-ship orders.", "الطلبات المؤكدة وقيد المعالجة والجاهزة للشحن."),
+      color: "#CE8A5A",
       icon: "＋"
     },
     {
@@ -289,10 +304,8 @@ export default function SellerWorkspacePage() {
         ? translate(locale, "Loading inventory…", "جارٍ تحميل المخزون…")
         : inventoryError
           ? translate(locale, "Inventory data is temporarily unavailable.", "بيانات المخزون غير متاحة مؤقتًا.")
-          : inventory.length
-            ? translate(locale, "Across this store’s warehouse records.", "في سجلات مستودعات هذا المتجر.")
-            : translate(locale, "No inventory records yet.", "لا توجد سجلات مخزون بعد."),
-      color: "#688B72",
+          : translate(locale, "Across this store’s warehouse records.", "في سجلات مستودعات هذا المتجر."),
+      color: "#5E9878",
       icon: "▦"
     },
     {
@@ -304,11 +317,20 @@ export default function SellerWorkspacePage() {
           ? translate(locale, "Inventory data is temporarily unavailable.", "بيانات المخزون غير متاحة مؤقتًا.")
           : lowStockCount
             ? translate(locale, "Inventory records at or below reorder point.", "سجلات المخزون عند حد إعادة الطلب أو دونه.")
-            : inventory.length
-              ? translate(locale, "No inventory is below its reorder point.", "لا يوجد مخزون دون حد إعادة الطلب.")
-              : translate(locale, "No inventory records yet.", "لا توجد سجلات مخزون بعد."),
-      color: "#8CA5B5",
+            : translate(locale, "No inventory is below its reorder point.", "لا يوجد مخزون دون حد إعادة الطلب."),
+      color: "#B38E3F",
       icon: "⚠"
+    },
+    {
+      label: translate(locale, "Store rating", "تقييم المتجر"),
+      value: analyticsLoading || analyticsError || sellerAnalytics?.metrics.averageRating == null
+        ? "—"
+        : `${sellerAnalytics.metrics.averageRating.toFixed(1)} / 5`,
+      description: sellerAnalytics?.metrics.reviewCount == null
+        ? translate(locale, "Review access is not available for this role.", "صلاحية عرض التقييمات غير متاحة لهذا الدور.")
+        : translate(locale, "{count} published customer reviews.", "{count} تقييمات منشورة من العملاء.").replace("{count}", formatMetric(sellerAnalytics.metrics.reviewCount)),
+      color: "#B38E3F",
+      icon: "★"
     }
   ];
 
