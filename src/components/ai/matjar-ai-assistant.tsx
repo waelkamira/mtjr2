@@ -42,7 +42,8 @@ type Message = { role: "user" | "assistant"; content: string; products?: Product
 const suggestions = [
   "ابحث عن منتجات إلكترونية",
   "ما المنتجات المتوفرة في المتجر؟",
-  "كيف أتواصل مع خدمة العملاء؟"
+  "كيف أتواصل مع خدمة العملاء؟",
+  "اعرض تذاكر الدعم الخاصة بي"
 ];
 
 export default function MatjarAIAssistant() {
