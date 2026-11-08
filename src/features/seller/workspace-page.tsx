@@ -23,7 +23,7 @@ type Workspace = {
   seller: null | { id: string; status: string; legalName: string | null; displayName: string | null };
   stores: Store[];
 };
-type ShippingRate = { id: string; market: { code: string; name: string }; currencyCode: string; name: string; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean };
+type ShippingRate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; name: string; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean };
 type InventoryRow = {
   id: string; quantityOnHand: number; quantityReserved: number; quantityAvailable: number;
   reorderPoint: number; isLowStock: boolean;
@@ -70,6 +70,7 @@ export default function SellerWorkspacePage() {
   const [shippingRegion, setShippingRegion] = useState("");
   const [shippingMinDays, setShippingMinDays] = useState("");
   const [shippingMaxDays, setShippingMaxDays] = useState("");
+  const [editingShippingRateId, setEditingShippingRateId] = useState("");
   const [legalName, setLegalName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -425,20 +426,32 @@ export default function SellerWorkspacePage() {
                       <h3 className="font-semibold">{translate(locale, "Shipping services", "خدمات الشحن")}</h3>
                       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Rates are scoped to a market and optional destination region. Enter the amount in the selected currency&apos;s minor units.", "ترتبط الأسعار بسوق ومنطقة وجهة اختيارية. أدخل المبلغ بأصغر وحدة للعملة المحددة.")}</p>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {shippingRates.map((rate) => <div key={rate.id} className="rounded-xl bg-[var(--color-ivory-100)] p-3 text-sm"><p className="font-semibold">{rate.name} · {rate.market.name}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.amountMinor} {rate.currencyCode} {translate(locale, "minor units", "وحدة فرعية")}{rate.destinationRegion ? ` · ${rate.destinationRegion}` : ` · ${translate(locale, "All regions", "جميع المناطق")}`}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "يومًا")} · {rate.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</p></div>)}
+                        {shippingRates.map((rate) => <div key={rate.id} className="rounded-xl border border-[var(--border)] bg-white p-3 text-sm shadow-sm"><div className="flex items-start justify-between gap-2"><p className="font-semibold">{rate.name} · {rate.market.name}</p><button type="button" onClick={() => { setEditingShippingRateId(rate.id); setShippingMarketId(rate.marketId); setShippingName(rate.name); setShippingAmount(rate.amountMinor); setShippingRegion(rate.destinationRegion ?? ""); setShippingMinDays(rate.minDeliveryDays?.toString() ?? ""); setShippingMaxDays(rate.maxDeliveryDays?.toString() ?? ""); }} className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-semibold">{translate(locale, "Edit", "تعديل")}</button></div><p className="mt-1 text-xs text-[var(--muted)]">{rate.amountMinor} {rate.currencyCode} {translate(locale, "minor units", "وحدة فرعية")}{rate.destinationRegion ? ` · ${rate.destinationRegion}` : ` · ${translate(locale, "All regions", "جميع المناطق")}`}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "يومًا")} · {rate.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</p></div>)}
                         {!shippingRates.length && <p className="rounded-xl bg-[var(--color-ivory-100)] p-4 text-xs text-[var(--muted)]">{translate(locale, "No shipping services configured.", "لم يتم إعداد خدمات شحن.")}</p>}
                       </div>
                       {selectedStore.isOwner && <form onSubmit={async (event) => {
                         event.preventDefault();
                         const market = selectedStore.markets.find((item) => item.market.id === shippingMarketId);
                         if (!market) return;
-                        await submit(event, "/api/seller/shipping-rates", {
-                          storeId: selectedStore.id, marketId: market.market.id, currencyCode: market.market.defaultCurrencyCode,
-                          name: shippingName, amountMinor: shippingAmount,
-                          destinationRegion: shippingRegion || null,
-                          minDeliveryDays: shippingMinDays ? Number(shippingMinDays) : null,
-                          maxDeliveryDays: shippingMaxDays ? Number(shippingMaxDays) : null
-                        }, "Shipping service created.");
+                        setBusy(true); setError(""); setMessage("");
+                        try {
+                          await readJson(await fetch(editingShippingRateId ? `/api/seller/shipping-rates/${encodeURIComponent(editingShippingRateId)}` : "/api/seller/shipping-rates", {
+                            method: editingShippingRateId ? "PATCH" : "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              storeId: selectedStore.id, marketId: market.market.id, currencyCode: market.market.defaultCurrencyCode,
+                              name: shippingName, amountMinor: shippingAmount,
+                              destinationRegion: shippingRegion || null,
+                              minDeliveryDays: shippingMinDays ? Number(shippingMinDays) : null,
+                              maxDeliveryDays: shippingMaxDays ? Number(shippingMaxDays) : null
+                            })
+                          }));
+                          setMessage(translate(locale, editingShippingRateId ? "Shipping service updated." : "Shipping service created.", editingShippingRateId ? "تم تحديث خدمة الشحن." : "تم إنشاء خدمة الشحن."));
+                          setEditingShippingRateId(""); setShippingName(""); setShippingAmount("0"); setShippingRegion(""); setShippingMinDays(""); setShippingMaxDays("");
+                          const refreshed = await readJson<{ rates: ShippingRate[] }>(await fetch(`/api/seller/shipping-rates?storeId=${encodeURIComponent(selectedStore.id)}`, { cache: "no-store" }));
+                          setShippingRates(refreshed.rates);
+                        } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Shipping service could not be saved.", "تعذر حفظ خدمة الشحن.")); }
+                        finally { setBusy(false); }
                       }} className="mt-4 grid gap-3 rounded-xl border border-dashed border-[var(--border)] p-4 sm:grid-cols-2">
                         <label className="grid gap-1 text-xs">{translate(locale, "Market", "السوق")}<select required value={shippingMarketId} onChange={(e) => setShippingMarketId(e.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"><option value="">{translate(locale, "Choose market", "اختر سوقًا")}</option>{selectedStore.markets.map(({ market }) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrencyCode}</option>)}</select></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Service name", "اسم الخدمة")}<input required minLength={2} maxLength={120} value={shippingName} onChange={(e) => setShippingName(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
@@ -446,7 +459,7 @@ export default function SellerWorkspacePage() {
                         <label className="grid gap-1 text-xs">{translate(locale, "Destination region", "منطقة الوجهة")}<input maxLength={120} value={shippingRegion} onChange={(e) => setShippingRegion(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Minimum days", "الحد الأدنى للأيام")}<input type="number" min="0" max="365" value={shippingMinDays} onChange={(e) => setShippingMinDays(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Maximum days", "الحد الأقصى للأيام")}<input type="number" min="0" max="365" value={shippingMaxDays} onChange={(e) => setShippingMaxDays(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
-                        <button disabled={busy || !selectedStore.markets.length} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 sm:col-span-2">{translate(locale, "Add shipping service", "إضافة خدمة شحن")}</button>
+                        <button disabled={busy || !selectedStore.markets.length} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 sm:col-span-2">{translate(locale, editingShippingRateId ? "Save changes" : "Add shipping service", editingShippingRateId ? "حفظ التعديلات" : "إضافة خدمة شحن")}</button>{editingShippingRateId && <button type="button" onClick={() => { setEditingShippingRateId(""); setShippingName(""); setShippingAmount("0"); setShippingRegion(""); setShippingMinDays(""); setShippingMaxDays(""); }} className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-xs font-semibold">{translate(locale, "Cancel edit", "إلغاء التعديل")}</button>}
                       </form>}
                     </div>
                     <div className="mt-7">
