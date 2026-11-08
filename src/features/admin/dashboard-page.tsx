@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
@@ -83,9 +84,7 @@ function defaultFilters(): Filters {
 }
 
 function money(amountMinor: string, currencyCode: string, minorUnit: number): string {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode }).format(
-    Number(amountMinor) / (10 ** minorUnit)
-  );
+  return formatMinorUnits(amountMinor, currencyCode, minorUnit);
 }
 
 function MetricCard({
