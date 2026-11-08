@@ -25,7 +25,9 @@ export async function deleteProductImage(storageKey: string): Promise<DeleteResu
     const configuredClientId = (process.env.IMGUR_CLIENT_IDS?.trim() || process.env.IMGUR_CLIENT_ID?.trim() || "")
       .split(/[;,\\n]/).map((value) => value.trim()).find(Boolean);
     const clientId = storedImgurClientId || configuredClientId;
-    const authorization = token ? `Bearer ${token}` : clientId ? `Client-ID ${clientId}` : null;
+    const authorization = storedImgurClientId
+      ? `Client-ID ${storedImgurClientId}`
+      : token ? `Bearer ${token}` : clientId ? `Client-ID ${clientId}` : null;
     if (!authorization) return "unsupported";
     const response = await fetch(`https://api.imgur.com/3/image/${encodeURIComponent(assetId)}`, {
       method: "DELETE",
