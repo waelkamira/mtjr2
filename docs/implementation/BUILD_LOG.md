@@ -2775,3 +2775,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 - Follow-up review found the governorate zoom assertion was unconditional, unlike the district/subdistrict/locality assertions. The picker correctly leaves the map focus unchanged when a geography record has no coordinates; the test now asserts zoom 7 only when both governorate coordinates exist.
 - This is a test reliability correction, not a change to geography runtime behavior. Exact-head CI and Browser E2E are pending on the preceding main commit; this new test commit will trigger fresh runs.
+
+
+## 2026-11-08 — Seller draft create/edit coverage and CI queue stability
+
+- Added a real seller-browser journey in `tests/e2e/marketplace.spec.ts`: sign in as the seeded seller, load the Akaar phone category, simulate only the external image-storage response, submit a draft through the real product API, verify the saved draft in the seller catalog API, open Edit draft, save changed name/slug through the real PATCH API, and verify persisted values.
+- The existing Syrian geography/Leaflet test now guards governorate zoom by coordinate availability, matching the picker behavior.
+- Changed both CI workflow concurrency groups to preserve in-flight quality/browser runs during rapid direct commits to canonical `main`. Previous `cancel-in-progress: true` cancelled runs while documentation updates were being committed in sequence; new pushes will queue instead of cancelling active work.
+- These latest changes are on `main`; the exact-head quality and Browser E2E runs are queued behind earlier runs. Do not claim the new create/edit browser journey passed until its Chromium run completes.
