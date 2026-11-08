@@ -42,7 +42,7 @@ const mapping = {
 };
 
 function englishKey(value) {
-  return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\\s+/g, " ").trim();
 }
 async function ensureTranslation(tx, categoryId, locale, name) {
   await tx.categoryTranslation.upsert({
@@ -54,7 +54,7 @@ async function ensureTranslation(tx, categoryId, locale, name) {
 async function main() {
   const imported = (await Promise.all(dataFiles.map(async (url) => JSON.parse(await readFile(url, "utf8"))))).flatMap((item) => item.categories);
   const skipped = [];
-  let createdFields = 0;
+  let linkedFields = 0;
   for (const item of imported) {
     const target = mapping[item.categoryAr];
     if (!target) { skipped.push(item.categoryAr); continue; }
@@ -93,18 +93,21 @@ async function main() {
         update: { name: englishKey(field.key) },
         create: { attributeDefinitionId: definition.id, locale: "en", name: englishKey(field.key) }
       });
+      // Akaar's source definitions do not declare mandatory fields. Keep them optional
+      // until product-domain requirements are explicitly reviewed and versioned.
+      const isRequired = field.required === true;
       await prisma.categoryAttribute.upsert({
         where: { categoryId_attributeDefinitionId: { categoryId: child.id, attributeDefinitionId: definition.id } },
-        update: { sortOrder: index, isRequired: true, options: field.options.length ? field.options : undefined },
+        update: { sortOrder: index, isRequired, options: field.options.length ? field.options : undefined },
         create: {
           categoryId: child.id, attributeDefinitionId: definition.id, sortOrder: index,
-          isRequired: true, options: field.options.length ? field.options : undefined
+          isRequired, options: field.options.length ? field.options : undefined
         }
       });
-      createdFields += 1;
+      linkedFields += 1;
     }
   }
-  console.info(`Imported ${imported.length} Akaar category field sets and linked ${createdFields} attribute definitions.`);
+  console.info(`Imported ${imported.length} Akaar category field sets and linked ${linkedFields} attribute definitions.`);
   if (skipped.length) console.info("Kept outside product taxonomy (separate domain):", skipped.join(", "));
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(async () => prisma.$disconnect());
