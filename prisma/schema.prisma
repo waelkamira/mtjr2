@@ -588,6 +588,19 @@ model Seller {
   status      SellerStatus @default(PENDING)
   legalName   String?
   displayName String?
+  contactName String?
+  contactEmail String?
+  phoneNumber String?
+  residence String?
+  businessType String?
+  sellingCategories String?
+  intendedProducts String? @db.Text
+  description String? @db.Text
+  facebookUrl String?
+  youtubeUrl String?
+  twitterUrl String?
+  latitude Float?
+  longitude Float?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   owner       User         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
