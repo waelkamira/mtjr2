@@ -2604,3 +2604,8 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Added regression tests for preserving legacy Akaar scalar fields, retaining values across primary-category changes, allowing intentional clearing of a field, and avoiding mutation of saved/current input objects.
 - Nested JSON values are deliberately not rendered as scalar text inputs; their original values are not silently coerced into `[object Object]`.
 - Tests were added but could not be executed in this session. The branch remains blocked from hosted build verification by the Vercel deployment quota.
+
+**Additional preservation safeguard**
+- The draft editor now starts its save merge from the product's original JSON object and overlays only the visible scalar fields. This prevents legacy nested custom-field values from being discarded when the editor saves unrelated product changes.
+- Clearing a visible scalar field explicitly removes only that key; nested/unrendered legacy values remain intact.
+- Added a focused regression test for nested JSON preservation, scalar update, and intentional scalar clearing. Test execution remains pending.
