@@ -121,7 +121,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
       return;
     }
     let active = true;
-    const sponsoredParams = new URLSearchParams({ marketId: selectedMarketId, q: product.name });
+    const sponsoredParams = new URLSearchParams({ marketId: selectedMarketId, q: product.name.slice(0, 120) });
     for (const category of product.categories) sponsoredParams.append("categoryId", category.id);
     if (product.brand?.id) sponsoredParams.set("brandId", product.brand.id);
     fetch(`/api/advertising/sponsored?${sponsoredParams.toString()}`, { cache: "no-store" })
