@@ -147,20 +147,18 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   function chooseLocality(id: string) {
     const item = localities.find((entry) => entry.id === id);
+    const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
     onChange({
       localityId: id || undefined,
       neighborhood: value.neighborhood,
-      ...(item?.latitude !== null && item?.latitude !== undefined && item.longitude !== null && item.longitude !== undefined
-        ? { latitude: item.latitude, longitude: item.longitude }
-        : {})
+      ...(hasCoordinates ? { latitude: item!.latitude!, longitude: item!.longitude! } : {})
     });
-    if (item?.latitude !== null && item?.latitude !== undefined && item.longitude !== null && item.longitude !== undefined) {
-      setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 14 });
-    }
+    if (hasCoordinates) setFocus({ latitude: item!.latitude!, longitude: item!.longitude!, zoom: 14 });
   }
 
   function updateCoordinates(coords: { latitude: number; longitude: number }) {
     onChange({ ...value, ...coords });
+    setFocus({ ...coords, zoom: 15 });
   }
 
   const fieldClass = "mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-sm text-[var(--color-ink-900)] outline-none transition focus:border-[var(--color-forest-500)] focus:ring-2 focus:ring-[var(--color-forest-500)]/10 disabled:cursor-not-allowed disabled:opacity-50";
