@@ -35,7 +35,8 @@ async function main() {
   ]);
 
   const governorateIds = new Set(governorates.map((row) => row.id));
-  const districtIds = new Set(districts.map((row) => row.id));
+  const districtById = new Map(districts.map((row) => [row.id, row]));
+  const districtIds = new Set(districtById.keys());
   const subdistrictById = new Map(subdistricts.map((row) => [row.id, row]));
   const subdistrictIds = new Set(subdistrictById.keys());
   const allSourceRows = [...governorates, ...districts, ...subdistricts, ...localities];
@@ -45,10 +46,16 @@ async function main() {
     if (typeof row.sourceStatus !== "string" || !row.sourceStatus) throw new Error(`Geography record ${row.id} has no source review status.`);
   }
   for (const row of districts) if (!governorateIds.has(row.governorateId)) throw new Error(`Unknown governorate ${row.governorateId} in district ${row.id}`);
-  for (const row of subdistricts) if (!governorateIds.has(row.governorateId) || !districtIds.has(row.districtId)) throw new Error(`Invalid parent chain for subdistrict ${row.id}`);
+  for (const row of subdistricts) {
+    const parent = districtById.get(row.districtId);
+    if (!governorateIds.has(row.governorateId) || !parent || parent.governorateId !== row.governorateId) {
+      throw new Error(`Invalid governorate/district parent chain for subdistrict ${row.id}`);
+    }
+  }
   for (const row of localities) {
     if (!governorateIds.has(row.governorateId)) throw new Error(`Unknown governorate for locality ${row.id}`);
-    if (row.districtId && !districtIds.has(row.districtId)) throw new Error(`Unknown district for locality ${row.id}`);
+    const district = row.districtId ? districtById.get(row.districtId) : null;
+    if (row.districtId && (!district || district.governorateId !== row.governorateId)) throw new Error(`Invalid district parent for locality ${row.id}`);
     if (row.subdistrictId && !subdistrictIds.has(row.subdistrictId)) throw new Error(`Unknown subdistrict for locality ${row.id}`);
     const parent = row.subdistrictId ? subdistrictById.get(row.subdistrictId) : null;
     if (row.subdistrictId && !parent) throw new Error(`Unknown subdistrict for locality ${row.id}`);
