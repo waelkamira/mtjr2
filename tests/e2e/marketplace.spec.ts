@@ -142,6 +142,7 @@ test.describe("seller journey", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/seller");
     await expect(page.getByRole("heading", { name: /Seller dashboard|لوحة تحكم البائع/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-desktop.png", fullPage: true });
     await page.goto("/seller/advertising");
@@ -150,6 +151,7 @@ test.describe("seller journey", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/seller");
     await expect(page.getByRole("heading", { name: /Seller dashboard|لوحة تحكم البائع/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-mobile.png", fullPage: true });
     await page.goto("/seller/advertising");
