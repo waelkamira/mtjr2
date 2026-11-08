@@ -18,7 +18,7 @@ ALTER TABLE "CategoryAttribute" ADD CONSTRAINT "CategoryAttribute_attributeDefin
 
 CREATE TABLE "SyriaGovernorate" (
   "id" TEXT NOT NULL, "nameEn" TEXT NOT NULL, "nameAr" TEXT, "latitude" DOUBLE PRECISION, "longitude" DOUBLE PRECISION,
-  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB, "sourceStatus" VARCHAR(24),
+  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB NOT NULL, "sourceStatus" VARCHAR(24) NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "SyriaGovernorate_pkey" PRIMARY KEY ("id")
 );
@@ -27,7 +27,7 @@ CREATE INDEX "SyriaGovernorate_nameEn_idx" ON "SyriaGovernorate"("nameEn");
 
 CREATE TABLE "SyriaDistrict" (
   "id" TEXT NOT NULL, "governorateId" TEXT NOT NULL, "nameEn" TEXT NOT NULL, "nameAr" TEXT, "latitude" DOUBLE PRECISION, "longitude" DOUBLE PRECISION,
-  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB, "sourceStatus" VARCHAR(24),
+  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB NOT NULL, "sourceStatus" VARCHAR(24) NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "SyriaDistrict_pkey" PRIMARY KEY ("id")
 );
@@ -37,7 +37,7 @@ ALTER TABLE "SyriaDistrict" ADD CONSTRAINT "SyriaDistrict_governorateId_fkey" FO
 
 CREATE TABLE "SyriaSubdistrict" (
   "id" TEXT NOT NULL, "governorateId" TEXT NOT NULL, "districtId" TEXT NOT NULL, "nameEn" TEXT NOT NULL, "nameAr" TEXT, "latitude" DOUBLE PRECISION, "longitude" DOUBLE PRECISION,
-  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB, "sourceStatus" VARCHAR(24),
+  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB NOT NULL, "sourceStatus" VARCHAR(24) NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "SyriaSubdistrict_pkey" PRIMARY KEY ("id")
 );
@@ -49,7 +49,7 @@ ALTER TABLE "SyriaSubdistrict" ADD CONSTRAINT "SyriaSubdistrict_governorateId_fk
 CREATE TABLE "SyriaLocality" (
   "id" TEXT NOT NULL, "governorateId" TEXT NOT NULL, "districtId" TEXT, "subdistrictId" TEXT,
   "nameEn" TEXT NOT NULL, "nameAr" TEXT, "kind" TEXT NOT NULL, "latitude" DOUBLE PRECISION, "longitude" DOUBLE PRECISION,
-  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB, "sourceStatus" VARCHAR(24),
+  "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB, "sourceReferences" JSONB NOT NULL, "sourceStatus" VARCHAR(24) NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "SyriaLocality_pkey" PRIMARY KEY ("id")
 );
