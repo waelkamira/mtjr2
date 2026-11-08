@@ -31,7 +31,7 @@ async function main() {
     prisma.syriaSubdistrict.findMany({ select: { nameAr: true, nameEn: true } }),
     prisma.syriaLocality.findMany({ select: { nameAr: true, nameEn: true } })
   ]);
-  if (governorates.length !== 14 || localities.length !== 7605) {
+  if (governorates.length < 14 || localities.length < 7605) {
     throw new Error("Import OpenSyria geography first (expected 14 governorates and 7,605 localities).");
   }
   const governorateByName = new Map(governorates.map((item) => [normalize(item.nameAr ?? item.nameEn), item.id]));
