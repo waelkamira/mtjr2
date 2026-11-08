@@ -101,7 +101,7 @@ export default function SellerProductsPage() {
     Promise.all([
       fetch("/api/seller/stores", { cache: "no-store" }).then((r) => json<Workspace>(r)),
       fetch("/api/markets").then((r) => json<{ items: Market[] }>(r)),
-      fetch("/api/categories?limit=100").then((r) => json<{ items: Category[] }>(r)),
+      fetch("/api/categories?limit=100&includeEmpty=true").then((r) => json<{ items: Category[] }>(r)),
       fetch("/api/brands?limit=100").then((r) => json<{ items: Brand[] }>(r))
     ]).then(([workspace, marketResult, categoryResult, brandResult]) => {
       if (!active) return;
