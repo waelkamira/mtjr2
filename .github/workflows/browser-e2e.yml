@@ -1,0 +1,81 @@
+name: Browser E2E
+
+on:
+  push:
+    branches: ["feat/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: mtjr2_e2e_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d mtjr2_e2e_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_e2e_ci?schema=public
+      DEMO_DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_e2e_ci?schema=public
+      AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
+      APP_URL: http://127.0.0.1:3000
+      NODE_ENV: development
+      TRUSTED_PROXY_IP_HEADER: cf-connecting-ip
+      PUBLIC_REGISTRATION_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - run: npx prisma migrate deploy
+      - run: npx prisma generate
+      - name: Seed isolated demo catalog and roles
+        run: npm run db:seed
+        env:
+          SEED_DEMO_CATALOG: "true"
+          ALLOW_DEMO_CATALOG_SEED: "true"
+      - run: node scripts/e2e-bootstrap.cjs
+      - run: npm install --no-save --package-lock=false @playwright/test
+      - run: npx playwright install --with-deps chromium
+      - name: Build production application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      - name: Start production application
+        run: |
+          NODE_ENV=production npm run start > /tmp/mtjr2-next.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:3000/api/markets > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/mtjr2-next.log
+          exit 1
+      - run: npx playwright test
+      - name: Upload browser reports and responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mtjr2-browser-e2e
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
