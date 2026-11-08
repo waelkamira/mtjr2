@@ -131,6 +131,13 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
       if (!seller || seller.status !== SellerStatus.ACTIVE) throw new Error("An approved seller account is required to create a store.");
       sellerId = seller.id;
 
+      const ownedStore = await tx.store.findFirst({
+        where: { sellerId: seller.id },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, name: true, slug: true, status: true }
+      });
+      if (ownedStore) return { ...ownedStore, alreadyCreated: true };
+
       const existing = await tx.store.findUnique({
         where: { slug: data.slug },
         select: {
@@ -176,6 +183,14 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
       return { ...store, alreadyCreated: false };
     });
   } catch (error) {
+    const uniqueConflict = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+    if (uniqueConflict && sellerId) {
+      const ownedStore = await prisma.store.findFirst({
+        where: { sellerId }, orderBy: { createdAt: "asc" },
+        select: { id: true, name: true, slug: true, status: true }
+      });
+      if (ownedStore) return { ...ownedStore, alreadyCreated: true };
+    }
     if (!isStoreSlugConflict(error) || !sellerId) throw error;
 
     const existing = await prisma.store.findUnique({
