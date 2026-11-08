@@ -97,6 +97,8 @@ export default function SellerWorkspacePage() {
   const [facebookUrl, setFacebookUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
+  const [identityDocumentFileId, setIdentityDocumentFileId] = useState("");
+  const [identityDocumentName, setIdentityDocumentName] = useState("");
   const [sellerLatitude, setSellerLatitude] = useState<number | null>(null);
   const [sellerLongitude, setSellerLongitude] = useState<number | null>(null);
   const [storeName, setStoreName] = useState("");
@@ -416,7 +418,7 @@ export default function SellerWorkspacePage() {
               void submit(event, "/api/seller/applications", {
                 legalName, displayName, contactName, contactEmail, phoneNumber, residence, businessType,
                 sellingCategories, intendedProducts, description: sellerDescription,
-                facebookUrl, youtubeUrl, twitterUrl, latitude: sellerLatitude, longitude: sellerLongitude
+                facebookUrl, youtubeUrl, twitterUrl, identityDocumentFileId, latitude: sellerLatitude, longitude: sellerLongitude
               }, "Your seller application has been submitted.");
             }} className="mt-6 grid gap-5">
               <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
