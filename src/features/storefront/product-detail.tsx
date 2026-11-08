@@ -9,6 +9,7 @@ import ProductQuestions from "@/features/storefront/product-questions";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import ProductLocationMap from "@/components/maps/product-location-map";
+import SponsoredProductCard from "@/features/storefront/sponsored-product-card";
 
 const GUEST_WISHLIST_KEY = "mtjr:guest-wishlist:v1";
 function readGuestWishlist(): string[] {
@@ -30,6 +31,17 @@ type Price = { marketId: string; currencyCode: string; amountMinor: string; comp
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type ProductAttribute = { key: string; name: string; valueType: string; values: unknown[] };
 type VariantAttribute = { key: string; name: string; valueType: string; value: unknown };
+type SponsoredProduct = {
+  campaignId: string;
+  token: string;
+  product: {
+    id: string; slug: string; name: string; description: string | null;
+    brand: { name: string } | null;
+    store: { id: string; name: string; slug: string };
+    media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
+    variants: Array<{ prices: Array<{ amountMinor: string; currencyCode: string; currency: { minorUnit: number } }> }>;
+  };
+};
 type Product = {
   id: string; slug: string; name: string; description: string | null;
   brand: { name: string } | null; store: { id: string; name: string; slug: string };
@@ -51,6 +63,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
   const [product, setProduct] = useState<Product | null>(null);
+  const [sponsored, setSponsored] = useState<SponsoredProduct[]>([]);
   const [selectedVariant, setSelectedVariant] = useState("");
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -101,6 +114,24 @@ export default function ProductDetail({ slug }: { slug: string }) {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [slug, locale, t]);
+
+  useEffect(() => {
+    if (!product || !selectedMarketId) {
+      setSponsored([]);
+      return;
+    }
+    let active = true;
+    fetch(`/api/advertising/sponsored?marketId=${encodeURIComponent(selectedMarketId)}&q=${encodeURIComponent(product.name)}`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Sponsored products unavailable.");
+        return response.json() as Promise<{ items: SponsoredProduct[] }>;
+      })
+      .then((result) => {
+        if (active) setSponsored(result.items.filter((item) => item.product.id !== product.id));
+      })
+      .catch(() => { if (active) setSponsored([]); });
+    return () => { active = false; };
+  }, [product?.id, product?.name, selectedMarketId]);
 
   if (loading) return <main className="mx-auto min-h-screen max-w-6xl px-5 py-16"><div className="h-96 animate-pulse rounded-3xl bg-[var(--color-ivory-100)]" /></main>;
   if (error || !product) return <main className="mx-auto min-h-screen max-w-3xl px-5 py-24 text-center"><p role="alert" className="text-lg">{error || t("Product not found.", "المنتج غير موجود.")}</p><Link href="/" className="mt-6 inline-block text-sm text-[var(--color-petrol-800)] underline">{t("Back to marketplace", "العودة إلى السوق")}</Link></main>;
@@ -227,6 +258,12 @@ export default function ProductDetail({ slug }: { slug: string }) {
         <p className="mt-5 text-xs leading-6 text-[var(--muted)]">{t("Price and stock are checked again by the marketplace before an item is added.", "يتحقق السوق مجددًا من السعر والمخزون قبل إضافة المنتج.")}</p>
       </section>
     </div>
+    {sponsored.length > 0 && <section className="mx-auto max-w-6xl px-5 pb-12">
+      <h2 className="mb-4 text-xl font-semibold">{t("Sponsored products you may like", "منتجات ممولة قد تعجبك")}</h2>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {sponsored.map((item) => <SponsoredProductCard key={item.campaignId} product={item.product} token={item.token} locale={locale} />)}
+      </div>
+    </section>}
     <ProductReviews productId={product.id} />
     <StoreReviews storeId={product.store.id} storeName={product.store.name} />
     <ProductQuestions productId={product.id} />
