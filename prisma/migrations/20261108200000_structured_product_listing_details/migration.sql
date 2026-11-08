@@ -8,19 +8,6 @@ ALTER TABLE "Product"
 CREATE TYPE "PropertyType" AS ENUM ('APARTMENT', 'HOUSE', 'LAND', 'COMMERCIAL');
 CREATE TYPE "PropertyListingType" AS ENUM ('SALE', 'RENT');
 
-CREATE TABLE "ProductMapLocation" (
-  "productId" TEXT NOT NULL,
-  "latitude" DOUBLE PRECISION NOT NULL,
-  "longitude" DOUBLE PRECISION NOT NULL,
-  "publicLatitude" DOUBLE PRECISION NOT NULL,
-  "publicLongitude" DOUBLE PRECISION NOT NULL,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL,
-  CONSTRAINT "ProductMapLocation_pkey" PRIMARY KEY ("productId"),
-  CONSTRAINT "ProductMapLocation_productId_fkey"
-    FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 CREATE TABLE "ProductPropertyDetails" (
   "productId" TEXT NOT NULL,
   "propertyType" "PropertyType" NOT NULL,
