@@ -535,7 +535,7 @@ export default function SellerProductsPage() {
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(420px,.92fr)_minmax(520px,1.08fr)]">
-        <section className="rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_14px_30px_rgba(40,65,84,.12),inset_0_1px_0_white] sm:p-7">
+        <section id="create-product" className="scroll-mt-24 rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_14px_30px_rgba(40,65,84,.12),inset_0_1px_0_white] sm:p-7">
           <h2 className="text-xl font-extrabold tracking-tight text-[#2d4a60]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2>
           <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
             const nextId = e.target.value;
