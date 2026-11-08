@@ -132,7 +132,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setError("");
     if (!id) return;
     setBusy(true);
-    try { setLocalities((await loadLevel("localities", { subdistrictId: id, limit: "100" })).items); }
+    try { setLocalities((await loadLevel("localities", { districtId, subdistrictId: id, limit: "100" })).items); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load localities."); }
     finally { setBusy(false); }
   }
@@ -140,7 +140,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   async function searchLocalities() {
     if (!subdistrictId || !localityQuery.trim()) return;
     setBusy(true); setError("");
-    try { setLocalities((await loadLevel("localities", { subdistrictId, q: localityQuery.trim(), limit: "100" })).items); }
+    try { setLocalities((await loadLevel("localities", { districtId, subdistrictId, q: localityQuery.trim(), limit: "100" })).items); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to search localities."); }
     finally { setBusy(false); }
   }
