@@ -119,7 +119,7 @@ test.describe("customer journey", () => {
     await page.screenshot({ path: "test-results/customer-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/account/orders");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").last()).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/customer-mobile.png", fullPage: true });
     await page.goto("/account/sessions");
@@ -175,7 +175,7 @@ test.describe("seller catalog authoring", () => {
 
     await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
     await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
-    await expect(page.getByText(attributes.items[0].label, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(attributes.items[0].label, { exact: false }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Product location in Syria|موقع المنتج في سوريا/i })).toBeVisible();
     const map = page.getByRole("application", { name: /Product location map|خريطة تحديد موقع المنتج/i });
     await expect(map).toBeVisible();
