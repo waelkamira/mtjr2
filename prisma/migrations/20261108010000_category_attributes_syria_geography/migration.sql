@@ -47,7 +47,7 @@ ALTER TABLE "SyriaSubdistrict" ADD CONSTRAINT "SyriaSubdistrict_districtId_fkey"
 
 CREATE TABLE "SyriaLocality" (
   "id" TEXT NOT NULL, "governorateId" TEXT NOT NULL, "districtId" TEXT, "subdistrictId" TEXT,
-  "nameEn" TEXT NOT NULL, "nameAr" TEXT, "kind" TEXT, "latitude" DOUBLE PRECISION, "longitude" DOUBLE PRECISION,
+  "nameEn" TEXT NOT NULL, "nameAr" TEXT, "kind" TEXT NOT NULL, "latitude" DOUBLE PRECISION, "longitude" DOUBLE PRECISION,
   "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "SyriaLocality_pkey" PRIMARY KEY ("id")
