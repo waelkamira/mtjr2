@@ -2572,3 +2572,9 @@ The Akaar create form `app/(selling)/newPost/product-create-form.jsx` and its `a
 Matjar also persists the seller/store relation, SKU/barcode/weight, market-specific pricing, normalized real-estate details, and optional brand/variant data. Authenticated owner identity and category labels are derived by the server rather than trusted from the client.
 
 **Remaining product-model scope:** the existing create form currently exposes one variant row with a price per enabled market, while Prisma supports multiple variants; the draft editor does not yet edit variant/SKU/price rows or product attribute definitions, identifiers, and translations. These are separate follow-up work items and are not represented as completed by the field mapping above.
+
+
+**Seller pricing UX follow-up**
+- Product creation now asks sellers for a normal human-readable price in each market's selected currency, then converts the exact decimal string to minor units using that currency's own `minorUnit`.
+- The same conversion helper is used for seller shipping rates. Excess decimal precision and unsafe amount ranges are rejected instead of silently rounded.
+- The UI no longer asks sellers to manually enter values such as 1299 for a 12.99 price.
