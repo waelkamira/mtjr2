@@ -2571,3 +2571,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - These environment changes do not themselves prove a successful build or image upload. The first build attempt on commit `b438e2190e93ae89732da1ab1e8cb830898aa6b6` compiled the application bundle and completed TypeScript, then failed during page-data collection because Production lacked `AUTH_SECRET` (and `APP_URL` was also absent). A new deployment is required to verify the corrected environment.
 
 - After adding the missing production variables, a forced production deployment request was blocked by Vercel's account limit: `api-deployments-free-per-day` (more than 100 deployments; Vercel requested a 24-hour wait). The corrected environment variables are present, but the updated commit has not yet been built/deployed. Do not mark the production fix as live until a new deployment completes and an authenticated upload smoke test succeeds.
+
+
+## 2026-11-08 — Draft product image replacement and provider cleanup
+- Extended the current-main draft product update service to accept a validated replacement image gallery, preserve ordering/primary-image metadata, and replace media records transactionally.
+- Added post-commit provider deletion for removed Imgur (OAuth delete hash), ImageKit (private file ID), and Cloudinary (signed destroy API) assets. Missing provider deletion credentials fail safely as unsupported; provider failures are logged without undoing the saved product edit.
+- Added regression tests for replacement/removal, transaction failure safety, and all three provider deletion paths. Documented optional server-side deletion credentials in .env.example.
+- These source changes were committed directly to main through repository integration; GitHub Actions has not produced a run for the latest commit and Vercel remains blocked by the daily deployment quota. Do not treat the changes as verified until CI, Prisma generation, unit tests, and browser checks run successfully.
