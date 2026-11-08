@@ -68,7 +68,13 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
       minZoom: 5,
       maxZoom: 19,
       zoomControl: true,
-      scrollWheelZoom: false,
+      scrollWheelZoom: true,
+      wheelPxPerZoomLevel: 80,
+      wheelDebounceTime: 35,
+      zoomSnap: 0.5,
+      zoomDelta: 0.5,
+      doubleClickZoom: true,
+      touchZoom: true,
       preferCanvas: true
     });
     const tileUrl = process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
