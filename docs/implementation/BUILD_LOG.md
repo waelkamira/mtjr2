@@ -2899,3 +2899,8 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added focused regression coverage for reapplication and admin queue privacy. Tests are authored but not executed in this session.
 - Exact-head GitHub status still reports only the Vercel build-rate-limit failure; no successful CI run is available to claim. GitHub Actions workflow-run results are not exposed by the current connector query. Prisma migration replay, typecheck, lint, full test suite, ImageKit upload/review, and authenticated browser verification remain outstanding.
 - Added route-level tests for administrator permission enforcement, private-file owner-tag validation, and five-minute signed URL generation. Authored tests are still awaiting an executable CI result.
+## 2026-11-09 — Verify private identity upload before exposing file reference
+
+- Strengthened the authenticated identity upload endpoint: after ImageKit accepts the upload, the server now fetches the file details and confirms `isPrivateFile`, the `matjar-seller-identity` tag, and the authenticated owner's tag before returning the file ID to the browser.
+- This closes the gap where a successful upload response alone could have been treated as proof of private storage. Submission and administrator review continue to re-check file privacy and owner association.
+- Exact-head runtime verification is still pending: the current GitHub integration does not expose a workflow-dispatch action or a local repository execution environment in this session. The Vercel status remains rate-limited; no successful build or test run is claimed.
