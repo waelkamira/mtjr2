@@ -2638,3 +2638,8 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 
 **Verification status**
 - Source and tests are committed to the continuing feature branch. No test/typecheck/lint/Prisma/browser run is available for this latest set yet. The Vercel deployment quota remains a blocker; do not claim the identity restoration has passed CI until exact-head checks run.
+
+**Additional identity/environment regression coverage**
+- Added a local RSA/JWK-backed test for Google ID-token verification. It covers a valid signed token, wrong nonce/audience, expiry, unverified email, signature tampering, and malformed-token rejection without network access.
+- Added a configuration test for deriving APP_URL from VERCEL_ENV=preview and VERCEL_URL when no explicit APP_URL is configured.
+- The verification and environment tests are committed but remain unexecuted pending an available CI/runtime run.
