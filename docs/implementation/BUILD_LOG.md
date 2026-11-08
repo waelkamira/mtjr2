@@ -2693,3 +2693,12 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Restored the authenticated sign-out-all API and session invalidation service, plus account sessions UI controls.
 - Added current-main unit/API/PostgreSQL integration regression tests for logout-all and privilege-request policy.
 - Updated the admin layout to route stale Super Admin step-up sessions to the dedicated ten-minute MFA re-verification page before showing protected admin content.
+
+
+## 2026-11-08 — Syrian geography and seller category fields
+- Added a cached server proxy for OpenSyria's v0.1.5 Syrian geography API and a hierarchical governorate → district → subdistrict → city/town → locality picker.
+- Added Leaflet fly-to behavior for selected administrative levels and city/neighborhood centroids; map click-to-pin and existing coordinate privacy behavior remain in place.
+- Added stable geography identifiers to product drafts in a new nullable JSON field and a Prisma migration; existing city/district text fields remain for search/display compatibility.
+- Added category-specific select options to the existing Akaar-aligned Matjar category presets and rendered them as selects in create/edit draft forms.
+- Documented dataset attribution, upstream API quota/caching, and the important limitation that not every Syrian city has a verified neighborhood list in the source.
+- Verification is pending: Prisma migration replay, typecheck, lint, unit tests, and browser journey have not yet run successfully on the latest commit.
