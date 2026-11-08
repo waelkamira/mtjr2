@@ -743,10 +743,12 @@ model Product {
   identifiers         ProductIdentifier[]
   attributes          ProductAttribute[]
   localityId          String?
+  neighborhoodId      String?
   neighborhood        String?               @db.VarChar(120)
   latitude            Float?
   longitude           Float?
   locality            SyriaLocality?         @relation(fields: [localityId], references: [id], onDelete: SetNull)
+  neighborhoodRecord  SyriaNeighborhood?     @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
   orderItems          OrderItem[]
   reviews             ProductReview[]
   questions           ProductQuestion[]
@@ -2410,6 +2412,7 @@ model SyriaNeighborhood {
   sourceCommit         String           @db.VarChar(64)
   verificationStatus   String           @default("CANDIDATE") @db.VarChar(24)
   governorate          SyriaGovernorate @relation(fields: [governorateId], references: [id], onDelete: Cascade)
+  products             Product[]
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
