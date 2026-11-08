@@ -126,7 +126,7 @@ export default function SellerShippingPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 bg-transparent px-4 py-6 sm:px-6 lg:px-8">
       <header className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-clay)] sm:p-8">
         <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--muted)]">{translate(locale, "Store operations", "عمليات المتجر")}</p>
         <h1 className="mt-2 text-2xl font-black text-[var(--color-ink-950)] sm:text-3xl">{translate(locale, "Shipping settings", "إعدادات الشحن")}</h1>
