@@ -45,6 +45,10 @@ This sequence is dependency-aware. The 49 systems will be mapped to these delive
 
 The phase audit found that the former README listed only nine phases and that detailed execution plans for Phases 5–10 were missing. The corrected canonical sequence is 1–11; the audit document records current gaps and the distinction between phase numbers and the 49-system IDs. Do not treat the roadmap as completion evidence. Exact-commit CI, disposable PostgreSQL integration, route/action journeys and provider/market approval remain mandatory for their respective exit gates.
 
+## Seller catalog and Syrian location foundations
+
+- [Syrian geography, Leaflet map, and category-specific product attributes](docs/catalog/SYRIA_GEOGRAPHY_AND_CATEGORY_ATTRIBUTES.md) — pinned OpenSyria administrative data, Akaar-derived field definitions, source-tracked neighbourhood suggestions, and seller product authoring integration.
+
 ## Phase execution plan index
 
 - [Phase 1 — Foundation](docs/implementation/PHASE_01_FOUNDATION_PLAN.md)
