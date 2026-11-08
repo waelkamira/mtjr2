@@ -2645,3 +2645,34 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - The verification and environment tests are committed but remain unexecuted pending an available CI/runtime run.
 
 - Added service-level tests for verification-email challenge rotation: previous unused challenges are consumed, only the SHA-256 token digest is persisted, expiry is bounded to 24 hours, and ineligible accounts receive no challenge.
+
+## 2026-11-08 — Reconcile current platform security and advertising work
+
+**Identity and platform administrator protection**
+- Restored current-main password email-verification flow, Google OIDC RS256/JWKS verification with nonce, and the verification/resend pages and APIs.
+- Restored session-bound, ten-minute MFA step-up for sensitive platform-admin permissions, including the verification route/page, admin page redirects, schema fields, migration, and regression tests.
+- Preserved the branch's image-upload request guard and authenticated upload throttling while restoring the current identity behavior.
+
+**Advertising workflow restored**
+- Added seller campaign creation, submission, activation/pause/archive, targeting, admin moderation, sponsored delivery, impression/click event collection, immutable spend ledger, monthly invoice generation, seller invoice view, and manual admin settlement/reconciliation.
+- Added advertising schema and migrations for campaign delivery, spend, invoice settlement, plus seeded ads:manage and ads:moderate permissions.
+- Added seller and admin advertising pages and navigation entries.
+- Integrated clearly labeled sponsored cards into product discovery/search, category listings, and product detail pages. Click and impression events use the signed campaign token and idempotent event identifiers.
+- Added campaign/delivery/invoice/cron tests and browser journeys for sponsored placement and event replay.
+
+**Advertising UX and currency correctness**
+- Seller campaign budgets, daily caps and CPC bids now accept normal human-readable currency amounts and convert to minor units using the selected currency's precision.
+- Campaign targeting UI now supports the advertised product's own categories and brand, plus up to eight keywords; server-side checks ensure selected category/brand actually match the advertised product.
+- Admin spend and open-invoice analytics now include each currency's minor-unit precision and display formatted amounts rather than raw integer minor units.
+- Seller catalog APIs now serialize generated product/store public numbers as strings; product numbers are displayed in the seller catalog without exposing BigInt JSON serialization failures.
+- Updated environment documentation for Vercel preview URLs and the scheduled advertising invoice worker.
+
+**Schema integration**
+- Rebased the feature branch's Prisma schema content on current main to retain the newer public store/product numbers, advertising models, refunds, and MFA step-up fields, while preserving seller one-store uniqueness and listing/map/property fields.
+- Added current-main migrations for public catalog numbers, advertising campaigns/delivery/invoices, refunds, and platform-admin step-up. The seller one-store/listing migration remains later in the migration order.
+- Added advertising permissions to the existing seed while preserving branch-specific demo dashboard and contact-email configuration.
+
+**Verification status**
+- These are source-level integrations only. No local TypeScript, lint, Vitest, Prisma validation/generation, migration replay, or browser execution has occurred in this editing session.
+- The continuing branch is significantly divergent from main; the open integration PR remains Draft. Reconcile all remaining overlapping files before merging.
+- Vercel still has no deployment for the latest feature head due the daily deployment quota. The one-store migration has not been applied to any database.
