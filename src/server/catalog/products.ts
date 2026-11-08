@@ -22,6 +22,12 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(180),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180),
   description: z.string().trim().max(12000).optional(),
+  city: z.string().trim().max(120).optional(),
+  district: z.string().trim().max(120).optional(),
+  contactPhone: z.string().trim().max(40).optional(),
+  videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").optional(),
+  customFields: z.record(z.string().trim().min(1).max(100), z.unknown()).optional(),
+  initialStock: z.number().int().min(0).max(100000000).default(0),
   brandId: z.string().trim().min(1).optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).default([]),
   mapLocation: z.object({
@@ -134,7 +140,11 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     const product = await tx.product.create({
       data: {
         storeId: store.id, brandId: data.brandId, name: data.name, slug: data.slug,
-        description: data.description, status: CatalogEntityStatus.DRAFT,
+        description: data.description,
+        city: data.city || null, district: data.district || null,
+        contactPhone: data.contactPhone || null, videoUrl: data.videoUrl || null,
+        customFields: data.customFields ? (data.customFields as Prisma.InputJsonValue) : undefined,
+        status: CatalogEntityStatus.DRAFT,
         approvalStatus: ProductApprovalStatus.PENDING,
         categories: { create: categoryIds.map((categoryId, index) => ({ categoryId, isPrimary: index === 0, sortOrder: index })) },
         media: { create: data.media.map((item) => ({ ...item })) },
@@ -160,12 +170,19 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
           }))
         }
       },
-      select: { id: true, storeId: true, name: true, slug: true, status: true, approvalStatus: true }
+      select: { id: true, storeId: true, name: true, slug: true, status: true, approvalStatus: true, variants: { select: { id: true } } }
     });
+    if (data.initialStock > 0) {
+      let warehouse = await tx.warehouse.findFirst({ where: { storeId: store.id, isActive: true }, orderBy: { createdAt: "asc" }, select: { id: true } });
+      if (!warehouse) warehouse = await tx.warehouse.create({ data: { storeId: store.id, code: "MAIN", name: "Main warehouse", isActive: true }, select: { id: true } });
+      for (const variant of product.variants) {
+        await tx.inventory.create({ data: { warehouseId: warehouse.id, variantId: variant.id, quantityOnHand: data.initialStock, quantityReserved: 0, quantityQuarantined: 0, reorderPoint: 0 } });
+      }
+    }
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.created",
       resource: "product", resourceId: product.id, scopeType: "STORE", scopeId: store.id,
-      occurredAt: now, metadata: { variantCount: data.variants.length, categoryCount: categoryIds.length, mediaCount: data.media.length }
+      occurredAt: now, metadata: { variantCount: data.variants.length, categoryCount: categoryIds.length, mediaCount: data.media.length, initialStock: data.initialStock }
     }});
     return product;
   });
