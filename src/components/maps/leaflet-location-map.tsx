@@ -137,7 +137,6 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
 
   return (
     <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-      <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
       <Script
         src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
