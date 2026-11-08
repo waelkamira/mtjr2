@@ -27,7 +27,7 @@ type Store = { id: string; name: string; markets: Array<{ market: { id: string }
 type Workspace = { stores: Store[] };
 type UploadedImage = { url: string; provider: "imgur" | "imagekit"; storageKey: string; mimeType: string; width?: number; height?: number; name: string };
 
-const categoryFieldPresets: Record<string, Array<{ key: string; label: string }>> = {
+const categoryFieldPresets: Record<string, Array<[string, string]>> = {
   "real-estate": [["adType","بيع / إيجار"],["rooms","الغرف"],["livingrooms","الصالونات"],["area","المساحة"],["propertyType","نوع العقار"],["bathrooms","الحمامات"]],
   cars: [["adType","بيع / إيجار"],["brand","الماركة"],["model","الموديل"],["year","سنة الصنع"],["condition","الحالة"],["fuelType","نوع الوقود"],["mileage","عدد الكيلومترات"]],
   phones: [["brand","الماركة"],["model","الموديل"],["storage","سعة التخزين"],["ram","الذاكرة العشوائية"],["camera","الكاميرا"],["battery","سعة البطارية"],["color","اللون"],["condition","الحالة"]],
@@ -50,10 +50,7 @@ const categoryFieldPresets: Record<string, Array<{ key: string; label: string }>
   jewelry: [["productType","نوع المجوهرات"],["metalType","نوع المعدن"],["karat","العيار"],["gemstone","الحجر الكريم"],["style","النمط التصميمي"],["brand","الماركة"],["gender","الفئة"],["occasion","المناسبة"],["condition","الحالة"]],
   baby: [["type","نوع المنتج"],["subType","التفاصيل"],["ageRange","الفئة العمرية"],["gender","الفئة"],["material","المادة"],["safetyCertification","شهادات السلامة"],["condition","الحالة"],["brand","الماركة"]],
   jobs: [["title","المسمى الوظيفي"],["company","الشركة"],["location","المحافظة"],["salary","الراتب"],["employmentType","نوع الوظيفة"],["jobCategory","مجال الوظيفة"],["educationLevel","المؤهل العلمي"],["experience","الخبرة المطلوبة"],["skills","المهارات المطلوبة"],["description","وصف الوظيفة"],["deadline","آخر موعد للتقديم"]]
-}.reduce<Record<string, Array<{ key: string; label: string }>>>((map, [slug, fields]) => {
-  map[slug] = fields.map(([key, label]) => ({ key, label }));
-  return map;
-}, {});
+};
 
 function presetFieldsForCategory(slug: string) {
   const normalized = slug.toLowerCase();
@@ -67,7 +64,7 @@ function presetFieldsForCategory(slug: string) {
     "employment": "jobs"
   };
   const key = aliases[normalized] ?? normalized;
-  return (categoryFieldPresets[key] ?? []).map((field) => ({ ...field, value: "" }));
+  return (categoryFieldPresets[key] ?? []).map(([fieldKey, label]) => ({ key: fieldKey, label, value: "" }));
 }
 
 async function json<T>(response: Response): Promise<T> {
