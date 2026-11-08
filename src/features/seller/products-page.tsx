@@ -13,7 +13,7 @@ type Market = {
   defaultCurrency: { code: string; minorUnit: number; symbol: string | null };
   currencies: Array<{ currency: { code: string; name: string; minorUnit: number; symbol: string | null } }>;
 };
-type Category = { id: string; name: string; children: Category[] };
+type Category = { id: string; name: string; slug: string; children: Category[] };
 type Brand = { id: string; name: string };
 type CategoryAttribute = {
   id: string; key: string; label: string; description: string | null;
@@ -22,7 +22,13 @@ type CategoryAttribute = {
 };
 type ProductLocationDraft = { localityId?: string; neighborhoodId?: string; neighborhood?: string; latitude?: number; longitude?: number };
 type Product = {
-  id: string; productNumber: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
+  id: string; productNumber: string; name: string; slug: string; description: string | null;
+  city: string | null; district: string | null; contactPhone: string | null; videoUrl: string | null;
+  localityId: string | null; neighborhoodId: string | null; neighborhood: string | null;
+  latitude: number | null; longitude: number | null;
+  propertyDetails: { propertyType: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"; listingType: "SALE" | "RENT"; bedrooms: number | null; bathrooms: number | null; floorArea: string } | null;
+  categories: Array<{ category: { id: string; name: string; slug: string } }>;
+  status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
   media: Array<{ id: string; url: string; storageKey: string | null; mimeType: string | null; width: number | null; height: number | null; altText: string | null; sortOrder: number; isPrimary: boolean }>;
   variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
@@ -35,12 +41,12 @@ async function json<T>(response: Response): Promise<T> {
   if (!response.ok) throw new Error(data.error ?? "Request failed.");
   return data as T;
 }
-function flatten(items: Category[], prefix = ""): Array<{ id: string; label: string }> {
+function flatten(items: Category[], prefix = ""): Array<{ id: string; slug: string; label: string }> {
   return items.flatMap((item) => {
     const children = item.children ?? [];
     return children.length
       ? flatten(children, prefix + item.name + " / ")
-      : [{ id: item.id, label: prefix + item.name }];
+      : [{ id: item.id, slug: item.slug, label: prefix + item.name }];
   });
 }
 
@@ -66,6 +72,13 @@ export default function SellerProductsPage() {
   const [attributeValues, setAttributeValues] = useState<Record<string, string | number | boolean | string[]>>({});
   const [loadingCategoryAttributes, setLoadingCategoryAttributes] = useState(false);
   const [productLocation, setProductLocation] = useState<ProductLocationDraft>({});
+  const [contactPhone, setContactPhone] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [propertyType, setPropertyType] = useState<"APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL">("APARTMENT");
+  const [listingType, setListingType] = useState<"SALE" | "RENT">("SALE");
+  const [bedrooms, setBedrooms] = useState("");
+  const [bathrooms, setBathrooms] = useState("");
+  const [floorArea, setFloorArea] = useState("");
   const [brandId, setBrandId] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -75,10 +88,21 @@ export default function SellerProductsPage() {
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editContactPhone, setEditContactPhone] = useState("");
+  const [editVideoUrl, setEditVideoUrl] = useState("");
+  const [editProductLocation, setEditProductLocation] = useState<ProductLocationDraft>({});
+  const [editPropertyType, setEditPropertyType] = useState<"APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL">("APARTMENT");
+  const [editListingType, setEditListingType] = useState<"SALE" | "RENT">("SALE");
+  const [editBedrooms, setEditBedrooms] = useState("");
+  const [editBathrooms, setEditBathrooms] = useState("");
+  const [editFloorArea, setEditFloorArea] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState("");
   const [editMedia, setEditMedia] = useState<Product["media"]>([]);
   const [editMediaUploading, setEditMediaUploading] = useState(false);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
+  const isRealEstate = categoryOptions.find((category) => category.id === categoryId)?.slug === "real-estate";
+  const editIsRealEstate = categoryOptions.find((category) => category.id === editCategoryId)?.slug === "real-estate";
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
   const approvalCounts = products.reduce((counts, product) => {
@@ -250,12 +274,17 @@ export default function SellerProductsPage() {
 
   async function createProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isRealEstate && (!productLocation.latitude || !productLocation.longitude || !floorArea || Number(floorArea) <= 0)) {
+      setError(translate(locale, "Real-estate listings need a map location and a positive floor area.", "تحتاج الإعلانات العقارية إلى موقع على الخريطة ومساحة موجبة."));
+      return;
+    }
     setBusy(true); setError(""); setMessage("");
     try {
       const product = await json<{ id: string }>(await fetch("/api/products", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          storeId, name, slug, description, ...(brandId ? { brandId } : {}),
+          storeId, name, slug, description, contactPhone: contactPhone || undefined, videoUrl: videoUrl || undefined, ...(brandId ? { brandId } : {}),
+          ...(isRealEstate ? { propertyDetails: { propertyType, listingType, bedrooms: bedrooms === "" ? null : Number(bedrooms), bathrooms: bathrooms === "" ? null : Number(bathrooms), floorArea } } : {}),
           categoryIds: categoryId ? [categoryId] : [],
           attributes: categoryAttributes.flatMap((attribute) => {
             const value = attributeValues[attribute.id];
@@ -363,7 +392,15 @@ export default function SellerProductsPage() {
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, slug: editSlug, description: editDescription, media: editMedia.map(({ id: _id, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 })) })
+        body: JSON.stringify({
+          name: editName, slug: editSlug, description: editDescription,
+          contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
+          ...(editIsRealEstate ? {
+            propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea },
+            ...editProductLocation
+          } : {}),
+          media: editMedia.map(({ id: _id, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 }))
+        })
       }));
       setEditingId("");
       setMessage(translate(locale, "Draft product updated and returned to pending review.", "تم تحديث مسودة المنتج وإعادتها إلى قائمة المراجعة."));
