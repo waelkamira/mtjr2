@@ -29,6 +29,7 @@ type ReturnRequest = {
   items: Array<{ productName: string; quantity: number }>;
 };
 type SupportTicket = {
+  id: string;
   ticketNumber: string;
   subject: string;
   status: string;
