@@ -2578,3 +2578,9 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Product creation now asks sellers for a normal human-readable price in each market's selected currency, then converts the exact decimal string to minor units using that currency's own `minorUnit`.
 - The same conversion helper is used for seller shipping rates. Excess decimal precision and unsafe amount ranges are rejected instead of silently rounded.
 - The UI no longer asks sellers to manually enter values such as 1299 for a 12.99 price.
+
+
+**Shipping management verification coverage**
+- Added focused service tests for seller-owned rate creation, rate updates constrained to the owning store, authorization denial for another seller, and invalid delivery-day windows.
+- Updated the shipping-rate creation API to return HTTP 403 for access-denied attempts instead of misclassifying them as HTTP 400 validation failures.
+- Updated the seller shipping form copy to ask for a normal currency amount; the server continues to persist integer minor units.
