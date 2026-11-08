@@ -2964,3 +2964,32 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Preserved the existing Akaar-derived application fields, map requirement, private identity-document upload, submission API, seller persistence and resubmission behavior.
 - Commit: `7ff8a069045419959af3ac462ea6c3191216b4b7`.
 - No backend or database behavior was changed in this visual refinement. Build and browser verification remain outstanding.
+
+
+## 2026-11-09 — Seller workspace consolidation and all-section visual pass
+
+**Structural correction**
+- Found that the App Router already wraps every `/seller/*` route in `src/app/seller/layout.tsx`, which renders the shared `SellerNavigation` and `SellerTopbar`.
+- Removed the duplicate, page-local sidebar and dashboard toolbar from `workspace-page.tsx` and the duplicate sidebar from `products-page.tsx`. The seller dashboard now relies on one shared navigation shell instead of rendering nested navigation.
+- Aligned the global seller layout canvas with the cool blue-grey reference palette.
+- Made the shared topbar visible at mobile and desktop widths, with a translated current-section title, product/SKU search, catalog shortcut, notifications and account access. The mobile horizontal seller navigation remains available below it.
+- Connected topbar search to the product catalog query parameter and its existing store-scoped API search.
+
+**Seller sections brought under one visual system**
+- Removed redundant brand/back-to-workspace headers from inventory, advertising, questions, returns, reviews, staff and seller orders; the shared seller shell now owns navigation.
+- Reworked their common content surfaces to raised cool blue-grey clay cards and consistent wide content containers.
+- Rebuilt the seller inbox with a store selector (restoring the saved active store when valid), conversation list, selected conversation state, responsive message panel and reply form.
+- Kept the existing server APIs, seller permission checks and mutation workflows intact; these changes are presentation/navigation integration, not authorization changes.
+
+**Commits**
+- Removed duplicate dashboard/product navigation: `69795ae7a1423c985a2c7dff97a582b2fb58b41d`, `283f922eb3d4d81a590bda565c8139437dcfce57`.
+- Shared topbar and search: `6998cae91896b0707ed9e2b0e87b770fba0730be`, `a6a7e35ec817c8cb28416b5b9c0540bd37ee1b43`.
+- Shared canvas: `614350d7b85b401b4f5d005e02442a5ce40c6d38`.
+- Seller operations surfaces: `274a64e477da7b53918ac8ca38234769e7ca5cef`, `a5663ff5fa2e2fb31e445cd13b161579a227b190`, `3fa9539ad324730962a362f421df06607a856128`, `484288366a03a66d885b88a2397ea16fdbb57dc0`, `6f6803fe826cc850969f48f35314921c91c1181e`, `8e2c1204069b04bb664dca0710243cbb956c509c`, `46d6ca78576e56cd830ad81fee7e20f6f29b38ee`, `bc1988faa7b26e396838d5dcf56bc8271792a895`.
+- Inbox store switching and presentation: `8dbc90f6637c0ab37b2800b4786a8aa56785285e`, `dcc26a2df1be3b05992e24f3d15301e2766099b7`.
+- Import cleanup: `d8b9a7c4d33765e0ef463a9f5abdc0df3da326c7`, `6d29f59b342be8f1a8dda9bed5b477cb4746632f`, `61f84888322144fc260b35e566971b088b23994b`, `0e7e48f40a91d9086929157fe09abf681c4895f0`, `a172341328442fdcb819e4580d5dafdea2d0d7cd`, `baf84c5c96489baff6828448a5ad2e50a575b0f4`, `1dd0bc27bafa0d4da2df818abe12706dca3cfb67`.
+
+**Verification**
+- Re-fetched the edited files from `main` after commits and confirmed the shared shell is present and duplicate page-level sidebars are removed.
+- GitHub reports the Vercel status as failed due to the account build-rate limit; no GitHub Actions workflow run is associated with the latest commits.
+- No local Node/package runtime or authenticated browser session is available here, so TypeScript, lint, production build, database integration and responsive screenshot checks are not claimed as passed.
