@@ -3,7 +3,7 @@ import "server-only";
 import { AuditActorType, CatalogEntityStatus, Prisma, ProductApprovalStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { requireCurrentSession } from "@/server/identity/current-session";
+import { requireCurrentSession, PermissionDeniedError } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { requirePermission } from "@/server/identity/permission-guard";
 import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
@@ -92,7 +92,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       throw new Error("An active seller store is required to manage products.");
     }
     if (!(await canManageStoreCatalog(actor.userId, store.seller.ownerId, store.id, now))) {
-      throw new Error("You do not have catalog access to this store.");
+      throw new PermissionDeniedError("You do not have catalog access to this store.");
     }
 
     if (data.brandId) {
