@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/geography/syria/route";
+import geography from "@/data/geography/syria-v0.1.5.json";
 
 describe("Syrian geography API route", () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -32,6 +33,13 @@ describe("Syrian geography API route", () => {
     })]);
     expect(body.sourceVersion).toBe("v0.1.5");
     expect(body.license).toBe("CC BY 4.0");
+  });
+
+  it("bundles the complete pinned source release", () => {
+    expect(geography.governorates).toHaveLength(14);
+    expect(geography.districts).toHaveLength(62);
+    expect(geography.subdistricts).toHaveLength(272);
+    expect(geography.localities).toHaveLength(7605);
   });
 
   it("exposes all Syrian administrative levels with stable counts and pagination", async () => {
