@@ -154,6 +154,87 @@ test.describe("seller journey", () => {
 });
 
 test.describe("seller catalog authoring", () => {
+  test("seller can create a draft product and edit it from the catalog", async ({ page }) => {
+    await signIn(page, sessions.seller);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route("**/api/seller/products/media", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          data: {
+            url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+            provider: "imgur",
+            mimeType: "image/png",
+            storageKey: "imgur:e2e-product-image",
+            width: 800,
+            height: 800
+          }
+        })
+      });
+    });
+    await page.goto("/seller/products");
+    await expect(page.getByRole("heading", { name: /Create product draft|إنشاء مسودة منتج/i })).toBeVisible();
+
+    const storesResponse = await page.request.get("/api/seller/stores");
+    expect(storesResponse.status()).toBe(200);
+    const storePayload = await storesResponse.json() as { stores: Array<{ id: string }> };
+    const storeId = storePayload.stores[0]?.id;
+    expect(storeId).toBeTruthy();
+
+    const categoryResponse = await page.request.get("/api/categories?limit=100&includeEmpty=true");
+    expect(categoryResponse.status()).toBe(200);
+    const categoryPayload = await categoryResponse.json() as { items: Array<{ id: string; slug: string; children?: Array<{ id: string; slug: string }> }> };
+    const phoneCategory = categoryPayload.items.find((item) => item.slug === "phones-electronics")?.children?.find((item) => item.slug === "phones");
+    expect(phoneCategory).toBeTruthy();
+
+    const stamp = Date.now().toString();
+    const productName = `E2E Seller Draft ${stamp}`;
+    const updatedName = `E2E Seller Draft Updated ${stamp}`;
+    await page.getByLabel(/Product name|اسم المنتج/i).fill(productName);
+    await page.getByLabel(/URL slug|معرّف الرابط/i).fill(`e2e-seller-draft-${stamp}`);
+    await page.getByLabel(/^SKU$/i).fill(`E2E-SKU-${stamp}`);
+    await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
+    await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
+
+    const priceInputs = page.locator('input[pattern="[0-9]+"]');
+    await expect(priceInputs.first()).toBeVisible();
+    for (let index = 0; index < await priceInputs.count(); index += 1) {
+      await priceInputs.nth(index).fill("1299");
+    }
+
+    await page.locator('input[type="file"][accept^="image/jpeg"]').first().setInputFiles({
+      name: "e2e-product.png",
+      mimeType: "image/png",
+      buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
+    });
+    await expect(page.getByText("imgur", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /Create draft product|إنشاء مسودة منتج/i }).click();
+    await expect(page.getByRole("status")).toContainText(/Draft product created|تم إنشاء مسودة المنتج/i, { timeout: 20000 });
+
+    const catalogResponse = await page.request.get(`/api/seller/products?storeId=${encodeURIComponent(storeId!)}`);
+    expect(catalogResponse.status()).toBe(200);
+    const catalog = await catalogResponse.json() as { items: Array<{ id: string; name: string; status: string }> };
+    const created = catalog.items.find((item) => item.name === productName);
+    expect(created).toBeTruthy();
+    expect(created!.status).toBe("DRAFT");
+
+    const productCard = page.locator("article").filter({ hasText: productName }).first();
+    await productCard.getByRole("button", { name: /Edit draft|تعديل المسودة/i }).click();
+    const editForm = page.locator("form").filter({ hasText: /Edit draft product|تعديل مسودة المنتج/i });
+    await expect(editForm).toBeVisible();
+    await editForm.locator("input").nth(0).fill(updatedName);
+    await editForm.locator("input").nth(1).fill(`e2e-seller-draft-updated-${stamp}`);
+    await editForm.getByRole("button", { name: /Save changes|حفظ التغييرات/i }).click();
+    await expect(page.getByRole("status")).toContainText(/Draft product updated|تم تحديث مسودة المنتج/i, { timeout: 20000 });
+
+    const updatedCatalogResponse = await page.request.get(`/api/seller/products?storeId=${encodeURIComponent(storeId!)}`);
+    expect(updatedCatalogResponse.status()).toBe(200);
+    const updatedCatalog = await updatedCatalogResponse.json() as { items: Array<{ id: string; name: string; status: string }> };
+    expect(updatedCatalog.items.some((item) => item.id === created!.id && item.name === updatedName && item.status === "DRAFT")).toBe(true);
+  });
+
   test("loads Akaar category fields, Syrian administrative locations and Leaflet map", async ({ page }) => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
