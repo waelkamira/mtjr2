@@ -233,6 +233,22 @@ test.describe("seller catalog authoring", () => {
     expect(updatedCatalogResponse.status()).toBe(200);
     const updatedCatalog = await updatedCatalogResponse.json() as { items: Array<{ id: string; name: string; status: string }> };
     expect(updatedCatalog.items.some((item) => item.id === created!.id && item.name === updatedName && item.status === "DRAFT")).toBe(true);
+
+    // The seller workspace must persist edits to an existing shipping service.
+    await page.goto("/seller");
+    await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
+    await expect(page.getByText("E2E Standard Shipping", { exact: true })).toBeVisible();
+    const shippingCard = page.getByText("E2E Standard Shipping", { exact: true }).locator("xpath=../..");
+    await shippingCard.getByRole("button", { name: /Edit|تعديل/i }).click();
+    const revisedShippingName = `E2E Standard Shipping Updated ${stamp}`;
+    await page.getByLabel(/Service name|اسم الخدمة/i).fill(revisedShippingName);
+    await page.getByLabel(/Description|الوصف/i).fill("Verified seller-managed shipping configuration");
+    await page.getByRole("button", { name: /Save changes|حفظ التعديلات/i }).click();
+    await expect(page.getByText(/Shipping service updated|تم تحديث خدمة الشحن/i)).toBeVisible({ timeout: 15000 });
+    const shippingResponse = await page.request.get(`/api/seller/shipping-rates?storeId=${encodeURIComponent(storeId!)}`);
+    expect(shippingResponse.status()).toBe(200);
+    const shippingPayload = await shippingResponse.json() as { rates: Array<{ id: string; name: string; description: string | null }> };
+    expect(shippingPayload.rates.some((rate) => rate.name === revisedShippingName && rate.description === "Verified seller-managed shipping configuration")).toBe(true);
   });
 
   test("loads Akaar category fields, Syrian administrative locations and Leaflet map", async ({ page }) => {
