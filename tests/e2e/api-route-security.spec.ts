@@ -140,8 +140,10 @@ test.describe("API role authorization boundary", () => {
           "Cache-Control": "no-store"
         }
       });
-      if (response.status() === 200 && probe.actor === "buyer") {
-        const payload = await response.json() as Record<string, unknown>;
+      const body = await response.text();
+      let payload: Record<string, unknown> | null = null;
+      try { payload = JSON.parse(body) as Record<string, unknown>; } catch { /* Keep the raw response for the failure report. */ }
+      if (response.status() === 200 && probe.actor === "buyer" && payload) {
         const safeEmptySellerWorkspace =
           probe.url === "/api/seller/stores" &&
           payload.seller === null &&
@@ -158,7 +160,7 @@ test.describe("API role authorization boundary", () => {
           actor: probe.actor,
           url: probe.url,
           status: response.status(),
-          body: (await response.text()).slice(0, 240)
+          body: body.slice(0, 240)
         });
       }
     }
