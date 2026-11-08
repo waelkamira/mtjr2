@@ -286,18 +286,11 @@ export default function SellerWorkspacePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,var(--color-sage-100),transparent_48%),linear-gradient(180deg,#f7f8f5_0%,#eef2ed_100%)]">
-      <header className="sticky top-0 z-30 border-b border-white/70 bg-white/85 shadow-[0_8px_30px_rgba(23,44,34,.07)] backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link href="/" className="text-2xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
-          <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex flex-wrap items-center gap-2"><Link href="/seller" className="rounded-full bg-[var(--color-forest-900)] px-3 py-2 text-xs font-semibold text-white">{translate(locale, "Overview", "الرئيسية")}</Link><Link href="/seller/products" className="rounded-full px-3 py-2 text-xs font-semibold text-[var(--color-forest-800)] hover:bg-[var(--color-sage-100)]">{translate(locale, "Products", "المنتجات")}</Link><Link href="/seller/orders" className="rounded-full px-3 py-2 text-xs font-semibold text-[var(--color-forest-800)] hover:bg-[var(--color-sage-100)]">{translate(locale, "Orders", "الطلبات")}</Link><Link href="/seller/inventory" className="rounded-full px-3 py-2 text-xs font-semibold text-[var(--color-forest-800)] hover:bg-[var(--color-sage-100)]">{translate(locale, "Inventory", "المخزون")}</Link><Link href="/notifications" className="text-xs font-semibold text-[var(--color-forest-800)]">{translate(locale, "Notifications", "الإشعارات")}</Link><Link href="/seller/reviews" className="text-xs font-semibold text-[var(--color-forest-800)]">{translate(locale, "Reviews", "المراجعات")}</Link><Link href="/seller/questions" className="text-xs font-semibold text-[var(--color-forest-800)]">{translate(locale, "Product Q&A", "أسئلة وأجوبة المنتجات")}</Link><Link href="/seller/advertising" className="text-xs font-semibold text-[var(--color-forest-800)]">{translate(locale, "Advertising", "الإعلانات")}</Link><span className="hidden text-xs font-semibold uppercase tracking-[.18em] text-[var(--muted)] md:inline">{translate(locale, "Seller center", "مركز البائع")}</span></nav>
-
-        </div>
-      </header>
-      <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:py-10">
-        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Your business", "أعمالك")}</p>
+    <main className="min-h-full bg-transparent">
+      <div className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+        <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-[var(--color-forest-950)] sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Track your store’s orders and inventory, create listings, and manage day-to-day operations.", "تابع طلبات متجرك ومخزونه، وأنشئ منتجات جديدة، وأدِر عملياتك اليومية.")}</p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p></div>{selectedStore && <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-xs shadow-sm"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-semibold text-[var(--color-onyx)]">{selectedStore.name}</span><span className="text-[var(--muted)]">{selectedStore.status}</span></div>}</div>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-950)]">{message}</p>}
         {loading ? <p className="py-16 text-sm text-[var(--muted)]">{translate(locale, "Loading your workspace…", "جارٍ تحميل مساحة عملك…")}</p> : authenticationRequired ? (
@@ -322,18 +315,18 @@ export default function SellerWorkspacePage() {
         ) : (
           <>
           {selectedStore && <>
-            <section className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-[28px] border border-white bg-gradient-to-br from-[#173b2d] via-[#214b39] to-[#2c6048] p-6 text-white shadow-[0_22px_60px_rgba(23,59,45,.18)] sm:p-8">
+            <section className="mt-7 flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-clay)] sm:p-8">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Store overview", "نظرة عامة على المتجر")}</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">{selectedStore.name}</h2>
-                <p className="mt-1 text-sm text-white/70">/{selectedStore.slug} · {selectedStore.status}</p>
+                <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Store overview", "نظرة عامة على المتجر")}</p>
+                <h2 className="mt-2 text-2xl font-bold text-[var(--color-onyx)]">{selectedStore.name}</h2>
+                <p className="mt-1 text-sm text-[var(--muted)]">/{selectedStore.slug} · {selectedStore.status}</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Link href="/seller/products" className="inline-flex items-center gap-2 rounded-xl bg-[#F0660D] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-clay)] transition hover:shadow-[var(--shadow-clay-hover)]">
                   <span aria-hidden="true" className="text-base leading-none">＋</span>
                   {translate(locale, "Create new listing", "إنشاء منتج جديد")}
                 </Link>
-                <Link href="/seller/orders" className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--color-onyx)] shadow-[var(--shadow-clay)] transition hover:shadow-[var(--shadow-clay-hover)]">
+                <Link href="/seller/orders" className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm font-semibold text-[var(--color-onyx)] transition hover:bg-white">
                   {translate(locale, "View orders", "عرض الطلبات")}
                 </Link>
               </div>
