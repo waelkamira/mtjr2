@@ -105,11 +105,16 @@ export default function SellerProductsPage() {
   const [editBrandId, setEditBrandId] = useState("");
   const [editCategoryIds, setEditCategoryIds] = useState<string[]>([]);
   const [editCustomFields, setEditCustomFields] = useState<Array<{ key: string; value: string; label?: string }>>([]);
-  const [editMapLocation, setEditMapLocation] = useState("");
-  const [editPropertyDetails, setEditPropertyDetails] = useState("");
+  const [editMapLocation, setEditMapLocation] = useState<ProductCoordinates | null>(null);
+  const [editPropertyType, setEditPropertyType] = useState("APARTMENT");
+  const [editListingType, setEditListingType] = useState("SALE");
+  const [editBedrooms, setEditBedrooms] = useState("");
+  const [editBathrooms, setEditBathrooms] = useState("");
+  const [editFloorArea, setEditFloorArea] = useState("");
   const [editMedia, setEditMedia] = useState<Product["media"]>([]);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
+  const editIsRealEstate = categoryOptions.find((category) => category.id === editCategoryIds[0])?.slug === "real-estate";
   const isRealEstate = categoryOptions.find((category) => category.id === categoryId)?.slug === "real-estate";
   const imagePreviews = [
     ...uploadedImages.map((image) => ({ url: image.url, name: image.name, provider: image.provider })),
@@ -392,8 +397,14 @@ export default function SellerProductsPage() {
         if (field.value.trim()) result[field.key] = field.value.trim();
         return result;
       }, {});
-      const mapLocation = parseJsonObjectInput(editMapLocation, translate(locale, "Map location", "موقع الخريطة"));
-      const propertyDetails = parseJsonObjectInput(editPropertyDetails, translate(locale, "Property details", "تفاصيل العقار"));
+      const mapLocation = editMapLocation;
+      const propertyDetails = editIsRealEstate ? {
+        propertyType: editPropertyType,
+        listingType: editListingType,
+        bedrooms: editBedrooms.trim() ? Number(editBedrooms) : null,
+        bathrooms: editBathrooms.trim() ? Number(editBathrooms) : null,
+        floorArea: editFloorArea
+      } : null;
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -572,7 +583,7 @@ export default function SellerProductsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditCity(product.city ?? ""); setEditDistrict(product.district ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? ""); setEditBrandId(product.brandId ?? ""); setEditCategoryIds(product.categories.map((entry) => entry.category.id)); setEditCustomFields(getCategoryFieldPresets(product.categories[0]?.category.slug ?? "").map((field) => ({ ...field, value: String((product.customFields && typeof product.customFields === "object" ? (product.customFields as Record<string, unknown>)[field.key] : "") ?? "") }))); setEditMapLocation(product.mapLocation ? JSON.stringify(product.mapLocation, null, 2) : ""); setEditPropertyDetails(product.propertyDetails ? JSON.stringify({ propertyType: product.propertyDetails.propertyType, listingType: product.propertyDetails.listingType, bedrooms: product.propertyDetails.bedrooms, bathrooms: product.propertyDetails.bathrooms, floorArea: product.propertyDetails.floorArea }, null, 2) : ""); setEditMedia(product.media.map((media, index) => ({ ...media, sortOrder: index }))); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditCity(product.city ?? ""); setEditDistrict(product.district ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? ""); setEditBrandId(product.brandId ?? ""); setEditCategoryIds(product.categories.map((entry) => entry.category.id)); setEditCustomFields(getCategoryFieldPresets(product.categories[0]?.category.slug ?? "").map((field) => ({ ...field, value: String((product.customFields && typeof product.customFields === "object" ? (product.customFields as Record<string, unknown>)[field.key] : "") ?? "") }))); setEditMapLocation(product.mapLocation); setEditPropertyType(product.propertyDetails?.propertyType ?? "APARTMENT"); setEditListingType(product.propertyDetails?.listingType ?? "SALE"); setEditBedrooms(product.propertyDetails?.bedrooms == null ? "" : String(product.propertyDetails.bedrooms)); setEditBathrooms(product.propertyDetails?.bathrooms == null ? "" : String(product.propertyDetails.bathrooms)); setEditFloorArea(product.propertyDetails?.floorArea ?? ""); setEditMedia(product.media.map((media, index) => ({ ...media, sortOrder: index }))); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
@@ -590,8 +601,14 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={editBrandId} onChange={(e) => setEditBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Categories", "الفئات")}<select required multiple className={inputClass + " min-h-28"} value={editCategoryIds} onChange={(e) => { const nextIds = Array.from(e.target.selectedOptions, (option) => option.value); const nextSlug = categoryOptions.find((item) => item.id === nextIds[0])?.slug ?? ""; setEditCategoryIds(nextIds); const presets = getCategoryFieldPresets(nextSlug); setEditCustomFields(presets.map((field) => ({ ...field, value: editCustomFields.find((current) => current.key === field.key)?.value ?? "" }))); }}>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><legend className="px-1 text-sm font-semibold">{translate(locale, "Category-specific details", "تفاصيل الفئة")}</legend>{editCustomFields.length ? <div className="grid gap-3 sm:grid-cols-2">{editCustomFields.map((field, index) => <label key={field.key} className="grid gap-1 text-sm">{field.label ?? field.key}<input required maxLength={500} className={inputClass} value={field.value} onChange={(event) => setEditCustomFields((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} /></label>)}</div> : <p className="text-xs text-[var(--muted)]">{translate(locale, "No additional fields are defined for the selected category.", "لا توجد حقول إضافية محددة للفئة المختارة.")}</p>}</fieldset>
-            <label className="grid gap-1 text-sm">{translate(locale, "Map location (JSON; blank to clear)", "الموقع على الخريطة (JSON؛ اتركه فارغاً للمسح)")}<textarea rows={3} className={inputClass} value={editMapLocation} onChange={(e) => setEditMapLocation(e.target.value)} placeholder='{"latitude":33.5,"longitude":36.2}' /></label>
-            <label className="grid gap-1 text-sm">{translate(locale, "Property details (JSON; blank to clear)", "تفاصيل العقار (JSON؛ اتركه فارغاً للمسح)")}<textarea rows={4} className={inputClass} value={editPropertyDetails} onChange={(e) => setEditPropertyDetails(e.target.value)} /></label>
+            {editIsRealEstate && <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><legend className="px-1 text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</legend><div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">{translate(locale, "Property type", "نوع العقار")}<select required className={inputClass} value={editPropertyType} onChange={(e) => setEditPropertyType(e.target.value)}><option value="APARTMENT">{translate(locale, "Apartment", "شقة")}</option><option value="HOUSE">{translate(locale, "House / villa", "منزل / فيلا")}</option><option value="LAND">{translate(locale, "Land", "أرض")}</option><option value="COMMERCIAL">{translate(locale, "Commercial property", "عقار تجاري")}</option></select></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Listing type", "نوع العرض")}<select required className={inputClass} value={editListingType} onChange={(e) => setEditListingType(e.target.value)}><option value="SALE">{translate(locale, "For sale", "للبيع")}</option><option value="RENT">{translate(locale, "For rent", "للإيجار")}</option></select></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Bedrooms", "غرف النوم")}<input type="number" min="0" max="100" className={inputClass} value={editBedrooms} onChange={(e) => setEditBedrooms(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Bathrooms", "الحمامات")}<input type="number" min="0" max="100" className={inputClass} value={editBathrooms} onChange={(e) => setEditBathrooms(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input required type="number" min="0.01" max="999999999" step="0.01" className={inputClass} value={editFloorArea} onChange={(e) => setEditFloorArea(e.target.value)} /></label>
+            </div></fieldset>}
+            <section className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><h4 className="text-sm font-semibold">{translate(locale, "Product location", "موقع المنتج")}</h4><p className="text-xs text-[var(--muted)]">{translate(locale, "The public listing shows an approximate area; exact coordinates remain private.", "يعرض الإعلان منطقة تقريبية، بينما تبقى الإحداثيات الدقيقة خاصة.")}</p><ProductLocationMap value={editMapLocation} onChange={setEditMapLocation} label={translate(locale, "Choose product location on map", "اختر موقع المنتج على الخريطة")} />{editMapLocation && <div className="flex items-center justify-between gap-3 text-xs text-[var(--muted)]"><span>{editMapLocation.latitude.toFixed(5)}, {editMapLocation.longitude.toFixed(5)}</span><button type="button" onClick={() => setEditMapLocation(null)} className="rounded-lg border border-[var(--border)] px-3 py-1.5 font-semibold">{translate(locale, "Clear location", "مسح الموقع")}</button></div>}</section>
             <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-2"><div><h4 className="text-sm font-semibold">{translate(locale, "Product image studio", "استوديو صور المنتج")}</h4><p className="text-xs text-[var(--muted)]">{translate(locale, "Upload, replace, remove, reorder and choose one cover image.", "ارفع الصور واستبدلها واحذفها ورتبها وحدد صورة غلاف واحدة.")}</p></div><span className="rounded-full bg-[var(--surface)] px-3 py-1 text-xs font-semibold">{editMedia.length}/8</span></div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
