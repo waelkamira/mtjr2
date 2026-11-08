@@ -10,7 +10,7 @@ const listSchema = z.object({
   locale: z.string().trim().min(2).max(16).default("ar"),
   page: z.coerce.number().int().min(1).max(1000).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(30),
-  includeEmpty: z.string().optional().transform((value) => value === "true").default(false)
+  includeEmpty: z.string().optional().transform((value) => value === "true")
 });
 
 type CategoryRow = {
