@@ -133,16 +133,16 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       const definition = allowedAttributes.get(attributeId);
       if (!definition) throw new Error("A submitted attribute does not belong to the selected category.");
       const options = Array.isArray(definition.options) ? definition.options : [];
-      if (definition.attribute.valueType === "TEXT" && typeof value !== "string") throw new Error("A text attribute must contain text.");
+      if (definition.attribute.valueType === "TEXT" && (typeof value !== "string" || value.length > 2000)) throw new Error("A text attribute must contain at most 2,000 characters.");
       if (definition.attribute.valueType === "NUMBER" && (typeof value !== "number" || !Number.isFinite(value))) throw new Error("A numeric attribute must contain a valid number.");
       if (definition.attribute.valueType === "BOOLEAN" && typeof value !== "boolean") throw new Error("A boolean attribute must contain true or false.");
       if (definition.attribute.valueType === "SELECT" && (typeof value !== "string" || !options.includes(value))) throw new Error("A selected attribute value is invalid.");
-      if (definition.attribute.valueType === "MULTI_SELECT" && (!Array.isArray(value) || value.some((entry) => typeof entry !== "string" || !options.includes(entry)))) throw new Error("A multi-select attribute value is invalid.");
+      if (definition.attribute.valueType === "MULTI_SELECT" && (!Array.isArray(value) || value.length > 100 || value.some((entry) => typeof entry !== "string" || !options.includes(entry)) || new Set(value).size !== value.length)) throw new Error("A multi-select attribute value is invalid.");
     }
     for (const row of categoryAttributeRows) {
       if (row.isRequired) {
         const value = submittedAttributes.get(row.attributeDefinitionId);
-        if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
+        if (value === undefined || value === null || value === "" || (typeof value === "string" && !value.trim()) || (Array.isArray(value) && value.length === 0)) {
           throw new Error("Please complete all required category attributes.");
         }
       }
