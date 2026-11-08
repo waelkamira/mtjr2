@@ -290,7 +290,7 @@ const updateProductSchema = z.object({
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
   customFields: z.record(z.string().trim().min(1).max(100), z.unknown()).nullable().optional(),
   brandId: z.string().trim().min(1).nullable().optional(),
-  categoryIds: z.array(z.string().trim().min(1)).max(30).optional(),
+  categoryIds: z.array(z.string().trim().min(1)).min(1).max(30).optional(),
   mapLocation: z.object({
     latitude: z.number().finite().min(-90).max(90),
     longitude: z.number().finite().min(-180).max(180)
@@ -404,6 +404,8 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         create: { productId: id, ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) },
         update: { ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) }
       });
+    } else if (categoryIds !== undefined && !isRealEstate && current.propertyDetails) {
+      await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
     }
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.updated",
