@@ -228,7 +228,7 @@ export default function SellerWorkspacePage() {
   const fulfillmentOrderCount = selectedStoreOrders.filter((order) =>
     ["CONFIRMED", "PROCESSING", "READY_TO_SHIP"].includes(order.status)
   ).length;
-  const formatMetric = (value: number) => value > 0 ? new Intl.NumberFormat(locale).format(value) : "—";
+  const formatMetric = (value: number) => new Intl.NumberFormat(locale).format(value);
   const sellerMetrics = [
     {
       label: translate(locale, "Seller orders", "طلبات البائع"),
