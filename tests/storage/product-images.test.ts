@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ProductImageValidationError,
+  deleteProductImage,
   uploadProductImage,
   validateProductImage
 } from "@/server/storage/product-images";
@@ -72,6 +73,36 @@ describe("product image storage", () => {
       status: 503,
       message: expect.stringContaining("Media Read & Write")
     });
+  });
+
+  it("deletes ImageKit assets with the server-side private key", async () => {
+    vi.stubEnv("IMAGEKIT_PRIVATE_KEY", "private_test_key");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(deleteProductImage("imagekit:ik-file-123")).resolves.toBe("deleted");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.imagekit.io/v1/files/ik-file-123",
+      expect.objectContaining({
+        method: "DELETE",
+        headers: { Authorization: `Basic ${Buffer.from("private_test_key:").toString("base64")}` }
+      })
+    );
+  });
+
+  it("does not attempt Imgur deletion without an OAuth access token", async () => {
+    vi.stubEnv("IMGUR_ACCESS_TOKEN", "");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(deleteProductImage("imgur:imgur-file-123")).resolves.toBe("unsupported");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed provider storage keys before making a network request", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(deleteProductImage("imagekit:../private")).rejects.toThrow(/Invalid product image storage key/i);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("fails clearly when no image provider is configured", async () => {
