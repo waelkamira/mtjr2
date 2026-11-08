@@ -16,6 +16,15 @@ describe("Akaar-compatible category field presets", () => {
     expect(getCategoryFieldPresets("baby-products").map((field) => field.key)).toContain("safetyCertification");
   });
 
+  it("exposes category-specific options for the seller form", () => {
+    expect(getCategoryFieldPresets("cars").find((field) => field.key === "brand")?.options).toContain("Toyota");
+    expect(getCategoryFieldPresets("cars").find((field) => field.key === "fuelType")?.options).toContain("كهرباء");
+    expect(getCategoryFieldPresets("phones-electronics").find((field) => field.key === "storage")?.options).toContain("256 GB");
+    expect(getCategoryFieldPresets("furniture").find((field) => field.key === "material")?.options).toContain("خشب طبيعي");
+    expect(getCategoryFieldPresets("clothing-fashion").find((field) => field.key === "size")?.options).toContain("XL");
+    expect(getCategoryFieldPresets("employment").find((field) => field.key === "employmentType")?.options).toContain("عن بُعد");
+  });
+
   it("returns fresh, empty values for every preset field", () => {
     const fields = getCategoryFieldPresets("computers");
     expect(fields.length).toBeGreaterThan(0);
