@@ -252,6 +252,17 @@ describe("product lifecycle", () => {
     expect(mocks.productMediaCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({ productId: "product-1", url: "https://images.example/updated.jpg", isPrimary: true })] });
   });
 
+  it("rejects product image updates without exactly one cover image", async () => {
+    await expect(updateDraftProduct("product-1", {
+      media: [
+        { url: "https://images.example/one.jpg", sortOrder: 0, isPrimary: true },
+        { url: "https://images.example/two.jpg", sortOrder: 1, isPrimary: true }
+      ]
+    })).rejects.toThrow(/exactly one primary/i);
+    expect(mocks.productFindUniqueTx).not.toHaveBeenCalled();
+    expect(mocks.productMediaCreateMany).not.toHaveBeenCalled();
+  });
+
   it("rejects a pending draft with a required reason and audit event", async () => {
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     const result = await rejectProduct({ productId: "product-1", reason: "Missing compliance details." });
