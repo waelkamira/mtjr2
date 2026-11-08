@@ -5,12 +5,20 @@ const {
   clearCookieMock,
   resolveMock,
   revokeMock,
+  revokeAllMock,
+  requireCurrentMock,
+  txUserSessionUpdateMock,
+  transactionMock,
   auditCreateMock
 } = vi.hoisted(() => ({
   cookieMock: vi.fn(),
   clearCookieMock: vi.fn(),
   resolveMock: vi.fn(),
   revokeMock: vi.fn(),
+  revokeAllMock: vi.fn(),
+  requireCurrentMock: vi.fn(),
+  txUserSessionUpdateMock: vi.fn(),
+  transactionMock: vi.fn(),
   auditCreateMock: vi.fn()
 }));
 
@@ -20,13 +28,15 @@ vi.mock("@/server/identity/session-cookie", () => ({
 }));
 vi.mock("@/server/identity/session", () => ({
   resolveUserSession: resolveMock,
-  revokeUserSession: revokeMock
+  revokeUserSession: revokeMock,
+  revokeAllUserSessions: revokeAllMock
 }));
+vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: requireCurrentMock }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { auditLog: { create: auditCreateMock } }
+  prisma: { auditLog: { create: auditCreateMock }, $transaction: transactionMock }
 }));
 
-import { logoutCurrentSession } from "../../src/server/identity/logout";
+import { logoutAllSessions, logoutCurrentSession } from "../../src/server/identity/logout";
 
 const now = new Date("2026-11-03T12:00:00.000Z");
 const session = {
@@ -41,6 +51,10 @@ describe("logoutCurrentSession", () => {
     vi.clearAllMocks();
     clearCookieMock.mockResolvedValue(undefined);
     auditCreateMock.mockResolvedValue({});
+    requireCurrentMock.mockResolvedValue(session);
+    revokeAllMock.mockResolvedValue(3);
+    txUserSessionUpdateMock.mockResolvedValue({ count: 3 });
+    transactionMock.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({ userSession: { updateMany: txUserSessionUpdateMock }, auditLog: { create: auditCreateMock } }));
   });
 
   it("revokes the current session, audits it, and clears the cookie", async () => {
@@ -90,5 +104,41 @@ describe("logoutCurrentSession", () => {
 
     await expect(logoutCurrentSession(now)).rejects.toThrow("database unavailable");
     expect(clearCookieMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe("logoutAllSessions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearCookieMock.mockResolvedValue(undefined);
+    auditCreateMock.mockResolvedValue({});
+    requireCurrentMock.mockResolvedValue(session);
+    revokeAllMock.mockResolvedValue(3);
+    txUserSessionUpdateMock.mockResolvedValue({ count: 3 });
+    transactionMock.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({ userSession: { updateMany: txUserSessionUpdateMock }, auditLog: { create: auditCreateMock } }));
+  });
+
+  it("revokes all sessions for the authenticated user, audits the action, and clears the current cookie", async () => {
+    await expect(logoutAllSessions(now)).resolves.toBe(3);
+    expect(requireCurrentMock).toHaveBeenCalledWith(now);
+    expect(transactionMock).toHaveBeenCalledOnce();
+    expect(txUserSessionUpdateMock).toHaveBeenCalledWith({ where: { userId: "user-1", revokedAt: null }, data: { revokedAt: now } });
+    expect(auditCreateMock).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        actorId: "user-1",
+        action: "identity.logout_all.succeeded",
+        resource: "user_session",
+        resourceId: "session-1",
+        metadata: { revokedSessions: 3 }
+      })
+    });
+    expect(clearCookieMock).toHaveBeenCalledOnce();
+  });
+
+  it("does not clear the cookie or revoke sessions when authentication is not valid", async () => {
+    requireCurrentMock.mockRejectedValue(new Error("not authenticated"));
+    await expect(logoutAllSessions(now)).rejects.toThrow("not authenticated");
+    expect(transactionMock).not.toHaveBeenCalled();
+    expect(clearCookieMock).not.toHaveBeenCalled();
   });
 });
