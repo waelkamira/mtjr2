@@ -365,17 +365,17 @@ export default function SellerWorkspacePage() {
   ];
 
   return (
-    <main className="min-h-full bg-transparent">
+    <main className="min-h-full bg-transparent text-[#263d50]">
       <div className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
-        <div className="relative mb-7 overflow-hidden rounded-[2rem] border border-[var(--color-lavender-300)] bg-[linear-gradient(125deg,var(--color-lavender-50),var(--surface)_58%,var(--color-mint-50))] p-6 shadow-[var(--shadow-clay)] sm:p-8">
+        <div className="relative mb-7 overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(125deg,#38556d_0%,#2b4359_58%,#3f6170_100%)] p-6 text-white shadow-[0_18px_38px_rgba(35,57,76,.2),inset_0_1px_0_rgba(255,255,255,.22)] sm:p-8">
           <div className="pointer-events-none absolute -right-10 -top-14 size-48 rounded-full bg-[var(--color-peach-100)]/80 blur-2xl" />
           <div className="relative flex flex-wrap items-end justify-between gap-5">
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[var(--color-lavender-800)]">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-[var(--color-ink-950)] sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#b9dce1]">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200/80">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
             </div>
-            {selectedStore && <div className="flex items-center gap-2 rounded-full border border-[var(--color-mint-300)] bg-[var(--color-mint-50)] px-4 py-2.5 text-xs shadow-[var(--shadow-clay)]"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-bold text-[var(--color-mint-800)]">{selectedStore.name}</span><span className="text-[var(--color-mint-800)]/70">{selectedStore.status}</span></div>}
+            {selectedStore && <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-xs text-white shadow-[inset_0_1px_0_rgba(255,255,255,.16)]"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-bold text-[var(--color-mint-800)]">{selectedStore.name}</span><span className="text-[var(--color-mint-800)]/70">{selectedStore.status}</span></div>}
           </div>
         </div>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
@@ -402,18 +402,18 @@ export default function SellerWorkspacePage() {
         ) : (
           <>
           {selectedStore && <>
-            <section className="mt-7 flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-[var(--color-peach-300)] bg-[linear-gradient(120deg,var(--color-peach-50),var(--surface)_58%,var(--color-butter-50))] p-6 shadow-[var(--shadow-clay)] sm:p-8">
+            <section className="mt-7 flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/80 bg-[linear-gradient(120deg,#d8e9ed,#e7eef1_58%,#e1e4f1)] p-6 shadow-[0_12px_28px_rgba(42,66,84,.12),inset_0_1px_0_white] sm:p-8">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Store overview", "نظرة عامة على المتجر")}</p>
-                <h2 className="mt-2 text-2xl font-bold text-[var(--color-onyx)]">{selectedStore.name}</h2>
+                <p className="text-xs font-bold uppercase tracking-[.18em] text-[#587b8c]">{translate(locale, "Store overview", "نظرة عامة على المتجر")}</p>
+                <h2 className="mt-2 text-2xl font-bold text-[#263d50]">{selectedStore.name}</h2>
                 <p className="mt-1 text-sm text-[var(--muted)]">/{selectedStore.slug} · {selectedStore.status}</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link href="/seller/products" className="inline-flex items-center gap-2 rounded-xl bg-[#F0660D] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-clay)] transition hover:shadow-[var(--shadow-clay-hover)]">
+                <Link href="/seller/products" className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#65aeb0,#3c858f)] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(38,94,105,.25),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:shadow-[var(--shadow-clay-hover)]">
                   <span aria-hidden="true" className="text-base leading-none">＋</span>
                   {translate(locale, "Create new listing", "إنشاء منتج جديد")}
                 </Link>
-                <Link href="/seller/orders" className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm font-semibold text-[var(--color-onyx)] transition hover:bg-white">
+                <Link href="/seller/orders" className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[#eef4f5] px-4 py-3 text-sm font-semibold text-[#365267] shadow-[inset_0_1px_0_white,0_4px_12px_rgba(39,63,81,.08)] transition hover:bg-white">
                   {translate(locale, "View orders", "عرض الطلبات")}
                 </Link>
               </div>
@@ -422,7 +422,7 @@ export default function SellerWorkspacePage() {
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric) => {
                 return (
-                  <article key={metric.label} className="group relative overflow-hidden rounded-[1.75rem] border bg-[var(--surface)]/95 p-5 shadow-[var(--shadow-clay)] transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-clay-hover)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
+                  <article key={metric.label} className="group relative overflow-hidden rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,.82),rgba(218,232,238,.9))] p-5 shadow-[0_10px_24px_rgba(39,63,81,.12),inset_0_1px_0_white] transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-clay-hover)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
                     <div className="flex items-center gap-3">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${metric.color}20`, color: metric.color }}>
                         <span aria-hidden="true" className="text-lg leading-none">{metric.icon}</span>
@@ -439,7 +439,7 @@ export default function SellerWorkspacePage() {
             <section aria-label={translate(locale, "Store analytics", "تحليلات المتجر")} className="mt-8">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Store performance", "أداء المتجر")}</h2>
+                  <h2 className="text-xl font-semibold text-[#2c485c]">{translate(locale, "Store performance", "أداء المتجر")}</h2>
                   <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Sales, order health, catalog performance and stock for the selected store.", "المبيعات وحالة الطلبات وأداء الكتالوج والمخزون للمتجر المحدد.")}</p>
                 </div>
                 {analyticsLoading && <span role="status" className="rounded-full bg-[var(--color-lavender-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-lavender-800)]">{translate(locale, "Refreshing store analytics…", "جارٍ تحديث تحليلات المتجر…")}</span>}
