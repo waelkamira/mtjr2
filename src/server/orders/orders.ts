@@ -463,8 +463,8 @@ export async function cancelOwnedOrder(guestToken: string, orderId: string, now 
     if (order.status !== OrderStatus.PENDING_PAYMENT) {
       throw new Error("Only orders awaiting payment can be canceled.");
     }
-    if (order.payments.length) {
-      throw new Error("A payment attempt exists for this order. Contact support to cancel it safely.");
+    if (order.payments.some((payment) => payment.status !== PaymentStatus.FAILED && payment.status !== PaymentStatus.CANCELLED)) {
+      throw new Error("An active or successful payment attempt exists for this order. Contact support to cancel it safely.");
     }
     if (order.vendorOrders.some((vendor) => vendor.status !== VendorOrderStatus.PENDING_PAYMENT)) {
       throw new Error("This order is no longer eligible for cancellation.");
