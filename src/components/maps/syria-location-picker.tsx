@@ -111,13 +111,13 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setGovernorateId(id); setDistrictId(""); setSubdistrictId(""); setDistricts([]); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     onChange({});
     const item = governorates.find((entry) => entry.id === id);
-    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 });
+    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 }); else setFocus(null);
     setError("");
     if (!id) return;
     setBusy(true);
     try { const result = await loadLevel("districts", { governorateId: id }); if (request === selectionRequest.current) setDistricts(result.items); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load districts."); }
-    finally { setBusy(false); }
+    catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load districts."); }
+    finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
   async function chooseDistrict(id: string) {
@@ -125,13 +125,13 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     const item = districts.find((entry) => entry.id === id);
     onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
-    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 10 });
+    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 10 }); else setFocus(null);
     setError("");
     if (!id) return;
     setBusy(true);
     try { const result = await loadLevel("subdistricts", { districtId: id }); if (request === selectionRequest.current) setSubdistricts(result.items); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load subdistricts."); }
-    finally { setBusy(false); }
+    catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load subdistricts."); }
+    finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
   async function chooseSubdistrict(id: string) {
@@ -140,13 +140,13 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const item = subdistricts.find((entry) => entry.id === id);
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
     onChange({ district: selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined });
-    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 12 });
+    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 12 }); else setFocus(null);
     setError("");
     if (!id) return;
     setBusy(true);
     try { const result = await loadLevel("localities", { districtId, subdistrictId: id, limit: "100" }); if (request === selectionRequest.current) setLocalities(result.items); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load localities."); }
-    finally { setBusy(false); }
+    catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load localities."); }
+    finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
   async function searchLocalities() {
@@ -162,7 +162,6 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
     setSelectedNeighborhoodId("");
     setNeighborhoodSuggestions([]);
-    const selectedSubdistrict = subdistricts.find((entry) => entry.id === subdistrictId);
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
     onChange({
       city: item ? (item.nameAr || item.nameEn) : undefined,
