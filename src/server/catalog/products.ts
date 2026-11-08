@@ -181,7 +181,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
           }))
         }
       },
-      select: { id: true, storeId: true, name: true, slug: true, status: true, approvalStatus: true, variants: { select: { id: true } } }
+      select: { id: true, productNumber: true, storeId: true, name: true, slug: true, status: true, approvalStatus: true, variants: { select: { id: true } } }
     });
     if (data.initialStock > 0) {
       let warehouse = await tx.warehouse.findFirst({ where: { storeId: store.id, code: "MAIN" }, select: { id: true, isActive: true } });
@@ -196,7 +196,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       resource: "product", resourceId: product.id, scopeType: "STORE", scopeId: store.id,
       occurredAt: now, metadata: { variantCount: data.variants.length, categoryCount: categoryIds.length, mediaCount: data.media.length, initialStock: data.initialStock }
     }});
-    return product;
+    return { ...product, productNumber: product.productNumber.toString() };
   });
 }
 
@@ -483,7 +483,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 100,
     select: {
-      id: true, name: true, slug: true, description: true, city: true, district: true, contactPhone: true, videoUrl: true, customFields: true, brandId: true, status: true, approvalStatus: true,
+      id: true, productNumber: true, name: true, slug: true, description: true, city: true, district: true, contactPhone: true, videoUrl: true, customFields: true, brandId: true, status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
       mapLocation: { select: { latitude: true, longitude: true } },
       propertyDetails: true,
@@ -494,6 +494,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
   });
   return products.map((product) => ({
     ...product,
+    productNumber: product.productNumber.toString(),
     variants: product.variants.map((variant) => ({
       ...variant,
       prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() }))
