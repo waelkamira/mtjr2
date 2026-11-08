@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
+import { buildCategoryFieldsForEdit, getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
 
 describe("Akaar-compatible category field presets", () => {
   it("provides all required real-estate and vehicle listing details", () => {
@@ -25,5 +25,34 @@ describe("Akaar-compatible category field presets", () => {
 
   it("returns no presets for unknown categories without blocking custom fields", () => {
     expect(getCategoryFieldPresets("unknown-category")).toEqual([]);
+  });
+});
+
+describe("editable category field preservation", () => {
+  it("keeps saved non-preset scalar fields and overlays the current editor values", () => {
+    const fields = buildCategoryFieldsForEdit("real-estate", {
+      rooms: "3",
+      livingrooms: "2",
+      legacyAkaarField: "balcony",
+      numericLegacyField: 4,
+      nestedLegacyField: { ignored: true }
+    }, [
+      { key: "rooms", value: "4" },
+      { key: "legacyAkaarField", value: "" }
+    ]);
+
+    expect(fields.find((field) => field.key === "rooms")?.value).toBe("4");
+    expect(fields.find((field) => field.key === "livingrooms")?.value).toBe("2");
+    expect(fields.find((field) => field.key === "legacyAkaarField")?.value).toBe("");
+    expect(fields.find((field) => field.key === "numericLegacyField")?.value).toBe("4");
+    expect(fields.some((field) => field.key === "nestedLegacyField")).toBe(false);
+  });
+
+  it("does not mutate the saved JSON object or current field array", () => {
+    const saved = { custom: "saved" };
+    const current = [{ key: "custom", value: "edited" }];
+    buildCategoryFieldsForEdit("unknown-category", saved, current);
+    expect(saved).toEqual({ custom: "saved" });
+    expect(current).toEqual([{ key: "custom", value: "edited" }]);
   });
 });
