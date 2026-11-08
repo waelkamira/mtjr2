@@ -63,6 +63,19 @@ describe("marketplace seller lifecycle", () => {
     }) }));
   });
 
+  it("rejects non-HTTPS seller social links and out-of-range map coordinates", async () => {
+    const validInput = {
+      legalName: "Example Trading BV", displayName: "Example Store",
+      contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
+      residence: "Paris, France", businessType: "STORE" as const, sellingCategories: "Home goods",
+      intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
+      latitude: 48.8566, longitude: 2.3522
+    };
+    await expect(submitSellerApplication({ ...validInput, facebookUrl: "http://example.com" })).rejects.toThrow();
+    await expect(submitSellerApplication({ ...validInput, latitude: 120 })).rejects.toThrow();
+    expect(requireCurrentSession).not.toHaveBeenCalled();
+  });
+
   it("returns the existing pending application on retry", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-existing", status: "PENDING" });
     const result = await submitSellerApplication({
