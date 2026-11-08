@@ -405,3 +405,10 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 
 
 - Geography browser test robustness: governorate zoom assertion now follows the same coordinate-presence guard as lower administrative levels; avoids asserting a map focus change when the source geography record has no coordinates.
+
+
+## Seller catalog create/edit coverage and CI scheduling — 2026-11-08
+
+- Added an end-to-end seller flow for creating a product draft and editing its name/slug, verifying persistence through the seller catalog API. The image-storage boundary is mocked; product creation and update API/database operations remain real against the isolated CI database.
+- CI and Browser E2E no longer cancel in-flight runs on every main push, preventing direct-commit sequences from cancelling the validation run before it completes.
+- Latest exact-head browser and quality workflows are queued; completion remains pending.
