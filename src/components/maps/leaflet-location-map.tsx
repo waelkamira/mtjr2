@@ -1,6 +1,5 @@
 "use client";
 
-import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 
 type Coordinates = { latitude: number; longitude: number };
@@ -26,10 +25,6 @@ type LeafletApi = {
   divIcon(options: Record<string, unknown>): unknown;
   marker(point: [number, number], options: Record<string, unknown>): LeafletMarker;
 };
-declare global {
-  interface Window { L?: LeafletApi }
-}
-
 type Props = {
   value?: Coordinates | null;
   focus?: (Coordinates & { zoom: number }) | null;
@@ -45,14 +40,28 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<LeafletMarker | null>(null);
   const onChangeRef = useRef(onChange);
-  const [ready, setReady] = useState(false);
+  const locationRef = useRef({ value, focus });
+  locationRef.current = { value, focus };
+  const [leaflet, setLeaflet] = useState<LeafletApi | null>(null);
   const [mapError, setMapError] = useState("");
 
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
 
   useEffect(() => {
-    if (!ready || !elementRef.current || !window.L || mapRef.current) return;
-    const L = window.L;
+    let active = true;
+    import("leaflet")
+      .then((module) => {
+        if (active) setLeaflet((module.default ?? module) as unknown as LeafletApi);
+      })
+      .catch(() => {
+        if (active) setMapError(locale === "ar" ? "تعذّر تحميل مكتبة الخريطة." : "The map library could not be loaded.");
+      });
+    return () => { active = false; };
+  }, [locale]);
+
+  useEffect(() => {
+    if (!leaflet || !elementRef.current || mapRef.current) return;
+    const L = leaflet;
     const map = L.map(elementRef.current, {
       center: SYRIA_CENTER,
       zoom: 6,
@@ -93,7 +102,6 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
     };
     map.on("click", clickHandler);
     mapRef.current = map;
-    if (value) setMarker(value, true, 14);
     const resize = () => map.invalidateSize();
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null;
     if (observer && elementRef.current) observer.observe(elementRef.current);
@@ -106,17 +114,17 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
       mapRef.current = null;
       markerRef.current = null;
     };
-    // The map instance is deliberately created once per Leaflet script load.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+    // The map instance is deliberately created once per bundled Leaflet module load.
+  }, [leaflet]);
 
   useEffect(() => {
-    if (!ready || !mapRef.current || !window.L) return;
-    const L = window.L;
-    const point = focus ?? value;
+    if (!leaflet || !mapRef.current) return;
+    const L = leaflet;
+    const { value: currentValue, focus: currentFocus } = locationRef.current;
+    const point = currentFocus ?? currentValue;
     if (!point) return;
     const position: [number, number] = [point.latitude, point.longitude];
-    if (value) {
+    if (currentValue) {
       if (!markerRef.current) {
         const icon = L.divIcon({
           className: "mtjr-leaflet-marker",
@@ -131,22 +139,14 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
         });
       } else markerRef.current.setLatLng(position);
     }
-    mapRef.current.flyTo(position, focus?.zoom ?? 14, { duration: 0.8 });
-  }, [ready, focus?.latitude, focus?.longitude, focus?.zoom, value?.latitude, value?.longitude]);
+    mapRef.current.flyTo(position, currentFocus?.zoom ?? 14, { duration: 0.8 });
+  }, [leaflet, focus?.latitude, focus?.longitude, focus?.zoom, value?.latitude, value?.longitude]);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-      <Script
-        src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossOrigin="anonymous"
-        strategy="afterInteractive"
-        onLoad={() => setReady(true)}
-        onError={() => setMapError(locale === "ar" ? "تعذّر تحميل مكتبة الخريطة. تحقق من الاتصال ثم أعد تحميل الصفحة." : "The map library could not be loaded. Check your connection and reload the page.")}
-      />
       <div className="relative">
         <div ref={elementRef} style={{ height }} className="z-0 w-full bg-slate-100" role="application" aria-label={locale === "ar" ? "خريطة تحديد موقع المنتج" : "Product location map"} />
-        {!ready && !mapError && <div className="absolute inset-0 grid place-items-center bg-slate-100/90 text-sm text-slate-600">{locale === "ar" ? "جارٍ تحميل الخريطة…" : "Loading map…"}</div>}
+        {!leaflet && !mapError && <div className="absolute inset-0 grid place-items-center bg-slate-100/90 text-sm text-slate-600">{locale === "ar" ? "جارٍ تحميل الخريطة…" : "Loading map…"}</div>}
         {mapError && <div role="alert" className="absolute inset-0 grid place-items-center bg-white/95 p-5 text-center text-sm text-red-700">{mapError}</div>}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)]">
