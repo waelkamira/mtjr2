@@ -380,10 +380,6 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     });
     if (changed.count !== 1) throw new Error("Product could not be updated.");
     if (categoryIds !== undefined) {
-      if (categoryIds.length) {
-        const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
-        if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
-      }
       await tx.productCategory.deleteMany({ where: { productId: id } });
       if (categoryIds.length) await tx.productCategory.createMany({
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
