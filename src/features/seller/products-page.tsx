@@ -57,6 +57,7 @@ export default function SellerProductsPage() {
   const [description, setDescription] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
+  const [geography, setGeography] = useState<{ governorateId: string; districtId?: string; subdistrictId?: string; localityId?: string; neighborhoodId?: string; source: "opensyria"; sourceVersion: "v0.1.5" } | null>(null);
   const [contactPhone, setContactPhone] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [initialStock, setInitialStock] = useState("1");
@@ -292,7 +293,7 @@ export default function SellerProductsPage() {
       const product = await json<{ id: string }>(await fetch("/api/products", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          storeId, name, slug, description, city, district, contactPhone, videoUrl: videoUrl || undefined,
+          storeId, name, slug, description, city, district, geography: geography ?? undefined, contactPhone, videoUrl: videoUrl || undefined,
           initialStock: Number(initialStock),
           customFields: Object.fromEntries(customFields.filter((field) => field.key.trim() && field.value.trim()).map((field) => [field.key.trim(), field.value.trim()])),
           ...(brandId ? { brandId } : {}),
@@ -316,7 +317,7 @@ export default function SellerProductsPage() {
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
-      setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setBarcode(""); setWeightGrams(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null); setMapFocus(null);
+      setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setGeography(null); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setBarcode(""); setWeightGrams(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null); setMapFocus(null);
       setPropertyType("APARTMENT"); setListingType("SALE"); setBedrooms(""); setBathrooms(""); setFloorArea("");
       setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
@@ -465,7 +466,7 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea required maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
             <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Barcode (optional)", "الباركود (اختياري)")}<input maxLength={100} className={inputClass} value={barcode} onChange={(e) => setBarcode(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Weight (grams)", "الوزن (غرام)")}<input type="number" min="0" max="1000000" step="1" className={inputClass} value={weightGrams} onChange={(e) => setWeightGrams(e.target.value)} /></label></div>
             <div className="grid gap-3 rounded-2xl border border-[var(--border)] p-4 sm:grid-cols-2">
-              <div className="sm:col-span-2"><SyriaLocationPicker district={district} inputClass={inputClass} onCityChange={setCity} onDistrictChange={setDistrict} onFocus={(coordinates, zoom) => setMapFocus({ coordinates, zoom, key: `${coordinates.latitude}:${coordinates.longitude}:${zoom}` })} /></div>
+              <div className="sm:col-span-2"><SyriaLocationPicker district={district} inputClass={inputClass} onCityChange={setCity} onDistrictChange={setDistrict} onGeographyChange={setGeography} onFocus={(coordinates, zoom) => setMapFocus({ coordinates, zoom, key: `${coordinates.latitude}:${coordinates.longitude}:${zoom}` })} /></div>
               <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "رقم الهاتف للتواصل")}<input required type="tel" minLength={6} maxLength={40} className={inputClass} value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Video link (YouTube / TikTok)", "رابط الفيديو (يوتيوب / تيك توك)")}<input type="url" maxLength={2048} className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Available quantity", "الكمية المتاحة")}<input required type="number" min="0" max="100000000" step="1" className={inputClass} value={initialStock} onChange={(e) => setInitialStock(e.target.value)} /></label>
