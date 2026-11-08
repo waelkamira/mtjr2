@@ -2752,3 +2752,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Extended the seller catalog Playwright journey to assert map zoom progression and mouse-wheel zoom using the map's viewport telemetry.
 - Changes are committed directly to canonical `main`. At log time, no exact-head GitHub Actions result has been observed for these direct commits. Do not claim typecheck, lint, build, browser E2E, or production deployment passed until the corresponding run is available.
 - Vercel's latest observed check remains blocked by the provider's build-rate limit; no deployment configuration or production secrets were changed.
+
+
+## 2026-11-08 — Seller/map CI lint failure triage
+
+- Inspected exact-head GitHub Actions CI run [42492266353](https://github.com/waelkamira/mtjr2/actions/runs/42492266353) for `1badcbfa50948d5d8f2b60791cf041266892d7c3`.
+- Prisma validation, migration deploy, client generation, and TypeScript typecheck passed. ESLint failed on two errors: an internal marketplace anchor in the new seller layout, and a synchronous state clear inside the geography picker effect. Unit tests and production build were skipped by the workflow after lint failed.
+- Fixed the seller navigation to use Next.js `Link`. Removed the redundant effect-body state update; selection handlers already clear neighbourhood suggestions when the selected geography/focus changes, while the effect remains responsible for the external neighbourhood fetch.
+- Fix commits were written directly to `main`: `6be4de2e3dd6356f7c6a909f8825a0ba15d5ea18` and `5262a9789cdd5f0c6cfb258f0fd438d9b53d2c55`. Exact-head rerun is pending; do not claim lint, unit tests, build or browser E2E passed until the new run reports them.
+- Vercel separately reports `Deployment rate limited — retry in 24 hours`; this is a provider quota failure, not an application build diagnosis. No Vercel settings, production secrets or production database were changed.
