@@ -165,12 +165,12 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     const categoryAttributeRows = categoryIds.length
       ? await tx.categoryAttribute.findMany({
           where: { categoryId: { in: categoryIds } },
-          select: { attributeDefinitionId: true, isRequired: true, options: true, attribute: { select: { key: true, valueType: true, variantLevel: true } } }
+          select: { attributeDefinitionId: true, isRequired: true, isVariantLevel: true, options: true, attribute: { select: { key: true, valueType: true } } }
         })
       : [];
     const allowedAttributes = new Map(categoryAttributeRows.map((row) => [row.attributeDefinitionId, row]));
-    const productAttributesByKey = new Map(categoryAttributeRows.filter((row) => !row.attribute.variantLevel).map((row) => [row.attribute.key, row]));
-    const variantAttributesByKey = new Map(categoryAttributeRows.filter((row) => row.attribute.variantLevel).map((row) => [row.attribute.key, row]));
+    const productAttributesByKey = new Map(categoryAttributeRows.filter((row) => !row.isVariantLevel).map((row) => [row.attribute.key, row]));
+    const variantAttributesByKey = new Map(categoryAttributeRows.filter((row) => row.isVariantLevel).map((row) => [row.attribute.key, row]));
     const submittedAttributes = new Map(data.attributes.map((item) => [item.attributeDefinitionId, item.value]));
     if (submittedAttributes.size !== data.attributes.length) throw new Error("A product attribute was submitted more than once.");
     const validateAttributeValue = (definition: (typeof categoryAttributeRows)[number], value: unknown) => {
@@ -185,7 +185,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       !(typeof value === "string" && !value.trim()) && !(Array.isArray(value) && value.length === 0);
     for (const [attributeId, value] of submittedAttributes) {
       const definition = allowedAttributes.get(attributeId);
-      if (!definition || definition.attribute.variantLevel) throw new Error("A submitted product attribute does not belong to the selected category or is variant-level.");
+      if (!definition || definition.isVariantLevel) throw new Error("A submitted product attribute does not belong to the selected category or is variant-level.");
       validateAttributeValue(definition, value);
     }
     for (const variant of data.variants) {
@@ -197,7 +197,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     }
     for (const row of categoryAttributeRows) {
       if (!row.isRequired) continue;
-      if (row.attribute.variantLevel) {
+      if (row.isVariantLevel) {
         for (const variant of data.variants) {
           if (!hasAttributeValue(variant.optionValues?.[row.attribute.key])) {
             throw new Error("Please complete all required variant options for every SKU.");
