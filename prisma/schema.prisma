@@ -758,6 +758,8 @@ model Product {
   media               ProductMedia[]
   mapLocation         ProductMapLocation?
   propertyDetails     ProductPropertyDetails?
+  mapLocation         ProductMapLocation?
+  propertyDetails     ProductPropertyDetails?
   variants            ProductVariant[]
   identifiers         ProductIdentifier[]
   attributes          ProductAttribute[]
@@ -828,6 +830,7 @@ model ProductMedia {
 
   @@index([productId, sortOrder])
 }
+
 
 
 model ProductVariant {
