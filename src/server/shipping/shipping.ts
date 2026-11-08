@@ -61,7 +61,7 @@ export async function createStoreShippingRate(input: unknown, now = new Date()) 
         minDeliveryDays: data.minDeliveryDays ?? null,
         maxDeliveryDays: data.maxDeliveryDays ?? null
       },
-      select: { id: true, storeId: true, marketId: true, currencyCode: true, name: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, priority: true }
+      select: { id: true, storeId: true, marketId: true, currencyCode: true, name: true, description: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, priority: true }
     });
     await tx.auditLog.create({ data: {
       actorType: "USER", actorId: actor.userId, action: "shipping.rate.created",
@@ -103,7 +103,7 @@ export async function updateStoreShippingRate(rateId: string, input: unknown, no
         minDeliveryDays: data.minDeliveryDays ?? null, maxDeliveryDays: data.maxDeliveryDays ?? null,
         priority: data.priority
       },
-      select: { id: true, storeId: true, marketId: true, currencyCode: true, name: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, priority: true }
+      select: { id: true, storeId: true, marketId: true, currencyCode: true, name: true, description: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, priority: true }
     });
     await tx.auditLog.create({ data: {
       actorType: "USER", actorId: actor.userId, action: "shipping.rate.updated",
