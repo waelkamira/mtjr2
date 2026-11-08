@@ -3001,3 +3001,6 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Store changes in these sections update the same shared preference used by the dashboard, product catalog and seller inbox.
 - This avoids different seller sections silently operating on different default stores after navigation.
 - Commits: `b87e18867efd2d10ac9b7ffbf2c18e739e55ae56`, `20c540aec6eae26e628aeac0afff0f709c58dc67`, `d8cf0ed10c76e6907ed0a2777f15d14f1e459e42`, `c52baac9e2c895b563ee83531acede05fc2d6507`.
+
+
+- Follow-up polish: removed the obsolete product-page navigation import (`490287e42b53e1551bf2b3e464e397ef75a983c5`) and clear stale inbox rows/conversation when switching stores (`89f3f9a4854951235603259b40a125610c206752`).
