@@ -300,7 +300,7 @@ const updateProductSchema = z.object({
     listingType: z.enum(["SALE", "RENT"]),
     bedrooms: z.number().int().min(0).max(100).nullable().optional(),
     bathrooms: z.number().int().min(0).max(100).nullable().optional(),
-    floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,2})?$/)
+    floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,2})?$/)
       .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
   }).nullable().optional()
 }).strict().refine((data) => Object.keys(data).length > 0, "At least one product field must be updated.");
