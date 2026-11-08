@@ -131,6 +131,25 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
       if (!seller || seller.status !== SellerStatus.ACTIVE) throw new Error("An approved seller account is required to create a store.");
       sellerId = seller.id;
 
+      // Serialize store creation per seller even when two requests arrive at once.
+      await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${seller.id}, 0))`);
+      const ownedStore = await tx.store.findFirst({
+        where: { sellerId: seller.id },
+        select: {
+          id: true, sellerId: true, storeNumber: true, name: true, slug: true, status: true,
+          markets: { where: { isEnabled: true }, select: { marketId: true } }
+        }
+      });
+      if (ownedStore) {
+        if (ownedStore.slug !== data.slug || !isMatchingStoreRequest(ownedStore, seller.id, data.name, marketIds)) {
+          throw new Error("Each seller can own only one store. Update the existing store instead of creating another.");
+        }
+        return {
+          id: ownedStore.id, storeNumber: ownedStore.storeNumber.toString(), name: ownedStore.name,
+          slug: ownedStore.slug, status: ownedStore.status, alreadyCreated: true
+        };
+      }
+
       const existing = await tx.store.findUnique({
         where: { slug: data.slug },
         select: {
