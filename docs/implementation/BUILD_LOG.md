@@ -2945,3 +2945,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Verification limits**
 - GitHub source updates succeeded on `main`; this confirms the files were committed, not that a deployment has refreshed.
 - No local package install, TypeScript check, lint, production build, database migration replay, or authenticated browser screenshot was available in this session. Runtime appearance and responsive behavior remain unverified until the application is built and opened.
+
+
+## 2026-11-09 — Seller dashboard and product studio refinement
+
+- Added a compact dashboard top bar with a responsive workspace search field, orders shortcut, seller avatar, and a direct product workflow entry point in the existing dashboard layout.
+- Refined the dashboard welcome surface to the reference's dark navy/cool blue-grey palette and reduced the previous purple cast. Existing metric data and chart components remain data-backed.
+- Expanded the create-product form header into a product studio introduction and applied raised, inset clay-style controls consistently to the form fields. The existing category-driven attribute schema, variant-level attributes, image provider rotation, image preview/replace/remove/reorder, location picker, and server-side draft workflow were retained.
+- Commits: dashboard toolbar `d086cd7d4167a10ab6a1e1f00027c69c3c5c0df9`; product studio `751e5408ac3d1df8e5535f5df2fa8ea25089cca7`.
+- Akaar review remains limited to seller onboarding requirements: its legacy newPost product form was commented out and was not copied; Matjar's production category-attribute API remains the source of category fields.
+- Build/runtime verification is still outstanding; source commits are confirmed on main, but no successful build or browser rendering was available in this session.
