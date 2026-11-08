@@ -5,6 +5,17 @@ import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
+import {
+  BoxPlot,
+  type ChartDatum,
+  HistogramChart,
+  HorizontalBarChart,
+  LineAreaChart,
+  PieChart,
+  RadarChart,
+  type ScatterDatum,
+  ScatterPlot
+} from "@/components/data-charts";
 
 type Dashboard = {
   filters: {
@@ -171,6 +182,28 @@ export default function AdminDashboardPage() {
     () => dashboard?.filters.stores.filter((store) => !filters.sellerId || store.sellerId === filters.sellerId) ?? [],
     [dashboard?.filters.stores, filters.sellerId]
   );
+  const emptyChartLabel = translate(locale, "No chart data is available for this range.", "لا تتوفر بيانات للمخطط في هذه الفترة.");
+  const dailyOrdersChart: ChartDatum[] = dashboard?.dailyOrders.map((day) => ({ label: day.day.slice(5), value: day.count })) ?? [];
+  const orderFlowChart: ChartDatum[] = dashboard ? [
+    { label: translate(locale, "Awaiting payment", "بانتظار الدفع"), value: dashboard.metrics.pendingOrders },
+    { label: translate(locale, "Processing", "قيد المعالجة"), value: dashboard.metrics.processingOrders },
+    { label: translate(locale, "Completed", "مكتمل"), value: dashboard.metrics.completedOrders }
+  ] : [];
+  const paymentFlowChart: ChartDatum[] = dashboard ? [
+    { label: translate(locale, "Successful", "ناجحة"), value: dashboard.metrics.successfulPayments },
+    { label: translate(locale, "Failed", "فاشلة"), value: dashboard.metrics.failedPayments },
+    { label: translate(locale, "Pending", "معلقة"), value: dashboard.metrics.pendingPayments }
+  ] : [];
+  const queueChart: ChartDatum[] = dashboard ? [
+    { label: translate(locale, "Product reviews", "مراجعات المنتجات"), value: dashboard.metrics.pendingProductReviews },
+    { label: translate(locale, "Store reviews", "مراجعات المتاجر"), value: dashboard.metrics.pendingStoreReviews },
+    { label: translate(locale, "Returns", "المرتجعات"), value: dashboard.metrics.requestedReturns },
+    { label: translate(locale, "Support tickets", "تذاكر الدعم"), value: dashboard.metrics.openSupportTickets }
+  ] : [];
+  const dailyOrderValues = dailyOrdersChart.map((item) => item.value);
+  const dailyOrderScatter: ScatterDatum[] = dailyOrdersChart.map((item, index) => ({
+    label: item.label, x: index + 1, y: item.value, size: Math.max(4, Math.min(18, item.value + 4))
+  }));
 
   function updateFilter(key: keyof Filters, value: string) {
     setFilters((current) => ({ ...current, [key]: value, ...(key === "sellerId" ? { storeId: "" } : {}) }));
@@ -272,6 +305,23 @@ export default function AdminDashboardPage() {
               { label: "Product reviews awaiting moderation", value: dashboard.metrics.pendingProductReviews, color: "bg-fuchsia-500" },
               { label: "Store reviews awaiting moderation", value: dashboard.metrics.pendingStoreReviews, color: "bg-violet-500" }
             ]} />
+          </section>
+
+          <section aria-label={translate(locale, "Advanced analytics charts", "مخططات التحليلات المتقدمة")} className="mt-8 grid gap-5 lg:grid-cols-2">
+            <LineAreaChart title={translate(locale, "Daily order trend", "اتجاه الطلبات اليومي")} description={translate(locale, "Orders placed each day in the selected period.", "الطلبات المنشأة يومياً خلال الفترة المحددة.")} data={dailyOrdersChart} emptyLabel={emptyChartLabel} />
+            <PieChart title={translate(locale, "Order fulfillment mix", "توزيع حالات الطلبات")} description={translate(locale, "Awaiting payment, processing and completed orders.", "الطلبات بانتظار الدفع وقيد المعالجة والمكتملة.")} data={orderFlowChart} emptyLabel={emptyChartLabel} />
+            <HorizontalBarChart title={translate(locale, "Administrative queues", "قوائم الانتظار الإدارية")} data={queueChart} emptyLabel={emptyChartLabel} />
+            <PieChart title={translate(locale, "Payment outcomes", "نتائج المدفوعات")} data={paymentFlowChart} emptyLabel={emptyChartLabel} />
+            <HistogramChart title={translate(locale, "Daily order volume distribution", "توزيع حجم الطلبات اليومي")} values={dailyOrderValues} bins={6} emptyLabel={emptyChartLabel} />
+            <BoxPlot title={translate(locale, "Daily order volume spread", "نطاق حجم الطلبات اليومي")} values={dailyOrderValues} emptyLabel={emptyChartLabel} />
+            <ScatterPlot title={translate(locale, "Order volume by day", "حجم الطلبات حسب اليوم")} data={dailyOrderScatter} xLabel={translate(locale, "Day index", "ترتيب اليوم")} yLabel={translate(locale, "Orders", "الطلبات")} emptyLabel={emptyChartLabel} />
+            <RadarChart title={translate(locale, "Marketplace health indicators", "مؤشرات صحة السوق")} data={[
+              { label: translate(locale, "Users", "المستخدمون"), value: dashboard.metrics.activeUsers },
+              { label: translate(locale, "Sellers", "البائعون"), value: dashboard.metrics.activeSellers },
+              { label: translate(locale, "Stores", "المتاجر"), value: dashboard.metrics.activeStores },
+              { label: translate(locale, "Products", "المنتجات"), value: dashboard.metrics.totalProducts },
+              { label: translate(locale, "Orders", "الطلبات"), value: dashboard.metrics.totalOrders }
+            ]} emptyLabel={emptyChartLabel} />
           </section>
 
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
