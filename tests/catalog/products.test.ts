@@ -81,7 +81,7 @@ describe("product lifecycle", () => {
      description: "Product description",
      city: "Damascus",
      district: "Central",
-     geography: { governorateId: "sy-damascus", districtId: "sy-damascus-damascus", subdistrictId: "sy-damascus-damascus-damascus", localityId: "sy-damascus-city", source: "opensyria", sourceVersion: "v0.1.5" },
+     geography: { governorateId: "sy-damascus", districtId: "sy-damascus-damascus", subdistrictId: "sy-damascus-damascus-damascus", localityId: "sy-damascus-damascus-damascus-damascus", source: "opensyria", sourceVersion: "v0.1.5" },
      contactPhone: "+963900000000",
      categoryIds: ["category-1"], brandId: "brand-1",
       media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
