@@ -201,3 +201,14 @@ The provider-neutral foundation is implemented on a clean branch based on curren
 - The corrected workflow passed on main commit `0d0fab6f47fdf49396022331f77f5612616a8d44` ([run 42404238983](https://github.com/waelkamira/mtjr2/actions/runs/42404238983)): committed migrations deployed, the PostgreSQL integration suite passed (3 files / 9 tests), and demo seed repeatability passed.
 - General CI passed on the subsequent documentation/route-registry head `f05480a83fe3126f0183e51f990e47216fb14098` ([run 42404307099](https://github.com/waelkamira/mtjr2/actions/runs/42404307099)), including Prisma, typecheck, lint, unit tests, build, API security inventory and UI mutation-feedback inventory.
 - Payment provider onboarding, live charge/webhook smoke test, refunds through an actual provider, settlement/reconciliation, and shipment carrier integration remain deliberately blocked on owner-approved markets/currencies, merchant account, payment methods, and provider choice. No provider or launch market is to be guessed.
+
+
+
+## 2026-11-08 — Buying journey and payment boundaries reconciled
+
+- The current `main` includes the buyer browser journey in `tests/e2e/marketplace.spec.ts`: product detail → add to cart → cart → checkout quote → delivery address → shipping selection → tax calculation → order placement → buyer order detail.
+- The browser journey asserts the resulting order is `PENDING_PAYMENT` and explicitly displays that payment is pending. It does not simulate a successful charge or authorize seller fulfillment.
+- The provider-neutral payment intent and verified-webhook foundation is present in `src/server/payments/**`; an unregistered provider fails closed before order lookup or mutation. Provider onboarding and real charge/webhook verification remain blocked until the owner selects launch market(s), currency, merchant account and payment methods.
+- Manual refunds are intentionally external/manual: only physically received return items can create a pending refund; a finance operator records an external reference only after processing outside the platform. This is not a provider refund integration or settlement reconciliation.
+- PR #78's exact-head Browser E2E run [42489548167](https://github.com/waelkamira/mtjr2/actions/runs/42489548167) passed. Fresh merged-main General CI, platform PostgreSQL, and clean migration replay are tracked by runs 42489984972, 42489984985, and 42489985055; check final conclusions before marking the merge-head gate complete.
+- No live payment, refund, carrier, production database, or deployment operation was performed.
