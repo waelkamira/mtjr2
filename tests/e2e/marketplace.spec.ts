@@ -141,15 +141,21 @@ test.describe("seller journey", () => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/seller");
-    await expect(page.locator("main").last()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Seller dashboard|لوحة تحكم البائع/i })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await page.screenshot({ path: "test-results/seller-desktop.png", fullPage: true });
     await page.goto("/seller/advertising");
     await expect(page.getByRole("heading", { name: /Advertising campaigns|الحملات الإعلانية/i })).toBeVisible();
-    await page.screenshot({ path: "test-results/seller-desktop.png", fullPage: true });
+    await page.screenshot({ path: "test-results/seller-advertising-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.reload();
-    await expect(page.getByRole("heading", { name: /Advertising campaigns|الحملات الإعلانية/i })).toBeVisible();
+    await page.goto("/seller");
+    await expect(page.getByRole("heading", { name: /Seller dashboard|لوحة تحكم البائع/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-mobile.png", fullPage: true });
+    await page.goto("/seller/advertising");
+    await expect(page.getByRole("heading", { name: /Advertising campaigns|الحملات الإعلانية/i })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await page.screenshot({ path: "test-results/seller-advertising-mobile.png", fullPage: true });
   });
 });
 
