@@ -1,6 +1,5 @@
 "use client";
 import { useCallback,useEffect,useState,type FormEvent } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
