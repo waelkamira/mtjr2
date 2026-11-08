@@ -52,8 +52,8 @@ describe("product image storage", () => {
       width: 1200,
       height: 900
     });
-    const request = fetchMock.mock.calls[0][1] as RequestInit;
-    expect(new Headers(request.headers).get("authorization")).toBe(`Basic ${Buffer.from("private_test_key:").toString("base64")}`);
+    const request = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(new Headers(request?.headers).get("authorization")).toBe(`Basic ${Buffer.from("private_test_key:").toString("base64")}`);
   });
 
   it("classifies ImageKit 403 as a provider configuration/permission failure, not a generic gateway failure", async () => {
