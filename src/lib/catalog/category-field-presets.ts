@@ -68,9 +68,12 @@ export function mergeEditedCategoryFields(
   savedValues: unknown,
   currentFields: Array<{ key: string; value: string }>
 ): Record<string, unknown> {
-  const result: Record<string, unknown> = savedValues && typeof savedValues === "object" && !Array.isArray(savedValues)
-    ? { ...(savedValues as Record<string, unknown>) }
-    : {};
+  const result = Object.create(null) as Record<string, unknown>;
+  if (savedValues && typeof savedValues === "object" && !Array.isArray(savedValues)) {
+    for (const [key, value] of Object.entries(savedValues as Record<string, unknown>)) {
+      result[key] = value;
+    }
+  }
   for (const field of currentFields) {
     const key = field.key.trim();
     if (!key) continue;
