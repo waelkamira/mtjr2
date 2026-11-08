@@ -7,7 +7,7 @@ import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import ProductLocationMap, { type ProductCoordinates } from "@/components/maps/product-location-map";
 import { toMinorUnits } from "@/lib/money";
-import { buildCategoryFieldsForEdit, getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
+import { buildCategoryFieldsForEdit, getCategoryFieldPresets, mergeEditedCategoryFields } from "@/lib/catalog/category-field-presets";
 
 type Market = {
   id: string; code: string; name: string;
@@ -383,10 +383,8 @@ export default function SellerProductsPage() {
     if (!editingId) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const customFields = editCustomFields.reduce<Record<string, string>>((result, field) => {
-        if (field.value.trim()) result[field.key] = field.value.trim();
-        return result;
-      }, {});
+      const savedCustomFields = products.find((product) => product.id === editingId)?.customFields;
+      const customFields = mergeEditedCategoryFields(savedCustomFields, editCustomFields);
       if (editIsRealEstate && !editMapLocation) {
         throw new Error(translate(locale, "Choose a location on the map for this real-estate listing.", "حدد موقع العقار على الخريطة."));
       }
