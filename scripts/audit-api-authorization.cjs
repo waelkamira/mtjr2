@@ -107,6 +107,7 @@ const lines = [
   "- Route handlers discovered: **" + rows.length + "**",
   "- Routes with a classified access boundary: **" + (rows.length - unresolved.length) + "**",
   "- Routes requiring manual authorization review: **" + unresolved.length + "**",
+  "- Scope: static import-trace classification; it does not replace actor, ownership, or cross-store behavioral tests.",
   "",
   ...[...counts.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => "- " + name + ": **" + count + "**"),
   "",
@@ -118,5 +119,7 @@ const report = lines.join("\n") + "\n";
 fs.writeFileSync("api-authorization-boundary-report.md", report);
 process.stdout.write(report);
 
-// Initially report-only. Promote to a hard CI gate after the first review pass
-// has explicitly classified every intentionally public or guest-token route.
+if (unresolved.length > 0) {
+  process.stderr.write("Unclassified API routes require explicit access-boundary review.\n");
+  process.exitCode = 1;
+}
