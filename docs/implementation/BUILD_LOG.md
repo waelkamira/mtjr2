@@ -2597,3 +2597,10 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 
 **Verification status**
 - These are source-level corrections committed to the feature branch. Automated tests, typecheck, lint, Prisma validation, migration execution, and browser checks have still not run because this session has no repository runtime/checkout and the Vercel deployment quota previously blocked builds. Do not interpret this static review as a passing build.
+
+## 2026-11-08 — Category editor regression coverage
+
+- Extracted the custom-field preservation logic into the shared catalog preset module so it can be tested independently of the React page.
+- Added regression tests for preserving legacy Akaar scalar fields, retaining values across primary-category changes, allowing intentional clearing of a field, and avoiding mutation of saved/current input objects.
+- Nested JSON values are deliberately not rendered as scalar text inputs; their original values are not silently coerced into `[object Object]`.
+- Tests were added but could not be executed in this session. The branch remains blocked from hosted build verification by the Vercel deployment quota.
