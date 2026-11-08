@@ -2585,3 +2585,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added a regression test for the second-store rejection and retained the idempotent matching-store retry behavior.
 - This protects the application creation path from concurrent duplicate store requests. A database-level unique constraint and a preflight audit/cleanup for any historical duplicate stores remain a separate migration task; no destructive cleanup was attempted.
 - The latest full CI and browser E2E run is pending on PR #72 and will be used to verify these changes.
+
+
+## 2026-11-08 — Current-main verification findings and test-fixture correction
+- The first exact-current-main CI run confirmed Prisma validation, PostgreSQL migration replay, Prisma Client generation, TypeScript, and ESLint. The full Vitest run then exposed one stale admin-seller test fixture: it supplied a legacy `stores[]`/`_count` shape while the current Prisma query selects the singular `store` relation.
+- Corrected `tests/admin/sellers.test.ts` to return the current singular relation shape. The seller one-store test was also corrected after its first run exposed an assertion-regex mismatch (the service correctly returned `Each seller can own only one store...`).
+- New verification commit on PR #73: `38030c1edaf605f90a053fde065414d36632a99b`. Fresh CI, Platform PostgreSQL Integration, and Browser E2E runs were triggered for this corrected head. Results are pending; no merge or deployment has been performed.
+- The previous CI result of 439 passed / 1 failed is superseded by this test-fixture correction and must not be reported as a passing run until the fresh exact-head jobs complete.
