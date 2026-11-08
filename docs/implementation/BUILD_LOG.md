@@ -2783,3 +2783,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The existing Syrian geography/Leaflet test now guards governorate zoom by coordinate availability, matching the picker behavior.
 - Changed both CI workflow concurrency groups to preserve in-flight quality/browser runs during rapid direct commits to canonical `main`. Previous `cancel-in-progress: true` cancelled runs while documentation updates were being committed in sequence; new pushes will queue instead of cancelling active work.
 - These latest changes are on `main`; the exact-head quality and Browser E2E runs are queued behind earlier runs. Do not claim the new create/edit browser journey passed until its Chromium run completes.
+
+
+## 2026-11-08 — Seller workspace closeout verification
+
+**Canonical branch:** `main`  
+**Verified source SHA:** `8d19568415f0a9139987774e7697cbf8dfbb90be`
+
+- Seller dashboard responsive journey captures the actual `/seller` workspace at desktop and 390px mobile widths after operational data has loaded; the test checks horizontal overflow at both sizes. Advertising is checked separately at both widths.
+- Seller catalog browser journey creates a real draft through the seller product API, verifies it in the store catalog, edits its name/slug through the real update API, and verifies persisted values. Only the external media-provider response is mocked; the upload UI, product API, database writes and catalog reads remain real in the isolated CI database.
+- Seller workspace journey edits the seeded shipping service through the real seller shipping PATCH API and verifies the updated name/description through a fresh API read.
+- Seller single-store guard was rechecked in source: the workspace hides second-store creation once an owned store exists; the service serializes creation per seller with an advisory transaction lock and rejects a second store with a different setup.
+- Geography browser coverage exercises Syrian governorate/district/subdistrict/locality selection and Leaflet zoom behavior, with coordinate-aware assertions.
+- Exact-SHA Browser E2E run `42494633661` completed successfully; Chromium journeys and responsive screenshot artifacts uploaded.
+- Exact-SHA CI run `42494633784` completed successfully: Prisma validate/migrate/generate, TypeScript, ESLint, Vitest, production build, API security inventory and UI mutation-feedback inventory.
+- Vercel status remains a provider-side build-rate limit (`build-rate-limit`), not an application build failure. No Vercel environment or deployment configuration was changed.

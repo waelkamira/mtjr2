@@ -412,3 +412,13 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - Added an end-to-end seller flow for creating a product draft and editing its name/slug, verifying persistence through the seller catalog API. The image-storage boundary is mocked; product creation and update API/database operations remain real against the isolated CI database.
 - CI and Browser E2E no longer cancel in-flight runs on every main push, preventing direct-commit sequences from cancelling the validation run before it completes.
 - Latest exact-head browser and quality workflows are queued; completion remains pending.
+
+
+## Seller workspace verification — 2026-11-08
+
+- `/seller`: seller dashboard renders operational store state, order/inventory metrics and charts; responsive Chromium screenshots captured at desktop and 390px mobile widths after data load, with no horizontal overflow.
+- `/seller/products`: browser journey creates and edits a draft product, verifies persistence through seller catalog API reads; external image-provider response alone is mocked.
+- Seller shipping configuration: existing shipping service is edited from the workspace; PATCH persistence verified by a fresh `GET /api/seller/shipping-rates`.
+- One-store-per-seller rule: UI hides create-store form after an owned store exists; backend serializes store creation and rejects a second distinct store setup.
+- Syrian geography/Leaflet selection and zoom journey passes in the same Browser E2E run.
+- Exact `main` SHA `8d19568415f0a9139987774e7697cbf8dfbb90be`: Browser E2E run `42494633661` PASS; CI run `42494633784` PASS.
