@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   storeFindUnique: vi.fn(),
   brandFindFirst: vi.fn(),
   categoryCount: vi.fn(),
-  categoryFindMany: vi.fn(),
   categoryAttributeFindMany: vi.fn(),
   localityFindUnique: vi.fn(),
   neighborhoodFindUnique: vi.fn(),
@@ -20,10 +19,6 @@ const mocks = vi.hoisted(() => ({
   categoryDeleteMany: vi.fn(),
   categoryCreateMany: vi.fn(),
   productUpdateMany: vi.fn(),
-  productMapLocationUpsert: vi.fn(),
-  productMapLocationDeleteMany: vi.fn(),
-  productPropertyDetailsUpsert: vi.fn(),
-  productPropertyDetailsDeleteMany: vi.fn(),
   productMediaFindMany: vi.fn(),
   productMediaDeleteMany: vi.fn(),
   productMediaCreateMany: vi.fn(),
@@ -59,7 +54,6 @@ describe("product lifecycle", () => {
     });
     mocks.brandFindFirst.mockResolvedValue({ id: "brand-1" });
     mocks.categoryCount.mockResolvedValue(1);
-    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "general" }]);
     mocks.categoryAttributeFindMany.mockResolvedValue([]);
     mocks.localityFindUnique.mockResolvedValue(null);
     mocks.neighborhoodFindUnique.mockResolvedValue(null);
@@ -74,14 +68,12 @@ describe("product lifecycle", () => {
     mocks.transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       store: { findUnique: mocks.storeFindUnique },
       brand: { findFirst: mocks.brandFindFirst },
-      category: { count: mocks.categoryCount, findMany: mocks.categoryFindMany },
+      category: { count: mocks.categoryCount },
       categoryAttribute: { findMany: mocks.categoryAttributeFindMany },
       syriaLocality: { findUnique: mocks.localityFindUnique },
       syriaNeighborhood: { findUnique: mocks.neighborhoodFindUnique },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
-      productMapLocation: { upsert: mocks.productMapLocationUpsert, deleteMany: mocks.productMapLocationDeleteMany },
-      productPropertyDetails: { upsert: mocks.productPropertyDetailsUpsert, deleteMany: mocks.productPropertyDetailsDeleteMany },
       productMedia: { findMany: mocks.productMediaFindMany, deleteMany: mocks.productMediaDeleteMany, createMany: mocks.productMediaCreateMany },
       product: {
         create: mocks.productCreate,
@@ -102,47 +94,6 @@ describe("product lifecycle", () => {
     const createArg = mocks.productCreate.mock.calls[0][0];
     expect(createArg.data.variants.create[0].prices.create[0].amountMinor).toBe(BigInt("2499"));
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
-  });
-
-  it("persists structured real-estate details and a privacy-rounded public map pin", async () => {
-    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
-    await createDraftProduct({
-      storeId: "store-1", name: "City apartment", slug: "city-apartment",
-      categoryIds: ["category-1"],
-      mapLocation: { latitude: 33.51381, longitude: 36.27654 },
-      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", bedrooms: 2, bathrooms: 1, floorArea: "85.50" },
-      city: "Damascus", district: "Mazzeh", contactPhone: "+963900000000",
-      videoUrl: "https://video.example/listing",
-      variants: [{ sku: "HOME-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "12000000" }] }]
-    });
-    const data = mocks.productCreate.mock.calls[0][0].data;
-    expect(data).toMatchObject({
-      city: "Damascus", district: "Mazzeh", contactPhone: "+963900000000",
-      videoUrl: "https://video.example/listing",
-      mapLocation: { create: { latitude: 33.51381, longitude: 36.27654, publicLatitude: 33.51, publicLongitude: 36.28 } },
-      propertyDetails: { create: { propertyType: "APARTMENT", listingType: "SALE", bedrooms: 2, bathrooms: 1 } }
-    });
-    expect(data.propertyDetails.create.floorArea.toString()).toBe("85.5");
-  });
-
-  it("requires a map pin and property details for real-estate category drafts", async () => {
-    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
-    await expect(createDraftProduct({
-      storeId: "store-1", name: "City apartment", slug: "city-apartment",
-      categoryIds: ["category-1"],
-      variants: [{ sku: "HOME-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "12000000" }] }]
-    })).rejects.toThrow(/property details and a map location/i);
-    expect(mocks.productCreate).not.toHaveBeenCalled();
-  });
-
-  it("rejects property details outside the real-estate category", async () => {
-    await expect(createDraftProduct({
-      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
-      categoryIds: ["category-1"],
-      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "20" },
-      variants: [{ sku: "MUG-1", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
-    })).rejects.toThrow(/only be added to a real-estate listing/i);
-    expect(mocks.productCreate).not.toHaveBeenCalled();
   });
 
   it("validates and persists category-scoped typed attributes", async () => {
