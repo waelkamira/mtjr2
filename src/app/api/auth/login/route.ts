@@ -30,7 +30,7 @@ export async function POST(request: Request): Promise<Response> {
       const status = result.reason === "RATE_LIMITED" ? 429 : 401;
       return Response.json({
         error: result.message,
-        code: result.reason === "RATE_LIMITED" ? "RATE_LIMITED" : "INVALID_CREDENTIALS"
+        code: result.reason
       }, { status });
     }
     await setSessionCookie(result.session.token, result.session.expiresAt);
