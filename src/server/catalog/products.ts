@@ -7,6 +7,7 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { requirePermission } from "@/server/identity/permission-guard";
 import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
+import { getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
 
 const priceSchema = z.object({
   marketId: z.string().trim().min(1),
@@ -113,8 +114,17 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
     }
     const categories = categoryIds.length
-      ? await tx.category.findMany({ where: { id: { in: categoryIds } }, select: { slug: true } })
+      ? await tx.category.findMany({ where: { id: { in: categoryIds } }, select: { id: true, slug: true } })
       : [];
+    const primaryCategorySlug = categories.find((category) => category.id === categoryIds[0])?.slug;
+    const requiredCategoryFields = primaryCategorySlug ? getCategoryFieldPresets(primaryCategorySlug) : [];
+    const missingCategoryFields = requiredCategoryFields.filter((field) => {
+      const value = data.customFields?.[field.key];
+      return typeof value !== "string" || !value.trim();
+    });
+    if (missingCategoryFields.length) {
+      throw new Error("Complete all required category-specific product details: " + missingCategoryFields.map((field) => field.label).join(", "));
+    }
     const isRealEstate = categories.some((category) => category.slug === "real-estate");
     if (isRealEstate && (!data.propertyDetails || !data.mapLocation)) {
       throw new Error("Real estate listings need property details and a map location.");
