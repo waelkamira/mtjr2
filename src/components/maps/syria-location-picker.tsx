@@ -79,7 +79,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   useEffect(() => {
     const localityId = value.localityId;
-    if (!localityId || localityId === hydratedLocalityId.current) return;
+    if (!localityId) {
+      hydratedLocalityId.current = "";
+      return;
+    }
+    if (localityId === hydratedLocalityId.current) return;
     hydratedLocalityId.current = localityId;
     let active = true;
     void Promise.resolve().then(async () => {
@@ -124,7 +128,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       }
     });
     return () => { active = false; };
-  }, [value.localityId]);
+  }, [value.localityId, value.neighborhoodId, value.latitude, value.longitude]);
 
   useEffect(() => {
     const searchPoint = focus ?? (
