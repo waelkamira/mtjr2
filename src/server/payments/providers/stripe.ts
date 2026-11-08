@@ -58,12 +58,13 @@ async function createIntent(input: Parameters<PaymentProviderAdapter["createInte
   const successUrl = new URL(input.returnUrl);
   successUrl.searchParams.set("payment", "success");
   successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
+  const stripeSuccessUrl = successUrl.toString().replace("%7BCHECKOUT_SESSION_ID%7D", "{CHECKOUT_SESSION_ID}");
   const cancelUrl = new URL(input.returnUrl);
   cancelUrl.searchParams.set("payment", "cancelled");
 
   const body = new URLSearchParams();
   body.set("mode", "payment");
-  body.set("success_url", successUrl.toString());
+  body.set("success_url", stripeSuccessUrl);
   body.set("cancel_url", cancelUrl.toString());
   body.set("client_reference_id", input.paymentId);
   body.set("metadata[paymentId]", input.paymentId);
