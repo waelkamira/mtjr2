@@ -38,9 +38,9 @@ export default function AddressesPage() {
   const reloadAddresses = useCallback(async () => {
     const response = await fetch("/api/account/addresses", { cache: "no-store" });
     const data = await response.json() as { addresses?: Address[]; error?: string };
-    if (!response.ok) throw new Error(data.error || t("Unable to load addresses.", "تعذّر تحميل العناوين."));
+    if (!response.ok) throw new Error(data.error || "Unable to load addresses.");
     setItems(data.addresses ?? []);
-  }, [locale]);
+  }, []);
 
   useEffect(() => {
     let active = true;
