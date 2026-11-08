@@ -24,7 +24,7 @@ import { createSellerStore, reviewSellerApplication, submitSellerApplication } f
 describe("marketplace seller lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: null } });
+    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: new Date("2026-01-01T00:00:00.000Z") } });
     requirePermission.mockResolvedValue({ userId: "admin-1" });
     sellerFindUnique.mockResolvedValue(null);
     sellerCreate.mockResolvedValue({ id: "seller-1", status: "PENDING" });
@@ -61,6 +61,18 @@ describe("marketplace seller lifecycle", () => {
       contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
       businessType: "STORE", latitude: 48.8566, longitude: 2.3522
     }) }));
+  });
+
+  it("requires a verified account email before seller application submission", async () => {
+    requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: null } });
+    await expect(submitSellerApplication({
+      legalName: "Example Trading BV", displayName: "Example Store",
+      contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
+      residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
+      latitude: 48.8566, longitude: 2.3522
+    })).rejects.toThrow(/verify your email/i);
+    expect(sellerCreate).not.toHaveBeenCalled();
   });
 
   it("rejects non-HTTPS seller social links and out-of-range map coordinates", async () => {
