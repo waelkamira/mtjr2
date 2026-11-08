@@ -125,7 +125,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     const item = districts.find((entry) => entry.id === id);
     onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
-    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 9 });
+    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 10 });
     setError("");
     if (!id) return;
     setBusy(true);
@@ -138,8 +138,9 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const request = ++selectionRequest.current;
     setSubdistrictId(id); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     const item = subdistricts.find((entry) => entry.id === id);
-    onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
-    if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 11 });
+    const selectedDistrict = districts.find((entry) => entry.id === districtId);
+    onChange({ district: selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined });
+    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 12 });
     setError("");
     if (!id) return;
     setBusy(true);
