@@ -1,0 +1,482 @@
+{
+  "source": "waelkamira/Akaar",
+  "generatedFromCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+  "categories": [
+    {
+      "categoryAr": "أثاث",
+      "sourcePath": "components/categoryFields/أثاث.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "70015c124441dc0c3d8f444b2bf2ee4fead77d2a",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع الأثاث",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة المصنوعة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "dimensions",
+          "labelAr": "الأبعاد",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "style",
+          "labelAr": "النمط التصميمي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "assembly",
+          "labelAr": "التجميع",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "أحذية",
+      "sourcePath": "components/categoryFields/أحذية.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "6fdbabf65257a47d0a6ba0c8c4e1f4b2bee67eee",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع الحذاء",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "category",
+          "labelAr": "التصنيف",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "size",
+          "labelAr": "المقاس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "usage",
+          "labelAr": "الاستخدام",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "أدوات",
+      "sourcePath": "components/categoryFields/أدوات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "1640a5c261b14b5e9685f3a3383837016ce49e89",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "toolCategory",
+          "labelAr": "تصنيف الأداة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "powerSource",
+          "labelAr": "مصدر الطاقة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "powerToolType",
+          "labelAr": "نوع الأداة الكهربائية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "voltage",
+          "labelAr": "الجهد الكهربائي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "lightingType",
+          "labelAr": "نوع الإضاءة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة المصنوعة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "measurement",
+          "labelAr": "القياسات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "safetyRating",
+          "labelAr": "تصنيف السلامة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "ألعاب",
+      "sourcePath": "components/categoryFields/ألعاب.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "79205691a17b556d162de06db9f457f284a5828f",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع اللعبة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "platform",
+          "labelAr": "المنصة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "genre",
+          "labelAr": "النوع",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "boardGameType",
+          "labelAr": "نوع اللعبة اللوحية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "minAge",
+          "labelAr": "الحد الأدنى للعمر",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "players",
+          "labelAr": "عدد اللاعبين",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "إلكترونيات",
+      "sourcePath": "components/categoryFields/إلكترونيات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "0006751334e215b2ff7ea71519c10ef870863336",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع الجهاز",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "screenSize",
+          "labelAr": "حجم الشاشة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "resolution",
+          "labelAr": "دقة العرض",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "audioOutput",
+          "labelAr": "قوة الصوت",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "smartFeatures",
+          "labelAr": "الميزات الذكية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "connectivity",
+          "labelAr": "إمكانيات الاتصال",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "power",
+          "labelAr": "الجهد الكهربائي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "جمال",
+      "sourcePath": "components/categoryFields/جمال.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "5c942b33fd1db5899a347cdafd022407dc1a086e",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "makeupType",
+          "labelAr": "نوع المكياج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "skinCareType",
+          "labelAr": "نوع العناية بالبشرة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "skinType",
+          "labelAr": "نوع البشرة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "hairType",
+          "labelAr": "نوع الشعر",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "hairCareType",
+          "labelAr": "نوع العناية بالشعر",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "fragranceType",
+          "labelAr": "نوع العطر",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "حقائب",
+      "sourcePath": "components/categoryFields/حقائب.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "70f567c84cd9ecf08a2a048b12800fe75900152f",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع الحقيبة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "style",
+          "labelAr": "النمط التصميمي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة المصنوعة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "size",
+          "labelAr": "الحجم",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "capacity",
+          "labelAr": "السعة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "features",
+          "labelAr": "المميزات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    }
+  ]
+}
