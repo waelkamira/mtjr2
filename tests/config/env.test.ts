@@ -31,6 +31,12 @@ describe("parseEnvironment", () => {
     expect(parsed.APP_URL).toBe(validEnvironment.APP_URL);
   });
 
+  it("derives APP_URL from the Vercel preview hostname when no explicit URL is set", () => {
+    const { APP_URL, ...withoutAppUrl } = validEnvironment;
+    const parsed = parseEnvironment({ ...withoutAppUrl, VERCEL_ENV: "preview", VERCEL_URL: "mtjr2-preview.example.vercel.app" });
+    expect(parsed.APP_URL).toBe("https://mtjr2-preview.example.vercel.app");
+  });
+
   it("rejects a non-PostgreSQL database URL", () => {
     expect(() => parseEnvironment({ ...validEnvironment, DATABASE_URL: "https://example.com" })).toThrow(/DATABASE_URL.*PostgreSQL/);
   });
