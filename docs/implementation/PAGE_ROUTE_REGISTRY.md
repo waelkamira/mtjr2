@@ -402,3 +402,6 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - The canonical main quality workflow passed on `6084b01c3a78a3608643c0f7e33064c09308eb6f`, including Prisma, typecheck, lint, Vitest and production build.
 - The dedicated `.github/workflows/browser-e2e.yml` now also runs on pushes to `main`; previously it only ran on feature-branch pushes, pull requests and manual dispatch. This closes the automation gap for the seller catalog authoring and Leaflet map browser journey.
 - The main-triggered browser run is pending; no browser-level pass is claimed until Chromium completes the Playwright suite.
+
+
+- Geography browser test robustness: governorate zoom assertion now follows the same coordinate-presence guard as lower administrative levels; avoids asserting a map focus change when the source geography record has no coordinates.
