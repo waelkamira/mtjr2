@@ -47,7 +47,7 @@ describe("registration", () => {
     txMock.verificationToken.updateMany.mockResolvedValue({ count: 1 });
   });
 
-  it("creates a pending user with a hashed password and single-use verification challenge", async () => {
+  it("creates an active user with a hashed password and no email-verification challenge", async () => {
     const result = await registerUser({
       email: "  Buyer@Example.COM ",
       password: "correct horse battery staple 2026",
@@ -57,23 +57,19 @@ describe("registration", () => {
       acceptedPrivacy: true
     }, now);
     expect(result.userId).toBe("user-1");
-    expect(result.verificationToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    expect(result.verificationExpiresAt).toEqual(new Date(now.getTime() + 24 * 60 * 60 * 1000));
 
     expect(txMock.user.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: "buyer@example.com",
         emailNormalized: "buyer@example.com",
-        status: UserStatus.PENDING,
+        status: UserStatus.ACTIVE,
         displayName: "Buyer"
       })
     }));
     const createUserCall = txMock.user.create.mock.calls[0][0];
     expect(createUserCall.data.passwordHash).not.toContain("correct horse");
     expect(createUserCall.data.emailVerifiedAt).toBeUndefined();
-    expect(txMock.verificationToken.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ userId: "user-1", purpose: "EMAIL_VERIFICATION", tokenHash: expect.any(String), expiresAt: result.verificationExpiresAt })
-    }));
+    expect(txMock.verificationToken.create).not.toHaveBeenCalled();
     expect(txMock.role.findUnique).toHaveBeenCalledWith({ where: { key: "CUSTOMER" }, select: { id: true } });
     expect(txMock.userRoleAssignment.create).toHaveBeenCalledWith({
       data: { userId: "user-1", roleId: "customer-role-1", scopeType: "GLOBAL", scopeId: "GLOBAL" }
@@ -87,12 +83,13 @@ describe("registration", () => {
     expect(txMock.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: "identity.registration.created",
-        resourceId: "user-1"
+        resourceId: "user-1",
+        metadata: { emailVerificationRequired: false }
       })
     });
   });
 
-  it("creates a pending seller application when the user selects seller", async () => {
+  it("creates an active account with a pending seller application", async () => {
     await registerUser({
       email: "seller@example.com",
       password: "correct horse battery staple 2026",

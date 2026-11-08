@@ -5,6 +5,7 @@ const { prismaMock, txMock, consumeMock, clearMock, verifyMock, mfaStateMock } =
   const tx = {
     user: { updateMany: vi.fn() },
     userSession: { create: vi.fn() },
+    verificationToken: { updateMany: vi.fn() },
     loginAttempt: { create: vi.fn() },
     auditLog: { create: vi.fn() }
   };
@@ -60,12 +61,13 @@ describe("password login service", () => {
     });
   });
 
-  it("issues a session only for an active email-verified account", async () => {
+  it("issues a session for an active account without requiring email verification", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: "user-1",
       passwordHash: "stored-hash",
       status: UserStatus.ACTIVE,
-      emailVerifiedAt: verifiedAt
+      adminStatusReason: null,
+      emailVerifiedAt: null
     });
 
     const result = await loginWithPassword({
@@ -85,8 +87,8 @@ describe("password login service", () => {
     expect(verifyMock).toHaveBeenCalledWith("a-secure-password", "stored-hash");
     expect(prismaMock.$transaction).toHaveBeenCalledOnce();
     expect(txMock.user.updateMany).toHaveBeenCalledWith({
-      where: { id: "user-1", status: UserStatus.ACTIVE, emailVerifiedAt: { not: null }, passwordHash: "stored-hash" },
-      data: { lastLoginAt: now }
+      where: { id: "user-1", status: UserStatus.ACTIVE, passwordHash: "stored-hash", adminStatusReason: null },
+      data: { status: UserStatus.ACTIVE, adminStatusReason: null, lastLoginAt: now }
     });
     expect(txMock.userSession.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -123,7 +125,7 @@ describe("password login service", () => {
 
   it("identifies an incorrect password for an existing verified account", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-1", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: verifiedAt
+      id: "user-1", passwordHash: "stored-hash", status: UserStatus.ACTIVE, adminStatusReason: null, emailVerifiedAt: verifiedAt
     });
     verifyMock.mockResolvedValue(false);
 
@@ -150,13 +152,35 @@ describe("password login service", () => {
     expect(txMock.userSession.create).not.toHaveBeenCalled();
   });
 
-  it("does not activate or issue a session to an unverified pending account", async () => {
+  it("activates a legacy pending account only after successful password verification", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-pending", passwordHash: "stored-hash", status: UserStatus.PENDING, emailVerifiedAt: null
+      id: "user-pending", passwordHash: "stored-hash", status: UserStatus.PENDING, adminStatusReason: null, emailVerifiedAt: null
     });
 
     const result = await loginWithPassword({
       email: "pending@example.com", password: "a-secure-password", trustedIpAddress: "203.0.113.10"
+    }, now);
+
+    expect(result).toMatchObject({ authenticated: true, userId: "user-pending" });
+    expect(txMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-pending", status: UserStatus.PENDING, passwordHash: "stored-hash", adminStatusReason: null },
+      data: { status: UserStatus.ACTIVE, adminStatusReason: null, lastLoginAt: now }
+    });
+    expect(txMock.verificationToken.updateMany).toHaveBeenCalledWith({
+      where: { userId: "user-pending", purpose: "EMAIL_VERIFICATION", consumedAt: null },
+      data: { consumedAt: now }
+    });
+    expect(txMock.userSession.create).toHaveBeenCalledOnce();
+  });
+
+  it("does not allow password login to override an administrator-set pending hold", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-admin-pending", passwordHash: "stored-hash", status: UserStatus.PENDING,
+      adminStatusReason: "Requires manual review", emailVerifiedAt: null
+    });
+
+    const result = await loginWithPassword({
+      email: "held@example.com", password: "a-secure-password", trustedIpAddress: "203.0.113.10"
     }, now);
 
     expect(result).toMatchObject({ authenticated: false, reason: "INVALID_CREDENTIALS" });
@@ -164,9 +188,25 @@ describe("password login service", () => {
     expect(txMock.userSession.create).not.toHaveBeenCalled();
   });
 
+  it("does not activate a legacy pending account when its password is incorrect", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "user-pending", passwordHash: "stored-hash", status: UserStatus.PENDING, adminStatusReason: null, emailVerifiedAt: null
+    });
+    verifyMock.mockResolvedValue(false);
+
+    const result = await loginWithPassword({
+      email: "pending@example.com", password: "wrong-password", trustedIpAddress: "203.0.113.10"
+    }, now);
+
+    expect(result).toMatchObject({ authenticated: false, reason: "INVALID_PASSWORD" });
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(txMock.userSession.create).not.toHaveBeenCalled();
+    expect(txMock.verificationToken.updateMany).not.toHaveBeenCalled();
+  });
+
   it("requires a second-factor challenge for an enrolled account", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-mfa", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: verifiedAt
+      id: "user-mfa", passwordHash: "stored-hash", status: UserStatus.ACTIVE, adminStatusReason: null, emailVerifiedAt: verifiedAt
     });
     mfaStateMock.mockResolvedValue({
       enabled: true, required: true, platformRequired: true, enrollmentRequired: false
@@ -181,7 +221,7 @@ describe("password login service", () => {
 
   it("requires platform administrators without MFA to enroll before using privileged routes", async () => {
     prismaMock.user.findUnique.mockResolvedValue({
-      id: "user-admin", passwordHash: "stored-hash", status: UserStatus.ACTIVE, emailVerifiedAt: verifiedAt
+      id: "user-admin", passwordHash: "stored-hash", status: UserStatus.ACTIVE, adminStatusReason: null, emailVerifiedAt: verifiedAt
     });
     mfaStateMock.mockResolvedValue({
       enabled: false, required: true, platformRequired: true, enrollmentRequired: true

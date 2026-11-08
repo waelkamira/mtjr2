@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   consumeRegistrationAttempt: vi.fn(),
   verifyRegistrationChallenge: vi.fn(),
   createUserSession: vi.fn(),
-  sendVerificationEmail: vi.fn(),
+  revokeUserSession: vi.fn(),
   isPublicRegistrationEnabled: vi.fn()
 }));
 
@@ -23,8 +23,7 @@ vi.mock("@/lib/env", () => ({
   isPublicRegistrationEnabled: mocks.isPublicRegistrationEnabled
 }));
 vi.mock("@/server/identity/session-cookie", () => ({ setSessionCookie: mocks.setSessionCookie }));
-vi.mock("@/server/email/resend", () => ({ resendEmailAdapter: { sendVerificationEmail: mocks.sendVerificationEmail } }));
-vi.mock("@/server/identity/session", () => ({ createUserSession: mocks.createUserSession }));
+vi.mock("@/server/identity/session", () => ({ createUserSession: mocks.createUserSession, revokeUserSession: mocks.revokeUserSession }));
 vi.mock("@/server/identity/login", () => ({ loginWithPassword: mocks.loginWithPassword }));
 vi.mock("@/server/identity/login-throttle", () => ({ consumeRegistrationAttempt: mocks.consumeRegistrationAttempt }));
 vi.mock("@/server/identity/turnstile", () => ({ verifyRegistrationChallenge: mocks.verifyRegistrationChallenge }));
@@ -40,7 +39,7 @@ import { POST as register } from "@/app/api/auth/register/route";
 function request(path: string, body: unknown) {
   return new Request(`http://localhost:3000${path}`, {
     method: "POST",
-    headers: { Origin: "http://localhost:3000", "Content-Type": "application/json" },
+    headers: { Origin: "http://localhost:3000", "Content-Type": "application/json", "User-Agent": "Vitest browser" },
     body: JSON.stringify(body)
   });
 }
@@ -58,16 +57,14 @@ describe("identity HTTP routes", () => {
       mfaRequired: false,
       mfaSetupRequired: false
     });
-    mocks.registerUser.mockResolvedValue({
-      userId: "user-1", verificationToken: "v".repeat(43), verificationExpiresAt: new Date("2026-11-07T00:00:00.000Z")
-    });
-    mocks.sendVerificationEmail.mockResolvedValue(undefined);
+    mocks.registerUser.mockResolvedValue({ userId: "user-1" });
     mocks.consumeRegistrationAttempt.mockResolvedValue({ blocked: false });
     mocks.verifyRegistrationChallenge.mockResolvedValue(true);
     mocks.createUserSession.mockResolvedValue({
       token: "session-token",
       expiresAt: new Date("2026-11-06T00:00:00.000Z")
     });
+    mocks.revokeUserSession.mockResolvedValue(true);
   });
 
   it("issues the session cookie after a successful password login", async () => {
@@ -139,7 +136,7 @@ describe("identity HTTP routes", () => {
     expect(mocks.setSessionCookie).toHaveBeenCalledOnce();
   });
 
-  it("sends a verification email and does not issue a session before email verification", async () => {
+  it("creates an active account and immediately issues an authenticated session", async () => {
     const response = await register(request("/api/auth/register", {
       email: "buyer@example.test",
       password: "A-correct-password",
@@ -150,23 +147,45 @@ describe("identity HTTP routes", () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. Check your email to verify your address." });
+    expect(await response.json()).toEqual({ message: "Account created. Signed in successfully.", signedIn: true });
     expect(mocks.verifyRegistrationChallenge).toHaveBeenCalledWith("valid-token", "127.0.0.1");
     expect(mocks.registerUser).toHaveBeenCalledOnce();
-    expect(mocks.sendVerificationEmail).toHaveBeenCalledWith("buyer@example.test", "v".repeat(43));
-    expect(mocks.createUserSession).not.toHaveBeenCalled();
-    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).toHaveBeenCalledWith("user-1", { ipAddress: "127.0.0.1", userAgent: "Vitest browser" });
+    expect(mocks.setSessionCookie).toHaveBeenCalledWith("session-token", new Date("2026-11-06T00:00:00.000Z"));
   });
 
-  it("returns an accepted response when verification email delivery is temporarily unavailable", async () => {
-    mocks.sendVerificationEmail.mockRejectedValue(new Error("mail provider unavailable"));
+  it("returns a recoverable sign-in response when session creation fails after account creation", async () => {
+    mocks.createUserSession.mockRejectedValueOnce(new Error("session store unavailable"));
     const response = await register(request("/api/auth/register", {
-      email: "buyer@example.test", password: "A-correct-password", accountType: "CUSTOMER",
-      acceptedTerms: true, acceptedPrivacy: true, turnstileToken: "valid-token"
+      email: "buyer@example.test",
+      password: "A-correct-password",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true,
+      turnstileToken: "valid-token"
     }));
-    expect(response.status).toBe(202);
-    expect(mocks.createUserSession).not.toHaveBeenCalled();
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ message: "Account created. Sign in to continue.", signedIn: false });
+    expect(mocks.registerUser).toHaveBeenCalledOnce();
     expect(mocks.setSessionCookie).not.toHaveBeenCalled();
+    expect(mocks.revokeUserSession).not.toHaveBeenCalled();
+  });
+
+  it("revokes the new session and returns a sign-in response when setting its cookie fails", async () => {
+    mocks.setSessionCookie.mockRejectedValueOnce(new Error("cookie unavailable"));
+    const response = await register(request("/api/auth/register", {
+      email: "buyer@example.test",
+      password: "A-correct-password",
+      accountType: "CUSTOMER",
+      acceptedTerms: true,
+      acceptedPrivacy: true,
+      turnstileToken: "valid-token"
+    }));
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ message: "Account created. Sign in to continue.", signedIn: false });
+    expect(mocks.revokeUserSession).toHaveBeenCalledWith("session-token");
   });
 
   it("rejects a failed bot challenge without creating an account", async () => {
