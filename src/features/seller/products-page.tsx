@@ -528,7 +528,7 @@ export default function SellerProductsPage() {
 
   const inputClass = "w-full rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f7fbfc,#e8f0f3)] px-4 py-3 text-sm text-[#263d50] shadow-[inset_0_2px_5px_rgba(43,69,88,.08),0_1px_0_white] outline-none transition placeholder:text-slate-400 focus:border-[#83b9c1] focus:ring-4 focus:ring-[#9bcbd0]/25";
   return <main className="min-h-screen bg-[linear-gradient(145deg,#eaf1f4,#dfe8ee)] text-[#263d50]">
-    <header className="border-b border-white/70 bg-[#e8f0f3]/85 shadow-[0_6px_18px_rgba(40,65,84,.08)]"><div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4"><span className="text-xl font-black tracking-tight text-[#2b465b]">matjar<span className="text-[#e87536]">.</span><span className="ms-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#7893a3]">Seller studio</span></span><Link href="/seller" className="rounded-full border border-white bg-[#e0ebef] px-4 py-2.5 text-sm font-bold text-[#35566c] shadow-[0_4px_12px_rgba(40,65,84,.1),inset_0_1px_0_white]">← {translate(locale, "Seller workspace", "لوحة البائع")}</Link></div></header>
+    
     <div className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
       <p className="text-xs font-extrabold uppercase tracking-[.2em] text-[#66899b]">{translate(locale, "Catalog management", "إدارة الكتالوج")}</p>
       <h1 className="mt-2 text-3xl font-black tracking-tight text-[#263d50] sm:text-4xl">{translate(locale, "Products", "المنتجات")}</h1>
