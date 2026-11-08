@@ -2516,10 +2516,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No local checkout or repository shell was available in this session. TypeScript, lint, Vitest, Prisma validation/generation, PostgreSQL migration rehearsal, and browser/device visual checks have **not** been run for these latest edits.
 - The seller edit form currently exposes nested custom fields, map location, and property details as JSON text areas. Product media and variant/price/inventory editing are not yet part of the existing-product editor; the image studio currently supports the create-draft flow. These are remaining UX/product-scope gaps, not verified complete.
 - The one-store-per-seller migration has not been applied to any database. Check for existing duplicate seller ownership and take a backup before applying it.
-- The feature branch remains divergent from `main` (76 commits ahead and 58 behind at the latest comparison); merge/rebase is intentionally deferred until the diff is reconciled and conflicts/security-sensitive changes are reviewed.
+- The feature branch remains divergent from `main` (77 commits ahead and 58 behind at the latest comparison); merge/rebase is intentionally deferred until the diff is reconciled and conflicts/security-sensitive changes are reviewed.
 
 
 **Follow-up static review**
 - Corrected escaped decimal-point patterns in the new shipping amount parser and draft property-area update validator.
 - Added category-preset validation to draft updates and kept real-estate map/property requirements consistent when changing categories.
-- The latest source commit has no matching Vercel deployment record; its Vercel status still points to the build-rate-limit restriction. These code changes therefore remain unbuilt and unverified.
+- The latest seller-editor source commit `8be0e08ea83b137879fb3ad3eb54709a6eb3f50f` has no matching Vercel deployment record; its Vercel status points to the build-rate-limit restriction. The later documentation-only commit has no CI status. These code changes therefore remain unbuilt and unverified.
