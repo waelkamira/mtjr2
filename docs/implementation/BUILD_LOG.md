@@ -2813,3 +2813,22 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Recent seller workspace work is present on main: real draft create/edit persistence, seller shipping-service edits, one-store-per-seller enforcement, image-upload browser feedback, responsive dashboard captures, and Syrian geography/Leaflet interactions. Exact-head seller workspace CI/E2E evidence is also recorded in the preceding closeout entry.
 - Latest identity correction on this head adds explicit MFA policy coverage: pending seller applicants are not forced into MFA enrollment before approval; active sellers are required to enroll, while platform administrators retain their privileged MFA requirement.
 - This audit is a baseline and evidence reconciliation, not a claim that all platform phases or journeys are complete. The next sequential task is the remaining identity/security closeout, including trusted-edge configuration evidence and the deployment HTTP journey; external secrets and production deployment must remain untouched unless separately authorized.
+
+
+## 2026-11-08 — API authorization boundary closeout
+
+**Audited source SHA:** `7e288958c2b4346154eb07e433e66d2fb7526922`
+
+- Added `scripts/audit-api-authorization.cjs` and wired it into the main CI workflow as a hard gate. Any newly added API route without an explicit access-boundary classification now fails CI until reviewed.
+- The latest CI inventory found **169/169** route handlers with a classified access boundary and **0** requiring manual authorization review:
+  - 137 authenticated/permission-scoped routes
+  - 12 public identity flows
+  - 13 explicitly allowlisted public GET routes
+  - 1 same-origin guarded public preference mutation
+  - 1 signed public advertising-event endpoint
+  - 5 signed system/cron/webhook endpoints
+- The existing API mutation inventory separately found **109/109** state-changing handlers with request/system boundary evidence and **0** requiring manual review.
+- Browser E2E now runs the anonymous protected-route-method sweep and explicit role-boundary probes. The buyer and seller role-boundary test passed; buyer-facing seller workspace/order endpoints return only their intentional empty state (`seller: null, stores: []` and `orders: []`) and expose no seller data. Seller and buyer requests to platform-admin APIs are denied.
+- Existing unit/integration coverage continues to verify exact store-scoped permission grants, staff membership, seller order ownership, and account ownership. The static inventory is not represented as a substitute for those behavioral tests.
+- Exact-head CI [42508679290](https://github.com/waelkamira/mtjr2/actions/runs/42508679290) and Browser E2E [42508679318](https://github.com/waelkamira/mtjr2/actions/runs/42508679318) both passed on the audited SHA.
+- Result: API route access classification and the critical buyer/seller/admin boundary checks are closed for this phase. New routes must be explicitly classified to keep the gate green.
