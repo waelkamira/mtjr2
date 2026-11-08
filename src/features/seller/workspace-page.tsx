@@ -509,23 +509,6 @@ export default function SellerWorkspacePage() {
         ) : (
           <>
           {selectedStore && <>
-            <section className="mt-7 flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/80 bg-[linear-gradient(120deg,#d8e9ed,#e7eef1_58%,#e1e4f1)] p-6 shadow-[0_12px_28px_rgba(42,66,84,.12),inset_0_1px_0_white] sm:p-8">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[.18em] text-[#587b8c]">{translate(locale, "Store overview", "نظرة عامة على المتجر")}</p>
-                <h2 className="mt-2 text-2xl font-bold text-[#263d50]">{selectedStore.name}</h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">/{selectedStore.slug} · {selectedStore.status}</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/seller/products#create-product" className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#65aeb0,#3c858f)] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(38,94,105,.25),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:shadow-[var(--shadow-clay-hover)]">
-                  <span aria-hidden="true" className="text-base leading-none">＋</span>
-                  {translate(locale, "Create new listing", "إنشاء منتج جديد")}
-                </Link>
-                <Link href="/seller/orders" className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[#eef4f5] px-4 py-3 text-sm font-semibold text-[#365267] shadow-[inset_0_1px_0_white,0_4px_12px_rgba(39,63,81,.08)] transition hover:bg-white">
-                  {translate(locale, "View orders", "عرض الطلبات")}
-                </Link>
-              </div>
-            </section>
-
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric, index) => {
                 const surface = [
