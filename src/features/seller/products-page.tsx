@@ -143,7 +143,7 @@ export default function SellerProductsPage() {
       if (initialStore) {
         setStoreId(initialStore.id);
         const enabled = new Set(initialStore.markets.map((entry) => entry.market.id));
-        setMarketPrices(Object.fromEntries(marketResult.items.filter((market) => enabled.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
+        setMarketPrices(Object.fromEntries(marketResult.items.filter((market) => enabled.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "" }])));
       }
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load seller catalog.");
@@ -450,7 +450,7 @@ export default function SellerProductsPage() {
             setProducts([]);
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
-            setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }])));
+            setMarketPrices(Object.fromEntries(markets.filter((market) => allowed.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "" }])));
           }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
           {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="mt-4 grid gap-3">
             <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
@@ -554,7 +554,7 @@ export default function SellerProductsPage() {
                 return <div key={market.id} className="grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
                   <p className="text-sm font-semibold">{market.name}</p>
                   <label className="grid gap-1 text-sm">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={draft.currencyCode} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, currencyCode: e.target.value } }))}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
-                  <label className="grid gap-1 text-sm">{translate(locale, "Price", "السعر")} ({currency.symbol ?? currency.code})<input required type="text" inputMode="decimal" className={inputClass} value={draft.amount} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amount: e.target.value } }))} placeholder={currency.minorUnit ? "0.00" : "0"} /><span className="text-xs text-[var(--muted)]">{translate(locale, "Enter the normal price. Decimal places supported", "أدخل السعر المعتاد. عدد المنازل العشرية المدعومة")} {currency.minorUnit}.</span></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Price", "السعر")} ({currency.symbol ?? currency.code})<input required type="text" inputMode="decimal" className={inputClass} value={draft.amount} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amount: e.target.value } }))} placeholder={currency.minorUnit ? `0.${"0".repeat(currency.minorUnit)}` : "0"} /><span className="text-xs text-[var(--muted)]">{translate(locale, "Enter the normal price. Decimal places supported", "أدخل السعر المعتاد. عدد المنازل العشرية المدعومة")} {currency.minorUnit}.</span></label>
                 </div>;
               })}
             </div>
