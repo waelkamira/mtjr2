@@ -23,6 +23,22 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(180),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180),
   description: z.string().trim().max(12000).optional(),
+  city: z.string().trim().min(1).max(120).optional(),
+  district: z.string().trim().max(120).optional(),
+  contactPhone: z.string().trim().min(6).max(40).optional(),
+  videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").optional(),
+  mapLocation: z.object({
+    latitude: z.number().finite().min(-90).max(90),
+    longitude: z.number().finite().min(-180).max(180)
+  }).optional(),
+  propertyDetails: z.object({
+    propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
+    listingType: z.enum(["SALE", "RENT"]),
+    bedrooms: z.number().int().min(0).max(100).nullable().optional(),
+    bathrooms: z.number().int().min(0).max(100).nullable().optional(),
+    floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,2})?$/)
+      .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
+  }).optional(),
   brandId: z.string().trim().min(1).optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).default([]),
   attributes: z.array(z.object({
@@ -99,9 +115,16 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       const brand = await tx.brand.findFirst({ where: { id: data.brandId, status: CatalogEntityStatus.ACTIVE }, select: { id: true } });
       if (!brand) throw new Error("The selected brand is not active.");
     }
-    if (categoryIds.length) {
-      const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
-      if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
+    const selectedCategories = categoryIds.length
+      ? await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true } })
+      : [];
+    if (selectedCategories.length !== categoryIds.length) throw new Error("Every selected category must be active.");
+    const isRealEstate = selectedCategories.some((category) => category.slug === "real-estate");
+    if (isRealEstate && (!data.propertyDetails || !data.mapLocation)) {
+      throw new Error("Real-estate listings require property details and a map location.");
+    }
+    if (!isRealEstate && data.propertyDetails) {
+      throw new Error("Property details can only be added to a real-estate listing.");
     }
 
     if ((data.latitude === undefined) !== (data.longitude === undefined)) {
@@ -166,7 +189,12 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     const product = await tx.product.create({
       data: {
         storeId: store.id, brandId: data.brandId, name: data.name, slug: data.slug,
-        description: data.description, status: CatalogEntityStatus.DRAFT,
+        description: data.description,
+        city: data.city,
+        district: data.district,
+        contactPhone: data.contactPhone,
+        videoUrl: data.videoUrl,
+        status: CatalogEntityStatus.DRAFT,
         approvalStatus: ProductApprovalStatus.PENDING,
         localityId: data.localityId,
         neighborhoodId: data.neighborhoodId,
@@ -179,6 +207,16 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
           values: { create: { value: item.value as Prisma.InputJsonValue } }
         })) },
         media: { create: data.media.map((item) => ({ ...item })) },
+        mapLocation: data.mapLocation ? { create: {
+          latitude: data.mapLocation.latitude,
+          longitude: data.mapLocation.longitude,
+          publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100,
+          publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100
+        } } : undefined,
+        propertyDetails: data.propertyDetails ? { create: {
+          ...data.propertyDetails,
+          floorArea: new Prisma.Decimal(data.propertyDetails.floorArea)
+        } } : undefined,
         variants: {
           create: data.variants.map((variant) => ({
             sku: variant.sku, barcode: variant.barcode, name: variant.name,
@@ -286,6 +324,22 @@ const updateProductSchema = z.object({
   name: z.string().trim().min(2).max(180).optional(),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180).optional(),
   description: z.string().trim().max(12000).nullable().optional(),
+  city: z.string().trim().min(1).max(120).nullable().optional(),
+  district: z.string().trim().max(120).nullable().optional(),
+  contactPhone: z.string().trim().min(6).max(40).nullable().optional(),
+  videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
+  mapLocation: z.object({
+    latitude: z.number().finite().min(-90).max(90),
+    longitude: z.number().finite().min(-180).max(180)
+  }).nullable().optional(),
+  propertyDetails: z.object({
+    propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
+    listingType: z.enum(["SALE", "RENT"]),
+    bedrooms: z.number().int().min(0).max(100).nullable().optional(),
+    bathrooms: z.number().int().min(0).max(100).nullable().optional(),
+    floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,2})?$/)
+      .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
+  }).nullable().optional(),
   brandId: z.string().trim().min(1).nullable().optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).optional(),
   media: z.array(z.object({
@@ -334,6 +388,10 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         ...(data.name !== undefined ? { name: data.name } : {}),
         ...(data.slug !== undefined ? { slug: data.slug } : {}),
         ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.city !== undefined ? { city: data.city } : {}),
+        ...(data.district !== undefined ? { district: data.district } : {}),
+        ...(data.contactPhone !== undefined ? { contactPhone: data.contactPhone } : {}),
+        ...(data.videoUrl !== undefined ? { videoUrl: data.videoUrl } : {}),
         ...(data.brandId !== undefined ? { brandId: data.brandId } : {}),
         approvalStatus: ProductApprovalStatus.PENDING,
         approvedAt: null,
@@ -346,6 +404,39 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (categoryIds.length) await tx.productCategory.createMany({
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
       });
+    }
+    if (data.mapLocation !== undefined) {
+      if (data.mapLocation === null) {
+        await tx.productMapLocation.deleteMany({ where: { productId: id } });
+      } else {
+        await tx.productMapLocation.upsert({
+          where: { productId: id },
+          create: {
+            productId: id,
+            latitude: data.mapLocation.latitude,
+            longitude: data.mapLocation.longitude,
+            publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100,
+            publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100
+          },
+          update: {
+            latitude: data.mapLocation.latitude,
+            longitude: data.mapLocation.longitude,
+            publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100,
+            publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100
+          }
+        });
+      }
+    }
+    if (data.propertyDetails !== undefined) {
+      if (data.propertyDetails === null) {
+        await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
+      } else {
+        await tx.productPropertyDetails.upsert({
+          where: { productId: id },
+          create: { productId: id, ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) },
+          update: { ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) }
+        });
+      }
     }
     if (data.media !== undefined) {
       const existingMedia = await tx.productMedia.findMany({
