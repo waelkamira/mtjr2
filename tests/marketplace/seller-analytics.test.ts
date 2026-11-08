@@ -57,8 +57,8 @@ describe("seller dashboard analytics", () => {
     mocks.vendorOrderCount.mockResolvedValue(2);
     mocks.vendorOrderGroupBy.mockResolvedValue([{ status: "CONFIRMED", _count: { _all: 2 } }]);
     mocks.queryRaw
-      .mockResolvedValueOnce([{ currencyCode: "EUR", amountMinor: 12345n, orderCount: 2n }])
-      .mockResolvedValueOnce([{ day: new Date("2026-11-07T00:00:00.000Z"), currencyCode: "EUR", amountMinor: 12345n, orderCount: 2n }]);
+      .mockResolvedValueOnce([{ currencyCode: "EUR", amountMinor: BigInt(12345), orderCount: BigInt(2) }])
+      .mockResolvedValueOnce([{ day: new Date("2026-11-07T00:00:00.000Z"), currencyCode: "EUR", amountMinor: BigInt(12345), orderCount: BigInt(2) }]);
     mocks.orderItemGroupBy.mockResolvedValue([{ productId: "product-1", productName: "Linen Shirt", _sum: { quantity: 3 } }]);
     mocks.productCount.mockResolvedValueOnce(8).mockResolvedValueOnce(2);
     mocks.storeReviewAggregate.mockResolvedValue({ _avg: { rating: 4.5 }, _count: { _all: 2 } });
