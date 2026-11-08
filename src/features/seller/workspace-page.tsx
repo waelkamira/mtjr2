@@ -31,6 +31,14 @@ type InventoryRow = {
   warehouse: { id: string; code: string; name: string };
   variant: { id: string; sku: string | null; name: string | null; product: { name: string; slug: string } };
 };
+type RecentSellerOrder = {
+  id: string;
+  status: string;
+  store: { id: string; name: string };
+  order: { orderNumber: string; placedAt: string; currencyCode: string; currency: { minorUnit: number } };
+  totalMinor: string;
+};
+
 type SellerAnalytics = {
   store: { id: string; name: string };
   range: { from: string; to: string; days: number };
@@ -72,6 +80,9 @@ export default function SellerWorkspacePage() {
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [inventoryError, setInventoryError] = useState("");
   const [sellerAnalytics, setSellerAnalytics] = useState<SellerAnalytics | null>(null);
+  const [recentOrders, setRecentOrders] = useState<RecentSellerOrder[]>([]);
+  const [recentOrdersLoading, setRecentOrdersLoading] = useState(false);
+  const [recentOrdersError, setRecentOrdersError] = useState("");
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState("");
   const [selectedSalesCurrency, setSelectedSalesCurrency] = useState("");
@@ -207,6 +218,32 @@ export default function SellerWorkspacePage() {
     });
     return () => { active = false; };
   }, [locale, selectedStoreId]);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedStoreId || !sellerAnalytics?.permissions.orders) {
+      setRecentOrders([]);
+      setRecentOrdersLoading(false);
+      setRecentOrdersError("");
+      return () => { active = false; };
+    }
+    setRecentOrdersLoading(true);
+    setRecentOrdersError("");
+    fetch("/api/seller/orders", { cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json() as { orders?: RecentSellerOrder[]; error?: string };
+        if (!response.ok) throw new Error(data.error || translate(locale, "Recent orders could not be loaded.", "تعذر تحميل الطلبات الأخيرة."));
+        return data.orders ?? [];
+      })
+      .then((orders) => {
+        if (active) setRecentOrders(orders.filter((order) => order.store.id === selectedStoreId).slice(0, 5));
+      })
+      .catch((cause: unknown) => {
+        if (active) setRecentOrdersError(cause instanceof Error ? cause.message : translate(locale, "Recent orders could not be loaded.", "تعذر تحميل الطلبات الأخيرة."));
+      })
+      .finally(() => { if (active) setRecentOrdersLoading(false); });
+    return () => { active = false; };
+  }, [locale, selectedStoreId, sellerAnalytics?.permissions.orders]);
 
   async function uploadSellerIdentityDocument(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -592,6 +629,25 @@ export default function SellerWorkspacePage() {
                   />
                 </div>
               </div>
+            </section>
+
+            <section aria-label={translate(locale, "Recent orders", "الطلبات الأخيرة")} className="mt-7 overflow-hidden rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[0_14px_28px_rgba(35,62,81,.12),inset_0_2px_0_white] sm:p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#66899b]">{translate(locale, "CUSTOMER ACTIVITY", "نشاط العملاء")}</p><h2 className="mt-1 text-lg font-black text-[#2d4a60]">{translate(locale, "Recent orders", "الطلبات الأخيرة")}</h2><p className="mt-1 text-xs text-[#718899]">{translate(locale, "The latest orders for the selected store.", "أحدث الطلبات الخاصة بالمتجر المحدد.")}</p></div>
+                <Link href="/seller/orders" className="rounded-full border border-white/90 bg-[linear-gradient(145deg,#eaf3f5,#d5e4e9)] px-4 py-2 text-xs font-extrabold text-[#35566b] shadow-[0_5px_12px_rgba(35,62,81,.1),inset_0_1px_0_white]">{translate(locale, "See all orders", "عرض كل الطلبات")} ↗</Link>
+              </div>
+              {recentOrdersLoading ? <p className="rounded-2xl bg-white/45 p-4 text-sm text-[#718899]">{translate(locale, "Loading recent orders…", "جارٍ تحميل الطلبات الأخيرة…")}</p>
+                : recentOrdersError ? <p role="status" className="rounded-2xl bg-white/45 p-4 text-sm text-[#718899]">{translate(locale, "Recent orders are temporarily unavailable.", "الطلبات الأخيرة غير متاحة مؤقتاً.")}</p>
+                : recentOrders.length ? <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{recentOrders.map((order) => {
+                  const amount = Number(order.totalMinor) / (10 ** order.order.currency.minorUnit);
+                  const formattedAmount = new Intl.NumberFormat(locale === "ar" ? "ar" : "en", { style: "currency", currency: order.order.currencyCode, maximumFractionDigits: order.order.currency.minorUnit }).format(amount);
+                  return <article key={order.id} className="rounded-2xl border border-white/85 bg-[linear-gradient(145deg,#f5fafb,#dce9ed)] p-4 shadow-[0_6px_14px_rgba(35,62,81,.08),inset_0_1px_0_white]">
+                    <div className="flex items-start justify-between gap-2"><p className="font-black text-[#2d4a60]">#{order.order.orderNumber}</p><span className="rounded-full border border-white bg-[#d9e9eb] px-2.5 py-1 text-[10px] font-bold text-[#456a7b]">{sellerStatusLabels[order.status] ?? order.status.replaceAll("_", " ")}</span></div>
+                    <p className="mt-3 text-xl font-black tracking-tight text-[#263d50]">{formattedAmount}</p>
+                    <p className="mt-1 text-[11px] text-[#718899]">{new Date(order.order.placedAt).toLocaleDateString(locale === "ar" ? "ar" : "en", { year: "numeric", month: "short", day: "numeric" })}</p>
+                  </article>;
+                })}</div>
+                : <p className="rounded-2xl bg-white/45 p-4 text-sm text-[#718899]">{translate(locale, "No orders have been placed for this store yet.", "لم تُسجل طلبات لهذا المتجر بعد.")}</p>}
             </section>
           </>}
 
