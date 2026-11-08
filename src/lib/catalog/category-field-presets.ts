@@ -28,12 +28,12 @@ const categoryFieldPresets: Record<string, Array<[string, string]>> = {
 export function getCategoryFieldPresets(slug: string): CategoryFieldPreset[] {
   const normalized = slug.toLowerCase();
   const aliases: Record<string, string> = {
-    "mobile-phones": "phones", "smartphones": "phones", "laptops": "computers",
-    "home-furniture": "furniture", "home-kitchen": "kitchen", "clothing": "fashion",
-    "beauty-personal-care": "beauty", "sports-outdoors": "sports", "video-games": "games",
-    "tools-hardware": "tools", "books-stationery": "books", "gifts-occasions": "gifts",
+    "mobile-phones": "phones", "phones-electronics": "phones", "smartphones": "phones", "laptops": "computers", "computers-tablets": "computers",
+    "home-furniture": "furniture", "furniture-home": "furniture", "home-decor-lighting": "furniture", "home-kitchen": "kitchen", "home-appliances": "kitchen", "kitchen-appliances": "kitchen", "clothing": "fashion", "clothing-fashion": "fashion",
+    "beauty-personal-care": "beauty", "skincare": "beauty", "hair-grooming": "beauty", "makeup": "beauty", "wellness-personal-care": "health", "sports-outdoors": "sports", "sports-equipment": "sports", "fitness-training": "sports", "outdoor-camping": "sports", "video-games": "games",
+    "tools-hardware": "tools", "books-stationery": "books", "office-stationery": "books", "arts-crafts": "gifts", "gifts-occasions": "gifts",
     "plants-gardening": "agriculture", "bicycles-motorcycles": "bikes", "medical-health": "health",
-    "footwear": "shoes", "bags-luggage": "bags", "jewellery": "jewelry", "baby-products": "baby",
+    "footwear": "shoes", "bags-luggage": "bags", "bags-accessories": "bags", "jewellery": "jewelry", "automotive-accessories": "cars", "car-electronics": "electronics", "car-care-safety": "cars", "tech-accessories": "electronics", "audio-headphones": "electronics", "wearables": "electronics", "cameras-photography": "electronics", "baby-products": "baby",
     "employment": "jobs"
   };
   const key = aliases[normalized] ?? normalized;
