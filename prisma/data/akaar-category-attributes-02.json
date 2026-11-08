@@ -1,0 +1,475 @@
+{
+  "source": "waelkamira/Akaar",
+  "generatedFromCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+  "categories": [
+    {
+      "categoryAr": "دراجات",
+      "sourcePath": "components/categoryFields/دراجات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "1939032607522790df25fed2fd30ca9521175865",
+      "fields": [
+        {
+          "key": "bikeType",
+          "labelAr": "نوع الدراجة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "motorcycleType",
+          "labelAr": "نوع الدراجة النارية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "engineType",
+          "labelAr": "نوع المحرك",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "engineSize",
+          "labelAr": "سعة المحرك (للنارية)",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "batteryRange",
+          "labelAr": "مدى البطارية (للدراجات الكهربائية)",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "frameMaterial",
+          "labelAr": "مادة الهيكل",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "suspensionType",
+          "labelAr": "نوع التعليق",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brakeType",
+          "labelAr": "نوع الفرامل",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "color",
+          "labelAr": "اللون",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "year",
+          "labelAr": "سنة الصنع",
+          "placeholderAr": "أدخل سنة الصنع",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "رياضة",
+      "sourcePath": "components/categoryFields/رياضة.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "66d29c79d0bfd90c582cfdc9dd540ed3097b219f",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "sport",
+          "labelAr": "الرياضة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "equipmentType",
+          "labelAr": "نوع المعدات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "clothingType",
+          "labelAr": "نوع الملابس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "size",
+          "labelAr": "المقاس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة المصنوعة منها",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "زراعة",
+      "sourcePath": "components/categoryFields/زراعة.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "35cd0ed8eb12acfd29460c26bcd1b02c920165d6",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "plantType",
+          "labelAr": "نوع النبات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "fruitType",
+          "labelAr": "نوع الفاكهة (إن وجدت)",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "vegetableType",
+          "labelAr": "نوع الخضار (إن وجدت)",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "growthCondition",
+          "labelAr": "ظروف النمو",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "wateringNeeds",
+          "labelAr": "احتياجات الري",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "soilType",
+          "labelAr": "نوع التربة المناسبة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "season",
+          "labelAr": "الموسم المناسب",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "harvestTime",
+          "labelAr": "وقت الحصاد",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "سيارات",
+      "sourcePath": "components/categoryFields/سيارات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "d90b49711b06f400749f02e107a80b5cbafcda1f",
+      "fields": [
+        {
+          "key": "adType",
+          "labelAr": "بيع/أجار",
+          "placeholderAr": "بيع/أجار",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "تويوتا",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "model",
+          "labelAr": "الموديل",
+          "placeholderAr": "الموديل",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "year",
+          "labelAr": "السنة",
+          "placeholderAr": "السنة",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "الحالة",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "fuelType",
+          "labelAr": "الوقود",
+          "placeholderAr": "الوقود",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "mileage",
+          "labelAr": "الكيلومترات",
+          "placeholderAr": "الكيلومترات",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "صحة",
+      "sourcePath": "components/categoryFields/صحة.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "288d5b56c365a69222bb9323fc64e56091a0119c",
+      "fields": [
+        {
+          "key": "productType",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "healthCategory",
+          "labelAr": "التصنيف الصحي",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "productForm",
+          "labelAr": "شكل المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "personalCareType",
+          "labelAr": "نوع العناية الشخصية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "cleaningType",
+          "labelAr": "نوع المنظفات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "oralCareType",
+          "labelAr": "نوع العناية بالفم",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "sizeVolume",
+          "labelAr": "الحجم/الكمية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "specialFeatures",
+          "labelAr": "مميزات خاصة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "طفلك",
+      "sourcePath": "components/categoryFields/طفلك.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "e8594ed29f1ff1919bb849df48181c8a2275d3b1",
+      "fields": [
+        {
+          "key": "type",
+          "labelAr": "نوع المنتج",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "subType",
+          "labelAr": "التفاصيل",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "ageRange",
+          "labelAr": "الفئة العمرية",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "gender",
+          "labelAr": "الجنس",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "material",
+          "labelAr": "المادة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "safetyCertification",
+          "labelAr": "شهادات السلامة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "condition",
+          "labelAr": "الحالة",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "brand",
+          "labelAr": "الماركة",
+          "placeholderAr": null,
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    },
+    {
+      "categoryAr": "عقارات",
+      "sourcePath": "components/categoryFields/عقارات.jsx",
+      "sourceCommit": "7d3374c2b885895dffa824db850f709bebd516c8",
+      "sourceBlob": "5c3caa942a2bbd2548ebdb88efcd8a6b8b2c0c81",
+      "fields": [
+        {
+          "key": "adType",
+          "labelAr": "بيع/أجار",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "rooms",
+          "labelAr": "الغرف",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "livingrooms",
+          "labelAr": "الصالونات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "area",
+          "labelAr": "المساحة",
+          "placeholderAr": "200 م²",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "propertyType",
+          "labelAr": "نوع العقار",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        },
+        {
+          "key": "bathrooms",
+          "labelAr": "الحمامات",
+          "placeholderAr": "-اختر-",
+          "valueType": "TEXT",
+          "options": []
+        }
+      ]
+    }
+  ]
+}
