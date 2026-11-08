@@ -173,8 +173,9 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       select: { id: true, storeId: true, name: true, slug: true, status: true, approvalStatus: true, variants: { select: { id: true } } }
     });
     if (data.initialStock > 0) {
-      let warehouse = await tx.warehouse.findFirst({ where: { storeId: store.id, isActive: true }, orderBy: { createdAt: "asc" }, select: { id: true } });
-      if (!warehouse) warehouse = await tx.warehouse.create({ data: { storeId: store.id, code: "MAIN", name: "Main warehouse", isActive: true }, select: { id: true } });
+      let warehouse = await tx.warehouse.findFirst({ where: { storeId: store.id, code: "MAIN" }, select: { id: true, isActive: true } });
+      if (!warehouse) warehouse = await tx.warehouse.create({ data: { storeId: store.id, code: "MAIN", name: "Main warehouse", isActive: true }, select: { id: true, isActive: true } });
+      else if (!warehouse.isActive) warehouse = await tx.warehouse.update({ where: { id: warehouse.id }, data: { isActive: true }, select: { id: true, isActive: true } });
       for (const variant of product.variants) {
         await tx.inventory.create({ data: { warehouseId: warehouse.id, variantId: variant.id, quantityOnHand: data.initialStock, quantityReserved: 0, quantityQuarantined: 0, reorderPoint: 0 } });
       }
