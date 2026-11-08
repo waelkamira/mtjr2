@@ -303,6 +303,16 @@ const updateProductSchema = z.object({
     floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,2})?$/)
       .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
   }).nullable().optional()
+  media: z.array(z.object({
+    url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
+    storageKey: z.string().trim().min(1).max(512).nullable().optional(),
+    mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]).nullable().optional(),
+    width: z.number().int().min(1).max(100000).nullable().optional(),
+    height: z.number().int().min(1).max(100000).nullable().optional(),
+    altText: z.string().trim().max(300).nullable().optional(),
+    sortOrder: z.number().int().min(0).max(1000),
+    isPrimary: z.boolean()
+  })).min(1).max(8).optional().refine((items) => items === undefined || items.filter((item) => item.isPrimary).length === 1, "Choose exactly one primary product image.")
 }).strict().refine((data) => Object.keys(data).length > 0, "At least one product field must be updated.");
 
 export type UpdateProductInput = z.input<typeof updateProductSchema>;
@@ -406,6 +416,12 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       });
     } else if (categoryIds !== undefined && !isRealEstate && current.propertyDetails) {
       await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
+    }
+    if (data.media !== undefined) {
+      await tx.productMedia.deleteMany({ where: { productId: id } });
+      await tx.productMedia.createMany({
+        data: data.media.map((media) => ({ productId: id, type: "IMAGE", ...media }))
+      });
     }
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.updated",
