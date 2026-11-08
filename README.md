@@ -422,3 +422,13 @@ The earlier sections above are chronological implementation notes; use the follo
 - No production database, production secret, live payment/refund/carrier provider, or deployment setting was accessed or changed in this reconciliation.
 
 Remaining release gates: reconcile all 49 system rows individually; complete actor/ownership/store-scope and cross-tenant authorization tests; complete the missing route-level customer/seller/admin browser journeys; resolve Vercel quota; and explicitly decide launch-market/provider credentials before any live payment, refund or carrier integration. Do not mark the marketplace globally complete while these gates remain open.
+
+
+
+## Latest verified progress — 2026-11-08
+
+- Password registration and immediate-session policy was merged into the sole canonical source, `main`, as commit `fde3b47b098b1f15ed40a141b6c66b9a6c237946` (PR #78).
+- Exact source-head General CI, disposable PostgreSQL, and Browser E2E passed before merge. Fresh workflows triggered by the merge are recorded in `docs/implementation/BUILD_LOG.md`; do not claim their final result until all three complete.
+- Buyer checkout browser journey reaches a persisted order in `PENDING_PAYMENT`; payment capture is not simulated. Real payment/refund/carrier provider work remains conditional on explicit launch-market, currency, merchant and provider decisions.
+- Identity code is implemented further, but Phase 2 is not closed: real Turnstile/Resend/trusted-proxy configuration and one deployed HTTP identity journey remain release gates.
+- No production database, Vercel configuration, production secrets, or deployment was changed.
