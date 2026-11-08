@@ -423,7 +423,14 @@ export default function SellerWorkspacePage() {
                 <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#628493]">{translate(locale, "MATJAR · SELLER STUDIO", "متجر · استوديو البائع")}</p>
                 <h1 className="mt-2 text-2xl font-black tracking-tight text-[#263d50] sm:text-3xl">{translate(locale, "Welcome back to your store", "أهلاً بعودتك إلى متجرك")}</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d788a]">{selectedStore ? translate(locale, "Your store is ready. Review today's activity, manage your catalog and keep customer orders moving.", "متجرك جاهز. راجع نشاط اليوم وأدر منتجاتك وتابع طلبات العملاء.") : translate(locale, "Your seller workspace brings products, orders and store operations together.", "تجمع مساحة عمل البائع منتجاتك وطلباتك وعمليات متجرك في مكان واحد.")}</p>
-                {selectedStore && <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/90 bg-white/45 px-3 py-1.5 text-xs font-bold text-[#3e6478] shadow-[inset_0_1px_0_white]"><span className="size-2 shrink-0 rounded-full bg-[#62a9a0]" /><span className="truncate">{selectedStore.name}</span><span className="text-[#78909c]">· {selectedStore.status}</span></div>}
+                {selectedStore && <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <label className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/90 bg-white/55 px-3 py-1.5 text-xs font-bold text-[#3e6478] shadow-[inset_0_1px_0_white]">
+                    <span className="size-2 shrink-0 rounded-full bg-[#62a9a0]" />
+                    <span className="shrink-0 text-[#78909c]">{translate(locale, "Active store", "المتجر النشط")}</span>
+                    {workspace.stores.length > 1 ? <select aria-label={translate(locale, "Choose active store", "اختر المتجر النشط")} value={selectedStoreId} onChange={(event) => { setSelectedStoreId(event.target.value); localStorage.setItem("mtjr.activeStoreId", event.target.value); }} className="max-w-[190px] bg-transparent font-extrabold text-[#35566b] outline-none">{workspace.stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select> : <span className="truncate">{selectedStore.name}</span>}
+                  </label>
+                  <span className="text-xs font-semibold text-[#78909c]">{selectedStore.status}</span>
+                </div>}
               </div>
             </div>
             <div className="flex flex-wrap gap-3 lg:justify-end">
