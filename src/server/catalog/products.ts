@@ -284,8 +284,25 @@ const updateProductSchema = z.object({
   name: z.string().trim().min(2).max(180).optional(),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180).optional(),
   description: z.string().trim().max(12000).nullable().optional(),
+  city: z.string().trim().max(120).nullable().optional(),
+  district: z.string().trim().max(120).nullable().optional(),
+  contactPhone: z.string().trim().min(6).max(40).nullable().optional(),
+  videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
+  customFields: z.record(z.string().trim().min(1).max(100), z.unknown()).nullable().optional(),
   brandId: z.string().trim().min(1).nullable().optional(),
-  categoryIds: z.array(z.string().trim().min(1)).max(30).optional()
+  categoryIds: z.array(z.string().trim().min(1)).max(30).optional(),
+  mapLocation: z.object({
+    latitude: z.number().finite().min(-90).max(90),
+    longitude: z.number().finite().min(-180).max(180)
+  }).nullable().optional(),
+  propertyDetails: z.object({
+    propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
+    listingType: z.enum(["SALE", "RENT"]),
+    bedrooms: z.number().int().min(0).max(100).nullable().optional(),
+    bathrooms: z.number().int().min(0).max(100).nullable().optional(),
+    floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,2})?$/)
+      .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
+  }).nullable().optional()
 }).strict().refine((data) => Object.keys(data).length > 0, "At least one product field must be updated.");
 
 export type UpdateProductInput = z.input<typeof updateProductSchema>;
@@ -319,6 +336,11 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         ...(data.name !== undefined ? { name: data.name } : {}),
         ...(data.slug !== undefined ? { slug: data.slug } : {}),
         ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.city !== undefined ? { city: data.city } : {}),
+        ...(data.district !== undefined ? { district: data.district } : {}),
+        ...(data.contactPhone !== undefined ? { contactPhone: data.contactPhone } : {}),
+        ...(data.videoUrl !== undefined ? { videoUrl: data.videoUrl } : {}),
+        ...(data.customFields !== undefined ? { customFields: data.customFields === null ? Prisma.DbNull : data.customFields as Prisma.InputJsonValue } : {}),
         ...(data.brandId !== undefined ? { brandId: data.brandId } : {}),
         approvalStatus: ProductApprovalStatus.PENDING,
         approvedAt: null,
@@ -327,9 +349,29 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     });
     if (changed.count !== 1) throw new Error("Product could not be updated.");
     if (categoryIds !== undefined) {
+      if (categoryIds.length) {
+        const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
+        if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
+      }
       await tx.productCategory.deleteMany({ where: { productId: id } });
       if (categoryIds.length) await tx.productCategory.createMany({
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
+      });
+    }
+    if (data.mapLocation !== undefined) {
+      if (data.mapLocation === null) await tx.productMapLocation.deleteMany({ where: { productId: id } });
+      else await tx.productMapLocation.upsert({
+        where: { productId: id },
+        create: { productId: id, latitude: data.mapLocation.latitude, longitude: data.mapLocation.longitude, publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100, publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100 },
+        update: { latitude: data.mapLocation.latitude, longitude: data.mapLocation.longitude, publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100, publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100 }
+      });
+    }
+    if (data.propertyDetails !== undefined) {
+      if (data.propertyDetails === null) await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
+      else await tx.productPropertyDetails.upsert({
+        where: { productId: id },
+        create: { productId: id, ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) },
+        update: { ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) }
       });
     }
     await tx.auditLog.create({ data: {
