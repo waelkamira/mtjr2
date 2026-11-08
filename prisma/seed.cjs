@@ -49,6 +49,8 @@ const permissions = [
   { key: "support:manage", description: "Manage customer support cases." },
   { key: "returns:manage", description: "Review and manage customer return requests." },
   { key: "messages:manage", description: "Read and reply to customer conversations within the granted store scope." },
+  { key: "ads:manage", description: "Manage advertising campaigns within an explicitly granted store scope." },
+  { key: "ads:moderate", description: "Review marketplace advertising campaigns." },
   { key: "roles:read", description: "Read role and permission definitions." },
   { key: "roles:assign", description: "Assign roles within authorized scopes." },
   { key: "audit:read", description: "Read security and administrative audit events." },
@@ -58,9 +60,9 @@ const permissions = [
 const roles = [
   { key: "CUSTOMER", name: "Customer", description: "Default buyer account role.", permissions: ["account:read:own", "account:update:own", "orders:read:own"] },
   { key: "SELLER", name: "Seller", description: "Seller account with store-scoped catalog, inventory, order, return, and review capabilities.", permissions: ["account:read:own", "account:update:own", "store:read", "store:manage", "catalog:read", "catalog:manage", "inventory:manage", "orders:read", "orders:manage", "returns:manage", "reviews:manage", "messages:manage"] },
-  { key: "STORE_MANAGER", name: "Store Manager", description: "Delegated store operations role; assignments must be store-scoped.", permissions: ["store:read", "store:manage", "store:staff:manage", "catalog:read", "catalog:manage", "inventory:manage", "orders:read", "orders:manage", "returns:manage", "reviews:manage", "messages:manage"] },
+  { key: "STORE_MANAGER", name: "Store Manager", description: "Delegated store operations role; assignments must be store-scoped.", permissions: ["store:read", "store:manage", "store:staff:manage", "catalog:read", "catalog:manage", "inventory:manage", "orders:read", "orders:manage", "returns:manage", "reviews:manage", "messages:manage", "ads:manage"] },
   { key: "SUPPORT_AGENT", name: "Support Agent", description: "Customer support access limited by explicit support and resource scopes.", permissions: ["users:read", "orders:read", "support:read", "support:manage", "returns:manage"] },
-  { key: "ADMIN", name: "Administrator", description: "Operational administration; grant only to approved staff.", permissions: ["users:read", "users:manage", "store:read", "store:manage", "catalog:read", "catalog:manage", "inventory:manage", "orders:read", "orders:manage", "payments:read", "payments:refund", "support:read", "support:manage", "returns:manage", "roles:read", "roles:assign", "audit:read"] },
+  { key: "ADMIN", name: "Administrator", description: "Operational administration; grant only to approved staff.", permissions: ["users:read", "users:manage", "store:read", "store:manage", "catalog:read", "catalog:manage", "inventory:manage", "orders:read", "orders:manage", "payments:read", "payments:refund", "support:read", "support:manage", "returns:manage", "roles:read", "roles:assign", "audit:read", "ads:moderate"] },
   { key: "SUPER_ADMIN", name: "Super Administrator", description: "Break-glass platform-wide administrator; never assign by default.", permissions: permissions.map((permission) => permission.key) },
 ];
 
