@@ -3,7 +3,7 @@
 import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import StoreReviewForm from "@/features/orders/store-review-form";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -34,7 +34,7 @@ function money(value: string, code: string, minorUnit: number) {
   return formatMinorUnits(value, code, minorUnit);
 }
 
-export default function OrderDetailPage({ orderId }: { orderId: string }) {
+export default function OrderDetailPage({ orderId, returnedFromPayment }: { orderId: string; returnedFromPayment: boolean }) {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
   const statusLabel = (status: string) => {
@@ -50,9 +50,7 @@ export default function OrderDetailPage({ orderId }: { orderId: string }) {
     return t(english, arabic);
   };
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnedFromPayment = searchParams.get("payment") === "success";
-  const [order, setOrder = useState<Order | null>(null);
+   const [order, setOrder = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [paymentProviders, setPaymentProviders] = useState<PaymentProvider[]>([]);
