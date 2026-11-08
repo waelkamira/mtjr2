@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Images, MapPin, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { ArrowDown, ArrowUp, ImagePlus, Images, MapPin, Pencil, Star, Trash2, Upload } from "lucide-react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import ProductLocationMap, { type ProductCoordinates } from "@/components/maps/product-location-map";
@@ -65,7 +66,6 @@ export default function SellerProductsPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0);
-  const [imageManagerOpen, setImageManagerOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [mapLocation, setMapLocation] = useState<ProductCoordinates | null>(null);
   const [propertyType, setPropertyType] = useState("APARTMENT");
@@ -110,10 +110,6 @@ export default function SellerProductsPage() {
   const activePreviewIndex = imagePreviews.length
     ? Math.min(selectedPreviewIndex, imagePreviews.length - 1)
     : 0;
-  const activePreview = imagePreviews[activePreviewIndex];
-  const thumbnailIndexes = imagePreviews.length
-    ? Array.from({ length: Math.min(6, imagePreviews.length) }, (_, index) => (activePreviewIndex + index) % imagePreviews.length)
-    : [];
   const selectedImageCount = uploadedImages.length + (imageUrl.trim() ? 1 : 0);
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
@@ -232,7 +228,7 @@ export default function SellerProductsPage() {
     void uploadDroppedImages(Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("image/")));
   }
 
-  async function replaceSelectedImage(event: ChangeEvent<HTMLInputElement>) {
+  async function replaceSelectedImage(event: ChangeEvent<HTMLInputElement>, replaceIndex = activePreviewIndex) {
     const input = event.currentTarget;
     const file = input.files?.[0];
     input.value = "";
@@ -246,14 +242,24 @@ export default function SellerProductsPage() {
       const body = new FormData(); body.append("storeId", storeId); body.append("file", file);
       const uploaded = await json<Omit<UploadedImage, "name">>(await fetch("/api/seller/products/images", { method: "POST", body }));
       const replacement = { ...uploaded, name: file.name };
-      if (activePreviewIndex < uploadedImages.length) {
-        setUploadedImages((current) => current.map((image, index) => index === activePreviewIndex ? replacement : image));
+      if (replaceIndex < uploadedImages.length) {
+        setUploadedImages((current) => current.map((image, index) => index === replaceIndex ? replacement : image));
       } else {
         setUploadedImages((current) => [...current, replacement]); setImageUrl("");
+        setSelectedPreviewIndex(replaceIndex);
       }
       setMessage(translate(locale, "Image replaced successfully.", "تم استبدال الصورة بنجاح."));
     } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Image replacement failed.", "تعذر استبدال الصورة.")); }
     finally { setUploading(false); }
+  }
+
+  function removeCreateImage(index: number) {
+    if (index < uploadedImages.length) {
+      setUploadedImages((current) => current.filter((_, imageIndex) => imageIndex !== index));
+    } else {
+      setImageUrl("");
+    }
+    setSelectedPreviewIndex((current) => Math.min(current > index ? current - 1 : current, Math.max(0, selectedImageCount - 2)));
   }
 
   async function createProduct(event: FormEvent<HTMLFormElement>) {
@@ -308,7 +314,7 @@ export default function SellerProductsPage() {
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
-      setImageManagerOpen(false); setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setBarcode(""); setWeightGrams(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
+      setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setBarcode(""); setWeightGrams(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
       setPropertyType("APARTMENT"); setListingType("SALE"); setBedrooms(""); setBathrooms(""); setFloorArea("");
       setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
@@ -463,49 +469,40 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video link (YouTube / TikTok)", "رابط الفيديو (يوتيوب / تيك توك)")}<input type="url" maxLength={2048} className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Available quantity", "الكمية المتاحة")}<input required type="number" min="0" max="100000000" step="1" className={inputClass} value={initialStock} onChange={(e) => setInitialStock(e.target.value)} /></label>
             </div>
-            {!imageManagerOpen ? <button type="button" onClick={() => setImageManagerOpen(true)} className="flex w-full items-center justify-between gap-4 rounded-2xl border border-dashed border-[var(--color-copper-600)] bg-[var(--surface-soft)] p-5 text-left transition hover:bg-[var(--color-sage-100)]"><span className="flex items-center gap-3"><Images aria-hidden="true" className="size-6 text-[var(--color-copper-600)]" /><span><span className="block text-sm font-semibold">{translate(locale, "Open image studio", "فتح استوديو الصور")}</span><span className="mt-1 block text-xs text-[var(--muted)]">{translate(locale, "Upload, preview, replace, remove and choose the cover image.", "ارفع الصور وعاينها واستبدلها واحذفها وحدد صورة الغلاف.")}</span></span></span><span className="rounded-full bg-[var(--color-forest-900)] px-4 py-2 text-xs font-semibold text-white">{selectedImageCount}/8</span></button> : <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6"><div role="dialog" aria-modal="true" aria-labelledby="product-image-studio-title" className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-white/20 bg-[var(--surface)] p-4 shadow-2xl sm:p-7"><div className="mb-5 flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[var(--color-copper-600)]">{translate(locale, "Media workspace", "مساحة إدارة الوسائط")}</p><h3 id="product-image-studio-title" className="mt-1 text-xl font-bold">{translate(locale, "Product image studio", "استوديو صور المنتج")}</h3><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Up to eight images · JPEG, PNG or WebP · 8 MB maximum per image", "حتى ثماني صور · JPEG أو PNG أو WebP · 8 ميغابايت كحد أقصى للصورة")}</p></div><button type="button" onClick={() => setImageManagerOpen(false)} className="rounded-xl border border-[var(--border)] px-3 py-2 text-sm font-semibold">{translate(locale, "Done", "تم")}</button></div><section onDragOver={(event) => event.preventDefault()} onDrop={handleImageDrop} className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4"> 
-              <div className="flex items-center gap-2">
-                <Images aria-hidden="true" className="size-5 text-[var(--color-copper-600)]" />
-                <h3 className="text-sm font-semibold">{translate(locale, "Listing images", "صور الإعلان")}</h3>
+            <section onDragOver={(event) => event.preventDefault()} onDrop={handleImageDrop} className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="rounded-xl bg-[var(--color-copper-600)]/10 p-2 text-[var(--color-copper-600)]"><Images aria-hidden="true" className="size-5" /></span>
+                  <div><h3 className="text-sm font-semibold">{translate(locale, "Product images", "صور المنتج")}</h3><p className="text-xs text-[var(--muted)]">{translate(locale, "Choose a photo to make it the cover. Use the icons to replace or delete it.", "اختر صورة لتصبح الغلاف. استخدم الأيقونات لاستبدالها أو حذفها.")}</p></div>
+                </div>
+                <span className="rounded-full bg-[var(--color-forest-900)] px-3 py-1 text-xs font-semibold text-white">{selectedImageCount}/8</span>
               </div>
-              <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or choose files. Preview, replace, remove and choose the cover image before saving.", "اسحب الصور إلى هنا أو اخترها. عاين كل صورة واستبدلها واحذفها وحدد صورة الغلاف قبل الحفظ.")}</p>
-              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || busy || !activePreview} onChange={replaceSelectedImage} className="sr-only" />{translate(locale, "Replace selected image", "استبدال الصورة المحددة")}</label>
-              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold">
-                <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || busy || selectedImageCount >= 8} onChange={uploadImages} className="sr-only" />
-                <Images aria-hidden="true" className="size-4" />
-                {uploading ? translate(locale, "Uploading…", "جارٍ الرفع…") : translate(locale, "Choose images", "اختر الصور")}
-              </label>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {imagePreviews.map((preview, index) => (
+                  <div key={`${preview.url}-${index}`} className={`relative overflow-hidden rounded-xl border-2 bg-[var(--surface)] ${index === activePreviewIndex ? "border-[var(--color-copper-600)] shadow-md" : "border-transparent"}`}>
+                    <button type="button" onClick={() => setSelectedPreviewIndex(index)} aria-label={translate(locale, `Choose image ${index + 1} as cover`, `اختيار الصورة ${index + 1} كغلاف`)} aria-pressed={index === activePreviewIndex} className="relative block aspect-square w-full">
+                      <Image src={preview.url} alt={preview.name} fill unoptimized className="object-cover" />
+                      {index === activePreviewIndex && <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-[var(--color-forest-900)] px-2 py-1 text-[10px] font-semibold text-white"><Star aria-hidden="true" className="size-3 fill-current" />{translate(locale, "Cover", "الغلاف")}</span>}
+                    </button>
+                    <div className="absolute right-2 top-2 flex gap-1">
+                      <label title={translate(locale, "Replace image", "استبدال الصورة")} className="cursor-pointer rounded-lg bg-white/95 p-2 text-[var(--color-forest-900)] shadow hover:bg-emerald-50">
+                        <Pencil aria-hidden="true" className="size-4" />
+                        <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || busy} onChange={(event) => { void replaceSelectedImage(event, index); }} className="sr-only" aria-label={translate(locale, `Replace image ${index + 1}`, `استبدال الصورة ${index + 1}`)} />
+                      </label>
+                      <button type="button" disabled={uploading || busy} onClick={() => removeCreateImage(index)} title={translate(locale, "Delete image", "حذف الصورة")} aria-label={translate(locale, `Delete image ${index + 1}`, `حذف الصورة ${index + 1}`)} className="rounded-lg bg-white/95 p-2 text-red-600 shadow hover:bg-red-50 disabled:opacity-50"><Trash2 aria-hidden="true" className="size-4" /></button>
+                    </div>
+                    <p className="truncate px-2 py-1.5 text-xs text-[var(--muted)]">{preview.name}</p>
+                  </div>
+                ))}
+                {selectedImageCount < 8 && <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--color-copper-600)]/50 bg-[var(--surface)] text-[var(--color-copper-600)] transition hover:border-[var(--color-copper-600)] hover:bg-[var(--color-copper-600)]/5">
+                  <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || busy} onChange={uploadImages} className="sr-only" />
+                  {uploading ? <Upload aria-hidden="true" className="size-6 animate-pulse" /> : <ImagePlus aria-hidden="true" className="size-6" />}
+                  <span className="text-xs font-semibold">{uploading ? translate(locale, "Uploading…", "جارٍ الرفع…") : translate(locale, "Add images", "إضافة صور")}</span>
+                </label>}
+              </div>
               <label className="grid gap-1 text-sm">{translate(locale, "Or add a hosted image URL", "أو أضف رابط صورة مستضافة")}<input type="url" disabled={uploadedImages.length >= 8 && !imageUrl.trim()} className={inputClass} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" /></label>
-              <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)]">
-                <div className="relative flex aspect-[4/3] items-center justify-center">
-                  {activePreview
-                    ? <img src={activePreview.url} alt={activePreview.name} className="size-full object-contain" />
-                    : <div className="flex flex-col items-center gap-2 text-[var(--muted)]"><Images aria-hidden="true" className="size-10" /><span className="text-sm">{translate(locale, "Your main image preview will appear here", "ستظهر معاينة الصورة الرئيسية هنا")}</span></div>}
-                  {activePreview && <>
-                    {imagePreviews.length > 1 && <><button type="button" onClick={() => setSelectedPreviewIndex((activePreviewIndex - 1 + imagePreviews.length) % imagePreviews.length)} aria-label={translate(locale, "Previous image", "الصورة السابقة")} className="absolute left-3 top-1/2 rounded-full bg-white/90 p-2 shadow"><ChevronLeft aria-hidden="true" className="size-5" /></button>
-                    <button type="button" onClick={() => setSelectedPreviewIndex((activePreviewIndex + 1) % imagePreviews.length)} aria-label={translate(locale, "Next image", "الصورة التالية")} className="absolute right-3 top-1/2 rounded-full bg-white/90 p-2 shadow"><ChevronRight aria-hidden="true" className="size-5" /></button></>}
-                    <button type="button" disabled={busy || uploading} onClick={() => {
-                      if (activePreviewIndex < uploadedImages.length) {
-                        setUploadedImages((current) => current.filter((_, index) => index !== activePreviewIndex));
-                      } else {
-                        setImageUrl("");
-                      }
-                      setSelectedPreviewIndex(Math.max(0, activePreviewIndex - 1));
-                    }} aria-label={translate(locale, "Remove selected image", "إزالة الصورة المحددة")} className="absolute right-3 top-3 rounded-lg bg-white p-2 text-[var(--color-onyx)] shadow disabled:opacity-50"><Trash2 aria-hidden="true" className="size-4" /></button>
-                  </>}
-                </div>
-                <div className="grid grid-cols-3 gap-2 border-t border-[var(--border)] p-2 sm:grid-cols-6">
-                  {Array.from({ length: 6 }, (_, slot) => {
-                    const previewIndex = thumbnailIndexes[slot];
-                    const preview = previewIndex === undefined ? undefined : imagePreviews[previewIndex];
-                    return preview && previewIndex !== undefined
-                      ? <button type="button" key={`${preview.url}-${previewIndex}`} onClick={() => setSelectedPreviewIndex(previewIndex)} aria-label={translate(locale, `Show image ${previewIndex + 1}: ${preview.name}`, `عرض الصورة ${previewIndex + 1}: ${preview.name}`)} aria-pressed={previewIndex === activePreviewIndex} className={`aspect-square overflow-hidden rounded-lg border-2 transition hover:border-[var(--color-copper-500)] focus-visible:outline-2 focus-visible:outline-[var(--color-copper-600)] ${previewIndex === activePreviewIndex ? "border-[var(--color-copper-600)]" : "border-transparent"}`}><img src={preview.url} alt="" className="size-full object-cover" /></button>
-                      : <div key={`empty-${slot}`} aria-hidden="true" className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-[var(--border)] text-[var(--muted)]"><Plus className="size-5" /></div>;
-                  })}
-                </div>
-              </div>
-              <p className="text-xs text-[var(--muted)]">{selectedImageCount}/8 {translate(locale, "images selected; the selected image becomes the cover.", "صور محددة؛ الصورة المحددة تصبح صورة الغلاف.")}</p><p className="rounded-xl border border-dashed border-[var(--color-copper-600)]/50 bg-[var(--surface-soft)] p-3 text-center text-xs text-[var(--muted)]">{translate(locale, "Drop image files anywhere in this panel to upload them.", "اسحب ملفات الصور إلى أي مكان داخل هذه النافذة لرفعها.")}</p>
-            </section></div></div>}
+              <p className="text-xs text-[var(--muted)]">{translate(locale, "JPEG, PNG or WebP · up to 8 MB each · drag images here to upload.", "JPEG أو PNG أو WebP · حتى 8 ميغابايت للصورة · اسحب الصور هنا لرفعها.")}</p>
+            </section>
             <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select required className={inputClass} value={categoryId} onChange={(e) => { setCategoryId(e.target.value); const selected = categoryOptions.find((item) => item.id === e.target.value); setCustomFields(selected ? getCategoryFieldPresets(selected.slug) : []); }}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             {categoryId && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold">{translate(locale, "Additional category details", "تفاصيل إضافية حسب الفئة")}</h3><button type="button" onClick={() => setCustomFields((items) => [...items, { key: "", value: "", label: "" }])} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Add field", "إضافة حقل")}</button></div><p className="text-xs text-[var(--muted)]">{translate(locale, "Add specifications such as model, year, condition, material, size or any category-specific detail.", "أضف المواصفات مثل الطراز والسنة والحالة والخامة والمقاس أو أي تفاصيل خاصة بالفئة.")}</p>{customFields.map((field, index) => <div key={index} className="grid items-end gap-2 sm:grid-cols-[1fr_auto]">{field.label ? <label className="grid gap-1 text-sm"><span className="font-medium">{field.label}</span><input required aria-label={field.label} className={inputClass} value={field.value} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} /></label> : <div className="grid gap-2 sm:grid-cols-2"><label className="grid gap-1 text-xs">{translate(locale, "Field name", "اسم الحقل")}<input className={inputClass} value={field.key} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, key: e.target.value } : item))} /></label><label className="grid gap-1 text-xs">{translate(locale, "Value", "القيمة")}<input className={inputClass} value={field.value} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} /></label></div>}<button type="button" onClick={() => setCustomFields((items) => items.filter((_, i) => i !== index))} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">{translate(locale, "Remove", "حذف")}</button></div>)}</section> }
             {isRealEstate && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
@@ -605,25 +602,35 @@ export default function SellerProductsPage() {
             </div></fieldset>}
             <section className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><h4 className="text-sm font-semibold">{translate(locale, "Product location", "موقع المنتج")}</h4><p className="text-xs text-[var(--muted)]">{translate(locale, "The public listing shows an approximate area; exact coordinates remain private.", "يعرض الإعلان منطقة تقريبية، بينما تبقى الإحداثيات الدقيقة خاصة.")}</p><ProductLocationMap value={editMapLocation} onChange={setEditMapLocation} label={translate(locale, "Choose product location on map", "اختر موقع المنتج على الخريطة")} />{editMapLocation && <div className="flex items-center justify-between gap-3 text-xs text-[var(--muted)]"><span>{editMapLocation.latitude.toFixed(5)}, {editMapLocation.longitude.toFixed(5)}</span><button type="button" onClick={() => setEditMapLocation(null)} className="rounded-lg border border-[var(--border)] px-3 py-1.5 font-semibold">{translate(locale, "Clear location", "مسح الموقع")}</button></div>}</section>
             <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2"><div><h4 className="text-sm font-semibold">{translate(locale, "Product image studio", "استوديو صور المنتج")}</h4><p className="text-xs text-[var(--muted)]">{translate(locale, "Upload, replace, remove, reorder and choose one cover image.", "ارفع الصور واستبدلها واحذفها ورتبها وحدد صورة غلاف واحدة.")}</p></div><span className="rounded-full bg-[var(--surface)] px-3 py-1 text-xs font-semibold">{editMedia.length}/8</span></div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-3"><span className="rounded-xl bg-[var(--color-copper-600)]/10 p-2 text-[var(--color-copper-600)]"><Images aria-hidden="true" className="size-5" /></span><div><h4 className="text-sm font-semibold">{translate(locale, "Product images", "صور المنتج")}</h4><p className="text-xs text-[var(--muted)]">{translate(locale, "Choose a photo for the cover. Use the icons to replace or delete it.", "اختر صورة للغلاف. استخدم الأيقونات لاستبدالها أو حذفها.")}</p></div></div><span className="rounded-full bg-[var(--color-forest-900)] px-3 py-1 text-xs font-semibold text-white">{editMedia.length}/8</span></div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {editMedia.map((media, index) => <div key={media.storageKey ?? media.url} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                  <img src={media.url} alt={media.altText ?? ""} className="aspect-square w-full object-cover" />
-                  <div className="grid gap-2 p-2">
-                    <span className="text-xs font-semibold">{media.isPrimary ? translate(locale, "Cover image", "صورة الغلاف") : translate(locale, "Image", "صورة")} {index + 1}</span>
-                    <div className="flex flex-wrap gap-1">
-                      <button type="button" disabled={uploading || busy} onClick={() => setEditMediaPrimary(index)} className="rounded-lg border px-2 py-1 text-[11px]">{translate(locale, "Make cover", "اجعلها الغلاف")}</button>
-                      <button type="button" disabled={uploading || busy} onClick={() => removeEditMedia(index)} className="rounded-lg border px-2 py-1 text-[11px] text-red-600">{translate(locale, "Remove", "حذف")}</button>
-                    </div>
-                    <div className="flex gap-1">
-                      <button type="button" disabled={index === 0 || uploading || busy} onClick={() => moveEditMedia(index, -1)} className="rounded-lg border px-2 py-1 text-[11px]">↑</button>
-                      <button type="button" disabled={index === editMedia.length - 1 || uploading || busy} onClick={() => moveEditMedia(index, 1)} className="rounded-lg border px-2 py-1 text-[11px]">↓</button>
-                      <label className="cursor-pointer rounded-lg border px-2 py-1 text-[11px]">{translate(locale, "Replace", "استبدال")}<input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={uploading || busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void uploadEditMedia([file], index); }} /></label>
+                {editMedia.map((media, index) => <div key={media.storageKey ?? media.url} className={`relative overflow-hidden rounded-xl border-2 bg-[var(--surface)] ${media.isPrimary ? "border-[var(--color-copper-600)] shadow-md" : "border-transparent"}`}>
+                  <button type="button" onClick={() => setEditMediaPrimary(index)} aria-label={translate(locale, `Choose image ${index + 1} as cover`, `اختيار الصورة ${index + 1} كغلاف`)} aria-pressed={media.isPrimary} className="relative block aspect-square w-full">
+                    <Image src={media.url} alt={media.altText ?? ""} fill unoptimized className="object-cover" />
+                    {media.isPrimary && <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-[var(--color-forest-900)] px-2 py-1 text-[10px] font-semibold text-white"><Star aria-hidden="true" className="size-3 fill-current" />{translate(locale, "Cover", "الغلاف")}</span>}
+                  </button>
+                  <div className="absolute right-2 top-2 flex gap-1">
+                    <label title={translate(locale, "Replace image", "استبدال الصورة")} className="cursor-pointer rounded-lg bg-white/95 p-2 text-[var(--color-forest-900)] shadow hover:bg-emerald-50">
+                      <Pencil aria-hidden="true" className="size-4" />
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label={translate(locale, `Replace image ${index + 1}`, `استبدال الصورة ${index + 1}`)} disabled={uploading || busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void uploadEditMedia([file], index); }} />
+                    </label>
+                    <button type="button" disabled={uploading || busy} onClick={() => removeEditMedia(index)} title={translate(locale, "Delete image", "حذف الصورة")} aria-label={translate(locale, `Delete image ${index + 1}`, `حذف الصورة ${index + 1}`)} className="rounded-lg bg-white/95 p-2 text-red-600 shadow hover:bg-red-50 disabled:opacity-50"><Trash2 aria-hidden="true" className="size-4" /></button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 p-2">
+                    <span className="truncate text-xs font-medium">{media.altText || `${translate(locale, "Image", "صورة")} ${index + 1}`}</span>
+                    <div className="flex shrink-0 gap-1">
+                      <button type="button" disabled={index === 0 || uploading || busy} onClick={() => moveEditMedia(index, -1)} title={translate(locale, "Move earlier", "تحريك للأعلى")} aria-label={translate(locale, "Move image earlier", "تحريك الصورة للأعلى")} className="rounded-lg bg-[var(--surface-soft)] p-1.5 text-[var(--color-onyx)] disabled:opacity-40"><ArrowUp aria-hidden="true" className="size-3.5" /></button>
+                      <button type="button" disabled={index === editMedia.length - 1 || uploading || busy} onClick={() => moveEditMedia(index, 1)} title={translate(locale, "Move later", "تحريك للأسفل")} aria-label={translate(locale, "Move image later", "تحريك الصورة للأسفل")} className="rounded-lg bg-[var(--surface-soft)] p-1.5 text-[var(--color-onyx)] disabled:opacity-40"><ArrowDown aria-hidden="true" className="size-3.5" /></button>
                     </div>
                   </div>
                 </div>)}
+                {editMedia.length < 8 && <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--color-copper-600)]/50 bg-[var(--surface)] text-[var(--color-copper-600)] transition hover:border-[var(--color-copper-600)] hover:bg-[var(--color-copper-600)]/5">
+                  <input type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={uploading || busy} onChange={(event) => { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; void uploadEditMedia(files); }} />
+                  {uploading ? <Upload aria-hidden="true" className="size-6 animate-pulse" /> : <ImagePlus aria-hidden="true" className="size-6" />}
+                  <span className="text-xs font-semibold">{uploading ? translate(locale, "Uploading…", "جارٍ الرفع…") : translate(locale, "Add images", "إضافة صور")}</span>
+                </label>}
               </div>
-              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold"><input type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={uploading || busy || editMedia.length >= 8} onChange={(event) => { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; void uploadEditMedia(files); }} />{uploading ? translate(locale, "Uploading…", "جارٍ الرفع…") : translate(locale, "Add images", "إضافة صور")}</label>
+              <p className="text-xs text-[var(--muted)]">{translate(locale, "JPEG, PNG or WebP · up to 8 MB each · choose an image to set it as the cover.", "JPEG أو PNG أو WebP · حتى 8 ميغابايت للصورة · اختر صورة لتعيينها كغلاف.")}</p>
               {!editMedia.length && <p className="text-xs text-red-600">{translate(locale, "Add at least one image before saving.", "أضف صورة واحدة على الأقل قبل الحفظ.")}</p>}
             </section>
             <div className="flex gap-2"><button disabled={busy} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" onClick={() => { setEditingId(""); setEditOriginalCustomFields(null); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
