@@ -2681,3 +2681,9 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Added a Vercel Cron schedule for 02:00 UTC on the first day of each month and added authenticated GET support (Vercel Cron's request method) while retaining POST for manual/controlled invocation.
 - Both methods use the same constant-time bearer-secret check and return a generic 401 when CRON_SECRET is missing or invalid.
 - Added a regression test for the authenticated GET worker path. Actual hosted scheduling still requires CRON_SECRET to be configured in the Vercel project and a successful deployment.
+
+**Automated verification wiring**
+- Restored CI, browser E2E, and PostgreSQL identity/integration GitHub Actions workflows to the continuing branch.
+- Added the feature branch to the PostgreSQL integration workflow's pull-request and push filters, including advertising, catalog, seller, identity, migration, and browser paths.
+- Restored the route-security/UI-mutation inventory scripts and the isolated E2E session bootstrap script required by those workflows.
+- Workflow files are committed, but no successful run has yet been observed for the latest head. The commit-status wrapper currently reports only the Vercel quota failure; do not infer CI success from the workflow configuration alone.
