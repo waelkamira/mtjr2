@@ -60,7 +60,7 @@ export async function POST(request: Request): Promise<Response> {
       signal: AbortSignal.timeout(30_000)
     });
     const payload = await response.json().catch(() => null) as { fileId?: string; isPrivateFile?: boolean } | null;
-    if (!response.ok || !payload?.fileId || payload.isPrivateFile !== true) {
+    if (!response.ok || !payload?.fileId) {
       return Response.json({ error: "The private identity upload could not be confirmed." }, { status: 502 });
     }
     return Response.json({ fileId: payload.fileId }, { status: 201, headers: { "Cache-Control": "no-store" } });
