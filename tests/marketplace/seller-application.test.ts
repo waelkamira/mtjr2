@@ -34,7 +34,7 @@ describe("marketplace seller lifecycle", () => {
     sellerUpdateMany.mockResolvedValue({ count: 1 });
     storeFindUnique.mockResolvedValue(null);
     storeFindFirst.mockResolvedValue(null);
-    storeCreate.mockResolvedValue({ id: "store-1", name: "Shop", slug: "shop", status: "DRAFT" });
+    storeCreate.mockResolvedValue({ id: "store-1", storeNumber: BigInt("201"), name: "Shop", slug: "shop", status: "DRAFT" });
     marketFindMany.mockResolvedValue([{ id: "market-1", defaultCurrencyCode: "EUR", currencies: [{ currencyCode: "EUR" }] }]);
     transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       seller: { findUnique: sellerFindUnique, create: sellerCreate, updateMany: sellerUpdateMany },
@@ -82,7 +82,7 @@ describe("marketplace seller lifecycle", () => {
 
   it("returns the seller's already-owned store instead of creating another one", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
-    storeFindFirst.mockResolvedValue({ id: "owned-store", name: "Existing shop", slug: "existing-shop", status: "ACTIVE" });
+    storeFindFirst.mockResolvedValue({ id: "owned-store", storeNumber: BigInt("202"), name: "Existing shop", slug: "existing-shop", status: "ACTIVE" });
 
     const result = await createSellerStore({ name: "Another shop", slug: "another-shop", marketIds: ["market-1"] });
 
@@ -109,7 +109,7 @@ describe("marketplace seller lifecycle", () => {
 
   it("recovers a concurrent second-store attempt through the seller unique constraint", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
-    const existingStore = { id: "owned-store", name: "Shop", slug: "shop", status: "DRAFT" };
+    const existingStore = { id: "owned-store", storeNumber: BigInt("204"), name: "Shop", slug: "shop", status: "DRAFT" };
     storeFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(existingStore);
     storeCreate.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
       code: "P2002", clientVersion: "6.19.0", meta: { target: ["sellerId"] }
