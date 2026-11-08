@@ -229,9 +229,29 @@ export default function SellerWorkspacePage() {
     .map(([day, value]) => ({ label: day.slice(5), value }));
   const salesCurrencies = sellerAnalytics?.metrics.grossSalesByCurrency ?? [];
   const activeSalesCurrency = salesCurrencies.find((entry) => entry.currencyCode === selectedSalesCurrency) ?? salesCurrencies[0];
-  const formatCurrencyMinor = (amountMinor: string, currencyCode: string, minorUnit: number) =>
-    new Intl.NumberFormat(locale, { style: "currency", currency: currencyCode, maximumFractionDigits: minorUnit })
-      .format(Number(amountMinor) / (10 ** minorUnit));
+  const formatCurrencyMinor = (amountMinor: string, currencyCode: string, minorUnit: number) => {
+    const amount = BigInt(amountMinor);
+    const factor = 10n ** BigInt(minorUnit);
+    const absolute = amount < 0n ? -amount : amount;
+    const whole = amount < 0n ? -(absolute / factor) : absolute / factor;
+    const fraction = absolute % factor;
+    const formatter = new Intl.NumberFormat(locale, {
+      style: "currency", currency: currencyCode, minimumFractionDigits: 0, maximumFractionDigits: 0
+    });
+    const parts = formatter.formatToParts(whole);
+    if (minorUnit > 0) {
+      const decimal = new Intl.NumberFormat(locale).formatToParts(1.1).find((part) => part.type === "decimal")?.value ?? ".";
+      const fractionText = new Intl.NumberFormat(locale, {
+        useGrouping: false, minimumIntegerDigits: minorUnit, maximumFractionDigits: 0
+      }).format(fraction);
+      let insertAt = 0;
+      parts.forEach((part, index) => {
+        if (part.type === "integer" || part.type === "group") insertAt = index + 1;
+      });
+      parts.splice(insertAt, 0, { type: "decimal", value: decimal }, { type: "fraction", value: fractionText });
+    }
+    return parts.map((part) => part.value).join("");
+  };
   const grossSalesSummary = salesCurrencies.length
     ? salesCurrencies.slice(0, 2).map((entry) => formatCurrencyMinor(entry.amountMinor, entry.currencyCode, entry.minorUnit)).join(" · ") +
       (salesCurrencies.length > 2 ? ` +${salesCurrencies.length - 2}` : "")
