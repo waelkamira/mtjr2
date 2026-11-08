@@ -44,7 +44,7 @@ type SponsoredProduct = {
 };
 type Product = {
   id: string; slug: string; name: string; description: string | null;
-  brand: { name: string } | null; store: { id: string; name: string; slug: string };
+  brand: { id: string; name: string; slug?: string } | null; store: { id: string; name: string; slug: string };
   mapLocation: { publicLatitude: number; publicLongitude: number } | null;
   propertyDetails: { propertyType: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"; listingType: "SALE" | "RENT"; bedrooms: number | null; bathrooms: number | null; floorArea: string } | null;
   categories: Array<{ id: string; name: string; slug: string }>;
@@ -121,7 +121,10 @@ export default function ProductDetail({ slug }: { slug: string }) {
       return;
     }
     let active = true;
-    fetch(`/api/advertising/sponsored?marketId=${encodeURIComponent(selectedMarketId)}&q=${encodeURIComponent(product.name)}`, { cache: "no-store" })
+    const sponsoredParams = new URLSearchParams({ marketId: selectedMarketId, q: product.name });
+    for (const category of product.categories) sponsoredParams.append("categoryId", category.id);
+    if (product.brand?.id) sponsoredParams.set("brandId", product.brand.id);
+    fetch(`/api/advertising/sponsored?${sponsoredParams.toString()}`, { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("Sponsored products unavailable.");
         return response.json() as Promise<{ items: SponsoredProduct[] }>;
