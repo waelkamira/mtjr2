@@ -14,13 +14,17 @@ export async function deleteProductImage(storageKey: string): Promise<DeleteResu
     throw new Error("Invalid product image storage key.");
   }
   const provider = storageKey.slice(0, separator);
-  const assetId = storageKey.slice(separator + 1);
+  const providerParts = storageKey.slice(separator + 1).split(":");
+  const storedImgurClientId = provider === "imgur" && providerParts.length === 2 ? providerParts[0] : undefined;
+  const assetId = provider === "imgur" && providerParts.length === 2 ? providerParts[1] : providerParts.join(":");
 
   if (provider === "imgur") {
-    if (!/^[A-Za-z0-9_-]{4,160}$/.test(assetId)) throw new Error("Invalid Imgur image identifier.");
+    if (providerParts.length > 2 || !/^[A-Za-z0-9_-]{4,160}$/.test(assetId)) throw new Error("Invalid Imgur image identifier.");
+    if (storedImgurClientId && !/^[A-Za-z0-9_-]{4,160}$/.test(storedImgurClientId)) throw new Error("Invalid Imgur Client ID.");
     const token = process.env.IMGUR_ACCESS_TOKEN?.trim();
-    const clientId = (process.env.IMGUR_CLIENT_IDS?.trim() || process.env.IMGUR_CLIENT_ID?.trim() || "")
+    const configuredClientId = (process.env.IMGUR_CLIENT_IDS?.trim() || process.env.IMGUR_CLIENT_ID?.trim() || "")
       .split(/[;,\\n]/).map((value) => value.trim()).find(Boolean);
+    const clientId = storedImgurClientId || configuredClientId;
     const authorization = token ? `Bearer ${token}` : clientId ? `Client-ID ${clientId}` : null;
     if (!authorization) return "unsupported";
     const response = await fetch(`https://api.imgur.com/3/image/${encodeURIComponent(assetId)}`, {
