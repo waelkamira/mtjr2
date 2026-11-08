@@ -454,7 +454,7 @@ export default function SellerWorkspacePage() {
           <div className="relative grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_auto]">
             <div className="flex items-center gap-4 sm:gap-6">
               <div className="grid size-[76px] shrink-0 place-items-center rounded-[1.7rem] border border-white/90 bg-[linear-gradient(145deg,#f5fbfc,#c7dce3)] text-3xl font-black text-[#42677b] shadow-[0_10px_22px_rgba(35,62,81,.16),inset_0_2px_0_white,inset_0_-3px_7px_rgba(48,76,94,.08)] sm:size-24 sm:text-4xl">
-                {(selectedStore?.name ?? workspace.seller?.displayName ?? "M").trim().slice(0,1).toLocaleUpperCase()}
+                {(selectedStore?.name ?? workspace?.seller?.displayName ?? "M").trim().slice(0,1).toLocaleUpperCase()}
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#628493]">{translate(locale, "MATJAR · SELLER STUDIO", "متجر · استوديو البائع")}</p>
@@ -464,7 +464,7 @@ export default function SellerWorkspacePage() {
                   <label className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/90 bg-white/55 px-3 py-1.5 text-xs font-bold text-[#3e6478] shadow-[inset_0_1px_0_white]">
                     <span className="size-2 shrink-0 rounded-full bg-[#62a9a0]" />
                     <span className="shrink-0 text-[#78909c]">{translate(locale, "Active store", "المتجر النشط")}</span>
-                    {workspace.stores.length > 1 ? <select aria-label={translate(locale, "Choose active store", "اختر المتجر النشط")} value={selectedStoreId} onChange={(event) => { setSelectedStoreId(event.target.value); localStorage.setItem("mtjr.activeStoreId", event.target.value); }} className="max-w-[190px] bg-transparent font-extrabold text-[#35566b] outline-none">{workspace.stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select> : <span className="truncate">{selectedStore.name}</span>}
+                    {(workspace?.stores.length ?? 0) > 1 ? <select aria-label={translate(locale, "Choose active store", "اختر المتجر النشط")} value={selectedStoreId} onChange={(event) => { setSelectedStoreId(event.target.value); localStorage.setItem("mtjr.activeStoreId", event.target.value); }} className="max-w-[190px] bg-transparent font-extrabold text-[#35566b] outline-none">{(workspace?.stores ?? []).map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select> : <span className="truncate">{selectedStore.name}</span>}
                   </label>
                   <span className="text-xs font-semibold text-[#78909c]">{selectedStore.status}</span>
                 </div>}
