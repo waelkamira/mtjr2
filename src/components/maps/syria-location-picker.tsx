@@ -50,7 +50,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   const [districtId, setDistrictId] = useState("");
   const [subdistrictId, setSubdistrictId] = useState("");
   const [localityQuery, setLocalityQuery] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [focus, setFocus] = useState<{ latitude: number; longitude: number; zoom: number } | null>(null);
   const labels = useMemo(() => ({
@@ -67,7 +67,6 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   useEffect(() => {
     let active = true;
-    setBusy(true);
     loadLevel("governorates").then((result) => { if (active) setGovernorates(result.items); })
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load governorates."); })
       .finally(() => { if (active) setBusy(false); });
@@ -75,11 +74,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }, []);
 
   useEffect(() => {
-    if (!governorateId || value.latitude === undefined || value.longitude === undefined) {
-      setNeighborhoodSuggestions([]);
-      setSelectedNeighborhoodId("");
-      return;
-    }
+    if (!governorateId || value.latitude === undefined || value.longitude === undefined) return;
     let active = true;
     const query = new URLSearchParams({
       governorateId,
@@ -113,7 +108,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }
 
   async function chooseDistrict(id: string) {
-    setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]);
+    setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     onChange({});
     const item = districts.find((entry) => entry.id === id);
     if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 9 });
@@ -126,7 +121,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }
 
   async function chooseSubdistrict(id: string) {
-    setSubdistrictId(id); setLocalities([]);
+    setSubdistrictId(id); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     onChange({});
     const item = subdistricts.find((entry) => entry.id === id);
     if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 11 });
@@ -150,6 +145,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const item = localities.find((entry) => entry.id === id);
     const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
     setSelectedNeighborhoodId("");
+    setNeighborhoodSuggestions([]);
     onChange({
       localityId: id || undefined,
       ...(hasCoordinates ? { latitude: item!.latitude!, longitude: item!.longitude! } : {})
@@ -158,6 +154,8 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }
 
   function updateCoordinates(coords: { latitude: number; longitude: number }) {
+    setSelectedNeighborhoodId("");
+    setNeighborhoodSuggestions([]);
     onChange({ ...value, neighborhoodId: undefined, ...coords });
     setFocus({ ...coords, zoom: 15 });
   }
@@ -206,7 +204,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <input className={fieldClass + " mt-0 min-w-0"} value={localityQuery} onChange={(event) => setLocalityQuery(event.target.value)} placeholder={labels.search} />
         <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[var(--color-ink-800)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{labels.searchButton}</button>
       </div>}
-      {neighborhoodSuggestions.length > 0 && <label className="block text-sm font-medium">{translate(locale, "Nearby neighbourhood suggestions", "أحياء قريبة مقترحة")}
+      {value.latitude !== undefined && value.longitude !== undefined && neighborhoodSuggestions.length > 0 && <label className="block text-sm font-medium">{translate(locale, "Nearby neighbourhood suggestions", "أحياء قريبة مقترحة")}
         <select className={fieldClass} value={selectedNeighborhoodId} onChange={(event) => {
           const selected = neighborhoodSuggestions.find((item) => item.id === event.target.value);
           setSelectedNeighborhoodId(event.target.value);
