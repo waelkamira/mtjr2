@@ -50,7 +50,7 @@ export default function OrderDetailPage({ orderId, returnedFromPayment }: { orde
     return t(english, arabic);
   };
   const router = useRouter();
-   const [order, setOrder = useState<Order | null>(null);
+   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [paymentProviders, setPaymentProviders] = useState<PaymentProvider[]>([]);
