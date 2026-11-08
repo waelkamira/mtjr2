@@ -599,6 +599,7 @@ model Seller {
   facebookUrl String?
   youtubeUrl String?
   twitterUrl String?
+  identityDocumentFileId String?
   latitude Float?
   longitude Float?
   createdAt   DateTime     @default(now())
