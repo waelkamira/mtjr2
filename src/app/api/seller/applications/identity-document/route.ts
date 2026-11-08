@@ -33,6 +33,7 @@ export async function POST(request: Request): Promise<Response> {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     return Response.json({ error: "Unable to verify the current session." }, { status: 401 });
   }
+  if (!actor.user.emailVerifiedAt) return Response.json({ error: "Verify your email address before uploading identity documents." }, { status: 403 });
   const contentTypeRejected = validateIdentityImageUploadRequest(request);
   if (contentTypeRejected) return contentTypeRejected;
   let form: FormData;
