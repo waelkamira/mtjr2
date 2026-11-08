@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
+import SyriaLocationPicker from "@/components/maps/syria-location-picker";
 
 type Market = {
   id: string; code: string; name: string;
@@ -14,6 +15,12 @@ type Market = {
 };
 type Category = { id: string; name: string; children: Category[] };
 type Brand = { id: string; name: string };
+type CategoryAttribute = {
+  id: string; key: string; label: string; description: string | null;
+  valueType: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "MULTI_SELECT";
+  required: boolean; variantLevel: boolean; options: string[];
+};
+type ProductLocationDraft = { localityId?: string; neighborhood?: string; latitude?: number; longitude?: number };
 type Product = {
   id: string; productNumber: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
@@ -29,10 +36,12 @@ async function json<T>(response: Response): Promise<T> {
   return data as T;
 }
 function flatten(items: Category[], prefix = ""): Array<{ id: string; label: string }> {
-  return items.flatMap((item) => [
-    { id: item.id, label: prefix + item.name },
-    ...flatten(item.children ?? [], prefix + item.name + " / ")
-  ]);
+  return items.flatMap((item) => {
+    const children = item.children ?? [];
+    return children.length
+      ? flatten(children, prefix + item.name + " / ")
+      : [{ id: item.id, label: prefix + item.name }];
+  });
 }
 
 export default function SellerProductsPage() {
@@ -53,6 +62,10 @@ export default function SellerProductsPage() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
   const [categoryId, setCategoryId] = useState("");
+  const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttribute[]>([]);
+  const [attributeValues, setAttributeValues] = useState<Record<string, string | number | boolean | string[]>>({});
+  const [loadingCategoryAttributes, setLoadingCategoryAttributes] = useState(false);
+  const [productLocation, setProductLocation] = useState<ProductLocationDraft>({});
   const [brandId, setBrandId] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -107,6 +120,30 @@ export default function SellerProductsPage() {
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!categoryId) {
+      setCategoryAttributes([]);
+      setAttributeValues({});
+      setLoadingCategoryAttributes(false);
+      return;
+    }
+    let active = true;
+    setLoadingCategoryAttributes(true);
+    setAttributeValues({});
+    fetch(`/api/categories/${encodeURIComponent(categoryId)}/attributes?locale=${encodeURIComponent(locale)}`, { cache: "no-store" })
+      .then((response) => json<{ items: CategoryAttribute[] }>(response))
+      .then((result) => { if (active) setCategoryAttributes(result.items); })
+      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load category fields."); })
+      .finally(() => { if (active) setLoadingCategoryAttributes(false); });
+    return () => { active = false; };
+  }, [categoryId, locale]);
+
+  const requiredAttributesComplete = categoryAttributes.every((attribute) => {
+    if (!attribute.required) return true;
+    const value = attributeValues[attribute.id];
+    return value !== undefined && value !== "" && (!Array.isArray(value) || value.length > 0);
+  });
 
   useEffect(() => {
     if (!storeId) return;
@@ -225,13 +262,20 @@ export default function SellerProductsPage() {
         body: JSON.stringify({
           storeId, name, slug, description, ...(brandId ? { brandId } : {}),
           categoryIds: categoryId ? [categoryId] : [],
+          attributes: categoryAttributes.flatMap((attribute) => {
+            const value = attributeValues[attribute.id];
+            return value === undefined || value === "" || (Array.isArray(value) && value.length === 0)
+              ? []
+              : [{ attributeDefinitionId: attribute.id, value }];
+          }),
+          ...productLocation,
           media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, storageKey: image.storageKey, width: image.width, height: image.height, altText: name, sortOrder: index, isPrimary: index === 0 })),
           variants: [{ sku, prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "" })) }]
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
-      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setSku(""); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
+      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setSku(""); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -328,7 +372,26 @@ export default function SellerProductsPage() {
               </div>}
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
-            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setAttributeValues({}); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            {categoryId && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+              <div>
+                <h3 className="text-sm font-semibold">{translate(locale, "Category-specific details", "الخصائص الخاصة بالفئة")}</h3>
+                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "These fields are defined by the catalog and validated again on the server.", "هذه الحقول معرّفة في الكتالوج ويعاد التحقق منها في الخادم قبل الحفظ.")}</p>
+              </div>
+              {loadingCategoryAttributes ? <p className="text-xs text-[var(--muted)]">{translate(locale, "Loading category fields…", "جارٍ تحميل خصائص الفئة…")}</p>
+                : categoryAttributes.length === 0 ? <p className="text-xs text-[var(--muted)]">{translate(locale, "No additional attributes are configured for this category yet.", "لم تُعرّف خصائص إضافية لهذه الفئة بعد.")}</p>
+                : <div className="grid gap-3 sm:grid-cols-2">
+                  {categoryAttributes.map((attribute) => {
+                    const current = attributeValues[attribute.id];
+                    const label = <span>{attribute.label}{attribute.required && <span className="ms-1 text-red-600">*</span>}</span>;
+                    if (attribute.valueType === "BOOLEAN") return <label key={attribute.id} className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm">{label}<input type="checkbox" checked={current === true} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.checked }))} /></label>;
+                    if (attribute.valueType === "SELECT") return <label key={attribute.id} className="grid gap-1 text-sm">{label}<select required={attribute.required} className={inputClass} value={typeof current === "string" ? current : ""} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.value }))}><option value="">{translate(locale, "Choose…", "اختر…")}</option>{attribute.options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
+                    if (attribute.valueType === "MULTI_SELECT") return <fieldset key={attribute.id} className="grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3"><legend className="px-1 text-sm font-medium">{label}</legend>{attribute.options.map((option) => <label key={option} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Array.isArray(current) && current.includes(option)} onChange={(event) => setAttributeValues((values) => { const selected = Array.isArray(values[attribute.id]) ? values[attribute.id] as string[] : []; return { ...values, [attribute.id]: event.target.checked ? [...selected, option] : selected.filter((item) => item !== option) }; })} />{option}</label>)}</fieldset>;
+                    return <label key={attribute.id} className="grid gap-1 text-sm">{label}<input required={attribute.required} type={attribute.valueType === "NUMBER" ? "number" : "text"} step={attribute.valueType === "NUMBER" ? "any" : undefined} className={inputClass} value={current === undefined ? "" : String(current)} onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: attribute.valueType === "NUMBER" ? (event.target.value === "" ? "" : Number(event.target.value)) : event.target.value }))} placeholder={attribute.description ?? ""} /></label>;
+                  })}
+                </div>}
+            </section>}
+            <SyriaLocationPicker locale={locale} value={productLocation} onChange={setProductLocation} />
             <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
             <div className="grid gap-3 rounded-2xl bg-[var(--surface-soft)] p-4">
               <p className="text-sm font-semibold">{translate(locale, "Prices for every enabled store market", "أسعار كل سوق مفعّل للمتجر")}</p>
@@ -344,7 +407,7 @@ export default function SellerProductsPage() {
                 </div>;
               })}
             </div>
-            <button disabled={busy || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
