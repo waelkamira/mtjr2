@@ -270,6 +270,7 @@ export default function SellerWorkspacePage() {
     {
       label: translate(locale, "Gross sales", "إجمالي المبيعات"),
       value: analyticsLoading || analyticsError ? "—" : grossSalesSummary,
+      compact: true,
       description: translate(locale, "Shown separately by currency; unpaid and cancelled orders are excluded.", "تُعرض كل عملة بشكل مستقل؛ ولا تشمل الطلبات غير المدفوعة أو الملغاة."),
       color: "#CE8A5A",
       icon: "↗"
@@ -337,13 +338,21 @@ export default function SellerWorkspacePage() {
   return (
     <main className="min-h-full bg-transparent">
       <div className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
-        <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-[var(--color-forest-950)] sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p></div>{selectedStore && <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-xs shadow-sm"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-semibold text-[var(--color-onyx)]">{selectedStore.name}</span><span className="text-[var(--muted)]">{selectedStore.status}</span></div>}</div>
+        <div className="relative mb-7 overflow-hidden rounded-[2rem] border border-[var(--color-lavender-300)] bg-[linear-gradient(125deg,var(--color-lavender-50),var(--surface)_58%,var(--color-mint-50))] p-6 shadow-[var(--shadow-clay)] sm:p-8">
+          <div className="pointer-events-none absolute -right-10 -top-14 size-48 rounded-full bg-[var(--color-peach-100)]/80 blur-2xl" />
+          <div className="relative flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[var(--color-lavender-800)]">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-[var(--color-ink-950)] sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
+            </div>
+            {selectedStore && <div className="flex items-center gap-2 rounded-full border border-[var(--color-mint-300)] bg-[var(--color-mint-50)] px-4 py-2.5 text-xs shadow-[var(--shadow-clay)]"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-bold text-[var(--color-mint-800)]">{selectedStore.name}</span><span className="text-[var(--color-mint-800)]/70">{selectedStore.status}</span></div>}
+          </div>
+        </div>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-950)]">{message}</p>}
         {loading ? <p className="py-16 text-sm text-[var(--muted)]">{translate(locale, "Loading your workspace…", "جارٍ تحميل مساحة عملك…")}</p> : mfaEnrollmentRequired ? (<section className="mt-8 max-w-2xl rounded-3xl border bg-white p-6 sm:p-8"><h2 className="text-xl font-semibold">{translate(locale, "Secure your seller account", "أمّن حساب البائع")}</h2><p className="mt-2 text-sm text-[var(--muted)]">{translate(locale, "Your seller application has been approved. Set up multi-factor authentication to continue.", "تمت الموافقة على طلبك. أعد إعداد المصادقة متعددة العوامل للمتابعة.")}</p><Link href="/account/security?mfa=setup&returnTo=%2Fseller" className="mt-6 inline-flex rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">{translate(locale, "Set up multi-factor authentication", "إعداد المصادقة متعددة العوامل")}</Link></section>) : authenticationRequired ? (
-          <section className="mt-8 max-w-2xl rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8">
+          <section className="mt-8 max-w-2xl rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-clay)] sm:p-8">
             <h2 className="text-xl font-semibold">{translate(locale, "Sign in to continue", "سجّل الدخول للمتابعة")}</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{translate(locale, "Sign in or create an account to apply to sell and manage your stores.", "سجّل الدخول أو أنشئ حسابًا للتقدم للبيع وإدارة متاجرك.")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -352,7 +361,7 @@ export default function SellerWorkspacePage() {
             </div>
           </section>
         ) : !workspace?.seller ? (
-          <section className="mt-8 max-w-2xl rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8">
+          <section className="mt-8 max-w-2xl rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-clay)] sm:p-8">
             <h2 className="text-xl font-semibold">{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{translate(locale, "Submit your legal and public business names. Your application will remain pending until reviewed by the marketplace team.", "أدخل الاسم القانوني والاسم التجاري العلني. سيظل طلبك قيد الانتظار حتى يراجعه فريق السوق.")}</p>
             <form onSubmit={(event) => submit(event, "/api/seller/applications", { legalName, displayName }, "Your seller application has been submitted.")} className="mt-6 grid gap-4">
@@ -364,7 +373,7 @@ export default function SellerWorkspacePage() {
         ) : (
           <>
           {selectedStore && <>
-            <section className="mt-7 flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-clay)] sm:p-8">
+            <section className="mt-7 flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-[var(--color-peach-300)] bg-[linear-gradient(120deg,var(--color-peach-50),var(--surface)_58%,var(--color-butter-50))] p-6 shadow-[var(--shadow-clay)] sm:p-8">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Store overview", "نظرة عامة على المتجر")}</p>
                 <h2 className="mt-2 text-2xl font-bold text-[var(--color-onyx)]">{selectedStore.name}</h2>
@@ -384,14 +393,14 @@ export default function SellerWorkspacePage() {
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric) => {
                 return (
-                  <article key={metric.label} className="group relative overflow-hidden rounded-2xl border bg-white/90 p-5 shadow-[0_12px_32px_rgba(23,44,34,.07)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(23,44,34,.11)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
+                  <article key={metric.label} className="group relative overflow-hidden rounded-[1.75rem] border bg-[var(--surface)]/95 p-5 shadow-[var(--shadow-clay)] transition duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-clay-hover)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
                     <div className="flex items-center gap-3">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${metric.color}20`, color: metric.color }}>
                         <span aria-hidden="true" className="text-lg leading-none">{metric.icon}</span>
                       </span>
                       <h3 className="text-sm font-semibold text-[var(--color-onyx)]">{metric.label}</h3>
                     </div>
-                    <p className="mt-4 text-3xl font-semibold tracking-tight text-[var(--color-onyx)]">{metric.value}</p>
+                    <p className={`mt-4 break-words font-black tracking-tight text-[var(--color-ink-950)] ${metric.compact ? "text-xl sm:text-2xl" : "text-3xl"}`}>{metric.value}</p>
                     <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{metric.description}</p>
                   </article>
                 );
@@ -455,7 +464,7 @@ export default function SellerWorkspacePage() {
           </>}
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
-            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+            <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-clay)]">
               <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{translate(locale, "Seller status", "حالة البائع")}</h2><span className="rounded-full bg-[var(--color-sage-100)] px-3 py-1 text-xs font-semibold text-[var(--color-forest-900)]">{workspace.seller.status}</span></div>
               <p className="mt-3 text-sm text-[var(--muted)]">{workspace.seller.displayName ?? workspace.seller.legalName}</p>
               {hasOwnedStore && <p className="mt-4 rounded-xl border border-[var(--color-sage-500)]/30 bg-[var(--color-sage-100)] p-3 text-sm leading-6 text-[var(--color-forest-900)]">{translate(locale, "This account is linked to one store. You can manage and update its settings at any time; creating another store is disabled.", "هذا الحساب مرتبط بمتجر واحد. يمكنك إدارة إعداداته وتحديثها في أي وقت؛ وتم تعطيل إنشاء متجر آخر.")}</p>}
@@ -470,7 +479,7 @@ export default function SellerWorkspacePage() {
                 </form>
               )}
             </section>
-            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+            <section className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-clay)]">
               <h2 className="text-lg font-semibold">{translate(locale, "Your stores", "متاجرك")}</h2>
               {!workspace.stores.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">{translate(locale, "No stores have been created yet.", "لم يتم إنشاء أي متاجر بعد.")}</p> : (
                 <>
@@ -490,7 +499,7 @@ export default function SellerWorkspacePage() {
                       <h3 className="font-semibold">{translate(locale, "Shipping services", "خدمات الشحن")}</h3>
                       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Rates are scoped to a market and optional destination region. Enter the normal amount in the market currency.", "ترتبط الأسعار بسوق ومنطقة وجهة اختيارية. أدخل تكلفة الشحن بصيغتها المعتادة بعملة السوق.")}</p>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {shippingRates.map((rate) => <div key={rate.id} className="rounded-xl border border-[var(--border)] bg-white p-3 text-sm shadow-sm"><div className="flex items-start justify-between gap-2"><div><p className="font-semibold">{rate.name} · {rate.market.name}</p>{rate.description && <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{rate.description}</p>}</div><button type="button" onClick={() => { setEditingShippingRateId(rate.id); setShippingMarketId(rate.marketId); setShippingName(rate.name); setShippingDescription(rate.description ?? ""); setShippingAmount((Number(rate.amountMinor) / (10 ** (markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2))).toFixed(markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2)); setShippingRegion(rate.destinationRegion ?? ""); setShippingMinDays(rate.minDeliveryDays?.toString() ?? ""); setShippingMaxDays(rate.maxDeliveryDays?.toString() ?? ""); }} className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-semibold">{translate(locale, "Edit", "تعديل")}</button></div><p className="mt-1 text-xs text-[var(--muted)]">{(Number(rate.amountMinor) / (10 ** (markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2))).toFixed(markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2)} {rate.currencyCode}{rate.destinationRegion ? ` · ${rate.destinationRegion}` : ` · ${translate(locale, "All regions", "جميع المناطق")}`}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "يومًا")} · {rate.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</p></div>)}
+                        {shippingRates.map((rate) => <div key={rate.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm shadow-[var(--shadow-clay)]"><div className="flex items-start justify-between gap-2"><div><p className="font-semibold">{rate.name} · {rate.market.name}</p>{rate.description && <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{rate.description}</p>}</div><button type="button" onClick={() => { setEditingShippingRateId(rate.id); setShippingMarketId(rate.marketId); setShippingName(rate.name); setShippingDescription(rate.description ?? ""); setShippingAmount((Number(rate.amountMinor) / (10 ** (markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2))).toFixed(markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2)); setShippingRegion(rate.destinationRegion ?? ""); setShippingMinDays(rate.minDeliveryDays?.toString() ?? ""); setShippingMaxDays(rate.maxDeliveryDays?.toString() ?? ""); }} className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-semibold">{translate(locale, "Edit", "تعديل")}</button></div><p className="mt-1 text-xs text-[var(--muted)]">{(Number(rate.amountMinor) / (10 ** (markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2))).toFixed(markets.find((item) => item.id === rate.marketId)?.defaultCurrency.minorUnit ?? 2)} {rate.currencyCode}{rate.destinationRegion ? ` · ${rate.destinationRegion}` : ` · ${translate(locale, "All regions", "جميع المناطق")}`}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "يومًا")} · {rate.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</p></div>)}
                         {!shippingRates.length && <p className="rounded-xl bg-[var(--color-ivory-100)] p-4 text-xs text-[var(--muted)]">{translate(locale, "No shipping services configured.", "لم يتم إعداد خدمات شحن.")}</p>}
                       </div>
                       {selectedStore.isOwner && <form onSubmit={async (event) => {
