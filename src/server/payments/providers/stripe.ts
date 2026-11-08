@@ -86,7 +86,7 @@ async function createIntent(input: Parameters<PaymentProviderAdapter["createInte
   });
   const result = await response.json() as StripeSession & { error?: { message?: string } };
   if (!response.ok || !result.id || !result.url) {
-    throw new Error(result.error?.message || "Stripe could not create a checkout session.");
+    throw new Error("Stripe could not create a checkout session. Check provider configuration and retry.");
   }
   return {
     providerReference: result.id,
