@@ -192,7 +192,7 @@ async function uploadToImageKit(input: ProductImageInput, privateKey: string): P
     url: safeHttpsUrl(data.url, "ImageKit"),
     provider: "imagekit",
     storageKey: `imagekit:${data.fileId}`,
-    mimeType: typeof data.fileType === "string" ? data.fileType : input.contentType,
+    mimeType: input.contentType,
     width: optionalDimension(data.width),
     height: optionalDimension(data.height)
   };
