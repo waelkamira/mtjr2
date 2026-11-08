@@ -30,7 +30,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/media/product-image-deletion", () => ({ deleteProductImage: mocks.deleteProductImage }));
 vi.mock("@/server/identity/permission-guard", () => ({ requirePermission: mocks.requirePermission }));
-vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
+vi.mock("@/server/identity/current-session", () => ({
+  requireCurrentSession: mocks.requireCurrentSession,
+  PermissionDeniedError: class PermissionDeniedError extends Error {}
+}));
 vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission, userHasPermission: mocks.userHasPermission }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { product: { findUnique: mocks.productFindUnique }, $transaction: mocks.transaction }
