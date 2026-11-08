@@ -345,7 +345,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     }
     const isRealEstate = selectedCategorySlugs.includes("real-estate");
     const effectiveCustomFields = data.customFields === undefined ? current.customFields : data.customFields;
-    const requiredFields = selectedCategorySlugs.includes("real-estate") ? [] : selectedCategorySlugs.flatMap((slug) => getCategoryFieldPresets(slug));
+    const requiredFields = selectedCategorySlugs.flatMap((slug) => getCategoryFieldPresets(slug));
     const missingFields = requiredFields.filter((field) => {
       const value = effectiveCustomFields && typeof effectiveCustomFields === "object"
         ? (effectiveCustomFields as Record<string, unknown>)[field.key]
