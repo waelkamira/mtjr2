@@ -2918,3 +2918,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Source changes were committed directly to `main` in commits `2a5662c` and `1bf8877`.
 - No local runtime or repository shell is attached in this session. TypeScript, lint, production build, category API runtime, and authenticated browser journeys have not been executed here; no pass is claimed.
 - The latest observed commit status exposed only the Vercel build-rate-limit failure, and the commit workflow-run lookup returned no runs. This is not evidence that the application build passed or failed.
+
+## Seller dashboard visual redesign — 2026-11-09
+
+- Reworked the seller workspace's visible dashboard shell on `main`: new lavender/mint pastel backdrop, a redesigned layered gradient hero with larger hierarchy and softer clay-style depth, and refreshed metric-card surfaces/shadows.
+- Kept existing seller analytics, store selection, orders, catalog, inventory, shipping, and API data flows intact; this commit is a presentation-layer change, not a claim that the entire seller portal has been rebuilt.
+- Commit: `f8bfdd69d44280e32e43177eb7d4b41dc5afdeb2`.
+- Verification: fetched the updated source from `main` and confirmed the new visual tokens are present. A production build and browser screenshot/runtime verification were not available in this session.
