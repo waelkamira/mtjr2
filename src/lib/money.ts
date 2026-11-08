@@ -9,10 +9,10 @@ export function toMinorUnits(amountInput: string, minorUnit: number): string {
   if (fraction.length > minorUnit) {
     throw new Error(`This currency supports at most ${minorUnit} decimal places.`);
   }
-  const scale = 10n ** BigInt(minorUnit);
+  const scale = BigInt(10) ** BigInt(minorUnit);
   const wholeMinor = BigInt(match[1]) * scale;
   const fractionalMinor = BigInt((fraction + "0".repeat(minorUnit)).slice(0, minorUnit) || "0");
   const result = wholeMinor + fractionalMinor;
-  if (result > 9000000000000000n) throw new Error("Shipping amount exceeds the supported limit.");
+  if (result > BigInt("9000000000000000")) throw new Error("Shipping amount exceeds the supported limit.");
   return result.toString();
 }
