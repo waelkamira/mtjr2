@@ -61,7 +61,7 @@ export default function SellerProductsPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [initialStock, setInitialStock] = useState("1");
-  const [customFields, setCustomFields] = useState<Array<{ key: string; value: string; label?: string; required?: boolean }>>([]);
+  const [customFields, setCustomFields] = useState<Array<{ key: string; value: string; label?: string; required?: boolean; options?: string[] }>>([]);
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
   const [weightGrams, setWeightGrams] = useState("");
@@ -94,7 +94,7 @@ export default function SellerProductsPage() {
   const [editVideoUrl, setEditVideoUrl] = useState("");
   const [editBrandId, setEditBrandId] = useState("");
   const [editCategoryIds, setEditCategoryIds] = useState<string[]>([]);
-  const [editCustomFields, setEditCustomFields] = useState<Array<{ key: string; value: string; label?: string }>>([]);
+  const [editCustomFields, setEditCustomFields] = useState<Array<{ key: string; value: string; label?: string; required?: boolean; options?: string[] }>>([]);
   const [editMapLocation, setEditMapLocation] = useState<ProductCoordinates | null>(null);
   const [editPropertyType, setEditPropertyType] = useState("APARTMENT");
   const [editListingType, setEditListingType] = useState("SALE");
