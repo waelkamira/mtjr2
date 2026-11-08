@@ -2925,3 +2925,23 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Kept existing seller analytics, store selection, orders, catalog, inventory, shipping, and API data flows intact; this commit is a presentation-layer change, not a claim that the entire seller portal has been rebuilt.
 - Commit: `f8bfdd69d44280e32e43177eb7d4b41dc5afdeb2`.
 - Verification: fetched the updated source from `main` and confirmed the new visual tokens are present. A production build and browser screenshot/runtime verification were not available in this session.
+
+
+## 2026-11-09 — Seller workspace visual rebuild (reference-led)
+
+**Reference review**
+- Inspected the supplied claymorphism dashboard reference: dark navy vertical navigation, cool blue-grey raised surfaces, pale cyan/teal accents, rounded inset controls, layered soft shadows, compact KPI cards and chart-led content.
+- Reviewed Akaar's seller implementation in `app/seller/dashboard/dashboard-client.tsx`, `app/seller/layout.tsx`, and `app/seller/seller-navigation.tsx`.
+- Akaar's application flow confirms the intended information architecture: applicant/contact identity, store/business name and type, email and phone, business address, activity description, intended product categories and sourcing/sales plan, map coordinates, optional private identity document, and optional social links. Matjar's current application form already covers these fields (and retains its additional legal-name field); it remains connected to Matjar's own session, validation, private ImageKit upload, Seller persistence, and admin review path. No Akaar authentication or persistence code was copied.
+- Akaar's old `newPost/product-create-form.jsx` contains a commented-out legacy implementation; it was not treated as a production-ready implementation. Matjar's category-specific fields remain sourced from its own category-attributes API and database.
+
+**Visible implementation committed directly to main**
+- Rebuilt the seller dashboard frame with a dark navy raised sidebar, seller identity tile, active navigation state, store status panel, and responsive navigation that collapses into a compact grid on smaller screens.
+- Changed the dashboard canvas and KPI surfaces to the supplied cool blue-grey palette and clay-style raised/inset shadows. Existing real analytics, charts, store selection, inventory and shipping operations remain in place.
+- Applied the same seller navigation shell and matching raised blue-grey surface treatment to the product workspace and create-product form, rather than leaving product creation in the previous separate visual system.
+- Dashboard commit: `cfdc6406b3a055c97889d3aabdc1b3fbdcc3f98e`.
+- Product workspace commit: `976ac62e633515ff801e8d60d522fb31b476859e`.
+
+**Verification limits**
+- GitHub source updates succeeded on `main`; this confirms the files were committed, not that a deployment has refreshed.
+- No local package install, TypeScript check, lint, production build, database migration replay, or authenticated browser screenshot was available in this session. Runtime appearance and responsive behavior remain unverified until the application is built and opened.
