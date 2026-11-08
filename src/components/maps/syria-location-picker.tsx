@@ -34,6 +34,8 @@ export default function SyriaLocationPicker({ onCityChange, onDistrictChange, on
   const [districts, setDistricts] = useState<SyriaPlace[]>([]);
   const [subdistricts, setSubdistricts] = useState<SyriaPlace[]>([]);
   const [localities, setLocalities] = useState<SyriaPlace[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<SyriaPlace[]>([]);
+  const [manualNeighborhood, setManualNeighborhood] = useState("");
   const [governorateId, setGovernorateId] = useState("");
   const [districtId, setDistrictId] = useState("");
   const [subdistrictId, setSubdistrictId] = useState("");
@@ -51,7 +53,7 @@ export default function SyriaLocationPicker({ onCityChange, onDistrictChange, on
   }, []);
 
   useEffect(() => {
-    if (!governorateId) { setDistricts([]); setDistrictId(""); setSubdistricts([]); setSubdistrictId(""); setLocalities([]); setCityPlaceId(""); setNeighborhoodId(""); return; }
+    if (!governorateId) { setDistricts([]); setDistrictId(""); setSubdistricts([]); setSubdistrictId(""); setLocalities([]); setNeighborhoods([]); setCityPlaceId(""); setNeighborhoodId(""); setManualNeighborhood(""); return; }
     let active = true;
     setLoading(true); setError("");
     loadLevel("districts", { governorateId }).then((result) => { if (active) setDistricts(result.items); })
@@ -61,7 +63,7 @@ export default function SyriaLocationPicker({ onCityChange, onDistrictChange, on
   }, [governorateId]);
 
   useEffect(() => {
-    if (!districtId) { setSubdistricts([]); setSubdistrictId(""); setLocalities([]); setCityPlaceId(""); setNeighborhoodId(""); return; }
+    if (!districtId) { setSubdistricts([]); setSubdistrictId(""); setLocalities([]); setNeighborhoods([]); setCityPlaceId(""); setNeighborhoodId(""); setManualNeighborhood(""); return; }
     let active = true;
     setLoading(true); setError("");
     loadLevel("subdistricts", { districtId }).then((result) => { if (active) setSubdistricts(result.items); })
@@ -76,7 +78,7 @@ export default function SyriaLocationPicker({ onCityChange, onDistrictChange, on
     const timer = window.setTimeout(() => {
       setLoading(true); setError("");
       loadLevel("localities", { subdistrictId, ...(search.trim().length >= 2 ? { q: search.trim() } : {}) })
-        .then((result) => { if (active) { setLocalities(result.items); setCityPlaceId(""); setNeighborhoodId(""); } })
+        .then((result) => { if (active) { setLocalities(result.items); setCityPlaceId(""); setNeighborhoodId(""); setNeighborhoods([]); setManualNeighborhood(""); } })
         .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "تعذر تحميل المدن والأحياء."); })
         .finally(() => { if (active) setLoading(false); });
     }, search.trim().length >= 2 ? 350 : 0);
@@ -87,7 +89,7 @@ export default function SyriaLocationPicker({ onCityChange, onDistrictChange, on
   const selectedDistrict = useMemo(() => districts.find((item) => item.id === districtId), [districts, districtId]);
   const selectedSubdistrict = useMemo(() => subdistricts.find((item) => item.id === subdistrictId), [subdistricts, subdistrictId]);
   const cityPlaces = useMemo(() => localities.filter((item) => item.kind === "city" || item.kind === "town" || item.kind === "village"), [localities]);
-  const neighborhoods = useMemo(() => localities.filter((item) => item.kind === "locality"), [localities]);
+
   const selectedCityPlace = cityPlaces.find((item) => item.id === cityPlaceId);
   const selectedNeighborhood = neighborhoods.find((item) => item.id === neighborhoodId);
 
@@ -101,9 +103,9 @@ export default function SyriaLocationPicker({ onCityChange, onDistrictChange, on
     <label className="grid gap-1 text-sm">المحافظة<select className={inputClass} value={governorateId} onChange={(event) => { const id = event.target.value; setGovernorateId(id); setDistrictId(""); setSubdistrictId(""); setSearch(""); setCityPlaceId(""); setNeighborhoodId(""); onCityChange(""); onDistrictChange(""); focus(governorates.find((item) => item.id === id), 9); }}><option value="">اختر المحافظة</option>{governorates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
     <label className="grid gap-1 text-sm">المنطقة الإدارية<select disabled={!governorateId || loading} className={inputClass} value={districtId} onChange={(event) => { const id = event.target.value; setDistrictId(id); setSubdistrictId(""); setSearch(""); onCityChange(""); onDistrictChange(""); focus(districts.find((item) => item.id === id), 10); }}><option value="">اختر المنطقة</option>{districts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
     <label className="grid gap-1 text-sm">الناحية<select disabled={!districtId || loading} className={inputClass} value={subdistrictId} onChange={(event) => { const id = event.target.value; setSubdistrictId(id); setSearch(""); onCityChange(""); onDistrictChange(""); focus(subdistricts.find((item) => item.id === id), 11); }}><option value="">اختر الناحية</option>{subdistricts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-    <label className="grid gap-1 text-sm"><span className="flex items-center gap-2">المدينة / البلدة<Search aria-hidden="true" className="size-3.5 text-[var(--muted)]" /></span><input className={inputClass} disabled={!subdistrictId} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث عن مدينة أو بلدة..." /><select disabled={!subdistrictId || loading} className={inputClass} value={cityPlaceId} onChange={(event) => { const id = event.target.value; const place = cityPlaces.find((item) => item.id === id); setCityPlaceId(id); setNeighborhoodId(""); onCityChange(place?.name ?? ""); onDistrictChange(""); focus(place, 14); }}><option value="">اختر المدينة / البلدة</option>{cityPlaces.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.kind === "city" ? "مدينة" : item.kind === "town" ? "بلدة" : "قرية"}</option>)}</select></label>
+    <label className="grid gap-1 text-sm"><span className="flex items-center gap-2">المدينة / البلدة<Search aria-hidden="true" className="size-3.5 text-[var(--muted)]" /></span><input className={inputClass} disabled={!subdistrictId} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث عن مدينة أو بلدة..." /><select disabled={!subdistrictId || loading} className={inputClass} value={cityPlaceId} onChange={(event) => { const id = event.target.value; const place = cityPlaces.find((item) => item.id === id); setCityPlaceId(id); setNeighborhoodId(""); setManualNeighborhood(""); onCityChange(place?.name ?? ""); onDistrictChange(""); focus(place, 14); if (place && subdistrictId) { loadLevel("localities", { subdistrictId, kind: "locality" }).then((result) => setNeighborhoods(result.items)).catch(() => setNeighborhoods([])); } }}><option value="">اختر المدينة / البلدة</option>{cityPlaces.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.kind === "city" ? "مدينة" : item.kind === "town" ? "بلدة" : "قرية"}</option>)}</select></label>
     <label className="grid gap-1 text-sm">الحي / المحلة<select disabled={!cityPlaceId || loading} className={inputClass} value={neighborhoodId} onChange={(event) => { const id = event.target.value; const place = neighborhoods.find((item) => item.id === id); setNeighborhoodId(id); onDistrictChange(place?.name ?? ""); focus(place, 15); }}><option value="">اختر الحي (إن توفر)</option>{neighborhoods.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-    {!neighborhoods.length && cityPlaceId && <label className="grid gap-1 text-sm">اسم الحي (إذا لم يكن مدرجاً)<input className={inputClass} maxLength={120} value={""} onChange={(event) => onDistrictChange(event.target.value)} placeholder="اكتب اسم الحي" /></label>}
+    {!neighborhoods.length && cityPlaceId && <label className="grid gap-1 text-sm">اسم الحي (إذا لم يكن مدرجاً)<input className={inputClass} maxLength={120} value={manualNeighborhood} onChange={(event) => { setManualNeighborhood(event.target.value); onDistrictChange(event.target.value); }} placeholder="اكتب اسم الحي" /></label>}
     {selectedGovernorate && <p className="text-xs text-[var(--muted)]">المحافظة: {selectedGovernorate.name}{selectedDistrict ? ` · ${selectedDistrict.name}` : ""}{selectedSubdistrict ? ` · ${selectedSubdistrict.name}` : ""}{selectedCityPlace ? ` · ${selectedCityPlace.name}` : ""}{selectedNeighborhood ? ` · ${selectedNeighborhood.name}` : ""}</p>}
     {loading && <p className="text-xs text-[var(--muted)]">جارٍ تحميل المواقع…</p>}
     {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
