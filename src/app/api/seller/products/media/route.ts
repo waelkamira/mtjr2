@@ -220,16 +220,26 @@ export async function DELETE(request: Request): Promise<Response> {
   const storageKey = verifyTemporaryProductImageDeleteToken(parsed.data.deleteToken, parsed.data.storeId);
   if (!storageKey) return jsonError("The temporary image delete token is invalid or expired.", 403);
 
+  let allowed = false;
   try {
-    if (!(await canManageStore(actor.userId, parsed.data.storeId))) {
-      return jsonError("You do not have access to this store.", 403);
-    }
-    const attached = await prisma.productMedia.findFirst({
+    allowed = await canManageStore(actor.userId, parsed.data.storeId);
+  } catch {
+    return jsonError("Unable to verify store access.", 500);
+  }
+  if (!allowed) return jsonError("You do not have access to this store.", 403);
+
+  let attached: { id: string } | null;
+  try {
+    attached = await prisma.productMedia.findFirst({
       where: { storageKey },
       select: { id: true }
     });
-    if (attached) return jsonError("This image is already attached to a product and cannot be deleted as a temporary upload.", 409);
+  } catch {
+    return jsonError("Unable to verify whether the image is attached to a product.", 500);
+  }
+  if (attached) return jsonError("This image is already attached to a product and cannot be deleted as a temporary upload.", 409);
 
+  try {
     const result = await deleteProductImage(storageKey);
     return Response.json({
       success: true,
