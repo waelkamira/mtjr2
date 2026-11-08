@@ -36,7 +36,6 @@ async function main() {
 
   const governorateIds = new Set(governorates.map((row) => row.id));
   const districtById = new Map(districts.map((row) => [row.id, row]));
-  const districtIds = new Set(districtById.keys());
   const subdistrictById = new Map(subdistricts.map((row) => [row.id, row]));
   const subdistrictIds = new Set(subdistrictById.keys());
   const allSourceRows = [...governorates, ...districts, ...subdistricts, ...localities];
