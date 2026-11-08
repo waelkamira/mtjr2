@@ -379,3 +379,12 @@ The workflow grants only canonical `SUPER_ADMIN` after independent review. The r
 ## API anonymous boundary verification — 2026-11-07
 
 PR #68 added an automated anonymous boundary sweep covering 165 route/method combinations, with documented public/guest routes excluded and request-origin/trusted-proxy headers exercised. Exact-head General CI and Browser E2E passed; see Build Log. This sweep verifies unauthenticated boundaries only and does not replace per-role, resource ownership, or store-scope authorization checks.
+
+
+## Seller workspace and geographic interaction update — 2026-11-08
+
+- `/seller/*` now shares `src/app/seller/layout.tsx` and `src/features/seller/seller-navigation.tsx`. The sidebar groups existing overview, catalog, order, inventory, returns, messaging, questions, reviews, advertising, staff and notification destinations; mobile navigation is compact and horizontally scrollable.
+- `/seller` keeps its existing server-backed seller/store, inventory, order, warehouse and shipping workflows. The overview header now uses the shared workspace shell rather than a second horizontal seller navigation.
+- Seller product authoring continues to use `src/components/maps/syria-location-picker.tsx` and the canonical `/api/geography/*` endpoints. Selecting governorate/district/subdistrict/locality updates the Leaflet viewport when coordinates are available; nearby neighbourhood candidates are searched around the current map focus.
+- `src/components/maps/leaflet-location-map.tsx` enables wheel/touch/double-click zoom and draggable/clickable map pin behavior. Playwright coverage now asserts administrative zoom progression and wheel zoom.
+- Status: implemented in source; exact-head CI/browser results pending. This update does not claim that all seller subpages or all navigation destinations have completed end-to-end verification. No schema migration was required.
