@@ -17,6 +17,10 @@ const mocks = vi.hoisted(() => ({
   categoryDeleteMany: vi.fn(),
   categoryCreateMany: vi.fn(),
   productUpdateMany: vi.fn(),
+  productMapLocationDeleteMany: vi.fn(),
+  productMapLocationUpsert: vi.fn(),
+  productPropertyDetailsDeleteMany: vi.fn(),
+  productPropertyDetailsUpsert: vi.fn(),
   auditCreate: vi.fn(),
   transaction: vi.fn()
 }));
@@ -57,6 +61,8 @@ describe("product lifecycle", () => {
       category: { count: mocks.categoryCount, findMany: mocks.categoryFindMany },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
+      productMapLocation: { deleteMany: mocks.productMapLocationDeleteMany, upsert: mocks.productMapLocationUpsert },
+      productPropertyDetails: { deleteMany: mocks.productPropertyDetailsDeleteMany, upsert: mocks.productPropertyDetailsUpsert },
       product: {
         create: mocks.productCreate,
         findUnique: mocks.productFindUniqueTx,
@@ -221,6 +227,21 @@ describe("product lifecycle", () => {
     expect(mocks.categoryDeleteMany).toHaveBeenCalledOnce();
     expect(mocks.categoryCreateMany).toHaveBeenCalledOnce();
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("updates all editable listing metadata and stores category fields as JSON", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
+    await updateDraftProduct("product-1", {
+      city: "Damascus", district: "Central", contactPhone: "+963900000000",
+      videoUrl: "https://video.example/item", customFields: { model: "X1" },
+      mapLocation: { latitude: 33.5, longitude: 36.2 },
+      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" }
+    });
+    const updateData = mocks.productUpdateMany.mock.calls[0][0].data;
+    expect(updateData).toMatchObject({ city: "Damascus", district: "Central", contactPhone: "+963900000000", videoUrl: "https://video.example/item" });
+    expect(updateData.customFields).toEqual({ model: "X1" });
+    expect(mocks.productMapLocationUpsert).toHaveBeenCalledOnce();
+    expect(mocks.productPropertyDetailsUpsert).toHaveBeenCalledOnce();
   });
 
   it("rejects a pending draft with a required reason and audit event", async () => {
