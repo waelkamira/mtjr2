@@ -10,6 +10,7 @@ import {
 } from "@/server/identity/current-session";
 import { requireAnyPermission } from "@/server/identity/permission-guard";
 import { userHasPermission } from "@/server/identity/permission-repository";
+import { StepUpRequiredError } from "@/server/identity/access-errors";
 
 const ADMIN_AREA_PERMISSIONS = [
   "users:read",
@@ -45,6 +46,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       const returnTo = await getRequestedPagePath("/admin", "/admin/dashboard");
       const params = new URLSearchParams({ mfa: "setup", returnTo });
       redirect(`/account/security?${params.toString()}`);
+    }
+    if (error instanceof StepUpRequiredError) {
+      const returnTo = await getRequestedPagePath("/admin", "/admin/control-panel");
+      redirect(`/mfa/verify?${new URLSearchParams({ returnTo }).toString()}`);
     }
     if (error instanceof MfaVerificationRequiredError) {
       const returnTo = await getRequestedPagePath("/admin", "/admin/dashboard");
