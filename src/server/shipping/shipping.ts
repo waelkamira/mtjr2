@@ -147,7 +147,7 @@ export async function getCheckoutShippingOptions(guestToken: string, quoteId: st
         AND: [
           { OR: [{ effectiveFrom: null }, { effectiveFrom: { lte: now } }] },
           { OR: [{ effectiveUntil: null }, { effectiveUntil: { gt: now } }] },
-          { OR: [{ destinationRegion: null }, { destinationRegion: data.deliveryAddress?.region ?? "" }] }
+          { OR: [{ destinationRegion: null }, { destinationRegion: { equals: data.deliveryAddress?.region ?? "", mode: "insensitive" } }] }
         ],
         store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: { some: { marketId: data.marketId, isEnabled: true } } }
       },
@@ -182,7 +182,7 @@ export async function selectCheckoutShipping(guestToken: string, quoteId: string
         AND: [
           { OR: [{ effectiveFrom: null }, { effectiveFrom: { lte: now } }] },
           { OR: [{ effectiveUntil: null }, { effectiveUntil: { gt: now } }] },
-          { OR: [{ destinationRegion: null }, { destinationRegion: current.deliveryAddress?.region ?? "" }] }
+          { OR: [{ destinationRegion: null }, { destinationRegion: { equals: current.deliveryAddress?.region ?? "", mode: "insensitive" } }] }
         ],
         store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: { some: { marketId: current.marketId, isEnabled: true } } }
       }
