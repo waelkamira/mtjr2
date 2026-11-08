@@ -533,7 +533,7 @@ export default function SellerProductsPage() {
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <h2 className="text-lg font-semibold">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2>
-          <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} onChange={(e) => {
+          <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
             const nextId = e.target.value;
             uploadedImages.forEach((image) => {
               URL.revokeObjectURL(image.previewUrl);
@@ -562,8 +562,11 @@ export default function SellerProductsPage() {
               aria-label={translate(locale, "Product image upload area", "منطقة رفع صور المنتج")}
             >
               <div>
-                <p className="text-sm font-semibold">{translate(locale, "Product images", "صور المنتج")}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Upload up to 10 JPG, PNG, WebP, GIF or AVIF images. The first image is the primary image. Imgur is tried first, then ImageKit.", "ارفع حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF. الصورة الأولى هي الرئيسية. تتم تجربة Imgur ثم ImageKit.")}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold">{translate(locale, "Product image gallery", "معرض صور المنتج")}</p>
+                  <span className="rounded-full bg-[var(--color-lavender-100)] px-2.5 py-1 text-[10px] font-bold text-[var(--color-lavender-800)]">{uploadedImages.length}/10</span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each). The first image is the storefront cover. Imgur Client IDs rotate in order, then ImageKit and Cloudinary are used as fallbacks.", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة). الصورة الأولى هي غلاف المتجر. يتم تدوير معرفات Imgur بالترتيب ثم استخدام ImageKit وCloudinary كبدائل.")}</p>
               </div>
               <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[var(--color-ink-800)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
                 {uploadingImages ? translate(locale, "Uploading images…", "جارٍ رفع الصور…") : translate(locale, "Choose images", "اختيار الصور")}
