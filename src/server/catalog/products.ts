@@ -367,7 +367,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, categories: { select: { category: { select: { slug: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
@@ -381,6 +381,15 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     if (categoryIds?.length) {
       const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
+    }
+    if (data.propertyDetails !== undefined || data.mapLocation !== undefined) {
+      const selectedCategories = categoryIds === undefined
+        ? current.categories.map((entry) => entry.category)
+        : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { slug: true } });
+      const isRealEstate = selectedCategories.some((category) => category.slug === "real-estate");
+      if (isRealEstate && data.propertyDetails === null) throw new Error("Real-estate listings must retain property details.");
+      if (!isRealEstate && data.propertyDetails && data.propertyDetails !== null) throw new Error("Property details can only be added to a real-estate listing.");
+      if (isRealEstate && data.mapLocation === null) throw new Error("Real-estate listings must retain a map location.");
     }
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT },
