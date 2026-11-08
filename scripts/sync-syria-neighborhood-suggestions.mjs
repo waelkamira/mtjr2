@@ -5,7 +5,6 @@ import { createHash } from "node:crypto";
 const prisma = new PrismaClient();
 const VERSION = "7d3374c2b885895dffa824db850f709bebd516c8";
 const SOURCE = "Akaar Cities.jsx";
-const RAW = "https://raw.githubusercontent.com/Open-Syria/data-geography/v0.1.5/data";
 const groupToGovernorate = {
   "دمشق": "دمشق", "إدلب": "إدلب", "حلب": "حلب", "حمص": "حمص", "درعا": "درعا",
   "حماة": "حماة", "القنيطرة": "القنيطرة", "الرقة": "الرقة", "الحسكة": "الحسكة",
@@ -24,21 +23,22 @@ function distanceKm(aLat, aLon, bLat, bLon) {
   const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
-async function fetchJson(path) {
-  const response = await fetch(`${RAW}/${path}.json`);
-  if (!response.ok) throw new Error(`OpenSyria ${path}: HTTP ${response.status}`);
-  return response.json();
-}
 async function main() {
   const source = JSON.parse(await readFile(new URL("../prisma/data/akaar-syria-location-suggestions.json", import.meta.url), "utf8"));
   const [governorates, districts, subdistricts, localities] = await Promise.all([
-    fetchJson("governorates"), fetchJson("districts"), fetchJson("subdistricts"), fetchJson("localities")
+    prisma.syriaGovernorate.findMany({ select: { id: true, nameAr: true, nameEn: true } }),
+    prisma.syriaDistrict.findMany({ select: { nameAr: true, nameEn: true } }),
+    prisma.syriaSubdistrict.findMany({ select: { nameAr: true, nameEn: true } }),
+    prisma.syriaLocality.findMany({ select: { nameAr: true, nameEn: true } })
   ]);
-  const governorateByName = new Map(governorates.map((item) => [normalize(item.name?.ar ?? item.name?.en), item.id]));
+  if (governorates.length !== 14 || localities.length !== 7605) {
+    throw new Error("Import OpenSyria geography first (expected 14 governorates and 7,605 localities).");
+  }
+  const governorateByName = new Map(governorates.map((item) => [normalize(item.nameAr ?? item.nameEn), item.id]));
   const officialNames = new Set();
   for (const item of [...governorates, ...districts, ...subdistricts, ...localities]) {
-    if (item.name?.ar) officialNames.add(normalize(item.name.ar));
-    if (item.name?.en) officialNames.add(normalize(item.name.en));
+    if (item.nameAr) officialNames.add(normalize(item.nameAr));
+    if (item.nameEn) officialNames.add(normalize(item.nameEn));
   }
 
   const rows = [];
