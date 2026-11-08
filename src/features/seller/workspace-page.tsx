@@ -81,6 +81,7 @@ export default function SellerWorkspacePage() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authenticationRequired, setAuthenticationRequired] = useState(false);
+  const [mfaEnrollmentRequired, setMfaEnrollmentRequired] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -106,6 +107,7 @@ export default function SellerWorkspacePage() {
         setAuthenticationRequired(true);
         return;
       }
+      if (cause instanceof ApiError && /multi-factor authentication enrollment is required/i.test(cause.message)) { setMfaEnrollmentRequired(true); return; }
       setError(cause instanceof Error ? cause.message : translate(locale, "The seller workspace could not be loaded.", "تعذر تحميل مساحة عمل البائع."));
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -293,7 +295,7 @@ export default function SellerWorkspacePage() {
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p></div>{selectedStore && <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-xs shadow-sm"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-semibold text-[var(--color-onyx)]">{selectedStore.name}</span><span className="text-[var(--muted)]">{selectedStore.status}</span></div>}</div>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-6 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-forest-950)]">{message}</p>}
-        {loading ? <p className="py-16 text-sm text-[var(--muted)]">{translate(locale, "Loading your workspace…", "جارٍ تحميل مساحة عملك…")}</p> : authenticationRequired ? (
+        {loading ? <p className="py-16 text-sm text-[var(--muted)]">{translate(locale, "Loading your workspace…", "جارٍ تحميل مساحة عملك…")}</p> : mfaEnrollmentRequired ? (<section className="mt-8 max-w-2xl rounded-3xl border bg-white p-6 sm:p-8"><h2 className="text-xl font-semibold">{translate(locale, "Secure your seller account", "أمّن حساب البائع")}</h2><p className="mt-2 text-sm text-[var(--muted)]">{translate(locale, "Your seller application has been approved. Set up multi-factor authentication to continue.", "تمت الموافقة على طلبك. أعد إعداد المصادقة متعددة العوامل للمتابعة.")}</p><Link href="/account/security?mfa=setup&returnTo=%2Fseller" className="mt-6 inline-flex rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">{translate(locale, "Set up multi-factor authentication", "إعداد المصادقة متعددة العوامل")}</Link></section>) : authenticationRequired ? (
           <section className="mt-8 max-w-2xl rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8">
             <h2 className="text-xl font-semibold">{translate(locale, "Sign in to continue", "سجّل الدخول للمتابعة")}</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{translate(locale, "Sign in or create an account to apply to sell and manage your stores.", "سجّل الدخول أو أنشئ حسابًا للتقدم للبيع وإدارة متاجرك.")}</p>
