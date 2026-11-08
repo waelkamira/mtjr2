@@ -3004,3 +3004,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 
 - Follow-up polish: removed the obsolete product-page navigation import (`490287e42b53e1551bf2b3e464e397ef75a983c5`) and clear stale inbox rows/conversation when switching stores (`89f3f9a4854951235603259b40a125610c206752`).
+
+
+## 2026-11-09 — Seller dashboard and product studio visual completion pass
+
+- Replaced the seller dashboard's oversized dark hero with a cool blue-grey clay welcome panel: raised profile monogram, active-store status/switcher, responsive primary actions, layered pastel lighting and soft inset/outer shadows.
+- Removed the second, redundant store overview hero so the page now flows from one welcome panel directly into the four KPI cards and real store analytics.
+- Gave KPI cards distinct mint, mist-blue, ice and lavender surfaces, preserving their live values and metric descriptions.
+- Rebuilt the products page heading as a matching clay catalog header with a direct New product action; widened the content container and moved the two-column form/catalog layout to 2XL so medium screens do not get cramped.
+- Continued the same clay treatment through catalog cards and category/variant controls. Category-aware fields, SKU/variant data, upload provider rotation, preview/remove/replace, draft saving and publication controls remain connected to the existing backend workflows.
+- Added a top-level active-store selector in the dashboard welcome panel when the account has multiple stores; it updates the same `mtjr.activeStoreId` used by other seller sections.
+- Commits: `1e4f3dbba39b0c48661a33a246a1db51ba0b48f4`, `cb9ee1bc1270b63e6fe68eff4a4c04cf7590b8fd`, `7d3fd215c49fb20d1612d09155f070d957687840`, `45ae0e01cb5ac3445a98d80e634829ef4c92b8cc`, `23a90b91ac73b1b75c1a3448eb487e1cd9be6747`, `7807b49795815fd79590af4e203c5457f3771f5e`, `0a6ef1db030d22a67875ef83a3346afd8b69cb02`.
+- Static source review: re-fetched all seller workspace pages from `main`; checked JSX main/header/section/aside/form tag counts, Link imports/usages and accidental literal newline escapes. No issues were found by these lightweight structural checks. This is not a substitute for TypeScript, lint, production build or browser testing, which remain unverified in this environment.
