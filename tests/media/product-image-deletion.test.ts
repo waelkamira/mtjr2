@@ -41,6 +41,19 @@ describe("product image provider deletion", () => {
     );
   });
 
+  it("uses the original rotating Client ID stored with an anonymous Imgur asset", async () => {
+    vi.stubEnv("IMGUR_ACCESS_TOKEN", "");
+    vi.stubEnv("IMGUR_CLIENT_IDS", "imgur-client-1,imgur-client-2");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(deleteProductImage("imgur:imgur-client-2:rotated-delete-hash")).resolves.toBe("deleted");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.imgur.com/3/image/rotated-delete-hash",
+      expect.objectContaining({ headers: { Authorization: "Client-ID imgur-client-2" } })
+    );
+  });
+
   it("deletes ImageKit assets using the private API key", async () => {
     vi.stubEnv("IMAGEKIT_PRIVATE_KEY", "imagekit-private-key");
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
