@@ -14,7 +14,9 @@ type Conv = {
 
 export default function Page() {
   const { locale } = useLocale();
-  const [store, setStore] = useState("");\n  const [stores, setStores] = useState<Store[]>([]);\n  const [loading, setLoading] = useState(true);
+  const [store, setStore] = useState("");
+  const [stores, setStores] = useState<Store[]>([]);
+  const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
   const [id, setId] = useState("");
   const [conversation, setConversation] = useState<Conv | null>(null);
