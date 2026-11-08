@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AuthenticationRequiredError, requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
-import { validateIdentityMutationRequest } from "@/server/identity/request-security";
+import { validateIdentityImageUploadRequest } from "@/server/identity/request-security";
 import { prisma } from "@/lib/db/prisma";
 import { getNextImgurClientId } from "@/server/media/imgur-client-manager";
 
@@ -97,7 +97,7 @@ async function uploadToCloudinary(file: File) {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const rejected = validateIdentityMutationRequest(request);
+  const rejected = validateIdentityImageUploadRequest(request);
   if (rejected) return rejected;
 
   let actor: Awaited<ReturnType<typeof requireCurrentSession>>;
