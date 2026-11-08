@@ -418,7 +418,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
     }
     if (data.media !== undefined) {
-      await tx.productMedia.deleteMany({ where: { productId: id } });
+      await tx.productMedia.deleteMany({ where: { productId: id, type: "IMAGE" } });
       await tx.productMedia.createMany({
         data: data.media.map((media) => ({ productId: id, type: "IMAGE", ...media }))
       });
