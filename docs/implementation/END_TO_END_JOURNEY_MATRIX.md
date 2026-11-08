@@ -289,3 +289,12 @@ The original 2026-11-04 baseline above is historical. Do not use its old per-sys
 - The current evidence does not establish production database migration, production secrets, live payment/refund/carrier integration, or successful deployment. None was changed or exercised in this audit.
 
 Next audit work must start by updating the individual 49 ledger rows against these merged facts, then finish actor/ownership/store-scope checks and route-level browser coverage. Do not turn the 165 anonymous cases, 105 API inventory, or 54 UI inventory into a blanket authorization-complete claim.
+
+
+
+## 2026-11-08 — Buyer purchase journey verification update
+
+- Current main's Playwright journey covers product detail → cart → checkout review → delivery address → shipping option → tax snapshot → place order → order confirmation/detail.
+- The verified expected terminal state is `PENDING_PAYMENT`; the UI explicitly communicates that payment is pending. This journey is not evidence of a captured payment or seller fulfillment eligibility.
+- The exact PR #78 source head passed Browser E2E [42489548167](https://github.com/waelkamira/mtjr2/actions/runs/42489548167), alongside disposable PostgreSQL [42489548337](https://github.com/waelkamira/mtjr2/actions/runs/42489548337) and General CI [42489542922](https://github.com/waelkamira/mtjr2/actions/runs/42489542922), with the follow-up test correction also passing in [42489548427](https://github.com/waelkamira/mtjr2/actions/runs/42489548427).
+- Payment provider onboarding, actual charge/webhook, external refund execution, settlement reconciliation, and carrier integrations remain conditional on owner-approved market/currency/provider/merchant decisions.
