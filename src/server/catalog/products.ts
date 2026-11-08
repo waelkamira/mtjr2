@@ -289,27 +289,6 @@ export async function approveProduct(productId: string, now = new Date()) {
     if (!product || product.approvalStatus !== ProductApprovalStatus.PENDING || product.status !== CatalogEntityStatus.DRAFT) {
       throw new Error("Only pending draft products can be approved.");
     }
-    const nextLocalityId = data.localityId === undefined ? current.localityId : data.localityId;
-    const localityChanged = data.localityId !== undefined && data.localityId !== current.localityId;
-    const neighborhoodNameChanged = data.neighborhood !== undefined && data.neighborhood !== current.neighborhood;
-    const nextNeighborhoodId = data.neighborhoodId === undefined
-      ? localityChanged || neighborhoodNameChanged ? null : current.neighborhoodId
-      : data.neighborhoodId;
-    const selectedLocality = nextLocalityId
-      ? await tx.syriaLocality.findUnique({ where: { id: nextLocalityId }, select: { id: true, governorateId: true } })
-      : null;
-    if (nextLocalityId && !selectedLocality) throw new Error("The selected Syrian locality is unavailable.");
-    if (nextNeighborhoodId) {
-      if (!selectedLocality) throw new Error("Choose the city or locality before selecting a neighbourhood.");
-      const selectedNeighborhood = await tx.syriaNeighborhood.findUnique({
-        where: { id: nextNeighborhoodId },
-        select: { id: true, governorateId: true }
-      });
-      if (!selectedNeighborhood || selectedNeighborhood.governorateId !== selectedLocality.governorateId) {
-        throw new Error("The selected neighbourhood does not belong to the selected governorate.");
-      }
-    }
-
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT, approvalStatus: ProductApprovalStatus.PENDING },
       data: { approvalStatus: ProductApprovalStatus.APPROVED, approvedAt: now }
@@ -431,6 +410,26 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
       throw new Error("You do not have catalog access to this store.");
+    }
+    const nextLocalityId = data.localityId === undefined ? current.localityId : data.localityId;
+    const localityChanged = data.localityId !== undefined && data.localityId !== current.localityId;
+    const neighborhoodNameChanged = data.neighborhood !== undefined && data.neighborhood !== current.neighborhood;
+    const nextNeighborhoodId = data.neighborhoodId === undefined
+      ? localityChanged || neighborhoodNameChanged ? null : current.neighborhoodId
+      : data.neighborhoodId;
+    const selectedLocality = nextLocalityId
+      ? await tx.syriaLocality.findUnique({ where: { id: nextLocalityId }, select: { id: true, governorateId: true } })
+      : null;
+    if (nextLocalityId && !selectedLocality) throw new Error("The selected Syrian locality is unavailable.");
+    if (nextNeighborhoodId) {
+      if (!selectedLocality) throw new Error("Choose the city or locality before selecting a neighbourhood.");
+      const selectedNeighborhood = await tx.syriaNeighborhood.findUnique({
+        where: { id: nextNeighborhoodId },
+        select: { id: true, governorateId: true }
+      });
+      if (!selectedNeighborhood || selectedNeighborhood.governorateId !== selectedLocality.governorateId) {
+        throw new Error("The selected neighbourhood does not belong to the selected governorate.");
+      }
     }
     if (data.brandId) {
       const brand = await tx.brand.findFirst({ where: { id: data.brandId, status: CatalogEntityStatus.ACTIVE }, select: { id: true } });
