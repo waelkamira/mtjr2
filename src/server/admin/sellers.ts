@@ -56,6 +56,7 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
         facebookUrl: true,
         youtubeUrl: true,
         twitterUrl: true,
+        identityDocumentFileId: true,
         latitude: true,
         longitude: true,
         createdAt: true,
@@ -67,12 +68,15 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
     })
   ]);
   return {
-    items: items.map((item) => ({
-      ...item,
+    items: items.map((item) => {
+      const { identityDocumentFileId, ...seller } = item;
+      return {
+      ...seller,
+      hasIdentityDocument: Boolean(identityDocumentFileId),
       createdAt: item.createdAt.toISOString(),
       stores: item.store ? [{ ...item.store, createdAt: item.store.createdAt.toISOString() }] : [],
       storeCount: item.store ? 1 : 0
-    })),
+    };}),
     page: filters.page,
     limit: filters.limit,
     total,
