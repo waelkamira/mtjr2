@@ -2318,6 +2318,7 @@ model SyriaGovernorate {
   sourceIds     String[]
   aliases       Json?
   districts     SyriaDistrict[]
+  neighborhoods SyriaNeighborhood[]
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
@@ -2387,4 +2388,23 @@ model SyriaLocality {
   @@index([subdistrictId, nameAr])
   @@index([subdistrictId, nameEn])
   @@index([kind])
+}
+
+
+model SyriaNeighborhood {
+  id                   String           @id
+  governorateId        String
+  cityGroupNameAr      String           @db.VarChar(120)
+  nameAr               String           @db.VarChar(160)
+  latitude             Float
+  longitude            Float
+  source               String           @db.VarChar(80)
+  sourceCommit         String           @db.VarChar(64)
+  verificationStatus   String           @default("CANDIDATE") @db.VarChar(24)
+  governorate          SyriaGovernorate @relation(fields: [governorateId], references: [id], onDelete: Cascade)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([governorateId, verificationStatus, cityGroupNameAr])
+  @@index([governorateId, nameAr])
 }
