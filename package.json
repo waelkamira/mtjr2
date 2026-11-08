@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "db:bootstrap-super-admin": "node scripts/bootstrap-super-admin.cjs",
     "db:sync-syria-geography": "node scripts/sync-syria-geography.mjs",
-    "db:seed-akaar-attributes": "node scripts/seed-akaar-category-attributes.mjs"
+    "db:seed-akaar-attributes": "node scripts/seed-akaar-category-attributes.mjs",
+    "db:sync-syria-neighborhoods": "node scripts/sync-syria-neighborhood-suggestions.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",
