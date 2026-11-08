@@ -341,8 +341,10 @@ export default function SellerProductsPage() {
       }
       setEditMedia((current) => {
         const next = [...current];
-        if (replaceIndex !== undefined) next.splice(replaceIndex, 1, additions[0]);
-        else next.push(...additions);
+        if (replaceIndex !== undefined) {
+          const replacement = additions[0];
+          if (replacement) next.splice(replaceIndex, 1, replacement);
+        } else next.push(...additions);
         return next.map((media, index) => ({
           ...media,
           sortOrder: index,
