@@ -420,7 +420,7 @@ export default function SellerWorkspacePage() {
                       </span>
                       <h3 className="text-sm font-semibold text-[var(--color-onyx)]">{metric.label}</h3>
                     </div>
-                    <p className={`mt-4 break-words font-black tracking-tight text-[var(--color-ink-950)] ${metric.compact ? "text-xl sm:text-2xl" : "text-3xl"}`}>{metric.value}</p>
+                    <p className={`mt-4 break-words font-black tracking-tight text-[var(--color-ink-950)] ${("compact" in metric && metric.compact) ? "text-xl sm:text-2xl" : "text-3xl"}`}>{metric.value}</p>
                     <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{metric.description}</p>
                   </article>
                 );
