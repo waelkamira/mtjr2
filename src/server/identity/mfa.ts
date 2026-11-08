@@ -423,6 +423,61 @@ export async function verifyMfaSession(
   }
 }
 
+/** Verify a fresh TOTP code for a ten-minute platform-admin step-up. */
+export async function verifyMfaStepUp(
+  userId: string,
+  sessionId: string,
+  code: string,
+  now = new Date()
+): Promise<boolean> {
+  if (!/^\d{6}$/.test(code)) return false;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const factor = await tx.userTwoFactor.findUnique({
+        where: { userId },
+        select: { secretCiphertext: true, enabledAt: true, lastVerifiedStep: true }
+      });
+      if (!factor?.enabledAt) return false;
+
+      const step = matchingTotpStep(decryptSecret(factor.secretCiphertext), code, now, factor.lastVerifiedStep);
+      if (step === null) return false;
+      const consumed = await tx.userTwoFactor.updateMany({
+        where: {
+          userId,
+          enabledAt: { not: null },
+          OR: [{ lastVerifiedStep: null }, { lastVerifiedStep: { lt: BigInt(step) } }]
+        },
+        data: { lastVerifiedStep: BigInt(step) }
+      });
+      if (consumed.count !== 1) return false;
+
+      const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+      const session = await tx.userSession.updateMany({
+        where: { id: sessionId, userId, revokedAt: null, expiresAt: { gt: now } },
+        data: { stepUpVerifiedAt: now, stepUpExpiresAt: expiresAt }
+      });
+      if (session.count !== 1) throw new MfaSessionChangedError();
+
+      await tx.auditLog.create({
+        data: {
+          actorType: AuditActorType.USER,
+          actorId: userId,
+          action: "identity.mfa.platform_step_up_verified",
+          resource: "user_session",
+          resourceId: sessionId,
+          occurredAt: now,
+          metadata: { method: "totp", expiresAt: expiresAt.toISOString() }
+        }
+      });
+      return true;
+    }, { isolationLevel: "Serializable" });
+  } catch (error) {
+    if (error instanceof MfaSessionChangedError) return false;
+    throw error;
+  }
+}
+
 export type MfaDisableResult =
   | "DISABLED"
   | "INVALID_PASSWORD"
