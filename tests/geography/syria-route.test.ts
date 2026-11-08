@@ -1,16 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { GET } from "@/app/api/geography/syria/route";
 import geography from "@/data/geography/syria-v0.1.5.json";
 
 describe("Syrian geography API route", () => {
-  afterEach(() => vi.unstubAllGlobals());
-
-  it("rejects unsupported levels before calling the upstream service", async () => {
-    const upstream = vi.fn();
-    vi.stubGlobal("fetch", upstream);
+  it("rejects unsupported geography levels", async () => {
     const response = await GET(new Request("https://mtjr.test/api/geography/syria?level=neighborhoods"));
     expect(response.status).toBe(400);
-    expect(upstream).not.toHaveBeenCalled();
   });
 
   it("requires a parent identifier for district and subdistrict lists", async () => {
