@@ -560,7 +560,7 @@ export default function SellerProductsPage() {
             </div>
             <label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label>
             <div
-              className="grid gap-4 rounded-[1.75rem] border border-dashed border-[var(--border)] bg-[var(--surface-soft)] p-4 shadow-[var(--shadow-clay-inset)] transition-colors hover:border-[var(--color-orange)] sm:p-5"
+              className="grid gap-4 rounded-[1.75rem] border border-dashed border-[#a9c7d1] bg-[linear-gradient(145deg,#eaf3f6,#dce9ee)] p-4 shadow-[inset_0_2px_7px_rgba(43,69,88,.08),0_1px_0_white] transition-colors hover:border-[#69aeb4] sm:p-5"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); void uploadProductImageFiles(Array.from(event.dataTransfer.files)); }}
               aria-label={translate(locale, "Product image upload area", "منطقة رفع صور المنتج")}
@@ -572,12 +572,12 @@ export default function SellerProductsPage() {
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each). The first image is the storefront cover. Imgur Client IDs rotate in order, then ImageKit and Cloudinary are used as fallbacks.", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة). الصورة الأولى هي غلاف المتجر. يتم تدوير معرفات Imgur بالترتيب ثم استخدام ImageKit وCloudinary كبدائل.")}</p>
               </div>
-              <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[var(--color-ink-800)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+              <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[linear-gradient(135deg,#68b4b5,#3d8993)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_7px_16px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:opacity-50">
                 {uploadingImages ? translate(locale, "Uploading images…", "جارٍ رفع الصور…") : translate(locale, "Choose images", "اختيار الصور")}
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
               </label>
               {uploadedImages.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-white/80 bg-[#eef4f6] shadow-[inset_0_2px_5px_rgba(43,69,88,.06)] shadow-sm">
+                {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-white/80 bg-[#e6eff2] shadow-[0_5px_14px_rgba(43,69,88,.1),inset_0_1px_0_white]">
                   <div className="relative aspect-square bg-[var(--surface-soft)]">
                     <img src={image.previewUrl} alt={`Product image ${index + 1}`} className={`h-full w-full object-cover ${image.status === "uploading" ? "opacity-60" : ""}`} />
                     {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2.5 py-1 text-[10px] font-bold text-white">{translate(locale, "Primary image", "الصورة الرئيسية")}</span>}
