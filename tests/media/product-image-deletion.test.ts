@@ -32,13 +32,12 @@ describe("product image provider deletion", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(deleteProductImage("imgur:anonymous-delete-hash")).resolves.toBe("deleted");
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.imgur.com/3/image/anonymous-delete-hash",
-      expect.objectContaining({
-        method: "DELETE",
-        headers: { Authorization: "Client-ID imgur-client-1" }
-      })
-    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("https://api.imgur.com/3/image/anonymous-delete-hash");
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
+      method: "DELETE",
+      headers: { Authorization: "Client-ID imgur-client-1" }
+    });
   });
 
   it("uses the original rotating Client ID stored with an anonymous Imgur asset", async () => {
