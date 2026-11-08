@@ -653,6 +653,9 @@ export async function getDiscoverableProduct(slug: string, locale = defaultLocal
   });
   return {
     ...localized,
+    propertyDetails: localized.propertyDetails
+      ? { ...localized.propertyDetails, floorArea: localized.propertyDetails.floorArea.toString() }
+      : null,
     location: latitude != null && longitude != null
       ? { latitude: Math.round(latitude * 100) / 100, longitude: Math.round(longitude * 100) / 100 }
       : null,
