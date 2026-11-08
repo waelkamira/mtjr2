@@ -247,3 +247,40 @@ export async function uploadProductImage(input: ProductImageInput): Promise<Uplo
   const message = detail ? providerFailureMessage(detail) : "All configured image storage providers failed.";
   throw new ProductImageUploadError(message, status);
 }
+
+
+/**
+ * Deletes an uploaded image from its provider after the database stops referencing it.
+ * Imgur deletion requires an OAuth access token; never attempt deletion with a public Client-ID.
+ */
+export async function deleteProductImage(storageKey: string): Promise<"deleted" | "unsupported"> {
+  const [provider, fileId] = storageKey.split(":", 2);
+  if (!fileId || !/^[a-zA-Z0-9_-]{1,160}$/.test(fileId)) {
+    throw new Error("Invalid product image storage key.");
+  }
+
+  let endpoint: string;
+  let headers: HeadersInit;
+  if (provider === "imagekit") {
+    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY?.trim();
+    if (!privateKey) return "unsupported";
+    endpoint = `https://api.imagekit.io/v1/files/${encodeURIComponent(fileId)}`;
+    headers = { Authorization: `Basic ${Buffer.from(`${privateKey}:`).toString("base64")}` };
+  } else if (provider === "imgur") {
+    const accessToken = process.env.IMGUR_ACCESS_TOKEN?.trim();
+    if (!accessToken) return "unsupported";
+    endpoint = `https://api.imgur.com/3/image/${encodeURIComponent(fileId)}`;
+    headers = { Authorization: `Bearer ${accessToken}` };
+  } else {
+    return "unsupported";
+  }
+
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers,
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000)
+  });
+  if (response.ok || response.status === 404) return "deleted";
+  throw new Error(`Image provider deletion failed (HTTP ${response.status}).`);
+}
