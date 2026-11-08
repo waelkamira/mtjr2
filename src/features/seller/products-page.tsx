@@ -362,7 +362,7 @@ export default function SellerProductsPage() {
                 <Images aria-hidden="true" className="size-5 text-[var(--color-copper-600)]" />
                 <h3 className="text-sm font-semibold">{translate(locale, "Listing images", "صور الإعلان")}</h3>
               </div>
-              <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or choose files. Preview, replace, reorder and remove each image before saving.", "اسحب الصور إلى هنا أو اخترها. عاين كل صورة واستبدلها ورتبها واحذفها قبل الحفظ.")}</p>
+              <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or choose files. Preview, replace, remove and choose the cover image before saving.", "اسحب الصور إلى هنا أو اخترها. عاين كل صورة واستبدلها واحذفها وحدد صورة الغلاف قبل الحفظ.")}</p>
               <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || busy || !activePreview} onChange={replaceSelectedImage} className="sr-only" />{translate(locale, "Replace selected image", "استبدال الصورة المحددة")}</label>
               <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold">
                 <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || busy || selectedImageCount >= 8} onChange={uploadImages} className="sr-only" />
