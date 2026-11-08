@@ -30,12 +30,22 @@ type InventoryRow = {
   warehouse: { id: string; code: string; name: string };
   variant: { id: string; sku: string | null; name: string | null; product: { name: string; slug: string } };
 };
-type SellerOrder = {
-  id: string;
-  status: string;
+type SellerAnalytics = {
   store: { id: string; name: string };
-  order: { orderNumber: string; placedAt: string };
-  items: Array<{ productName: string; quantity: number }>;
+  range: { from: string; to: string; days: number };
+  permissions: { orders: boolean; catalog: boolean; inventory: boolean; reviews: boolean; returns: boolean; store: boolean };
+  metrics: {
+    totalOrders: number | null;
+    grossSalesByCurrency: Array<{ currencyCode: string; amountMinor: string; orderCount: number; minorUnit: number; currencyName: string }>;
+    activeProducts: number | null;
+    pendingProducts: number | null;
+    averageRating: number | null;
+    reviewCount: number | null;
+    requestedReturns: number | null;
+  };
+  orderStatuses: Array<{ status: string; count: number }>;
+  dailySales: Array<{ day: string; currencyCode: string; amountMinor: string; orderCount: number }>;
+  topProducts: Array<{ productId: string | null; name: string; unitsSold: number }>;
 };
 
 class ApiError extends Error {
@@ -60,9 +70,10 @@ export default function SellerWorkspacePage() {
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [inventoryError, setInventoryError] = useState("");
-  const [sellerOrders, setSellerOrders] = useState<SellerOrder[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const [ordersError, setOrdersError] = useState("");
+  const [sellerAnalytics, setSellerAnalytics] = useState<SellerAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
+  const [selectedSalesCurrency, setSelectedSalesCurrency] = useState("");
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingMarketId, setShippingMarketId] = useState("");
   const [shippingName, setShippingName] = useState("");
@@ -140,28 +151,32 @@ export default function SellerWorkspacePage() {
   }, [locale, selectedStoreId]);
 
   useEffect(() => {
-    if (!selectedStoreId) return;
+    if (!selectedStoreId) {
+      setSellerAnalytics(null);
+      return;
+    }
     let active = true;
-    void Promise.resolve().then(async () => {
-      if (!active) return;
-      setOrdersLoading(true);
-      setOrdersError("");
-      try {
-        const result = await readJson<{ orders: SellerOrder[] }>(
-          await fetch("/api/seller/orders", { cache: "no-store" })
+    setAnalyticsLoading(true);
+    setAnalyticsError("");
+    fetch(`/api/seller/analytics?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
+      .then((response) => readJson<SellerAnalytics>(response))
+      .then((data) => {
+        if (!active) return;
+        setSellerAnalytics(data);
+        setSelectedSalesCurrency((current) =>
+          data.metrics.grossSalesByCurrency.some((entry) => entry.currencyCode === current)
+            ? current
+            : data.metrics.grossSalesByCurrency[0]?.currencyCode ?? ""
         );
-        if (active) setSellerOrders(result.orders.filter((order) => order.store.id === selectedStoreId));
-      } catch (cause) {
-        if (active) {
-          setSellerOrders([]);
-          setOrdersError(cause instanceof Error
-            ? cause.message
-            : translate(locale, "Order analytics could not be loaded.", "تعذر تحميل تحليلات الطلبات."));
-        }
-      } finally {
-        if (active) setOrdersLoading(false);
-      }
-    });
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+        setSellerAnalytics(null);
+        setAnalyticsError(cause instanceof Error
+          ? cause.message
+          : translate(locale, "Store analytics could not be loaded.", "تعذر تحميل تحليلات المتجر."));
+      })
+      .finally(() => { if (active) setAnalyticsLoading(false); });
     return () => { active = false; };
   }, [locale, selectedStoreId]);
 
@@ -194,7 +209,6 @@ export default function SellerWorkspacePage() {
 
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
   const hasOwnedStore = workspace?.stores.some((store) => store.isOwner) ?? false;
-  const selectedStoreOrders = sellerOrders.filter((order) => order.store.id === selectedStoreId);
   const sellerStatusLabels: Record<string, string> = {
     PENDING_PAYMENT: translate(locale, "Awaiting payment", "بانتظار الدفع"),
     CONFIRMED: translate(locale, "Confirmed", "مؤكد"),
@@ -204,21 +218,35 @@ export default function SellerWorkspacePage() {
     DELIVERED: translate(locale, "Delivered", "تم التوصيل"),
     CANCELLED: translate(locale, "Cancelled", "ملغى")
   };
-  const sellerOrderStatuses: ChartDatum[] = Object.entries(
-    selectedStoreOrders.reduce<Record<string, number>>((counts, order) => {
-      counts[order.status] = (counts[order.status] ?? 0) + 1;
-      return counts;
-    }, {})
-  ).map(([status, value]) => ({ label: sellerStatusLabels[status] ?? status, value }));
-  const ordersByDay = selectedStoreOrders.reduce<Record<string, number>>((counts, order) => {
-    const day = order.order.placedAt.slice(0, 10);
-    counts[day] = (counts[day] ?? 0) + 1;
+  const sellerOrderStatuses: ChartDatum[] = (sellerAnalytics?.orderStatuses ?? [])
+    .map(({ status, count }) => ({ label: sellerStatusLabels[status] ?? status, value: count }));
+  const ordersByDay = (sellerAnalytics?.dailySales ?? []).reduce<Record<string, number>>((counts, row) => {
+    counts[row.day] = (counts[row.day] ?? 0) + row.orderCount;
     return counts;
   }, {});
   const sellerDailyOrders: ChartDatum[] = Object.entries(ordersByDay)
     .sort(([dayA], [dayB]) => dayA.localeCompare(dayB))
-    .slice(-30)
     .map(([day, value]) => ({ label: day.slice(5), value }));
+  const salesCurrencies = sellerAnalytics?.metrics.grossSalesByCurrency ?? [];
+  const activeSalesCurrency = salesCurrencies.find((entry) => entry.currencyCode === selectedSalesCurrency) ?? salesCurrencies[0];
+  const formatCurrencyMinor = (amountMinor: string, currencyCode: string, minorUnit: number) =>
+    new Intl.NumberFormat(locale, { style: "currency", currency: currencyCode, maximumFractionDigits: minorUnit })
+      .format(Number(amountMinor) / (10 ** minorUnit));
+  const grossSalesSummary = salesCurrencies.length
+    ? salesCurrencies.slice(0, 2).map((entry) => formatCurrencyMinor(entry.amountMinor, entry.currencyCode, entry.minorUnit)).join(" · ") +
+      (salesCurrencies.length > 2 ? ` +${salesCurrencies.length - 2}` : "")
+    : "—";
+  const sellerDailySales: ChartDatum[] = (sellerAnalytics?.dailySales ?? [])
+    .filter((row) => row.currencyCode === activeSalesCurrency?.currencyCode)
+    .map((row) => ({
+      label: row.day.slice(5),
+      value: Number(row.amountMinor) / (10 ** (activeSalesCurrency?.minorUnit ?? 2))
+    }));
+  const topSellingProducts: ChartDatum[] = (sellerAnalytics?.topProducts ?? [])
+    .map((product) => ({ label: product.name, value: product.unitsSold }));
+  const fulfillmentOrderCount = (sellerAnalytics?.orderStatuses ?? [])
+    .filter((row) => ["CONFIRMED", "PROCESSING", "READY_TO_SHIP"].includes(row.status))
+    .reduce((total, row) => total + row.count, 0);
   const topStockProducts: ChartDatum[] = Object.values(inventory.reduce<Record<string, ChartDatum>>((products, row) => {
     const label = row.variant.product.name;
     products[label] = { label, value: (products[label]?.value ?? 0) + row.quantityAvailable };
@@ -226,9 +254,6 @@ export default function SellerWorkspacePage() {
   }, {})).sort((a, b) => b.value - a.value).slice(0, 8);
   const lowStockCount = inventory.filter((row) => row.isLowStock).length;
   const availableUnits = inventory.reduce((total, row) => total + row.quantityAvailable, 0);
-  const fulfillmentOrderCount = selectedStoreOrders.filter((order) =>
-    ["CONFIRMED", "PROCESSING", "READY_TO_SHIP"].includes(order.status)
-  ).length;
   const formatMetric = (value: number) => new Intl.NumberFormat(locale).format(value);
   const sellerMetrics = [
     {
