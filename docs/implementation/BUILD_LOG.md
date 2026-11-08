@@ -2643,3 +2643,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The disposable PostgreSQL integration workflow triggered by the preceding API commit completed successfully: Prisma validation/generation, committed migration replay, baseline permission seeding, integration tests, demo catalog seed, and seed repeatability all passed. This run predates the typed shipping error-mapping change and is not evidence for that new route behavior.
 - Exact-head general CI was triggered on the new test commit and is pending. No passing typecheck/lint/unit/build claim is made for these latest changes until that run completes.
 - No production database, Vercel configuration, or deployment was changed.
+
+
+## 2026-11-08 — PR #69 reconciliation review and seller catalog comparison
+
+- Rechecked PR #69 against current `main`: it remains a Draft and is not mergeable. The current comparison reports 336 commits ahead, 103 behind, and 159 changed paths. The branch must not be merged wholesale.
+- Confirmed that current `main` already uses database-backed category attribute definitions in the seller product editor (including locale-aware loading and typed attribute values), and already includes the Syrian location picker backed by the platform's geography API and neighborhood suggestions. The PR's static Akaar preset map and bundled OpenSyria v0.1.5 geography API/picker are not safe drop-ins: they are older, parallel contracts that would bypass the current category/geography models and conflict with the current product schema.
+- The PR's product-editor changes still identify potentially useful fields not yet represented on the current `Product` model (contact phone, video URL, legacy custom JSON, and property-specific details). These require a deliberate schema/API/editor design against the current `ProductAttribute`, `SyriaLocality`, and `SyriaNeighborhood` models; no legacy JSON or duplicate geography model was imported.
+- Current-main seller API error handling was tightened in this work. PostgreSQL integration run `42468235175` completed successfully, including Prisma validation/generation, migration replay, baseline permission seed, integration tests, demo catalog seed, and seed repeatability.
+- Exact-head CI run `42468235212` has passed dependency installation, Prisma validation, migration deploy, Prisma generation, TypeScript typecheck, and ESLint. Vitest is still running at the time of this entry; build and route/UI audit steps have not yet completed. Do not treat the workflow as fully green until the remaining steps finish.
+- No Vercel deployment, production database mutation, or PR merge was performed.
