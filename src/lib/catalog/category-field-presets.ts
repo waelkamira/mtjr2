@@ -40,3 +40,25 @@ export function getCategoryFieldPresets(slug: string): CategoryFieldPreset[] {
   return (categoryFieldPresets[key] ?? []).map(([fieldKey, label]) => ({ key: fieldKey, label, value: "" }));
 }
 
+/** Build an editable field list without discarding previously saved custom keys. */
+export function buildCategoryFieldsForEdit(
+  slug: string,
+  savedValues: unknown,
+  currentFields: Array<{ key: string; value: string; label?: string }> = []
+): CategoryFieldPreset[] {
+  const saved = savedValues && typeof savedValues === "object" && !Array.isArray(savedValues)
+    ? savedValues as Record<string, unknown>
+    : {};
+  const current = Object.fromEntries(
+    currentFields.filter((field) => field.key.trim()).map((field) => [field.key, field.value])
+  );
+  const values = { ...saved, ...current };
+  const presets = getCategoryFieldPresets(slug);
+  const knownKeys = new Set(presets.map((field) => field.key));
+  const standard = presets.map((field) => ({ ...field, value: String(values[field.key] ?? "") }));
+  const additional = Object.entries(values)
+    .filter(([key]) => !knownKeys.has(key))
+    .filter(([, value]) => ["string", "number", "boolean"].includes(typeof value))
+    .map(([key, value]) => ({ key, label: key, value: String(value) }));
+  return [...standard, ...additional];
+}
