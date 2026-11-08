@@ -36,7 +36,7 @@ const storeSchema = z.object({
   marketIds: z.array(z.string().trim().min(1)).min(1).max(20)
 });
 
-export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
+export type SellerApplicationInput = z.input<typeof sellerApplicationSchema>;
 
 function isStoreSlugConflict(error: unknown) {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false;
