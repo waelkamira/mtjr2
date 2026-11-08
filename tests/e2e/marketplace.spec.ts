@@ -188,34 +188,51 @@ test.describe("seller catalog authoring", () => {
     const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
     expect(damascus).toBeTruthy();
     await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
+    await expect(map).toHaveAttribute("data-map-zoom", "7", { timeout: 10000 });
 
     const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
     expect(districtsResponse.status()).toBe(200);
-    const districts = await districtsResponse.json() as { items: Array<{ id: string }> };
+    const districts = await districtsResponse.json() as { items: Array<{ id: string; latitude: number | null; longitude: number | null }> };
     expect(districts.items.length).toBeGreaterThan(0);
-    await page.getByLabel(/District|المنطقة/i).selectOption(districts.items[0].id);
+    const selectedDistrict = districts.items.find((item) => item.latitude !== null && item.longitude !== null) ?? districts.items[0];
+    await page.getByLabel(/District|المنطقة/i).selectOption(selectedDistrict.id);
+    if (selectedDistrict.latitude !== null && selectedDistrict.longitude !== null) {
+      await expect(map).toHaveAttribute("data-map-zoom", "10", { timeout: 10000 });
+    }
 
-    const subdistrictsResponse = await page.request.get(`/api/geography/subdistricts?districtId=${encodeURIComponent(districts.items[0].id)}`);
+    const subdistrictsResponse = await page.request.get(`/api/geography/subdistricts?districtId=${encodeURIComponent(selectedDistrict.id)}`);
     expect(subdistrictsResponse.status()).toBe(200);
-    const subdistricts = await subdistrictsResponse.json() as { items: Array<{ id: string }> };
+    const subdistricts = await subdistrictsResponse.json() as { items: Array<{ id: string; latitude: number | null; longitude: number | null }> };
     expect(subdistricts.items.length).toBeGreaterThan(0);
     let selectedSubdistrictId = "";
+    let selectedSubdistrictHasCoordinates = false;
     let selectedLocalityId = "";
     for (const subdistrict of subdistricts.items) {
-      const response = await page.request.get(`/api/geography/localities?districtId=${encodeURIComponent(districts.items[0].id)}&subdistrictId=${encodeURIComponent(subdistrict.id)}`);
-      const payload = await response.json() as { items: Array<{ id: string }> };
-      if (payload.items.length) {
+      const response = await page.request.get(`/api/geography/localities?districtId=${encodeURIComponent(selectedDistrict.id)}&subdistrictId=${encodeURIComponent(subdistrict.id)}`);
+      const payload = await response.json() as { items: Array<{ id: string; latitude: number | null; longitude: number | null }> };
+      const locality = payload.items.find((item) => item.latitude !== null && item.longitude !== null) ?? payload.items[0];
+      if (locality) {
         selectedSubdistrictId = subdistrict.id;
-        selectedLocalityId = payload.items[0].id;
+        selectedSubdistrictHasCoordinates = subdistrict.latitude !== null && subdistrict.longitude !== null;
+        selectedLocalityId = locality.id;
         break;
       }
     }
     expect(selectedSubdistrictId).toBeTruthy();
     expect(selectedLocalityId).toBeTruthy();
     await page.getByLabel(/Subdistrict|الناحية/i).selectOption(selectedSubdistrictId);
+    if (selectedSubdistrictHasCoordinates) {
+      await expect(map).toHaveAttribute("data-map-zoom", "12", { timeout: 10000 });
+    }
     await expect(page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i)).toBeEnabled();
     await page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i).selectOption(selectedLocalityId);
     await expect(map).toHaveClass(/leaflet-container/, { timeout: 15000 });
+    await expect(map).toHaveAttribute("data-map-zoom", "15", { timeout: 10000 });
+
+    const zoomBeforeWheel = Number(await map.getAttribute("data-map-zoom"));
+    await map.hover();
+    await page.mouse.wheel(0, -600);
+    await expect.poll(async () => Number(await map.getAttribute("data-map-zoom"))).toBeGreaterThan(zoomBeforeWheel);
   });
 });
 
