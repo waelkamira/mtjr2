@@ -2613,3 +2613,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Split same-origin/Fetch-Metadata validation from body-type validation. JSON mutation routes retain the JSON-only guard; image upload routes now use a dedicated multipart guard that requires a multipart boundary and preserves same-origin checks.
 - Updated both `/api/seller/products/media` and the backward-compatible `/api/seller/products/images` endpoint. Added unit coverage for JSON acceptance, multipart rejection on JSON endpoints, multipart acceptance on upload endpoints, and missing/cross-origin rejection.
 - These changes were committed directly to main; they are not verified yet. A fresh exact-head CI, PostgreSQL integration, and Browser E2E run is required before considering this fix complete.
+
+
+## 2026-11-08 — Preserve authentication-first behavior on upload routes
+- The first multipart-guard E2E run correctly exposed that anonymous POST probes received HTTP 415 before authentication because the content-type check ran too early. The other six browser journeys passed; the security-boundary test failed only on the two image-upload aliases.
+- Reordered the canonical media route: same-origin/Fetch-Metadata validation first, session authentication second, multipart content-type validation third, then form parsing and store permission checks. The legacy `/images` route now delegates directly to the canonical handler so it cannot return a different pre-auth response.
+- This keeps CSRF protection ahead of authentication while ensuring anonymous probes receive authentication failure instead of upload-format details. The updated route changes are on main and copied to the verification branch for a fresh exact-head CI/E2E run.
