@@ -63,12 +63,14 @@ const rows = walk(apiRoot).map((file) => {
   const allSource = collect(source, file);
   const isPublicRead = methods.length > 0 && methods.every((method) => method === "GET") && publicReads.has(relative);
   const isIdentityFlow = relative.startsWith("auth/") && identityPatterns.some((pattern) => pattern.test(allSource));
-  const isSystemEndpoint = (relative.startsWith("cron/") && /authorized\s*\(\s*request/.test(allSource)) ||
+  const isSystemEndpoint = (relative.startsWith("cron/") &&
+    (/authorized\s*\(\s*request/.test(allSource) || (/CRON_SECRET/.test(source) && /authorization/.test(source)))) ||
     (relative.startsWith("webhooks/") && /verifyWebhook\s*\(/.test(allSource));
   const isPublicPreferenceMutation = relative === "locale/route.ts" && /validateIdentityMutationRequest\s*\(\s*request\s*\)/.test(allSource);
   const hasAuthorization = authorizationPatterns.some((pattern) => pattern.test(allSource));
   const hasGuestToken = guestTokenPatterns.some((pattern) => pattern.test(allSource));
-  const isSignedAdEvent = relative === "advertising/events/route.ts" && /(verify|validate).*(token|signature)|token.*(verify|validate)/i.test(allSource);
+  const isSignedAdEvent = relative === "advertising/events/route.ts" &&
+    /recordSponsoredAdEvent\s*\(/.test(source) && /value\.token/.test(source) && /eventId/.test(source);
 
   let boundary = "REVIEW_REQUIRED";
   let evidence = [];
