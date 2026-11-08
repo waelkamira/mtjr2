@@ -4,7 +4,7 @@ export function toMinorUnits(amountInput: string, minorUnit: number): string {
   }
   const amount = amountInput.trim();
   const match = /^(0|[1-9][0-9]*)(?:\.([0-9]+))?$/.exec(amount);
-  if (!match) throw new Error("Enter a valid non-negative shipping amount.");
+  if (!match) throw new Error("Enter a valid non-negative amount.");
   const fraction = match[2] ?? "";
   if (fraction.length > minorUnit) {
     throw new Error(`This currency supports at most ${minorUnit} decimal places.`);
@@ -13,6 +13,6 @@ export function toMinorUnits(amountInput: string, minorUnit: number): string {
   const wholeMinor = BigInt(match[1]) * scale;
   const fractionalMinor = BigInt((fraction + "0".repeat(minorUnit)).slice(0, minorUnit) || "0");
   const result = wholeMinor + fractionalMinor;
-  if (result > BigInt("9000000000000000")) throw new Error("Shipping amount exceeds the supported limit.");
+  if (result > BigInt("9000000000000000")) throw new Error("Amount exceeds the supported limit.");
   return result.toString();
 }
