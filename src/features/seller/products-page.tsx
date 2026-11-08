@@ -122,15 +122,8 @@ export default function SellerProductsPage() {
   }, []);
 
   useEffect(() => {
-    if (!categoryId) {
-      setCategoryAttributes([]);
-      setAttributeValues({});
-      setLoadingCategoryAttributes(false);
-      return;
-    }
+    if (!categoryId) return;
     let active = true;
-    setLoadingCategoryAttributes(true);
-    setAttributeValues({});
     fetch(`/api/categories/${encodeURIComponent(categoryId)}/attributes?locale=${encodeURIComponent(locale)}`, { cache: "no-store" })
       .then((response) => json<{ items: CategoryAttribute[] }>(response))
       .then((result) => { if (active) setCategoryAttributes(result.items); })
@@ -372,7 +365,7 @@ export default function SellerProductsPage() {
               </div>}
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
-            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setAttributeValues({}); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             {categoryId && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
               <div>
                 <h3 className="text-sm font-semibold">{translate(locale, "Category-specific details", "الخصائص الخاصة بالفئة")}</h3>
