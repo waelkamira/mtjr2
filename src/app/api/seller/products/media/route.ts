@@ -1,9 +1,18 @@
 import { z } from "zod";
 import { AuthenticationRequiredError, requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
-import { validateIdentityImageUploadRequest, validateIdentityMutationOrigin } from "@/server/identity/request-security";
+import {
+  validateIdentityImageUploadRequest,
+  validateIdentityMutationOrigin,
+  validateIdentityMutationRequest
+} from "@/server/identity/request-security";
 import { prisma } from "@/lib/db/prisma";
 import { getNextImgurClientId } from "@/server/media/imgur-client-manager";
+import { deleteProductImage } from "@/server/media/product-image-deletion";
+import {
+  createTemporaryProductImageDeleteToken,
+  verifyTemporaryProductImageDeleteToken
+} from "@/server/media/temporary-product-image-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +47,15 @@ async function hasValidImageSignature(file: File): Promise<boolean> {
   if (file.type === "image/webp") return starts(0x52, 0x49, 0x46, 0x46) && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
   if (file.type === "image/avif") return bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70 && ((bytes[8] === 0x61 && bytes[9] === 0x76 && bytes[10] === 0x69 && bytes[11] === 0x66) || (bytes[8] === 0x61 && bytes[9] === 0x76 && bytes[10] === 0x69 && bytes[11] === 0x73));
   return false;
+}
+
+function withTemporaryDeleteToken<T extends { storageKey?: string }>(result: T, storeId: string) {
+  return {
+    ...result,
+    ...(result.storageKey
+      ? { deleteToken: createTemporaryProductImageDeleteToken(storeId, result.storageKey) }
+      : {})
+  };
 }
 
 async function uploadToImgur(file: File) {
@@ -137,7 +155,7 @@ export async function POST(request: Request): Promise<Response> {
   if (imgurConfigured) {
     try {
       const result = await uploadToImgur(file);
-      return Response.json({ success: true, data: result }, { headers: { "Cache-Control": "no-store" } });
+      return Response.json({ success: true, data: withTemporaryDeleteToken(result, storeId.data) }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
       errors.push(error instanceof Error ? error.message : "Imgur upload failed.");
     }
@@ -174,4 +192,51 @@ export async function POST(request: Request): Promise<Response> {
       : "Image upload is not configured. Set IMGUR_CLIENT_IDS, IMAGEKIT_PRIVATE_KEY, or CLOUDINARY_CLOUD_NAME with CLOUDINARY_UPLOAD_PRESET in the server environment.",
     configured ? 502 : 503
   );
+}
+
+
+/** Delete a provider upload that has not yet been attached to a ProductMedia row. */
+export async function DELETE(request: Request): Promise<Response> {
+  const originRejected = validateIdentityMutationOrigin(request);
+  if (originRejected) return originRejected;
+
+  let actor: Awaited<ReturnType<typeof requireCurrentSession>>;
+  try {
+    actor = await requireCurrentSession();
+  } catch (error) {
+    if (error instanceof AuthenticationRequiredError) return jsonError("Authentication required.", 401);
+    return jsonError("Unable to verify the current session.", 401);
+  }
+
+  const contentTypeRejected = validateIdentityMutationRequest(request);
+  if (contentTypeRejected) return contentTypeRejected;
+
+  const parsed = z.object({
+    storeId: z.string().trim().min(1).max(128),
+    deleteToken: z.string().trim().min(20).max(2048)
+  }).strict().safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return jsonError("A valid store and temporary image delete token are required.", 400);
+
+  const storageKey = verifyTemporaryProductImageDeleteToken(parsed.data.deleteToken, parsed.data.storeId);
+  if (!storageKey) return jsonError("The temporary image delete token is invalid or expired.", 403);
+
+  try {
+    if (!(await canManageStore(actor.userId, parsed.data.storeId))) {
+      return jsonError("You do not have access to this store.", 403);
+    }
+    const attached = await prisma.productMedia.findFirst({
+      where: { storageKey },
+      select: { id: true }
+    });
+    if (attached) return jsonError("This image is already attached to a product and cannot be deleted as a temporary upload.", 409);
+
+    const result = await deleteProductImage(storageKey);
+    return Response.json({
+      success: true,
+      deleted: result === "deleted",
+      ...(result === "unsupported" ? { warning: "The provider deletion credentials are not configured; the image was removed from this draft only." } : {})
+    }, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return jsonError("The temporary image could not be deleted.", 502);
+  }
 }
