@@ -72,6 +72,48 @@ export async function createStoreShippingRate(input: unknown, now = new Date()) 
   });
 }
 
+export async function updateStoreShippingRate(rateId: string, input: unknown, now = new Date()) {
+  const id = z.string().trim().min(1).parse(rateId);
+  const data = rateInput.parse(input);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const store = await tx.store.findUnique({
+      where: { id: data.storeId },
+      select: { id: true, seller: { select: { ownerId: true, status: true } } }
+    });
+    if (!store || store.seller.status !== "ACTIVE" || !(await canManageShipping(actor.userId, store.seller.ownerId, store.id, now))) {
+      throw new PermissionDeniedError("You do not have shipping configuration access to this store.");
+    }
+    const market = await tx.market.findFirst({
+      where: {
+        id: data.marketId, status: "ACTIVE", country: { is: { isActive: true } },
+        storeLinks: { some: { storeId: store.id, isEnabled: true } },
+        currencies: { some: { currencyCode: data.currencyCode, isEnabled: true, currency: { isActive: true } } }
+      }, select: { id: true }
+    });
+    if (!market) throw new Error("The store must be enabled for this active market and currency.");
+    const current = await tx.storeShippingRate.findFirst({ where: { id, storeId: store.id }, select: { id: true } });
+    if (!current) throw new Error("Shipping service was not found for this store.");
+    const rate = await tx.storeShippingRate.update({
+      where: { id },
+      data: {
+        marketId: data.marketId, currencyCode: data.currencyCode, name: data.name,
+        description: data.description || null, amountMinor: data.amountMinor,
+        destinationRegion: data.destinationRegion?.trim() || null,
+        minDeliveryDays: data.minDeliveryDays ?? null, maxDeliveryDays: data.maxDeliveryDays ?? null,
+        priority: data.priority
+      },
+      select: { id: true, storeId: true, marketId: true, currencyCode: true, name: true, description: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, priority: true }
+    });
+    await tx.auditLog.create({ data: {
+      actorType: "USER", actorId: actor.userId, action: "shipping.rate.updated",
+      resource: "store_shipping_rate", resourceId: rate.id, scopeType: "STORE", scopeId: store.id,
+      occurredAt: now, metadata: { marketId: rate.marketId, currencyCode: rate.currencyCode, amountMinor: rate.amountMinor.toString() }
+    }});
+    return { ...rate, amountMinor: rate.amountMinor.toString() };
+  });
+}
+
 export async function listStoreShippingRates(storeId: string, now = new Date()) {
   const actor = await requireCurrentSession(now);
   const store = await prisma.store.findUnique({
