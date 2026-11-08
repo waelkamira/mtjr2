@@ -2317,6 +2317,8 @@ model SyriaGovernorate {
   sourceVersion String            @db.VarChar(20)
   sourceIds     String[]
   aliases       Json?
+  sourceReferences Json?
+  sourceStatus  String?           @db.VarChar(24)
   districts     SyriaDistrict[]
   neighborhoods SyriaNeighborhood[]
   createdAt     DateTime          @default(now())
@@ -2336,6 +2338,8 @@ model SyriaDistrict {
   sourceVersion String            @db.VarChar(20)
   sourceIds     String[]
   aliases       Json?
+  sourceReferences Json?
+  sourceStatus  String?           @db.VarChar(24)
   governorate   SyriaGovernorate  @relation(fields: [governorateId], references: [id], onDelete: Cascade)
   subdistricts  SyriaSubdistrict[]
   createdAt     DateTime          @default(now())
@@ -2356,6 +2360,8 @@ model SyriaSubdistrict {
   sourceVersion String            @db.VarChar(20)
   sourceIds     String[]
   aliases       Json?
+  sourceReferences Json?
+  sourceStatus  String?           @db.VarChar(24)
   governorate   SyriaGovernorate  @relation(fields: [governorateId], references: [id], onDelete: Cascade)
   district      SyriaDistrict     @relation(fields: [districtId], references: [id], onDelete: Cascade)
   localities    SyriaLocality[]
@@ -2379,6 +2385,8 @@ model SyriaLocality {
   sourceVersion String            @db.VarChar(20)
   sourceIds     String[]
   aliases       Json?
+  sourceReferences Json?
+  sourceStatus  String?           @db.VarChar(24)
   subdistrict   SyriaSubdistrict? @relation(fields: [subdistrictId], references: [id], onDelete: SetNull)
   products      Product[]
   createdAt     DateTime          @default(now())
