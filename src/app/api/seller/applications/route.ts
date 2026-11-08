@@ -6,7 +6,20 @@ import { submitSellerApplication } from "@/server/marketplace/seller-application
 export const runtime = "nodejs";
 const bodySchema = z.object({
   legalName: z.string().trim().min(2).max(160),
-  displayName: z.string().trim().min(2).max(80)
+  displayName: z.string().trim().min(2).max(80),
+  contactName: z.string().trim().min(2).max(120),
+  contactEmail: z.string().trim().email().max(254),
+  phoneNumber: z.string().trim().min(7).max(25).regex(/^\+?[0-9\s().-]{7,25}$/),
+  residence: z.string().trim().min(3).max(240),
+  businessType: z.enum(["INDIVIDUAL", "STORE", "ARTISAN", "AGENCY", "OTHER"]),
+  sellingCategories: z.string().trim().min(2).max(300),
+  intendedProducts: z.string().trim().min(20).max(4000),
+  description: z.string().trim().max(2000).optional(),
+  facebookUrl: z.string().trim().max(2048).optional(),
+  youtubeUrl: z.string().trim().max(2048).optional(),
+  twitterUrl: z.string().trim().max(2048).optional(),
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180)
 }).strict();
 
 export async function POST(request: Request): Promise<Response> {
