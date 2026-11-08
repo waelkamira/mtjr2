@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   productMapLocationUpsert: vi.fn(),
   productPropertyDetailsDeleteMany: vi.fn(),
   productPropertyDetailsUpsert: vi.fn(),
+  productMediaFindMany: vi.fn(),
+  deleteProductImage: vi.fn(),
   productMediaDeleteMany: vi.fn(),
   productMediaCreateMany: vi.fn(),
   auditCreate: vi.fn(),
@@ -31,6 +33,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/permission-guard", () => ({ requirePermission: mocks.requirePermission }));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
 vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission, userHasPermission: mocks.userHasPermission }));
+vi.mock("@/server/storage/product-images", () => ({ deleteProductImage: mocks.deleteProductImage }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { product: { findUnique: mocks.productFindUnique }, $transaction: mocks.transaction }
 }));
@@ -57,6 +60,8 @@ describe("product lifecycle", () => {
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
+    mocks.productMediaFindMany.mockResolvedValue([]);
+    mocks.deleteProductImage.mockResolvedValue("deleted");
     mocks.transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       store: { findUnique: mocks.storeFindUnique },
       brand: { findFirst: mocks.brandFindFirst },
@@ -65,7 +70,7 @@ describe("product lifecycle", () => {
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
       productMapLocation: { deleteMany: mocks.productMapLocationDeleteMany, upsert: mocks.productMapLocationUpsert },
       productPropertyDetails: { deleteMany: mocks.productPropertyDetailsDeleteMany, upsert: mocks.productPropertyDetailsUpsert },
-      productMedia: { deleteMany: mocks.productMediaDeleteMany, createMany: mocks.productMediaCreateMany },
+      productMedia: { findMany: mocks.productMediaFindMany, deleteMany: mocks.productMediaDeleteMany, createMany: mocks.productMediaCreateMany },
       product: {
         create: mocks.productCreate,
         findUnique: mocks.productFindUniqueTx,
@@ -253,6 +258,19 @@ describe("product lifecycle", () => {
     expect(mocks.productPropertyDetailsUpsert).toHaveBeenCalledOnce();
     expect(mocks.productMediaDeleteMany).toHaveBeenCalledWith({ where: { productId: "product-1", type: "IMAGE" } });
     expect(mocks.productMediaCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({ productId: "product-1", url: "https://images.example/updated.jpg", isPrimary: true })] });
+  });
+
+  it("deletes removed provider images only after the draft update commits", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
+    mocks.productMediaFindMany.mockResolvedValue([
+      { storageKey: "imagekit:removed-file" },
+      { storageKey: "imagekit:retained-file" }
+    ]);
+    await updateDraftProduct("product-1", {
+      media: [{ url: "https://images.example/retained.jpg", storageKey: "imagekit:retained-file", sortOrder: 0, isPrimary: true }]
+    });
+    expect(mocks.deleteProductImage).toHaveBeenCalledOnce();
+    expect(mocks.deleteProductImage).toHaveBeenCalledWith("imagekit:removed-file");
   });
 
   it("requires all primary-category fields when updating a listing", async () => {
