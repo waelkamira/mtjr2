@@ -388,3 +388,10 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - Seller product authoring continues to use `src/components/maps/syria-location-picker.tsx` and the canonical `/api/geography/*` endpoints. Selecting governorate/district/subdistrict/locality updates the Leaflet viewport when coordinates are available; nearby neighbourhood candidates are searched around the current map focus.
 - `src/components/maps/leaflet-location-map.tsx` enables wheel/touch/double-click zoom and draggable/clickable map pin behavior. Playwright coverage now asserts administrative zoom progression and wheel zoom.
 - Status: implemented in source; exact-head CI/browser results pending. This update does not claim that all seller subpages or all navigation destinations have completed end-to-end verification. No schema migration was required.
+
+
+## Seller/map lint correction — 2026-11-08
+
+- `src/app/seller/layout.tsx`: marketplace navigation now uses Next.js `Link` for the internal root route.
+- `src/components/maps/syria-location-picker.tsx`: removed a redundant synchronous state update from the neighbourhood-loading effect; geography selection handlers remain responsible for clearing stale suggestions.
+- Verification status: source corrections committed to `main`; follow-up exact-head CI pending. The previous run passed Prisma validation and TypeScript typecheck but failed ESLint, so unit tests/build were skipped. See the Build Log for the run link and provider rate-limit distinction.
