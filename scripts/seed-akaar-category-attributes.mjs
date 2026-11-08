@@ -62,14 +62,14 @@ async function main() {
     const rootNames = roots[rootSlug];
     const root = await prisma.category.upsert({
       where: { slug: rootSlug },
-      update: {},
+      update: { name: rootNames.en, status: CatalogEntityStatus.ACTIVE },
       create: { slug: rootSlug, name: rootNames.en, status: CatalogEntityStatus.ACTIVE }
     });
     await ensureTranslation(prisma, root.id, "en", rootNames.en);
     await ensureTranslation(prisma, root.id, "ar", rootNames.ar);
     const child = await prisma.category.upsert({
       where: { slug: childSlug },
-      update: { parentId: root.id },
+      update: { parentId: root.id, name: childEn, status: CatalogEntityStatus.ACTIVE },
       create: { slug: childSlug, parentId: root.id, name: childEn, status: CatalogEntityStatus.ACTIVE }
     });
     await ensureTranslation(prisma, child.id, "en", childEn);
