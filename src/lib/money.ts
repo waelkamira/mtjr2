@@ -16,7 +16,7 @@ export function toMinorUnits(amount: string | number, minorUnit: number): string
     throw new Error(`This currency supports at most ${minorUnit} decimal places.`);
   }
   const fractionalMinor = fraction.slice(0, minorUnit).padEnd(minorUnit, "0");
-  const scale = 10n ** BigInt(minorUnit);
+  const scale = BigInt(10) ** BigInt(minorUnit);
   const minor = whole * scale + BigInt(fractionalMinor || "0");
   return minor.toString();
 }
