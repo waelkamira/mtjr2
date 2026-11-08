@@ -1,8 +1,10 @@
+import { timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { AuditActorType, ConsentType, SellerStatus, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { env, isPublicRegistrationEnabled } from "@/lib/env";
 import { safeReturnPath } from "@/lib/safe-return-path";
+import { verifyGoogleIdToken } from "@/server/identity/google-id-token";
 
 import { createUserSession } from "@/server/identity/session";
 import { setSessionCookie } from "@/server/identity/session-cookie";
@@ -14,8 +16,15 @@ function redirectTo(path: string): Response {
   return Response.redirect(new URL(path, env.APP_URL), 303);
 }
 
+function matchesState(actual: string | null | undefined, expected: string | undefined): boolean {
+  if (!actual || !expected) return false;
+  const actualBytes = Buffer.from(actual, "utf8");
+  const expectedBytes = Buffer.from(expected, "utf8");
+  return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
+}
+
 function clearOAuthCookies(store: Awaited<ReturnType<typeof cookies>>) {
-  for (const name of ["mtjr_google_state","mtjr_google_verifier","mtjr_google_intent","mtjr_google_return_to","mtjr_google_account_type","mtjr_google_terms","mtjr_google_privacy","mtjr_google_seller_legal","mtjr_google_seller_display"]) {
+  for (const name of ["mtjr_google_state","mtjr_google_nonce","mtjr_google_verifier","mtjr_google_intent","mtjr_google_return_to","mtjr_google_account_type","mtjr_google_terms","mtjr_google_privacy","mtjr_google_seller_legal","mtjr_google_seller_display"]) {
     store.set(name, "", { path: "/api/auth/google", maxAge: 0, expires: new Date(0), httpOnly: true, secure: env.NODE_ENV === "production", sameSite: "lax" });
   }
 }
@@ -36,6 +45,7 @@ export async function GET(request: Request): Promise<Response> {
   const state = url.searchParams.get("state");
   const expectedState = store.get("mtjr_google_state")?.value;
   const verifier = store.get("mtjr_google_verifier")?.value;
+  const expectedNonce = store.get("mtjr_google_nonce")?.value;
   const intent = store.get("mtjr_google_intent")?.value;
   const accountType = store.get("mtjr_google_account_type")?.value;
   const termsVersion = store.get("mtjr_google_terms")?.value;
@@ -53,7 +63,7 @@ export async function GET(request: Request): Promise<Response> {
     return Response.redirect(destination, 303);
   }
 
-  if (!code || !state || !expectedState || state !== expectedState || !verifier ||
+  if (!code || !matchesState(state, expectedState) || !verifier || !expectedNonce ||
       (intent !== "login" && intent !== "register") ||
       (accountType !== "CUSTOMER" && accountType !== "SELLER") ||
       (intent === "register" && (termsVersion !== "v1" || privacyVersion !== "v1"))) {
@@ -77,19 +87,13 @@ export async function GET(request: Request): Promise<Response> {
     const tokens = await tokenResponse.json() as { id_token?: string };
     if (!tokens.id_token) return oauthError("failed");
 
-    const identityResponse = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(tokens.id_token), { cache: "no-store" });
-    if (!identityResponse.ok) return oauthError("failed");
-    const identity = await identityResponse.json() as { iss?: string; aud?: string; sub?: string; email?: string; email_verified?: string; name?: string; exp?: string };
-    if ((identity.iss !== "https://accounts.google.com" && identity.iss !== "accounts.google.com") ||
-        identity.aud !== env.GOOGLE_CLIENT_ID || !identity.sub || !identity.email ||
-        identity.email_verified !== "true" || !identity.exp || !/^\d+$/.test(identity.exp) || !Number.isSafeInteger(Number(identity.exp)) || Number(identity.exp) * 1000 <= Date.now()) {
-      return oauthError("failed");
-    }
+    const identity = await verifyGoogleIdToken(tokens.id_token, env.GOOGLE_CLIENT_ID, expectedNonce);
+    if (!identity) return oauthError("failed");
     const email = identity.email.trim().toLowerCase();
     const now = new Date();
     const linked = await prisma.oAuthAccount.findUnique({
       where: { provider_providerAccountId: { provider: "google", providerAccountId: identity.sub } },
-      select: { userId: true, user: { select: { id: true, status: true } } }
+      select: { userId: true, user: { select: { id: true, status: true, emailVerifiedAt: true } } }
     });
     let userId: string;
     if (intent === "login") {
@@ -99,13 +103,13 @@ export async function GET(request: Request): Promise<Response> {
         const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
         return oauthError(existing ? "link_required" : "not_linked");
       }
-      if (linked.user.status !== UserStatus.ACTIVE) {
+      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) {
         return oauthError("inactive");
       }
       userId = linked.userId;
       await prisma.user.update({ where: { id: userId }, data: { lastLoginAt: now } });
     } else if (linked) {
-      if (linked.user.status !== UserStatus.ACTIVE) return oauthError("inactive");
+      if (linked.user.status !== UserStatus.ACTIVE || !linked.user.emailVerifiedAt) return oauthError("inactive");
       userId = linked.userId;
     } else {
       const existing = await prisma.user.findUnique({ where: { emailNormalized: email }, select: { id: true } });
@@ -117,10 +121,17 @@ export async function GET(request: Request): Promise<Response> {
 
       const created = await prisma.$transaction(async tx => {
         const user = await tx.user.create({
-          data: { email, emailNormalized: email, displayName: identity.name?.slice(0,80) ?? null, passwordHash: null, status: UserStatus.ACTIVE },
+          data: { email, emailNormalized: email, displayName: identity.name?.slice(0,80) ?? null, passwordHash: null, status: UserStatus.ACTIVE, emailVerifiedAt: now },
           select: { id: true }
         });
-        await tx.oAuthAccount.create({ data: { userId: user.id, provider: "google", providerAccountId: identity.sub! } });
+        await tx.oAuthAccount.create({ data: { userId: user.id, provider: "google", providerAccountId: identity.sub } });
+        if (accountType === "CUSTOMER") {
+          const customerRole = await tx.role.findUnique({ where: { key: "CUSTOMER" }, select: { id: true } });
+          if (!customerRole) throw new Error("CUSTOMER role is missing; run the identity seed before registering customers.");
+          await tx.userRoleAssignment.create({
+            data: { userId: user.id, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" }
+          });
+        }
         await tx.userConsent.createMany({ data: [
           { userId: user.id, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true, capturedAt: now, source: "google-registration" },
           { userId: user.id, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true, capturedAt: now, source: "google-registration" }
@@ -141,6 +152,17 @@ export async function GET(request: Request): Promise<Response> {
           tx.userConsent.findFirst({ where: { userId, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true }, select: { id: true } }),
           tx.seller.findUnique({ where: { ownerId: userId }, select: { id: true } })
         ]);
+        if (accountType === "CUSTOMER") {
+          const customerRole = await tx.role.findUnique({ where: { key: "CUSTOMER" }, select: { id: true } });
+          if (!customerRole) throw new Error("CUSTOMER role is missing; run the identity seed before registering customers.");
+          const assignment = await tx.userRoleAssignment.findFirst({
+            where: { userId, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" },
+            select: { id: true }
+          });
+          if (!assignment) await tx.userRoleAssignment.create({
+            data: { userId, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" }
+          });
+        }
         const missing: Array<{ userId: string; type: ConsentType; version: string; granted: boolean; capturedAt: Date; source: string }> = [];
         if (!terms) missing.push({ userId, type: ConsentType.TERMS_OF_SERVICE, version: termsVersion!, granted: true, capturedAt: now, source: "google-registration" });
         if (!privacy) missing.push({ userId, type: ConsentType.PRIVACY_POLICY, version: privacyVersion!, granted: true, capturedAt: now, source: "google-registration" });
