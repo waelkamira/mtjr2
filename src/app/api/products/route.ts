@@ -22,6 +22,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(product, { status: 201 });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+    if (error instanceof Error && /catalog access/i.test(error.message)) return Response.json({ error: "Product catalog access denied." }, { status: 403 });
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid product input.", issues: error.issues }, { status: 400 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to create product." }, { status: 400 });
   }
