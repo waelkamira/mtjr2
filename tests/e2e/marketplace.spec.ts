@@ -141,7 +141,7 @@ test.describe("seller journey", () => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/seller");
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").last()).toBeVisible();
     await page.goto("/seller/advertising");
     await expect(page.getByRole("heading", { name: /Advertising campaigns|الحملات الإعلانية/i })).toBeVisible();
     await page.screenshot({ path: "test-results/seller-desktop.png", fullPage: true });
