@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import LeafletLocationMap from "@/components/maps/leaflet-location-map";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -85,6 +86,19 @@ export default function SellerWorkspacePage() {
   const [editingShippingRateId, setEditingShippingRateId] = useState("");
   const [legalName, setLegalName] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [residence, setResidence] = useState("");
+  const [businessType, setBusinessType] = useState("INDIVIDUAL");
+  const [sellingCategories, setSellingCategories] = useState("");
+  const [intendedProducts, setIntendedProducts] = useState("");
+  const [sellerDescription, setSellerDescription] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [sellerLatitude, setSellerLatitude] = useState<number | null>(null);
+  const [sellerLongitude, setSellerLongitude] = useState<number | null>(null);
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [warehouseName, setWarehouseName] = useState("");
@@ -393,10 +407,50 @@ export default function SellerWorkspacePage() {
           <section className="mt-8 max-w-2xl rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_12px_28px_rgba(40,65,84,.11),inset_0_1px_0_white] sm:p-8">
             <h2 className="text-xl font-semibold">{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{translate(locale, "Submit your legal and public business names. Your application will remain pending until reviewed by the marketplace team.", "أدخل الاسم القانوني والاسم التجاري العلني. سيظل طلبك قيد الانتظار حتى يراجعه فريق السوق.")}</p>
-            <form onSubmit={(event) => submit(event, "/api/seller/applications", { legalName, displayName }, "Your seller application has been submitted.")} className="mt-6 grid gap-4">
-              <label className="grid gap-2 text-sm font-medium">{translate(locale, "Legal business name", "الاسم القانوني للنشاط التجاري")}<input required minLength={2} maxLength={160} value={legalName} onChange={(e) => setLegalName(e.target.value)} className="rounded-xl border border-[var(--border)] px-4 py-3 font-normal" /></label>
-              <label className="grid gap-2 text-sm font-medium">{translate(locale, "Storefront display name", "اسم العرض للمتجر")}<input required minLength={2} maxLength={80} value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-xl border border-[var(--border)] px-4 py-3 font-normal" /></label>
-              <button disabled={busy} className="mt-2 rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Submitting…", "جارٍ الإرسال…") : translate(locale, "Submit application", "إرسال الطلب")}</button>
+            <form onSubmit={(event) => {
+              if (sellerLatitude === null || sellerLongitude === null) {
+                event.preventDefault();
+                setError(translate(locale, "Choose your business location on the map.", "حدد موقع نشاطك على الخريطة قبل الإرسال."));
+                return;
+              }
+              void submit(event, "/api/seller/applications", {
+                legalName, displayName, contactName, contactEmail, phoneNumber, residence, businessType,
+                sellingCategories, intendedProducts, description: sellerDescription,
+                facebookUrl, youtubeUrl, twitterUrl, latitude: sellerLatitude, longitude: sellerLongitude
+              }, "Your seller application has been submitted.");
+            }} className="mt-6 grid gap-5">
+              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+                <div><h3 className="font-extrabold text-[#2d4a60]">{translate(locale, "01 · Applicant and business", "01 · بيانات البائع والنشاط")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Your legal identity and public store details.", "بياناتك الشخصية واسم المتجر الذي سيظهر للعملاء.")}</p></div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-1 text-sm">{translate(locale, "Full legal name", "الاسم الكامل كما في الهوية")}<input required minLength={2} maxLength={160} autoComplete="name" value={legalName} onChange={(e) => setLegalName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Store name", "اسم المتجر")}<input required minLength={2} maxLength={80} value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Contact person", "الشخص المسؤول")}<input required minLength={2} maxLength={120} value={contactName} onChange={(e) => setContactName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Contact email", "البريد الإلكتروني للتواصل")}<input required type="email" maxLength={254} autoComplete="email" dir="ltr" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Phone number", "رقم الهاتف")}<input required type="tel" maxLength={25} autoComplete="tel" dir="ltr" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+963 9xx xxx xxx" className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Business type", "نوع النشاط")}<select required value={businessType} onChange={(e) => setBusinessType(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]"><option value="INDIVIDUAL">{translate(locale, "Individual seller", "بائع فردي")}</option><option value="STORE">{translate(locale, "Store or company", "متجر أو شركة")}</option><option value="ARTISAN">{translate(locale, "Artisan / maker", "حرفي أو صانع")}</option><option value="AGENCY">{translate(locale, "Agency / distributor", "وكالة أو موزع")}</option><option value="OTHER">{translate(locale, "Other", "أخرى")}</option></select></label>
+                  <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Business address / residence", "عنوان النشاط أو مكان الإقامة")}<input required minLength={3} maxLength={240} value={residence} onChange={(e) => setResidence(e.target.value)} placeholder={translate(locale, "City, district, street", "المدينة، المنطقة، الشارع")} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                </div>
+              </section>
+              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+                <div><h3 className="font-extrabold text-[#2d4a60]">{translate(locale, "02 · Products and selling plan", "02 · المنتجات وخطة البيع")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Tell us what you plan to offer and where it comes from.", "أخبرنا عن المنتجات التي ستعرضها ومصدرها وخطة توفيرها.")}</p></div>
+                <label className="grid gap-1 text-sm">{translate(locale, "Product categories", "فئات المنتجات")}<input required minLength={2} maxLength={300} value={sellingCategories} onChange={(e) => setSellingCategories(e.target.value)} placeholder={translate(locale, "Fashion, electronics, home, beauty…", "أزياء، إلكترونيات، منزل، تجميل...")} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Products and sales plan (at least 20 characters)", "المنتجات وخطة البيع (20 حرفاً على الأقل)")}<textarea required minLength={20} maxLength={4000} rows={4} value={intendedProducts} onChange={(e) => setIntendedProducts(e.target.value)} placeholder={translate(locale, "Examples, condition, sourcing, expected quantities and supply frequency…", "أمثلة المنتجات، حالتها، مصدرها، الكميات المتوقعة وتواتر التوريد...")} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /><span className="text-xs text-[#718899]">{intendedProducts.length}/4000</span></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "About your business (optional)", "نبذة عن نشاطك (اختياري)")}<textarea maxLength={2000} rows={3} value={sellerDescription} onChange={(e) => setSellerDescription(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+              </section>
+              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+                <div><h3 className="font-extrabold text-[#2d4a60]">{translate(locale, "03 · Business location", "03 · موقع النشاط")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Click or drag the pin to mark your business location.", "انقر على الخريطة أو اسحب الدبوس لتحديد موقع نشاطك بدقة.")}</p></div>
+                <LeafletLocationMap locale={locale} value={sellerLatitude !== null && sellerLongitude !== null ? { latitude: sellerLatitude, longitude: sellerLongitude } : null} onChange={(point) => { setSellerLatitude(point.latitude); setSellerLongitude(point.longitude); }} height={300} />
+                <p className="text-xs text-[#718899]">{sellerLatitude === null || sellerLongitude === null ? translate(locale, "A map location is required.", "تحديد الموقع على الخريطة مطلوب.") : sellerLatitude.toFixed(5) + ", " + sellerLongitude.toFixed(5)}</p>
+              </section>
+              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+                <div><h3 className="font-extrabold text-[#2d4a60]">{translate(locale, "04 · Online presence", "04 · الحضور الرقمي")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Optional links help us understand your business.", "روابط اختيارية تساعدنا على التعرف على نشاطك.")}</p></div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <label className="grid gap-1 text-sm">Facebook<input type="url" maxLength={2048} dir="ltr" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/…" className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">YouTube<input type="url" maxLength={2048} dir="ltr" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="https://youtube.com/…" className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">X<input type="url" maxLength={2048} dir="ltr" value={twitterUrl} onChange={(e) => setTwitterUrl(e.target.value)} placeholder="https://x.com/…" className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                </div>
+              </section>
+              <button disabled={busy} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#68b4b5,#3d8993)] px-5 py-3 text-sm font-extrabold text-white shadow-[0_9px_20px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] disabled:opacity-50">{busy ? translate(locale, "Submitting…", "جارٍ الإرسال…") : translate(locale, "Submit application", "إرسال الطلب للمراجعة")}</button>
             </form>
           </section>
         ) : (
