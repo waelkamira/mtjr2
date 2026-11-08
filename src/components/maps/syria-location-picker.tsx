@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import LeafletLocationMap from "@/components/maps/leaflet-location-map";
 import { translate, type Locale } from "@/lib/locale";
 
@@ -55,6 +55,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [focus, setFocus] = useState<{ latitude: number; longitude: number; zoom: number } | null>(null);
+  const selectionRequest = useRef(0);
   const labels = useMemo(() => ({
     governorate: translate(locale, "Governorate", "المحافظة"),
     district: translate(locale, "District", "المنطقة"),
@@ -76,16 +77,25 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }, []);
 
   useEffect(() => {
-    if (!governorateId || value.latitude === undefined || value.longitude === undefined) return;
+    const searchPoint = focus ?? (
+      value.latitude !== undefined && value.longitude !== undefined
+        ? { latitude: value.latitude, longitude: value.longitude, zoom: 14 }
+        : null
+    );
+    if (!governorateId || !searchPoint) {
+      setNeighborhoodSuggestions([]);
+      return;
+    }
     let active = true;
+    const radiusKm = searchPoint.zoom <= 7 ? "30" : searchPoint.zoom <= 10 ? "18" : searchPoint.zoom <= 12 ? "10" : "5";
     const query = new URLSearchParams({
       governorateId,
-      nearLat: String(value.latitude),
-      nearLng: String(value.longitude),
-      radiusKm: "15",
+      nearLat: String(searchPoint.latitude),
+      nearLng: String(searchPoint.longitude),
+      radiusKm,
       limit: "100"
     });
-    fetch(`/api/geography/neighborhoods?${query.toString()}`, { cache: "force-cache" })
+    fetch(`/api/geography/neighborhoods?${query.toString()}`, { cache: "no-store" })
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error ?? "Unable to load neighbourhood suggestions.");
@@ -94,35 +104,38 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       .then((result) => { if (active) setNeighborhoodSuggestions(result.items); })
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load neighbourhood suggestions."); });
     return () => { active = false; };
-  }, [governorateId, value.latitude, value.longitude]);
+  }, [governorateId, focus, value.latitude, value.longitude]);
 
   async function chooseGovernorate(id: string) {
+    const request = ++selectionRequest.current;
     setGovernorateId(id); setDistrictId(""); setSubdistrictId(""); setDistricts([]); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     onChange({});
     const item = governorates.find((entry) => entry.id === id);
-    if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 });
+    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 });
     setError("");
     if (!id) return;
     setBusy(true);
-    try { setDistricts((await loadLevel("districts", { governorateId: id })).items); }
+    try { const result = await loadLevel("districts", { governorateId: id }); if (request === selectionRequest.current) setDistricts(result.items); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load districts."); }
     finally { setBusy(false); }
   }
 
   async function chooseDistrict(id: string) {
+    const request = ++selectionRequest.current;
     setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     const item = districts.find((entry) => entry.id === id);
     onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
-    if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 9 });
+    if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 9 });
     setError("");
     if (!id) return;
     setBusy(true);
-    try { setSubdistricts((await loadLevel("subdistricts", { districtId: id })).items); }
+    try { const result = await loadLevel("subdistricts", { districtId: id }); if (request === selectionRequest.current) setSubdistricts(result.items); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load subdistricts."); }
     finally { setBusy(false); }
   }
 
   async function chooseSubdistrict(id: string) {
+    const request = ++selectionRequest.current;
     setSubdistrictId(id); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
     const item = subdistricts.find((entry) => entry.id === id);
     onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
@@ -130,7 +143,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setError("");
     if (!id) return;
     setBusy(true);
-    try { setLocalities((await loadLevel("localities", { districtId, subdistrictId: id, limit: "100" })).items); }
+    try { const result = await loadLevel("localities", { districtId, subdistrictId: id, limit: "100" }); if (request === selectionRequest.current) setLocalities(result.items); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load localities."); }
     finally { setBusy(false); }
   }
@@ -152,11 +165,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
     onChange({
       city: item ? (item.nameAr || item.nameEn) : undefined,
-      district: selectedSubdistrict ? (selectedSubdistrict.nameAr || selectedSubdistrict.nameEn) : selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined,
+      district: selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined,
       localityId: id || undefined,
       ...(hasCoordinates ? { latitude: item!.latitude!, longitude: item!.longitude! } : {})
     });
-    if (hasCoordinates) setFocus({ latitude: item!.latitude!, longitude: item!.longitude!, zoom: 14 });
+    if (hasCoordinates) setFocus({ latitude: item!.latitude!, longitude: item!.longitude!, zoom: 15 });
   }
 
   function updateCoordinates(coords: { latitude: number; longitude: number }) {
