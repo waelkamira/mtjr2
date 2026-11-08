@@ -2674,3 +2674,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added focused product lifecycle tests for real-estate validation, structured metadata persistence, and draft updates.
 - Verification status at this entry: source and migration changes are committed to the integration branch; CI/typecheck/Prisma validation have not yet run on this branch. No claim of passing tests is made until the exact-head workflow completes.
 - No production database, Vercel deployment, or production configuration was changed.
+
+
+## 2026-11-08 — PR #69 seller operations, analytics, shipping and advertising extraction
+
+- Ported the seller workspace's order/inventory analytics and charts while retaining current seller APIs and the existing one-store-per-seller enforcement.
+- Added reusable chart primitives and eight additional Super Admin analytics views using already-returned dashboard metrics and daily order counts; deliberately avoided the PR #69 backend approach that would add twenty extra database queries to each dashboard request.
+- Added store-scoped shipping-rate editing through a new PATCH endpoint. The service verifies seller/store ownership or scoped permission, validates enabled market/currency, checks the rate belongs to the same store, and writes an audit event. Permission failures map to 403 rather than relying on message matching.
+- Added route and service tests for shipping-rate updates, including unauthorized and cross-store cases.
+- Improved seller advertising setup: budgets are entered in human-readable major currency units and converted with the selected currency's minor-unit precision; positive budget checks are enforced client-side. Added category/brand targeting controls with server-side product/category/brand consistency checks.
+- Extended sponsored campaign delivery to accept multiple category IDs (deduplicated and capped at 20) while preserving the existing single-category input for compatibility; added a focused targeting test.
+- Rechecked PR #69's remaining identity/MFA, one-store safeguard, geography, image-gallery, and core advertising work against current `main`; these foundations are already present, so they were not duplicated.
+- Verification status: Prisma validation and migration deployment passed on an earlier integration head. The exact current head must pass typecheck, lint, tests, build, browser E2E, and PostgreSQL integration before merge. No production database or deployment was changed.
