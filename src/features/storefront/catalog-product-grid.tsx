@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SponsoredProductCard from "@/features/storefront/sponsored-product-card";
 import { type Locale, translate } from "@/lib/locale";
+import { formatMinorUnits } from "@/lib/money";
 
 type Product = {
   id: string; slug: string; name: string; description: string | null;
