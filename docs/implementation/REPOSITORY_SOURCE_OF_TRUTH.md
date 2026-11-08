@@ -5,7 +5,29 @@
 **Canonical branch:** `main`  
 **Canonical Prisma schema:** `prisma/schema.prisma`
 
+# Repository source of truth and consolidation status
+
+**Audit date:** 2026-11-05  
+**Audited baseline:** `main` at `5f5d1da7d8fd8d6c7ea4f1981ef39acf9de578d3`  
+**Canonical branch:** `main`  
+**Canonical Prisma schema:** `prisma/schema.prisma`
+
+## 2026-11-08 — Latest consolidation update
+
+The earlier audit below is historical. The PR #69 seller/catalog follow-up has now been resolved:
+
+- PR [#69](https://github.com/waelkamira/mtjr2/pull/69) is **closed, not merged**. Its stale 336-commit branch was deliberately not merged wholesale.
+- PR [#76](https://github.com/waelkamira/mtjr2/pull/76) extracted the remaining compatible work onto current `main` and was **squash-merged** as `c914cc6d2172f1c88e97b220ac9a59094e915d5c`.
+- Exact source head `ee8471143155349a870d0a9976785f7e23eb95c7` passed all three workflows: CI run `42471523233`, Platform PostgreSQL Integration run `42471523223`, and Browser E2E run `42471523220`.
+- The successful checks covered Prisma validation/migration deployment/generation, TypeScript, ESLint, unit tests, production build, PostgreSQL integration and repeatable demo seed, browser Playwright journeys, API security inventory, and UI mutation-feedback inventory.
+- The merged commit is present in `main`; comparison reports `main` one commit ahead and zero behind that merge commit.
+- PR #70 is also merged and remains the canonical Syrian geography, Leaflet, and category-attribute implementation. PR #76 reuses it rather than duplicating it.
+- No production database was migrated and no Vercel deployment was initiated.
+
+**Disposition:** PR #69 integration is complete. Do not reopen or re-merge its stale branch. Continue new work from the latest `main` only.
+
 ## Non-negotiable repository rule
+
 
 `main` is the only canonical source of truth. Feature, fix, rebuild, integration, and documentation branches are work areas only; their existence, age, or apparent commit count does not establish that their changes are missing from `main`.
 
