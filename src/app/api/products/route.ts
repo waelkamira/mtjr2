@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/current-session";
 import { createDraftProduct } from "@/server/catalog/products";
 import { listDiscoverableProducts } from "@/server/catalog/discovery";
 import { enforcePublicSearchBudget } from "@/server/search/search-request";
@@ -22,7 +22,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(product, { status: 201 });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
-    if (error instanceof Error && /catalog access/i.test(error.message)) return Response.json({ error: "Product catalog access denied." }, { status: 403 });
+    if (error instanceof PermissionDeniedError) return Response.json({ error: "Product catalog access denied." }, { status: 403 });
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid product input.", issues: error.issues }, { status: 400 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to create product." }, { status: 400 });
   }
