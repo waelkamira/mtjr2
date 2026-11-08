@@ -300,6 +300,10 @@
 
 ## 2026-11-03 — Committed identity migration and repeatable baseline seed
 
+
+- Completed the Akaar category comparison across its 22 listing categories. Added shared category field presets for real estate, cars, phones, computers, electronics, furniture, kitchen, fashion, beauty, sports, games, tools, books, gifts, agriculture, bikes, health, shoes, bags, jewelry, baby supplies, and jobs. Preset values are mandatory in both the form and the server-side product creation service; sellers can still append extra custom fields.
+- Matched Akaar's required core listing fields by requiring category, description, city, district/area, and a contact phone. Added optional video link, initial stock, barcode and variant weight in grams. Real-estate listings retain Matjar's structured property details and map-pin requirement.
+
 **Migration**
 - Generated the initial migration from the canonical `prisma/schema.prisma` using the pinned Prisma 6.19.0 CLI.
 - Reviewed the generated SQL structure: three PostgreSQL enums, 13 tables, primary/unique/index definitions, and foreign-key constraints for the identity/access foundation.
