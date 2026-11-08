@@ -683,9 +683,9 @@ export default function SellerProductsPage() {
             <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => { const price = marketPrices[market.id]; if (!/^(0|[1-9][0-9]{0,17})$/.test(price?.amountMinor ?? "")) return true; if (!price?.compareAtMinor) return false; return !/^(0|[1-9][0-9]{0,17})$/.test(price.compareAtMinor) || BigInt(price.compareAtMinor) < BigInt(price.amountMinor); })} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#68b4b5,#3d8993)] px-5 py-3 text-sm font-extrabold text-white shadow-[0_9px_20px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
-        <section className="rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_14px_30px_rgba(40,65,84,.12),inset_0_1px_0_white] sm:p-7">
+        <section className="rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-6 shadow-[0_16px_32px_rgba(35,62,81,.14),inset_0_2px_0_white,inset_0_-2px_7px_rgba(48,76,94,.05)] sm:p-7">
           <h2 className="text-xl font-extrabold tracking-tight text-[#2d4a60]">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
-          {!loading && products.length > 0 && <section aria-label="Seller catalog analytics" className="mt-5 grid gap-4 md:grid-cols-2">
+          {!loading && products.length > 0 && <section aria-label="Seller catalog analytics" className="mt-5 grid gap-4 sm:grid-cols-2">
             <MetricBarChart title="Product approval pipeline" description="Counts reflect the currently loaded product list and active search." rows={Object.entries(approvalCounts).map(([status, count], index) => ({
               label: status.replaceAll("_", " ").toLowerCase(),
               value: count,
@@ -729,7 +729,7 @@ export default function SellerProductsPage() {
               </div>
             </fieldset>}
             <SyriaLocationPicker locale={locale} value={editProductLocation} onChange={setEditProductLocation} />
-            <section className="grid gap-3 rounded-xl border border-[var(--border)] p-3" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
+            <section className="grid gap-3 rounded-2xl border border-white/80 bg-[linear-gradient(145deg,#edf5f7,#dbe8ec)] p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(43,69,88,.06)]" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div><h4 className="text-sm font-semibold">{translate(locale, "Product image gallery", "معرض صور المنتج")}</h4><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Preview, remove, replace and reorder up to 10 images. The first image is the cover.", "عاين الصور واحذفها واستبدلها ورتبها. الصورة الأولى هي الغلاف، بحد أقصى ١٠ صور.")}</p></div>
                 <label className="cursor-pointer rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">
