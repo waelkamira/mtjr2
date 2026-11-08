@@ -17,7 +17,8 @@ const rateInput = z.object({
   destinationRegion: z.string().trim().max(120).optional().nullable(),
   minDeliveryDays: z.number().int().min(0).max(365).optional().nullable(),
   maxDeliveryDays: z.number().int().min(0).max(365).optional().nullable(),
-  priority: z.number().int().min(0).max(10000).default(0)
+  priority: z.number().int().min(0).max(10000).default(0),
+  isActive: z.boolean().optional()
 }).strict().superRefine((value, ctx) => {
   if (value.minDeliveryDays != null && value.maxDeliveryDays != null && value.maxDeliveryDays < value.minDeliveryDays) {
     ctx.addIssue({ code: "custom", path: ["maxDeliveryDays"], message: "Maximum delivery days must not be less than minimum." });
@@ -56,7 +57,7 @@ export async function createStoreShippingRate(input: unknown, now = new Date()) 
     if (!market) throw new Error("The store must be enabled for this active market and currency.");
     const rate = await tx.storeShippingRate.create({
       data: {
-        ...data, description: data.description || null,
+        ...data, isActive: data.isActive ?? true, description: data.description || null,
         destinationRegion: data.destinationRegion?.trim() || null,
         minDeliveryDays: data.minDeliveryDays ?? null,
         maxDeliveryDays: data.maxDeliveryDays ?? null
@@ -92,7 +93,7 @@ export async function updateStoreShippingRate(rateId: string, input: unknown, no
       }, select: { id: true }
     });
     if (!market) throw new Error("The store must be enabled for this active market and currency.");
-    const current = await tx.storeShippingRate.findFirst({ where: { id, storeId: store.id }, select: { id: true } });
+    const current = await tx.storeShippingRate.findFirst({ where: { id, storeId: store.id }, select: { id: true, isActive: true } });
     if (!current) throw new Error("Shipping service was not found for this store.");
     const rate = await tx.storeShippingRate.update({
       where: { id },
@@ -101,7 +102,7 @@ export async function updateStoreShippingRate(rateId: string, input: unknown, no
         description: data.description || null, amountMinor: data.amountMinor,
         destinationRegion: data.destinationRegion?.trim() || null,
         minDeliveryDays: data.minDeliveryDays ?? null, maxDeliveryDays: data.maxDeliveryDays ?? null,
-        priority: data.priority
+        priority: data.priority, isActive: data.isActive ?? current.isActive
       },
       select: { id: true, storeId: true, marketId: true, currencyCode: true, name: true, description: true, amountMinor: true, destinationRegion: true, minDeliveryDays: true, maxDeliveryDays: true, isActive: true, priority: true }
     });
