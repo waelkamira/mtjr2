@@ -6,6 +6,7 @@ import { AlertTriangle, Boxes, ClipboardList, PackagePlus } from "lucide-react";
 import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { toMinorUnits } from "@/lib/money";
 import {
   type ChartDatum,
   HorizontalBarChart,
@@ -442,7 +443,7 @@ export default function SellerWorkspacePage() {
                             body: JSON.stringify({
                               storeId: selectedStore.id, marketId: market.market.id, currencyCode: market.market.defaultCurrencyCode,
                               name: shippingName, description: shippingDescription || null,
-                              amountMinor: (() => { const minorUnit = markets.find((item) => item.id === market.market.id)?.defaultCurrency.minorUnit ?? 2; const amount = Number(shippingAmount); if (!Number.isFinite(amount) || amount < 0 || !Number.isSafeInteger(Math.round(amount * (10 ** minorUnit)))) throw new Error("Enter a valid shipping amount."); return String(Math.round(amount * (10 ** minorUnit))); })(),
+                              amountMinor: toMinorUnits(shippingAmount, markets.find((item) => item.id === market.market.id)?.defaultCurrency.minorUnit ?? 2),
                               destinationRegion: shippingRegion || null,
                               minDeliveryDays: shippingMinDays ? Number(shippingMinDays) : null,
                               maxDeliveryDays: shippingMaxDays ? Number(shippingMaxDays) : null
