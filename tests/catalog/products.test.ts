@@ -19,11 +19,16 @@ const mocks = vi.hoisted(() => ({
   categoryDeleteMany: vi.fn(),
   categoryCreateMany: vi.fn(),
   productUpdateMany: vi.fn(),
+  productMediaFindMany: vi.fn(),
+  productMediaDeleteMany: vi.fn(),
+  productMediaCreateMany: vi.fn(),
+  deleteProductImage: vi.fn(),
   auditCreate: vi.fn(),
   transaction: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/server/media/product-image-deletion", () => ({ deleteProductImage: mocks.deleteProductImage }));
 vi.mock("@/server/identity/permission-guard", () => ({ requirePermission: mocks.requirePermission }));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
 vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission, userHasPermission: mocks.userHasPermission }));
@@ -54,6 +59,8 @@ describe("product lifecycle", () => {
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.productMediaFindMany.mockResolvedValue([]);
+    mocks.deleteProductImage.mockResolvedValue("deleted");
     mocks.auditCreate.mockResolvedValue({});
     mocks.transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       store: { findUnique: mocks.storeFindUnique },
@@ -64,6 +71,7 @@ describe("product lifecycle", () => {
       syriaNeighborhood: { findUnique: mocks.neighborhoodFindUnique },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
+      productMedia: { findMany: mocks.productMediaFindMany, deleteMany: mocks.productMediaDeleteMany, createMany: mocks.productMediaCreateMany },
       product: {
         create: mocks.productCreate,
         findUnique: mocks.productFindUniqueTx,
@@ -280,6 +288,46 @@ describe("product lifecycle", () => {
     expect(mocks.categoryDeleteMany).toHaveBeenCalledOnce();
     expect(mocks.categoryCreateMany).toHaveBeenCalledOnce();
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("replaces draft product images and deletes removed provider assets after commit", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT",
+      store: { seller: { ownerId: "seller-1" } }
+    });
+    mocks.productMediaFindMany.mockResolvedValue([
+      { storageKey: "imgur:old-delete-hash" },
+      { storageKey: "imagekit:retained-file" }
+    ]);
+
+    await updateDraftProduct("product-1", {
+      media: [{
+        url: "https://ik.imagekit.io/demo/new.jpg",
+        storageKey: "imagekit:retained-file",
+        mimeType: "image/jpeg",
+        sortOrder: 0,
+        isPrimary: true
+      }]
+    });
+
+    expect(mocks.productMediaDeleteMany).toHaveBeenCalledWith({
+      where: { productId: "product-1", type: "IMAGE" }
+    });
+    expect(mocks.productMediaCreateMany).toHaveBeenCalledOnce();
+    expect(mocks.deleteProductImage).toHaveBeenCalledOnce();
+    expect(mocks.deleteProductImage).toHaveBeenCalledWith("imgur:old-delete-hash");
+  });
+
+  it("does not delete provider images when the product update transaction fails", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT",
+      store: { seller: { ownerId: "seller-1" } }
+    });
+    mocks.productMediaFindMany.mockResolvedValue([{ storageKey: "imgur:old-delete-hash" }]);
+    mocks.transaction.mockRejectedValueOnce(new Error("database transaction failed"));
+
+    await expect(updateDraftProduct("product-1", { media: [] })).rejects.toThrow(/database transaction failed/i);
+    expect(mocks.deleteProductImage).not.toHaveBeenCalled();
   });
 
   it("rejects a pending draft with a required reason and audit event", async () => {
