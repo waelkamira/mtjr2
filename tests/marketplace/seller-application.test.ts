@@ -108,7 +108,7 @@ describe("marketplace seller lifecycle", () => {
 
     await expect(createSellerStore({
       name: "Second shop", slug: "second-shop", marketIds: ["market-1"]
-    })).rejects.toThrow(/only own one store/i);
+    })).rejects.toThrow(/own only one store/i);
     expect(storeCreate).not.toHaveBeenCalled();
     expect(marketFindMany).not.toHaveBeenCalled();
   });
