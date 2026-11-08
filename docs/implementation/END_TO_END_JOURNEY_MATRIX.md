@@ -298,3 +298,16 @@ Next audit work must start by updating the individual 49 ledger rows against the
 - The verified expected terminal state is `PENDING_PAYMENT`; the UI explicitly communicates that payment is pending. This journey is not evidence of a captured payment or seller fulfillment eligibility.
 - The exact PR #78 source head passed Browser E2E [42489548167](https://github.com/waelkamira/mtjr2/actions/runs/42489548167), alongside disposable PostgreSQL [42489548337](https://github.com/waelkamira/mtjr2/actions/runs/42489548337) and General CI [42489542922](https://github.com/waelkamira/mtjr2/actions/runs/42489542922), with the follow-up test correction also passing in [42489548427](https://github.com/waelkamira/mtjr2/actions/runs/42489548427).
 - Payment provider onboarding, actual charge/webhook, external refund execution, settlement reconciliation, and carrier integrations remain conditional on owner-approved market/currency/provider/merchant decisions.
+
+
+## Customer saved-address lifecycle — implementation update 2026-11-08
+
+| Actor action | UI → API | Authorization and domain | Persistence / final outcome | Failure behavior |
+|---|---|---|---|---|
+| List saved addresses | `/account/addresses` → `GET /api/account/addresses` | Current authenticated session; server derives owner | Only the session user's UserAddress rows are returned with flattened active country data | Anonymous 401; private response is no-store |
+| Create address | Address form → `POST /api/account/addresses` | Same-origin JSON guard; server derives owner; selected country must be active | Serializable transaction + per-user advisory lock; first address becomes default; explicitly selected default replaces previous default | Invalid payload/country rejected; no partial default change |
+| Edit address | Edit form → `PATCH /api/account/addresses/[addressId]` | Same-origin JSON guard; query is scoped by address ID and session user ID | Serializable transaction; country, address fields and optional default change commit together | Foreign/missing address returns 404; invalid payload 400 |
+| Change default | Address card → same PATCH endpoint with current address snapshot and `isDefault: true` | Same owner check; no client-supplied user ID | Per-user advisory lock clears the previous default and sets the selected address atomically | Missing address 404; failed/concurrent update returns conflict |
+| Delete address | Address card → `DELETE /api/account/addresses/[addressId]` | Same-origin JSON guard; server derives owner | Deletes only the owned row; checkout quote snapshots retain their copied address and nullable source relation; newest remaining address becomes default when needed | Missing/foreign address 404; transaction rolls back if promotion fails |
+
+The address book does not expose another user's records. No Prisma migration was required: the existing `UserAddress` and `CheckoutQuoteAddress` relation already preserves immutable checkout snapshots and sets the optional source-address reference to null on deletion. Verification remains tied to PR #79 exact-head General CI, PostgreSQL and Browser E2E; do not claim browser coverage of these new controls unless a dedicated browser journey is added.

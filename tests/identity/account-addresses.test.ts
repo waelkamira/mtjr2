@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prismaMock, txMock, sessionMock } = vi.hoisted(() => {
   const tx = {
+    $queryRaw: vi.fn(),
     country: { findFirst: vi.fn() },
-    userAddress: { findFirst: vi.fn(), updateMany: vi.fn(), create: vi.fn() }
+    userAddress: { findFirst: vi.fn(), updateMany: vi.fn(), create: vi.fn(), deleteMany: vi.fn() }
   };
   return {
     txMock: tx,
@@ -20,7 +21,7 @@ vi.mock("@/server/identity/current-session", () => ({
   requireCurrentSession: sessionMock.requireCurrentSession
 }));
 
-import { createUserAddress, listUserAddresses } from "../../src/server/account/addresses";
+import { createUserAddress, deleteUserAddress, listUserAddresses, updateUserAddress } from "../../src/server/account/addresses";
 
 const savedAddress = {
   id: "address-1",
@@ -87,4 +88,61 @@ describe("customer address API data contract", () => {
     }));
     expect(address).toMatchObject({ countryCode: "FR", countryName: "France" });
   });
+  it("updates only an address owned by the session user and atomically makes it default", async () => {
+    txMock.userAddress.findFirst
+      .mockResolvedValueOnce({ id: "address-1", isDefault: false })
+      .mockResolvedValueOnce(savedAddress);
+    txMock.country.findFirst.mockResolvedValue({ id: "country-1", iso2: "FR", name: "France" });
+    txMock.userAddress.updateMany.mockResolvedValue({ count: 1 });
+
+    const address = await updateUserAddress("address-1", {
+      countryCode: "FR", recipientName: "Buyer Person", phone: "+33612345678",
+      line1: "2 Rue de Rivoli", city: "Paris", isDefault: true
+    });
+
+    expect(txMock.$queryRaw).toHaveBeenCalledOnce();
+    expect(txMock.userAddress.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { userId: "buyer-1", isDefault: true }, data: { isDefault: false }
+    });
+    expect(txMock.userAddress.updateMany).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      where: { id: "address-1", userId: "buyer-1" },
+      data: expect.objectContaining({ line1: "2 Rue de Rivoli", isDefault: true })
+    }));
+    expect(address).toMatchObject({ countryCode: "FR", countryName: "France" });
+  });
+
+  it("does not reveal or mutate another user's address", async () => {
+    txMock.userAddress.findFirst.mockResolvedValue(null);
+    await expect(updateUserAddress("someone-elses-address", {
+      countryCode: "FR", recipientName: "Buyer Person", phone: "+33612345678",
+      line1: "2 Rue de Rivoli", city: "Paris"
+    })).rejects.toThrow("Saved address not found.");
+    expect(txMock.userAddress.updateMany).not.toHaveBeenCalled();
+    expect(txMock.userAddress.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("promotes the newest remaining address when the default is deleted", async () => {
+    txMock.userAddress.findFirst
+      .mockResolvedValueOnce({ id: "address-1", isDefault: true })
+      .mockResolvedValueOnce({ id: "address-2" });
+    txMock.userAddress.deleteMany.mockResolvedValue({ count: 1 });
+    txMock.userAddress.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(deleteUserAddress("address-1")).resolves.toEqual({
+      deleted: true, defaultAddressId: "address-2"
+    });
+    expect(txMock.userAddress.deleteMany).toHaveBeenCalledWith({
+      where: { id: "address-1", userId: "buyer-1" }
+    });
+    expect(txMock.userAddress.updateMany).toHaveBeenCalledWith({
+      where: { id: "address-2", userId: "buyer-1" }, data: { isDefault: true }
+    });
+  });
+
+  it("does not delete an address that is not owned by the current user", async () => {
+    txMock.userAddress.findFirst.mockResolvedValue(null);
+    await expect(deleteUserAddress("foreign-address")).rejects.toThrow("Saved address not found.");
+    expect(txMock.userAddress.deleteMany).not.toHaveBeenCalled();
+  });
+
 });
