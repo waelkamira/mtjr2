@@ -48,7 +48,7 @@ describe("product lifecycle", () => {
     });
     mocks.brandFindFirst.mockResolvedValue({ id: "brand-1" });
     mocks.categoryCount.mockResolvedValue(1);
-    mocks.categoryFindMany.mockResolvedValue([{ slug: "phones-electronics" }]);
+    mocks.categoryFindMany.mockResolvedValue([{ slug: "general" }]);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
@@ -221,6 +221,7 @@ describe("product lifecycle", () => {
 
   it("updates draft metadata and resets review status for a fresh review", async () => {
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
+    mocks.categoryFindMany.mockResolvedValue([{ slug: "general" }]);
     const result = await updateDraftProduct("product-1", { name: "Updated mug", categoryIds: ["category-1"] });
     expect(result.approvalStatus).toBe("PENDING");
     expect(mocks.productUpdateMany).toHaveBeenCalledOnce();
@@ -234,7 +235,7 @@ describe("product lifecycle", () => {
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
     await updateDraftProduct("product-1", {
       city: "Damascus", district: "Central", contactPhone: "+963900000000",
-      videoUrl: "https://video.example/item", customFields: { model: "X1" },
+      videoUrl: "https://video.example/item", customFields: { model: "X1" }, categoryIds: ["category-1"],
       mapLocation: { latitude: 33.5, longitude: 36.2 },
       propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" }
     });
