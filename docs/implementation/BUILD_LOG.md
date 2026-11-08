@@ -2609,3 +2609,8 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - The draft editor now starts its save merge from the product's original JSON object and overlays only the visible scalar fields. This prevents legacy nested custom-field values from being discarded when the editor saves unrelated product changes.
 - Clearing a visible scalar field explicitly removes only that key; nested/unrendered legacy values remain intact.
 - Added a focused regression test for nested JSON preservation, scalar update, and intentional scalar clearing. Test execution remains pending.
+
+**Optional legacy fields**
+- Existing category-preset fields remain required to match server validation, while additional legacy/custom fields are now optional in the draft editor.
+- Sellers can intentionally clear an optional legacy field without being blocked by HTML form validation; the merge removes only that scalar key and retains unrelated nested JSON.
+- Added assertions for required preset fields versus optional legacy fields. Execution is still pending.
