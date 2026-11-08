@@ -330,7 +330,7 @@ export default function SellerProductsPage() {
     }
     setUploading(true); setError("");
     try {
-      const additions: Product["media"][] = [];
+      const additions: Product["media"][number][] = [];
       for (const file of files.slice(0, available)) {
         if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
           throw new Error(translate(locale, "Use JPEG, PNG, or WebP images no larger than 8 MB.", "استخدم صور JPEG أو PNG أو WebP بحجم لا يتجاوز 8 ميغابايت."));
