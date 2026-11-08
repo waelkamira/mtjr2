@@ -2447,3 +2447,26 @@ model SyriaNeighborhood {
   @@index([governorateId, verificationStatus, cityGroupNameAr])
   @@index([governorateId, nameAr])
 }
+
+model ProductMapLocation {
+  productId       String   @id
+  latitude        Float
+  longitude       Float
+  publicLatitude  Float
+  publicLongitude Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductPropertyDetails {
+  productId    String              @id
+  propertyType PropertyType
+  listingType  PropertyListingType
+  bedrooms     Int?
+  bathrooms    Int?
+  floorArea    Decimal             @db.Decimal(12, 2)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  product      Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
