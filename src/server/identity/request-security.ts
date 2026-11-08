@@ -33,7 +33,7 @@ export function validateIdentityMutationRequest(request: Request): Response | nu
   const originRejected = validateIdentityMutationOrigin(request);
   if (originRejected) return originRejected;
   const contentType = request.headers.get("content-type") ?? "";
-  if (!/^application\\/json(?:\\s*;|$)/i.test(contentType)) {
+  if (!/^application\/json(?:\s*;|$)/i.test(contentType)) {
     return Response.json({ error: "Content-Type must be application/json." }, { status: 415 });
   }
   return null;
@@ -44,7 +44,7 @@ export function validateIdentityImageUploadRequest(request: Request): Response |
   const originRejected = validateIdentityMutationOrigin(request);
   if (originRejected) return originRejected;
   const contentType = request.headers.get("content-type") ?? "";
-  if (!/^multipart\\/form-data\\s*;/i.test(contentType)) {
+  if (!/^multipart\/form-data\s*;/i.test(contentType)) {
     return Response.json({ error: "Content-Type must be multipart/form-data." }, { status: 415 });
   }
   return null;
