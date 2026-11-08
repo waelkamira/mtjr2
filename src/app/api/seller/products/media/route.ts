@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AuthenticationRequiredError, requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
-import { validateIdentityImageUploadRequest } from "@/server/identity/request-security";
+import { validateIdentityImageUploadRequest, validateIdentityMutationOrigin } from "@/server/identity/request-security";
 import { prisma } from "@/lib/db/prisma";
 import { getNextImgurClientId } from "@/server/media/imgur-client-manager";
 
@@ -97,8 +97,10 @@ async function uploadToCloudinary(file: File) {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const rejected = validateIdentityImageUploadRequest(request);
-  if (rejected) return rejected;
+  // Reject cross-origin requests before authentication, but defer content-type
+  // details until after authentication so anonymous probes receive 401/403.
+  const originRejected = validateIdentityMutationOrigin(request);
+  if (originRejected) return originRejected;
 
   let actor: Awaited<ReturnType<typeof requireCurrentSession>>;
   try {
@@ -107,6 +109,9 @@ export async function POST(request: Request): Promise<Response> {
     if (error instanceof AuthenticationRequiredError) return jsonError("Authentication required.", 401);
     return jsonError("Unable to verify the current session.", 401);
   }
+
+  const contentTypeRejected = validateIdentityImageUploadRequest(request);
+  if (contentTypeRejected) return contentTypeRejected;
 
   let form: FormData;
   try { form = await request.formData(); } catch { return jsonError("A multipart form upload is required.", 400); }
