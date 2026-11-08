@@ -40,6 +40,21 @@ function flatten(items: Category[], prefix = ""): Array<{ id: string; slug: stri
   ]);
 }
 
+function parseJsonObjectInput(value: string, label: string, required = false): Record<string, unknown> | null {
+  const trimmed = value.trim();
+  if (!trimmed) return required ? {} : null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    throw new Error(`${label} must contain valid JSON.`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`${label} must be a JSON object.`);
+  }
+  return parsed as Record<string, unknown>;
+}
+
 export default function SellerProductsPage() {
   const { locale } = useLocale();
   const [stores, setStores] = useState<Store[]>([]);
@@ -310,6 +325,9 @@ export default function SellerProductsPage() {
     if (!editingId) return;
     setBusy(true); setError(""); setMessage("");
     try {
+      const customFields = parseJsonObjectInput(editCustomFields, translate(locale, "Category fields", "حقول الفئة"), true) ?? {};
+      const mapLocation = parseJsonObjectInput(editMapLocation, translate(locale, "Map location", "موقع الخريطة"));
+      const propertyDetails = parseJsonObjectInput(editPropertyDetails, translate(locale, "Property details", "تفاصيل العقار"));
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -317,9 +335,7 @@ export default function SellerProductsPage() {
           city: editCity || null, district: editDistrict || null,
           contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
           brandId: editBrandId || null, categoryIds: editCategoryIds,
-          customFields: JSON.parse(editCustomFields),
-          mapLocation: editMapLocation.trim() ? JSON.parse(editMapLocation) : null,
-          propertyDetails: editPropertyDetails.trim() ? JSON.parse(editPropertyDetails) : null
+          customFields, mapLocation, propertyDetails
         })
       }));
       setEditingId("");
