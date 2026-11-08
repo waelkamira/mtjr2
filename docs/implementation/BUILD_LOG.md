@@ -2993,3 +2993,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Re-fetched the edited files from `main` after commits and confirmed the shared shell is present and duplicate page-level sidebars are removed.
 - GitHub reports the Vercel status as failed due to the account build-rate limit; no GitHub Actions workflow run is associated with the latest commits.
 - No local Node/package runtime or authenticated browser session is available here, so TypeScript, lint, production build, database integration and responsive screenshot checks are not claimed as passed.
+
+
+## 2026-11-09 — Seller store context continuity
+
+- Inventory, shipping, advertising and staff now restore the previously selected store from `mtjr.activeStoreId` when that store is still available, otherwise they fall back to a valid store.
+- Store changes in these sections update the same shared preference used by the dashboard, product catalog and seller inbox.
+- This avoids different seller sections silently operating on different default stores after navigation.
+- Commits: `b87e18867efd2d10ac9b7ffbf2c18e739e55ae56`, `20c540aec6eae26e628aeac0afff0f709c58dc67`, `d8cf0ed10c76e6907ed0a2777f15d14f1e459e42`, `c52baac9e2c895b563ee83531acede05fc2d6507`.
