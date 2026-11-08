@@ -31,6 +31,11 @@ describe("parseEnvironment", () => {
     expect(parsed.APP_URL).toBe(validEnvironment.APP_URL);
   });
 
+  it("treats an empty optional cron secret as unconfigured", () => {
+    const parsed = parseEnvironment({ ...validEnvironment, CRON_SECRET: "" });
+    expect(parsed.CRON_SECRET).toBeUndefined();
+  });
+
   it("derives APP_URL from the Vercel preview hostname when no explicit URL is set", () => {
     const { APP_URL, ...withoutAppUrl } = validEnvironment;
     const parsed = parseEnvironment({ ...withoutAppUrl, VERCEL_ENV: "preview", VERCEL_URL: "mtjr2-preview.example.vercel.app" });
