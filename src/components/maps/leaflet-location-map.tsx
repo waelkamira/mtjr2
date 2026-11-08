@@ -41,11 +41,11 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
   const markerRef = useRef<LeafletMarker | null>(null);
   const onChangeRef = useRef(onChange);
   const locationRef = useRef({ value, focus });
-  locationRef.current = { value, focus };
   const [leaflet, setLeaflet] = useState<LeafletApi | null>(null);
   const [mapError, setMapError] = useState("");
 
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+  useEffect(() => { locationRef.current = { value, focus }; }, [value, focus]);
 
   useEffect(() => {
     let active = true;
