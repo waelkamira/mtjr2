@@ -434,7 +434,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 100,
     select: {
-      id: true, name: true, slug: true, description: true, city: true, district: true, contactPhone: true, videoUrl: true, customFields: true, status: true, approvalStatus: true,
+      id: true, name: true, slug: true, description: true, city: true, district: true, contactPhone: true, videoUrl: true, customFields: true, brandId: true, status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
       mapLocation: { select: { latitude: true, longitude: true } },
       propertyDetails: true,
