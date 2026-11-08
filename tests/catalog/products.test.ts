@@ -252,6 +252,17 @@ describe("product lifecycle", () => {
     expect(mocks.productMediaCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({ productId: "product-1", url: "https://images.example/updated.jpg", isPrimary: true })] });
   });
 
+  it("requires all primary-category fields when updating a listing", async () => {
+    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
+    await expect(updateDraftProduct("product-1", {
+      categoryIds: ["category-1"], customFields: { adType: "SALE" },
+      mapLocation: { latitude: 33.5, longitude: 36.2 },
+      propertyDetails: { propertyType: "APARTMENT", listingType: "SALE", floorArea: "85.5" }
+    })).rejects.toThrow(/category-specific product details/i);
+    expect(mocks.productUpdateMany).not.toHaveBeenCalled();
+  });
+
   it("rejects product image updates without exactly one cover image", async () => {
     await expect(updateDraftProduct("product-1", {
       media: [
