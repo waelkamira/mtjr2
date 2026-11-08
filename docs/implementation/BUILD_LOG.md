@@ -2696,9 +2696,9 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 
 
 ## 2026-11-08 — Syrian geography and seller category fields
-- Added a cached server proxy for OpenSyria's v0.1.5 Syrian geography API and a hierarchical governorate → district → subdistrict → city/town → locality picker.
+- Bundled OpenSyria's pinned v0.1.5 Syrian geography release locally (14 governorates, 62 districts, 272 subdistricts, 7,605 localities) and added a filtered/paginated server route plus a hierarchical governorate → district → subdistrict → city/town → locality picker.
 - Added Leaflet fly-to behavior for selected administrative levels and city/neighborhood centroids; map click-to-pin and existing coordinate privacy behavior remain in place.
 - Added stable geography identifiers to product drafts in a new nullable JSON field and a Prisma migration; existing city/district text fields remain for search/display compatibility.
 - Added category-specific select options to the existing Akaar-aligned Matjar category presets and rendered them as selects in create/edit draft forms.
-- Documented dataset attribution, upstream API quota/caching, and the important limitation that not every Syrian city has a verified neighborhood list in the source.
+- Documented CC BY 4.0 attribution and the important limitation that not every Syrian city has a verified neighborhood list in the source; the runtime no longer depends on an external API or daily request quota.
 - Verification is pending: Prisma migration replay, typecheck, lint, unit tests, and browser journey have not yet run successfully on the latest commit.
