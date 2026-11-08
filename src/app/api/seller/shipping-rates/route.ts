@@ -24,6 +24,7 @@ export async function POST(request: Request): Promise<Response> {
   catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid shipping rate.", issues: error.issues }, { status: 400 });
+    if (error instanceof Error && /access/i.test(error.message)) return Response.json({ error: "Shipping configuration access denied." }, { status: 403 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to create shipping rate." }, { status: 400 });
   }
 }
