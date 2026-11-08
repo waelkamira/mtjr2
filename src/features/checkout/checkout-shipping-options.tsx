@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMinorUnits } from "@/lib/money";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -18,7 +19,7 @@ export default function CheckoutShippingOptions({ quoteId, currencyCode, minorUn
   const [message, setMessage] = useState("");
 
   function money(amount: string) {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode }).format(Number(amount) / (10 ** minorUnit));
+    return formatMinorUnits(amount, currencyCode, minorUnit);
   }
 
   async function load() {
