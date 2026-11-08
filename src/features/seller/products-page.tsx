@@ -297,7 +297,7 @@ export default function SellerProductsPage() {
     }
     setEditMediaUploading(true);
     try {
-      const uploaded = await Promise.all(files.map(async (file) => {
+      const results = await Promise.allSettled(files.map(async (file) => {
         const form = new FormData();
         form.append("file", file, file.name);
         form.append("storeId", storeId);
@@ -316,10 +316,21 @@ export default function SellerProductsPage() {
           isPrimary: false
         };
       }));
-      setEditMedia((current) => [...current, ...uploaded].map((item, index) => ({
-        ...item, sortOrder: index, isPrimary: index === 0
-      })));
-      toast.success(translate(locale, "Images uploaded successfully.", "تم رفع الصور بنجاح."));
+      const uploaded = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+      if (uploaded.length) {
+        setEditMedia((current) => [...current, ...uploaded].map((item, index) => ({
+          ...item, sortOrder: index, isPrimary: index === 0
+        })));
+      }
+      const failures = results.filter((result) => result.status === "rejected");
+      if (failures.length) {
+        const first = failures[0];
+        toast.error(first.status === "rejected" && first.reason instanceof Error
+          ? first.reason.message
+          : translate(locale, "One or more images could not be uploaded.", "تعذر رفع صورة واحدة أو أكثر."));
+      } else {
+        toast.success(translate(locale, "Images uploaded successfully.", "تم رفع الصور بنجاح."));
+      }
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "فشل رفع الصورة.");
       toast.error(message);
