@@ -50,7 +50,9 @@ describe("Google ID token verification", () => {
     await expect(verifyGoogleIdToken(createToken({ exp: Math.floor(now / 1000) - 1 }), "google-client", "expected-nonce", now, keyFetcher())).resolves.toBeNull();
     await expect(verifyGoogleIdToken(createToken({ email_verified: false }), "google-client", "expected-nonce", now, keyFetcher())).resolves.toBeNull();
     const valid = createToken();
-    const tampered = valid.slice(0, -1) + (valid.endsWith("a") ? "b" : "a");
+    const tokenParts = valid.split(".");
+    tokenParts[2] = (tokenParts[2][0] === "A" ? "B" : "A") + tokenParts[2].slice(1);
+    const tampered = tokenParts.join(".");
     await expect(verifyGoogleIdToken(tampered, "google-client", "expected-nonce", now, keyFetcher())).resolves.toBeNull();
   });
 
