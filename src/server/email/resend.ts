@@ -50,6 +50,7 @@ function buildActionUrl(path: string, token: string): string {
 }
 
 export interface TransactionalEmailAdapter {
+  sendVerificationEmail(to: string, token: string): Promise<void>;
   sendPasswordResetEmail(to: string, token: string): Promise<void>;
 }
 
@@ -58,6 +59,16 @@ export interface TransactionalEmailAdapter {
  * they are never persisted by this adapter or written to application logs.
  */
 export const resendEmailAdapter: TransactionalEmailAdapter = {
+  async sendVerificationEmail(to, token) {
+    const verificationUrl = buildActionUrl("/verify-email", token);
+    await sendEmail({
+      to: [to],
+      subject: "Verify your Mtjr account",
+      text: `Verify your email address: ${verificationUrl}\n\nThis link expires in 24 hours and can only be used once.`,
+      html: `<p>Welcome to Mtjr.</p><p>Verify your email address:</p><p><a href="${verificationUrl}">Verify email address</a></p><p>This link expires in 24 hours and can only be used once.</p>`
+    });
+  },
+
   async sendPasswordResetEmail(to, token) {
     const resetUrl = buildActionUrl("/reset-password", token);
     await sendEmail({
