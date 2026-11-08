@@ -423,13 +423,21 @@ export default function SellerWorkspacePage() {
         </aside>
         <div className="min-w-0">
       <div className="mx-auto max-w-[1680px] px-1 py-2 sm:px-2 lg:px-3 lg:py-3">
-        <div className="relative mb-7 overflow-hidden rounded-[2.25rem] border border-white/90 bg-[linear-gradient(145deg,#344e63_0%,#203b52_55%,#496d7c_100%)] p-6 text-white shadow-[0_24px_55px_rgba(92,79,139,.22),inset_0_2px_0_rgba(255,255,255,.35)] sm:p-9 lg:p-10">
-          <div className="pointer-events-none absolute -right-10 -top-14 size-64 rounded-full bg-[#f8d7e8]/70 blur-3xl" /><div className="pointer-events-none absolute -bottom-24 left-[38%] size-72 rounded-full bg-[#b9f0df]/30 blur-3xl" />
+        <header className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] border border-white/75 bg-[linear-gradient(145deg,rgba(235,245,248,.94),rgba(193,213,222,.88))] px-4 py-3 shadow-[0_9px_22px_rgba(35,61,80,.13),inset_0_2px_0_rgba(255,255,255,.92)] sm:px-5">
+          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-[linear-gradient(145deg,#e8f3f6,#b8d0db)] text-xl text-[#35566b] shadow-[0_5px_12px_rgba(38,67,87,.16),inset_0_2px_0_white]">⌂</span><div><p className="text-lg font-black tracking-tight text-[#2b465a]">{translate(locale,"Dashboard","لوحة التحكم")}</p><p className="text-[10px] font-semibold tracking-[.14em] text-[#718a99]">MATJAR · SELLER STUDIO</p></div></div>
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
+            <label className="hidden min-w-[190px] max-w-[330px] flex-1 items-center gap-2 rounded-full border border-white/80 bg-[#dce8ed] px-4 py-2.5 text-xs text-[#6c8493] shadow-[inset_0_3px_7px_rgba(43,69,88,.12),0_1px_0_white] md:flex"><span className="text-base">⌕</span><input aria-label={translate(locale,"Search seller workspace","ابحث في لوحة البائع")} placeholder={translate(locale,"Search products, orders…","ابحث عن المنتجات والطلبات...")} className="min-w-0 flex-1 bg-transparent text-[#29465b] outline-none placeholder:text-[#8297a3]" onKeyDown={(event) => { if (event.key === "Enter") { const target = event.currentTarget.value.trim(); if (target) window.location.href = "/seller/products?search=" + encodeURIComponent(target); } }} /></label>
+            <Link href="/seller/orders" aria-label={translate(locale,"Open orders","فتح الطلبات")} className="grid size-10 place-items-center rounded-full border border-white/80 bg-[linear-gradient(145deg,#e7f2f5,#bfd4dd)] text-lg text-[#35576b] shadow-[0_5px_12px_rgba(38,67,87,.15),inset_0_2px_0_white]">♧</Link>
+            <span className="grid size-10 place-items-center rounded-full border border-white/80 bg-[linear-gradient(145deg,#8cc9c5,#4f929a)] font-black text-white shadow-[0_6px_14px_rgba(38,94,105,.22),inset_0_2px_0_rgba(255,255,255,.5)]">{(workspace?.seller?.displayName ?? workspace?.seller?.legalName ?? "M").slice(0,1).toUpperCase()}</span>
+          </div>
+        </header>
+        <div className="relative mb-7 overflow-hidden rounded-[2.25rem] border border-white/90 bg-[linear-gradient(145deg,#263f56_0%,#172f46_56%,#3f6878_100%)] p-6 text-white shadow-[0_20px_42px_rgba(26,49,69,.28),inset_0_2px_0_rgba(255,255,255,.22)] sm:p-9 lg:p-10">
+          <div className="pointer-events-none absolute -right-10 -top-14 size-64 rounded-full bg-[#a7ddd1]/25 blur-3xl" /><div className="pointer-events-none absolute -bottom-24 left-[38%] size-72 rounded-full bg-[#b9f0df]/30 blur-3xl" />
           <div className="relative flex flex-wrap items-end justify-between gap-5">
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/75">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-white drop-shadow-sm sm:text-5xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 sm:text-base">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-[#b9d9e2]">{translate(locale, "SELLER WORKSPACE", "مركز البائع")}</p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-white drop-shadow-sm sm:text-4xl">{translate(locale, "Seller dashboard", "لوحة تحكم البائع")}</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#d7e7ed] sm:text-base">{translate(locale, "Your store operations, performance and daily tasks in one place.", "إدارة متجرك وأداؤه ومهامه اليومية في مكان واحد.")}</p>
             </div>
             {selectedStore && <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-xs text-white shadow-[inset_0_1px_0_rgba(255,255,255,.16)]"><span className="size-2 rounded-full bg-[var(--color-success)]" /><span className="font-bold text-white">{selectedStore.name}</span><span className="text-white/75">{selectedStore.status}</span></div>}
           </div>
@@ -524,7 +532,7 @@ export default function SellerWorkspacePage() {
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric) => {
                 return (
-                  <article key={metric.label} className="group relative isolate overflow-hidden rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,rgba(235,246,249,.98),rgba(194,218,227,.92))] p-5 shadow-[0_12px_26px_rgba(37,65,84,.16),inset_0_2px_0_rgba(255,255,255,.95),inset_0_-3px_7px_rgba(54,84,101,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(83,72,125,.16)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
+                  <article key={metric.label} className="group relative isolate overflow-hidden rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,rgba(235,246,249,.98),rgba(194,218,227,.92))] p-5 shadow-[0_12px_26px_rgba(37,65,84,.16),inset_0_2px_0_rgba(255,255,255,.95),inset_0_-3px_7px_rgba(54,84,101,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(37,65,84,.22)]" style={{ backgroundColor: `${metric.color}12`, borderColor: `${metric.color}44` }}>
                     <div className="flex items-center gap-3">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${metric.color}20`, color: metric.color }}>
                         <span aria-hidden="true" className="text-lg leading-none">{metric.icon}</span>
