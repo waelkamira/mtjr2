@@ -395,3 +395,10 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - `src/app/seller/layout.tsx`: marketplace navigation now uses Next.js `Link` for the internal root route.
 - `src/components/maps/syria-location-picker.tsx`: removed a redundant synchronous state update from the neighbourhood-loading effect; geography selection handlers remain responsible for clearing stale suggestions.
 - Verification status: source corrections committed to `main`; follow-up exact-head CI pending. The previous run passed Prisma validation and TypeScript typecheck but failed ESLint, so unit tests/build were skipped. See the Build Log for the run link and provider rate-limit distinction.
+
+
+## CI and browser verification — 2026-11-08
+
+- The canonical main quality workflow passed on `6084b01c3a78a3608643c0f7e33064c09308eb6f`, including Prisma, typecheck, lint, Vitest and production build.
+- The dedicated `.github/workflows/browser-e2e.yml` now also runs on pushes to `main`; previously it only ran on feature-branch pushes, pull requests and manual dispatch. This closes the automation gap for the seller catalog authoring and Leaflet map browser journey.
+- The main-triggered browser run is pending; no browser-level pass is claimed until Chromium completes the Playwright suite.
