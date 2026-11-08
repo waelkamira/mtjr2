@@ -21,9 +21,11 @@ export default function ProductLocationMap({ value, onChange, readOnly = false, 
   const markerRef = useRef<CircleMarker | null>(null);
   const onChangeRef = useRef(onChange);
   const valueRef = useRef(value);
+  const focusRef = useRef(focus);
 
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
   useEffect(() => { valueRef.current = value; }, [value]);
+  useEffect(() => { focusRef.current = focus; }, [focus]);
 
   useEffect(() => {
     let active = true;
@@ -39,6 +41,10 @@ export default function ProductLocationMap({ value, onChange, readOnly = false, 
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       mapRef.current = map;
+      if (focusRef.current) {
+        const target = focusRef.current;
+        map.flyTo([target.coordinates.latitude, target.coordinates.longitude], target.zoom, { duration: 0.8 });
+      }
 
       if (valueRef.current) {
         markerRef.current = leaflet.circleMarker(
