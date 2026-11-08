@@ -48,6 +48,13 @@ const environmentSchema = z.object({
       message: "TURNSTILE_SECRET_KEY and NEXT_PUBLIC_TURNSTILE_SITE_KEY must be configured together"
     });
   }
+  if (Boolean(value.STRIPE_SECRET_KEY) !== Boolean(value.STRIPE_WEBHOOK_SECRET)) {
+    context.addIssue({
+      code: "custom",
+      path: ["STRIPE_WEBHOOK_SECRET"],
+      message: "STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be configured together"
+    });
+  }
 });
 
 export type ApplicationEnvironment = Omit<z.infer<typeof environmentSchema>, "APP_URL" | "PUBLIC_REGISTRATION_ENABLED"> & {
