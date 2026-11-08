@@ -490,10 +490,14 @@ export default function SellerProductsPage() {
         body: JSON.stringify({
           name: editName, slug: editSlug, description: editDescription,
           city: editProductLocation.city ?? null, district: editProductLocation.district ?? null,
+          localityId: editProductLocation.localityId ?? null,
+          neighborhoodId: editProductLocation.neighborhoodId ?? null,
+          neighborhood: editProductLocation.neighborhood ?? null,
+          latitude: editProductLocation.latitude ?? null,
+          longitude: editProductLocation.longitude ?? null,
           contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
           ...(editIsRealEstate ? {
-            propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea },
-            latitude: editProductLocation.latitude, longitude: editProductLocation.longitude
+            propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea }
           } : {}),
           media: editMedia.map(({ id: _id, deleteToken: _deleteToken, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 }))
         })
@@ -693,8 +697,8 @@ export default function SellerProductsPage() {
                 <label className="grid gap-1 text-sm">{translate(locale, "Bathrooms", "الحمامات")}<input type="number" min="0" max="100" className={inputClass} value={editBathrooms} onChange={(event) => setEditBathrooms(event.target.value)} /></label>
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input type="number" min="0.01" step="0.01" required className={inputClass} value={editFloorArea} onChange={(event) => setEditFloorArea(event.target.value)} /></label>
               </div>
-              <SyriaLocationPicker locale={locale} value={editProductLocation} onChange={setEditProductLocation} />
             </fieldset>}
+            <SyriaLocationPicker locale={locale} value={editProductLocation} onChange={setEditProductLocation} />
             <section className="grid gap-3 rounded-xl border border-[var(--border)] p-3" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div><h4 className="text-sm font-semibold">{translate(locale, "Product image gallery", "معرض صور المنتج")}</h4><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Preview, remove, replace and reorder up to 10 images. The first image is the cover.", "عاين الصور واحذفها واستبدلها ورتبها. الصورة الأولى هي الغلاف، بحد أقصى ١٠ صور.")}</p></div>
