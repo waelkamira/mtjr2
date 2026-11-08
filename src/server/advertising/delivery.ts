@@ -32,18 +32,19 @@ function readToken(token: string, now: Date): TokenPayload | null {
 }
 
 export async function listSponsoredCampaigns(input: {
-  marketId?: string; categoryId?: string; brandId?: string; query?: string; limit?: number; now?: Date;
+  marketId?: string; categoryId?: string; categoryIds?: string[]; brandId?: string; query?: string; limit?: number; now?: Date;
 }) {
   const now = input.now ?? new Date();
   if (!input.marketId) return [];
   const tokens: string[] = (input.query ?? "").normalize("NFKC").toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  const categoryIds = [...new Set([input.categoryId, ...(input.categoryIds ?? [])].filter((value): value is string => Boolean(value)))].slice(0, 20);
   const rows = await prisma.adCampaign.findMany({
     where: {
       status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now },
       marketId: input.marketId,
       market: { status: "ACTIVE", country: { isActive: true }, currencies: { some: { isEnabled: true } } },
       AND: [
-        { OR: [{ targetCategoryId: null }, ...(input.categoryId ? [{ targetCategoryId: input.categoryId }] : [])] },
+        { OR: [{ targetCategoryId: null }, ...(categoryIds.length ? [{ targetCategoryId: { in: categoryIds } }] : [])] },
         { OR: [{ targetBrandId: null }, ...(input.brandId ? [{ targetBrandId: input.brandId }] : [])] }
       ],
       product: {

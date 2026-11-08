@@ -23,6 +23,18 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(180),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180),
   description: z.string().trim().max(12000).optional(),
+  city: z.string().trim().min(1).max(120).optional(),
+  district: z.string().trim().max(120).optional(),
+  contactPhone: z.string().trim().min(6).max(40).optional(),
+  videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").optional(),
+  propertyDetails: z.object({
+    propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
+    listingType: z.enum(["SALE", "RENT"]),
+    bedrooms: z.number().int().min(0).max(100).nullable().optional(),
+    bathrooms: z.number().int().min(0).max(100).nullable().optional(),
+    floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,2})?$/)
+      .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
+  }).optional(),
   brandId: z.string().trim().min(1).optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).default([]),
   attributes: z.array(z.object({
@@ -54,6 +66,28 @@ const createSchema = z.object({
 }).strict();
 
 export type CreateProductInput = z.input<typeof createSchema>;
+
+async function hasCategoryAncestorSlug(
+  tx: Prisma.TransactionClient,
+  categories: Array<{ parentId: string | null; slug: string }>,
+  targetSlug: string
+) {
+  if (categories.some((category) => category.slug === targetSlug)) return true;
+  let parentIds = [...new Set(categories.map((category) => category.parentId).filter((id): id is string => Boolean(id)))];
+  const visited = new Set<string>();
+  for (let depth = 0; parentIds.length && depth < 12; depth += 1) {
+    parentIds = parentIds.filter((id) => !visited.has(id));
+    if (!parentIds.length) break;
+    parentIds.forEach((id) => visited.add(id));
+    const parents = await tx.category.findMany({
+      where: { id: { in: parentIds }, status: CatalogEntityStatus.ACTIVE },
+      select: { id: true, parentId: true, slug: true }
+    });
+    if (parents.some((category) => category.slug === targetSlug)) return true;
+    parentIds = parents.map((category) => category.parentId).filter((id): id is string => Boolean(id));
+  }
+  return false;
+}
 
 async function canManageStoreCatalog(userId: string, ownerId: string, storeId: string, now: Date) {
   if (ownerId === userId) return true;
@@ -99,9 +133,16 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       const brand = await tx.brand.findFirst({ where: { id: data.brandId, status: CatalogEntityStatus.ACTIVE }, select: { id: true } });
       if (!brand) throw new Error("The selected brand is not active.");
     }
-    if (categoryIds.length) {
-      const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
-      if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
+    const selectedCategories = categoryIds.length
+      ? await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true, parentId: true } })
+      : [];
+    if (selectedCategories.length !== categoryIds.length) throw new Error("Every selected category must be active.");
+    const isRealEstate = await hasCategoryAncestorSlug(tx, selectedCategories, "real-estate");
+    if (isRealEstate && (!data.propertyDetails || data.latitude === undefined || data.longitude === undefined)) {
+      throw new Error("Real-estate listings require property details and map coordinates.");
+    }
+    if (!isRealEstate && data.propertyDetails) {
+      throw new Error("Property details can only be added to a real-estate listing.");
     }
 
     if ((data.latitude === undefined) !== (data.longitude === undefined)) {
@@ -166,7 +207,12 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     const product = await tx.product.create({
       data: {
         storeId: store.id, brandId: data.brandId, name: data.name, slug: data.slug,
-        description: data.description, status: CatalogEntityStatus.DRAFT,
+        description: data.description,
+        city: data.city,
+        district: data.district,
+        contactPhone: data.contactPhone,
+        videoUrl: data.videoUrl,
+        status: CatalogEntityStatus.DRAFT,
         approvalStatus: ProductApprovalStatus.PENDING,
         localityId: data.localityId,
         neighborhoodId: data.neighborhoodId,
@@ -179,6 +225,10 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
           values: { create: { value: item.value as Prisma.InputJsonValue } }
         })) },
         media: { create: data.media.map((item) => ({ ...item })) },
+        propertyDetails: data.propertyDetails ? { create: {
+          ...data.propertyDetails,
+          floorArea: new Prisma.Decimal(data.propertyDetails.floorArea)
+        } } : undefined,
         variants: {
           create: data.variants.map((variant) => ({
             sku: variant.sku, barcode: variant.barcode, name: variant.name,
@@ -286,6 +336,20 @@ const updateProductSchema = z.object({
   name: z.string().trim().min(2).max(180).optional(),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180).optional(),
   description: z.string().trim().max(12000).nullable().optional(),
+  city: z.string().trim().min(1).max(120).nullable().optional(),
+  district: z.string().trim().max(120).nullable().optional(),
+  contactPhone: z.string().trim().min(6).max(40).nullable().optional(),
+  videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
+  latitude: z.number().finite().min(-90).max(90).nullable().optional(),
+  longitude: z.number().finite().min(-180).max(180).nullable().optional(),
+  propertyDetails: z.object({
+    propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
+    listingType: z.enum(["SALE", "RENT"]),
+    bedrooms: z.number().int().min(0).max(100).nullable().optional(),
+    bathrooms: z.number().int().min(0).max(100).nullable().optional(),
+    floorArea: z.string().regex(/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,2})?$/)
+      .refine((value) => Number(value) > 0, "Floor area must be greater than zero.")
+  }).nullable().optional(),
   brandId: z.string().trim().min(1).nullable().optional(),
   categoryIds: z.array(z.string().trim().min(1)).max(30).optional(),
   media: z.array(z.object({
@@ -313,7 +377,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
@@ -328,12 +392,35 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
     }
+    if (data.propertyDetails !== undefined || data.latitude !== undefined || data.longitude !== undefined || categoryIds !== undefined) {
+      const selectedCategories = categoryIds === undefined
+        ? current.categories.map((entry) => entry.category)
+        : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true, parentId: true } });
+      const isRealEstate = await hasCategoryAncestorSlug(tx, selectedCategories, "real-estate");
+      const nextLatitude = data.latitude === undefined ? current.latitude : data.latitude;
+      const nextLongitude = data.longitude === undefined ? current.longitude : data.longitude;
+      const hasPropertyDetails = data.propertyDetails === undefined ? Boolean(current.propertyDetails) : data.propertyDetails !== null;
+      if ((nextLatitude == null) !== (nextLongitude == null)) throw new Error("Latitude and longitude must be supplied together.");
+      if (isRealEstate && (!hasPropertyDetails || nextLatitude == null || nextLongitude == null)) {
+        throw new Error("Real-estate listings must retain property details and map coordinates.");
+      }
+      if (!isRealEstate && data.propertyDetails && data.propertyDetails !== null) throw new Error("Property details can only be added to a real-estate listing.");
+      if (!isRealEstate && current.propertyDetails) {
+        await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
+      }
+    }
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT },
       data: {
         ...(data.name !== undefined ? { name: data.name } : {}),
         ...(data.slug !== undefined ? { slug: data.slug } : {}),
         ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.city !== undefined ? { city: data.city } : {}),
+        ...(data.district !== undefined ? { district: data.district } : {}),
+        ...(data.contactPhone !== undefined ? { contactPhone: data.contactPhone } : {}),
+        ...(data.videoUrl !== undefined ? { videoUrl: data.videoUrl } : {}),
+        ...(data.latitude !== undefined ? { latitude: data.latitude } : {}),
+        ...(data.longitude !== undefined ? { longitude: data.longitude } : {}),
         ...(data.brandId !== undefined ? { brandId: data.brandId } : {}),
         approvalStatus: ProductApprovalStatus.PENDING,
         approvedAt: null,
@@ -346,6 +433,17 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (categoryIds.length) await tx.productCategory.createMany({
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
       });
+    }
+    if (data.propertyDetails !== undefined) {
+      if (data.propertyDetails === null) {
+        await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
+      } else {
+        await tx.productPropertyDetails.upsert({
+          where: { productId: id },
+          create: { productId: id, ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) },
+          update: { ...data.propertyDetails, floorArea: new Prisma.Decimal(data.propertyDetails.floorArea) }
+        });
+      }
     }
     if (data.media !== undefined) {
       const existingMedia = await tx.productMedia.findMany({
@@ -442,7 +540,13 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 100,
     select: {
-      id: true, productNumber: true, name: true, slug: true, description: true, status: true, approvalStatus: true,
+      id: true, productNumber: true, name: true, slug: true, description: true,
+      city: true, district: true, contactPhone: true, videoUrl: true,
+      localityId: true, neighborhoodId: true, neighborhood: true, latitude: true, longitude: true,
+      propertyDetails: { select: { propertyType: true, listingType: true, bedrooms: true, bathrooms: true, floorArea: true } },
+      brand: { select: { id: true, name: true } },
+      categories: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { category: { select: { id: true, name: true, slug: true } } } },
+      status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
       media: { where: { type: "IMAGE" }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 10, select: { id: true, url: true, storageKey: true, mimeType: true, width: true, height: true, altText: true, sortOrder: true, isPrimary: true } },
       variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
@@ -451,6 +555,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
   return products.map((product) => ({
     ...product,
     productNumber: product.productNumber.toString(),
+    propertyDetails: product.propertyDetails ? { ...product.propertyDetails, floorArea: product.propertyDetails.floorArea.toString() } : null,
     variants: product.variants.map((variant) => ({
       ...variant,
       prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() }))

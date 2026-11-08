@@ -535,6 +535,9 @@ export async function getDiscoverableProduct(slug: string, locale = defaultLocal
     },
     select: {
       id: true, slug: true, name: true, description: true, publishedAt: true,
+      city: true, district: true, contactPhone: true, videoUrl: true,
+      latitude: true, longitude: true,
+      propertyDetails: { select: { propertyType: true, listingType: true, bedrooms: true, bathrooms: true, floorArea: true } },
       translations: { where: { locale: language }, select: { name: true, description: true, seoTitle: true, seoDescription: true }, take: 1 },
       brand: {
         select: {
@@ -616,7 +619,7 @@ export async function getDiscoverableProduct(slug: string, locale = defaultLocal
     }
   });
   if (!product) return null;
-  const { translations, attributes, ...productData } = product;
+  const { translations, attributes, latitude, longitude, ...productData } = product;
   const localized = serializeProductPrices({
     ...productData,
     brand: product.brand?.status === CatalogEntityStatus.ACTIVE
@@ -650,6 +653,12 @@ export async function getDiscoverableProduct(slug: string, locale = defaultLocal
   });
   return {
     ...localized,
+    propertyDetails: localized.propertyDetails
+      ? { ...localized.propertyDetails, floorArea: localized.propertyDetails.floorArea.toString() }
+      : null,
+    location: latitude != null && longitude != null
+      ? { latitude: Math.round(latitude * 100) / 100, longitude: Math.round(longitude * 100) / 100 }
+      : null,
     name: translations[0]?.name ?? product.name,
     description: translations[0]?.description ?? product.description,
     seoTitle: translations[0]?.seoTitle ?? translations[0]?.name ?? product.name,

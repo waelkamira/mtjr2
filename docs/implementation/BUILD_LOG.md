@@ -2660,3 +2660,29 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact-head CI on commit `5d825d8906fa53ef0e6ef426c64b9b6fd8fb4841` passed dependency installation, Prisma validation, migration deploy, Prisma generation, TypeScript typecheck, ESLint, and both route/UI audit generators (167/167 API routes with guard evidence; 107/107 state-changing routes with mutation-boundary evidence; zero inventory items flagged for manual review).
 - Vitest reported 447 passing tests and one failing test. The failure was a stale Vitest mock in `tests/catalog/products.test.ts`: the production service now throws the shared typed `PermissionDeniedError`, but that test's mocked `current-session` module did not export the class. This was a test-double defect, not a production authorization failure.
 - Fixed the mock export in commit `0cdeee69fb81998db175a4bac43f8c2d14547288`. Exact-head CI run `42468433339` is now running against that fix. Build remains gated on Vitest success.
+
+
+## 2026-11-08 — PR #69 compatible product-listing integration
+
+- Started a clean integration branch from current `main` instead of merging the stale 336-commit PR #69 wholesale.
+- Preserved the current platform's normalized, database-backed category attributes and Syrian geography/location picker. Did not import PR #69's parallel static category preset/legacy custom JSON system or duplicate geography dataset.
+- Added structured real-estate metadata to the current Prisma model: property type, sale/rent listing type, bedrooms, bathrooms, and positive floor area. Added optional city, district, seller contact phone, and HTTPS video URL fields.
+- Reused the existing `Product.latitude` / `Product.longitude` fields as the canonical exact seller-selected coordinates; deliberately did not add a second map-location table. Public product details receive only coordinates rounded to two decimal places, while the seller workspace retains exact coordinates.
+- Added a forward-only Prisma migration with foreign-key and positive-area/room-count checks. The one-store-per-seller constraint was not re-created because it already exists in current `main`.
+- Extended draft create/update validation and transactional persistence. Real-estate category ancestry is checked server-side; property details and a complete coordinate pair are required for real-estate drafts, and property details are removed if a draft is moved out of the real-estate category.
+- Extended seller product listing responses, seller create/edit forms, and storefront product details to show property specifications, contact phone, video link, and approximate map location. The existing category-attribute editor, image gallery, and Leaflet/Syria picker remain in place.
+- Added focused product lifecycle tests for real-estate validation, structured metadata persistence, and draft updates.
+- Verification status at this entry: source and migration changes are committed to the integration branch; CI/typecheck/Prisma validation have not yet run on this branch. No claim of passing tests is made until the exact-head workflow completes.
+- No production database, Vercel deployment, or production configuration was changed.
+
+
+## 2026-11-08 — PR #69 seller operations, analytics, shipping and advertising extraction
+
+- Ported the seller workspace's order/inventory analytics and charts while retaining current seller APIs and the existing one-store-per-seller enforcement.
+- Added reusable chart primitives and eight additional Super Admin analytics views using already-returned dashboard metrics and daily order counts; deliberately avoided the PR #69 backend approach that would add twenty extra database queries to each dashboard request.
+- Added store-scoped shipping-rate editing through a new PATCH endpoint. The service verifies seller/store ownership or scoped permission, validates enabled market/currency, checks the rate belongs to the same store, and writes an audit event. Permission failures map to 403 rather than relying on message matching.
+- Added route and service tests for shipping-rate updates, including unauthorized and cross-store cases.
+- Improved seller advertising setup: budgets are entered in human-readable major currency units and converted with the selected currency's minor-unit precision; positive budget checks are enforced client-side. Added category/brand targeting controls with server-side product/category/brand consistency checks.
+- Extended sponsored campaign delivery to accept multiple category IDs (deduplicated and capped at 20) while preserving the existing single-category input for compatibility; added a focused targeting test.
+- Rechecked PR #69's remaining identity/MFA, one-store safeguard, geography, image-gallery, and core advertising work against current `main`; these foundations are already present, so they were not duplicated.
+- Verification status: Prisma validation and migration deployment passed on an earlier integration head. The exact current head must pass typecheck, lint, tests, build, browser E2E, and PostgreSQL integration before merge. No production database or deployment was changed.
