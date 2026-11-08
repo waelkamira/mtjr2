@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/current-session";
+import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { PermissionDeniedError } from "@/server/identity/access-errors";
 import { getSellerDashboardAnalytics } from "@/server/marketplace/seller-analytics";
 
 export const dynamic = "force-dynamic";
