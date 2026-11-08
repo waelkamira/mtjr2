@@ -31,14 +31,15 @@ async function fetchJson(path) {
 }
 async function main() {
   const source = JSON.parse(await readFile(new URL("../prisma/data/akaar-syria-location-suggestions.json", import.meta.url), "utf8"));
-  const [governorates, localities] = await Promise.all([fetchJson("governorates"), fetchJson("localities")]);
+  const [governorates, districts, subdistricts, localities] = await Promise.all([
+    fetchJson("governorates"), fetchJson("districts"), fetchJson("subdistricts"), fetchJson("localities")
+  ]);
   const governorateByName = new Map(governorates.map((item) => [normalize(item.name?.ar ?? item.name?.en), item.id]));
   const officialNames = new Set();
-  for (const item of localities) {
+  for (const item of [...governorates, ...districts, ...subdistricts, ...localities]) {
     if (item.name?.ar) officialNames.add(normalize(item.name.ar));
     if (item.name?.en) officialNames.add(normalize(item.name.en));
   }
-  for (const item of governorates) if (item.name?.ar) officialNames.add(normalize(item.name.ar));
 
   const rows = [];
   const seen = new Set();
