@@ -58,7 +58,7 @@ async function main() {
       // explicitly unverified suggestions, never as administrative records.
       if (officialNames.has(normalize(candidate.nameAr))) continue;
       const normalized = normalize(candidate.nameAr);
-      const dedupe = `${governorateId}|${normalized}`;
+      const dedupe = `${governorateId}|${group.nameAr}|${normalized}`;
       if (seen.has(dedupe)) continue;
       seen.add(dedupe);
       const id = "akaar-n-" + createHash("sha256").update(`${group.nameAr}|${candidate.nameAr}|${candidate.latitude.toFixed(6)}|${candidate.longitude.toFixed(6)}`).digest("hex").slice(0, 24);
