@@ -44,6 +44,19 @@ describe("sponsored ad delivery and billing ledger", () => {
     expect(mocks.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ marketId: "market-1" }) }));
     expect(await listSponsoredCampaigns({ query: "running" })).toEqual([]);
   });
+  it("matches campaigns targeted to any of the selected product categories", async () => {
+    await listSponsoredCampaigns({
+      marketId: "market-1",
+      categoryIds: ["category-a", "category-b", "category-a"],
+      now: new Date("2026-11-07T12:00:00Z")
+    });
+    const where = mocks.findMany.mock.calls[0][0].where;
+    expect(where.AND[0].OR).toEqual([
+      { targetCategoryId: null },
+      { targetCategoryId: { in: ["category-a", "category-b"] } }
+    ]);
+  });
+
   it("records a signed impression once and increments the impression count", async () => {
     const [ad] = await listSponsoredCampaigns({ marketId: "market-1", query: "running", now: new Date("2026-11-07T12:00:00Z") });
     const result = await recordSponsoredAdEvent({ token: ad.token, eventId: "eventidentifier123456", type: "IMPRESSION", headers: new Headers(), now: new Date("2026-11-07T12:01:00Z") });
