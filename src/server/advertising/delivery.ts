@@ -77,7 +77,7 @@ export async function listSponsoredCampaigns(input: {
     if (row.spentMinor >= row.budgetMinor) return false;
     const dailySpent = row.spendEntries.reduce((sum, entry) => sum + entry.amountMinor, BigInt(0));
     if (dailySpent >= row.dailyBudgetMinor) return false;
-    if (row.targetKeywords.length && (!tokens.length || !row.targetKeywords.some((keyword) => tokens.includes(keyword.toLocaleLowerCase())))) return false;
+    if (row.targetKeywords.length && (!tokens.length || !row.targetKeywords.some(matchesKeyword))) return false;
     return Boolean(row.currencyCode) && row.product.variants.some((variant) => variant.prices.some((price) => price.currencyCode === row.currencyCode));
   }).slice(0, input.limit ?? 4).map((row) => ({
     campaignId: row.id,
