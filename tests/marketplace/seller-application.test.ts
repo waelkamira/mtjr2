@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Prisma } from "@prisma/client";
 
-const { requireCurrentSession, requirePermission, sellerFindUnique, sellerCreate, auditCreate, transaction, roleFindUnique, roleUpsert, sellerUpdateMany, storeFindUnique, storeCreate, marketFindMany } = vi.hoisted(() => ({
+const { requireCurrentSession, requirePermission, sellerFindUnique, sellerCreate, auditCreate, transaction, roleFindUnique, roleUpsert, sellerUpdateMany, storeFindUnique, storeFindFirst, storeCreate, marketFindMany } = vi.hoisted(() => ({
   requireCurrentSession: vi.fn(), requirePermission: vi.fn(), sellerFindUnique: vi.fn(),
   sellerCreate: vi.fn(), auditCreate: vi.fn(), transaction: vi.fn(),
   roleFindUnique: vi.fn(), roleUpsert: vi.fn(), sellerUpdateMany: vi.fn(),
-  storeFindUnique: vi.fn(), storeCreate: vi.fn(), marketFindMany: vi.fn()
+  storeFindUnique: vi.fn(), storeFindFirst: vi.fn(), storeCreate: vi.fn(), marketFindMany: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
@@ -14,7 +14,7 @@ vi.mock("@/server/identity/permission-guard", () => ({ requirePermission }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     seller: { findUnique: sellerFindUnique },
-    store: { findUnique: storeFindUnique },
+    store: { findUnique: storeFindUnique, findFirst: storeFindFirst },
     $transaction: transaction
   }
 }));
@@ -33,6 +33,7 @@ describe("marketplace seller lifecycle", () => {
     roleUpsert.mockResolvedValue({});
     sellerUpdateMany.mockResolvedValue({ count: 1 });
     storeFindUnique.mockResolvedValue(null);
+    storeFindFirst.mockResolvedValue(null);
     storeCreate.mockResolvedValue({ id: "store-1", name: "Shop", slug: "shop", status: "DRAFT" });
     marketFindMany.mockResolvedValue([{ id: "market-1", defaultCurrencyCode: "EUR", currencies: [{ currencyCode: "EUR" }] }]);
     transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
@@ -41,7 +42,7 @@ describe("marketplace seller lifecycle", () => {
       userRoleAssignment: { upsert: roleUpsert },
       auditLog: { create: auditCreate },
       market: { findMany: marketFindMany },
-      store: { findUnique: storeFindUnique, create: storeCreate }
+      store: { findUnique: storeFindUnique, findFirst: storeFindFirst, create: storeCreate }
     } as unknown as Prisma.TransactionClient));
   });
 
@@ -77,6 +78,18 @@ describe("marketplace seller lifecycle", () => {
     expect(result).toMatchObject({ status: "DRAFT", alreadyCreated: false });
     expect(requirePermission).toHaveBeenCalledWith(expect.objectContaining({ permissionKey: "store:manage", now: expect.any(Date) }));
     expect(auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("returns the seller's already-owned store instead of creating another one", async () => {
+    sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
+    storeFindFirst.mockResolvedValue({ id: "owned-store", name: "Existing shop", slug: "existing-shop", status: "ACTIVE" });
+
+    const result = await createSellerStore({ name: "Another shop", slug: "another-shop", marketIds: ["market-1"] });
+
+    expect(result).toMatchObject({ id: "owned-store", slug: "existing-shop", alreadyCreated: true });
+    expect(storeCreate).not.toHaveBeenCalled();
+    expect(marketFindMany).not.toHaveBeenCalled();
+    expect(auditCreate).not.toHaveBeenCalled();
   });
 
   it("returns an existing matching store without duplicating audit on retry", async () => {
