@@ -41,12 +41,12 @@ async function json<T>(response: Response): Promise<T> {
   if (!response.ok) throw new Error(data.error ?? "Request failed.");
   return data as T;
 }
-function flatten(items: Category[], prefix = ""): Array<{ id: string; slug: string; label: string }> {
+function flatten(items: Category[], prefix = "", ancestors: string[] = []): Array<{ id: string; slug: string; ancestors: string[]; label: string }> {
   return items.flatMap((item) => {
     const children = item.children ?? [];
     return children.length
-      ? flatten(children, prefix + item.name + " / ")
-      : [{ id: item.id, slug: item.slug, label: prefix + item.name }];
+      ? flatten(children, prefix + item.name + " / ", [...ancestors, item.slug])
+      : [{ id: item.id, slug: item.slug, ancestors, label: prefix + item.name }];
   });
 }
 
@@ -101,8 +101,8 @@ export default function SellerProductsPage() {
   const [editMediaUploading, setEditMediaUploading] = useState(false);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
-  const isRealEstate = categoryOptions.find((category) => category.id === categoryId)?.slug === "real-estate";
-  const editIsRealEstate = categoryOptions.find((category) => category.id === editCategoryId)?.slug === "real-estate";
+  const isRealEstate = (() => { const selected = categoryOptions.find((category) => category.id === categoryId); return selected?.slug === "real-estate" || selected?.ancestors.includes("real-estate") === true; })();
+  const editIsRealEstate = (() => { const selected = categoryOptions.find((category) => category.id === editCategoryId); return selected?.slug === "real-estate" || selected?.ancestors.includes("real-estate") === true; })();
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
   const approvalCounts = products.reduce((counts, product) => {
