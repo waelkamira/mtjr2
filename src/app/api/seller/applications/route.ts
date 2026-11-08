@@ -35,6 +35,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(result, { status: result.alreadySubmitted ? 200 : 201 });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+    if (error instanceof Error && /verify your email/i.test(error.message)) return Response.json({ error: error.message }, { status: 403 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to submit seller application." }, { status: 400 });
   }
 }
