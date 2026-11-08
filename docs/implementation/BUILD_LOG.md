@@ -2643,3 +2643,5 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Added a local RSA/JWK-backed test for Google ID-token verification. It covers a valid signed token, wrong nonce/audience, expiry, unverified email, signature tampering, and malformed-token rejection without network access.
 - Added a configuration test for deriving APP_URL from VERCEL_ENV=preview and VERCEL_URL when no explicit APP_URL is configured.
 - The verification and environment tests are committed but remain unexecuted pending an available CI/runtime run.
+
+- Added service-level tests for verification-email challenge rotation: previous unused challenges are consumed, only the SHA-256 token digest is persisted, expiry is bounded to 24 hours, and ineligible accounts receive no challenge.
