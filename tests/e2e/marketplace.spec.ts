@@ -209,7 +209,7 @@ test.describe("seller catalog authoring", () => {
       mimeType: "image/png",
       buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
     });
-    await expect(page.getByText("imgur", { exact: true })).toBeVisible();
+    await expect(page.getByText(/Images uploaded successfully|تم رفع الصور بنجاح/i)).toBeVisible({ timeout: 15000 });
     await page.getByRole("button", { name: /Create draft product|إنشاء مسودة منتج/i }).click();
     await expect(page.getByRole("status")).toContainText(/Draft product created|تم إنشاء مسودة المنتج/i, { timeout: 20000 });
 
