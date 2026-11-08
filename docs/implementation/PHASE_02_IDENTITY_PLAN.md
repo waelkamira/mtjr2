@@ -177,3 +177,15 @@ The identity feature review is governed by System 01 and the Phase 2 exit gates 
 - [x] Preserve safe same-origin return paths through the Google OAuth state-cookie flow.
 - [x] Add focused regression coverage for linked Google login and rejection of unlinked identities during login.
 - [ ] Verify exact-head CI/PostgreSQL integration and complete one deployed registration → immediate session → account → logout journey after Turnstile and trusted-proxy configuration.
+
+
+
+## 2026-11-08 — Password registration policy aligned and merged
+
+- PR #78 is merged into `main` as `fde3b47b098b1f15ed40a141b6c66b9a6c237946`.
+- Password registration creates an ACTIVE customer account and attempts immediate server-side session creation. A post-creation session/cookie failure returns a clear sign-in-required response instead of a misleading registration failure.
+- Password registration/login no longer require email verification. Legacy pending registrations can activate after valid password proof; administrator-imposed PENDING holds retain their reason and cannot be cleared by user login.
+- Seller applications remain pending and do not grant seller permissions before approval.
+- Exact PR-head General CI, disposable PostgreSQL, and Browser E2E passed (runs 42489542922, 42489548427, 42489548337, 42489548167).
+- Fresh checks on the squash-merged `main` commit are running: General CI 42489984972, platform PostgreSQL 42489984985, and clean migration replay 42489985055. Record their final outcomes before closing this verification item.
+- **Phase 2 remains Implemented / not Verified / not Complete.** Remaining exit gates are operational: production Turnstile configuration, verified Resend sender and one password-reset delivery smoke test, trusted-proxy header/edge overwrite and direct-origin bypass prevention, plus one deployed HTTP journey (register → immediate session → `/api/auth/me` → logout → anonymous denial). Do not access production settings or database without explicit owner approval.
