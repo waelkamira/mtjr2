@@ -2,7 +2,8 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { PermissionDeniedError, requireCurrentSession } from "@/server/identity/current-session";
+import { requireCurrentSession } from "@/server/identity/current-session";
+import { PermissionDeniedError } from "@/server/identity/access-errors";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 
 const SALE_STATUSES = ["CONFIRMED", "PROCESSING", "READY_TO_SHIP", "SHIPPED", "DELIVERED"] as const;
