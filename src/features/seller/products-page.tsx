@@ -20,7 +20,7 @@ type CategoryAttribute = {
   valueType: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "MULTI_SELECT";
   required: boolean; variantLevel: boolean; options: string[];
 };
-type ProductLocationDraft = { localityId?: string; neighborhood?: string; latitude?: number; longitude?: number };
+type ProductLocationDraft = { localityId?: string; neighborhoodId?: string; neighborhood?: string; latitude?: number; longitude?: number };
 type Product = {
   id: string; productNumber: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
