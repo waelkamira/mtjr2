@@ -32,7 +32,7 @@ describe("product image storage", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       fileId: "ik-file-123",
       url: "https://ik.imagekit.io/demo/product.jpg",
-      fileType: "image/jpeg",
+      fileType: "image",
       width: 1200,
       height: 900
     }), { status: 200, headers: { "Content-Type": "application/json" } }));
