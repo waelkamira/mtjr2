@@ -60,6 +60,15 @@ describe("editable category field preservation", () => {
 });
 
 describe("custom field update merge", () => {
+  it("treats prototype-like saved keys as ordinary data", () => {
+    const saved = JSON.parse('{"__proto__":"legacy","constructor":"value"}') as Record<string, unknown>;
+    const merged = mergeEditedCategoryFields(saved, [{ key: "__proto__", value: "updated" }]);
+
+    expect(Object.getPrototypeOf(merged)).toBeNull();
+    expect(merged["__proto__"]).toBe("updated");
+    expect(merged.constructor).toBe("value");
+  });
+
   it("preserves nested legacy JSON while updating and clearing visible scalar fields", () => {
     const saved = {
       rooms: "3",
