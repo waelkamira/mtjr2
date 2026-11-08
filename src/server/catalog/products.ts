@@ -383,6 +383,9 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         throw new Error("Real-estate listings must retain property details and map coordinates.");
       }
       if (!isRealEstate && data.propertyDetails && data.propertyDetails !== null) throw new Error("Property details can only be added to a real-estate listing.");
+      if (!isRealEstate && current.propertyDetails) {
+        await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
+      }
     }
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT },
@@ -408,14 +411,6 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (categoryIds.length) await tx.productCategory.createMany({
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
       });
-    }
-    if (categoryIds !== undefined && !categoryIds.some((categoryId) => current.categories.some((entry) => entry.category.slug === "real-estate" && entry.categoryId === categoryId))) {
-      const targetCategories = categoryIds.length
-        ? await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { slug: true } })
-        : [];
-      if (!targetCategories.some((category) => category.slug === "real-estate")) {
-        await tx.productPropertyDetails.deleteMany({ where: { productId: id } });
-      }
     }
     if (data.propertyDetails !== undefined) {
       if (data.propertyDetails === null) {
