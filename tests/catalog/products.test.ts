@@ -177,6 +177,30 @@ describe("product lifecycle", () => {
     }]);
   });
 
+  it("validates and persists variant-level category options on the SKU", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-size",
+      isRequired: true,
+      isVariantLevel: true,
+      options: ["S", "M", "L"],
+      attribute: { key: "size", valueType: "SELECT" }
+    }]);
+    await createDraftProduct({
+      storeId: "store-1", name: "Cotton Shirt", slug: "cotton-shirt",
+      categoryIds: ["category-1"],
+      variants: [{
+        sku: "SHIRT-M",
+        optionValues: { size: "M" },
+        prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }]
+      }]
+    });
+    const variant = mocks.productCreate.mock.calls[0][0].data.variants.create[0];
+    expect(variant.attributes.create).toEqual([{
+      attributeDefinitionId: "attribute-size",
+      value: "M"
+    }]);
+  });
+
   it("rejects category attributes that are not configured for the selected category", async () => {
     mocks.categoryAttributeFindMany.mockResolvedValue([]);
     await expect(createDraftProduct({
