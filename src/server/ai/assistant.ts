@@ -220,6 +220,7 @@ export async function answerCustomer(raw: unknown) {
       } else if (call.function.name === "get_my_support_tickets") {
         const tickets = await listMySupportTickets();
         supportTickets = tickets.slice(0, 5).map((ticket) => ({
+          id: ticket.id,
           ticketNumber: ticket.ticketNumber,
           subject: ticket.subject,
           status: ticket.status,
