@@ -757,8 +757,6 @@ model Product {
   translations        ProductTranslation[]
   media               ProductMedia[]
   propertyDetails     ProductPropertyDetails?
-  mapLocation         ProductMapLocation?
-  propertyDetails     ProductPropertyDetails?
   variants            ProductVariant[]
   identifiers         ProductIdentifier[]
   attributes          ProductAttribute[]
