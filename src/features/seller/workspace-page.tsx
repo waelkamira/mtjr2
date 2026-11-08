@@ -430,10 +430,10 @@ export default function SellerWorkspacePage() {
               <AuthReturnLink href="/register" className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--color-forest-900)]">{translate(locale, "Create account", "إنشاء حساب")}</AuthReturnLink>
             </div>
           </section>
-        ) : !workspace?.seller ? (
+        ) : (!workspace?.seller || workspace.seller.status === "REJECTED") ? (
           <section className="mt-8 max-w-2xl rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_12px_28px_rgba(40,65,84,.11),inset_0_1px_0_white] sm:p-8">
             <h2 className="text-xl font-semibold">{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{translate(locale, "Submit your legal and public business names. Your application will remain pending until reviewed by the marketplace team.", "أدخل الاسم القانوني والاسم التجاري العلني. سيظل طلبك قيد الانتظار حتى يراجعه فريق السوق.")}</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{workspace?.seller?.status === "REJECTED" ? translate(locale, "Your previous application was not approved. Correct the information below and submit it again for a new review.", "لم تتم الموافقة على طلبك السابق. صحح البيانات أدناه ثم أعد إرساله للمراجعة.") : translate(locale, "Complete the business details below. Your application will remain pending until reviewed by the marketplace team.", "أكمل بيانات نشاطك التجاري أدناه. سيظل طلبك قيد المراجعة حتى يراجعه فريق السوق.")}</p>
             <form onSubmit={(event) => {
               if (sellerLatitude === null || sellerLongitude === null) {
                 event.preventDefault();
