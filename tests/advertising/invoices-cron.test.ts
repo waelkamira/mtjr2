@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ generate: vi.fn() }));
 vi.mock("@/server/advertising/delivery", () => ({ generateAdInvoices: mocks.generate }));
 
-import { POST } from "@/app/api/cron/advertising-invoices/route";
+import { GET, POST } from "@/app/api/cron/advertising-invoices/route";
 
 describe("monthly advertising invoice worker authorization", () => {
   beforeEach(() => {
@@ -25,6 +25,15 @@ describe("monthly advertising invoice worker authorization", () => {
     expect(period.periodEnd.getUTCDate()).toBe(1);
     expect(period.periodStart.getTime()).toBeLessThan(period.periodEnd.getTime());
     expect(period.dueAt.getTime()).toBeGreaterThanOrEqual(period.periodEnd.getTime());
+  });
+
+  it("accepts Vercel Cron GET requests with the configured bearer secret", async () => {
+    const response = await GET(new Request("https://mtjr.example/api/cron/advertising-invoices", {
+      method: "GET",
+      headers: { authorization: "Bearer " + process.env.CRON_SECRET }
+    }));
+    expect(response.status).toBe(200);
+    expect(mocks.generate).toHaveBeenCalledOnce();
   });
 
   it("rejects a missing or incorrect bearer token without invoking the worker", async () => {
