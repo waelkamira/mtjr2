@@ -24,7 +24,7 @@ type ProductLocationDraft = { localityId?: string; neighborhoodId?: string; neig
 type Product = {
   id: string; productNumber: string; name: string; slug: string; description: string | null; status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
-  media: Array<{ url: string; altText: string | null }>;
+  media: Array<{ id: string; url: string; storageKey: string | null; mimeType: string | null; width: number | null; height: number | null; altText: string | null; sortOrder: number; isPrimary: boolean }>;
   variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
 };
 type Store = { id: string; storeNumber: string; name: string; markets: Array<{ market: { id: string } }> };
@@ -75,6 +75,8 @@ export default function SellerProductsPage() {
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editMedia, setEditMedia] = useState<Product["media"]>([]);
+  const [editMediaUploading, setEditMediaUploading] = useState(false);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
@@ -276,6 +278,73 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
+  async function uploadEditProductImages(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!files.length || !editingId) return;
+    if (editMedia.length + files.length > 10) {
+      toast.error(translate(locale, "A product can have up to 10 images.", "يمكن إضافة ١٠ صور كحد أقصى للمنتج."));
+      return;
+    }
+    const invalid = files.find((file) => !["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"].includes(file.type) || file.size <= 0 || file.size > 10 * 1024 * 1024);
+    if (invalid) {
+      toast.error(translate(locale, "Use JPG, PNG, WebP, GIF or AVIF images up to 10 MB each.", "استخدم صور JPG أو PNG أو WebP أو GIF أو AVIF بحجم لا يتجاوز ١٠ ميغابايت للصورة."));
+      return;
+    }
+    if (!storeId) {
+      toast.error(translate(locale, "Choose a store before uploading images.", "اختر متجراً قبل رفع الصور."));
+      return;
+    }
+    setEditMediaUploading(true);
+    try {
+      const uploaded = await Promise.all(files.map(async (file) => {
+        const form = new FormData();
+        form.append("file", file, file.name);
+        form.append("storeId", storeId);
+        const result = await json<{ success: true; data: { url: string; storageKey?: string; mimeType?: string; width?: number; height?: number } }>(
+          await fetch("/api/seller/products/media", { method: "POST", body: form })
+        );
+        return {
+          id: crypto.randomUUID(),
+          url: result.data.url,
+          storageKey: result.data.storageKey ?? null,
+          mimeType: result.data.mimeType ?? file.type,
+          width: result.data.width ?? null,
+          height: result.data.height ?? null,
+          altText: editName,
+          sortOrder: 0,
+          isPrimary: false
+        };
+      }));
+      setEditMedia((current) => [...current, ...uploaded].map((item, index) => ({
+        ...item, sortOrder: index, isPrimary: index === 0
+      })));
+      toast.success(translate(locale, "Images uploaded successfully.", "تم رفع الصور بنجاح."));
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "فشل رفع الصورة.");
+      toast.error(message);
+    } finally {
+      setEditMediaUploading(false);
+    }
+  }
+
+  function removeEditProductImage(id: string) {
+    setEditMedia((current) => current.filter((item) => item.id !== id).map((item, index) => ({
+      ...item, sortOrder: index, isPrimary: index === 0
+    })));
+  }
+
+  function moveEditProductImage(id: string, direction: -1 | 1) {
+    setEditMedia((current) => {
+      const index = current.findIndex((item) => item.id === id);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next.map((item, order) => ({ ...item, sortOrder: order, isPrimary: order === 0 }));
+    });
+  }
+
   async function saveProductEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingId) return;
@@ -283,7 +352,7 @@ export default function SellerProductsPage() {
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, slug: editSlug, description: editDescription })
+        body: JSON.stringify({ name: editName, slug: editSlug, description: editDescription, media: editMedia.map(({ id: _id, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 })) })
       }));
       setEditingId("");
       setMessage(translate(locale, "Draft product updated and returned to pending review.", "تم تحديث مسودة المنتج وإعادتها إلى قائمة المراجعة."));
@@ -420,7 +489,7 @@ export default function SellerProductsPage() {
           {!products.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-5 text-sm text-[var(--muted)]">{search ? translate(locale, "No products match this search.", "لا توجد منتجات تطابق هذا البحث.") : translate(locale, "No products in this store yet.", "لا توجد منتجات في هذا المتجر بعد.")}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">{product.media[0]?.url && <img src={product.media[0].url} alt={product.media[0].altText ?? product.name} className="size-16 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] object-cover" />}<div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs font-semibold text-[var(--color-copper-700)]">PRD-{product.productNumber.padStart(8, "0")}</p><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs">{translate(locale, product.status, product.status === "DRAFT" ? "مسودة" : product.status)}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{translate(locale, product.approvalStatus, product.approvalStatus === "PENDING" ? "قيد المراجعة" : product.approvalStatus === "APPROVED" ? "مقبول" : product.approvalStatus === "REJECTED" ? "مرفوض" : product.approvalStatus)}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">{translate(locale, "Review:", "ملاحظة المراجعة:")} {product.rejectionReason}</p>}</div></div>
             <div className="flex flex-wrap gap-2">
-              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditMedia(product.media); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
@@ -429,7 +498,32 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={180} className={inputClass} value={editName} onChange={(e) => setEditName(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Slug", "المعرّف")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={editSlug} onChange={(e) => setEditSlug(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} /></label>
-            <div className="flex gap-2"><button disabled={busy} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" onClick={() => setEditingId("")} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
+            <section className="grid gap-3 rounded-xl border border-[var(--border)] p-3" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div><h4 className="text-sm font-semibold">{translate(locale, "Product image gallery", "معرض صور المنتج")}</h4><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Preview, remove, replace and reorder up to 10 images. The first image is the cover.", "عاين الصور واحذفها واستبدلها ورتبها. الصورة الأولى هي الغلاف، بحد أقصى ١٠ صور.")}</p></div>
+                <label className="cursor-pointer rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">
+                  {editMediaUploading ? translate(locale, "Uploading…", "جارٍ الرفع…") : translate(locale, "Add images", "إضافة صور")}
+                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="sr-only" disabled={busy || editMediaUploading || editMedia.length >= 10} onChange={uploadEditProductImages} />
+                </label>
+              </div>
+              {editMedia.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {editMedia.map((media, index) => <article key={media.id} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]">
+                  <div className="relative aspect-square">
+                    <img src={media.url} alt={media.altText ?? editName} className="h-full w-full object-cover" />
+                    {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2 py-1 text-[10px] font-bold text-white">{translate(locale, "Cover", "الغلاف")}</span>}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-1 p-2">
+                    <span className="text-[10px] text-[var(--muted)]">{index + 1} / {editMedia.length}</span>
+                    <div className="flex gap-1">
+                      <button type="button" disabled={index === 0 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, -1)} aria-label={translate(locale, "Move image earlier", "تحريك الصورة للأعلى")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40">↑</button>
+                      <button type="button" disabled={index === editMedia.length - 1 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, 1)} aria-label={translate(locale, "Move image later", "تحريك الصورة للأسفل")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40">↓</button>
+                      <button type="button" disabled={busy || editMediaUploading} onClick={() => removeEditProductImage(media.id)} aria-label={translate(locale, "Remove image", "حذف الصورة")} className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-700 disabled:opacity-40">×</button>
+                    </div>
+                  </div>
+                </article>)}
+              </div> : <p className="rounded-lg bg-[var(--surface-soft)] p-4 text-xs text-[var(--muted)]">{translate(locale, "No images yet. Add at least one image to make the product easier to recognize.", "لا توجد صور بعد. أضف صورة واحدة على الأقل لتسهيل التعرف على المنتج.")}</p>}
+            </section>
+            <div className="flex gap-2"><button disabled={busy || editMediaUploading} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" disabled={busy || editMediaUploading} onClick={() => { setEditingId(""); setEditMedia([]); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
           </form>}
         </section>
       </div>}
