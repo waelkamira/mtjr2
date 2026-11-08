@@ -2710,3 +2710,10 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Added unit coverage for ImageKit deletion, missing Imgur OAuth configuration, malformed storage keys, and catalog-level removal behavior.
 - Provider deletion failures are logged after unlinking; a durable retry/outbox is still required before claiming guaranteed cleanup. Existing Imgur assets need a valid owner access token to be removed.
 - Verification remains pending on this head: GitHub Actions has not reported a run for the latest commit, and Vercel is blocked by the daily deployment quota.
+
+
+## 2026-11-08 — Revalidated merge-base and integration blockers
+- Recomputed the actual Git merge base against current main: `5dc32fe6055c1cf21876ac14f3888f1a16992696`. Current main contains 189 changed paths since that base; the feature branch contains 159; 104 paths overlap. GitHub reports the branch diverged (335 commits ahead, 59 behind) and the PR is not mergeable. This supersedes older 329/58 and 16-file overlap estimates.
+- The overlap is substantive, not merely documentation: current main's DB-backed Syrian geography picker and Product locality/neighborhood columns conflict with the branch's bundled OpenSyria picker, Product.geography JSON, and ProductMapLocation/PropertyDetails fields. The seller editor, catalog service, Prisma schema, package manifests, workflows, and many identity/admin/storefront files also overlap.
+- A safe integration requires a real three-way rebase/merge with source-level resolution across those 104 paths, followed by migration replay and exact-head CI. A wholesale tree overlay or force merge would silently discard current-main behavior or introduce incompatible schema/API contracts, so neither was performed.
+- GitHub Actions reports no workflow run for the latest feature head; Vercel's check remains pending/blocked by the daily deployment quota. No test result is claimed for the provider-deletion follow-up.
