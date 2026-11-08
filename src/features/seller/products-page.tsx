@@ -110,8 +110,6 @@ export default function SellerProductsPage() {
   const [editMedia, setEditMedia] = useState<Product["media"]>([]);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
-  const editPrimaryCategory = categoryOptions.find((category) => category.id === editCategoryIds[0]);
-  const editCategoryPresets = getCategoryFieldPresets(editPrimaryCategory?.slug ?? "");
   const isRealEstate = categoryOptions.find((category) => category.id === categoryId)?.slug === "real-estate";
   const imagePreviews = [
     ...uploadedImages.map((image) => ({ url: image.url, name: image.name, provider: image.provider })),
@@ -388,7 +386,10 @@ export default function SellerProductsPage() {
     if (!editingId) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const customFields = Object.fromEntries(editCustomFields.map((field) => [field.key, field.value.trim()]).filter(([, value]) => Boolean(value)));
+      const customFields = editCustomFields.reduce<Record<string, string>>((result, field) => {
+        if (field.value.trim()) result[field.key] = field.value.trim();
+        return result;
+      }, {});
       const mapLocation = parseJsonObjectInput(editMapLocation, translate(locale, "Map location", "موقع الخريطة"));
       const propertyDetails = parseJsonObjectInput(editPropertyDetails, translate(locale, "Property details", "تفاصيل العقار"));
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
