@@ -18,6 +18,16 @@ const priceSchema = z.object({
   message: "Compare-at price must be greater than or equal to the selling price."
 });
 
+const geographySchema = z.object({
+  governorateId: z.string().regex(/^sy-[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  districtId: z.string().regex(/^sy-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  subdistrictId: z.string().regex(/^sy-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  localityId: z.string().regex(/^sy-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  neighborhoodId: z.string().regex(/^sy-[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  source: z.literal("opensyria"),
+  sourceVersion: z.literal("v0.1.5")
+}).strict();
+
 const createSchema = z.object({
   storeId: z.string().trim().min(1),
   name: z.string().trim().min(2).max(180),
@@ -25,6 +35,7 @@ const createSchema = z.object({
   description: z.string().trim().min(1).max(12000),
   city: z.string().trim().min(1).max(120),
   district: z.string().trim().min(1).max(120),
+  geography: geographySchema.optional(),
   contactPhone: z.string().trim().min(6).max(40),
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").optional(),
   customFields: z.record(z.string().trim().min(1).max(100), z.unknown()).optional(),
@@ -153,6 +164,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         storeId: store.id, brandId: data.brandId, name: data.name, slug: data.slug,
         description: data.description,
         city: data.city || null, district: data.district || null,
+        geography: data.geography as Prisma.InputJsonValue | undefined,
         contactPhone: data.contactPhone || null, videoUrl: data.videoUrl || null,
         customFields: data.customFields ? (data.customFields as Prisma.InputJsonValue) : undefined,
         status: CatalogEntityStatus.DRAFT,
@@ -286,6 +298,7 @@ const updateProductSchema = z.object({
   description: z.string().trim().max(12000).nullable().optional(),
   city: z.string().trim().max(120).nullable().optional(),
   district: z.string().trim().max(120).nullable().optional(),
+  geography: geographySchema.nullable().optional(),
   contactPhone: z.string().trim().min(6).max(40).nullable().optional(),
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
   customFields: z.record(z.string().trim().min(1).max(100), z.unknown()).nullable().optional(),
@@ -383,6 +396,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         ...(data.description !== undefined ? { description: data.description } : {}),
         ...(data.city !== undefined ? { city: data.city } : {}),
         ...(data.district !== undefined ? { district: data.district } : {}),
+        ...(data.geography !== undefined ? { geography: data.geography === null ? Prisma.DbNull : data.geography as Prisma.InputJsonValue } : {}),
         ...(data.contactPhone !== undefined ? { contactPhone: data.contactPhone } : {}),
         ...(data.videoUrl !== undefined ? { videoUrl: data.videoUrl } : {}),
         ...(data.customFields !== undefined ? { customFields: data.customFields === null ? Prisma.DbNull : data.customFields as Prisma.InputJsonValue } : {}),
