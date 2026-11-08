@@ -13,8 +13,7 @@ type Sponsored = { campaignId: string; token: string; product: Product };
 function productPrice(product: Product, locale: Locale) {
   const price = product.variants.flatMap((variant) => variant.prices)[0];
   if (!price) return translate(locale, "Price unavailable", "السعر غير متاح");
-  return new Intl.NumberFormat(locale, { style: "currency", currency: price.currencyCode })
-    .format(Number(price.amountMinor) / (10 ** price.currency.minorUnit));
+  return formatMinorUnits(price.amountMinor, price.currencyCode, price.currency.minorUnit, locale);
 }
 
 export default function CatalogProductGrid({ products, locale, sponsored = [] }: { products: Product[]; locale: Locale; sponsored?: Sponsored[] }) {
