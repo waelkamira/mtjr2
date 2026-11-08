@@ -53,7 +53,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   let sponsored: Awaited<ReturnType<typeof listSponsoredCampaigns>> = [];
   if (marketId) {
     try {
-      sponsored = await listSponsoredCampaigns({ marketId, query: product.name, limit: 4 });
+      sponsored = await listSponsoredCampaigns({ marketId, categoryIds: product.categories.map((category) => category.id), brandId: product.brand?.id, query: product.name, limit: 4 });
     } catch {
       sponsored = [];
     }
