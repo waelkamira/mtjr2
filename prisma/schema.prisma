@@ -151,6 +151,8 @@ model UserSession {
   expiresAt  DateTime
   revokedAt  DateTime?
   mfaVerifiedAt DateTime?
+  stepUpVerifiedAt DateTime?
+  stepUpExpiresAt DateTime?
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
