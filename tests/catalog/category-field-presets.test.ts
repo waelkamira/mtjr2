@@ -42,8 +42,10 @@ describe("editable category field preservation", () => {
     ]);
 
     expect(fields.find((field) => field.key === "rooms")?.value).toBe("4");
+    expect(fields.find((field) => field.key === "rooms")?.required).toBe(true);
     expect(fields.find((field) => field.key === "livingrooms")?.value).toBe("2");
     expect(fields.find((field) => field.key === "legacyAkaarField")?.value).toBe("");
+    expect(fields.find((field) => field.key === "legacyAkaarField")?.required).toBe(false);
     expect(fields.find((field) => field.key === "numericLegacyField")?.value).toBe("4");
     expect(fields.some((field) => field.key === "nestedLegacyField")).toBe(false);
   });
