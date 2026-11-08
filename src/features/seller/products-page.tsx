@@ -274,7 +274,7 @@ export default function SellerProductsPage() {
 
   async function createProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isRealEstate && (!productLocation.latitude || !productLocation.longitude || !floorArea || Number(floorArea) <= 0)) {
+    if (isRealEstate && (productLocation.latitude == null || productLocation.longitude == null || !floorArea || Number(floorArea) <= 0)) {
       setError(translate(locale, "Real-estate listings need a map location and a positive floor area.", "تحتاج الإعلانات العقارية إلى موقع على الخريطة ومساحة موجبة."));
       return;
     }
@@ -451,6 +451,10 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "هاتف التواصل")}<input type="tel" maxLength={40} className={inputClass} value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
+            </div>
             <label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} /></label>
             <div className="grid gap-3 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] p-4">
               <div>
@@ -502,6 +506,20 @@ export default function SellerProductsPage() {
                 </div>}
             </section>}
             <SyriaLocationPicker locale={locale} value={productLocation} onChange={setProductLocation} />
+            {isRealEstate && <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
+              <legend className="px-1 text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1 text-sm">{translate(locale, "Property type", "نوع العقار")}<select required className={inputClass} value={propertyType} onChange={(event) => setPropertyType(event.target.value as typeof propertyType)}>
+                  <option value="APARTMENT">{translate(locale, "Apartment", "شقة")}</option><option value="HOUSE">{translate(locale, "House / villa", "منزل / فيلا")}</option><option value="LAND">{translate(locale, "Land", "أرض")}</option><option value="COMMERCIAL">{translate(locale, "Commercial", "تجاري")}</option>
+                </select></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Listing type", "نوع العرض")}<select required className={inputClass} value={listingType} onChange={(event) => setListingType(event.target.value as typeof listingType)}>
+                  <option value="SALE">{translate(locale, "For sale", "للبيع")}</option><option value="RENT">{translate(locale, "For rent", "للإيجار")}</option>
+                </select></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Bedrooms", "غرف النوم")}<input type="number" min="0" max="100" step="1" className={inputClass} value={bedrooms} onChange={(event) => setBedrooms(event.target.value)} /></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Bathrooms", "الحمامات")}<input type="number" min="0" max="100" step="1" className={inputClass} value={bathrooms} onChange={(event) => setBathrooms(event.target.value)} /></label>
+                <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input required type="number" min="0.01" max="999999999" step="0.01" className={inputClass} value={floorArea} onChange={(event) => setFloorArea(event.target.value)} /></label>
+              </div>
+            </fieldset>}
             <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
             <div className="grid gap-3 rounded-2xl bg-[var(--surface-soft)] p-4">
               <p className="text-sm font-semibold">{translate(locale, "Prices for every enabled store market", "أسعار كل سوق مفعّل للمتجر")}</p>
@@ -537,7 +555,12 @@ export default function SellerProductsPage() {
           {!products.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-5 text-sm text-[var(--muted)]">{search ? translate(locale, "No products match this search.", "لا توجد منتجات تطابق هذا البحث.") : translate(locale, "No products in this store yet.", "لا توجد منتجات في هذا المتجر بعد.")}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">{product.media[0]?.url && <img src={product.media[0].url} alt={product.media[0].altText ?? product.name} className="size-16 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] object-cover" />}<div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs font-semibold text-[var(--color-copper-700)]">PRD-{product.productNumber.padStart(8, "0")}</p><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p><div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs">{translate(locale, product.status, product.status === "DRAFT" ? "مسودة" : product.status)}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{translate(locale, product.approvalStatus, product.approvalStatus === "PENDING" ? "قيد المراجعة" : product.approvalStatus === "APPROVED" ? "مقبول" : product.approvalStatus === "REJECTED" ? "مرفوض" : product.approvalStatus)}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">{translate(locale, "Review:", "ملاحظة المراجعة:")} {product.rejectionReason}</p>}</div></div>
             <div className="flex flex-wrap gap-2">
-              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditMedia(product.media); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? "");
+                setEditCategoryId(product.categories[0]?.category.id ?? "");
+                setEditProductLocation({ localityId: product.localityId ?? undefined, neighborhoodId: product.neighborhoodId ?? undefined, neighborhood: product.neighborhood ?? undefined, latitude: product.latitude ?? undefined, longitude: product.longitude ?? undefined });
+                setEditPropertyType(product.propertyDetails?.propertyType ?? "APARTMENT"); setEditListingType(product.propertyDetails?.listingType ?? "SALE");
+                setEditBedrooms(product.propertyDetails?.bedrooms == null ? "" : String(product.propertyDetails.bedrooms)); setEditBathrooms(product.propertyDetails?.bathrooms == null ? "" : String(product.propertyDetails.bathrooms)); setEditFloorArea(product.propertyDetails?.floorArea ?? "");
+                setEditMedia(product.media); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
@@ -546,6 +569,21 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={180} className={inputClass} value={editName} onChange={(e) => setEditName(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Slug", "المعرّف")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={editSlug} onChange={(e) => setEditSlug(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} /></label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "هاتف التواصل")}<input type="tel" maxLength={40} className={inputClass} value={editContactPhone} onChange={(event) => setEditContactPhone(event.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} className={inputClass} value={editVideoUrl} onChange={(event) => setEditVideoUrl(event.target.value)} /></label>
+            </div>
+            {editIsRealEstate && <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
+              <legend className="px-1 text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1 text-sm">{translate(locale, "Property type", "نوع العقار")}<select className={inputClass} value={editPropertyType} onChange={(event) => setEditPropertyType(event.target.value as typeof editPropertyType)}><option value="APARTMENT">شقة</option><option value="HOUSE">منزل / فيلا</option><option value="LAND">أرض</option><option value="COMMERCIAL">تجاري</option></select></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Listing type", "نوع العرض")}<select className={inputClass} value={editListingType} onChange={(event) => setEditListingType(event.target.value as typeof editListingType)}><option value="SALE">للبيع</option><option value="RENT">للإيجار</option></select></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Bedrooms", "غرف النوم")}<input type="number" min="0" max="100" className={inputClass} value={editBedrooms} onChange={(event) => setEditBedrooms(event.target.value)} /></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Bathrooms", "الحمامات")}<input type="number" min="0" max="100" className={inputClass} value={editBathrooms} onChange={(event) => setEditBathrooms(event.target.value)} /></label>
+                <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input type="number" min="0.01" step="0.01" required className={inputClass} value={editFloorArea} onChange={(event) => setEditFloorArea(event.target.value)} /></label>
+              </div>
+              <SyriaLocationPicker locale={locale} value={editProductLocation} onChange={setEditProductLocation} />
+            </fieldset>}
             <section className="grid gap-3 rounded-xl border border-[var(--border)] p-3" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div><h4 className="text-sm font-semibold">{translate(locale, "Product image gallery", "معرض صور المنتج")}</h4><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Preview, remove, replace and reorder up to 10 images. The first image is the cover.", "عاين الصور واحذفها واستبدلها ورتبها. الصورة الأولى هي الغلاف، بحد أقصى ١٠ صور.")}</p></div>
