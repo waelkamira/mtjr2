@@ -2578,3 +2578,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added post-commit provider deletion for removed Imgur (OAuth delete hash), ImageKit (private file ID), and Cloudinary (signed destroy API) assets. Missing provider deletion credentials fail safely as unsupported; provider failures are logged without undoing the saved product edit.
 - Added regression tests for replacement/removal, transaction failure safety, and all three provider deletion paths. Documented optional server-side deletion credentials in .env.example.
 - These source changes were committed directly to main through repository integration; GitHub Actions has not produced a run for the latest commit and Vercel remains blocked by the daily deployment quota. Do not treat the changes as verified until CI, Prisma generation, unit tests, and browser checks run successfully.
+
+
+## 2026-11-08 — Seller one-store creation guard
+- Seller store creation now acquires a transaction-scoped PostgreSQL advisory lock keyed by the seller ID, then checks for an existing seller-owned store before creating anything. Matching retries return the existing store; any second store request with a different setup is rejected.
+- Added a regression test for the second-store rejection and retained the idempotent matching-store retry behavior.
+- This protects the application creation path from concurrent duplicate store requests. A database-level unique constraint and a preflight audit/cleanup for any historical duplicate stores remain a separate migration task; no destructive cleanup was attempted.
+- The latest full CI and browser E2E run is pending on PR #72 and will be used to verify these changes.
