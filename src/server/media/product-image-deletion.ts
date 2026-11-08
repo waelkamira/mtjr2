@@ -19,10 +19,13 @@ export async function deleteProductImage(storageKey: string): Promise<DeleteResu
   if (provider === "imgur") {
     if (!/^[A-Za-z0-9_-]{4,160}$/.test(assetId)) throw new Error("Invalid Imgur image identifier.");
     const token = process.env.IMGUR_ACCESS_TOKEN?.trim();
-    if (!token) return "unsupported";
+    const clientId = (process.env.IMGUR_CLIENT_IDS ?? process.env.IMGUR_CLIENT_ID ?? "")
+      .split(/[;,\\n]/).map((value) => value.trim()).find(Boolean);
+    const authorization = token ? `Bearer ${token}` : clientId ? `Client-ID ${clientId}` : null;
+    if (!authorization) return "unsupported";
     const response = await fetch(`https://api.imgur.com/3/image/${encodeURIComponent(assetId)}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: authorization },
       cache: "no-store",
       signal: AbortSignal.timeout(15_000)
     });
