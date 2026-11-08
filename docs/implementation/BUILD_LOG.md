@@ -2955,3 +2955,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Commits: dashboard toolbar `d086cd7d4167a10ab6a1e1f00027c69c3c5c0df9`; product studio `751e5408ac3d1df8e5535f5df2fa8ea25089cca7`.
 - Akaar review remains limited to seller onboarding requirements: its legacy newPost product form was commented out and was not copied; Matjar's production category-attribute API remains the source of category fields.
 - Build/runtime verification is still outstanding; source commits are confirmed on main, but no successful build or browser rendering was available in this session.
+
+
+## 2026-11-09 — Seller application presentation
+
+- Expanded the seller application panel from a narrow form into a full-width guided application surface.
+- Added a navy welcome header and four visible stages (business, products, location, profile) matching the reference's sidebar/dashboard visual language.
+- Preserved the existing Akaar-derived application fields, map requirement, private identity-document upload, submission API, seller persistence and resubmission behavior.
+- Commit: `7ff8a069045419959af3ac462ea6c3191216b4b7`.
+- No backend or database behavior was changed in this visual refinement. Build and browser verification remain outstanding.
