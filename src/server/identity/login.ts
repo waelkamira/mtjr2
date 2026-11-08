@@ -74,7 +74,7 @@ export async function loginWithPassword(
   const passwordMatches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
   if (!user) {
     await prisma.loginAttempt.create({ data: { identifierHash, ipHash, succeeded: false, attemptedAt: now } });
-    return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: INVALID_CREDENTIALS };
+    return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." };
   }
 
   const eligible = (user.status === UserStatus.ACTIVE ||
@@ -85,11 +85,9 @@ export async function loginWithPassword(
     await prisma.loginAttempt.create({
       data: { userId: user.id, identifierHash, ipHash, succeeded: false, attemptedAt: now }
     });
-    return {
-      authenticated: false,
-      reason: eligible ? "INVALID_PASSWORD" : "INVALID_CREDENTIALS",
-      message: INVALID_CREDENTIALS
-    };
+    return !eligible
+      ? { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS }
+      : { authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect." };
   }
 
   const mfa = await getMfaAccessState(user.id, now);
