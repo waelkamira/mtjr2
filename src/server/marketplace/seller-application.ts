@@ -6,9 +6,23 @@ import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { requirePermission } from "@/server/identity/permission-guard";
 
+const httpsUrl = z.string().trim().max(2048).refine((value) => !value || (() => { try { return new URL(value).protocol === "https:"; } catch { return false; } })(), "Only HTTPS links are accepted.");
 const sellerApplicationSchema = z.object({
   legalName: z.string().trim().min(2).max(160),
-  displayName: z.string().trim().min(2).max(80)
+  displayName: z.string().trim().min(2).max(80),
+  contactName: z.string().trim().min(2).max(120),
+  contactEmail: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  phoneNumber: z.string().trim().min(7).max(25).regex(/^\+?[0-9\s().-]{7,25}$/),
+  residence: z.string().trim().min(3).max(240),
+  businessType: z.enum(["INDIVIDUAL", "STORE", "ARTISAN", "AGENCY", "OTHER"]),
+  sellingCategories: z.string().trim().min(2).max(300),
+  intendedProducts: z.string().trim().min(20).max(4000),
+  description: z.string().trim().max(2000).optional().default(""),
+  facebookUrl: httpsUrl.optional().default(""),
+  youtubeUrl: httpsUrl.optional().default(""),
+  twitterUrl: httpsUrl.optional().default(""),
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180)
 });
 const reviewSchema = z.object({
   sellerId: z.string().trim().min(1),
@@ -58,7 +72,14 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
         return { sellerId: existing.id, status: existing.status, alreadySubmitted: true };
       }
       const seller = await tx.seller.create({
-        data: { ownerId: actor.userId, legalName: data.legalName, displayName: data.displayName, status: SellerStatus.PENDING },
+        data: {
+          ownerId: actor.userId, legalName: data.legalName, displayName: data.displayName,
+          contactName: data.contactName, contactEmail: data.contactEmail, phoneNumber: data.phoneNumber,
+          residence: data.residence, businessType: data.businessType, sellingCategories: data.sellingCategories,
+          intendedProducts: data.intendedProducts, description: data.description,
+          facebookUrl: data.facebookUrl || null, youtubeUrl: data.youtubeUrl || null, twitterUrl: data.twitterUrl || null,
+          latitude: data.latitude, longitude: data.longitude, status: SellerStatus.PENDING
+        },
         select: { id: true, status: true }
       });
       await tx.auditLog.create({ data: {
