@@ -115,8 +115,8 @@ export async function getSellerDashboardAnalytics(input: SellerAnalyticsRange) {
             order: { placedAt: { gte: from, lt: toExclusive } }
           }
         },
-        _sum: { quantity: true, lineTotalMinor: true },
-        orderBy: { _sum: { lineTotalMinor: "desc" } },
+        _sum: { quantity: true },
+        orderBy: { _sum: { quantity: "desc" } },
         take: 8
       }) : Promise.resolve([]),
       catalogPermission ? prisma.product.count({ where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED" } }) : Promise.resolve(null),
@@ -177,8 +177,7 @@ export async function getSellerDashboardAnalytics(input: SellerAnalyticsRange) {
     topProducts: topProducts.map((row) => ({
       productId: row.productId,
       name: row.productName,
-      unitsSold: row._sum.quantity ?? 0,
-      amountMinor: (row._sum.lineTotalMinor ?? 0n).toString()
+      unitsSold: row._sum.quantity ?? 0
     }))
   };
 }
