@@ -603,7 +603,7 @@ model Store {
   conversations              StoreConversation[]
   commissionTransactions     CommissionTransaction[]
 
-  @@index([sellerId, status])
+  @@unique([sellerId])
   @@index([status, createdAt])
 }
 
@@ -715,6 +715,11 @@ model Product {
   slug                String                @db.VarChar(180)
   name                String
   description         String?
+  city                String?               @db.VarChar(120)
+  district            String?               @db.VarChar(120)
+  contactPhone        String?               @db.VarChar(40)
+  videoUrl            String?               @db.VarChar(2048)
+  customFields        Json?
   status              CatalogEntityStatus   @default(DRAFT)
   approvalStatus      ProductApprovalStatus @default(PENDING)
   rejectionReason     String?
