@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Prisma } from "@prisma/client";
 
-const { requireCurrentSession, requirePermission, sellerFindUnique, sellerCreate, auditCreate, transaction, roleFindUnique, roleUpsert, sellerUpdateMany, storeFindUnique, storeCreate, marketFindMany } = vi.hoisted(() => ({
+const { requireCurrentSession, requirePermission, sellerFindUnique, sellerCreate, auditCreate, transaction, roleFindUnique, roleUpsert, sellerUpdateMany, storeFindUnique, storeFindFirst, storeCreate, marketFindMany, queryRaw } = vi.hoisted(() => ({
   requireCurrentSession: vi.fn(), requirePermission: vi.fn(), sellerFindUnique: vi.fn(),
   sellerCreate: vi.fn(), auditCreate: vi.fn(), transaction: vi.fn(),
   roleFindUnique: vi.fn(), roleUpsert: vi.fn(), sellerUpdateMany: vi.fn(),
