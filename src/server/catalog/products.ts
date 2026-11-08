@@ -22,15 +22,15 @@ const createSchema = z.object({
   storeId: z.string().trim().min(1),
   name: z.string().trim().min(2).max(180),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180),
-  description: z.string().trim().max(12000).optional(),
-  city: z.string().trim().max(120).optional(),
-  district: z.string().trim().max(120).optional(),
-  contactPhone: z.string().trim().max(40).optional(),
+  description: z.string().trim().min(1).max(12000),
+  city: z.string().trim().min(1).max(120),
+  district: z.string().trim().min(1).max(120),
+  contactPhone: z.string().trim().min(6).max(40),
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").optional(),
   customFields: z.record(z.string().trim().min(1).max(100), z.unknown()).optional(),
   initialStock: z.number().int().min(0).max(100000000).default(0),
   brandId: z.string().trim().min(1).optional(),
-  categoryIds: z.array(z.string().trim().min(1)).max(30).default([]),
+  categoryIds: z.array(z.string().trim().min(1)).min(1).max(30),
   mapLocation: z.object({
     latitude: z.number().finite().min(-90).max(90),
     longitude: z.number().finite().min(-180).max(180)
@@ -58,6 +58,7 @@ const createSchema = z.object({
     sku: z.string().trim().min(1).max(100),
     barcode: z.string().trim().min(1).max(100).optional(),
     name: z.string().trim().max(180).optional(),
+    weightGrams: z.number().int().min(0).max(1000000).optional(),
     optionValues: z.record(z.string(), z.unknown()).optional(),
     prices: z.array(priceSchema).min(1).max(20)
   })).min(1).max(100)
@@ -170,7 +171,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         } } : undefined,
         variants: {
           create: data.variants.map((variant) => ({
-            sku: variant.sku, barcode: variant.barcode, name: variant.name,
+            sku: variant.sku, barcode: variant.barcode, name: variant.name, weightGrams: variant.weightGrams,
             optionValues: variant.optionValues as Prisma.InputJsonValue | undefined,
             prices: { create: variant.prices.map((price) => ({
               marketId: price.marketId, currencyCode: price.currencyCode,
