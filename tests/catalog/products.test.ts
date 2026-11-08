@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   storeFindUnique: vi.fn(),
   brandFindFirst: vi.fn(),
   categoryCount: vi.fn(),
+  categoryFindMany: vi.fn(),
   categoryAttributeFindMany: vi.fn(),
   localityFindUnique: vi.fn(),
   neighborhoodFindUnique: vi.fn(),
@@ -19,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   categoryDeleteMany: vi.fn(),
   categoryCreateMany: vi.fn(),
   productUpdateMany: vi.fn(),
+  productPropertyDetailsUpsert: vi.fn(),
+  productPropertyDetailsDeleteMany: vi.fn(),
   productMediaFindMany: vi.fn(),
   productMediaDeleteMany: vi.fn(),
   productMediaCreateMany: vi.fn(),
@@ -54,13 +57,14 @@ describe("product lifecycle", () => {
     });
     mocks.brandFindFirst.mockResolvedValue({ id: "brand-1" });
     mocks.categoryCount.mockResolvedValue(1);
+    mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "general" }]);
     mocks.categoryAttributeFindMany.mockResolvedValue([]);
     mocks.localityFindUnique.mockResolvedValue(null);
     mocks.neighborhoodFindUnique.mockResolvedValue(null);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", productNumber: BigInt("101"), storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
-    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", latitude: null, longitude: null, categories: [{ category: { slug: "general" } }], store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
     mocks.productMediaFindMany.mockResolvedValue([]);
     mocks.deleteProductImage.mockResolvedValue("deleted");
@@ -68,7 +72,7 @@ describe("product lifecycle", () => {
     mocks.transaction.mockImplementation(async (callback: (tx: Prisma.TransactionClient) => unknown) => callback({
       store: { findUnique: mocks.storeFindUnique },
       brand: { findFirst: mocks.brandFindFirst },
-      category: { count: mocks.categoryCount },
+      category: { count: mocks.categoryCount, findMany: mocks.categoryFindMany },
       categoryAttribute: { findMany: mocks.categoryAttributeFindMany },
       syriaLocality: { findUnique: mocks.localityFindUnique },
       syriaNeighborhood: { findUnique: mocks.neighborhoodFindUnique },
