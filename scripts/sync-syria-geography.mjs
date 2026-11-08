@@ -22,7 +22,9 @@ function common(record) {
     longitude: record.centroid?.longitude ?? null,
     sourceVersion: VERSION,
     sourceIds: Array.isArray(record.sourceIds) ? record.sourceIds : [],
-    aliases: record.aliases ?? undefined
+    aliases: record.aliases ?? undefined,
+    sourceReferences: record.sourceReferences ?? undefined,
+    sourceStatus: record.sourceStatus ?? null
   };
 }
 
