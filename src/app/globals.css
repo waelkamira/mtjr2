@@ -196,3 +196,34 @@ html body [data-sonner-toaster].clay-toaster[data-sonner-theme="light"] {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* Pinned Leaflet map marker: brand-consistent, keyboard-independent map pin. */
+.mtjr-leaflet-marker {
+  background: transparent;
+  border: 0;
+}
+.mtjr-leaflet-marker__pin {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: #e87524;
+  box-shadow: 0 3px 12px rgb(15 23 42 / 30%);
+  transform: rotate(-45deg);
+}
+.mtjr-leaflet-marker__pin > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+}
+.leaflet-container {
+  font: inherit;
+  z-index: 0;
+}
+.leaflet-control-attribution {
+  font-size: 10px !important;
+}
