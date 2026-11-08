@@ -81,7 +81,7 @@ export default function SyriaLocationPicker({ district, onCityChange, onDistrict
     const timer = window.setTimeout(() => {
       setLoading(true); setError("");
       loadLevel("localities", { subdistrictId, ...(search.trim().length >= 2 ? { q: search.trim() } : {}) })
-        .then((result) => { if (active) { setLocalities(result.items); setCityPlaceId(""); setNeighborhoodId(""); setNeighborhoods([]); setManualNeighborhood(""); } })
+        .then((result) => { if (active) { setLocalities(result.items); setCityPlaceId(""); setNeighborhoodId(""); setNeighborhoods([]); setManualNeighborhood(""); onCityChange(""); onDistrictChange(""); onGeographyChange({ governorateId, ...(districtId ? { districtId } : {}), ...(subdistrictId ? { subdistrictId } : {}), source: "opensyria", sourceVersion: "v0.1.5" }); } })
         .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "تعذر تحميل المدن والأحياء."); })
         .finally(() => { if (active) setLoading(false); });
     }, search.trim().length >= 2 ? 350 : 0);
