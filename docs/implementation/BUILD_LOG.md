@@ -2472,3 +2472,24 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - ImageKit documents HTTP 403 for failed account authentication, expired public/private keys, disabled accounts, or exhausted storage/upload limits. Restricted API keys must grant Media Read & Write for uploads.
 - Verify the private key in the ImageKit dashboard and replace the deployment's `IMAGEKIT_PRIVATE_KEY` with the current private key. Do not use a public key or client-side key. Check the account's storage/upload quota.
 - This repository-only change cannot validate or repair the external ImageKit account credential. No live upload, local typecheck, unit-test run, production deployment, or browser journey is claimed here; run CI against this exact branch head and perform one real seller upload after correcting the provider configuration.
+
+
+## 2026-11-08 — Seller center, single-store ownership, listing completeness and media studio
+
+**Implemented on `feat/super-admin-control-panel`**
+- Reworked the seller workspace presentation with a responsive sticky navigation, wider dashboard canvas, refined forest/ivory visual system, stronger store overview hero, and elevated KPI cards. Existing order/inventory charts remain data-backed; unavailable metrics are not fabricated.
+- Enforced one owned store per seller account in the creation service. A second create request returns the existing owned store instead of creating another. The seller UI hides the creation form once the account already owns a store.
+- Added a database unique constraint on `Store.sellerId`. The migration checks for existing duplicate seller ownership and deliberately aborts with a clear message instead of deleting or silently merging existing stores. It also removes the now-redundant seller/status index.
+- Compared Akaar's `app/(selling)/newPost/product-create-form.jsx` with Matjar's draft flow. Added city, district/area, contact phone, HTTPS video URL, initial stock quantity, and flexible category-specific key/value details to the Matjar product draft form and API schema.
+- Extended Prisma `Product` with `city`, `district`, `contactPhone`, `videoUrl`, and JSON `customFields`. Initial stock is written into the store's MAIN warehouse inventory; the MAIN warehouse is created or reactivated when necessary. The initial stock amount is included in the product-created audit metadata.
+- Rebuilt the image interaction as a modal image studio with multi-image selection, local previews, thumbnails, primary-cover selection, per-image deletion, replacement upload, and drag-and-drop upload. The existing provider upload endpoint and server-side validation remain in use.
+- Added seller-owned shipping-rate editing: saved services can be loaded into the editor, updated through a scoped PATCH endpoint, and reloaded after save. Changes are audited.
+
+**Migration**
+- `prisma/migrations/20261108123000_seller_store_limit_and_listing_fields/migration.sql`
+- Apply with the project's normal Prisma migration deployment after reviewing the duplicate-store precondition. If historical duplicate stores exist for one seller, consolidate their business data first; this migration intentionally refuses to destroy or merge records.
+
+**Verification status**
+- Source and migration files were committed to the feature branch.
+- Automated typecheck, unit tests, Prisma migration execution, and browser/device journeys have not been run in this editing session. Do not treat this commit as a verified deployment.
+- Existing Vercel deployment rate-limit restrictions may still prevent a hosted build/deploy; check the current commit status separately.
