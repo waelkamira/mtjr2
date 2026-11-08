@@ -18,6 +18,8 @@ type LeafletMap = {
   off(event: string, handler: (event: LeafletEvent) => void): LeafletMap;
   remove(): void;
   invalidateSize(): void;
+  getZoom(): number;
+  getCenter(): LeafletPoint;
 };
 type LeafletApi = {
   map(element: HTMLElement, options?: Record<string, unknown>): LeafletMap;
@@ -107,7 +109,17 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
       onChangeRef.current(point);
     };
     map.on("click", clickHandler);
+    const updateViewport = () => {
+      if (!elementRef.current) return;
+      const center = map.getCenter();
+      elementRef.current.dataset.mapZoom = String(map.getZoom());
+      elementRef.current.dataset.centerLat = center.lat.toFixed(6);
+      elementRef.current.dataset.centerLng = center.lng.toFixed(6);
+    };
+    map.on("zoomend", updateViewport);
+    map.on("moveend", updateViewport);
     mapRef.current = map;
+    updateViewport();
     const resize = () => map.invalidateSize();
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null;
     if (observer && elementRef.current) observer.observe(elementRef.current);
@@ -116,6 +128,8 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
       window.clearTimeout(resizeTimer);
       observer?.disconnect();
       map.off("click", clickHandler);
+      map.off("zoomend", updateViewport);
+      map.off("moveend", updateViewport);
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
