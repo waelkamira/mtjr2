@@ -45,12 +45,15 @@ export async function GET(request: Request) {
   const governorateId = params.get("governorateId") ?? "";
   const districtId = params.get("districtId") ?? "";
   const subdistrictId = params.get("subdistrictId") ?? "";
+  const kind = params.get("kind") ?? "";
   for (const id of [governorateId, districtId, subdistrictId]) {
     if (id && !idPattern.test(id)) return NextResponse.json({ error: "Invalid geography parent ID." }, { status: 400 });
   }
 
   if (level === "districts" && !governorateId) return NextResponse.json({ error: "Governorate is required." }, { status: 400 });
   if (level === "subdistricts" && !districtId) return NextResponse.json({ error: "District is required." }, { status: 400 });
+  if (kind && !["city", "town", "village", "locality"].includes(kind)) return NextResponse.json({ error: "Invalid locality kind." }, { status: 400 });
+  if (level !== "localities" && kind) return NextResponse.json({ error: "Kind filter is only available for localities." }, { status: 400 });
   if (level === "localities" && !governorateId && !subdistrictId) {
     return NextResponse.json({ error: "Choose a governorate or subdistrict before loading localities." }, { status: 400 });
   }
@@ -64,6 +67,7 @@ export async function GET(request: Request) {
   if (governorateId) upstream.searchParams.set("governorateId", governorateId);
   if (districtId) upstream.searchParams.set("districtId", districtId);
   if (subdistrictId) upstream.searchParams.set("subdistrictId", subdistrictId);
+  if (kind) upstream.searchParams.set("kind", kind);
 
   try {
     const response = await fetch(upstream, {
