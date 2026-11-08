@@ -20,7 +20,7 @@ type CategoryAttribute = {
   valueType: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "MULTI_SELECT";
   required: boolean; variantLevel: boolean; options: string[];
 };
-type ProductLocationDraft = { localityId?: string; neighborhoodId?: string; neighborhood?: string; latitude?: number; longitude?: number };
+type ProductLocationDraft = { city?: string; district?: string; localityId?: string; neighborhoodId?: string; neighborhood?: string; latitude?: number; longitude?: number };
 type Product = {
   id: string; productNumber: string; name: string; slug: string; description: string | null;
   city: string | null; district: string | null; contactPhone: string | null; videoUrl: string | null;
@@ -394,6 +394,7 @@ export default function SellerProductsPage() {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editName, slug: editSlug, description: editDescription,
+          city: editProductLocation.city ?? null, district: editProductLocation.district ?? null,
           contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
           ...(editIsRealEstate ? {
             propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea },
@@ -557,7 +558,7 @@ export default function SellerProductsPage() {
             <div className="flex flex-wrap gap-2">
               {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? "");
                 setEditCategoryId(product.categories[0]?.category.id ?? "");
-                setEditProductLocation({ localityId: product.localityId ?? undefined, neighborhoodId: product.neighborhoodId ?? undefined, neighborhood: product.neighborhood ?? undefined, latitude: product.latitude ?? undefined, longitude: product.longitude ?? undefined });
+                setEditProductLocation({ city: product.city ?? undefined, district: product.district ?? undefined, localityId: product.localityId ?? undefined, neighborhoodId: product.neighborhoodId ?? undefined, neighborhood: product.neighborhood ?? undefined, latitude: product.latitude ?? undefined, longitude: product.longitude ?? undefined });
                 setEditPropertyType(product.propertyDetails?.propertyType ?? "APARTMENT"); setEditListingType(product.propertyDetails?.listingType ?? "SALE");
                 setEditBedrooms(product.propertyDetails?.bedrooms == null ? "" : String(product.propertyDetails.bedrooms)); setEditBathrooms(product.propertyDetails?.bathrooms == null ? "" : String(product.propertyDetails.bathrooms)); setEditFloorArea(product.propertyDetails?.floorArea ?? "");
                 setEditMedia(product.media); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
