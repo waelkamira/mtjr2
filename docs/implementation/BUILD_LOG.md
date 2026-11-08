@@ -2548,3 +2548,27 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added unit tests for returning an already-owned store without creating a second store, and for recovering a concurrent duplicate seller-store create through the unique `sellerId` constraint.
 - Updated the seller application test transaction mocks to include the new `store.findFirst` lookup.
 - The one-store rule is enforced by the Prisma unique constraint and service-level idempotent response. It still requires a safe production migration after checking duplicate seller ownership.
+
+
+## Akaar product-form parity review
+
+The Akaar create form `app/(selling)/newPost/product-create-form.jsx` and its `app/api/product/route.js` were reviewed against Matjar's seller product form, Prisma schema, and catalog service. The Akaar category modules under `components/categoryFields/` were also inspected. Their dynamic field keys match the category preset field keys used by Matjar for the corresponding categories.
+
+| Akaar field | Matjar field / persistence |
+|---|---|
+| `title` | `Product.name` |
+| `categoryId` / category name | `ProductCategory`; category name/slug are resolved server-side |
+| `images[]` | `ProductMedia` records with order, cover flag, storage key, MIME type and dimensions |
+| `city` | `Product.city` |
+| `town` | `Product.district` |
+| `phoneNumber` | `Product.contactPhone` |
+| `basePrice` | `ProductVariant` + `ProductPrice.amountMinor` per enabled market/currency |
+| `stockQuantity` | `Inventory.quantityOnHand` at the store's main warehouse |
+| `description` | `Product.description` |
+| `link` (video) | `Product.videoUrl` (HTTPS) |
+| `lat` / `lng` | `ProductMapLocation` with private exact and rounded public coordinates |
+| `details{}` | `Product.customFields` JSON, validated against the primary category's server-side presets |
+
+Matjar also persists the seller/store relation, SKU/barcode/weight, market-specific pricing, normalized real-estate details, and optional brand/variant data. Authenticated owner identity and category labels are derived by the server rather than trusted from the client.
+
+**Remaining product-model scope:** the existing create form currently exposes one variant row with a price per enabled market, while Prisma supports multiple variants; the draft editor does not yet edit variant/SKU/price rows or product attribute definitions, identifiers, and translations. These are separate follow-up work items and are not represented as completed by the field mapping above.
