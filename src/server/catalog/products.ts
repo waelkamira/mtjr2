@@ -332,7 +332,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (!brand) throw new Error("The selected brand is not active.");
     }
     const categoryIds = data.categoryIds === undefined ? undefined : [...new Set(data.categoryIds)];
-    let selectedCategorySlugs = current.categories.map((entry) => entry.category.slug);
+    let selectedCategorySlugs = (current.categories ?? []).map((entry) => entry.category.slug);
     if (categoryIds !== undefined) {
       if (categoryIds.length) {
         const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
