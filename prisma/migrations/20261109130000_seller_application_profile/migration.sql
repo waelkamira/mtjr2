@@ -12,6 +12,7 @@ ALTER TABLE "Seller"
   ADD COLUMN "facebookUrl" VARCHAR(2048),
   ADD COLUMN "youtubeUrl" VARCHAR(2048),
   ADD COLUMN "twitterUrl" VARCHAR(2048),
+  ADD COLUMN "identityDocumentFileId" VARCHAR(255),
   ADD COLUMN "latitude" DOUBLE PRECISION,
   ADD COLUMN "longitude" DOUBLE PRECISION;
 
