@@ -324,6 +324,18 @@ enum ProductApprovalStatus {
   REJECTED
 }
 
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  LAND
+  COMMERCIAL
+}
+
+enum PropertyListingType {
+  SALE
+  RENT
+}
+
 enum ProductMediaType {
   IMAGE
   VIDEO
@@ -728,6 +740,10 @@ model Product {
   slug                String                @db.VarChar(180)
   name                String
   description         String?
+  city                String?               @db.VarChar(120)
+  district            String?               @db.VarChar(120)
+  contactPhone        String?               @db.VarChar(40)
+  videoUrl            String?               @db.VarChar(2048)
   status              CatalogEntityStatus   @default(DRAFT)
   approvalStatus      ProductApprovalStatus @default(PENDING)
   rejectionReason     String?
@@ -740,6 +756,8 @@ model Product {
   categories          ProductCategory[]
   translations        ProductTranslation[]
   media               ProductMedia[]
+  mapLocation         ProductMapLocation?
+  propertyDetails     ProductPropertyDetails?
   variants            ProductVariant[]
   identifiers         ProductIdentifier[]
   attributes          ProductAttribute[]
@@ -810,6 +828,7 @@ model ProductMedia {
 
   @@index([productId, sortOrder])
 }
+
 
 model ProductVariant {
   id                 String              @id @default(cuid())
