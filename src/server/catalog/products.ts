@@ -27,10 +27,6 @@ const createSchema = z.object({
   district: z.string().trim().max(120).optional(),
   contactPhone: z.string().trim().min(6).max(40).optional(),
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").optional(),
-  mapLocation: z.object({
-    latitude: z.number().finite().min(-90).max(90),
-    longitude: z.number().finite().min(-180).max(180)
-  }).optional(),
   propertyDetails: z.object({
     propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
     listingType: z.enum(["SALE", "RENT"]),
@@ -120,8 +116,8 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       : [];
     if (selectedCategories.length !== categoryIds.length) throw new Error("Every selected category must be active.");
     const isRealEstate = selectedCategories.some((category) => category.slug === "real-estate");
-    if (isRealEstate && (!data.propertyDetails || !data.mapLocation)) {
-      throw new Error("Real-estate listings require property details and a map location.");
+    if (isRealEstate && (!data.propertyDetails || data.latitude === undefined || data.longitude === undefined)) {
+      throw new Error("Real-estate listings require property details and map coordinates.");
     }
     if (!isRealEstate && data.propertyDetails) {
       throw new Error("Property details can only be added to a real-estate listing.");
@@ -207,12 +203,6 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
           values: { create: { value: item.value as Prisma.InputJsonValue } }
         })) },
         media: { create: data.media.map((item) => ({ ...item })) },
-        mapLocation: data.mapLocation ? { create: {
-          latitude: data.mapLocation.latitude,
-          longitude: data.mapLocation.longitude,
-          publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100,
-          publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100
-        } } : undefined,
         propertyDetails: data.propertyDetails ? { create: {
           ...data.propertyDetails,
           floorArea: new Prisma.Decimal(data.propertyDetails.floorArea)
@@ -328,10 +318,8 @@ const updateProductSchema = z.object({
   district: z.string().trim().max(120).nullable().optional(),
   contactPhone: z.string().trim().min(6).max(40).nullable().optional(),
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
-  mapLocation: z.object({
-    latitude: z.number().finite().min(-90).max(90),
-    longitude: z.number().finite().min(-180).max(180)
-  }).nullable().optional(),
+  latitude: z.number().finite().min(-90).max(90).nullable().optional(),
+  longitude: z.number().finite().min(-180).max(180).nullable().optional(),
   propertyDetails: z.object({
     propertyType: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
     listingType: z.enum(["SALE", "RENT"]),
@@ -367,7 +355,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, categories: { select: { category: { select: { slug: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, categories: { select: { category: { select: { slug: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
@@ -382,14 +370,17 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
     }
-    if (data.propertyDetails !== undefined || data.mapLocation !== undefined) {
+    if (data.propertyDetails !== undefined || data.latitude !== undefined || data.longitude !== undefined || categoryIds !== undefined) {
       const selectedCategories = categoryIds === undefined
         ? current.categories.map((entry) => entry.category)
         : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { slug: true } });
       const isRealEstate = selectedCategories.some((category) => category.slug === "real-estate");
       if (isRealEstate && data.propertyDetails === null) throw new Error("Real-estate listings must retain property details.");
       if (!isRealEstate && data.propertyDetails && data.propertyDetails !== null) throw new Error("Property details can only be added to a real-estate listing.");
-      if (isRealEstate && data.mapLocation === null) throw new Error("Real-estate listings must retain a map location.");
+      const nextLatitude = data.latitude === undefined ? current.latitude : data.latitude;
+      const nextLongitude = data.longitude === undefined ? current.longitude : data.longitude;
+      if ((nextLatitude == null) !== (nextLongitude == null)) throw new Error("Latitude and longitude must be supplied together.");
+      if (isRealEstate && (nextLatitude == null || nextLongitude == null)) throw new Error("Real-estate listings must retain map coordinates.");
     }
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT },
@@ -401,6 +392,8 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         ...(data.district !== undefined ? { district: data.district } : {}),
         ...(data.contactPhone !== undefined ? { contactPhone: data.contactPhone } : {}),
         ...(data.videoUrl !== undefined ? { videoUrl: data.videoUrl } : {}),
+        ...(data.latitude !== undefined ? { latitude: data.latitude } : {}),
+        ...(data.longitude !== undefined ? { longitude: data.longitude } : {}),
         ...(data.brandId !== undefined ? { brandId: data.brandId } : {}),
         approvalStatus: ProductApprovalStatus.PENDING,
         approvedAt: null,
@@ -413,28 +406,6 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (categoryIds.length) await tx.productCategory.createMany({
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
       });
-    }
-    if (data.mapLocation !== undefined) {
-      if (data.mapLocation === null) {
-        await tx.productMapLocation.deleteMany({ where: { productId: id } });
-      } else {
-        await tx.productMapLocation.upsert({
-          where: { productId: id },
-          create: {
-            productId: id,
-            latitude: data.mapLocation.latitude,
-            longitude: data.mapLocation.longitude,
-            publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100,
-            publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100
-          },
-          update: {
-            latitude: data.mapLocation.latitude,
-            longitude: data.mapLocation.longitude,
-            publicLatitude: Math.round(data.mapLocation.latitude * 100) / 100,
-            publicLongitude: Math.round(data.mapLocation.longitude * 100) / 100
-          }
-        });
-      }
     }
     if (data.propertyDetails !== undefined) {
       if (data.propertyDetails === null) {
@@ -544,7 +515,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     select: {
       id: true, productNumber: true, name: true, slug: true, description: true,
       city: true, district: true, contactPhone: true, videoUrl: true,
-      mapLocation: { select: { latitude: true, longitude: true, publicLatitude: true, publicLongitude: true } },
+      latitude: true, longitude: true,
       propertyDetails: { select: { propertyType: true, listingType: true, bedrooms: true, bathrooms: true, floorArea: true } },
       categories: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { category: { select: { id: true, name: true, slug: true } } } },
       status: true, approvalStatus: true,
