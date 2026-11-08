@@ -235,8 +235,8 @@ export default function SellerWorkspacePage() {
   const activeSalesCurrency = salesCurrencies.find((entry) => entry.currencyCode === selectedSalesCurrency) ?? salesCurrencies[0];
   const formatCurrencyMinor = (amountMinor: string, currencyCode: string, minorUnit: number) => {
     const amount = BigInt(amountMinor);
-    const factor = 10n ** BigInt(minorUnit);
-    const absolute = amount < 0n ? -amount : amount;
+    const factor = BigInt(10) ** BigInt(minorUnit);
+    const absolute = amount < BigInt(0) ? -amount : amount;
     const whole = amount < 0n ? -(absolute / factor) : absolute / factor;
     const fraction = absolute % factor;
     const formatter = new Intl.NumberFormat(locale, {
