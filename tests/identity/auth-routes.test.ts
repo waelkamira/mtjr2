@@ -147,7 +147,7 @@ describe("identity HTTP routes", () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. Signed in successfully." });
+    expect(await response.json()).toEqual({ message: "Account created. Signed in successfully.", signedIn: true });
     expect(mocks.verifyRegistrationChallenge).toHaveBeenCalledWith("valid-token", "127.0.0.1");
     expect(mocks.registerUser).toHaveBeenCalledOnce();
     expect(mocks.createUserSession).toHaveBeenCalledWith("user-1", { ipAddress: "127.0.0.1", userAgent: "Vitest browser" });
