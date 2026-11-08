@@ -88,6 +88,25 @@ describe("marketplace seller lifecycle", () => {
     expect(requireCurrentSession).not.toHaveBeenCalled();
   });
 
+  it("allows a rejected seller to correct details and resubmit the same application", async () => {
+    sellerFindUnique.mockResolvedValue({ id: "seller-rejected", status: "REJECTED" });
+    const result = await submitSellerApplication({
+      legalName: "Updated Trading BV", displayName: "Updated Store",
+      contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
+      residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      intendedProducts: "Updated household products and a clearer supplier and fulfilment plan.",
+      latitude: 48.8566, longitude: 2.3522
+    });
+    expect(result).toMatchObject({ sellerId: "seller-rejected", status: "PENDING", resubmitted: true });
+    expect(sellerUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "seller-rejected", ownerId: "user-1", status: "REJECTED" },
+      data: expect.objectContaining({ legalName: "Updated Trading BV", status: "PENDING" })
+    }));
+    expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ action: "seller.application.resubmitted" })
+    }));
+  });
+
   it("returns the existing pending application on retry", async () => {
     sellerFindUnique.mockResolvedValue({ id: "seller-existing", status: "PENDING" });
     const result = await submitSellerApplication({
