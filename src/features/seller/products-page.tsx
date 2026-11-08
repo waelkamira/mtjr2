@@ -7,7 +7,7 @@ import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import ProductLocationMap, { type ProductCoordinates } from "@/components/maps/product-location-map";
 import { toMinorUnits } from "@/lib/money";
-import { getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
+import { buildCategoryFieldsForEdit, getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
 
 type Market = {
   id: string; code: string; name: string;
@@ -39,29 +39,6 @@ function flatten(items: Category[], prefix = ""): Array<{ id: string; slug: stri
     { id: item.id, slug: item.slug, label: prefix + item.name },
     ...flatten(item.children ?? [], prefix + item.name + " / ")
   ]);
-}
-
-function categoryFieldsForEdit(
-  slug: string,
-  savedValues: unknown,
-  currentFields: Array<{ key: string; value: string; label?: string }> = []
-): Array<{ key: string; value: string; label?: string }> {
-  const saved = savedValues && typeof savedValues === "object" && !Array.isArray(savedValues)
-    ? savedValues as Record<string, unknown>
-    : {};
-  const current = Object.fromEntries(currentFields.filter((field) => field.key.trim()).map((field) => [field.key, field.value]));
-  const values = { ...saved, ...current };
-  const presets = getCategoryFieldPresets(slug);
-  const knownKeys = new Set(presets.map((field) => field.key));
-  const standard = presets.map((field) => ({
-    ...field,
-    value: String(values[field.key] ?? "")
-  }));
-  const additional = Object.entries(values)
-    .filter(([key]) => !knownKeys.has(key))
-    .filter(([, value]) => ["string", "number", "boolean"].includes(typeof value))
-    .map(([key, value]) => ({ key, value: String(value ?? "") }));
-  return [...standard, ...additional];
 }
 
 export default function SellerProductsPage() {
@@ -602,7 +579,7 @@ export default function SellerProductsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditCity(product.city ?? ""); setEditDistrict(product.district ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? ""); setEditBrandId(product.brandId ?? ""); setEditCategoryIds(product.categories.map((entry) => entry.category.id)); setEditCustomFields(categoryFieldsForEdit(product.categories[0]?.category.slug ?? "", product.customFields)); setEditMapLocation(product.mapLocation); setEditPropertyType(product.propertyDetails?.propertyType ?? "APARTMENT"); setEditListingType(product.propertyDetails?.listingType ?? "SALE"); setEditBedrooms(product.propertyDetails?.bedrooms == null ? "" : String(product.propertyDetails.bedrooms)); setEditBathrooms(product.propertyDetails?.bathrooms == null ? "" : String(product.propertyDetails.bathrooms)); setEditFloorArea(product.propertyDetails?.floorArea ?? ""); const coverIndex = Math.max(0, product.media.findIndex((media) => media.isPrimary)); setEditMedia(product.media.map((media, index) => ({ ...media, sortOrder: index, isPrimary: index === coverIndex }))); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditCity(product.city ?? ""); setEditDistrict(product.district ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? ""); setEditBrandId(product.brandId ?? ""); setEditCategoryIds(product.categories.map((entry) => entry.category.id)); setEditCustomFields(buildCategoryFieldsForEdit(product.categories[0]?.category.slug ?? "", product.customFields)); setEditMapLocation(product.mapLocation); setEditPropertyType(product.propertyDetails?.propertyType ?? "APARTMENT"); setEditListingType(product.propertyDetails?.listingType ?? "SALE"); setEditBedrooms(product.propertyDetails?.bedrooms == null ? "" : String(product.propertyDetails.bedrooms)); setEditBathrooms(product.propertyDetails?.bathrooms == null ? "" : String(product.propertyDetails.bathrooms)); setEditFloorArea(product.propertyDetails?.floorArea ?? ""); const coverIndex = Math.max(0, product.media.findIndex((media) => media.isPrimary)); setEditMedia(product.media.map((media, index) => ({ ...media, sortOrder: index, isPrimary: index === coverIndex }))); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
@@ -618,7 +595,7 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" className={inputClass} value={editVideoUrl} onChange={(e) => setEditVideoUrl(e.target.value)} /></label>
             </div>
             <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={editBrandId} onChange={(e) => setEditBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
-            <label className="grid gap-1 text-sm">{translate(locale, "Categories", "الفئات")}<select required multiple className={inputClass + " min-h-28"} value={editCategoryIds} onChange={(e) => { const nextIds = Array.from(e.target.selectedOptions, (option) => option.value); const nextSlug = categoryOptions.find((item) => item.id === nextIds[0])?.slug ?? ""; setEditCategoryIds(nextIds); setEditCustomFields((current) => categoryFieldsForEdit(nextSlug, {}, current)); }}>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Categories", "الفئات")}<select required multiple className={inputClass + " min-h-28"} value={editCategoryIds} onChange={(e) => { const nextIds = Array.from(e.target.selectedOptions, (option) => option.value); const nextSlug = categoryOptions.find((item) => item.id === nextIds[0])?.slug ?? ""; setEditCategoryIds(nextIds); setEditCustomFields((current) => buildCategoryFieldsForEdit(nextSlug, {}, current)); }}>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><legend className="px-1 text-sm font-semibold">{translate(locale, "Category-specific details", "تفاصيل الفئة")}</legend>{editCustomFields.length ? <div className="grid gap-3 sm:grid-cols-2">{editCustomFields.map((field, index) => <label key={field.key} className="grid gap-1 text-sm">{field.label ?? field.key}<input required maxLength={500} className={inputClass} value={field.value} onChange={(event) => setEditCustomFields((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} /></label>)}</div> : <p className="text-xs text-[var(--muted)]">{translate(locale, "No additional fields are defined for the selected category.", "لا توجد حقول إضافية محددة للفئة المختارة.")}</p>}</fieldset>
             {editIsRealEstate && <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4"><legend className="px-1 text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</legend><div className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1 text-sm">{translate(locale, "Property type", "نوع العقار")}<select required className={inputClass} value={editPropertyType} onChange={(e) => setEditPropertyType(e.target.value)}><option value="APARTMENT">{translate(locale, "Apartment", "شقة")}</option><option value="HOUSE">{translate(locale, "House / villa", "منزل / فيلا")}</option><option value="LAND">{translate(locale, "Land", "أرض")}</option><option value="COMMERCIAL">{translate(locale, "Commercial property", "عقار تجاري")}</option></select></label>
