@@ -46,7 +46,7 @@ CREATE INDEX "SyriaSubdistrict_districtId_nameEn_idx" ON "SyriaSubdistrict"("dis
 ALTER TABLE "SyriaSubdistrict" ADD CONSTRAINT "SyriaSubdistrict_districtId_fkey" FOREIGN KEY ("districtId") REFERENCES "SyriaDistrict"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE "SyriaLocality" (
-  "id" TEXT NOT NULL, "governorateId" TEXT NOT NULL, "districtId" TEXT NOT NULL, "subdistrictId" TEXT NOT NULL,
+  "id" TEXT NOT NULL, "governorateId" TEXT NOT NULL, "districtId" TEXT, "subdistrictId" TEXT,
   "nameEn" TEXT NOT NULL, "nameAr" TEXT, "kind" TEXT, "latitude" DOUBLE PRECISION, "longitude" DOUBLE PRECISION,
   "sourceVersion" VARCHAR(20) NOT NULL, "sourceIds" TEXT[] NOT NULL, "aliases" JSONB,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -56,7 +56,7 @@ CREATE INDEX "SyriaLocality_governorateId_districtId_subdistrictId_idx" ON "Syri
 CREATE INDEX "SyriaLocality_subdistrictId_nameAr_idx" ON "SyriaLocality"("subdistrictId", "nameAr");
 CREATE INDEX "SyriaLocality_subdistrictId_nameEn_idx" ON "SyriaLocality"("subdistrictId", "nameEn");
 CREATE INDEX "SyriaLocality_kind_idx" ON "SyriaLocality"("kind");
-ALTER TABLE "SyriaLocality" ADD CONSTRAINT "SyriaLocality_subdistrictId_fkey" FOREIGN KEY ("subdistrictId") REFERENCES "SyriaSubdistrict"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "SyriaLocality" ADD CONSTRAINT "SyriaLocality_subdistrictId_fkey" FOREIGN KEY ("subdistrictId") REFERENCES "SyriaSubdistrict"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "Product" ADD COLUMN "localityId" TEXT, ADD COLUMN "latitude" DOUBLE PRECISION, ADD COLUMN "longitude" DOUBLE PRECISION;
 CREATE INDEX "Product_localityId_idx" ON "Product"("localityId");
