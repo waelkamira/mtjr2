@@ -197,7 +197,7 @@ export default function ProductDetail({ initialProduct, initialSponsored }: { in
           {product.propertyDetails && <>
             <h2 className="text-sm font-semibold">{t("Property details", "تفاصيل العقار")}</h2>
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <div><dt className="text-xs text-[var(--muted)]">{t("Property type", "نوع العقار")}</dt><dd className="mt-1 text-sm font-semibold">{t(product.propertyDetails.propertyType, product.propertyDetails.propertyType === "APARTMENT" ? "شقة" : product.propertyDetails.propertyType === "HOUSE" ? "منزل / فيلا" : product.propertyDetails.propertyType === "LAND" ? "أرض" : "تجاري")}</dd></div>
+              <div><dt className="text-xs text-[var(--muted)]">{t("Property type", "نوع العقار")}</dt><dd className="mt-1 text-sm font-semibold">{product.propertyDetails.propertyType === "APARTMENT" ? t("Apartment", "شقة") : product.propertyDetails.propertyType === "HOUSE" ? t("House / villa", "منزل / فيلا") : product.propertyDetails.propertyType === "LAND" ? t("Land", "أرض") : t("Commercial", "تجاري")}</dd></div>
               <div><dt className="text-xs text-[var(--muted)]">{t("Listing", "نوع العرض")}</dt><dd className="mt-1 text-sm font-semibold">{product.propertyDetails.listingType === "SALE" ? t("For sale", "للبيع") : t("For rent", "للإيجار")}</dd></div>
               <div><dt className="text-xs text-[var(--muted)]">{t("Area", "المساحة")}</dt><dd className="mt-1 text-sm font-semibold">{product.propertyDetails.floorArea} m²</dd></div>
               {product.propertyDetails.bedrooms != null && <div><dt className="text-xs text-[var(--muted)]">{t("Bedrooms", "غرف النوم")}</dt><dd className="mt-1 text-sm font-semibold">{product.propertyDetails.bedrooms}</dd></div>}
