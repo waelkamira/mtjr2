@@ -3,7 +3,7 @@ import "server-only";
 import { CheckoutQuoteStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { requireCurrentSession } from "@/server/identity/current-session";
+import { requireCurrentSession, PermissionDeniedError } from "@/server/identity/current-session";
 import { getCheckoutQuote } from "@/server/checkout/quotes";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 
@@ -42,7 +42,7 @@ export async function createStoreShippingRate(input: unknown, now = new Date()) 
       select: { id: true, seller: { select: { ownerId: true, status: true } } }
     });
     if (!store || store.seller.status !== "ACTIVE" || !(await canManageShipping(actor.userId, store.seller.ownerId, store.id, now))) {
-      throw new Error("You do not have shipping configuration access to this store.");
+      throw new PermissionDeniedError("You do not have shipping configuration access to this store.");
     }
     const market = await tx.market.findFirst({
       where: {
@@ -79,7 +79,7 @@ export async function listStoreShippingRates(storeId: string, now = new Date()) 
     select: { id: true, seller: { select: { ownerId: true, status: true } } }
   });
   if (!store || store.seller.status !== "ACTIVE" || !(await canManageShipping(actor.userId, store.seller.ownerId, store.id, now))) {
-    throw new Error("You do not have shipping configuration access to this store.");
+    throw new PermissionDeniedError("You do not have shipping configuration access to this store.");
   }
   const rates = await prisma.storeShippingRate.findMany({
     where: { storeId: store.id }, orderBy: [{ priority: "asc" }, { createdAt: "desc" }], take: 200,
@@ -159,7 +159,6 @@ export async function selectCheckoutShipping(guestToken: string, quoteId: string
         minDeliveryDays: rate.minDeliveryDays, maxDeliveryDays: rate.maxDeliveryDays
       }
     });
-    // Any shipping price/service change invalidates the previously calculated tax snapshot.
     await tx.checkoutTaxSnapshot.deleteMany({ where: { quoteId } });
     return { ...selection, amountMinor: selection.amountMinor.toString() };
   }, { isolationLevel: "Serializable" });
