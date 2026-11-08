@@ -2832,3 +2832,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Existing unit/integration coverage continues to verify exact store-scoped permission grants, staff membership, seller order ownership, and account ownership. The static inventory is not represented as a substitute for those behavioral tests.
 - Exact-head CI [42508679290](https://github.com/waelkamira/mtjr2/actions/runs/42508679290) and Browser E2E [42508679318](https://github.com/waelkamira/mtjr2/actions/runs/42508679318) both passed on the audited SHA.
 - Result: API route access classification and the critical buyer/seller/admin boundary checks are closed for this phase. New routes must be explicitly classified to keep the gate green.
+
+
+## 2026-11-09 — Financial integrity foundation (journal invariants)
+
+**Canonical branch:** `main`  
+**Implementation commits:** `198ef450a0b343e2a06f09286ae68915b6683ef5`, `aef236ba783bb05961cfa1722786bac4e88a05f1`
+
+- Added `src/server/accounting/journal.ts` with pure domain validation for minimum line count, account presence, positive integer minor-unit amounts, single-currency journals, and exact debit/credit balance.
+- Added reversal-line construction that swaps debit/credit sides and preserves the original lines as immutable input; reversals are intended to be new journal postings, never destructive edits.
+- Added focused Vitest coverage for balanced multi-line journals, imbalance, mixed currency, zero amounts, reversal balance, and one-line rejection.
+- This is a domain foundation only: it does **not** create persistent ledger accounts/journals, post money movements, calculate seller balances, or enable payouts. Those remain blocked on the reviewed Prisma schema/migration and transactional posting service.
+- Latest commit check currently reports only the Vercel provider context as pending. No application CI result is claimed from that status response.
