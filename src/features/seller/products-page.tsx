@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Images, MapPin, Plus, Trash2 } from "lucide-
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import ProductLocationMap, { type ProductCoordinates } from "@/components/maps/product-location-map";
+import { toMinorUnits } from "@/lib/money";
 import { getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
 
 type Market = {
@@ -72,7 +73,7 @@ export default function SellerProductsPage() {
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [floorArea, setFloorArea] = useState("");
-  const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string }>>({});
+  const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amount: string }>>({});
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -298,13 +299,17 @@ export default function SellerProductsPage() {
               floorArea
             }
           } : {}),
-          variants: [{ sku, ...(barcode.trim() ? { barcode: barcode.trim() } : {}), ...(weightGrams !== "" ? { weightGrams: Number(weightGrams) } : {}), prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "" })) }]
+          variants: [{ sku, ...(barcode.trim() ? { barcode: barcode.trim() } : {}), ...(weightGrams !== "" ? { weightGrams: Number(weightGrams) } : {}), prices: availableMarkets.map((market) => {
+            const currencyCode = marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code;
+            const currency = market.currencies.find((entry) => entry.currency.code === currencyCode)?.currency ?? market.defaultCurrency;
+            return { marketId: market.id, currencyCode, amountMinor: toMinorUnits(marketPrices[market.id]?.amount ?? "", currency.minorUnit) };
+          }) }]
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       setImageManagerOpen(false); setName(""); setSlug(""); setDescription(""); setCity(""); setDistrict(""); setContactPhone(""); setVideoUrl(""); setInitialStock("1"); setCustomFields([]); setSku(""); setBarcode(""); setWeightGrams(""); setImageUrl(""); setUploadedImages([]); setSelectedPreviewIndex(0); setMapLocation(null);
       setPropertyType("APARTMENT"); setListingType("SALE"); setBedrooms(""); setBathrooms(""); setFloorArea("");
-      setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "" }]))); setCategoryId(""); setBrandId("");
+      setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "" }]))); setCategoryId(""); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -543,17 +548,17 @@ export default function SellerProductsPage() {
               <p className="text-sm font-semibold">{translate(locale, "Prices for every enabled store market", "أسعار كل سوق مفعّل للمتجر")}</p>
               {!availableMarkets.length && <p className="text-xs text-amber-800">{translate(locale, "This store has no active markets enabled.", "لا توجد أسواق مفعّلة لهذا المتجر.")}</p>}
               {availableMarkets.map((market) => {
-                const draft = marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amountMinor: "" };
+                const draft = marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amount: "" };
                 const currencies = market.currencies.map((entry) => entry.currency);
                 const currency = currencies.find((item) => item.code === draft.currencyCode) ?? market.defaultCurrency;
                 return <div key={market.id} className="grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
                   <p className="text-sm font-semibold">{market.name}</p>
                   <label className="grid gap-1 text-sm">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={draft.currencyCode} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, currencyCode: e.target.value } }))}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
-                  <label className="grid gap-1 text-sm">{translate(locale, "Price in minor units", "السعر بالوحدات الصغرى")}<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.amountMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amountMinor: e.target.value } }))} placeholder={translate(locale, "e.g. 1299", "مثال: 1299")} /><span className="text-xs text-[var(--muted)]">{translate(locale, "Integer minor units · precision", "عدد صحيح بالوحدات الصغرى · الدقة")} {currency.minorUnit}.</span></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Price", "السعر")} ({currency.symbol ?? currency.code})<input required type="text" inputMode="decimal" className={inputClass} value={draft.amount} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amount: e.target.value } }))} placeholder={currency.minorUnit ? "0.00" : "0"} /><span className="text-xs text-[var(--muted)]">{translate(locale, "Enter the normal price. Decimal places supported", "أدخل السعر المعتاد. عدد المنازل العشرية المدعومة")} {currency.minorUnit}.</span></label>
                 </div>;
               })}
             </div>
-            <button disabled={busy || uploading || !storeId || (!uploadedImages.length && !imageUrl.trim()) || (isRealEstate && (!mapLocation || !floorArea)) || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <button disabled={busy || uploading || !storeId || (!uploadedImages.length && !imageUrl.trim()) || (isRealEstate && (!mapLocation || !floorArea)) || !availableMarkets.length || availableMarkets.some((market) => { const currencyCode = marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code; const currency = market.currencies.find((entry) => entry.currency.code === currencyCode)?.currency ?? market.defaultCurrency; try { toMinorUnits(marketPrices[market.id]?.amount ?? "", currency.minorUnit); return false; } catch { return true; } })} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
