@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -54,8 +55,9 @@ export default function PlatformPrivilegeRequestsPage() {
       if (!response.ok) throw new Error(data.error || translate(locale, "Unable to submit request.", "تعذر إرسال الطلب."));
       setEmail(""); setReason(""); setNotice(translate(locale, "Privilege request submitted for independent review.", "تم إرسال طلب الامتياز للمراجعة المستقلة."));
       await load();
+      toast.success(translate(locale, "Privilege request submitted.", "تم إرسال طلب الصلاحيات."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Unable to submit request.", "تعذر إرسال الطلب."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to submit request.", "تعذر إرسال الطلب."); setError(message); toast.error(message);
     } finally { setSaving(false); }
   }
 
@@ -70,8 +72,9 @@ export default function PlatformPrivilegeRequestsPage() {
       if (!response.ok) throw new Error(data.error || translate(locale, "Unable to process decision.", "تعذرت معالجة القرار."));
       setNotice(decision === "APPROVE" ? translate(locale, "Request approved; platform access was granted.", "تمت الموافقة على الطلب ومنح صلاحية الوصول إلى المنصة.") : translate(locale, "Request rejected.", "تم رفض الطلب."));
       await load();
+      toast.success(translate(locale, "Privilege decision saved.", "تم حفظ قرار الصلاحيات."));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Unable to process decision.", "تعذرت معالجة القرار."));
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to process decision.", "تعذرت معالجة القرار."); setError(message); toast.error(message);
     } finally { setSaving(false); }
   }
 
@@ -85,14 +88,14 @@ export default function PlatformPrivilegeRequestsPage() {
         <header className="mt-4">
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Security & governance", "الأمن والحوكمة")}</p>
           <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Super Admin privilege approvals", "الموافقة على امتيازات المشرف الأعلى")}</h1>
-          <p className="mt-2 max-w-3xl text-sm text-[var(--muted)]">{translate(locale, "A two-person control for granting platform-wide access. The requester cannot approve or reject their own request; approvals grant only the canonical SUPER_ADMIN role.", "آلية موافقة من شخصين لمنح صلاحية الوصول على مستوى المنصة. لا يمكن لمقدم الطلب الموافقة على طلبه أو رفضه؛ وتمنح الموافقة دور SUPER_ADMIN الرسمي فقط.")}</p>
+          <p className="mt-2 max-w-3xl text-sm text-[var(--muted)]">{translate(locale, "A two-person control for granting platform-wide access. Neither the requester nor the target can approve or reject the request; approvals grant only the canonical SUPER_ADMIN role.", "آلية موافقة من شخصين لمنح صلاحية الوصول على مستوى المنصة. لا يمكن لمقدم الطلب أو المستخدم المستهدف الموافقة على الطلب أو رفضه؛ وتمنح الموافقة دور SUPER_ADMIN الرسمي فقط.")}</p>
         </header>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--color-forest-950)]">{notice}</p>}
 
         <form onSubmit={submitRequest} className="mt-7 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-5">
-          <div><h2 className="font-semibold text-[var(--color-forest-950)]">{translate(locale, "Request platform access for a user", "طلب صلاحية الوصول إلى المنصة لمستخدم")}</h2><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Target must be an existing active account. A different Super Admin must review this request.", "يجب أن يكون الحساب المستهدف موجودًا ونشطًا. يجب أن يراجع مشرف أعلى آخر هذا الطلب.")}</p></div>
+          <div><h2 className="font-semibold text-[var(--color-forest-950)]">{translate(locale, "Request platform access for a user", "طلب صلاحية الوصول إلى المنصة لمستخدم")}</h2><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Target must be an existing active account. A different Super Admin who is neither requester nor target must review this request.", "يجب أن يكون الحساب المستهدف موجودًا ونشطًا. يجب أن يراجعه مشرف أعلى آخر ليس مقدم الطلب ولا المستخدم المستهدف.")}</p></div>
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "User email", "البريد الإلكتروني للمستخدم")}<input required type="email" maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@example.com" className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2.5 text-sm text-[var(--foreground)]" /></label>
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Business justification", "مبررات العمل")}<textarea required minLength={20} maxLength={1000} rows={3} value={reason} onChange={(event) => setReason(event.target.value)} placeholder={translate(locale, "Explain why this person needs platform-wide management access…", "اشرح سبب حاجة هذا الشخص إلى صلاحيات الإدارة على مستوى المنصة…")} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2.5 text-sm text-[var(--foreground)]" /></label>
           <button disabled={saving} className="justify-self-start rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{saving ? translate(locale, "Processing…", "جارٍ التنفيذ…") : translate(locale, "Submit access request", "إرسال طلب الوصول")}</button>
