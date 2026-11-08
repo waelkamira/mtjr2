@@ -1,3 +1,4 @@
+import { randomBytes, createHash } from "node:crypto";
 import { AuditActorType, ConsentType, Prisma, SellerStatus, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
@@ -30,6 +31,20 @@ export class IdentityConflictError extends Error {
 
 export interface RegistrationResult {
   userId: string;
+  /** Pass only to a trusted email-delivery adapter; never return from an API. */
+  verificationToken: string;
+  verificationExpiresAt: Date;
+}
+
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
+const VERIFICATION_PURPOSE = "EMAIL_VERIFICATION";
+
+function createVerificationToken(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+function digestToken(token: string): string {
+  return createHash("sha256").update(token, "utf8").digest("hex");
 }
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -40,7 +55,8 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 /**
- * Creates an active account without requiring email verification.
+ * Creates a pending account and a single-use email-verification challenge.
+ * The raw challenge is returned only to the trusted caller that sends email.
  */
 export async function registerUser(
   input: RegistrationInput,
@@ -65,6 +81,8 @@ export async function registerUser(
   if (existingUser) throw new IdentityConflictError();
 
   const passwordHash = await hashPassword(parsed.password);
+  const verificationToken = createVerificationToken();
+  const verificationExpiresAt = new Date(now.getTime() + VERIFICATION_TTL_MS);
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -74,9 +92,29 @@ export async function registerUser(
           emailNormalized,
           passwordHash,
           displayName: parsed.displayName,
-          status: UserStatus.ACTIVE
+          status: UserStatus.PENDING
         },
         select: { id: true }
+      });
+
+      if (parsed.accountType === "CUSTOMER") {
+        const customerRole = await tx.role.findUnique({
+          where: { key: "CUSTOMER" },
+          select: { id: true }
+        });
+        if (!customerRole) throw new Error("CUSTOMER role is missing; run the identity seed before registering customers.");
+        await tx.userRoleAssignment.create({
+          data: { userId: createdUser.id, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" }
+        });
+      }
+
+      await tx.verificationToken.create({
+        data: {
+          userId: createdUser.id,
+          tokenHash: digestToken(verificationToken),
+          purpose: VERIFICATION_PURPOSE,
+          expiresAt: verificationExpiresAt
+        }
       });
 
       if (parsed.accountType === "SELLER") {
@@ -104,14 +142,80 @@ export async function registerUser(
         ]
       });
 
-      await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.registration.created", resource: "user", resourceId: createdUser.id, occurredAt: now, metadata: { emailVerificationRequired: false } } });
+      await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.registration.created", resource: "user", resourceId: createdUser.id, occurredAt: now, metadata: { emailVerificationRequired: true } } });
 
       return createdUser;
     });
 
-    return { userId: user.id };
+    return {
+      userId: user.id,
+      verificationToken,
+      verificationExpiresAt
+    };
   } catch (error) {
     if (isUniqueConstraintError(error)) throw new IdentityConflictError();
     throw error;
   }
+}
+
+/**
+ * Consumes a verification challenge exactly once and activates its account.
+ * Invalid, expired, already-used, or wrong-purpose tokens fail closed.
+ */
+export async function verifyUserEmail(
+  token: string | null | undefined,
+  now = new Date()
+): Promise<boolean> {
+  if (!token || token.length !== 43) return false;
+
+  return prisma.$transaction(async (tx) => {
+    const challenge = await tx.verificationToken.findUnique({
+      where: { tokenHash: digestToken(token) },
+      select: {
+        id: true,
+        userId: true,
+        purpose: true,
+        expiresAt: true,
+        consumedAt: true
+      }
+    });
+
+    if (
+      !challenge ||
+      challenge.purpose !== VERIFICATION_PURPOSE ||
+      challenge.consumedAt !== null ||
+      challenge.expiresAt.getTime() <= now.getTime()
+    ) {
+      return false;
+    }
+
+    const consumed = await tx.verificationToken.updateMany({
+      where: {
+        id: challenge.id,
+        purpose: VERIFICATION_PURPOSE,
+        consumedAt: null,
+        expiresAt: { gt: now }
+      },
+      data: { consumedAt: now }
+    });
+
+    if (consumed.count !== 1) return false;
+
+    // A valid token must not reactivate a suspended/disabled account. The
+    // status predicate also makes concurrent account-state changes fail closed.
+    const activated = await tx.user.updateMany({
+      where: {
+        id: challenge.userId,
+        status: UserStatus.PENDING
+      },
+      data: {
+        status: UserStatus.ACTIVE,
+        emailVerifiedAt: now
+      }
+    });
+
+    if (activated.count !== 1) return false;
+    await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.email_verification.completed", resource: "user", resourceId: challenge.userId, occurredAt: now } });
+    return true;
+  });
 }
