@@ -65,7 +65,7 @@ const rows = walk(apiRoot).map((file) => {
   const isIdentityFlow = relative.startsWith("auth/") && identityPatterns.some((pattern) => pattern.test(allSource));
   const isSystemEndpoint = (relative.startsWith("cron/") &&
     (/authorized\s*\(\s*request/.test(allSource) || (/CRON_SECRET/.test(source) && /authorization/.test(source)))) ||
-    (relative.startsWith("webhooks/") && /verifyWebhook\s*\(/.test(allSource));
+    (relative.startsWith("webhooks/") && /(?:provider\.)?verifyWebhook\s*\(/.test(allSource));
   const isPublicPreferenceMutation = relative === "locale/route.ts" && /validateIdentityMutationRequest\s*\(\s*request\s*\)/.test(allSource);
   const hasAuthorization = authorizationPatterns.some((pattern) => pattern.test(allSource));
   const hasGuestToken = guestTokenPatterns.some((pattern) => pattern.test(allSource));
