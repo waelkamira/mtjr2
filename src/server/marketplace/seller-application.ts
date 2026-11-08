@@ -21,6 +21,7 @@ const sellerApplicationSchema = z.object({
   facebookUrl: httpsUrl.optional().default(""),
   youtubeUrl: httpsUrl.optional().default(""),
   twitterUrl: httpsUrl.optional().default(""),
+  identityDocumentFileId: z.string().trim().max(255).optional().default(""),
   latitude: z.number().finite().min(-90).max(90),
   longitude: z.number().finite().min(-180).max(180)
 });
@@ -63,6 +64,19 @@ function isMatchingStoreRequest(
 export async function submitSellerApplication(input: SellerApplicationInput, now = new Date()) {
   const data = sellerApplicationSchema.parse(input);
   const actor = await requireCurrentSession(now);
+  if (data.identityDocumentFileId) {
+    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY?.trim();
+    if (!privateKey) throw new Error("Private identity document storage is not configured.");
+    const response = await fetch(`https://api.imagekit.io/v1/files/${encodeURIComponent(data.identityDocumentFileId)}/details`, {
+      headers: { Authorization: `Basic ${Buffer.from(privateKey + ":").toString("base64")}` },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) throw new Error("The identity document could not be verified. Upload it again.");
+    const details = await response.json() as { isPrivateFile?: boolean; tags?: string[] | null };
+    if (!details.isPrivateFile || !(details.tags ?? []).includes("matjar-seller-identity") || !(details.tags ?? []).includes(`user-${actor.userId}`)) {
+      throw new Error("The identity document is not a private upload belonging to this account.");
+    }
+  }
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -78,6 +92,7 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
           residence: data.residence, businessType: data.businessType, sellingCategories: data.sellingCategories,
           intendedProducts: data.intendedProducts, description: data.description,
           facebookUrl: data.facebookUrl || null, youtubeUrl: data.youtubeUrl || null, twitterUrl: data.twitterUrl || null,
+          identityDocumentFileId: data.identityDocumentFileId || null,
           latitude: data.latitude, longitude: data.longitude, status: SellerStatus.PENDING
         },
         select: { id: true, status: true }
