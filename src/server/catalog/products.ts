@@ -317,7 +317,10 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       where: { id },
       select: {
         id: true, storeId: true, status: true, customFields: true,
-        categories: { select: { category: { select: { slug: true } } } },
+        categories: {
+          orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+          select: { category: { select: { id: true, slug: true } } }
+        },
         mapLocation: { select: { productId: true } },
         propertyDetails: { select: { productId: true } },
         store: { select: { seller: { select: { ownerId: true } } } }
@@ -337,15 +340,16 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (categoryIds.length) {
         const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
         if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
-        const selectedCategories = await tx.category.findMany({ where: { id: { in: categoryIds } }, select: { slug: true } });
-        selectedCategorySlugs = selectedCategories.map((category) => category.slug);
+        const selectedCategories = await tx.category.findMany({ where: { id: { in: categoryIds } }, select: { id: true, slug: true } });
+        selectedCategorySlugs = categoryIds.map((categoryId) => selectedCategories.find((category) => category.id === categoryId)?.slug).filter((slug): slug is string => Boolean(slug));
       } else {
         selectedCategorySlugs = [];
       }
     }
     const isRealEstate = selectedCategorySlugs.includes("real-estate");
     const effectiveCustomFields = data.customFields === undefined ? current.customFields : data.customFields;
-    const requiredFields = selectedCategorySlugs.flatMap((slug) => getCategoryFieldPresets(slug));
+    const primaryCategorySlug = selectedCategorySlugs[0];
+    const requiredFields = primaryCategorySlug ? getCategoryFieldPresets(primaryCategorySlug) : [];
     const missingFields = requiredFields.filter((field) => {
       const value = effectiveCustomFields && typeof effectiveCustomFields === "object"
         ? (effectiveCustomFields as Record<string, unknown>)[field.key]
