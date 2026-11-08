@@ -56,6 +56,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   const [error, setError] = useState("");
   const [focus, setFocus] = useState<{ latitude: number; longitude: number; zoom: number } | null>(null);
   const selectionRequest = useRef(0);
+  const hydratedLocalityId = useRef("");
   const labels = useMemo(() => ({
     governorate: translate(locale, "Governorate", "المحافظة"),
     district: translate(locale, "District", "المنطقة"),
@@ -75,6 +76,55 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       .finally(() => { if (active) setBusy(false); });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    const localityId = value.localityId;
+    if (!localityId || localityId === hydratedLocalityId.current) return;
+    hydratedLocalityId.current = localityId;
+    let active = true;
+    void Promise.resolve().then(async () => {
+      setBusy(true);
+      setError("");
+      try {
+        const response = await fetch(`/api/geography/localities/${encodeURIComponent(localityId)}`, { cache: "force-cache" });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error ?? "Unable to load the selected locality.");
+        const locality = payload.item as GeoItem & {
+          governorateId: string; districtId: string | null; subdistrictId: string | null;
+        };
+        const [districtResult, subdistrictResult, localityResult] = await Promise.all([
+          loadLevel("districts", { governorateId: locality.governorateId }),
+          locality.districtId ? loadLevel("subdistricts", { districtId: locality.districtId }) : Promise.resolve({ items: [], pagination: { total: 0, totalPages: 0 } }),
+          loadLevel("localities", {
+            ...(locality.districtId ? { districtId: locality.districtId } : { governorateId: locality.governorateId }),
+            ...(locality.subdistrictId ? { subdistrictId: locality.subdistrictId } : {}),
+            limit: "100"
+          })
+        ]);
+        if (!active) return;
+        setGovernorateId(locality.governorateId);
+        setDistrictId(locality.districtId ?? "");
+        setSubdistrictId(locality.subdistrictId ?? "");
+        setDistricts(districtResult.items);
+        setSubdistricts(subdistrictResult.items);
+        setLocalities(localityResult.items.some((item) => item.id === locality.id)
+          ? localityResult.items
+          : [locality, ...localityResult.items]);
+        setSelectedNeighborhoodId(value.neighborhoodId ?? "");
+        const coordinates = locality.latitude != null && locality.longitude != null
+          ? { latitude: locality.latitude, longitude: locality.longitude }
+          : value.latitude !== undefined && value.longitude !== undefined
+            ? { latitude: value.latitude, longitude: value.longitude }
+            : null;
+        if (coordinates) setFocus({ ...coordinates, zoom: 15 });
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : "Unable to load the selected locality.");
+      } finally {
+        if (active) setBusy(false);
+      }
+    });
+    return () => { active = false; };
+  }, [value.localityId]);
 
   useEffect(() => {
     const searchPoint = focus ?? (
@@ -112,8 +162,16 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setError("");
     if (!id) return;
     setBusy(true);
-    try { const result = await loadLevel("districts", { governorateId: id }); if (request === selectionRequest.current) setDistricts(result.items); }
-    catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load districts."); }
+    try {
+      const [districtResult, localityResult] = await Promise.all([
+        loadLevel("districts", { governorateId: id }),
+        loadLevel("localities", { governorateId: id, limit: "100" })
+      ]);
+      if (request === selectionRequest.current) {
+        setDistricts(districtResult.items);
+        setLocalities(localityResult.items);
+      }
+    } catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load districts."); }
     finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
@@ -147,9 +205,9 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }
 
   async function searchLocalities() {
-    if (!subdistrictId || !localityQuery.trim()) return;
+    if (!districtId || !localityQuery.trim()) return;
     setBusy(true); setError("");
-    try { setLocalities((await loadLevel("localities", { districtId, subdistrictId, q: localityQuery.trim(), limit: "100" })).items); }
+    try { setLocalities((await loadLevel("localities", { districtId, ...(subdistrictId ? { subdistrictId } : {}), q: localityQuery.trim(), limit: "100" })).items); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to search localities."); }
     finally { setBusy(false); }
   }
@@ -210,13 +268,13 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
           </select>
         </label>
         <label className="block text-sm font-medium">{labels.locality}
-          <select className={fieldClass} value={value.localityId ?? ""} disabled={!subdistrictId || busy} onChange={(event) => chooseLocality(event.target.value)}>
+          <select className={fieldClass} value={value.localityId ?? ""} disabled={!districtId || busy} onChange={(event) => chooseLocality(event.target.value)}>
             <option value="">{labels.choose}</option>
             {localities.map((item) => <option key={item.id} value={item.id}>{name(item)}{item.kind ? ` · ${kindLabel(item.kind)}` : ""}</option>)}
           </select>
         </label>
       </div>
-      {subdistrictId && <div className="flex gap-2">
+      {districtId && <div className="flex gap-2">
         <input className={fieldClass + " mt-0 min-w-0"} value={localityQuery} onChange={(event) => setLocalityQuery(event.target.value)} placeholder={labels.search} />
         <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[var(--color-ink-800)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{labels.searchButton}</button>
       </div>}
