@@ -170,6 +170,54 @@ describe("product lifecycle", () => {
     expect(mocks.productCreate).not.toHaveBeenCalled();
   });
 
+  it("rejects category select values outside the configured option set", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-color",
+      isRequired: true,
+      options: ["Black", "Blue"],
+      attribute: { valueType: "SELECT" }
+    }]);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      categoryIds: ["category-1"],
+      attributes: [{ attributeDefinitionId: "attribute-color", value: "Red" }],
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/select an available option/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects overlong text and duplicate multi-select attribute values", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-description",
+      isRequired: true,
+      options: null,
+      attribute: { valueType: "TEXT" }
+    }]);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      categoryIds: ["category-1"],
+      attributes: [{ attributeDefinitionId: "attribute-description", value: "x".repeat(2001) }],
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/2,000 characters/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate values in a category multi-select field", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-features",
+      isRequired: true,
+      options: ["Insulated", "Leakproof"],
+      attribute: { valueType: "MULTI_SELECT" }
+    }]);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      categoryIds: ["category-1"],
+      attributes: [{ attributeDefinitionId: "attribute-features", value: ["Insulated", "Insulated"] }],
+      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
+    })).rejects.toThrow(/multi-select attribute value is invalid/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects a price targeting a market not enabled for the store", async () => {
     mocks.storeFindUnique.mockResolvedValue({
       id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: []
