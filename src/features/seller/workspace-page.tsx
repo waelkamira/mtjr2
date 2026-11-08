@@ -127,7 +127,10 @@ export default function SellerWorkspacePage() {
       if (!active) return;
       setMarkets(marketResult.items);
       setWorkspace(sellerResult);
-      if (sellerResult.stores[0]) { setSelectedStoreId(sellerResult.stores[0].id); localStorage.setItem("mtjr.activeStoreId", sellerResult.stores[0].id); }
+      let preferredStoreId = "";
+      try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage can be unavailable in restricted browsers. */ }
+      const initialStore = sellerResult.stores.find((store) => store.id === preferredStoreId) ?? sellerResult.stores[0];
+      if (initialStore) { setSelectedStoreId(initialStore.id); try { localStorage.setItem("mtjr.activeStoreId", initialStore.id); } catch { /* Storage can be unavailable in restricted browsers. */ } }
     }).catch((cause: unknown) => {
       if (!active) return;
       if (cause instanceof ApiError && cause.status === 401) {
