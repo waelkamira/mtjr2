@@ -25,7 +25,7 @@ type Product = {
 };
 type Store = { id: string; name: string; markets: Array<{ market: { id: string } }> };
 type Workspace = { stores: Store[] };
-type UploadedImage = { url: string; provider: "imgur" | "imagekit"; name: string };
+type UploadedImage = { url: string; provider: "imgur" | "imagekit"; storageKey: string; mimeType: string; width?: number; height?: number; name: string };
 
 async function json<T>(response: Response): Promise<T> {
   const data = await response.json();
@@ -164,7 +164,7 @@ export default function SellerProductsPage() {
       body.append("storeId", storeId);
       body.append("file", file);
       try {
-        const uploaded = await json<{ url: string; provider: UploadedImage["provider"] }>(
+        const uploaded = await json<Omit<UploadedImage, "name">>(
           await fetch("/api/seller/products/images", { method: "POST", body })
         );
         setUploadedImages((current) => [...current, { ...uploaded, name: file.name }]);
@@ -182,7 +182,7 @@ export default function SellerProductsPage() {
   async function createProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const draftImages = [
-      ...uploadedImages.map((image) => ({ url: image.url, altText: name })),
+      ...uploadedImages.map((image) => ({ url: image.url, storageKey: image.storageKey, mimeType: image.mimeType, ...(image.width ? { width: image.width } : {}), ...(image.height ? { height: image.height } : {}), altText: name })),
       ...(imageUrl.trim() ? [{ url: imageUrl.trim(), altText: name }] : [])
     ];
     const primaryImage = draftImages[activePreviewIndex];
