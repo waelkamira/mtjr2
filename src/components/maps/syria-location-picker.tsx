@@ -113,7 +113,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   async function chooseDistrict(id: string) {
     setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]);
-    onChange({ neighborhood: value.neighborhood });
+    onChange({});
     const item = districts.find((entry) => entry.id === id);
     if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 9 });
     setError("");
@@ -126,7 +126,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   async function chooseSubdistrict(id: string) {
     setSubdistrictId(id); setLocalities([]);
-    onChange({ neighborhood: value.neighborhood });
+    onChange({});
     const item = subdistricts.find((entry) => entry.id === id);
     if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 11 });
     setError("");
