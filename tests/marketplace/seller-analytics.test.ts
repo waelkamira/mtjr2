@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/current-session", () => ({
   requireCurrentSession: mocks.requireCurrentSession,
+}));
+vi.mock("@/server/identity/access-errors", () => ({
   PermissionDeniedError: class PermissionDeniedError extends Error {}
 }));
 vi.mock("@/server/identity/permission-repository", () => ({
@@ -40,7 +42,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 import { getSellerDashboardAnalytics } from "@/server/marketplace/seller-analytics";
-import { PermissionDeniedError } from "@/server/identity/current-session";
+import { PermissionDeniedError } from "@/server/identity/access-errors";
 
 describe("seller dashboard analytics", () => {
   beforeEach(() => {
