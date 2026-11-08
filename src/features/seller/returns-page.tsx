@@ -119,14 +119,9 @@ export default function SellerReturnsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--surface)] shadow-clay-raised px-5 py-5">
-        <div className="mx-auto flex max-w-6xl justify-between">
-          <Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link>
-          <div className="flex gap-4 text-sm"><Link href="/seller/orders">{translate(locale, "Orders", "الطلبات")}</Link><Link href="/seller">{translate(locale, "Seller workspace", "مساحة عمل البائع")}</Link></div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-6xl px-5 py-10">
+    <main className="min-h-screen bg-transparent">
+      
+      <div className="mx-auto max-w-[1440px] px-5 py-10">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{translate(locale, "Seller operations", "عمليات البائع")}</p>
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Store returns", "مرتجعات المتجر")}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Review only the return items belonging to each store you own or are authorized to manage. A decision never changes another store's items.", "راجع عناصر الإرجاع التابعة للمتاجر التي تملكها أو لديك صلاحية إدارتها فقط. لا يؤثر القرار مطلقًا في عناصر المتاجر الأخرى.")}</p>
