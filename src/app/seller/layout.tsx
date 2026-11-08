@@ -4,7 +4,7 @@ import SellerTopbar from "@/features/seller/seller-topbar";
 
 export default function SellerLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(185,215,225,.58),transparent_42%),radial-gradient(ellipse_at_top_right,rgba(214,221,239,.5),transparent_38%),linear-gradient(145deg,#eaf1f4,#dfe8ee)] lg:flex">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(196,215,225,.48),transparent_34%),linear-gradient(145deg,#dbe6eb_0%,#cbd9e0_48%,#e5edf0_100%)] lg:flex">
       <SellerNavigation />
       <div className="min-w-0 flex-1">
         <SellerTopbar />
