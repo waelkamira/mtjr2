@@ -25,6 +25,22 @@ describe("product image provider deletion", () => {
     );
   });
 
+  it("deletes anonymous Imgur uploads with a configured Client ID when OAuth is not enabled", async () => {
+    vi.stubEnv("IMGUR_ACCESS_TOKEN", "");
+    vi.stubEnv("IMGUR_CLIENT_IDS", "imgur-client-1,imgur-client-2");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(deleteProductImage("imgur:anonymous-delete-hash")).resolves.toBe("deleted");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.imgur.com/3/image/anonymous-delete-hash",
+      expect.objectContaining({
+        method: "DELETE",
+        headers: { Authorization: "Client-ID imgur-client-1" }
+      })
+    );
+  });
+
   it("deletes ImageKit assets using the private API key", async () => {
     vi.stubEnv("IMAGEKIT_PRIVATE_KEY", "imagekit-private-key");
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
@@ -63,6 +79,8 @@ describe("product image provider deletion", () => {
 
   it("does not call providers when deletion credentials are absent", async () => {
     vi.stubEnv("IMGUR_ACCESS_TOKEN", "");
+    vi.stubEnv("IMGUR_CLIENT_IDS", "");
+    vi.stubEnv("IMGUR_CLIENT_ID", "");
     vi.stubEnv("IMAGEKIT_PRIVATE_KEY", "");
     vi.stubEnv("CLOUDINARY_API_SECRET", "");
     const fetchMock = vi.fn();
