@@ -2844,3 +2844,30 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added focused Vitest coverage for balanced multi-line journals, imbalance, mixed currency, zero amounts, reversal balance, and one-line rejection.
 - This is a domain foundation only: it does **not** create persistent ledger accounts/journals, post money movements, calculate seller balances, or enable payouts. Those remain blocked on the reviewed Prisma schema/migration and transactional posting service.
 - Latest commit check currently reports only the Vercel provider context as pending. No application CI result is claimed from that status response.
+
+## 2026-11-09 — Seller workspace and product authoring refresh
+
+**Canonical branch:** `main`
+
+**Implemented**
+- Applied the cool blue/navy claymorphism visual system to the seller workspace shell, desktop sidebar, mobile navigation, topbar, overview hero, metric cards, store setup panels, and shipping/catalog panels.
+- Removed the duplicate Matjar masthead from the seller products route so it uses the shared seller dashboard shell.
+- Restyled the seller product authoring flow, image gallery controls, catalog cards, inputs, market pricing panels, and primary save action.
+- Added SKU barcode and optional compare-at price inputs per enabled market; compare-at prices are checked against the selling price before submission and remain subject to server validation.
+- Separated category-level product attributes from variant-level options in the authoring UI. Variant-level values are sent with the SKU and now validated against the selected category's configured options.
+- Persisted SKU-level category values to the canonical `VariantAttribute` relation as well as the existing variant option-values JSON.
+- Added focused regression coverage for creation and persistence of a required SKU-level category option.
+- Confirmed the store-creation service already serializes creation per seller and enforces one owned store; the dashboard exposes the existing store-management and shipping-rate edit flows.
+
+**Verification**
+- Re-fetched the changed source and test files from `main` and confirmed the changes are present.
+- Latest reported commit status contains only the Vercel provider check failing with its build-rate-limit response. This is an external deployment quota failure, not evidence of a successful application build.
+- The GitHub workflow-run lookup returned no run for the exact head. Typecheck, lint, focused Vitest, and production build have therefore **not** been claimed as passing in this session.
+- No database migration was required by these UI and service changes.
+
+**Remaining verification**
+- Run `npm run typecheck`, `npm run lint`, and the focused `tests/catalog/products.test.ts` suite when a repository runtime/CI runner is available.
+- Verify the seller dashboard at mobile, tablet, and desktop widths with an authenticated seller account.
+- Verify category-level and SKU-level required attributes, image upload/replacement/deletion, and multi-market prices against PostgreSQL.
+- The current create form creates one SKU variant per submission; a full multi-SKU variant matrix editor remains a separate enhancement.
+
