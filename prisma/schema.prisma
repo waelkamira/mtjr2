@@ -2369,17 +2369,17 @@ model SyriaSubdistrict {
 model SyriaLocality {
   id            String            @id
   governorateId String
-  districtId    String
-  subdistrictId String
+  districtId    String?
+  subdistrictId String?
   nameEn        String
   nameAr        String?
-  kind          String?
+  kind          String
   latitude      Float?
   longitude     Float?
   sourceVersion String            @db.VarChar(20)
   sourceIds     String[]
   aliases       Json?
-  subdistrict   SyriaSubdistrict  @relation(fields: [subdistrictId], references: [id], onDelete: Cascade)
+  subdistrict   SyriaSubdistrict? @relation(fields: [subdistrictId], references: [id], onDelete: SetNull)
   products      Product[]
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
