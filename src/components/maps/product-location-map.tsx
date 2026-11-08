@@ -10,11 +10,12 @@ type Props = {
   onChange?: (coordinates: ProductCoordinates) => void;
   readOnly?: boolean;
   label: string;
+  focus?: { coordinates: ProductCoordinates; zoom: number; key: string } | null;
 };
 
 const defaultCenter: ProductCoordinates = { latitude: 33.5138, longitude: 36.2765 };
 
-export default function ProductLocationMap({ value, onChange, readOnly = false, label }: Props) {
+export default function ProductLocationMap({ value, onChange, readOnly = false, label, focus = null }: Props) {
   const elementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<CircleMarker | null>(null);
@@ -66,6 +67,12 @@ export default function ProductLocationMap({ value, onChange, readOnly = false, 
       markerRef.current = null;
     };
   }, [readOnly]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focus) return;
+    map.flyTo([focus.coordinates.latitude, focus.coordinates.longitude], focus.zoom, { duration: 0.8 });
+  }, [focus?.key]);
 
   useEffect(() => {
     const map = mapRef.current;
