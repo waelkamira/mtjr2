@@ -2729,3 +2729,26 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact PR source head `35557ef5df5e24f747b20349b2483c3ba973eb4e` passed General CI [42490650980](https://github.com/waelkamira/mtjr2/actions/runs/42490650980), disposable PostgreSQL [42490651121](https://github.com/waelkamira/mtjr2/actions/runs/42490651121), and Browser E2E [42490648736](https://github.com/waelkamira/mtjr2/actions/runs/42490648736). The browser workflow passed as a suite; it does not contain a dedicated new address-book interaction test.
 - Fresh merged-main General CI passed on `cc5545b` in [run 42490916929](https://github.com/waelkamira/mtjr2/actions/runs/42490916929).
 - No production database, Vercel configuration, secrets, or deployment was changed.
+
+
+## 2026-11-08 — Seller workspace redesign and interactive Syrian location map
+
+**Seller workspace**
+- Added a shared `/seller/*` layout with a structured desktop sidebar, grouped navigation, active-route state, compact mobile navigation, and a consistent top bar.
+- Removed the old wrapping horizontal seller header from the overview so the shared shell is the single seller navigation surface.
+- Restyled the seller overview header and store summary to use the platform's white/onyx/orange design tokens while preserving the existing live metrics, charts, store ownership checks, inventory, warehouse and shipping workflows.
+- Navigation intentionally links only to existing seller routes; it does not advertise unimplemented finance/analytics/settings pages.
+
+**Location picker and Leaflet**
+- Enabled Leaflet scroll-wheel zoom, touch zoom and double-click zoom; wheel zoom is active when the pointer is over the map.
+- Added fractional zoom steps and viewport telemetry on the map element so browser tests can assert actual zoom changes.
+- The map now follows each selected administrative level using the existing database-backed Syrian geography API: governorate, district, subdistrict and locality, with progressively closer zoom.
+- Nearby neighbourhood suggestions are now requested around the current map focus after selecting an administrative level, not only after an exact coordinate is already present. The search radius narrows as the map zooms in.
+- Corrected subdistrict-to-district label mapping so the selected administrative district remains the district value and the selected locality remains the city value.
+- Guarded asynchronous administrative-level requests against stale responses when users change selections quickly.
+- No geography schema, Prisma model, or migration was added; the existing geography tables and neighbourhood suggestion endpoint remain canonical.
+
+**Verification**
+- Extended the seller catalog Playwright journey to assert map zoom progression and mouse-wheel zoom using the map's viewport telemetry.
+- Changes are committed directly to canonical `main`. At log time, no exact-head GitHub Actions result has been observed for these direct commits. Do not claim typecheck, lint, build, browser E2E, or production deployment passed until the corresponding run is available.
+- Vercel's latest observed check remains blocked by the provider's build-rate limit; no deployment configuration or production secrets were changed.
