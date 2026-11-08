@@ -100,7 +100,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   async function chooseGovernorate(id: string) {
     setGovernorateId(id); setDistrictId(""); setSubdistrictId(""); setDistricts([]); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
-    onChange({ neighborhood: value.neighborhood });
+    onChange({});
     const item = governorates.find((entry) => entry.id === id);
     if (item?.latitude && item.longitude) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 });
     setError("");
@@ -148,9 +148,9 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   function chooseLocality(id: string) {
     const item = localities.find((entry) => entry.id === id);
     const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
+    setSelectedNeighborhoodId("");
     onChange({
       localityId: id || undefined,
-      neighborhood: value.neighborhood,
       ...(hasCoordinates ? { latitude: item!.latitude!, longitude: item!.longitude! } : {})
     });
     if (hasCoordinates) setFocus({ latitude: item!.latitude!, longitude: item!.longitude!, zoom: 14 });
