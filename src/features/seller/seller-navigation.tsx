@@ -120,23 +120,23 @@ export default function SellerNavigation() {
           <Link href="/" className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.14)] transition hover:shadow-[var(--shadow-clay)]">
             <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
           </Link>
-          <p className="mt-3 px-2 text-[10px] leading-5 text-[var(--muted)]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
+          <p className="mt-3 px-2 text-[10px] leading-5 text-slate-300/65">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
         </div>
       </aside>
 
-      <div className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-clay)] lg:hidden">
+      <div className="border-b border-white/10 bg-[linear-gradient(135deg,#304b63,#203449)] px-4 py-3 text-slate-100 shadow-[0_8px_22px_rgba(25,44,63,.18)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[var(--color-ink-950)]">
-            <span className="grid size-8 place-items-center rounded-xl bg-[var(--color-lavender-100)] text-sm text-[var(--color-lavender-800)]">m</span>
+          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-slate-50">
+            <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-white/10 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,.18)]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
-          <Link href="/" className="rounded-full bg-[var(--color-peach-50)] px-3 py-2 text-xs font-semibold text-[var(--color-peach-800)]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
+          <Link href="/" className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.16)]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
         </div>
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex gap-2 overflow-x-auto pb-1">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-[var(--color-lavender-100)] text-[var(--color-lavender-800)] ring-1 ring-[var(--color-lavender-300)]" : "bg-[var(--surface-soft)] text-[var(--color-ink-600)]"}`}>
+              className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-[linear-gradient(135deg,#d8edf0,#b7d8df)] text-[#23394d] ring-1 ring-white/70 shadow-[0_5px_14px_rgba(9,24,38,.2),inset_0_1px_0_white]" : "bg-white/10 text-slate-200 hover:bg-white/15"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
