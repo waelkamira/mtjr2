@@ -531,17 +531,6 @@ export default function SellerProductsPage() {
 
   const inputClass = "w-full rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f7fbfc,#e8f0f3)] px-4 py-3 text-sm text-[#263d50] shadow-[inset_0_2px_5px_rgba(43,69,88,.08),0_1px_0_white] outline-none transition placeholder:text-slate-400 focus:border-[#83b9c1] focus:ring-4 focus:ring-[#9bcbd0]/25";
   return <main className="min-h-screen bg-[linear-gradient(145deg,#dbe6eb_0%,#cbd9e0_48%,#e5edf0_100%)] text-[#1d3448]">
-    <div className="mx-auto grid max-w-[1840px] gap-4 px-3 py-3 sm:px-5 lg:grid-cols-[238px_minmax(0,1fr)] lg:gap-6 lg:px-6 lg:py-6">
-      <aside className="h-fit rounded-[2rem] border border-[#9fb4c2]/70 bg-[linear-gradient(155deg,#263f56_0%,#172f46_58%,#213b52_100%)] p-4 text-white shadow-[0_22px_45px_rgba(26,49,69,.30),inset_0_2px_0_rgba(255,255,255,.16)] lg:sticky lg:top-5">
-        <div className="flex items-center gap-3 px-2 py-3"><div className="grid size-14 place-items-center rounded-[1.25rem] bg-[linear-gradient(145deg,#a9c7d4,#5b8197)] text-2xl font-black text-[#17344b]">M</div><div><p className="text-lg font-black">matjar</p><p className="text-[10px] tracking-[.18em] text-white/55">SELLER STUDIO</p></div></div>
-        <nav aria-label={translate(locale,"Seller navigation","تنقل البائع")} className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
-          {[
-            ["/seller","⌂",translate(locale,"Dashboard","لوحة التحكم")],["/seller/products","▦",translate(locale,"Products","المنتجات")],["/seller/orders","▤",translate(locale,"Orders","الطلبات")],["/seller/inventory","▥",translate(locale,"Inventory","المخزون")],["/seller/messages","✉",translate(locale,"Messages","الرسائل")],["/seller/questions","?",translate(locale,"Questions","الأسئلة")],["/seller/returns","↶",translate(locale,"Returns","المرتجعات")],["/seller/staff","♙",translate(locale,"Team & access","الفريق والصلاحيات")]
-          ].map(([href,icon,label]) => <Link key={href} href={href} aria-current={href==="/seller/products"?"page":undefined} className={href==="/seller/products"?"flex items-center gap-3 rounded-2xl border border-white/40 bg-[linear-gradient(145deg,#d9e8ee,#9eb9c8)] px-3 py-3 text-sm font-extrabold text-[#203b50] shadow-[0_7px_15px_rgba(0,0,0,.18),inset_0_2px_0_white]":"flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-white/75 hover:bg-white/10"}><span className="grid size-8 place-items-center rounded-xl bg-white/10 text-lg">{icon}</span><span>{label}</span></Link>)}
-        </nav>
-        <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-white/[.08] p-4"><p className="text-xs font-extrabold">{translate(locale,"Catalog workspace","مساحة الكتالوج")}</p><p className="mt-2 text-[11px] leading-5 text-white/65">{translate(locale,"Create, review and maintain your product listings.","أنشئ قوائم منتجاتك وراجعها وأدرها.")}</p></div>
-      </aside>
-      <div className="min-w-0">
     <div className="mx-auto max-w-[1500px] px-1 py-2 sm:px-2 lg:px-3 lg:py-3">
       <p className="text-xs font-extrabold uppercase tracking-[.2em] text-[#66899b]">{translate(locale, "Catalog management", "إدارة الكتالوج")}</p>
       <h1 className="mt-2 text-3xl font-black tracking-tight text-[#263d50] sm:text-4xl">{translate(locale, "Products", "المنتجات")}</h1>
@@ -765,7 +754,5 @@ export default function SellerProductsPage() {
         </section>
       </div>}
     </div>
-      </div>
-    </div>
-  </main>;
+  </main>
 }
