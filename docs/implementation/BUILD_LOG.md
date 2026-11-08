@@ -2694,3 +2694,14 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Closed stale Draft PR #69 as superseded. Its 336-commit branch was not merged wholesale; unique compatible improvements were extracted while retaining current-main implementations of geography, category attributes, image gallery, identity/MFA, advertising foundations, and one-store-per-seller enforcement.
 - Exact merged source head `ee8471143155349a870d0a9976785f7e23eb95c7` passed Prisma validation/migration deployment, TypeScript typecheck, ESLint, unit tests, production build, PostgreSQL integration (including repeatable catalog seed), browser E2E/Playwright, API route security inventory, and UI mutation-feedback inventory.
 - No production database migration was run and no Vercel deployment was performed; database migration verification used disposable CI PostgreSQL.
+
+
+## 2026-11-08 — Closed-PR audit and saved-address correction
+
+- Audited closed PR state and compared the remaining deltas of the closed/unmerged branches against current `main`; no stale feature branch was merged wholesale.
+- Confirmed the important historical feature groups were already integrated through later clean merges: seller returns (#19/#20), shipment tracking (#41), roadmap plans (#38/#39), manual refunds (#59), Super Admin control center and independent reviewer protections (#35/#62/#64), Groq assistant provider foundation (#54), anonymous API boundary fixes (#68), and seller/catalog work (#76).
+- Confirmed PR #22 remained closed and unmerged. Its Google ID-token verification and registration-role work are already represented by later merged identity changes; its saved-address page correction exposed a still-live country-contract mismatch in current `main`.
+- Rebuilt that address correction on current `main`: country selector now consumes ISO-2 `iso2` from `/api/countries`, POST sends `countryCode` expected by the address service, and rendering consumes `countryName` from the flattened list response. Added service tests for owner scoping, active-country lookup, default-address handling, and response shape.
+- Opened PR #77 and squash-merged it as `881fc9ed5bf3e807b2f4013e991899463adee76b`. Exact source head `64044d409da434486ccaff5a6574f7e9ee5a3b45` passed CI run `42475854889`, disposable PostgreSQL integration run `42475854901`, and Browser E2E run `42475854837`.
+- Prisma validation, migration deploy/generation, typecheck, ESLint, unit tests, production build, API/UI inventories, PostgreSQL integration/repeatable seed, and browser E2E all completed successfully on the exact PR head.
+- No production database migration, production secret change, Vercel setting change, or deployment was performed.
