@@ -140,6 +140,8 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
       <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
       <Script
         src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossOrigin="anonymous"
         strategy="afterInteractive"
         onLoad={() => setReady(true)}
         onError={() => setMapError(locale === "ar" ? "تعذّر تحميل مكتبة الخريطة. تحقق من الاتصال ثم أعد تحميل الصفحة." : "The map library could not be loaded. Check your connection and reload the page.")}
