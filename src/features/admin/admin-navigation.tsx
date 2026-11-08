@@ -23,6 +23,7 @@ const links = [
   { href: "/admin/search-synonyms", label: "Search synonyms", ar: "مرادفات البحث" },
   { href: "/admin/tax-rates", label: "Tax rates", ar: "معدلات الضرائب" },
   { href: "/admin/commissions", label: "Commissions", ar: "العمولات" },
+  { href: "/admin/advertising", label: "Advertising review", ar: "مراجعة الإعلانات" },
   { href: "/admin/coupons", label: "Discount codes", ar: "رموز الخصم" },
   { href: "/admin/control-panel", label: "Super Admin", ar: "إدارة المنصة", platformOnly: true }
 ];
