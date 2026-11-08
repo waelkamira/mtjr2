@@ -23,7 +23,7 @@ type Workspace = {
   seller: null | { id: string; status: string; legalName: string | null; displayName: string | null };
   stores: Store[];
 };
-type ShippingRate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; name: string; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean };
+type ShippingRate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; name: string; description: string | null; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean };
 type InventoryRow = {
   id: string; quantityOnHand: number; quantityReserved: number; quantityAvailable: number;
   reorderPoint: number; isLowStock: boolean;
@@ -66,6 +66,7 @@ export default function SellerWorkspacePage() {
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingMarketId, setShippingMarketId] = useState("");
   const [shippingName, setShippingName] = useState("");
+  const [shippingDescription, setShippingDescription] = useState("");
   const [shippingAmount, setShippingAmount] = useState("0");
   const [shippingRegion, setShippingRegion] = useState("");
   const [shippingMinDays, setShippingMinDays] = useState("");
@@ -426,7 +427,7 @@ export default function SellerWorkspacePage() {
                       <h3 className="font-semibold">{translate(locale, "Shipping services", "خدمات الشحن")}</h3>
                       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Rates are scoped to a market and optional destination region. Enter the amount in the selected currency&apos;s minor units.", "ترتبط الأسعار بسوق ومنطقة وجهة اختيارية. أدخل المبلغ بأصغر وحدة للعملة المحددة.")}</p>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {shippingRates.map((rate) => <div key={rate.id} className="rounded-xl border border-[var(--border)] bg-white p-3 text-sm shadow-sm"><div className="flex items-start justify-between gap-2"><p className="font-semibold">{rate.name} · {rate.market.name}</p><button type="button" onClick={() => { setEditingShippingRateId(rate.id); setShippingMarketId(rate.marketId); setShippingName(rate.name); setShippingAmount(rate.amountMinor); setShippingRegion(rate.destinationRegion ?? ""); setShippingMinDays(rate.minDeliveryDays?.toString() ?? ""); setShippingMaxDays(rate.maxDeliveryDays?.toString() ?? ""); }} className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-semibold">{translate(locale, "Edit", "تعديل")}</button></div><p className="mt-1 text-xs text-[var(--muted)]">{rate.amountMinor} {rate.currencyCode} {translate(locale, "minor units", "وحدة فرعية")}{rate.destinationRegion ? ` · ${rate.destinationRegion}` : ` · ${translate(locale, "All regions", "جميع المناطق")}`}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "يومًا")} · {rate.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</p></div>)}
+                        {shippingRates.map((rate) => <div key={rate.id} className="rounded-xl border border-[var(--border)] bg-white p-3 text-sm shadow-sm"><div className="flex items-start justify-between gap-2"><p className="font-semibold">{rate.name} · {rate.market.name}</p><button type="button" onClick={() => { setEditingShippingRateId(rate.id); setShippingMarketId(rate.marketId); setShippingName(rate.name); setShippingDescription(rate.description ?? ""); setShippingAmount(rate.amountMinor); setShippingRegion(rate.destinationRegion ?? ""); setShippingMinDays(rate.minDeliveryDays?.toString() ?? ""); setShippingMaxDays(rate.maxDeliveryDays?.toString() ?? ""); }} className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-semibold">{translate(locale, "Edit", "تعديل")}</button></div><p className="mt-1 text-xs text-[var(--muted)]">{rate.amountMinor} {rate.currencyCode} {translate(locale, "minor units", "وحدة فرعية")}{rate.destinationRegion ? ` · ${rate.destinationRegion}` : ` · ${translate(locale, "All regions", "جميع المناطق")}`}</p><p className="mt-1 text-xs text-[var(--muted)]">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "يومًا")} · {rate.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</p></div>)}
                         {!shippingRates.length && <p className="rounded-xl bg-[var(--color-ivory-100)] p-4 text-xs text-[var(--muted)]">{translate(locale, "No shipping services configured.", "لم يتم إعداد خدمات شحن.")}</p>}
                       </div>
                       {selectedStore.isOwner && <form onSubmit={async (event) => {
@@ -440,14 +441,14 @@ export default function SellerWorkspacePage() {
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
                               storeId: selectedStore.id, marketId: market.market.id, currencyCode: market.market.defaultCurrencyCode,
-                              name: shippingName, amountMinor: shippingAmount,
+                              name: shippingName, description: shippingDescription || null, amountMinor: shippingAmount,
                               destinationRegion: shippingRegion || null,
                               minDeliveryDays: shippingMinDays ? Number(shippingMinDays) : null,
                               maxDeliveryDays: shippingMaxDays ? Number(shippingMaxDays) : null
                             })
                           }));
                           setMessage(translate(locale, editingShippingRateId ? "Shipping service updated." : "Shipping service created.", editingShippingRateId ? "تم تحديث خدمة الشحن." : "تم إنشاء خدمة الشحن."));
-                          setEditingShippingRateId(""); setShippingName(""); setShippingAmount("0"); setShippingRegion(""); setShippingMinDays(""); setShippingMaxDays("");
+                          setEditingShippingRateId(""); setShippingName(""); setShippingDescription(""); setShippingAmount("0"); setShippingRegion(""); setShippingMinDays(""); setShippingMaxDays("");
                           const refreshed = await readJson<{ rates: ShippingRate[] }>(await fetch(`/api/seller/shipping-rates?storeId=${encodeURIComponent(selectedStore.id)}`, { cache: "no-store" }));
                           setShippingRates(refreshed.rates);
                         } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Shipping service could not be saved.", "تعذر حفظ خدمة الشحن.")); }
