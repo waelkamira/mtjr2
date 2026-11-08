@@ -37,6 +37,7 @@ export async function listSponsoredCampaigns(input: {
   const now = input.now ?? new Date();
   if (!input.marketId) return [];
   const tokens: string[] = (input.query ?? "").normalize("NFKC").toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  const categoryIds = [...new Set([input.categoryId, ...(input.categoryIds ?? [])].filter((value): value is string => Boolean(value)))].slice(0, 20);
   const rows = await prisma.adCampaign.findMany({
     where: {
       status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now },
