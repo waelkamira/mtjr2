@@ -1,6 +1,6 @@
 # Matjar AI Assistant — implementation plan
 
-**Status:** Initial implementation committed on `feat/matjar-ai-assistant`; CI and production configuration remain pending.
+**Status:** Initial implementation is integrated on canonical `main`; production provider configuration and privacy/security acceptance remain pending.
 **Provider:** GroqCloud API, using its free tier within the account's published rate limits.
 **Initial model:** `openai/gpt-oss-20b` (tool calling supported in current Groq documentation). Keep the model configurable because provider model availability and free-tier limits can change.
 **Cost constraint:** No paid model/API plan and no paid vector database. The application must fail gracefully when the free quota is exhausted; it must never silently switch to a paid provider.
@@ -88,7 +88,7 @@ Do not expose tools for payments/refunds, cancellations, stock changes, account 
 
 ## Super Admin controls and observability
 
-**Current implementation status (2026-11-06, branch `feat/super-admin-control-panel`):** the first settings slice is implemented at `/admin/control-panel/ai-assistant`, protected by the existing `platform:manage` guard and mandatory MFA. It uses the singleton `AiAssistantSetting` row, records every change in `AuditLog`, exposes only a boolean provider-key status, and applies a deployment-environment master kill switch that the database cannot override. The model is currently restricted to `openai/gpt-oss-20b`; completion tokens are bounded. Usage analytics, conversation access, feedback, approved knowledge management, and distributed rate limiting remain outstanding.
+**Current implementation status on canonical `main` (2026-11-06):** the first settings slice is implemented at `/admin/control-panel/ai-assistant`, protected by the existing `platform:manage` guard and mandatory MFA. It uses the singleton `AiAssistantSetting` row, records every change in `AuditLog`, exposes only a boolean provider-key status, and applies a deployment-environment master kill switch that the database cannot override. The model is currently restricted to `openai/gpt-oss-20b`; completion tokens are bounded. Usage analytics, conversation access, feedback, approved knowledge management, and distributed rate limiting remain outstanding.
 
 The remaining Super Admin scope is:
 - Overview: request counts, tool-call counts, error/quota events, and feedback.

@@ -160,7 +160,7 @@ The identity feature review is governed by System 01 and the Phase 2 exit gates 
 
 **Scope findings — still not complete:**
 - Core password registration/login, logout service/route, password reset, authenticated password change, current-session resolution, session listing/revocation, profile update, consent capture, audit events, persistent rate limits, same-origin mutation protection, role/permission evaluation and audited role assignment/revocation are implemented in source. Email verification and resend flows are retired.
-- The account address surface currently exposes list/create only; edit/delete/default-address management is not complete and must be treated as the shared account-profile slice rather than claimed complete.
+- The account address surface now supports list/create/edit/default selection/delete through owner-scoped APIs and a bilingual account UI. PR #79 merged as `cc5545b`; focused service tests, exact-head General CI, disposable PostgreSQL, and the Browser E2E suite passed. No new Prisma model or migration was required. The broader identity and address browser/provider journeys remain distinct release gates.
 - Google OIDC/PKCE code exists, but provider-backed sign-in/registration has not been exercised with real Google credentials and redirect URI.
 - TOTP MFA and one-time recovery codes are implemented; Super Admin operations require enrollment and fresh verification. Passkeys are not implemented.
 - Real Resend delivery for password reset, Turnstile configuration, trusted-proxy header configuration/edge overwrite and origin-bypass prevention, and one deployed HTTP journey (register → immediate session → /api/auth/me → logout → anonymous denial) remain operational exit gates.
@@ -189,3 +189,12 @@ The identity feature review is governed by System 01 and the Phase 2 exit gates 
 - Exact PR-head General CI, disposable PostgreSQL, and Browser E2E passed (runs 42489542922, 42489548427, 42489548337, 42489548167).
 - Fresh checks on the squash-merged `main` commit are running: General CI 42489984972, platform PostgreSQL 42489984985, and clean migration replay 42489985055. Record their final outcomes before closing this verification item.
 - **Phase 2 remains Implemented / not Verified / not Complete.** Remaining exit gates are operational: production Turnstile configuration, verified Resend sender and one password-reset delivery smoke test, trusted-proxy header/edge overwrite and direct-origin bypass prevention, plus one deployed HTTP journey (register → immediate session → `/api/auth/me` → logout → anonymous denial). Do not access production settings or database without explicit owner approval.
+
+
+## 2026-11-08 — Saved address lifecycle completed in main
+
+- PR #79 merged as `cc5545b96cbb00c82757819a6b1c58fbd338b805`.
+- Customer address management now supports create, edit, default selection, and delete, in addition to list. Mutations are owner-scoped, use same-origin JSON protection, and serialize default-address changes per customer.
+- Deleting the default promotes the newest remaining address. Existing checkout quote snapshots remain intact because the source-address relation is nullable with `ON DELETE SET NULL`.
+- Focused address service tests, General CI, disposable PostgreSQL, and the Browser E2E suite passed on the exact PR head; merged-main General CI also passed. The browser suite did not add a dedicated address interaction test.
+- Phase 2 remains open for real Turnstile/Resend/trusted-proxy configuration and the single deployed HTTP identity journey.

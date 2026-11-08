@@ -2717,3 +2717,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The initial exact PR head `5c035f05371161f0d2e7a6c2bca600e1d3ebdb72` passed General CI runs [42489542922](https://github.com/waelkamira/mtjr2/actions/runs/42489542922) and [42489548427](https://github.com/waelkamira/mtjr2/actions/runs/42489548427), disposable PostgreSQL [42489548337](https://github.com/waelkamira/mtjr2/actions/runs/42489548337), and Browser E2E [42489548167](https://github.com/waelkamira/mtjr2/actions/runs/42489548167). The follow-up test correction was included before merge.
 - The merge triggered fresh `main` checks: General CI [42489984972](https://github.com/waelkamira/mtjr2/actions/runs/42489984972), platform PostgreSQL [42489984985](https://github.com/waelkamira/mtjr2/actions/runs/42489984985), and clean migration replay [42489985055](https://github.com/waelkamira/mtjr2/actions/runs/42489985055). Their results must be checked before claiming exact-merge-head verification.
 - No production database, provider secret, Vercel setting, or deployment was changed. Phase 2 remains open for real provider/proxy configuration and the single deployed HTTP journey.
+
+
+## 2026-11-08 — Customer saved-address management merged
+
+- Squash-merged PR #79 into `main` as `cc5545b96cbb00c82757819a6b1c58fbd338b805`.
+- Completed the authenticated customer address-book lifecycle: list, create, edit, set default, and delete. Every mutation derives the owner from the current session and scopes the database write by both address ID and owner ID.
+- Serialized address-book mutations with a per-user PostgreSQL advisory transaction lock and serializable transactions. Creating/replacing a default clears the previous default atomically; deleting the default promotes the newest remaining address.
+- Preserved immutable checkout address snapshots: deleting a saved address only nulls the optional source-address reference; it does not change an existing quote/order address snapshot.
+- No Prisma schema change or migration was required. Added focused service tests for owner isolation, default transitions, deletion fallback, and the existing country-code response contract.
+- Exact PR source head `35557ef5df5e24f747b20349b2483c3ba973eb4e` passed General CI [42490650980](https://github.com/waelkamira/mtjr2/actions/runs/42490650980), disposable PostgreSQL [42490651121](https://github.com/waelkamira/mtjr2/actions/runs/42490651121), and Browser E2E [42490648736](https://github.com/waelkamira/mtjr2/actions/runs/42490648736). The browser workflow passed as a suite; it does not contain a dedicated new address-book interaction test.
+- Fresh merged-main General CI passed on `cc5545b` in [run 42490916929](https://github.com/waelkamira/mtjr2/actions/runs/42490916929).
+- No production database, Vercel configuration, secrets, or deployment was changed.

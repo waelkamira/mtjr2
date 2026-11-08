@@ -112,7 +112,7 @@ A system may be marked **Complete** only when:
 
 ## Matjar AI Assistant
 
-The implementation plan and release gates are documented in [`docs/ai/MATJAR_AI_ASSISTANT_PLAN.md`](docs/ai/MATJAR_AI_ASSISTANT_PLAN.md); local configuration and privacy instructions are in [`docs/ai/SETUP.md`](docs/ai/SETUP.md). The initial Groq-powered assistant implementation is being developed on `feat/matjar-ai-assistant`: global chat UI, public catalog search, session-scoped order summaries, server-only Groq integration, and input validation. It is disabled by default and requires server-side `GROQ_API_KEY` plus `AI_ASSISTANT_ENABLED=true` after CI and privacy/security acceptance. No paid provider fallback is configured.
+The Matjar AI Assistant implementation is present on canonical `main`: global chat UI, public catalog search, session-scoped order summaries, server-only Groq integration, and input validation. The implementation plan and release gates are documented in [`docs/ai/MATJAR_AI_ASSISTANT_PLAN.md`](docs/ai/MATJAR_AI_ASSISTANT_PLAN.md); local configuration and privacy instructions are in [`docs/ai/SETUP.md`](docs/ai/SETUP.md). It is disabled by default and requires server-side `GROQ_API_KEY` plus `AI_ASSISTANT_ENABLED=true` after CI and privacy/security acceptance. No paid provider fallback is configured.
 ## Documentation
 
 - `docs/architecture/` — architecture decisions, domain boundaries, and system blueprint.
@@ -432,3 +432,8 @@ Remaining release gates: reconcile all 49 system rows individually; complete act
 - Buyer checkout browser journey reaches a persisted order in `PENDING_PAYMENT`; payment capture is not simulated. Real payment/refund/carrier provider work remains conditional on explicit launch-market, currency, merchant and provider decisions.
 - Identity code is implemented further, but Phase 2 is not closed: real Turnstile/Resend/trusted-proxy configuration and one deployed HTTP identity journey remain release gates.
 - No production database, Vercel configuration, production secrets, or deployment was changed.
+
+
+## Customer account completion — 2026-11-08
+
+Saved address management is now complete at source level on `main`: customers can add, edit, set a default, and delete saved addresses. The service enforces owner scope and atomic default transitions; checkout snapshots remain unchanged. PR #79 and its General CI, PostgreSQL, and Browser E2E workflows passed, and merged-main General CI passed. Phase 2 still has deployment-only identity gates and is not marked complete.
