@@ -18,6 +18,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ produ
     return Response.json(await updateDraftProduct(productId, body as Parameters<typeof updateDraftProduct>[1]));
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+    if (error instanceof Error && /catalog access/i.test(error.message)) return Response.json({ error: "Product catalog access denied." }, { status: 403 });
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid product update.", issues: error.issues }, { status: 400 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to update product." }, { status: 400 });
   }
