@@ -7,6 +7,7 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import { requirePermission } from "@/server/identity/permission-guard";
 import { isSafeCatalogMediaUrl } from "@/server/catalog/media-url";
+import { deleteProductImage } from "@/server/media/product-image-deletion";
 
 const priceSchema = z.object({
   marketId: z.string().trim().min(1),
@@ -286,8 +287,20 @@ const updateProductSchema = z.object({
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180).optional(),
   description: z.string().trim().max(12000).nullable().optional(),
   brandId: z.string().trim().min(1).nullable().optional(),
-  categoryIds: z.array(z.string().trim().min(1)).max(30).optional()
-}).strict().refine((data) => Object.keys(data).length > 0, "At least one product field must be updated.");
+  categoryIds: z.array(z.string().trim().min(1)).max(30).optional(),
+  media: z.array(z.object({
+    url: z.string().url().max(2048).refine(isSafeCatalogMediaUrl, "Product media URLs must use HTTPS and cannot include credentials."),
+    storageKey: z.string().trim().max(1024).optional(),
+    mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]).optional(),
+    width: z.number().int().positive().max(100000).optional(),
+    height: z.number().int().positive().max(100000).optional(),
+    altText: z.string().trim().max(300).optional(),
+    sortOrder: z.number().int().min(0).max(1000).default(0),
+    isPrimary: z.boolean().default(false)
+  }).strict()).max(30).optional()
+}).strict()
+  .refine((data) => Object.keys(data).length > 0, "At least one product field must be updated.")
+  .refine((data) => !data.media || data.media.filter((item) => item.isPrimary).length <= 1, "Only one primary product image is allowed.");
 
 export type UpdateProductInput = z.input<typeof updateProductSchema>;
 
@@ -296,7 +309,8 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const id = z.string().trim().min(1).parse(productId);
   const data = updateProductSchema.parse(input);
   const actor = await requireCurrentSession(now);
-  return prisma.$transaction(async (tx) => {
+  const removedStorageKeys: string[] = [];
+  const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
       select: { id: true, storeId: true, status: true, store: { select: { seller: { select: { ownerId: true } } } } }
@@ -333,6 +347,22 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         data: categoryIds.map((categoryId, index) => ({ productId: id, categoryId, isPrimary: index === 0, sortOrder: index }))
       });
     }
+    if (data.media !== undefined) {
+      const existingMedia = await tx.productMedia.findMany({
+        where: { productId: id, type: "IMAGE" },
+        select: { storageKey: true }
+      });
+      const retainedStorageKeys = new Set(data.media.map((item) => item.storageKey).filter((key): key is string => Boolean(key)));
+      for (const item of existingMedia) {
+        if (item.storageKey && !retainedStorageKeys.has(item.storageKey)) removedStorageKeys.push(item.storageKey);
+      }
+      await tx.productMedia.deleteMany({ where: { productId: id, type: "IMAGE" } });
+      if (data.media.length) {
+        await tx.productMedia.createMany({
+          data: data.media.map((item) => ({ productId: id, type: "IMAGE", ...item }))
+        });
+      }
+    }
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "catalog.product.updated",
       resource: "product", resourceId: id, scopeType: "STORE", scopeId: current.storeId,
@@ -340,6 +370,25 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     }});
     return { productId: id, approvalStatus: ProductApprovalStatus.PENDING };
   });
+
+  // Delete remote assets only after the DB transaction commits. A failed provider
+  // deletion is logged for operational follow-up and never rolls back the saved edit.
+  for (const storageKey of new Set(removedStorageKeys)) {
+    try {
+      const deletion = await deleteProductImage(storageKey);
+      if (deletion === "unsupported") {
+        console.warn("Product image was unlinked but its provider deletion is not configured.", {
+          provider: storageKey.slice(0, storageKey.indexOf(":"))
+        });
+      }
+    } catch (error) {
+      console.error("Product image provider deletion failed after unlink.", {
+        provider: storageKey.slice(0, storageKey.indexOf(":")),
+        message: error instanceof Error ? error.message : "Unknown provider error."
+      });
+    }
+  }
+  return result;
 }
 
 /** Platform reviewer rejects only pending draft products and must provide a reason. */
