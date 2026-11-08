@@ -237,7 +237,7 @@ export default function SellerWorkspacePage() {
     const amount = BigInt(amountMinor);
     const factor = BigInt(10) ** BigInt(minorUnit);
     const absolute = amount < BigInt(0) ? -amount : amount;
-    const whole = amount < 0n ? -(absolute / factor) : absolute / factor;
+    const whole = amount < BigInt(0) ? -(absolute / factor) : absolute / factor;
     const fraction = absolute % factor;
     const formatter = new Intl.NumberFormat(locale, {
       style: "currency", currency: currencyCode, minimumFractionDigits: 0, maximumFractionDigits: 0
