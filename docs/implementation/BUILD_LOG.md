@@ -2904,3 +2904,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Strengthened the authenticated identity upload endpoint: after ImageKit accepts the upload, the server now fetches the file details and confirms `isPrivateFile`, the `matjar-seller-identity` tag, and the authenticated owner's tag before returning the file ID to the browser.
 - This closes the gap where a successful upload response alone could have been treated as proof of private storage. Submission and administrator review continue to re-check file privacy and owner association.
 - Exact-head runtime verification is still pending: the current GitHub integration does not expose a workflow-dispatch action or a local repository execution environment in this session. The Vercel status remains rate-limited; no successful build or test run is claimed.
+
+
+## 2026-11-09 — Seller workspace and catalog continuity fixes
+
+**Implemented on `main`**
+- Seller dashboard and product catalog now restore the last active store from the shared `mtjr.activeStoreId` preference, falling back safely to the first store when the saved store is no longer accessible.
+- Switching stores in the product workspace now updates the same preference used by the seller dashboard, keeping both screens aligned.
+- Category-dependent product attributes now enter their loading state immediately when a category is selected, avoiding a stale or apparently empty attribute panel while the category API is resolving.
+- Browser storage access is guarded so privacy-restricted browsers do not break workspace initialization.
+
+**Verification boundary**
+- Source changes were committed directly to `main` in commits `2a5662c` and `1bf8877`.
+- No local runtime or repository shell is attached in this session. TypeScript, lint, production build, category API runtime, and authenticated browser journeys have not been executed here; no pass is claimed.
+- The latest observed commit status exposed only the Vercel build-rate-limit failure, and the commit workflow-run lookup returned no runs. This is not evidence that the application build passed or failed.
