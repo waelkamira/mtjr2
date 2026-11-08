@@ -2686,3 +2686,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Extended sponsored campaign delivery to accept multiple category IDs (deduplicated and capped at 20) while preserving the existing single-category input for compatibility; added a focused targeting test.
 - Rechecked PR #69's remaining identity/MFA, one-store safeguard, geography, image-gallery, and core advertising work against current `main`; these foundations are already present, so they were not duplicated.
 - Verification status: Prisma validation and migration deployment passed on an earlier integration head. The exact current head must pass typecheck, lint, tests, build, browser E2E, and PostgreSQL integration before merge. No production database or deployment was changed.
+
+
+## 2026-11-08 — PR #69 integration merged and verified
+
+- Squash-merged PR #76 (`feat/pr69-product-listing-integration`) into `main` as commit `c914cc6d2172f1c88e97b220ac9a59094e915d5c`.
+- Closed stale Draft PR #69 as superseded. Its 336-commit branch was not merged wholesale; unique compatible improvements were extracted while retaining current-main implementations of geography, category attributes, image gallery, identity/MFA, advertising foundations, and one-store-per-seller enforcement.
+- Exact merged source head `ee8471143155349a870d0a9976785f7e23eb95c7` passed Prisma validation/migration deployment, TypeScript typecheck, ESLint, unit tests, production build, PostgreSQL integration (including repeatable catalog seed), browser E2E/Playwright, API route security inventory, and UI mutation-feedback inventory.
+- No production database migration was run and no Vercel deployment was performed; database migration verification used disposable CI PostgreSQL.
