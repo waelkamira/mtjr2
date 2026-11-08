@@ -385,9 +385,6 @@ export async function listDiscoverableProducts(input: unknown = {}, options: { i
       ...(useRelevance ? {} : { skip: (query.page - 1) * query.limit, take: query.limit }),
       select: {
         id: true, slug: true, name: true, description: true, publishedAt: true,
-      city: true, district: true, contactPhone: true, videoUrl: true,
-      latitude: true, longitude: true,
-      propertyDetails: { select: { propertyType: true, listingType: true, bedrooms: true, bathrooms: true, floorArea: true } },
         translations: { where: { locale: query.locale }, select: { name: true, description: true, seoTitle: true, seoDescription: true }, take: 1 },
         brand: {
           select: {
