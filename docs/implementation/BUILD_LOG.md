@@ -2870,4 +2870,24 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Verify the seller dashboard at mobile, tablet, and desktop widths with an authenticated seller account.
 - Verify category-level and SKU-level required attributes, image upload/replacement/deletion, and multi-market prices against PostgreSQL.
 - The current create form creates one SKU variant per submission; a full multi-SKU variant matrix editor remains a separate enhancement.
+## 2026-11-09 — Akaar-inspired seller application upgrade
 
+**Reference reviewed**
+- Inspected the actual Akaar seller application in `waelkamira/Akaar`: `app/seller/dashboard/dashboard-client.tsx`, `app/api/seller/application/route.ts`, `lib/seller/application.mjs`, and its private identity-document upload route.
+- Ported the useful onboarding structure and field contract into Matjar's existing identity/session, Seller, audit, and admin review architecture. No Akaar database tables or legacy authentication code were copied.
+
+**Implemented on `main`**
+- Replaced the minimal legal/display-name form in `/seller` with guided sections for applicant/business identity and contact; business type/address; product categories and sourcing/sales plan; business map location; optional social presence.
+- Added an interactive Leaflet location pin and required coordinate pair.
+- Added optional identity image upload through a dedicated authenticated same-origin endpoint. The endpoint accepts JPG/PNG/WebP/AVIF up to 4 MB, checks image signatures, uploads only to ImageKit private storage, and tags the file to the authenticated account. Public Imgur/Cloudinary product-image providers are deliberately not used for identity documents.
+- At application submission, the service verifies the ImageKit file is private and tagged for the submitting account before storing its file ID.
+- Added structured Seller profile columns and additive migration `20261109130000_seller_application_profile`; old Seller rows remain valid because the new fields are nullable.
+- Expanded the application API/service Zod contract and persists submitted business details with the Seller and audit event in the existing transaction.
+- Expanded the protected admin seller queue payload and UI to show contact details, business type/address, intended products, location link, and optional social links.
+
+**Verification boundary**
+- Source files and migration were re-fetched from `main` after writes.
+- Focused seller lifecycle tests were updated for the expanded payload; they have not been executed in this GitHub-only session.
+- Prisma validation/client generation, migration replay, TypeScript, lint, private ImageKit upload, and authenticated browser journey remain pending exact-head CI/runtime evidence.
+- No production database was touched and no migration was applied to a live database.
+- Identity document download/review UI for authorized administrators remains a follow-up; the private file ID is not exposed in the seller list response.
