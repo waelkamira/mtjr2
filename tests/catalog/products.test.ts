@@ -355,6 +355,44 @@ describe("product lifecycle", () => {
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
+  it("validates and persists locality and neighbourhood changes when editing a draft", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT",
+      latitude: 33.5, longitude: 36.2, localityId: "old-locality", neighborhoodId: "old-neighborhood",
+      neighborhood: "الحي القديم", categories: [{ category: { id: "category-1", slug: "phones-electronics", parentId: null } }],
+      store: { seller: { ownerId: "seller-1" } }
+    });
+    mocks.localityFindUnique.mockResolvedValue({ id: "new-locality", governorateId: "sy-damascus" });
+    mocks.neighborhoodFindUnique.mockResolvedValue({ id: "new-neighborhood", governorateId: "sy-damascus" });
+
+    await updateDraftProduct("product-1", {
+      localityId: "new-locality", neighborhoodId: "new-neighborhood",
+      neighborhood: "المزة", latitude: 33.505, longitude: 36.278
+    });
+
+    expect(mocks.productUpdateMany.mock.calls[0][0].data).toMatchObject({
+      localityId: "new-locality", neighborhoodId: "new-neighborhood",
+      neighborhood: "المزة", latitude: 33.505, longitude: 36.278
+    });
+  });
+
+  it("rejects a neighbourhood from another governorate when editing a draft", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT",
+      latitude: 33.5, longitude: 36.2, localityId: "old-locality", neighborhoodId: null,
+      neighborhood: null, categories: [{ category: { id: "category-1", slug: "phones-electronics", parentId: null } }],
+      store: { seller: { ownerId: "seller-1" } }
+    });
+    mocks.localityFindUnique.mockResolvedValue({ id: "new-locality", governorateId: "sy-damascus" });
+    mocks.neighborhoodFindUnique.mockResolvedValue({ id: "remote-neighborhood", governorateId: "sy-aleppo" });
+
+    await expect(updateDraftProduct("product-1", {
+      localityId: "new-locality", neighborhoodId: "remote-neighborhood",
+      neighborhood: "حي بعيد", latitude: 33.505, longitude: 36.278
+    })).rejects.toThrow(/does not belong to the selected governorate/i);
+    expect(mocks.productUpdateMany).not.toHaveBeenCalled();
+  });
+
   it("replaces draft product images and deletes removed provider assets after commit", async () => {
     mocks.productFindUniqueTx.mockResolvedValue({
       id: "product-1", storeId: "store-1", status: "DRAFT",
