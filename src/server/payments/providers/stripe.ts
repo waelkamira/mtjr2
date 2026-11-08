@@ -51,7 +51,7 @@ function verifyStripeSignature(rawBody: string, signatureHeader: string, secret:
 async function createIntent(input: Parameters<PaymentProviderAdapter["createIntent"]>[0]) {
   const { secretKey } = requireStripeSecrets();
   const currency = input.currencyCode.toLowerCase();
-  if (!/^[a-z]{3}$/.test(currency) || !/^(0|[1-9]\d*)$/.test(input.amountMinor) || BigInt(input.amountMinor) <= 0n || BigInt(input.amountMinor) > 99_999_999n) {
+  if (!/^[a-z]{3}$/.test(currency) || !/^(0|[1-9]\d*)$/.test(input.amountMinor) || BigInt(input.amountMinor) <= BigInt("0") || BigInt(input.amountMinor) > BigInt("99999999")) {
     throw new Error("Stripe payment amount or currency is invalid.");
   }
 
