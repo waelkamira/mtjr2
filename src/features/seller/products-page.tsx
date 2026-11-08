@@ -430,6 +430,37 @@ export default function SellerProductsPage() {
     }
   }
 
+  async function replaceEditProductImage(id: string, event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    const current = editMedia.find((item) => item.id === id);
+    if (!file || !current) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"].includes(file.type) || file.size <= 0 || file.size > 10 * 1024 * 1024) {
+      toast.error(translate(locale, "Use JPG, PNG, WebP, GIF or AVIF images up to 10 MB.", "استخدم صور JPG أو PNG أو WebP أو GIF بحجم لا يتجاوز ١٠ ميغابايت."));
+      return;
+    }
+    setEditMediaUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file, file.name);
+      form.append("storeId", storeId);
+      const result = await json<{ success: true; data: { url: string; storageKey?: string; deleteToken?: string; mimeType?: string; width?: number; height?: number } }>(
+        await fetch("/api/seller/products/media", { method: "POST", body: form })
+      );
+      setEditMedia((items) => items.map((item) => item.id === id ? {
+        ...item, url: result.data.url, storageKey: result.data.storageKey ?? null,
+        deleteToken: result.data.deleteToken, mimeType: result.data.mimeType ?? file.type,
+        width: result.data.width ?? null, height: result.data.height ?? null, altText: editName
+      } : item));
+      if (current.deleteToken) await deleteTemporaryProductImage(current.deleteToken);
+      toast.success(translate(locale, "Image replaced successfully.", "تم استبدال الصورة بنجاح."));
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : translate(locale, "Image could not be replaced.", "تعذر استبدال الصورة."));
+    } finally {
+      setEditMediaUploading(false);
+    }
+  }
+
   function removeEditProductImage(id: string) {
     const removed = editMedia.find((item) => item.id === id);
     setEditMedia((current) => current.filter((item) => item.id !== id).map((item, index) => ({
@@ -504,9 +535,12 @@ export default function SellerProductsPage() {
           <h2 className="text-lg font-semibold">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2>
           <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} onChange={(e) => {
             const nextId = e.target.value;
+            uploadedImages.forEach((image) => {
+              URL.revokeObjectURL(image.previewUrl);
+              if (image.deleteToken) void deleteTemporaryProductImage(image.deleteToken);
+            });
             setStoreId(nextId);
             setProducts([]);
-            uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl));
             setUploadedImages([]);
             const nextStore = stores.find((store) => store.id === nextId);
             const allowed = new Set(nextStore?.markets.map((entry) => entry.market.id) ?? []);
@@ -547,6 +581,10 @@ export default function SellerProductsPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2 p-2 text-xs">
                     <span className={image.status === "ready" ? "text-emerald-700" : image.status === "failed" ? "text-red-700" : "text-[var(--muted)]"}>{image.status === "ready" ? image.provider : image.status === "failed" ? translate(locale, "Failed", "فشل") : translate(locale, "Processing", "قيد المعالجة")}</span>
                     {image.status === "failed" && <button type="button" disabled={uploadingImages} onClick={() => retryProductImage(image.id)} className="rounded-md border border-red-200 px-2 py-1 font-semibold text-red-700 disabled:opacity-40">{translate(locale, "Retry", "إعادة المحاولة")}</button>}
+                    <label className="cursor-pointer rounded-md border border-[var(--border)] px-2 py-1 font-semibold">
+                      {translate(locale, "Replace", "استبدال")}
+                      <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="sr-only" disabled={uploadingImages || image.status === "uploading"} onChange={(event) => void replaceProductImage(image.id, event)} />
+                    </label>
                     <div className="flex gap-1">
                       <button type="button" disabled={index === 0} onClick={() => moveProductImage(image.id, -1)} className="rounded-md border border-[var(--border)] px-2 py-1 disabled:opacity-30" aria-label={translate(locale, "Move image left", "تحريك الصورة للأعلى")}>↑</button>
                       <button type="button" disabled={index === uploadedImages.length - 1} onClick={() => moveProductImage(image.id, 1)} className="rounded-md border border-[var(--border)] px-2 py-1 disabled:opacity-30" aria-label={translate(locale, "Move image right", "تحريك الصورة للأسفل")}>↓</button>
@@ -673,6 +711,10 @@ export default function SellerProductsPage() {
                     <div className="flex gap-1">
                       <button type="button" disabled={index === 0 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, -1)} aria-label={translate(locale, "Move image earlier", "تحريك الصورة للأعلى")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40">↑</button>
                       <button type="button" disabled={index === editMedia.length - 1 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, 1)} aria-label={translate(locale, "Move image later", "تحريك الصورة للأسفل")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40">↓</button>
+                      <label className="cursor-pointer rounded-md border border-[var(--border)] px-2 py-1 text-xs font-semibold">
+                        {translate(locale, "Replace", "استبدال")}
+                        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="sr-only" disabled={busy || editMediaUploading} onChange={(event) => void replaceEditProductImage(media.id, event)} />
+                      </label>
                       <button type="button" disabled={busy || editMediaUploading} onClick={() => removeEditProductImage(media.id)} aria-label={translate(locale, "Remove image", "حذف الصورة")} className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-700 disabled:opacity-40">×</button>
                     </div>
                   </div>
