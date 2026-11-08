@@ -11,6 +11,8 @@ describe("Akaar-compatible category field presets", () => {
 
   it("resolves supported category slug aliases", () => {
     expect(getCategoryFieldPresets("mobile-phones").map((field) => field.key)).toContain("storage");
+    expect(getCategoryFieldPresets("phones-electronics").map((field) => field.key)).toContain("camera");
+    expect(getCategoryFieldPresets("computers-tablets").map((field) => field.key)).toContain("processor");
     expect(getCategoryFieldPresets("baby-products").map((field) => field.key)).toContain("safetyCertification");
   });
 
