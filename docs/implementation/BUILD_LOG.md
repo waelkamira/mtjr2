@@ -2614,3 +2614,8 @@ Matjar also persists the seller/store relation, SKU/barcode/weight, market-speci
 - Existing category-preset fields remain required to match server validation, while additional legacy/custom fields are now optional in the draft editor.
 - Sellers can intentionally clear an optional legacy field without being blocked by HTML form validation; the merge removes only that scalar key and retains unrelated nested JSON.
 - Added assertions for required preset fields versus optional legacy fields. Execution is still pending.
+
+**Legacy custom-field safety and usability**
+- Marked fields supplied by the active category preset as required, matching the service's required-field validation; preserved extra legacy/custom fields as optional so sellers can clear them.
+- The custom-field merge now uses a null-prototype object and safely treats keys such as `__proto__` and `constructor` as ordinary data.
+- Added regression assertions for optional legacy fields and prototype-like keys. These tests are committed but have not yet been executed.
