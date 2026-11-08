@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { formatMinorUnits } from "@/lib/money";
 
 type Store = { id: string; name: string; markets: Array<{ market: { id: string; code: string; name: string; defaultCurrencyCode: string } }> };
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string }; currencies: Array<{ currency: { code: string; name: string } }> };
-type Rate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; name: string; description: string | null; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean; priority: number };
+type Rate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; currency: { minorUnit: number }; name: string; description: string | null; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean; priority: number };
 type Draft = { marketId: string; currencyCode: string; name: string; description: string; amountMinor: string; destinationRegion: string; minDeliveryDays: string; maxDeliveryDays: string; priority: string; isActive: boolean };
 const emptyDraft: Draft = { marketId: "", currencyCode: "", name: "", description: "", amountMinor: "", destinationRegion: "", minDeliveryDays: "", maxDeliveryDays: "", priority: "0", isActive: true };
 
@@ -142,7 +143,7 @@ export default function SellerShippingPage() {
             <div className="flex items-center justify-between"><h2 className="text-lg font-extrabold">{translate(locale, "Your delivery services", "خدمات التوصيل")}</h2><span className="rounded-full bg-[var(--color-mint-100)] px-3 py-1 text-xs font-bold text-[var(--color-mint-800)]">{rates.length}</span></div>
             {rates.length ? rates.map((rate) => (
               <article key={rate.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-clay)]">
-                <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold text-[var(--color-ink-950)]">{rate.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">{rate.market.name} · {rate.market.code} · {rate.currencyCode}</p></div><strong className="text-lg tabular-nums">{rate.amountMinor} <span className="text-xs">{rate.currencyCode}</span></strong></div>
+                <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold text-[var(--color-ink-950)]">{rate.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">{rate.market.name} · {rate.market.code} · {rate.currencyCode}</p></div><strong className="text-lg tabular-nums">{formatMinorUnits(rate.amountMinor, rate.currencyCode, rate.currency.minorUnit, locale)}</strong></div>
                 {rate.description && <p className="mt-2 text-sm text-[var(--color-ink-600)]">{rate.description}</p>}
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--muted)]"><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.destinationRegion || translate(locale, "All destinations", "كل الوجهات")}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "أيام")}</span><span className={`rounded-full px-3 py-1 ${rate.isActive ? "bg-[var(--color-mint-100)] text-[var(--color-mint-800)]" : "bg-[var(--surface-soft)]"}`}>{rate.isActive ? translate(locale, "Active", "نشطة") : translate(locale, "Inactive", "متوقفة")}</span></div>
                 <button type="button" onClick={() => startEdit(rate)} className="mt-4 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-bold hover:bg-[var(--surface-soft)]">{translate(locale, "Edit service", "تعديل الخدمة")}</button>
