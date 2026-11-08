@@ -21,7 +21,7 @@ type Product = {
   mapLocation: ProductCoordinates | null;
   propertyDetails: { propertyType: string; listingType: string; bedrooms: number | null; bathrooms: number | null; floorArea: string } | null;
   categories: Array<{ category: { id: string; name: string; slug: string } }>;
-  media: Array<{ url: string; altText: string | null; isPrimary: boolean }>;
+  media: Array<{ url: string; storageKey: string | null; mimeType: string | null; width: number | null; height: number | null; altText: string | null; sortOrder: number; isPrimary: boolean }>;
   variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
 };
 type Store = { id: string; name: string; markets: Array<{ market: { id: string } }> };
@@ -107,6 +107,7 @@ export default function SellerProductsPage() {
   const [editCustomFields, setEditCustomFields] = useState("{}");
   const [editMapLocation, setEditMapLocation] = useState("");
   const [editPropertyDetails, setEditPropertyDetails] = useState("");
+  const [editMedia, setEditMedia] = useState<Product["media"]>([]);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
   const isRealEstate = categoryOptions.find((category) => category.id === categoryId)?.slug === "real-estate";
@@ -320,6 +321,66 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
+  async function uploadEditMedia(files: File[], replaceIndex?: number) {
+    if (!storeId || !files.length) return;
+    const available = replaceIndex === undefined ? 8 - editMedia.length : 1;
+    if (available <= 0) {
+      setError(translate(locale, "A listing can include up to eight images.", "يمكن أن يتضمن الإعلان ثماني صور كحد أقصى."));
+      return;
+    }
+    setUploading(true); setError("");
+    try {
+      const additions: Product["media"][] = [];
+      for (const file of files.slice(0, available)) {
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
+          throw new Error(translate(locale, "Use JPEG, PNG, or WebP images no larger than 8 MB.", "استخدم صور JPEG أو PNG أو WebP بحجم لا يتجاوز 8 ميغابايت."));
+        }
+        const body = new FormData(); body.append("storeId", storeId); body.append("file", file);
+        const uploaded = await json<Omit<UploadedImage, "name">>(await fetch("/api/seller/products/images", { method: "POST", body }));
+        additions.push({ url: uploaded.url, storageKey: uploaded.storageKey, mimeType: uploaded.mimeType, width: uploaded.width ?? null, height: uploaded.height ?? null, altText: file.name, sortOrder: 0, isPrimary: false });
+      }
+      setEditMedia((current) => {
+        const next = [...current];
+        if (replaceIndex !== undefined) next.splice(replaceIndex, 1, additions[0]);
+        else next.push(...additions);
+        return next.map((media, index) => ({
+          ...media,
+          sortOrder: index,
+          isPrimary: replaceIndex !== undefined
+            ? (current[replaceIndex]?.isPrimary ?? false)
+            : (index === 0 && current.length === 0 ? true : media.isPrimary)
+        }));
+      });
+      setMessage(translate(locale, "Product images uploaded. Save the draft to apply the changes.", "تم رفع الصور. احفظ المسودة لتطبيق التغييرات."));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "تعذر رفع الصورة."));
+    } finally { setUploading(false); }
+  }
+
+  function removeEditMedia(index: number) {
+    setEditMedia((current) => {
+      const next = current.filter((_, itemIndex) => itemIndex !== index);
+      const hasPrimary = next.some((media) => media.isPrimary);
+      return next.map((media, sortOrder) => ({
+        ...media, sortOrder,
+        isPrimary: hasPrimary ? media.isPrimary : sortOrder === 0
+      }));
+    });
+  }
+
+  function setEditMediaPrimary(index: number) {
+    setEditMedia((current) => current.map((media, itemIndex) => ({ ...media, isPrimary: itemIndex === index })));
+  }
+
+  function moveEditMedia(index: number, direction: -1 | 1) {
+    setEditMedia((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current]; [next[index], next[target]] = [next[target], next[index]];
+      return next.map((media, sortOrder) => ({ ...media, sortOrder }));
+    });
+  }
+
   async function saveProductEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingId) return;
@@ -335,7 +396,8 @@ export default function SellerProductsPage() {
           city: editCity || null, district: editDistrict || null,
           contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
           brandId: editBrandId || null, categoryIds: editCategoryIds,
-          customFields, mapLocation, propertyDetails
+          customFields, mapLocation, propertyDetails,
+          media: editMedia.map((media, sortOrder) => ({ ...media, sortOrder }))
         })
       }));
       setEditingId("");
@@ -505,7 +567,7 @@ export default function SellerProductsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditCity(product.city ?? ""); setEditDistrict(product.district ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? ""); setEditBrandId(product.brandId ?? ""); setEditCategoryIds(product.categories.map((entry) => entry.category.id)); setEditCustomFields(JSON.stringify(product.customFields ?? {}, null, 2)); setEditMapLocation(product.mapLocation ? JSON.stringify(product.mapLocation, null, 2) : ""); setEditPropertyDetails(product.propertyDetails ? JSON.stringify({ propertyType: product.propertyDetails.propertyType, listingType: product.propertyDetails.listingType, bedrooms: product.propertyDetails.bedrooms, bathrooms: product.propertyDetails.bathrooms, floorArea: product.propertyDetails.floorArea }, null, 2) : ""); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+              {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditCity(product.city ?? ""); setEditDistrict(product.district ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? ""); setEditBrandId(product.brandId ?? ""); setEditCategoryIds(product.categories.map((entry) => entry.category.id)); setEditCustomFields(JSON.stringify(product.customFields ?? {}, null, 2)); setEditMapLocation(product.mapLocation ? JSON.stringify(product.mapLocation, null, 2) : ""); setEditPropertyDetails(product.propertyDetails ? JSON.stringify({ propertyType: product.propertyDetails.propertyType, listingType: product.propertyDetails.listingType, bedrooms: product.propertyDetails.bedrooms, bathrooms: product.propertyDetails.bathrooms, floorArea: product.propertyDetails.floorArea }, null, 2) : ""); setEditMedia(product.media.map((media, index) => ({ ...media, sortOrder: index }))); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
@@ -525,6 +587,28 @@ export default function SellerProductsPage() {
             <label className="grid gap-1 text-sm">{translate(locale, "Category-specific fields (JSON)", "حقول الفئة (JSON)")}<textarea rows={4} className={inputClass} value={editCustomFields} onChange={(e) => setEditCustomFields(e.target.value)} /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Map location (JSON; blank to clear)", "الموقع على الخريطة (JSON؛ اتركه فارغاً للمسح)")}<textarea rows={3} className={inputClass} value={editMapLocation} onChange={(e) => setEditMapLocation(e.target.value)} placeholder='{"latitude":33.5,"longitude":36.2}' /></label>
             <label className="grid gap-1 text-sm">{translate(locale, "Property details (JSON; blank to clear)", "تفاصيل العقار (JSON؛ اتركه فارغاً للمسح)")}<textarea rows={4} className={inputClass} value={editPropertyDetails} onChange={(e) => setEditPropertyDetails(e.target.value)} /></label>
+            <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2"><div><h4 className="text-sm font-semibold">{translate(locale, "Product image studio", "استوديو صور المنتج")}</h4><p className="text-xs text-[var(--muted)]">{translate(locale, "Upload, replace, remove, reorder and choose one cover image.", "ارفع الصور واستبدلها واحذفها ورتبها وحدد صورة غلاف واحدة.")}</p></div><span className="rounded-full bg-[var(--surface)] px-3 py-1 text-xs font-semibold">{editMedia.length}/8</span></div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {editMedia.map((media, index) => <div key={media.storageKey ?? media.url} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                  <img src={media.url} alt={media.altText ?? ""} className="aspect-square w-full object-cover" />
+                  <div className="grid gap-2 p-2">
+                    <span className="text-xs font-semibold">{media.isPrimary ? translate(locale, "Cover image", "صورة الغلاف") : translate(locale, "Image", "صورة")} {index + 1}</span>
+                    <div className="flex flex-wrap gap-1">
+                      <button type="button" disabled={uploading || busy} onClick={() => setEditMediaPrimary(index)} className="rounded-lg border px-2 py-1 text-[11px]">{translate(locale, "Make cover", "اجعلها الغلاف")}</button>
+                      <button type="button" disabled={uploading || busy} onClick={() => removeEditMedia(index)} className="rounded-lg border px-2 py-1 text-[11px] text-red-600">{translate(locale, "Remove", "حذف")}</button>
+                    </div>
+                    <div className="flex gap-1">
+                      <button type="button" disabled={index === 0 || uploading || busy} onClick={() => moveEditMedia(index, -1)} className="rounded-lg border px-2 py-1 text-[11px]">↑</button>
+                      <button type="button" disabled={index === editMedia.length - 1 || uploading || busy} onClick={() => moveEditMedia(index, 1)} className="rounded-lg border px-2 py-1 text-[11px]">↓</button>
+                      <label className="cursor-pointer rounded-lg border px-2 py-1 text-[11px]">{translate(locale, "Replace", "استبدال")}<input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={uploading || busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void uploadEditMedia([file], index); }} /></label>
+                    </div>
+                  </div>
+                </div>)}
+              </div>
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold"><input type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={uploading || busy || editMedia.length >= 8} onChange={(event) => { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; void uploadEditMedia(files); }} />{uploading ? translate(locale, "Uploading…", "جارٍ الرفع…") : translate(locale, "Add images", "إضافة صور")}</label>
+              {!editMedia.length && <p className="text-xs text-red-600">{translate(locale, "Add at least one image before saving.", "أضف صورة واحدة على الأقل قبل الحفظ.")}</p>}
+            </section>
             <div className="flex gap-2"><button disabled={busy} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" onClick={() => setEditingId("")} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
           </form>}
         </section>
