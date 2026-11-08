@@ -488,7 +488,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
       mapLocation: { select: { latitude: true, longitude: true } },
       propertyDetails: true,
       categories: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { category: { select: { id: true, name: true, slug: true } } } },
-      media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 8, select: { url: true, altText: true, isPrimary: true } },
+      media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 8, select: { url: true, storageKey: true, mimeType: true, width: true, height: true, altText: true, sortOrder: true, isPrimary: true } },
       variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
     }
   });
