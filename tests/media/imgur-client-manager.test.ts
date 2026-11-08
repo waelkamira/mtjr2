@@ -25,6 +25,12 @@ describe("Imgur Client ID rotation", () => {
     expect(getNextImgurClientId()).toBe("client-a");
   });
 
+  it("falls back to the single Client ID when the rotation list is blank", () => {
+    vi.stubEnv("IMGUR_CLIENT_IDS", "");
+    vi.stubEnv("IMGUR_CLIENT_ID", "single-client");
+    expect(getNextImgurClientId()).toBe("single-client");
+  });
+
   it("deduplicates configured IDs and resets usage when the configured list changes", () => {
     vi.stubEnv("IMGUR_CLIENT_IDS", "client-a,client-a;client-b");
     expect(getNextImgurClientId()).toBe("client-a");
