@@ -525,18 +525,18 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
-  const inputClass = "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm";
-  return <main className="min-h-screen bg-[var(--background)]">
-    <header className="border-b border-[var(--border)] bg-[var(--background)]"><div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5"><Link href="/" className="text-2xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><Link href="/seller" className="text-sm font-medium text-[var(--color-ink-800)]">← Seller workspace</Link></div></header>
-    <div className="mx-auto max-w-6xl px-5 py-10">
-      <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Catalog management", "إدارة الكتالوج")}</p>
-      <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Products", "المنتجات")}</h1>
-      <p className="mt-2 text-sm text-[var(--muted)]">{translate(locale, "Create draft products using your store's enabled markets. Product review and publication are enforced by the backend.", "أنشئ مسودات منتجات باستخدام الأسواق المفعلة لمتجرك. تتم مراجعة المنتجات ونشرها بواسطة النظام الخلفي.")}</p>
+  const inputClass = "w-full rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f7fbfc,#e8f0f3)] px-4 py-3 text-sm text-[#263d50] shadow-[inset_0_2px_5px_rgba(43,69,88,.08),0_1px_0_white] outline-none transition placeholder:text-slate-400 focus:border-[#83b9c1] focus:ring-4 focus:ring-[#9bcbd0]/25";
+  return <main className="min-h-screen bg-[linear-gradient(145deg,#eaf1f4,#dfe8ee)] text-[#263d50]">
+    <header className="border-b border-white/70 bg-[#e8f0f3]/85 shadow-[0_6px_18px_rgba(40,65,84,.08)]"><div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4"><span className="text-xl font-black tracking-tight text-[#2b465b]">matjar<span className="text-[#e87536]">.</span><span className="ms-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#7893a3]">Seller studio</span></span><Link href="/seller" className="rounded-full border border-white bg-[#e0ebef] px-4 py-2.5 text-sm font-bold text-[#35566c] shadow-[0_4px_12px_rgba(40,65,84,.1),inset_0_1px_0_white]">← {translate(locale, "Seller workspace", "لوحة البائع")}</Link></div></header>
+    <div className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+      <p className="text-xs font-extrabold uppercase tracking-[.2em] text-[#66899b]">{translate(locale, "Catalog management", "إدارة الكتالوج")}</p>
+      <h1 className="mt-2 text-3xl font-black tracking-tight text-[#263d50] sm:text-4xl">{translate(locale, "Products", "المنتجات")}</h1>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-[#647d8d]">{translate(locale, "Create draft products using your store's enabled markets. Product review and publication are enforced by the backend.", "أنشئ مسودات منتجات باستخدام الأسواق المفعلة لمتجرك. تتم مراجعة المنتجات ونشرها بواسطة النظام الخلفي.")}</p>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
-      {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-          <h2 className="text-lg font-semibold">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2>
+      {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(420px,.92fr)_minmax(520px,1.08fr)]">
+        <section className="rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_14px_30px_rgba(40,65,84,.12),inset_0_1px_0_white] sm:p-7">
+          <h2 className="text-xl font-extrabold tracking-tight text-[#2d4a60]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2>
           <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
             const nextId = e.target.value;
             uploadedImages.forEach((image) => {
@@ -577,7 +577,7 @@ export default function SellerProductsPage() {
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
               </label>
               {uploadedImages.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+                {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-white/80 bg-[#eef4f6] shadow-[inset_0_2px_5px_rgba(43,69,88,.06)] shadow-sm">
                   <div className="relative aspect-square bg-[var(--surface-soft)]">
                     <img src={image.previewUrl} alt={`Product image ${index + 1}`} className={`h-full w-full object-cover ${image.status === "uploading" ? "opacity-60" : ""}`} />
                     {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2.5 py-1 text-[10px] font-bold text-white">{translate(locale, "Primary image", "الصورة الرئيسية")}</span>}
@@ -653,7 +653,7 @@ export default function SellerProductsPage() {
             <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => !/^(0|[1-9][0-9]{0,17})$/.test(marketPrices[market.id]?.amountMinor ?? ""))} className="mt-2 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <section className="rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_14px_30px_rgba(40,65,84,.12),inset_0_1px_0_white] sm:p-7">
           <h2 className="text-lg font-semibold">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
           {!loading && products.length > 0 && <section aria-label="Seller catalog analytics" className="mt-5 grid gap-4 md:grid-cols-2">
             <MetricBarChart title="Product approval pipeline" description="Counts reflect the currently loaded product list and active search." rows={Object.entries(approvalCounts).map(([status, count], index) => ({
