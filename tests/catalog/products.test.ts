@@ -52,7 +52,7 @@ describe("product lifecycle", () => {
     mocks.categoryCount.mockResolvedValue(1);
     mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "general" }]);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
-    mocks.productCreate.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
+    mocks.productCreate.mockResolvedValue({ id: "product-1", productNumber: BigInt("101"), storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
@@ -86,7 +86,7 @@ describe("product lifecycle", () => {
       media: [{ url: "https://images.example/mug.jpg", isPrimary: true }],
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     });
-    expect(result).toMatchObject({ id: "product-1", status: "DRAFT", approvalStatus: "PENDING" });
+    expect(result).toMatchObject({ id: "product-1", productNumber: "101", status: "DRAFT", approvalStatus: "PENDING" });
     const createArg = mocks.productCreate.mock.calls[0][0];
     expect(createArg.data.variants.create[0].prices.create[0].amountMinor).toBe(BigInt("2499"));
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
