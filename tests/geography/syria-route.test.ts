@@ -19,41 +19,36 @@ describe("Syrian geography API route", () => {
     expect(subdistrictResponse.status).toBe(400);
   });
 
-  it("normalizes source-backed Arabic names and centroids", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      success: true,
-      data: {
-        items: [{
-          id: "sy-damascus",
-          name: { ar: "دمشق", en: "Damascus" },
-          kind: "city",
-          governorateId: "sy-damascus",
-          districtId: "sy-damascus-damascus",
-          subdistrictId: "sy-damascus-damascus-damascus",
-          centroid: { latitude: 33.5138, longitude: 36.2765 }
-        }],
-        pagination: { currentPage: 1, totalPages: 1 }
-      }
-    }), { status: 200 })));
-    const response = await GET(new Request("https://mtjr.test/api/geography/syria?level=localities&subdistrictId=sy-damascus-damascus-damascus"));
+  it("serves the pinned Syrian release with Arabic names and map centroids", async () => {
+    const response = await GET(new Request("https://mtjr.test/api/geography/syria?level=localities&subdistrictId=sy-damascus-damascus-damascus&kind=city&q=دمشق"));
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.items).toEqual([expect.objectContaining({
-      id: "sy-damascus",
+      id: "sy-damascus-damascus-damascus-damascus",
       name: "دمشق",
       englishName: "Damascus",
       kind: "city",
-      coordinates: { latitude: 33.5138, longitude: 36.2765 }
+      coordinates: { latitude: 33.517175, longitude: 36.27671 }
     })]);
     expect(body.sourceVersion).toBe("v0.1.5");
+    expect(body.license).toBe("CC BY 4.0");
   });
 
-  it("does not expose upstream errors or response bodies", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("upstream failure details", { status: 429 })));
-    const response = await GET(new Request("https://mtjr.test/api/geography/syria"));
-    const body = await response.json();
-    expect(response.status).toBe(502);
-    expect(body.error).toContain("temporarily unavailable");
-    expect(JSON.stringify(body)).not.toContain("upstream failure details");
+  it("exposes all Syrian administrative levels with stable counts and pagination", async () => {
+    const [governoratesResponse, districtsResponse, subdistrictsResponse, localitiesResponse] = await Promise.all([
+      GET(new Request("https://mtjr.test/api/geography/syria?level=governorates")),
+      GET(new Request("https://mtjr.test/api/geography/syria?level=districts&governorateId=sy-damascus")),
+      GET(new Request("https://mtjr.test/api/geography/syria?level=subdistricts&districtId=sy-damascus-damascus")),
+      GET(new Request("https://mtjr.test/api/geography/syria?level=localities&governorateId=sy-damascus"))
+    ]);
+    const [governorates, districts, subdistricts, localities] = await Promise.all([
+      governoratesResponse.json(), districtsResponse.json(), subdistrictsResponse.json(), localitiesResponse.json()
+    ]);
+    expect(governorates.pagination.totalRecords).toBe(14);
+    expect(districts.pagination.totalRecords).toBeGreaterThan(0);
+    expect(subdistricts.pagination.totalRecords).toBeGreaterThan(0);
+    expect(localities.pagination.totalRecords).toBeGreaterThan(50);
+    expect(localities.pagination.totalPages).toBeGreaterThan(1);
+    expect(localities.items).toHaveLength(50);
   });
 });
