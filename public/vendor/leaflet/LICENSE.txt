@@ -1,0 +1,6 @@
+Leaflet 1.9.4
+Copyright (c) 2010-2023, Vladimir Agafonkin
+Copyright (c) 2010-2011, CloudMade
+Licensed under the BSD 2-Clause License.
+Source: https://github.com/Leaflet/Leaflet/tree/v1.9.4
+The JavaScript runtime is loaded from the pinned 1.9.4 distribution URL in the map component.
