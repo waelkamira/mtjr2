@@ -40,7 +40,6 @@ const groups = [
 export default function SellerNavigation() {
   const pathname = usePathname();
   const { locale } = useLocale();
-  const ar = locale === "ar";
 
   return (
     <>
