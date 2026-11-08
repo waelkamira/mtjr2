@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import LeafletLocationMap from "@/components/maps/leaflet-location-map";
 import AuthReturnLink from "@/components/auth-return-link";
@@ -204,6 +204,31 @@ export default function SellerWorkspacePage() {
     });
     return () => { active = false; };
   }, [locale, selectedStoreId]);
+
+  async function uploadSellerIdentityDocument(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.size <= 0 || file.size > 4 * 1024 * 1024) {
+      setError(translate(locale, "Choose an image no larger than 4 MB.", "اختر صورة لا يتجاوز حجمها 4 ميغابايت."));
+      input.value = "";
+      return;
+    }
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const result = await readJson<{ fileId: string }>(await fetch("/api/seller/applications/identity-document", { method: "POST", body }));
+      setIdentityDocumentFileId(result.fileId);
+      setIdentityDocumentName(file.name);
+      setMessage(translate(locale, "Private identity document uploaded.", "تم رفع وثيقة الهوية إلى مساحة تخزين خاصة."));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : translate(locale, "The identity document could not be uploaded.", "تعذر رفع وثيقة الهوية."));
+    } finally {
+      input.value = "";
+      setBusy(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>, path: string, payload: unknown, success: string) {
     event.preventDefault();
@@ -446,6 +471,12 @@ export default function SellerWorkspacePage() {
               </section>
               <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
                 <div><h3 className="font-extrabold text-[#2d4a60]">{translate(locale, "04 · Online presence", "04 · الحضور الرقمي")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Optional links help us understand your business.", "روابط اختيارية تساعدنا على التعرف على نشاطك.")}</p></div>
+                <label className="grid gap-2 rounded-2xl border border-dashed border-[#9bbbc7] bg-[#f2f7f8] p-4 text-sm">
+                  <span className="font-bold text-[#2d4a60]">{translate(locale, "Identity document (optional)", "وثيقة الهوية (اختياري)")}</span>
+                  <span className="text-xs text-[#718899]">{identityDocumentName || translate(locale, "Upload JPG, PNG, WebP or AVIF · up to 4 MB. Stored privately for authorized review only.", "ارفع JPG أو PNG أو WebP أو AVIF · حتى 4 ميغابايت. تحفظ بشكل خاص للمراجعة من المسؤولين المخولين فقط.")}</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={uploadSellerIdentityDocument} disabled={busy} className="block w-full text-xs" />
+                  {identityDocumentFileId && <span className="text-xs font-semibold text-emerald-700">{translate(locale, "Private document attached to this application.", "تم إرفاق الوثيقة الخاصة بالطلب.")}</span>}
+                </label>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <label className="grid gap-1 text-sm">Facebook<input type="url" maxLength={2048} dir="ltr" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/…" className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
                   <label className="grid gap-1 text-sm">YouTube<input type="url" maxLength={2048} dir="ltr" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="https://youtube.com/…" className="rounded-2xl border border-white/90 bg-[#f7fbfc] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
