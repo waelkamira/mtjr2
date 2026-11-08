@@ -8,8 +8,8 @@ import SonnerToaster from "@/components/sonner-toaster";
 import { LocaleProvider } from "@/components/locale-provider";
 import { cookies } from "next/headers";
 import { defaultLocale, isLocale, localeCookieName } from "@/lib/locale";
-import "./globals.css";
 import "leaflet/dist/leaflet.css";
+import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = await cookies();
