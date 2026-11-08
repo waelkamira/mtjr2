@@ -94,7 +94,7 @@ export default function MatjarAIAssistant() {
             {messages.length === 0 && (
               <div className="space-y-3">
                 <div className="rounded-2xl bg-white p-4 text-sm leading-7 text-[var(--color-ink-800)] shadow-sm">
-                  مرحباً بك في Matjar! اسألني عن المنتجات أو الأسعار أو كيفية استخدام المتجر. تُرسل رسائلك إلى Groq لتوليد الإجابة، أما تفاصيل طلباتك وطلبات الإرجاع فتُعرض من Matjar مباشرة ولا تُرسل إلى النموذج. لا ترسل كلمات المرور أو بيانات الدفع.
+                  مرحباً بك في Matjar! اسألني عن المنتجات أو الأسعار أو كيفية استخدام المتجر. تُرسل رسائلك إلى Groq لتوليد الإجابة، أما ملخصات طلباتك وطلبات الإرجاع وتذاكر الدعم فتُعرض من Matjar مباشرة ولا تُرسل تفاصيلها أو ملاحظات الدعم الداخلية إلى النموذج. لا ترسل كلمات المرور أو بيانات الدفع.
                 </div>
                 <Link href="/account/support" className="block text-center text-xs font-semibold text-[var(--color-lavender-800)] underline">التواصل مع خدمة العملاء</Link>
                 {suggestions.map((suggestion) => (
