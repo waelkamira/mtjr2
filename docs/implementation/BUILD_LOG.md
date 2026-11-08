@@ -2891,3 +2891,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Prisma validation/client generation, migration replay, TypeScript, lint, private ImageKit upload, and authenticated browser journey remain pending exact-head CI/runtime evidence.
 - No production database was touched and no migration was applied to a live database.
 - Identity document download/review UI for authorized administrators remains a follow-up; the private file ID is not exposed in the seller list response.
+## 2026-11-09 — Seller review and reapplication completion
+
+- Added an administrator-only identity-document access endpoint. It re-reads ImageKit file metadata, checks private-file state and owner tags, and redirects to a five-minute signed URL. The seller-list response exposes only a boolean indicating whether a document exists; it never exposes the private ImageKit file ID.
+- Added a secure document link to each application card in the admin seller queue.
+- Rejected sellers can now correct their application and resubmit the same Seller record. A conditional update prevents stale/concurrent submissions; the application returns to PENDING and emits a dedicated audit event. Existing active/suspended seller accounts cannot use this path.
+- Added focused regression coverage for reapplication and admin queue privacy. Tests are authored but not executed in this session.
+- Exact-head GitHub status still reports only the Vercel build-rate-limit failure; no successful CI run is available to claim. GitHub Actions workflow-run results are not exposed by the current connector query. Prisma migration replay, typecheck, lint, full test suite, ImageKit upload/review, and authenticated browser verification remain outstanding.
