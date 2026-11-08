@@ -25,3 +25,11 @@ export class MfaVerificationRequiredError extends PermissionDeniedError {
     this.name = "MfaVerificationRequiredError";
   }
 }
+
+export class StepUpRequiredError extends MfaVerificationRequiredError {
+  constructor() {
+    super();
+    this.message = "Recent multi-factor authentication is required for platform administration.";
+    this.name = "StepUpRequiredError";
+  }
+}
