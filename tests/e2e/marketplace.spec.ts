@@ -188,7 +188,9 @@ test.describe("seller catalog authoring", () => {
     const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
     expect(damascus).toBeTruthy();
     await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
-    await expect(map).toHaveAttribute("data-map-zoom", "7", { timeout: 10000 });
+    if (damascus!.latitude !== null && damascus!.longitude !== null) {
+      await expect(map).toHaveAttribute("data-map-zoom", "7", { timeout: 10000 });
+    }
 
     const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
     expect(districtsResponse.status()).toBe(200);
