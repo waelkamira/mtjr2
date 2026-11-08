@@ -151,36 +151,41 @@ export default function SellerWorkspacePage() {
   }, [locale, selectedStoreId]);
 
   useEffect(() => {
-    if (!selectedStoreId) {
-      setSellerAnalytics(null);
-      return;
-    }
     let active = true;
-    setAnalyticsLoading(true);
-    setAnalyticsError("");
-    fetch(`/api/seller/analytics?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
-      .then((response) => readJson<SellerAnalytics>(response))
-      .then((data) => {
-        if (!active) return;
-        setSellerAnalytics(data);
-        setSelectedSalesCurrency((current) =>
-          data.metrics.grossSalesByCurrency.some((entry) => entry.currencyCode === current)
-            ? current
-            : data.metrics.grossSalesByCurrency[0]?.currencyCode ?? ""
-        );
-      })
-      .catch((cause: unknown) => {
-        if (!active) return;
-        if (cause instanceof ApiError && cause.status === 401) {
-          setAuthenticationRequired(true);
-          return;
-        }
+    void Promise.resolve().then(() => {
+      if (!active) return;
+      if (!selectedStoreId) {
         setSellerAnalytics(null);
-        setAnalyticsError(cause instanceof Error
-          ? cause.message
-          : translate(locale, "Store analytics could not be loaded.", "تعذر تحميل تحليلات المتجر."));
-      })
-      .finally(() => { if (active) setAnalyticsLoading(false); });
+        setAnalyticsLoading(false);
+        setAnalyticsError("");
+        return;
+      }
+      setAnalyticsLoading(true);
+      setAnalyticsError("");
+      return fetch(`/api/seller/analytics?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
+        .then((response) => readJson<SellerAnalytics>(response))
+        .then((data) => {
+          if (!active) return;
+          setSellerAnalytics(data);
+          setSelectedSalesCurrency((current) =>
+            data.metrics.grossSalesByCurrency.some((entry) => entry.currencyCode === current)
+              ? current
+              : data.metrics.grossSalesByCurrency[0]?.currencyCode ?? ""
+          );
+        })
+        .catch((cause: unknown) => {
+          if (!active) return;
+          if (cause instanceof ApiError && cause.status === 401) {
+            setAuthenticationRequired(true);
+            return;
+          }
+          setSellerAnalytics(null);
+          setAnalyticsError(cause instanceof Error
+            ? cause.message
+            : translate(locale, "Store analytics could not be loaded.", "تعذر تحميل تحليلات المتجر."));
+        })
+        .finally(() => { if (active) setAnalyticsLoading(false); });
+    });
     return () => { active = false; };
   }, [locale, selectedStoreId]);
 
