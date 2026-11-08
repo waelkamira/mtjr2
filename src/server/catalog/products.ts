@@ -29,6 +29,7 @@ const createSchema = z.object({
     value: z.unknown()
   }).strict()).max(100).default([]),
   localityId: z.string().trim().min(1).optional(),
+  neighborhoodId: z.string().trim().min(1).optional(),
   neighborhood: z.string().trim().max(120).optional(),
   latitude: z.number().finite().min(-90).max(90).optional(),
   longitude: z.number().finite().min(-180).max(180).optional(),
@@ -105,9 +106,19 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
     if ((data.latitude === undefined) !== (data.longitude === undefined)) {
       throw new Error("Latitude and longitude must be supplied together.");
     }
-    if (data.localityId) {
-      const locality = await tx.syriaLocality.findUnique({ where: { id: data.localityId }, select: { id: true } });
-      if (!locality) throw new Error("The selected Syrian locality is unavailable.");
+    const selectedLocality = data.localityId
+      ? await tx.syriaLocality.findUnique({ where: { id: data.localityId }, select: { id: true, governorateId: true } })
+      : null;
+    if (data.localityId && !selectedLocality) throw new Error("The selected Syrian locality is unavailable.");
+    if (data.neighborhoodId) {
+      if (!selectedLocality) throw new Error("Choose the city or locality before selecting a neighbourhood.");
+      const selectedNeighborhood = await tx.syriaNeighborhood.findUnique({
+        where: { id: data.neighborhoodId },
+        select: { id: true, governorateId: true }
+      });
+      if (!selectedNeighborhood || selectedNeighborhood.governorateId !== selectedLocality.governorateId) {
+        throw new Error("The selected neighbourhood does not belong to the selected governorate.");
+      }
     }
     const categoryAttributeRows = categoryIds.length
       ? await tx.categoryAttribute.findMany({
@@ -157,6 +168,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         description: data.description, status: CatalogEntityStatus.DRAFT,
         approvalStatus: ProductApprovalStatus.PENDING,
         localityId: data.localityId,
+        neighborhoodId: data.neighborhoodId,
         neighborhood: data.neighborhood,
         latitude: data.latitude,
         longitude: data.longitude,
