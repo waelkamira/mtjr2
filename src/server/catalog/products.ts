@@ -315,7 +315,13 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   return prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: {
+        id: true, storeId: true, status: true, customFields: true,
+        categories: { select: { category: { select: { slug: true } } } },
+        mapLocation: { select: { productId: true } },
+        propertyDetails: { select: { productId: true } },
+        store: { select: { seller: { select: { ownerId: true } } } }
+      }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
@@ -326,6 +332,35 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       if (!brand) throw new Error("The selected brand is not active.");
     }
     const categoryIds = data.categoryIds === undefined ? undefined : [...new Set(data.categoryIds)];
+    let selectedCategorySlugs = current.categories.map((entry) => entry.category.slug);
+    if (categoryIds !== undefined) {
+      if (categoryIds.length) {
+        const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
+        if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
+        const selectedCategories = await tx.category.findMany({ where: { id: { in: categoryIds } }, select: { slug: true } });
+        selectedCategorySlugs = selectedCategories.map((category) => category.slug);
+      } else {
+        selectedCategorySlugs = [];
+      }
+    }
+    const isRealEstate = selectedCategorySlugs.includes("real-estate");
+    const effectiveCustomFields = data.customFields === undefined ? current.customFields : data.customFields;
+    const requiredFields = selectedCategorySlugs.includes("real-estate") ? [] : selectedCategorySlugs.flatMap((slug) => getCategoryFieldPresets(slug));
+    const missingFields = requiredFields.filter((field) => {
+      const value = effectiveCustomFields && typeof effectiveCustomFields === "object"
+        ? (effectiveCustomFields as Record<string, unknown>)[field.key]
+        : undefined;
+      return typeof value !== "string" || !value.trim();
+    });
+    if (missingFields.length) throw new Error("Complete all required category-specific product details: " + missingFields.map((field) => field.label).join(", "));
+    const hasMapLocation = data.mapLocation !== undefined ? data.mapLocation !== null : Boolean(current.mapLocation);
+    const hasPropertyDetails = data.propertyDetails !== undefined ? data.propertyDetails !== null : Boolean(current.propertyDetails);
+    if (isRealEstate && (!hasMapLocation || !hasPropertyDetails)) {
+      throw new Error("Real estate listings need property details and a map location.");
+    }
+    if (!isRealEstate && data.propertyDetails) {
+      throw new Error("Property details can only be added to a real-estate listing.");
+    }
     const changed = await tx.product.updateMany({
       where: { id, status: CatalogEntityStatus.DRAFT },
       data: {
