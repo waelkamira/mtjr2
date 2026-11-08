@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Images, MapPin, Plus, Trash2 } from "lucide-
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import ProductLocationMap, { type ProductCoordinates } from "@/components/maps/product-location-map";
+import { getCategoryFieldPresets } from "@/lib/catalog/category-field-presets";
 
 type Market = {
   id: string; code: string; name: string;
@@ -26,46 +27,6 @@ type Product = {
 type Store = { id: string; name: string; markets: Array<{ market: { id: string } }> };
 type Workspace = { stores: Store[] };
 type UploadedImage = { url: string; provider: "imgur" | "imagekit"; storageKey: string; mimeType: string; width?: number; height?: number; name: string };
-
-const categoryFieldPresets: Record<string, Array<[string, string]>> = {
-  "real-estate": [["adType","بيع / إيجار"],["rooms","الغرف"],["livingrooms","الصالونات"],["area","المساحة"],["propertyType","نوع العقار"],["bathrooms","الحمامات"]],
-  cars: [["adType","بيع / إيجار"],["brand","الماركة"],["model","الموديل"],["year","سنة الصنع"],["condition","الحالة"],["fuelType","نوع الوقود"],["mileage","عدد الكيلومترات"]],
-  phones: [["brand","الماركة"],["model","الموديل"],["storage","سعة التخزين"],["ram","الذاكرة العشوائية"],["camera","الكاميرا"],["battery","سعة البطارية"],["color","اللون"],["condition","الحالة"]],
-  computers: [["type","نوع الجهاز"],["brand","الماركة"],["processor","المعالج"],["ram","الذاكرة العشوائية"],["storage","وحدة التخزين"],["graphicsCard","كرت الشاشة"],["screenSize","حجم الشاشة"],["operatingSystem","نظام التشغيل"],["condition","الحالة"]],
-  electronics: [["type","نوع الجهاز"],["brand","الماركة"],["screenSize","حجم الشاشة"],["resolution","دقة العرض"],["audioOutput","قوة الصوت"],["smartFeatures","الميزات الذكية"],["connectivity","إمكانيات الاتصال"],["condition","الحالة"],["power","الجهد الكهربائي"]],
-  furniture: [["type","نوع الأثاث"],["material","المادة المصنوعة"],["color","اللون"],["dimensions","الأبعاد"],["style","النمط التصميمي"],["condition","الحالة"],["assembly","التجميع"]],
-  kitchen: [["productType","نوع المنتج"],["furnitureType","نوع الأثاث"],["tableShape","شكل الطاولة"],["applianceType","نوع الجهاز"],["cooktopType","نوع الموقد"],["capacity","السعة"],["material","المادة"],["color","اللون"],["style","النمط"],["dimensions","الأبعاد"],["condition","الحالة"]],
-  fashion: [["type","نوع المنتج"],["clothingType","نوع الملابس"],["gender","الفئة"],["size","المقاس"],["color","اللون"],["brand","الماركة"],["material","المادة"],["condition","الحالة"],["season","الموسم"]],
-  beauty: [["productType","نوع المنتج"],["makeupType","نوع المكياج"],["skinCareType","نوع العناية بالبشرة"],["skinType","نوع البشرة"],["hairType","نوع الشعر"],["hairCareType","نوع العناية بالشعر"],["fragranceType","نوع العطر"],["color","اللون"],["condition","الحالة"]],
-  sports: [["type","نوع المنتج"],["sport","الرياضة"],["equipmentType","نوع المعدات"],["clothingType","نوع الملابس"],["size","المقاس"],["brand","الماركة"],["material","المادة"],["condition","الحالة"]],
-  games: [["type","نوع اللعبة"],["platform","المنصة"],["genre","النوع"],["boardGameType","نوع اللعبة اللوحية"],["minAge","الحد الأدنى للعمر"],["players","عدد اللاعبين"],["brand","الماركة"],["condition","الحالة"]],
-  tools: [["productType","نوع المنتج"],["toolCategory","تصنيف الأداة"],["powerSource","مصدر الطاقة"],["powerToolType","نوع الأداة الكهربائية"],["voltage","الجهد الكهربائي"],["lightingType","نوع الإضاءة"],["material","المادة"],["measurement","القياسات"],["brand","الماركة"],["safetyRating","تصنيف السلامة"]],
-  books: [["productType","نوع المنتج"],["genre","التصنيف الأدبي"],["author","المؤلف / المترجم"],["publisher","دار النشر"],["language","اللغة"],["format","نوع النسخة"],["edition","الطبعة"],["condition","الحالة"],["isbn","رقم ISBN"]],
-  gifts: [["giftCategory","فئة الهدية"],["wrapping","التغليف"],["personalization","التخصيص"],["delivery","التوصيل"]],
-  agriculture: [["type","نوع المنتج"],["plantType","نوع النبات"],["fruitType","نوع الفاكهة"],["vegetableType","نوع الخضار"],["growthCondition","ظروف النمو"],["wateringNeeds","احتياجات الري"],["soilType","نوع التربة"],["season","الموسم"],["harvestTime","وقت الحصاد"]],
-  bikes: [["bikeType","نوع الدراجة"],["motorcycleType","نوع الدراجة النارية"],["engineType","نوع المحرك"],["engineSize","سعة المحرك"],["batteryRange","مدى البطارية"],["frameMaterial","مادة الهيكل"],["suspensionType","نوع التعليق"],["brakeType","نوع الفرامل"],["color","اللون"],["condition","الحالة"],["brand","الماركة"],["year","سنة الصنع"]],
-  health: [["productType","نوع المنتج"],["healthCategory","التصنيف الصحي"],["productForm","شكل المنتج"],["personalCareType","نوع العناية الشخصية"],["cleaningType","نوع المنظفات"],["oralCareType","نوع العناية بالفم"],["sizeVolume","الحجم / الكمية"],["brand","الماركة"],["specialFeatures","مميزات خاصة"]],
-  shoes: [["type","نوع الحذاء"],["category","التصنيف"],["size","المقاس"],["color","اللون"],["material","المادة"],["brand","الماركة"],["usage","الاستخدام"],["condition","الحالة"]],
-  bags: [["productType","نوع الحقيبة"],["style","النمط التصميمي"],["material","المادة"],["color","اللون"],["size","الحجم"],["capacity","السعة"],["features","المميزات"],["brand","الماركة"],["condition","الحالة"]],
-  jewelry: [["productType","نوع المجوهرات"],["metalType","نوع المعدن"],["karat","العيار"],["gemstone","الحجر الكريم"],["style","النمط التصميمي"],["brand","الماركة"],["gender","الفئة"],["occasion","المناسبة"],["condition","الحالة"]],
-  baby: [["type","نوع المنتج"],["subType","التفاصيل"],["ageRange","الفئة العمرية"],["gender","الفئة"],["material","المادة"],["safetyCertification","شهادات السلامة"],["condition","الحالة"],["brand","الماركة"]],
-  jobs: [["title","المسمى الوظيفي"],["company","الشركة"],["location","المحافظة"],["salary","الراتب"],["employmentType","نوع الوظيفة"],["jobCategory","مجال الوظيفة"],["educationLevel","المؤهل العلمي"],["experience","الخبرة المطلوبة"],["skills","المهارات المطلوبة"],["description","وصف الوظيفة"],["deadline","آخر موعد للتقديم"]]
-};
-
-function presetFieldsForCategory(slug: string) {
-  const normalized = slug.toLowerCase();
-  const aliases: Record<string, string> = {
-    "mobile-phones": "phones", "smartphones": "phones", "laptops": "computers",
-    "home-furniture": "furniture", "home-kitchen": "kitchen", "clothing": "fashion",
-    "beauty-personal-care": "beauty", "sports-outdoors": "sports", "video-games": "games",
-    "tools-hardware": "tools", "books-stationery": "books", "gifts-occasions": "gifts",
-    "plants-gardening": "agriculture", "bicycles-motorcycles": "bikes", "medical-health": "health",
-    "footwear": "shoes", "bags-luggage": "bags", "jewellery": "jewelry", "baby-products": "baby",
-    "employment": "jobs"
-  };
-  const key = aliases[normalized] ?? normalized;
-  return (categoryFieldPresets[key] ?? []).map(([fieldKey, label]) => ({ key: fieldKey, label, value: "" }));
-}
 
 async function json<T>(response: Response): Promise<T> {
   const data = await response.json();
@@ -437,7 +398,7 @@ export default function SellerProductsPage() {
               </div>
               <p className="text-xs text-[var(--muted)]">{selectedImageCount}/8 {translate(locale, "images selected; the selected image becomes the cover.", "صور محددة؛ الصورة المحددة تصبح صورة الغلاف.")}</p><p className="rounded-xl border border-dashed border-[var(--color-copper-600)]/50 bg-[var(--surface-soft)] p-3 text-center text-xs text-[var(--muted)]">{translate(locale, "Drop image files anywhere in this panel to upload them.", "اسحب ملفات الصور إلى أي مكان داخل هذه النافذة لرفعها.")}</p>
             </section></div></div>}
-            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { setCategoryId(e.target.value); const selected = categoryOptions.find((item) => item.id === e.target.value); setCustomFields(selected ? presetFieldsForCategory(selected.slug) : []); }}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { setCategoryId(e.target.value); const selected = categoryOptions.find((item) => item.id === e.target.value); setCustomFields(selected ? getCategoryFieldPresets(selected.slug) : []); }}><option value="">{translate(locale, "No category", "بلا فئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             {categoryId && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold">{translate(locale, "Additional category details", "تفاصيل إضافية حسب الفئة")}</h3><button type="button" onClick={() => setCustomFields((items) => [...items, { key: "", value: "", label: "" }])} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Add field", "إضافة حقل")}</button></div><p className="text-xs text-[var(--muted)]">{translate(locale, "Add specifications such as model, year, condition, material, size or any category-specific detail.", "أضف المواصفات مثل الطراز والسنة والحالة والخامة والمقاس أو أي تفاصيل خاصة بالفئة.")}</p>{customFields.map((field, index) => <div key={index} className="grid items-end gap-2 sm:grid-cols-[1fr_auto]">{field.label ? <label className="grid gap-1 text-sm"><span className="font-medium">{field.label}</span><input required aria-label={field.label} className={inputClass} value={field.value} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} /></label> : <div className="grid gap-2 sm:grid-cols-2"><label className="grid gap-1 text-xs">{translate(locale, "Field name", "اسم الحقل")}<input className={inputClass} value={field.key} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, key: e.target.value } : item))} /></label><label className="grid gap-1 text-xs">{translate(locale, "Value", "القيمة")}<input className={inputClass} value={field.value} onChange={(e) => setCustomFields((items) => items.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} /></label></div>}<button type="button" onClick={() => setCustomFields((items) => items.filter((_, i) => i !== index))} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">{translate(locale, "Remove", "حذف")}</button></div>)}</section> }
             {isRealEstate && <section className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
               <h3 className="text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</h3>
