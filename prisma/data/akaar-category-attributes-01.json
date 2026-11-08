@@ -12,50 +12,111 @@
           "key": "type",
           "labelAr": "نوع الأثاث",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "كنبة",
+            "كرسي",
+            "طاولة",
+            "سرير",
+            "خزانة",
+            "مكتب",
+            "رف",
+            "دولاب",
+            "أثاث حديقة",
+            "أخرى"
+          ]
         },
         {
           "key": "material",
           "labelAr": "المادة المصنوعة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "خشب طبيعي",
+            "خشب MDF",
+            "معدن",
+            "قماش",
+            "جلد طبيعي",
+            "جلد صناعي",
+            "زجاج",
+            "بلاستيك",
+            "رخام",
+            "أخرى"
+          ]
         },
         {
           "key": "color",
           "labelAr": "اللون",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أسود",
+            "أبيض",
+            "بني",
+            "رمادي",
+            "أحمر",
+            "أزرق",
+            "أخضر",
+            "بيج",
+            "ذهبي",
+            "فضي",
+            "أخرى"
+          ]
         },
         {
           "key": "dimensions",
           "labelAr": "الأبعاد",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "صغير",
+            "متوسط",
+            "كبير",
+            "ضخم",
+            "مقاس خاص"
+          ]
         },
         {
           "key": "style",
           "labelAr": "النمط التصميمي",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "حديث",
+            "كلاسيكي",
+            "ريفي",
+            "بسيط",
+            "صناعي",
+            "اسكندنافي",
+            "شرقي",
+            "فخم",
+            "أخرى"
+          ]
         },
         {
           "key": "condition",
           "labelAr": "الحالة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - بحالة ممتازة",
+            "مستعمل - بحالة جيدة",
+            "مستعمل - بحاجة ترميم",
+            "أخرى"
+          ]
         },
         {
           "key": "assembly",
           "labelAr": "التجميع",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "مجمّع بالكامل",
+            "يحتاج تجميع بسيط",
+            "يحتاج تجميع كامل",
+            "غير متوفر تجميع"
+          ]
         }
       ]
     },
@@ -69,57 +130,148 @@
           "key": "type",
           "labelAr": "نوع الحذاء",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "حذاء رياضي",
+            "حذاء طويل (بوت)",
+            "صندل",
+            "حذاء رسمي",
+            "حذاء منزلي",
+            "حذاء كاجوال",
+            "حذاء أطفال",
+            "حذاء تزلج",
+            "أخرى"
+          ]
         },
         {
           "key": "category",
           "labelAr": "التصنيف",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "رجالي",
+            "نسائي",
+            "أطفال",
+            "للجنسين"
+          ]
         },
         {
           "key": "size",
           "labelAr": "المقاس",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24",
+            "25",
+            "26",
+            "27",
+            "28",
+            "29",
+            "30",
+            "31",
+            "32",
+            "33",
+            "34",
+            "35",
+            "36",
+            "37",
+            "38",
+            "39",
+            "40",
+            "41",
+            "42",
+            "43",
+            "44",
+            "45",
+            "46",
+            "47",
+            "48",
+            "أخرى"
+          ]
         },
         {
           "key": "color",
           "labelAr": "اللون",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أسود",
+            "أبيض",
+            "بني",
+            "رمادي",
+            "أحمر",
+            "أزرق",
+            "أخضر",
+            "زهري",
+            "أصفر",
+            "بيج",
+            "متعدد الألوان",
+            "أخرى"
+          ]
         },
         {
           "key": "material",
           "labelAr": "المادة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جلد طبيعي",
+            "جلد صناعي",
+            "قماش",
+            "مطاط",
+            "بلاستيك",
+            "شامواه",
+            "أخرى"
+          ]
         },
         {
           "key": "brand",
           "labelAr": "الماركة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "نايكي",
+            "أديداس",
+            "بوما",
+            "سكيتشرز",
+            "كالفن كلاين",
+            "جيس",
+            "كونفيرس",
+            "أخرى"
+          ]
         },
         {
           "key": "usage",
           "labelAr": "الاستخدام",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "رياضة",
+            "يومي",
+            "عمل",
+            "مناسبات",
+            "تزلج",
+            "أخرى"
+          ]
         },
         {
           "key": "condition",
           "labelAr": "الحالة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - بحالة ممتازة",
+            "مستعمل - بحالة جيدة",
+            "مستعمل - بحاجة لتنظيف",
+            "أخرى"
+          ]
         }
       ]
     },
@@ -133,71 +285,142 @@
           "key": "productType",
           "labelAr": "نوع المنتج",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أدوات يدوية",
+            "أدوات كهربائية",
+            "معدات إضاءة",
+            "لوازم السباكة",
+            "مواد دهان",
+            "أجهزة ومسامير",
+            "مواد بناء",
+            "أرضيات وبلاط",
+            "أخرى"
+          ]
         },
         {
           "key": "toolCategory",
           "labelAr": "تصنيف الأداة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أدوات قياس",
+            "أدوات قطع",
+            "أدوات تثبيت",
+            "أدوات لحام",
+            "أدوات نجارة",
+            "أدوات سباكة",
+            "أدوات كهرباء",
+            "أخرى"
+          ]
         },
         {
           "key": "powerSource",
           "labelAr": "مصدر الطاقة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "سلكي (كهرباء)",
+            "لاسلكي (بطارية)",
+            "يعمل بالبنزين",
+            "يدوي",
+            "أخرى"
+          ]
         },
         {
           "key": "powerToolType",
           "labelAr": "نوع الأداة الكهربائية",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "مثقاب",
+            "منشار",
+            "ماكينة صنفرة",
+            "طاحونة زاوية",
+            "مسحاج خشب",
+            "مفك براغي كهربائي",
+            "أخرى"
+          ]
         },
         {
           "key": "voltage",
           "labelAr": "الجهد الكهربائي",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "110 فولت",
+            "220 فولت",
+            "12 فولت (بطارية)",
+            "18 فولت (بطارية)",
+            "أخرى"
+          ]
         },
         {
           "key": "lightingType",
           "labelAr": "نوع الإضاءة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "LED",
+            "متوهجة",
+            "فلورسنت",
+            "هالوجين",
+            "إضاءة ذكية",
+            "أخرى"
+          ]
         },
         {
           "key": "material",
           "labelAr": "المادة المصنوعة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "فولاذ",
+            "ألومنيوم",
+            "خشب",
+            "بلاستيك",
+            "مطاط",
+            "أخرى"
+          ]
         },
         {
           "key": "measurement",
           "labelAr": "القياسات",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "صغير (أقل من 30 سم)",
+            "متوسط (30-60 سم)",
+            "كبير (60-120 سم)",
+            "ضخم (أكثر من 120 سم)",
+            "مقاس خاص"
+          ]
         },
         {
           "key": "brand",
           "labelAr": "الماركة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "بوش",
+            "ماكيتا",
+            "ديوالت",
+            "ستانلي",
+            "بلاك آند ديكر",
+            "أخرى"
+          ]
         },
         {
           "key": "safetyRating",
           "labelAr": "تصنيف السلامة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "CE معتمد",
+            "UL معتمد",
+            "ISO معتمد",
+            "غير معروف"
+          ]
         }
       ]
     },
@@ -211,57 +434,120 @@
           "key": "type",
           "labelAr": "نوع اللعبة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "لعبة فيديو",
+            "لعبة لوحية",
+            "لعبة أطفال",
+            "أحجية",
+            "مقتنيات",
+            "ألعاب بطاقات",
+            "ألعاب تعليمية",
+            "أخرى"
+          ]
         },
         {
           "key": "platform",
           "labelAr": "المنصة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "بلاي ستيشن 5",
+            "إكس بوكس سيريس إكس",
+            "نينتندو سويتش",
+            "بلاي ستيشن 4",
+            "إكس بوكس ون",
+            "كمبيوتر",
+            "موبايل",
+            "أخرى"
+          ]
         },
         {
           "key": "genre",
           "labelAr": "النوع",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أكشن",
+            "مغامرة",
+            "استراتيجية",
+            "رياضية",
+            "RPG",
+            "سباقات",
+            "قتال",
+            "رعب",
+            "محاكاة",
+            "أخرى"
+          ]
         },
         {
           "key": "boardGameType",
           "labelAr": "نوع اللعبة اللوحية",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "إستراتيجية",
+            "حظ",
+            "تعليمية",
+            "أحاجي",
+            "بطاقات",
+            "أخرى"
+          ]
         },
         {
           "key": "minAge",
           "labelAr": "الحد الأدنى للعمر",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "3 سنوات+",
+            "6 سنوات+",
+            "12 سنوات+",
+            "16 سنوات+",
+            "18 سنوات+",
+            "للجميع"
+          ]
         },
         {
           "key": "players",
           "labelAr": "عدد اللاعبين",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "لاعب واحد",
+            "لاعبان",
+            "2-4 لاعبين",
+            "4-6 لاعبين",
+            "6+ لاعبين",
+            "متعدد اللاعبين"
+          ]
         },
         {
           "key": "brand",
           "labelAr": "الماركة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "سوني",
+            "مايكروسوفت",
+            "نينتندو",
+            "إلكترونيك آرتس",
+            "أكتيفجن",
+            "أخرى"
+          ]
         },
         {
           "key": "condition",
           "labelAr": "الحالة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - بحالة ممتازة",
+            "مستعمل - بحالة جيدة",
+            "مستعمل - بحالة مقبولة",
+            "أخرى"
+          ]
         }
       ]
     },
@@ -275,64 +561,133 @@
           "key": "type",
           "labelAr": "نوع الجهاز",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "تلفزيون",
+            "نظام صوت",
+            "كاميرات",
+            "أجهزة منزلية",
+            "هواتف ذكية",
+            "ألعاب إلكترونية",
+            "أجهزة كمبيوتر",
+            "ملحقات إلكترونية",
+            "أخرى"
+          ]
         },
         {
           "key": "brand",
           "labelAr": "الماركة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "سامسونج",
+            "إل جي",
+            "سوني",
+            "باناسونيك",
+            "توشيبا",
+            "شاومي",
+            "هواوي",
+            "أخرى"
+          ]
         },
         {
           "key": "screenSize",
           "labelAr": "حجم الشاشة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "24 بوصة",
+            "32 بوصة",
+            "40 بوصة",
+            "43 بوصة",
+            "50 بوصة",
+            "55 بوصة",
+            "65 بوصة",
+            "75 بوصة",
+            "85 بوصة",
+            "أخرى"
+          ]
         },
         {
           "key": "resolution",
           "labelAr": "دقة العرض",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "HD",
+            "Full HD",
+            "4K Ultra HD",
+            "8K Ultra HD",
+            "OLED",
+            "QLED",
+            "أخرى"
+          ]
         },
         {
           "key": "audioOutput",
           "labelAr": "قوة الصوت",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "20 واط",
+            "50 واط",
+            "100 واط",
+            "200 واط",
+            "500 واط",
+            "أخرى"
+          ]
         },
         {
           "key": "smartFeatures",
           "labelAr": "الميزات الذكية",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "ذكي (Smart TV)",
+            "دعم تطبيقات",
+            "مساعد صوتي",
+            "تحكم عن بعد",
+            "أخرى"
+          ]
         },
         {
           "key": "connectivity",
           "labelAr": "إمكانيات الاتصال",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "واي فاي",
+            "بلوتوث",
+            "HDMI",
+            "USB",
+            "إيثرنت",
+            "أخرى"
+          ]
         },
         {
           "key": "condition",
           "labelAr": "الحالة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - بحالة ممتازة",
+            "مستعمل - بحالة جيدة",
+            "مستعمل - بحاجة لصيانة",
+            "أخرى"
+          ]
         },
         {
           "key": "power",
           "labelAr": "الجهد الكهربائي",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "110 فولت",
+            "220 فولت",
+            "240 فولت",
+            "أخرى"
+          ]
         }
       ]
     },
@@ -346,64 +701,141 @@
           "key": "productType",
           "labelAr": "نوع المنتج",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "مكياج",
+            "العناية بالبشرة",
+            "العناية بالشعر",
+            "عطور",
+            "أدوات تجميل",
+            "حلاقة",
+            "العناية بالفم",
+            "الاستحمام والجسم",
+            "العناية بالأظافر",
+            "أخرى"
+          ]
         },
         {
           "key": "makeupType",
           "labelAr": "نوع المكياج",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "وجه (أساس، كونسيلر، بودرة)",
+            "عيون (ظلال، كحل، ماسكارا)",
+            "شفاه (أحمر شفاه، ملمع شفاه)",
+            "خدود (بلاشر، برونزر)",
+            "مثبت مكياج",
+            "أخرى"
+          ]
         },
         {
           "key": "skinCareType",
           "labelAr": "نوع العناية بالبشرة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "مرطب",
+            "منظف",
+            "مقشر",
+            "مصل",
+            "واقي شمس",
+            "كريم عيون",
+            "علاج حب الشباب",
+            "أخرى"
+          ]
         },
         {
           "key": "skinType",
           "labelAr": "نوع البشرة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "عادية",
+            "جافة",
+            "دهنية",
+            "مختلطة",
+            "حساسة",
+            "معرضة لحب الشباب",
+            "ناضجة",
+            "أخرى"
+          ]
         },
         {
           "key": "hairType",
           "labelAr": "نوع الشعر",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "عادي",
+            "جاف",
+            "دهني",
+            "تالف",
+            "معالج بالصبغة",
+            "ناعم",
+            "سميك",
+            "مجعد",
+            "مستقيم",
+            "أخرى"
+          ]
         },
         {
           "key": "hairCareType",
           "labelAr": "نوع العناية بالشعر",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "شامبو",
+            "بلسم",
+            "ماسك",
+            "زيت",
+            "مصل",
+            "علاج تساقط",
+            "صبغة شعر",
+            "أخرى"
+          ]
         },
         {
           "key": "fragranceType",
           "labelAr": "نوع العطر",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "بارفان",
+            "أودي تواليت",
+            "أودي بيرفوم",
+            "كولونيا",
+            "عطر زيتي",
+            "أخرى"
+          ]
         },
         {
           "key": "color",
           "labelAr": "اللون",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أسود",
+            "بني",
+            "أشقر",
+            "أحمر",
+            "وردي",
+            "لون بشري",
+            "بنفسجي",
+            "أخرى"
+          ]
         },
         {
           "key": "condition",
           "labelAr": "الحالة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل",
+            "مفتوح وغير مستخدم",
+            "أخرى"
+          ]
         }
       ]
     },
@@ -417,64 +849,138 @@
           "key": "productType",
           "labelAr": "نوع الحقيبة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "حقيبة يد",
+            "حقيبة ظهر",
+            "حقيبة سفر",
+            "حقيبة كمبيوتر",
+            "حقيبة رياضية",
+            "حقيبة مدرسية",
+            "حقيبة كتف",
+            "حقيبة حمل",
+            "حقيبة صغيرة",
+            "أخرى"
+          ]
         },
         {
           "key": "style",
           "labelAr": "النمط التصميمي",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "كاجوال",
+            "رسمي",
+            "رياضي",
+            "عتيق",
+            "بوهيمي",
+            "سفر",
+            "عمل",
+            "ميني مال",
+            "أخرى"
+          ]
         },
         {
           "key": "material",
           "labelAr": "المادة المصنوعة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جلد طبيعي",
+            "جلد صناعي",
+            "نايلون",
+            "بوليستر",
+            "قماش",
+            "قنب",
+            "أخرى"
+          ]
         },
         {
           "key": "color",
           "labelAr": "اللون",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أسود",
+            "بني",
+            "أزرق",
+            "أحمر",
+            "أخضر",
+            "رمادي",
+            "بيج",
+            "ذهبي",
+            "فضي",
+            "متعدد الألوان",
+            "أخرى"
+          ]
         },
         {
           "key": "size",
           "labelAr": "الحجم",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "صغير (أقل من 30 سم)",
+            "متوسط (30-45 سم)",
+            "كبير (45-60 سم)",
+            "كبير جداً (أكثر من 60 سم)",
+            "مقاس خاص"
+          ]
         },
         {
           "key": "capacity",
           "labelAr": "السعة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "أقل من 20 لتر",
+            "20-40 لتر",
+            "40-60 لتر",
+            "60-80 لتر",
+            "أكثر من 80 لتر"
+          ]
         },
         {
           "key": "features",
           "labelAr": "المميزات",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "مقاوم للماء",
+            "جيب سري",
+            "قفل أمان",
+            "عجلات",
+            "قابلة للتوسيع",
+            "أخرى"
+          ]
         },
         {
           "key": "brand",
           "labelAr": "الماركة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "لويس فويتون",
+            "جوتشي",
+            "مايكل كورس",
+            "سامسونيت",
+            "أديداس",
+            "نايك",
+            "أخرى"
+          ]
         },
         {
           "key": "condition",
           "labelAr": "الحالة",
           "placeholderAr": "-اختر-",
-          "valueType": "TEXT",
-          "options": []
+          "valueType": "SELECT",
+          "options": [
+            "جديد",
+            "مستعمل - بحالة ممتازة",
+            "مستعمل - بحالة جيدة",
+            "مستعمل - بحاجة لتنظيف",
+            "أخرى"
+          ]
         }
       ]
     }
