@@ -3668,3 +3668,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Updated the seller team documentation and page inventories to reflect the actual selected-role grant, role-change endpoint, and current remaining gaps.
 - Commits: 6ea8d27 (suspended membership revoke), 34c573f (team UI status handling), 21a7c3e (staff API inventory correction), 54ac52e (page inventory), 7386733 (platform page inventory).
 - No tests, builds, typechecks, browser sessions or deployments were run.
+
+
+## 2026-11-09 — Seller accounting journal foundation
+- Added `LedgerAccountType`, `LedgerAccount`, `JournalEntry`, and `JournalLine` to Prisma, with currency relations, scoped account metadata, unique idempotency keys and one-to-one reversal references.
+- Added migration `20261109200000_seller_double_entry_ledger`: immutable update/delete triggers, positive one-sided line checks, and deferred transaction-commit integrity checks for at least two lines, equal debit/credit totals, and matching account/journal currencies.
+- Added internal `postJournalEntry` service: validates integer minor-unit amounts, balanced totals, active same-currency accounts, deterministic idempotency-key reuse and exact inverse reversal lines; writes entries/lines in a serializable transaction.
+- Added cursor-paginated immutable ledger-account activity reader. No API or seller balance/payout is exposed; the service is a foundation, not yet called from payment/commission/refund flows.
+- Finance system documentation now records the remaining policy decisions: shipping/tax allocation, seller payable trigger, reserves/holds, chargebacks, clearing accounts and negative balances. Do not derive withdrawable balances from commission snapshots.
+- Commits: 7c0d8f1 (Prisma ledger models), f8e77a6 (ledger migration), c0e56bc (posting service), d58d71c (deferred balance/currency constraints), b49745a (exact reversal validation), 69ee7c9 (seller team owner-authorization copy correction), finance docs and model map updated in this turn.
+- No tests, builds, typechecks, browser sessions or deployments were run, as requested.
