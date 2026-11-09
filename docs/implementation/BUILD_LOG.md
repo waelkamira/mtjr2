@@ -3385,3 +3385,19 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level state-scope review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller business profile editing
+
+**Implemented on `main`**
+- Added owner-scoped `GET/PATCH /api/seller/profile` and a dedicated server service for active seller accounts.
+- Sellers can update their public display name, contact person/email/phone, business address, description and social URLs. Legal name and verification-document references remain protected from self-service edits.
+- Updates lock the seller row, validate the full payload, persist through Prisma and write an audit event containing changed field names without copying personal data into audit metadata.
+- Added the editable business-profile form to `/seller/settings` with server-confirmed save feedback.
+
+**Commits**
+- `a68f89b` — `feat(seller): add audited seller profile service`.
+- `8b6e2d8` — `feat(seller): expose owner-scoped seller profile API`.
+- `343115c` — `feat(seller): add editable business profile to settings`.
+
+**Verification**
+- Source-level authorization, validation, transaction and UI wiring review only. No tests, build, browser, database, CI or deployment commands were run.
