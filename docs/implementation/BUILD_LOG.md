@@ -4315,3 +4315,13 @@ The platform account policy is now explicit: email verification is not required 
 - Fixed webhook credential resolution so legacy payments without encrypted snapshots continue to verify with their original environment credentials instead of accidentally using a newer database-managed provider secret.
 - Preserved PayPal legacy environment compatibility while fixing the duplicate OAuth credential variable declaration.
 - Updated the payment provider control-center documentation to describe multi-key rotation rather than the superseded single-key limitation. No tests, typechecks or builds were run.
+
+
+## 2026-11-10 — Payment vault safeguards
+
+- Added a database CHECK constraint requiring provider configuration ID, environment, encrypted credential snapshot and key version to be either all present or all absent on Payment rows.
+- Key rotation now refuses to proceed when it finds malformed historical snapshots, processes at most 100 provider configs and 100 payment snapshots per request, and can be safely rerun until both remaining counts reach zero.
+- Enforced the supported payment-method allowlist at configuration save time (Stripe card, PayPal wallet) as well as at checkout selection.
+- Checkout provider discovery now hides providers that do not match the order's country/currency, and the API uses private no-store caching.
+- PayPal capture validates that the returned order and purchase-unit custom/reference ID belong to the exact Matjar payment before accepting capture results.
+- No tests, builds or typechecks were run.
