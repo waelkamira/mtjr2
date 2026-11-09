@@ -19,7 +19,7 @@ type Queues = { sellers: SellerApplication[]; products: PendingProduct[] };
 
 async function readJson<T>(response: Response): Promise<T> {
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error ?? t("Request failed.", "فشل الطلب."));
+  if (!response.ok) throw new Error(body.error ?? "Request failed.");
   return body as T;
 }
 
