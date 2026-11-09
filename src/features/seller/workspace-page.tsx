@@ -680,6 +680,7 @@ export default function SellerWorkspacePage() {
             </div>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{workspace?.seller?.status === "REJECTED" ? translate(locale, "Your previous application was not approved. Review the feedback below, correct the information and submit it again.", "لم تتم الموافقة على طلبك السابق. راجع الملاحظات أدناه وصحح البيانات ثم أعد الإرسال.") : translate(locale, "Complete the business details below. Your application will remain pending until reviewed by the marketplace team.", "أكمل بيانات نشاطك التجاري أدناه. سيظل طلبك قيد المراجعة حتى يراجعه فريق السوق.")}</p>
             {workspace?.seller?.status === "REJECTED" && workspace.seller.rejectionReason && <div role="alert" className="mt-4 rounded-2xl border border-[#e7c6ce] bg-[linear-gradient(145deg,#f9e9ed,#f2dce3)] p-4 text-sm leading-7 text-[#75495a] shadow-[inset_0_1px_0_white]"><p className="font-extrabold">{translate(locale, "Reviewer feedback", "ملاحظات المراجع")}</p><p className="mt-1 whitespace-pre-wrap">{workspace.seller.rejectionReason}</p>{workspace.seller.reviewedAt && <p className="mt-2 text-xs text-[#987384]">{translate(locale, "Reviewed", "تاريخ المراجعة")}: {new Date(workspace.seller.reviewedAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>}</div>}
+            <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <form onSubmit={(event) => {
               if (sellerLatitude === null || sellerLongitude === null) {
                 event.preventDefault();
@@ -691,7 +692,7 @@ export default function SellerWorkspacePage() {
                 sellingCategories, intendedProducts, description: sellerDescription,
                 facebookUrl, youtubeUrl, twitterUrl, identityDocumentFileId, latitude: sellerLatitude, longitude: sellerLongitude
               }, "Your seller application has been submitted.");
-            }} className="mt-6 grid gap-5">
+            }} className="grid gap-5">
               <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
                 <div><h3 className="font-extrabold text-[#34445a]">{translate(locale, "01 · Applicant and business", "01 · بيانات البائع والنشاط")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Your legal identity and public store details.", "بياناتك الشخصية واسم المتجر الذي سيظهر للعملاء.")}</p></div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -731,6 +732,20 @@ export default function SellerWorkspacePage() {
               </section>
               <button disabled={busy} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-5 py-3 text-sm font-extrabold text-white shadow-[0_9px_20px_rgba(93,83,139,.14),inset_0_1px_0_rgba(255,255,255,.35)] disabled:opacity-50">{busy ? translate(locale, "Submitting…", "جارٍ الإرسال…") : translate(locale, "Submit application", "إرسال الطلب للمراجعة")}</button>
             </form>
+              <aside className="space-y-4 lg:sticky lg:top-28">
+                <section className="overflow-hidden rounded-[1.7rem] border border-white/90 bg-[linear-gradient(145deg,#f5f2fb,#e3e2ef)] shadow-[0_12px_28px_rgba(74,75,112,.12),inset_0_1px_0_white]">
+                  <div className="bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] p-5 text-white"><p className="text-[10px] font-extrabold uppercase tracking-[.18em]">{translate(locale, "SELLER PROFILE PREVIEW", "معاينة ملف البائع")}</p><h3 className="mt-2 break-words text-xl font-black">{displayName.trim() || translate(locale, "Your new store", "متجرك الجديد")}</h3><p className="mt-1 text-sm text-white/85">{contactName.trim() || translate(locale, "Add your full name", "أضف اسمك الكامل")}</p></div>
+                  <div className="space-y-4 p-5 text-sm text-[#657487]">
+                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "LEGAL NAME", "الاسم القانوني")}</p><p className="mt-1 break-words font-semibold text-[#46516b]">{legalName.trim() || "—"}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "CONTACT EMAIL", "البريد الإلكتروني")}</p><p dir="ltr" className="mt-1 break-all text-left">{contactEmail.trim() || translate(locale, "Required", "مطلوب")}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "PHONE", "الهاتف")}</p><p dir="ltr" className="mt-1 text-left">{phoneNumber.trim() || translate(locale, "Required", "مطلوب")}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "PRODUCT CATEGORIES", "فئات المنتجات")}</p><p className="mt-1 break-words">{sellingCategories.trim() || translate(locale, "Categories you plan to sell", "فئات المنتجات التي ستبيعها")}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "BUSINESS LOCATION", "موقع النشاط")}</p><p className="mt-1 break-words">{residence.trim() || translate(locale, "Add your address", "أضف عنوانك")}</p></div>
+                  </div>
+                </section>
+                <section className="rounded-[1.5rem] border border-white/90 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-5 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]"><h3 className="flex items-center gap-2 text-sm font-extrabold text-[#46516b]"><span aria-hidden="true">◈</span>{translate(locale, "Your privacy matters", "خصوصيتك مهمة")}</h3><p className="mt-3 text-xs leading-6 text-[#718596]">{translate(locale, "Your contact details and map location are used only to review your seller application. Identity documents are optional and stored privately for authorized reviewers.", "تُستخدم بيانات التواصل وموقع الخريطة لمراجعة طلبك فقط. وثيقة الهوية اختيارية وتُحفظ بشكل خاص ولا يطّلع عليها إلا المسؤولون المخولون.")}</p></section>
+              </aside>
+            </div>
           </section>
         ) : (
           <>
