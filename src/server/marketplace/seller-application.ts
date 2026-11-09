@@ -71,7 +71,6 @@ function isMatchingStoreRequest(
 export async function submitSellerApplication(input: SellerApplicationInput, now = new Date()) {
   const data = sellerApplicationSchema.parse(input);
   const actor = await requireCurrentSession(now);
-  if (!actor.user.emailVerifiedAt) throw new Error("Verify your email address before applying to become a seller.");
   if (data.identityDocumentFileId) {
     const privateKey = process.env.IMAGEKIT_PRIVATE_KEY?.trim();
     if (!privateKey) throw new Error("Private identity document storage is not configured.");
