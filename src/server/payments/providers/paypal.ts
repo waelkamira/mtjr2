@@ -1,5 +1,7 @@
 import "server-only";
 
+import "server-only";
+
 import { env } from "@/lib/env";
 import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
 
