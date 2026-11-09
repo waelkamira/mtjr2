@@ -4231,3 +4231,12 @@ The platform account policy is now explicit: email verification is not required 
 - Improved seller dashboard content gutters and hero grid sizing so the store name, description and primary actions stay within the main content column and wrap cleanly instead of intruding into navigation space.
 - Corrected low-contrast white labels on pastel lavender and mint action buttons in the seller dashboard, product management, store settings and shipping pages. Dark text is retained on light surfaces; white text remains only on dark surfaces and dark overlays.
 - No tests, builds, typechecks, or browser checks were run.
+
+
+## 2026-11-10 — Restore complete Damascus neighbourhood suggestions
+- Removed the importer rule that discarded Akaar neighbourhood candidates whenever their Arabic name also existed in the official OpenSyria locality gazetteer; this could remove core Damascus neighbourhoods such as Al-Mazzeh and Kafr Souseh.
+- Changed the neighbourhood API to return the full candidate list for the selected governorate, optionally sorting it by distance from the selected map point without filtering out distant neighbourhoods.
+- Changed the seller location picker to load neighbourhoods immediately after governorate selection, even before a map point or locality is selected, and to label the list as governorate-wide suggestions.
+- Kept Akaar-origin entries clearly marked as unverified suggestions because the source mixes neighbourhoods and nearby towns; they are not represented as official administrative divisions.
+- After pulling this commit, run npm run db:sync-syria-neighborhoods against the same DATABASE_URL used by the app. The importer is additive and will insert newly retained records without deleting existing ones.
+- No tests, builds, typechecks, or browser checks were run.
