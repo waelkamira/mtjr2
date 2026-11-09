@@ -279,7 +279,7 @@ export async function getSellerWorkspace(now = new Date()) {
   const actor = await requireCurrentSession(now);
   const seller = await prisma.seller.findUnique({
     where: { ownerId: actor.userId },
-    select: { id: true, status: true, legalName: true, displayName: true }
+    select: { id: true, status: true, legalName: true, displayName: true, contactName: true, contactEmail: true, phoneNumber: true, residence: true, businessType: true, sellingCategories: true, intendedProducts: true, description: true, facebookUrl: true, youtubeUrl: true, twitterUrl: true, latitude: true, longitude: true, createdAt: true }
   });
   const latestRejection = seller?.status === SellerStatus.REJECTED
     ? await prisma.auditLog.findFirst({
