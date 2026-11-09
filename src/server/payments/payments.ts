@@ -432,7 +432,7 @@ export async function listAvailablePaymentProviders(input?: { currencyCode?: str
     where: { environment },
     select: {
       providerKey: true, displayName: true, status: true,
-      supportedCurrencies: true, supportedCountries: true
+      supportedCurrencies: true, supportedCountries: true, enabledPaymentMethods: true
     },
     orderBy: [{ sortOrder: "asc" }, { providerKey: "asc" }]
   });
@@ -440,7 +440,8 @@ export async function listAvailablePaymentProviders(input?: { currencyCode?: str
   const activeManaged = managed.filter((item) =>
     item.status === "ACTIVE" &&
     (!input?.currencyCode || item.supportedCurrencies.length === 0 || item.supportedCurrencies.includes(input.currencyCode)) &&
-    (!input?.countryCode || item.supportedCountries.length === 0 || item.supportedCountries.includes(input.countryCode))
+    (!input?.countryCode || item.supportedCountries.length === 0 || item.supportedCountries.includes(input.countryCode)) &&
+    (item.enabledPaymentMethods.length === 0 || item.enabledPaymentMethods.includes(item.providerKey === "stripe" ? "card" : "paypal"))
   ).map(({ providerKey, displayName }) => ({ key: providerKey, displayName }));
 
   const { listPaymentProviders } = await import("./providers/registry");
