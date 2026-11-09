@@ -3703,3 +3703,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Expanded the owner-scoped workspace query to return application fields needed by that view, including business/contact details, product plan, social links, coordinates and submission timestamp. Query remains scoped by the authenticated user's ownerId.
 - Commits: service 195f2c7788401b38f2042e0a45c877b164196a36; UI bbca46ac134eb0b9b3ba6138a8aa892fa63bf648.
 - No tests/build/typecheck/browser checks run, per instruction.
+
+
+## Seller application POST compatibility — 2026-11-09
+- Added the singular `/api/seller/application` endpoint as a compatibility alias to the canonical `/api/seller/applications` handler, so older clients or cached UI builds reach the same validated submission flow.
+- The authorization checks remain unchanged: the request must pass same-origin validation, the user must have a valid session, and the account email must be verified before a seller application is accepted. A 403 from the canonical handler can therefore still indicate an origin mismatch or an unverified email; the response body carries the specific reason.
+- No tests, build, typecheck, or browser checks were run, per instruction.
