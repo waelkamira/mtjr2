@@ -160,3 +160,6 @@
 - تعطيل المزود يمنع بدء محاولات جديدة، لكنه لا يلغي التحقق من إشعارات محاولات قائمة ذات نسخة محفوظة.
 - المتبقي: دعم تدوير مفتاح التشفير الرئيسي بأكثر من إصدار (المتاح حالياً الإصدار 1 فقط)، إنفاذ اختيار طريقة الدفع داخل كل مزود، تطبيق migrations على قاعدة بيانات المستخدم، ثم إجراء رحلة sandbox حقيقية والتحقق من الإشعارات دون تنفيذ أي عملية إنتاجية قبل موافقة صاحب الحساب.
 - لم تُشغّل الاختبارات أو build أو typecheck في هذه المرحلة التزاماً بتأجيلها.
+
+
+- Key management: versioned AES-256-GCM key ring, backward-compatible v1 setting, active-version writes, and MFA-protected audited batch re-encryption of provider credentials plus historical payment snapshots. Old keys must remain configured until re-encryption reports zero remaining rows.
