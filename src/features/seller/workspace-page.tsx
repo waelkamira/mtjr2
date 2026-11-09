@@ -675,18 +675,20 @@ export default function SellerWorkspacePage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(145deg,#dbe6eb_0%,#cbd9e0_48%,#e5edf0_100%)] text-[#423d59]">
       <div className="mx-auto max-w-[1680px] px-1 py-2 sm:px-2 lg:px-3 lg:py-3">
-        <section className="relative mb-7 overflow-hidden rounded-[2rem] border border-white/90 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] p-5 text-[#46516b] shadow-[0_16px_34px_rgba(35,62,81,.16),inset_0_2px_0_white,inset_0_-3px_8px_rgba(48,76,94,.06)] sm:p-7 lg:p-8">
+        <section className="relative mb-7 min-h-[220px] overflow-hidden rounded-[2rem] border border-white/90 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] p-5 text-[#46516b] shadow-[0_16px_34px_rgba(35,62,81,.16),inset_0_2px_0_white,inset_0_-3px_8px_rgba(48,76,94,.06)] sm:p-7 lg:p-8">
+          {selectedStore?.bannerUrl && <img src={selectedStore.bannerUrl} alt="" aria-hidden="true" className="absolute inset-0 size-full object-cover opacity-25" />}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(100deg,rgba(219,235,239,.94),rgba(197,219,226,.84)_52%,rgba(226,229,239,.9))]" />
           <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 size-64 rounded-full bg-[#a8d8d4]/45 blur-3xl" />
           <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-[34%] size-72 rounded-full bg-[#c6c8e3]/45 blur-3xl" />
           <div className="relative grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_auto]">
             <div className="flex items-center gap-4 sm:gap-6">
-              <div className="grid size-[76px] shrink-0 place-items-center rounded-[1.7rem] border border-white/90 bg-[linear-gradient(145deg,#f5fbfc,#c7dce3)] text-3xl font-black text-[#42677b] shadow-[0_10px_22px_rgba(35,62,81,.16),inset_0_2px_0_white,inset_0_-3px_7px_rgba(48,76,94,.08)] sm:size-24 sm:text-4xl">
-                {(selectedStore?.name ?? workspace?.seller?.displayName ?? "M").trim().slice(0,1).toLocaleUpperCase()}
+              <div className="grid size-[76px] shrink-0 place-items-center overflow-hidden rounded-[1.7rem] border border-white/90 bg-[linear-gradient(145deg,#f5fbfc,#c7dce3)] text-3xl font-black text-[#42677b] shadow-[0_10px_22px_rgba(35,62,81,.16),inset_0_2px_0_white,inset_0_-3px_7px_rgba(48,76,94,.08)] sm:size-24 sm:text-4xl">
+                {selectedStore?.logoUrl ? <img src={selectedStore.logoUrl} alt={selectedStore.name} className="size-full object-cover" /> : (selectedStore?.name ?? workspace?.seller?.displayName ?? "M").trim().slice(0,1).toLocaleUpperCase()}
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#628493]">{translate(locale, "MATJAR · SELLER STUDIO", "متجر · استوديو البائع")}</p>
-                <h1 className="mt-2 text-2xl font-black tracking-tight text-[#46516b] sm:text-3xl">{translate(locale, "Welcome back to your store", "أهلاً بعودتك إلى متجرك")}</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5d788a]">{selectedStore ? translate(locale, "Your store is ready. Review today's activity, manage your catalog and keep customer orders moving.", "متجرك جاهز. راجع نشاط اليوم وأدر منتجاتك وتابع طلبات العملاء.") : translate(locale, "Your seller workspace brings products, orders and store operations together.", "تجمع مساحة عمل البائع منتجاتك وطلباتك وعمليات متجرك في مكان واحد.")}</p>
+                <h1 className="mt-2 text-2xl font-black tracking-tight text-[#344d60] sm:text-3xl">{selectedStore?.name ?? translate(locale, "Welcome back to your store", "أهلاً بعودتك إلى متجرك")}</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4f6c7d]">{selectedStore?.description || (selectedStore ? translate(locale, "Your store is ready. Review today's activity, manage your catalog and keep customer orders moving.", "متجرك جاهز. راجع نشاط اليوم وأدر منتجاتك وتابع طلبات العملاء.") : translate(locale, "Your seller workspace brings products, orders and store operations together.", "تجمع مساحة عمل البائع منتجاتك وطلباتك وعمليات متجرك في مكان واحد."))}</p>
                 {selectedStore && <div className="mt-3 flex flex-wrap items-center gap-2">
                   <label className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/90 bg-white/55 px-3 py-1.5 text-xs font-bold text-[#3e6478] shadow-[inset_0_1px_0_white]">
                     <span className="size-2 shrink-0 rounded-full bg-[#62a9a0]" />
@@ -700,6 +702,7 @@ export default function SellerWorkspacePage() {
             <div className="flex flex-wrap gap-3 lg:justify-end">
               {selectedStore && <Link href="/seller/products#create-product" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#a8d9d4,#75b8b8)] px-5 py-3 text-sm font-extrabold text-[#24485a] shadow-[0_7px_16px_rgba(38,94,105,.18),inset_0_2px_0_rgba(255,255,255,.85)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(38,94,105,.2)]"><span aria-hidden="true" className="text-lg leading-none">＋</span>{translate(locale, "Create product", "إنشاء منتج")}</Link>}
               <Link href="/seller/orders" className="inline-flex items-center justify-center rounded-full border border-white/90 bg-[linear-gradient(145deg,#eaf3f5,#e1dfed)] px-5 py-3 text-sm font-bold text-[#526078] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "View orders", "عرض الطلبات")}</Link>
+              {selectedStore?.isOwner && <Link href="/seller/settings" className="inline-flex items-center justify-center rounded-full border border-white/90 bg-white/55 px-5 py-3 text-sm font-bold text-[#405a6d] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "Edit store", "تعديل المتجر")}</Link>}
             </div>
           </div>
         </section>
