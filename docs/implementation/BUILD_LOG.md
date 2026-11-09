@@ -4223,3 +4223,11 @@ The platform account policy is now explicit: email verification is not required 
 - Added a browser geolocation action so a seller can use the device's current location when permission is granted; the resulting marker remains draggable and can be fine-tuned on the map.
 - Added minimum/maximum query validation, bounded result count, request timeout, service error states and a one-request-per-second process guard for the public Nominatim service.
 - No tests, builds, typechecks, or browser checks were run, consistent with the current instruction to defer validation until implementation work is complete.
+
+
+## 2026-11-10 — Seller workspace layout and contrast correction
+- Reworked the seller shell canvas to a clean neutral background and stabilized the desktop sidebar as a fixed-height, non-overlapping flex column with its store identity and growth card kept inside the sidebar; the navigation list now owns the available scroll area.
+- Raised the sidebar stacking order above the seller top bar and changed the top bar from sticky positioning to a normal in-flow header, preventing the header from visually floating across the sidebar.
+- Improved seller dashboard content gutters and hero grid sizing so the store name, description and primary actions stay within the main content column and wrap cleanly instead of intruding into navigation space.
+- Corrected low-contrast white labels on pastel lavender and mint action buttons in the seller dashboard, product management, store settings and shipping pages. Dark text is retained on light surfaces; white text remains only on dark surfaces and dark overlays.
+- No tests, builds, typechecks, or browser checks were run.
