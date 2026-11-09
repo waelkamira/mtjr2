@@ -3615,3 +3615,4 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added a load-more control and loading/error feedback. Existing inventory summary calculations continue to use the rows currently loaded; the complete inventory list can now be traversed page by page.
 - Commits: 9bc12e9080d102b54d6df5dbdcc75dc343af2a04, 639c128d6b13fa8621597b7ba55c92307536c0cf, e4e9961b74854f82c305fef6effb4ef688cc8075, 5150c8efe7f89ea4243a6d9d4a77757a4236c402.
 - No tests/build/typecheck/browser verification performed, per the current build-first instruction.
+- Compatibility follow-up: preserved the existing numeric-limit call contract for `listStoreInventoryMovements` while the seller API uses the new cursor-page contract, so existing service consumers retain array results. Commit: d6954a2cde5f673034f2f4bcee84735e607de1ff.
