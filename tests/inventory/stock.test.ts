@@ -51,7 +51,7 @@ vi.mock("@/server/identity/permission-repository", () => ({
   userHasPermission: mocks.userHasPermission
 }));
 
-import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements, decideQuarantinedStock, updateWarehouse, createStockCount, recordStockCountLine, completeStockCount } from "@/server/inventory/stock";
+import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements, decideQuarantinedStock, updateWarehouse, createStockCount, recordStockCountLine, completeStockCount, cancelStockCount } from "@/server/inventory/stock";
 
 describe("seller inventory operations", () => {
   beforeEach(() => {
@@ -141,6 +141,20 @@ describe("seller inventory operations", () => {
     mocks.stockCountLineFindUnique.mockResolvedValue({ id: "line-1", countedQuantity: 9 });
     await expect(recordStockCountLine("count-1", "line-1", { countedQuantity: 9 })).resolves.toMatchObject({ id: "line-1" });
     expect(mocks.stockCountLineUpdateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "line-1", sessionId: "count-1" }, data: expect.objectContaining({ countedQuantity: 9 }) }));
+  });
+
+  it("cancels an unfinished count without changing inventory", async () => {
+    mocks.stockCountSessionFindUnique.mockResolvedValue({
+      id: "count-cancel", storeId: "store-1", status: "IN_PROGRESS",
+      warehouse: { store: { seller: { ownerId: "owner-1", status: "ACTIVE" } } }
+    });
+    await expect(cancelStockCount("count-cancel")).resolves.toMatchObject({ status: "CANCELLED", alreadyCancelled: false });
+    expect(mocks.stockCountSessionUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "count-cancel", status: "IN_PROGRESS" },
+      data: { status: "CANCELLED" }
+    }));
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.inventoryMovementCreate).not.toHaveBeenCalled();
   });
 
   it("reconciles count variances into stock movements and is replay-safe", async () => {
