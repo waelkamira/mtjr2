@@ -4204,3 +4204,4 @@ The platform account policy is now explicit: email verification is not required 
 - Localized page metadata for seller commissions, seller finance, AI assistant settings, and the informational email-verification route.
 - Kept API contracts, authorization, business logic, and stored data unchanged.
 - No tests, builds, or browser checks were run, consistent with the instruction to defer testing until implementation is complete.
+- Added a shared `translateStatus` helper for common order, payment, return, refund, and shipment states, and applied it to the affected admin detail/finance screens so enum values do not remain in English when Arabic is selected.
