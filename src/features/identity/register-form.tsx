@@ -88,11 +88,10 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
         body: JSON.stringify({ displayName, email, password, accountType, sellerLegalName: accountType === "SELLER" ? sellerLegalName : undefined, sellerDisplayName: accountType === "SELLER" ? sellerDisplayName : undefined, acceptedTerms, acceptedPrivacy, turnstileToken }),
         cache: "no-store"
       });
-      const result = await response.json() as { message?: string; signedIn?: boolean; error?: string };
+      const result = await response.json() as { message?: string; verificationRequired?: boolean; error?: string };
       if (!response.ok) throw new Error(result.error || t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
       redirecting = true;
-      const returnTo = currentReturnPath();
-      window.location.assign(result.signedIn === false ? `/login?returnTo=${encodeURIComponent(returnTo)}` : returnTo);
+      window.location.assign(`/verify-email?email=${encodeURIComponent(email.trim())}`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
       setTurnstileToken("");
