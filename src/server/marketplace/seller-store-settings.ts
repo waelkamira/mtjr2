@@ -10,14 +10,14 @@ import { userHasScopedPermission } from "@/server/identity/permission-repository
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   slug: z.string().trim().min(3).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  shippingContactName: z.string().trim().max(120).nullable().optional(),
-  shippingPhone: z.string().trim().max(25).regex(/^\+?[0-9\s().-]{7,25}$/).nullable().optional(),
-  shippingAddressLine1: z.string().trim().max(240).nullable().optional(),
+  shippingContactName: z.string().trim().min(2).max(120).nullable().optional(),
+  shippingPhone: z.string().trim().min(7).max(25).regex(/^\+?[0-9\s().-]{7,25}$/).nullable().optional(),
+  shippingAddressLine1: z.string().trim().min(3).max(240).nullable().optional(),
   shippingAddressLine2: z.string().trim().max(240).nullable().optional(),
-  shippingCity: z.string().trim().max(120).nullable().optional(),
+  shippingCity: z.string().trim().min(2).max(120).nullable().optional(),
   shippingRegion: z.string().trim().max(120).nullable().optional(),
   shippingPostalCode: z.string().trim().max(40).nullable().optional(),
-  shippingCountryCode: z.string().trim().length(2).toUpperCase().nullable().optional(),
+  shippingCountryCode: z.string().trim().length(2).toUpperCase().regex(/^[A-Z]{2}$/).nullable().optional(),
   shippingInstructions: z.string().trim().max(1000).nullable().optional()
 }).strict();
 
@@ -28,7 +28,7 @@ export class SellerStoreSettingsConflictError extends Error {
   }
 }
 
-/** Update only the public name and URL slug of a store owned or managed in the exact store scope. */
+/** Update public store identity and private dispatch-origin details in the exact store scope. */
 export async function updateSellerStoreSettings(storeIdInput: string, input: unknown, now = new Date()) {
   const actor = await requireCurrentSession(now);
   const storeId = z.string().trim().min(1).max(128).parse(storeIdInput);
@@ -95,7 +95,8 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
     }
     const previousShipping = { shippingContactName: current.shippingContactName, shippingPhone: current.shippingPhone, shippingAddressLine1: current.shippingAddressLine1, shippingAddressLine2: current.shippingAddressLine2, shippingCity: current.shippingCity, shippingRegion: current.shippingRegion, shippingPostalCode: current.shippingPostalCode, shippingCountryCode: current.shippingCountryCode, shippingInstructions: current.shippingInstructions };
     const nextShipping = { shippingContactName: updated.shippingContactName, shippingPhone: updated.shippingPhone, shippingAddressLine1: updated.shippingAddressLine1, shippingAddressLine2: updated.shippingAddressLine2, shippingCity: updated.shippingCity, shippingRegion: updated.shippingRegion, shippingPostalCode: updated.shippingPostalCode, shippingCountryCode: updated.shippingCountryCode, shippingInstructions: updated.shippingInstructions };
-    if (updated.name !== current.name || updated.slug !== current.slug || JSON.stringify(previousShipping) !== JSON.stringify(nextShipping)) {
+    const changedShippingFields = Object.keys(previousShipping).filter((key) => previousShipping[key as keyof typeof previousShipping] !== nextShipping[key as keyof typeof nextShipping]);
+    if (updated.name !== current.name || updated.slug !== current.slug || changedShippingFields.length > 0) {
       await tx.auditLog.create({
         data: {
           actorType: AuditActorType.USER,
@@ -106,7 +107,7 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
           scopeType: "STORE",
           scopeId: storeId,
           occurredAt: now,
-          metadata: { previous: { name: current.name, slug: current.slug, ...previousShipping }, next: { name: updated.name, slug: updated.slug, ...nextShipping } }
+          metadata: { previous: { name: current.name, slug: current.slug }, next: { name: updated.name, slug: updated.slug }, changedFields: [...(updated.name !== current.name ? ["name"] : []), ...(updated.slug !== current.slug ? ["slug"] : []), ...changedShippingFields] }
         }
       });
     }
