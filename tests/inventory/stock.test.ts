@@ -7,7 +7,14 @@ const mocks = vi.hoisted(() => ({
   warehouseFindUnique: vi.fn(),
   warehouseUpdate: vi.fn(),
   inventoryFindFirst: vi.fn(),
+  inventoryFindMany: vi.fn(),
   stockTransferFindFirst: vi.fn(),
+  stockCountSessionCreate: vi.fn(),
+  stockCountSessionFindUnique: vi.fn(),
+  stockCountSessionFindFirst: vi.fn(),
+  stockCountSessionUpdateMany: vi.fn(),
+  stockCountLineUpdateMany: vi.fn(),
+  stockCountLineFindUnique: vi.fn(),
   productVariantFindFirst: vi.fn(),
   productVariantFindMany: vi.fn(),
   inventoryFindUnique: vi.fn(),
@@ -26,9 +33,11 @@ const mocks = vi.hoisted(() => ({
 const tx = {
   warehouse: { findUnique: mocks.warehouseFindUnique, update: mocks.warehouseUpdate },
   productVariant: { findFirst: mocks.productVariantFindFirst, findMany: mocks.productVariantFindMany },
-  inventory: { findUnique: mocks.inventoryFindUnique, findFirst: mocks.inventoryFindFirst, create: mocks.inventoryCreate, updateMany: mocks.inventoryUpdateMany },
+  inventory: { findUnique: mocks.inventoryFindUnique, findFirst: mocks.inventoryFindFirst, findMany: mocks.inventoryFindMany, create: mocks.inventoryCreate, updateMany: mocks.inventoryUpdateMany },
   inventoryMovement: { findUnique: mocks.inventoryMovementFindUnique, create: mocks.inventoryMovementCreate, findMany: mocks.inventoryMovementFindMany },
   auditLog: { create: mocks.auditCreate },
+  stockCountSession: { create: mocks.stockCountSessionCreate, findUnique: mocks.stockCountSessionFindUnique, findFirst: mocks.stockCountSessionFindFirst, updateMany: mocks.stockCountSessionUpdateMany },
+  stockCountLine: { updateMany: mocks.stockCountLineUpdateMany, findUnique: mocks.stockCountLineFindUnique },
   stockTransfer: { findUnique: mocks.stockTransferFindUnique, findFirst: mocks.stockTransferFindFirst, create: mocks.stockTransferCreate, updateMany: mocks.stockTransferUpdateMany }
 };
 
@@ -42,7 +51,7 @@ vi.mock("@/server/identity/permission-repository", () => ({
   userHasPermission: mocks.userHasPermission
 }));
 
-import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements, decideQuarantinedStock, updateWarehouse } from "@/server/inventory/stock";
+import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements, decideQuarantinedStock, updateWarehouse, createStockCount, recordStockCountLine, completeStockCount } from "@/server/inventory/stock";
 
 describe("seller inventory operations", () => {
   beforeEach(() => {
@@ -52,6 +61,11 @@ describe("seller inventory operations", () => {
     mocks.userHasPermission.mockResolvedValue(false);
     mocks.warehouseUpdate.mockImplementation(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => ({ id: where.id, storeId: "store-1", code: String(data.code ?? "MAIN"), name: String(data.name ?? "Main"), isActive: Boolean(data.isActive ?? true) }));
     mocks.inventoryFindFirst.mockResolvedValue(null);
+    mocks.inventoryFindMany.mockResolvedValue([]);
+    mocks.stockCountSessionFindFirst.mockResolvedValue(null);
+    mocks.stockCountSessionUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.stockCountLineUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.stockCountSessionCreate.mockResolvedValue({ id: "count-1" });
     mocks.stockTransferFindFirst.mockResolvedValue(null);
     mocks.warehouseFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => ({
       id: where.id, storeId: "store-1", isActive: true,
@@ -98,6 +112,63 @@ describe("seller inventory operations", () => {
     expect(mocks.inventoryFindFirst).toHaveBeenCalledOnce();
     expect(mocks.stockTransferFindFirst).toHaveBeenCalledOnce();
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+
+  it("opens a physical count from a versioned inventory snapshot", async () => {
+    const snapshotTime = new Date("2026-11-09T10:00:00Z");
+    mocks.inventoryFindMany.mockResolvedValue([{ id: "inventory-1", quantityOnHand: 12, updatedAt: snapshotTime }]);
+    mocks.stockCountSessionCreate.mockResolvedValue({ id: "count-1", lines: [{ id: "line-1", expectedQuantity: 12, expectedUpdatedAt: snapshotTime }] });
+    await expect(createStockCount({ warehouseId: "warehouse-1" })).resolves.toMatchObject({ id: "count-1" });
+    expect(mocks.stockCountSessionCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ warehouseId: "warehouse-1", lines: { create: [{ inventoryId: "inventory-1", expectedQuantity: 12, expectedUpdatedAt: snapshotTime }] } })
+    }));
+    expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "inventory.stock_count.opened" }) }));
+  });
+
+  it("saves a counted quantity only against a line in an open authorized session", async () => {
+    mocks.stockCountSessionFindUnique.mockResolvedValue({ id: "count-1", status: "IN_PROGRESS", warehouseId: "warehouse-1", storeId: "store-1" });
+    mocks.stockCountLineFindUnique.mockResolvedValue({ id: "line-1", countedQuantity: 9 });
+    await expect(recordStockCountLine("count-1", "line-1", { countedQuantity: 9 })).resolves.toMatchObject({ id: "line-1" });
+    expect(mocks.stockCountLineUpdateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "line-1", sessionId: "count-1" }, data: expect.objectContaining({ countedQuantity: 9 }) }));
+  });
+
+  it("reconciles count variances into stock movements and is replay-safe", async () => {
+    const updatedAt = new Date("2026-11-09T10:00:00Z");
+    mocks.stockCountSessionFindUnique.mockResolvedValue({
+      id: "count-1", storeId: "store-1", status: "IN_PROGRESS", note: null,
+      warehouse: { id: "warehouse-1", storeId: "store-1", isActive: true, store: { status: "ACTIVE", seller: { ownerId: "owner-1", status: "ACTIVE" } } },
+      lines: [{ id: "line-1", inventoryId: "inventory-1", expectedQuantity: 10, expectedUpdatedAt: updatedAt, countedQuantity: 8, note: null,
+        inventory: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 0, updatedAt } }]
+    });
+    mocks.inventoryUpdateMany.mockResolvedValue({ count: 1 });
+    await expect(completeStockCount("count-1")).resolves.toMatchObject({ status: "COMPLETED", adjustedLines: 1, totalVariance: -2 });
+    expect(mocks.inventoryUpdateMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: "inventory-1", quantityOnHand: 10, quantityReserved: { lte: 8 } }), data: { quantityOnHand: 8 } }));
+    expect(mocks.inventoryMovementCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ type: "ADJUSTMENT", quantityDelta: -2, referenceType: "STOCK_COUNT", idempotencyKey: "stock-count:count-1:line-1" }) }));
+    expect(mocks.stockCountSessionUpdateMany).toHaveBeenCalledOnce();
+  });
+
+  it("rejects count reconciliation if inventory changed after the snapshot", async () => {
+    const expectedUpdatedAt = new Date("2026-11-09T10:00:00Z");
+    mocks.stockCountSessionFindUnique.mockResolvedValue({
+      id: "count-2", storeId: "store-1", status: "IN_PROGRESS",
+      warehouse: { id: "warehouse-1", storeId: "store-1", isActive: true, store: { status: "ACTIVE", seller: { ownerId: "owner-1", status: "ACTIVE" } } },
+      lines: [{ id: "line-2", inventoryId: "inventory-1", expectedQuantity: 10, expectedUpdatedAt, countedQuantity: 9,
+        inventory: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 0, quantityQuarantined: 0, updatedAt: new Date("2026-11-09T10:05:00Z") } }]
+    });
+    await expect(completeStockCount("count-2")).rejects.toThrow("Inventory changed after this count was opened");
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not reconcile an uncounted item or a physical quantity below reservations", async () => {
+    const updatedAt = new Date("2026-11-09T10:00:00Z");
+    const base = { id: "count-3", storeId: "store-1", status: "IN_PROGRESS",
+      warehouse: { id: "warehouse-1", storeId: "store-1", isActive: true, store: { status: "ACTIVE", seller: { ownerId: "owner-1", status: "ACTIVE" } } } };
+    mocks.stockCountSessionFindUnique.mockResolvedValue({ ...base, lines: [{ id: "line-3", inventoryId: "inventory-1", expectedQuantity: 10, expectedUpdatedAt: updatedAt, countedQuantity: null, inventory: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 0, updatedAt } }] });
+    await expect(completeStockCount("count-3")).rejects.toThrow("Every stock item must be counted");
+    mocks.stockCountSessionFindUnique.mockResolvedValue({ ...base, lines: [{ id: "line-3", inventoryId: "inventory-1", expectedQuantity: 10, expectedUpdatedAt: updatedAt, countedQuantity: 1, inventory: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 0, updatedAt } }] });
+    await expect(completeStockCount("count-3")).rejects.toThrow("lower than the quantity already reserved");
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
   });
 
   it("lists only the requested store's latest ledger movements", async () => {
