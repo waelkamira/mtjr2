@@ -3455,3 +3455,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level schema/service/UI contract review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Draft price edits honor current seller and market eligibility
+
+- Draft product edits now require the seller to remain ACTIVE and the store not be SUSPENDED/CLOSED, matching draft creation eligibility.
+- The price matrix is limited to markets currently enabled and active for the store's active country; every active SKU must retain one valid price per such market.
+- Commits: `906bf03`, `62a20b6`, `e75008f`.
+- Source-level lifecycle/market-scope review only. No tests, build, browser, database, CI or deployment commands were run.
