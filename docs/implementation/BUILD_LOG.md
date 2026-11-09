@@ -3153,3 +3153,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Seller workspace now includes inactive warehouses so they can be reviewed and reactivated; operational selectors continue to show active warehouses only.
 - Deactivation is deliberately non-destructive and is rejected while any on-hand, reserved, or quarantined stock remains, or while a draft/shipped transfer references the warehouse.
 - Every successful change is recorded in the store-scoped audit log. Focused tests cover metadata updates, stock-blocked deactivation, and safe empty-warehouse deactivation.
+
+## Seller physical stock count and reconciliation
+- Added StockCountSession and StockCountLine records plus a migration. Each session snapshots on-hand quantity and the inventory row version (updatedAt) for every SKU in one warehouse.
+- Sellers can open a count, enter and save each physical quantity, inspect per-SKU variance, and complete reconciliation from the inventory page.
+- Completion requires every line to be counted, rejects inventory changed since the snapshot, and rejects physical quantities below active reservations. All inventory changes and adjustment movements commit in one Serializable transaction; movement idempotency keys prevent duplicate application.
+- Count opening/completion are audit logged. A warehouse cannot be deactivated while a count is in progress. Completed count replay is authorized and does not apply stock twice.
+- API routes: GET/POST /api/seller/inventory/counts, GET /api/seller/inventory/counts/[countId], PATCH /api/seller/inventory/counts/[countId]/lines/[lineId], and POST /api/seller/inventory/counts/[countId]/complete.
