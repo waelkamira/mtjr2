@@ -140,7 +140,7 @@
 - Added the Super Admin-only management page and API. Writes require both `platform:manage` and `payment.providers.manage`, use the existing MFA step-up gate, and record non-secret AuditLog metadata.
 - Added AES-256-GCM vault encryption driven by a separate 32-byte runtime key; raw credentials and ciphertext are never returned to the browser.
 - Added credential validation and non-charge connection checks for Stripe and PayPal, and safe archival checks against active payments and unprocessed provider events.
-- Runtime integration is intentionally not yet complete: the checkout registry still uses environment variables. The page displays this boundary so a database ACTIVE flag is not misrepresented as an active checkout route. The next phase must bind each Payment to its provider configuration/environment and route historical webhooks to the correct retained verification credentials before changing checkout selection.
+- Runtime integration is intentionally not yet complete: the checkout registry still uses environment variables. The page displays this boundary so a database ACTIVE flag is not misrepresented as an active checkout route. The provider runtime binding is now implemented: each new Payment is linked to its provider configuration/environment and retains an encrypted credential snapshot for historical webhook and PayPal return verification. The remaining owner-side steps are migration application and sandbox/live verification.
 
 
 ## `/admin/payment-providers` — provider configuration manager (tranche 1)
