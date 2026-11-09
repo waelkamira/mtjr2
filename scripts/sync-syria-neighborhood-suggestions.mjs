@@ -35,12 +35,6 @@ async function main() {
     throw new Error("Import OpenSyria geography first (expected 14 governorates and 7,605 localities).");
   }
   const governorateByName = new Map(governorates.map((item) => [normalize(item.nameAr ?? item.nameEn), item.id]));
-  const officialNames = new Set();
-  for (const item of [...governorates, ...districts, ...subdistricts, ...localities]) {
-    if (item.nameAr) officialNames.add(normalize(item.nameAr));
-    if (item.nameEn) officialNames.add(normalize(item.nameEn));
-  }
-
   const rows = [];
   const seen = new Set();
   for (const group of source.groups) {
@@ -53,10 +47,9 @@ async function main() {
       if (!candidate.nameAr || ["غير محدد", "غير ذلك"].includes(candidate.nameAr)) continue;
       if (candidate.latitude < 32 || candidate.latitude > 37.7 || candidate.longitude < 35.4 || candidate.longitude > 42.5) continue;
       if (distanceKm(group.latitude, group.longitude, candidate.latitude, candidate.longitude) > radius) continue;
-      // Akaar's old city lists mix neighbourhoods and nearby towns. Exclude names
-      // already represented in the official locality gazetteer; keep the rest as
-      // explicitly unverified suggestions, never as administrative records.
-      if (officialNames.has(normalize(candidate.nameAr))) continue;
+      // Preserve names that overlap the official locality gazetteer: this includes
+      // useful neighbourhood names in Damascus. They remain suggestions, never
+      // administrative records, and retain their Akaar source provenance.
       const normalized = normalize(candidate.nameAr);
       const dedupe = `${governorateId}|${group.nameAr}|${normalized}`;
       if (seen.has(dedupe)) continue;
