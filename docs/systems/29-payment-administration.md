@@ -132,3 +132,12 @@
 - No Prisma schema or migration change was required; the existing `Payment`, `PaymentWebhookEvent` and payment lifecycle service are reused.
 - Current activation is environment-based. The Super Admin provider management UI/configuration model remains a separate incomplete deliverable.
 - Sandbox/live credentials, PayPal merchant-account eligibility, supported currencies/markets and live payment smoke tests remain owner-controlled prerequisites.
+
+
+## Provider configuration management — first implementation tranche
+
+- Added `PaymentProviderConfig` with TEST/LIVE environment and DRAFT/CONFIGURED/ACTIVE/DISABLED/ARCHIVED lifecycle, encrypted credentials, market/currency/method allowlists, ordering, verification metadata and archive timestamp.
+- Added the Super Admin-only management page and API. Writes require both `platform:manage` and `payment.providers.manage`, use the existing MFA step-up gate, and record non-secret AuditLog metadata.
+- Added AES-256-GCM vault encryption driven by a separate 32-byte runtime key; raw credentials and ciphertext are never returned to the browser.
+- Added credential validation and non-charge connection checks for Stripe and PayPal, and safe archival checks against active payments and unprocessed provider events.
+- Runtime integration is intentionally not yet complete: the checkout registry still uses environment variables. The page displays this boundary so a database ACTIVE flag is not misrepresented as an active checkout route. The next phase must bind each Payment to its provider configuration/environment and route historical webhooks to the correct retained verification credentials before changing checkout selection.
