@@ -12,7 +12,6 @@ const mocks = vi.hoisted(() => ({
   categoryFindMany: vi.fn(),
   categoryAttributeFindMany: vi.fn(),
   localityFindUnique: vi.fn(),
-  neighborhoodFindUnique: vi.fn(),
   marketFindMany: vi.fn(),
   productCreate: vi.fn(),
   productFindUnique: vi.fn(),
@@ -60,7 +59,6 @@ describe("product lifecycle", () => {
     mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "general" }]);
     mocks.categoryAttributeFindMany.mockResolvedValue([]);
     mocks.localityFindUnique.mockResolvedValue(null);
-    mocks.neighborhoodFindUnique.mockResolvedValue(null);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", productNumber: BigInt("101"), storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
@@ -75,7 +73,6 @@ describe("product lifecycle", () => {
       category: { count: mocks.categoryCount, findMany: mocks.categoryFindMany },
       categoryAttribute: { findMany: mocks.categoryAttributeFindMany },
       syriaLocality: { findUnique: mocks.localityFindUnique },
-      syriaNeighborhood: { findUnique: mocks.neighborhoodFindUnique },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
       productPropertyDetails: { upsert: mocks.productPropertyDetailsUpsert, deleteMany: mocks.productPropertyDetailsDeleteMany },
@@ -283,31 +280,21 @@ describe("product lifecycle", () => {
     });
   });
 
-  it("persists the selected neighbourhood reference only within its governorate", async () => {
+  it("persists a seller-entered neighbourhood label without a separate geographic record", async () => {
     mocks.localityFindUnique.mockResolvedValue({ id: "sy-locality-1", governorateId: "sy-damascus" });
-    mocks.neighborhoodFindUnique.mockResolvedValue({ id: "akaar-n-1", governorateId: "sy-damascus" });
     await createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
-      localityId: "sy-locality-1", neighborhoodId: "akaar-n-1", neighborhood: "المزة",
+      localityId: "sy-locality-1", neighborhood: "المزة",
       latitude: 33.505004, longitude: 36.278227,
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     });
     expect(mocks.productCreate.mock.calls[0][0].data).toMatchObject({
-      localityId: "sy-locality-1", neighborhoodId: "akaar-n-1", neighborhood: "المزة"
+      localityId: "sy-locality-1", neighborhood: "المزة",
+      latitude: 33.505004, longitude: 36.278227
     });
   });
 
-  it("rejects a neighbourhood from another governorate", async () => {
-    mocks.localityFindUnique.mockResolvedValue({ id: "sy-locality-1", governorateId: "sy-damascus" });
-    mocks.neighborhoodFindUnique.mockResolvedValue({ id: "akaar-n-2", governorateId: "sy-aleppo" });
-    await expect(createDraftProduct({
-      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
-      localityId: "sy-locality-1", neighborhoodId: "akaar-n-2", neighborhood: "حي بعيد",
-      latitude: 33.505004, longitude: 36.278227,
-      variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
-    })).rejects.toThrow(/does not belong to the selected governorate/i);
-    expect(mocks.productCreate).not.toHaveBeenCalled();
-  });
+
 
   it("rejects category select values outside the configured option set", async () => {
     mocks.categoryAttributeFindMany.mockResolvedValue([{
@@ -424,40 +411,21 @@ describe("product lifecycle", () => {
   it("validates and persists locality and neighbourhood changes when editing a draft", async () => {
     mocks.productFindUniqueTx.mockResolvedValue({
       id: "product-1", storeId: "store-1", status: "DRAFT",
-      latitude: 33.5, longitude: 36.2, localityId: "old-locality", neighborhoodId: "old-neighborhood",
       neighborhood: "الحي القديم", categories: [{ category: { id: "category-1", slug: "phones-electronics", parentId: null } }],
       store: { seller: { ownerId: "seller-1" } }
     });
     mocks.localityFindUnique.mockResolvedValue({ id: "new-locality", governorateId: "sy-damascus" });
-    mocks.neighborhoodFindUnique.mockResolvedValue({ id: "new-neighborhood", governorateId: "sy-damascus" });
 
     await updateDraftProduct("product-1", {
-      localityId: "new-locality", neighborhoodId: "new-neighborhood",
       neighborhood: "المزة", latitude: 33.505, longitude: 36.278
     });
 
     expect(mocks.productUpdateMany.mock.calls[0][0].data).toMatchObject({
-      localityId: "new-locality", neighborhoodId: "new-neighborhood",
       neighborhood: "المزة", latitude: 33.505, longitude: 36.278
     });
   });
 
-  it("rejects a neighbourhood from another governorate when editing a draft", async () => {
-    mocks.productFindUniqueTx.mockResolvedValue({
-      id: "product-1", storeId: "store-1", status: "DRAFT",
-      latitude: 33.5, longitude: 36.2, localityId: "old-locality", neighborhoodId: null,
-      neighborhood: null, categories: [{ category: { id: "category-1", slug: "phones-electronics", parentId: null } }],
-      store: { seller: { ownerId: "seller-1" } }
-    });
-    mocks.localityFindUnique.mockResolvedValue({ id: "new-locality", governorateId: "sy-damascus" });
-    mocks.neighborhoodFindUnique.mockResolvedValue({ id: "remote-neighborhood", governorateId: "sy-aleppo" });
 
-    await expect(updateDraftProduct("product-1", {
-      localityId: "new-locality", neighborhoodId: "remote-neighborhood",
-      neighborhood: "حي بعيد", latitude: 33.505, longitude: 36.278
-    })).rejects.toThrow(/does not belong to the selected governorate/i);
-    expect(mocks.productUpdateMany).not.toHaveBeenCalled();
-  });
 
   it("replaces draft product images and deletes removed provider assets after commit", async () => {
     mocks.productFindUniqueTx.mockResolvedValue({
