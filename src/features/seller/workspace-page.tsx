@@ -130,6 +130,7 @@ export default function SellerWorkspacePage() {
   const [editingStoreBannerStorageKey, setEditingStoreBannerStorageKey] = useState("");
   const [storeLogoDeleteToken, setStoreLogoDeleteToken] = useState("");
   const [storeBannerDeleteToken, setStoreBannerDeleteToken] = useState("");
+  const [storeStagedDeleteTokens, setStoreStagedDeleteTokens] = useState<string[]>([]);
   const [editingShippingPolicy, setEditingShippingPolicy] = useState("");
   const [editingReturnsPolicy, setEditingReturnsPolicy] = useState("");
   const [editingPrivacyPolicy, setEditingPrivacyPolicy] = useState("");
@@ -407,7 +408,11 @@ export default function SellerWorkspacePage() {
         })
       }));
       await reload();
-      setStoreLogoDeleteToken(""); setStoreBannerDeleteToken("");
+      const retainedTokens = new Set([storeLogoDeleteToken, storeBannerDeleteToken].filter(Boolean));
+      await Promise.all(storeStagedDeleteTokens.filter((token) => !retainedTokens.has(token)).map((token) =>
+        fetch("/api/seller/products/media", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ storeId: selectedStore.id, deleteToken: token }) })
+      ));
+      setStoreStagedDeleteTokens([]); setStoreLogoDeleteToken(""); setStoreBannerDeleteToken("");
       setEditingStoreProfile(false);
       setMessage(translate(locale, "Store profile updated and recorded in the audit log.", "تم تحديث ملف المتجر وتسجيل التغيير في سجل التدقيق."));
     } catch (cause) {
@@ -431,8 +436,9 @@ export default function SellerWorkspacePage() {
     try {
       const form = new FormData(); form.append("storeId", selectedStore.id); form.append("file", file);
       const response = await fetch("/api/seller/products/media", { method: "POST", body: form });
-      const payload = await response.json() as { success?: boolean; data?: { url?: string }; error?: string };
+      const payload = await response.json() as { success?: boolean; data?: { url?: string; storageKey?: string; deleteToken?: string }; error?: string };
       if (!response.ok || !payload.success || !payload.data?.url) throw new Error(payload.error || translate(locale, "The image could not be uploaded.", "تعذر رفع الصورة."));
+      if (payload.data.deleteToken) setStoreStagedDeleteTokens((tokens) => [...tokens, payload.data!.deleteToken!]);
       if (kind === "logo") { setEditingStoreLogoUrl(payload.data.url); setEditingStoreLogoStorageKey(payload.data.storageKey ?? ""); setStoreLogoDeleteToken(payload.data.deleteToken ?? ""); }
       else { setEditingStoreBannerUrl(payload.data.url); setEditingStoreBannerStorageKey(payload.data.storageKey ?? ""); setStoreBannerDeleteToken(payload.data.deleteToken ?? ""); }
       setMessage(translate(locale, "Image uploaded. Save the store profile to publish this change.", "تم رفع الصورة. احفظ ملف المتجر لاعتماد التغيير."));
@@ -835,7 +841,7 @@ export default function SellerWorkspacePage() {
                         setEditingStoreLogoUrl(selectedStore.logoUrl ?? "");
                         setEditingStoreBannerUrl(selectedStore.bannerUrl ?? "");
                         setEditingStoreLogoStorageKey(selectedStore.logoStorageKey ?? ""); setEditingStoreBannerStorageKey(selectedStore.bannerStorageKey ?? "");
-                        setStoreLogoDeleteToken(""); setStoreBannerDeleteToken("");
+                        setStoreLogoDeleteToken(""); setStoreBannerDeleteToken(""); setStoreStagedDeleteTokens([]);
                         setEditingShippingPolicy(selectedStore.shippingPolicy ?? "");
                         setEditingReturnsPolicy(selectedStore.returnsPolicy ?? "");
                         setEditingPrivacyPolicy(selectedStore.privacyPolicy ?? "");
