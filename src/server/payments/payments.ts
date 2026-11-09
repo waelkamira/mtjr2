@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { PaymentStatus, OrderStatus, VendorOrderStatus, Prisma, PaymentProviderEnvironment } from "@prisma/client";
+import { PaymentStatus, OrderStatus, VendorOrderStatus, Prisma } from "@prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
