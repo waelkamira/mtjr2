@@ -5,8 +5,7 @@ import { consumeRegistrationAttempt } from "@/server/identity/login-throttle";
 import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
 import { verifyRegistrationChallenge } from "@/server/identity/turnstile";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { createUserSession, revokeUserSession } from "@/server/identity/session";
-import { setSessionCookie } from "@/server/identity/session-cookie";
+import { resendEmailAdapter } from "@/server/email/resend";
 
 export const runtime = "nodejs";
 
@@ -51,21 +50,18 @@ export async function POST(request: Request): Promise<Response> {
 
     delete data.turnstileToken;
     const result = await registerUser(data as Parameters<typeof registerUser>[0]);
-    let sessionToken: string | null = null;
     try {
-      const session = await createUserSession(result.userId, {
-        ipAddress: trustedIpAddress,
-        userAgent: request.headers.get("user-agent")
-      });
-      sessionToken = session.token;
-      await setSessionCookie(session.token, session.expiresAt);
-      return Response.json({ message: "Account created. Signed in successfully.", signedIn: true }, { status: 201 });
+      await resendEmailAdapter.sendVerificationEmail(data.email.trim().toLowerCase(), result.verificationToken);
     } catch {
-      if (sessionToken) {
-        try { await revokeUserSession(sessionToken); } catch { /* The user can still sign in; never expose a partial session. */ }
-      }
-      return Response.json({ message: "Account created. Sign in to continue.", signedIn: false }, { status: 201 });
+      return Response.json({
+        message: "Account created. Email delivery is temporarily unavailable; request a verification email again later.",
+        verificationRequired: true
+      }, { status: 202 });
     }
+    return Response.json({
+      message: "Account created. Check your email to verify your address.",
+      verificationRequired: true
+    }, { status: 201 });
   } catch (error) {
     if (error instanceof IdentityConflictError) {
       return Response.json({ error: "An account with this email address already exists. Sign in or use password recovery instead.", code: "EMAIL_ALREADY_EXISTS" }, { status: 409 });
