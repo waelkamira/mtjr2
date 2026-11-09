@@ -17,6 +17,8 @@ const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   slug: z.string().trim().min(3).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   description: z.string().trim().max(2000).nullable().optional(),
+  publicPhone: z.string().trim().min(7).max(25).regex(/^\\+?[0-9\\s().-]{7,25}$/).nullable().optional(),
+  publicAddress: z.string().trim().max(500).nullable().optional(),
   logoUrl: publicImageUrl,
   bannerUrl: publicImageUrl,
   logoStorageKey: z.string().trim().max(512).regex(/^(imgur|imagekit|cloudinary):/).nullable().optional(),
@@ -55,7 +57,7 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       where: { id: storeId },
       select: {
         id: true, sellerId: true, name: true, slug: true, status: true,
-        description: true, logoUrl: true, bannerUrl: true, logoStorageKey: true, bannerStorageKey: true,
+        description: true, publicPhone: true, publicAddress: true, logoUrl: true, bannerUrl: true, logoStorageKey: true, bannerStorageKey: true,
         shippingPolicy: true, returnsPolicy: true, privacyPolicy: true, termsOfSale: true,
         shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true,
         shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true,
@@ -106,12 +108,12 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       ...(data.shippingCountryCode !== undefined ? { shippingCountryCode: data.shippingCountryCode } : {}),
       ...(data.shippingInstructions !== undefined ? { shippingInstructions: data.shippingInstructions } : {})
     };
-    let updated: { id: string; name: string; slug: string; status: StoreStatus; description: string | null; logoUrl: string | null; bannerUrl: string | null; logoStorageKey: string | null; bannerStorageKey: string | null; shippingPolicy: string | null; returnsPolicy: string | null; privacyPolicy: string | null; termsOfSale: string | null; shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null; shippingCity: string | null; shippingRegion: string | null; shippingPostalCode: string | null; shippingCountryCode: string | null; shippingInstructions: string | null };
+    let updated: { id: string; name: string; slug: string; status: StoreStatus; description: string | null; publicPhone: string | null; publicAddress: string | null; logoUrl: string | null; bannerUrl: string | null; logoStorageKey: string | null; bannerStorageKey: string | null; shippingPolicy: string | null; returnsPolicy: string | null; privacyPolicy: string | null; termsOfSale: string | null; shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null; shippingCity: string | null; shippingRegion: string | null; shippingPostalCode: string | null; shippingCountryCode: string | null; shippingInstructions: string | null };
     try {
       updated = await tx.store.update({
         where: { id: storeId },
         data: updateData,
-        select: { id: true, name: true, slug: true, status: true, description: true, logoUrl: true, bannerUrl: true, logoStorageKey: true, bannerStorageKey: true, shippingPolicy: true, returnsPolicy: true, privacyPolicy: true, termsOfSale: true, shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true, shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true }
+        select: { id: true, name: true, slug: true, status: true, description: true, publicPhone: true, publicAddress: true, logoUrl: true, bannerUrl: true, logoStorageKey: true, bannerStorageKey: true, shippingPolicy: true, returnsPolicy: true, privacyPolicy: true, termsOfSale: true, shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true, shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true }
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -122,7 +124,7 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
     const previousShipping = { shippingContactName: current.shippingContactName, shippingPhone: current.shippingPhone, shippingAddressLine1: current.shippingAddressLine1, shippingAddressLine2: current.shippingAddressLine2, shippingCity: current.shippingCity, shippingRegion: current.shippingRegion, shippingPostalCode: current.shippingPostalCode, shippingCountryCode: current.shippingCountryCode, shippingInstructions: current.shippingInstructions };
     const nextShipping = { shippingContactName: updated.shippingContactName, shippingPhone: updated.shippingPhone, shippingAddressLine1: updated.shippingAddressLine1, shippingAddressLine2: updated.shippingAddressLine2, shippingCity: updated.shippingCity, shippingRegion: updated.shippingRegion, shippingPostalCode: updated.shippingPostalCode, shippingCountryCode: updated.shippingCountryCode, shippingInstructions: updated.shippingInstructions };
     const changedShippingFields = Object.keys(previousShipping).filter((key) => previousShipping[key as keyof typeof previousShipping] !== nextShipping[key as keyof typeof nextShipping]);
-    const changedBrandFields = (["description", "logoUrl", "bannerUrl", "logoStorageKey", "bannerStorageKey", "shippingPolicy", "returnsPolicy", "privacyPolicy", "termsOfSale"] as const).filter((key) => current[key] !== updated[key]);
+    const changedBrandFields = (["description", "publicPhone", "publicAddress", "logoUrl", "bannerUrl", "logoStorageKey", "bannerStorageKey", "shippingPolicy", "returnsPolicy", "privacyPolicy", "termsOfSale"] as const).filter((key) => current[key] !== updated[key]);
     if (updated.name !== current.name || updated.slug !== current.slug || changedShippingFields.length > 0 || changedBrandFields.length > 0) {
       await tx.auditLog.create({
         data: {
@@ -135,8 +137,8 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
           scopeId: storeId,
           occurredAt: now,
           metadata: {
-            previous: { name: current.name, slug: current.slug, description: current.description, logoUrl: current.logoUrl, bannerUrl: current.bannerUrl },
-            next: { name: updated.name, slug: updated.slug, description: updated.description, logoUrl: updated.logoUrl, bannerUrl: updated.bannerUrl },
+            previous: { name: current.name, slug: current.slug, description: current.description, publicPhone: current.publicPhone, publicAddress: current.publicAddress, logoUrl: current.logoUrl, bannerUrl: current.bannerUrl },
+            next: { name: updated.name, slug: updated.slug, description: updated.description, publicPhone: updated.publicPhone, publicAddress: updated.publicAddress, logoUrl: updated.logoUrl, bannerUrl: updated.bannerUrl },
             changedFields: [...(updated.name !== current.name ? ["name"] : []), ...(updated.slug !== current.slug ? ["slug"] : []), ...changedBrandFields, ...changedShippingFields]
           }
         }
