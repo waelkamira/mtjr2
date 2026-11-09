@@ -773,7 +773,7 @@ export default function SellerProductsPage() {
         </section>
       </div>}
     </div>
-    {imagePreview && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#201d31]/80 p-4 backdrop-blur-md">
+    {imagePreview && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#172b3c]/85 p-4 backdrop-blur-md">
       <button type="button" aria-label={translate(locale, "Close image preview", "إغلاق معاينة الصورة")} onClick={() => setImagePreview(null)} className="absolute inset-0 cursor-zoom-out bg-transparent" />
       <section role="dialog" aria-modal="true" aria-label={translate(locale, "Image preview", "معاينة الصورة")} className="relative z-10 flex max-h-[94vh] w-full max-w-5xl flex-col items-center gap-3 rounded-[2rem] border border-white/30 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-3 shadow-[0_24px_70px_rgba(12,10,24,.42),inset_0_2px_0_rgba(255,255,255,.9)] sm:p-5">
         <div className="flex w-full items-center justify-between gap-3 px-1">
