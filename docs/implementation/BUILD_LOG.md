@@ -4173,3 +4173,9 @@ The platform account policy is now explicit: email verification is not required 
 - Existing verification endpoints and legacy token-consumption support are retained for compatibility, but are no longer part of the new-account registration or sign-in path.
 - Tests/build/typecheck/browser checks were not run, per user instruction. Existing identity and seller-application test expectations must be updated before the deferred validation phase.
 
+## 2026-11-09 — Port platform theme and administrator navigation from super-admin branch
+
+- Reconciled the platform-wide charcoal/graphite and orange visual token palette from `feat/super-admin-control-panel` into `src/app/theme.css` on `main`.
+- Ported the branch's shared global surface, control, hover, selection, and form styling into `src/app/globals.css`, while retaining the dedicated seller-dashboard reference skin and seller map styling from the current `main` implementation.
+- Added a role-gated Control panel link to the desktop header and mobile navigation. Admin accounts route to `/admin/dashboard`; Super Admin accounts route to `/admin/control-panel`. Ordinary customers and sellers do not receive the link.
+- No tests, build, typecheck, or browser validation were run, consistent with the current instruction to finish implementation before testing.
