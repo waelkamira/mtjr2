@@ -14,9 +14,19 @@ type CommissionTransaction = {
 type CommissionResponse = { store: { id: string; name: string }; limit: number; totals: CommissionTotal[]; transactions: CommissionTransaction[] };
 
 function formatMinor(value: string, currency: string, minorUnit: number, locale: string) {
-  return new Intl.NumberFormat(locale, {
+  const amount = BigInt(value);
+  const scale = 10n ** BigInt(minorUnit);
+  const whole = amount / scale;
+  const fraction = amount % scale;
+  const formatter = new Intl.NumberFormat(locale, {
     style: "currency", currency, minimumFractionDigits: minorUnit, maximumFractionDigits: minorUnit
-  }).format(Number(value) / (10 ** minorUnit));
+  });
+  if (minorUnit === 0) return formatter.format(whole);
+  const digitFormatter = new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 0 });
+  const localizedFraction = digitFormatter.format(fraction).padStart(minorUnit, digitFormatter.format(0));
+  return formatter.formatToParts(whole).map((part) =>
+    part.type === "fraction" ? localizedFraction : part.value
+  ).join("");
 }
 
 export default function SellerCommissionsPage() {
