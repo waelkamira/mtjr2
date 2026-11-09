@@ -109,9 +109,9 @@ export default function SellerCommissionsPage() {
 
           {data.totals.length > 0 && <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {data.totals.map((total) => <section key={total.currencyCode} className="rounded-[24px] border border-white/90 bg-[linear-gradient(145deg,#e9edf2,#c9d9e2)] p-5 shadow-[8px_10px_20px_rgba(38,66,84,.1),inset_0_2px_0_white,inset_0_-3px_7px_rgba(57,86,105,.07)]">
-              <p className="text-xs font-bold text-[#628493]">{t("Order item base amount", "قيمة عناصر الطلب قبل العمولة")} · {total.currencyCode}</p>
+              <p className="text-xs font-bold text-[#628493]">{t("All-time recorded order item base", "إجمالي قيمة عناصر الطلب المسجلة")} · {total.currencyCode}</p>
               <p className="mt-2 text-2xl font-black tabular-nums text-[#263d50]">{formatMinor(total.baseAmountMinor, total.currencyCode, total.minorUnit, locale)}</p>
-              <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/70 pt-3"><div><p className="text-[11px] text-[#718899]">{t("Platform commission", "عمولة المنصة")}</p><p className="mt-1 text-lg font-extrabold text-[#42677b]">{formatMinor(total.commissionMinor, total.currencyCode, total.minorUnit, locale)}</p></div><p className="text-xs font-semibold text-[#718899]">{total.transactionCount} {t("items", "عنصر")}</p></div>
+              <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/70 pt-3"><div><p className="text-[11px] text-[#718899]">{t("All-time recorded platform commission", "إجمالي عمولة المنصة المسجلة")}</p><p className="mt-1 text-lg font-extrabold text-[#42677b]">{formatMinor(total.commissionMinor, total.currencyCode, total.minorUnit, locale)}</p></div><p className="text-xs font-semibold text-[#718899]">{total.transactionCount} {t("items", "عنصر")}</p></div>
             </section>)}
           </div>}
 
@@ -138,7 +138,7 @@ export default function SellerCommissionsPage() {
               </table>
             </div>}
           </section>
-          <p className="mt-4 rounded-xl border border-[#9bbbc7] bg-white/55 p-4 text-xs leading-5 text-[#718899]">{t("Important: totals cover only the latest 100 commission snapshots. This view does not calculate seller net balances, withdrawals, payout status, or later refund/adjustment entries. Those require the platform accounting and payout ledger.", "مهم: الإجماليات تغطي أحدث 100 لقطة عمولة فقط. لا يحسب هذا العرض صافي رصيد البائع أو السحوبات أو حالة الدفعات أو تسويات الاسترداد اللاحقة؛ فهذه تتطلب دفتر المحاسبة والدفعات في المنصة.")}</p>
+          <p className="mt-4 rounded-xl border border-[#9bbbc7] bg-white/55 p-4 text-xs leading-5 text-[#718899]">{t("Totals aggregate every commission snapshot currently recorded for this store, grouped by currency. The table shows only the latest 100 details. These figures are not seller net balances or withdrawable funds; refunds, adjustments, holds and payouts are not yet represented in a seller accounting ledger.", "تجمع الإجماليات كل لقطات العمولات المسجلة حالياً لهذا المتجر حسب العملة، بينما يعرض الجدول أحدث 100 تفصيل فقط. هذه الأرقام ليست صافي مستحقات البائع أو أموالاً قابلة للسحب؛ إذ لم تُربط بعد بدفتر محاسبي للبائع يشمل الاستردادات والتسويات والمبالغ المحجوزة والدفعات.")}</p>
         </>}
       </div>
     </main>
