@@ -4287,3 +4287,14 @@ The platform account policy is now explicit: email verification is not required 
 - Added the bilingual `/admin/payment-providers` page, navigation and Super Admin control-center shortcut. The interface includes add/edit forms, credential masking, test/live setup, verification, enable/disable and archive actions.
 - Explicit boundary: this is the management/data-storage tranche only. Checkout and webhook adapters still use the existing environment-based registry; database ACTIVE/DISABLED status does not yet alter checkout. The UI warns about this. The next implementation step is the provider runtime/config binding, including immutable payment-to-config/environment association and retained historical webhook verification.
 - No tests, builds, typechecks or browser checks were run, in line with the instruction to defer validation until the build work is complete.
+
+
+## 2026-11-10 — Payment provider runtime binding, second implementation tranche
+
+- Extended the compiled Stripe and PayPal adapters to accept server-resolved credentials and TEST/LIVE environment values; the legacy environment path remains available only when no database-managed record exists for that provider/environment.
+- New checkout requests resolve the unique provider configuration for the runtime environment and reject disabled, unverified, unsupported-currency or unsupported-country configurations. A configured country allowlist also rejects orders without a known country.
+- Added a relation from Payment to PaymentProviderConfig, environment metadata and an immutable encrypted credential snapshot with key version. Migration: 20261110143000_payment_provider_runtime_snapshots.
+- New Stripe and PayPal checkout sessions use the active database credentials. Public checkout provider discovery now lists active database-managed records and immediately avoids stale caching after a provider is disabled.
+- Webhook verification resolves the payment snapshot before signature verification; provider metadata is also used to find an in-flight payment before its provider reference has been persisted. PayPal return/capture uses the same historical snapshot.
+- Existing payments without a snapshot continue through the legacy environment credentials path. Existing attempts with a snapshot can resume after the provider is disabled; disablement blocks new attempts but does not intentionally strand an already-created payment.
+- No tests, builds, typechecks or browser checks were run, per the instruction to defer testing. Migrations have been committed but have not been applied to the user's database. Provider credentials, merchant eligibility and live transactions have not been verified in the user's environment.
