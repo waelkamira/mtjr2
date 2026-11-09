@@ -11,7 +11,7 @@ function authorized(request: Request) {
   const a = Buffer.from(secret), b = Buffer.from(supplied);
   return a.length === b.length && timingSafeEqual(a, b);
 }
-export async function POST(request: Request): Promise<Response> {
+async function runInvoiceWorker(request: Request): Promise<Response> {
   // Missing configuration and invalid credentials both fail closed without disclosing worker state.
   if (!authorized(request)) return Response.json({ error: "Unauthorized." }, { status: 401 });
   const now = new Date();
@@ -20,4 +20,13 @@ export async function POST(request: Request): Promise<Response> {
   const dueAt = new Date(periodEnd.getTime() + 14 * 24 * 60 * 60 * 1000);
   try { return Response.json(await generateAdInvoices({ periodStart, periodEnd, dueAt }), { headers: { "Cache-Control": "no-store" } }); }
   catch { return Response.json({ error: "Unable to generate advertising invoices." }, { status: 500 }); }
+}
+
+
+export async function GET(request: Request): Promise<Response> {
+  return runInvoiceWorker(request);
+}
+
+export async function POST(request: Request): Promise<Response> {
+  return runInvoiceWorker(request);
 }
