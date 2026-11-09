@@ -3802,3 +3802,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - A shared-file comparison exposed an important branch-only server change that had not reached main: the admin dashboard UI on main consumes metricSamples and orderStatusCounts, but the main dashboard service did not return either field.
 - Ported the bounded, latest-20-record metric sample queries from the branch into the current main service and restored metricSamples plus orderStatusCounts in its response. Kept main's newer dashboard authorization, filters, aggregate metrics, and smaller recent-orders list; did not replace the current service wholesale.
 - This is a targeted recovery of the dashboard data contract, not a claim that the dashboard has been tested. No tests, build, typecheck, migration execution, or browser checks were run.
+## 2026-11-09 — Reconcile email verification from the retained feature branch
+
+- Restored the password-registration email-verification lifecycle on top of the current main implementation rather than replacing its newer identity controls.
+- New password registrations now create PENDING users and a single-use, SHA-256-digested verification challenge with a 24-hour expiry inside the registration transaction.
+- The registration API sends the challenge through the existing server-only Resend adapter. Delivery failure returns an accepted registration state without exposing the raw token; users can request another message through the existing throttled, generic-response resend endpoint.
+- Registration UI now directs users to the existing bilingual verification page. Password login refuses pending, unverified accounts and guides them to that page; verified accounts continue through the current conditional session-creation and MFA flow.
+- Preserved the current main Turnstile validation, trusted-proxy IP handling, registration throttling, consent capture, seller-pending status, unique-email conflict handling, password policy, audit logging, and differentiated login errors.
+- The old branch route/service versions were not copied wholesale because they predate the current hardened registration and login contracts.
+- No tests, build, typecheck, or browser checks were run, per the current build-first instruction.
