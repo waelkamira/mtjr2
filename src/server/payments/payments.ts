@@ -164,8 +164,9 @@ export async function startOrderPayment(input: {
   try {
     const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.APP_URL).toString();
     const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
-    const providerCredentials = snapshot?.credentials ?? (reusableIsLegacy ? undefined : runtimeSelection.config?.credentials);
-    const providerAdapter = reusableIsLegacy
+    const paymentIsLegacy = !payment.providerConfigId;
+    const providerCredentials = snapshot?.credentials ?? (paymentIsLegacy ? undefined : runtimeSelection.config?.credentials);
+    const providerAdapter = paymentIsLegacy
       ? getPaymentProvider(payment.provider)
       : provider ?? getPaymentProviderAdapter(payment.provider);
     if (!providerAdapter) throw new Error("The payment provider adapter is unavailable.");
