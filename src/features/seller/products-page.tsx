@@ -440,6 +440,10 @@ export default function SellerProductsPage() {
       setError(translate(locale, "Retry or remove failed images before saving the product.", "أعد محاولة رفع الصور الفاشلة أو احذفها قبل حفظ المنتج."));
       return;
     }
+    if (!uploadedImages.some((image) => image.status === "ready")) {
+      setError(translate(locale, "Add at least one successfully uploaded product image before saving.", "أضف صورة واحدة على الأقل وارفعها بنجاح قبل حفظ المنتج."));
+      return;
+    }
     if (isRealEstate && (productLocation.latitude == null || productLocation.longitude == null || !floorArea || Number(floorArea) <= 0)) {
       setError(translate(locale, "Real-estate listings need a map location and a positive floor area.", "تحتاج الإعلانات العقارية إلى موقع على الخريطة ومساحة موجبة."));
       return;
@@ -599,6 +603,10 @@ export default function SellerProductsPage() {
   async function saveProductEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingId) return;
+    if (!editMedia.length) {
+      setError(translate(locale, "A product must keep at least one image. Add a replacement before removing the final image.", "يجب أن يحتفظ المنتج بصورة واحدة على الأقل. أضف صورة بديلة قبل إزالة الصورة الأخيرة."));
+      return;
+    }
     if (!editVariantPricesValid) {
       setError(translate(locale, "Enter a valid price for every SKU and enabled market.", "أدخل سعراً صالحاً لكل متغير وسوق مفعّل."));
       return;
