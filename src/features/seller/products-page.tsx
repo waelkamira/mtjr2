@@ -32,17 +32,26 @@ type Product = {
   status: string; approvalStatus: string;
   rejectionReason: string | null; updatedAt: string;
   media: Array<{ id: string; url: string; storageKey: string | null; mimeType: string | null; width: number | null; height: number | null; altText: string | null; sortOrder: number; isPrimary: boolean }>;
-  variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string }> }>;
+  variants: Array<{ id: string; sku: string; name: string | null; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } }> }>;
 };
 type Store = { id: string; storeNumber: string; name: string; markets: Array<{ market: { id: string } }> };
 type Workspace = { stores: Store[] };
 type EditableProductMedia = Product["media"][number] & { deleteToken?: string };
+type EditVariantDraft = { id: string; sku: string; name: string | null; prices: Record<string, { currencyCode: string; amount: string; compareAt: string }> };
 
 async function json<T>(response: Response): Promise<T> {
   const data = await response.json();
   if (!response.ok) throw new Error(data.error ?? "Request failed.");
   return data as T;
 }
+function minorUnitsToInput(amountMinor: string, minorUnit: number): string {
+  const amount = BigInt(amountMinor);
+  const scale = BigInt(10) ** BigInt(minorUnit);
+  const whole = amount / scale;
+  if (minorUnit === 0) return whole.toString();
+  return whole.toString() + "." + (amount % scale).toString().padStart(minorUnit, "0");
+}
+
 function flatten(items: Category[], prefix = "", ancestors: string[] = []): Array<{ id: string; slug: string; ancestors: string[]; label: string }> {
   return items.flatMap((item) => {
     const children = item.children ?? [];
@@ -104,6 +113,7 @@ export default function SellerProductsPage() {
   const [editFloorArea, setEditFloorArea] = useState("");
   const [editCategoryId, setEditCategoryId] = useState("");
   const [editMedia, setEditMedia] = useState<EditableProductMedia[]>([]);
+  const [editVariantRows, setEditVariantRows] = useState<EditVariantDraft[]>([]);
   const [editMediaUploading, setEditMediaUploading] = useState(false);
 
   useEffect(() => {
