@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { AuthenticationRequiredError, MfaEnrollmentRequiredError, MfaVerificationRequiredError } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
 import { getMySellerProfile, updateMySellerProfile } from "@/server/marketplace/seller-profile";
 
@@ -14,6 +14,7 @@ export async function GET(): Promise<Response> {
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     if (error instanceof PermissionDeniedError) return Response.json({ error: "An active seller profile is required." }, { status: 403 });
+    if (error instanceof MfaEnrollmentRequiredError || error instanceof MfaVerificationRequiredError) return Response.json({ error: error.message }, { status: 403 });
     return Response.json({ error: "Unable to load seller profile." }, { status: 500 });
   }
 }
