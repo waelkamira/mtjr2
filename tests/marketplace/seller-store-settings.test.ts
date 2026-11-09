@@ -72,6 +72,12 @@ describe("seller store profile settings", () => {
     expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "store.settings_updated" }) }));
   });
 
+  it("rejects malformed dispatch phone numbers and country codes", async () => {
+    await expect(updateSellerStoreSettings("store-1", { name: "Original Shop", slug: "original-shop", shippingPhone: "call me" })).rejects.toThrow();
+    await expect(updateSellerStoreSettings("store-1", { name: "Original Shop", slug: "original-shop", shippingCountryCode: "1!" })).rejects.toThrow();
+    expect(storeUpdate).not.toHaveBeenCalled();
+  });
+
   it("does not allow changing an active store URL", async () => {
     storeFindUnique.mockResolvedValueOnce({ ...draftStore, status: StoreStatus.ACTIVE });
     await expect(updateSellerStoreSettings("store-1", { name: "Updated Shop", slug: "updated-shop" }))
