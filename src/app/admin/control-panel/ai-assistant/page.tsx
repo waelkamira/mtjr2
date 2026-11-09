@@ -1,5 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import AiAssistantSettingsPage from "@/features/admin/ai-assistant-settings-page";
+import { getPreferredLocale } from "@/server/locale";
+import { translate } from "@/lib/locale";
 import { MfaEnrollmentRequiredError, MfaVerificationRequiredError, StepUpRequiredError } from "@/server/identity/access-errors";
 import {
   AuthenticationRequiredError,
@@ -7,7 +9,10 @@ import {
   requirePlatformManagement
 } from "@/server/identity/permission-guard";
 
-export const metadata = { title: "AI assistant controls", robots: { index: false, follow: false } };
+export async function generateMetadata() {
+  const locale = await getPreferredLocale();
+  return { title: translate(locale, "AI assistant controls", "إعدادات مساعد الذكاء الاصطناعي"), robots: { index: false, follow: false } };
+}
 
 export default async function AdminAiAssistantRoute() {
   try {
