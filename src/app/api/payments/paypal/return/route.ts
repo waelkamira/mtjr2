@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { env } from "@/lib/env";
 import { captureApprovedPayPalOrder } from "@/server/payments/providers/paypal";
+import { getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
 import { processVerifiedPaymentEvent } from "@/server/payments/payments";
 
 export const runtime = "nodejs";
@@ -26,7 +27,13 @@ export async function GET(request: Request): Promise<Response> {
   if (!payment) return orderRedirect(null, "pending");
 
   try {
-    const event = await captureApprovedPayPalOrder(orderId, payment.id);
+    const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
+    const event = await captureApprovedPayPalOrder(
+      orderId,
+      payment.id,
+      snapshot?.credentials,
+      snapshot?.environment
+    );
     const payloadHash = createHash("sha256").update(JSON.stringify(event)).digest("hex");
     const result = await processVerifiedPaymentEvent({
       providerKey: "paypal",
