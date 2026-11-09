@@ -5,7 +5,7 @@ import { PaymentStatus, OrderStatus, VendorOrderStatus, Prisma, PaymentProviderE
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
-import { getPaymentProvider } from "./providers/registry";
+import { getPaymentProvider, getPaymentProviderAdapter } from "./providers/registry";
 import { getActivePaymentProviderRuntimeConfig, getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
 import type { VerifiedPaymentEvent } from "./providers/types";
 import { createInAppNotification } from "@/server/notifications/notifications";
@@ -121,7 +121,7 @@ export async function startOrderPayment(input: {
     const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.APP_URL).toString();
     const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
     const providerCredentials = snapshot?.credentials ?? runtimeSelection.config?.credentials;
-    const providerAdapter = provider ?? getPaymentProvider(payment.provider);
+    const providerAdapter = provider ?? getPaymentProviderAdapter(payment.provider);
     if (!providerAdapter) throw new Error("The payment provider adapter is unavailable.");
     const intent = await providerAdapter.createIntent({
       paymentId: payment.id, orderNumber: order.orderNumber, amountMinor: order.totalMinor.toString(),
