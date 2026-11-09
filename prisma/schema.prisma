@@ -7,6 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum LedgerAccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
 enum UserStatus {
   PENDING
   ACTIVE
@@ -546,6 +554,8 @@ model Currency {
   adCampaigns    AdCampaign[]
   adInvoices     AdInvoice[]
   adSpendLedgerEntries AdSpendLedgerEntry[]
+  ledgerAccounts LedgerAccount[]
+  journalEntries JournalEntry[]
 
   shippingRates StoreShippingRate[]
 
@@ -2145,6 +2155,60 @@ model Payment {
   @@unique([provider, providerReference])
   @@index([orderId, createdAt])
   @@index([status, createdAt])
+}
+
+model LedgerAccount {
+  id           String            @id @default(cuid())
+  code         String            @db.VarChar(64)
+  name         String            @db.VarChar(160)
+  accountType  LedgerAccountType
+  scopeType    String            @default("GLOBAL") @db.VarChar(32)
+  scopeId      String            @default("GLOBAL") @db.VarChar(128)
+  currencyCode String            @db.Char(3)
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  currency     Currency          @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  lines        JournalLine[]
+
+  @@unique([scopeType, scopeId, code, currencyCode])
+  @@index([currencyCode, accountType, scopeType, scopeId])
+  @@index([isActive, code])
+}
+
+model JournalEntry {
+  id             String        @id @default(cuid())
+  idempotencyKey String        @unique @db.VarChar(180)
+  sourceType     String        @db.VarChar(64)
+  sourceId       String        @db.VarChar(180)
+  currencyCode   String        @db.Char(3)
+  description    String        @db.VarChar(500)
+  occurredAt     DateTime
+  postedAt       DateTime      @default(now())
+  reversalOfId   String?       @unique
+  createdAt      DateTime      @default(now())
+  currency       Currency      @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  lines          JournalLine[]
+  reversalOf     JournalEntry? @relation("JournalEntryReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversal       JournalEntry? @relation("JournalEntryReversal")
+
+  @@index([sourceType, sourceId])
+  @@index([currencyCode, postedAt, id])
+}
+
+model JournalLine {
+  id             String       @id @default(cuid())
+  journalEntryId String
+  accountId      String
+  lineNumber     Int
+  debitMinor     BigInt       @default(0)
+  creditMinor    BigInt       @default(0)
+  memo           String?      @db.VarChar(500)
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+  account        LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@unique([journalEntryId, lineNumber])
+  @@index([accountId, journalEntryId])
 }
 
 model CommissionRule {
