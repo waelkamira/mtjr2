@@ -657,3 +657,23 @@ export async function completeStockCount(sessionIdInput: string, now = new Date(
     return { sessionId: session.id, status: StockCountStatus.COMPLETED, alreadyCompleted: false, adjustedLines, totalVariance };
   }, { isolationLevel: "Serializable" });
 }
+
+
+export async function getStockCount(sessionIdInput: string, now = new Date()) {
+  const sessionId = z.string().trim().min(1).parse(sessionIdInput);
+  const actor = await requireCurrentSession(now);
+  const session = await prisma.stockCountSession.findUnique({
+    where: { id: sessionId },
+    include: {
+      warehouse: { select: { id: true, code: true, name: true, store: { select: { seller: { select: { ownerId: true, status: true } } } } } },
+      lines: { orderBy: [{ inventory: { variant: { sku: "asc" } } }, { id: "asc" }], include: {
+        inventory: { select: { id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true, variant: { select: { sku: true, name: true, product: { select: { name: true } } } } }
+      } } }
+    }
+  });
+  if (!session || session.warehouse.store.seller.status !== "ACTIVE" ||
+      !(await canManageInventory(actor.userId, session.warehouse.store.seller.ownerId, session.storeId, now))) {
+    throw new Error("You do not have access to this stock count.");
+  }
+  return session;
+}
