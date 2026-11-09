@@ -5,7 +5,6 @@ import { consumeRegistrationAttempt } from "@/server/identity/login-throttle";
 import { resolveTrustedClientIp } from "@/server/identity/trusted-client-ip";
 import { verifyRegistrationChallenge } from "@/server/identity/turnstile";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { resendEmailAdapter } from "@/server/email/resend";
 
 export const runtime = "nodejs";
 
@@ -49,18 +48,9 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     delete data.turnstileToken;
-    const result = await registerUser(data as Parameters<typeof registerUser>[0]);
-    try {
-      await resendEmailAdapter.sendVerificationEmail(data.email.trim().toLowerCase(), result.verificationToken);
-    } catch {
-      return Response.json({
-        message: "Account created. Email delivery is temporarily unavailable; request a verification email again later.",
-        verificationRequired: true
-      }, { status: 202 });
-    }
+    await registerUser(data as Parameters<typeof registerUser>[0]);
     return Response.json({
-      message: "Account created. Check your email to verify your address.",
-      verificationRequired: true
+      message: "Account created successfully. You can now sign in."
     }, { status: 201 });
   } catch (error) {
     if (error instanceof IdentityConflictError) {
