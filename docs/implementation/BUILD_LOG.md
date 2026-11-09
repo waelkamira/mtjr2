@@ -3960,3 +3960,21 @@ Commits added to canonical main during these batches:
 - `2f0822f` — document the expanded demo fixture.
 
 No tests, builds, typechecks, or browser checks were run, per the user's instruction to defer validation until implementation is complete.
+
+## 2026-11-09 — Ten-file reconciliation batches 4–6
+
+### Batch 4 — account profile, admin access and protected admin APIs
+- Reviewed account profile page/API, admin layout, coupon routes, return review route, search-synonym routes, sponsored-ad route and login route.
+- Main has the current private account analytics contract, explicit permission error types, the `ads:moderate` admin permission, mutation/request boundaries, and normalized sponsored-ad filter handling. Branch profile charts call the broad orders API and are superseded by the dedicated aggregate account-profile API. No branch code copied.
+
+### Batch 5 — registration, categories, cron workers and public catalog/returns APIs
+- Reviewed registration, category discovery, advertising invoice worker, checkout-expiry worker, notification delivery, support SLA, locale mutation, product detail/listing and customer return creation routes.
+- Main preserves the verified-email registration response contract, optional empty-category behavior, fail-closed cron-secret handling without configuration disclosure, same-origin locale/return mutation checks, typed permission mapping and defensive JSON parsing. The branch's extra GET handler for advertising invoice generation would trigger a state-changing invoice worker through GET; it was intentionally not added. No branch code copied.
+
+### Batch 6 — seller APIs, store staff, contact and global styles
+- Reviewed seller advertising, seller applications, inventory, orders, legacy product-image endpoint, shipping-rate create/update, store staff invitation, contact page and global CSS.
+- Main APIs retain cursor pagination, exact store selection, richer seller application fields, canonical media-route delegation, shipping-rate deactivation and typed authorization/validation handling, plus email-based invitations with least-privilege roles. Branch versions are narrower/older.
+- Main global styles are scoped to the current seller dashboard and clay primitives. The branch stylesheet contains broad global selector overrides and legacy map styling; importing it would risk overriding current storefront/admin styling and was not done.
+- Contact configuration on main preserves the explicit `CONTACT_EMAIL` preference and null-safe fallback.
+
+No additional runtime files were copied from batches 4–6. No tests, builds, typechecks or browser checks were run, per the user's instruction to defer validation.
