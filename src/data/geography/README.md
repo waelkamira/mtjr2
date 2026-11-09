@@ -1,7 +1,6 @@
 # Syrian geography data
 
-Matjar imports Syrian administrative geography into PostgreSQL from the pinned
-OpenSyria Data Geography release.
+Matjar uses **OpenSyria Data Geography as its sole structured geographic source**.
 
 - Dataset: OpenSyria Data Geography
 - Pinned release: `v0.1.5`
@@ -10,26 +9,14 @@ OpenSyria Data Geography release.
 - License: Creative Commons Attribution 4.0 International (CC BY 4.0)
 - License text: https://creativecommons.org/licenses/by/4.0/
 
-The importer is `scripts/sync-syria-geography.mjs`. It validates the source
-hierarchy and required provenance fields before inserting records into the
-canonical geography tables. Import is an explicit database operation; the
-regular identity seed does not download this dataset. After applying Prisma
-migrations to a database, run `npm run db:sync-syria-geography` (or
-`npm run db:seed:all` to run the regular seed, import the official hierarchy,
-and import Akaar-derived neighbourhood candidates) against that same
-`DATABASE_URL`. The application cannot display location options until the
-official geography import has populated the geography tables. Neighbourhood
-candidates remain explicitly unverified suggestions and are not official
-administrative divisions. The pinned release is expected to contain 14
-governorates, 62 districts, 272 subdistricts, and 7,605 localities.
+The importer is `scripts/sync-syria-geography.mjs`. It validates the pinned release's expected counts, provenance fields and parent hierarchy before inserting records into PostgreSQL.
 
-The seller location picker reads paginated records from the database-backed
-`/api/geography/[level]` routes; it does not load a bundled JSON geography
-file at runtime. The importer is additive and deliberately does not overwrite
-existing IDs when geography has already been seeded.
+Expected coverage: 14 governorates, 62 districts, 272 subdistricts and 7,605 localities (cities, towns, villages and other populated places).
 
-Preserve attribution to OpenSyria and the underlying source datasets. Do not
-silently replace the pinned release with unreviewed live data. To upgrade,
-review the new tagged release, its data-quality notes and license, validate
-parent relationships and record counts, update the pinned version and
-importer, and document the change.
+After applying Prisma migrations, run `npm run db:sync-syria-geography` against the same `DATABASE_URL` used by the application. The importer is additive and preserves stable OpenSyria IDs and existing product references.
+
+**No Akaar-derived geographic data is used.** OpenSyria v0.1.5 does not provide a separate verified neighbourhood directory. Neighbourhood and exact street address are optional seller-entered text; they are not fabricated or imported from another source. Map place search queries the imported OpenSyria records, while the user can fine-tune exact coordinates with the map pin.
+
+The separate Akaar category-attribute seed is product taxonomy metadata, not geographic data.
+
+Preserve attribution to OpenSyria and upstream sources. Do not silently replace the pinned release with unreviewed live data. To upgrade, review the new tagged release, data-quality notes and licence, validate counts and parent relationships, then update the pin and importer.
