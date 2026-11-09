@@ -3401,3 +3401,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level authorization, validation, transaction and UI wiring review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller profile external-link policy
+
+- Aligned seller profile editing with the seller application security rule: public social links accept HTTPS only; non-HTTPS URLs are rejected by the server.
+- Commit: `9dcb9b5` — `fix(seller): restrict public profile links to HTTPS`.
+- Source-level validation review only; no tests or builds were run.
