@@ -27,9 +27,15 @@ async function assertStoreAccess(storeId:string,userId:string,now:Date){
  if(store.seller.ownerId!==userId&&!await userHasScopedPermission(userId,{permissionKey:"ads:manage",scope:{type:"STORE",id:storeId},now}))throw new Error("You do not have advertising access to this store.");
  return store;
 }
-export async function listSellerAdCampaigns(storeId:string,now=new Date()){
+export async function listSellerAdCampaigns(storeId:string,now=new Date(),searchInput:unknown={}){
+ const {cursor}=z.object({cursor:z.string().trim().min(1).max(128).optional()}).strict().parse(searchInput);
  const actor=await requireCurrentSession(now); await assertStoreAccess(storeId,actor.userId,now);
- return (await prisma.adCampaign.findMany({where:{storeId},orderBy:[{createdAt:"desc"},{id:"desc"}],take:100,select})).map(serializeCampaign);
+ const rows=await prisma.adCampaign.findMany({
+  where:{storeId},orderBy:[{createdAt:"desc"},{id:"desc"}],
+  ...(cursor?{cursor:{id:cursor},skip:1}:{}),take:101,select
+ });
+ const hasMore=rows.length>100,items=hasMore?rows.slice(0,100):rows;
+ return {items:items.map(serializeCampaign),nextCursor:hasMore?items[items.length-1]?.id??null:null};
 }
 export async function createSellerAdCampaign(input:CreateAdCampaignInput,now=new Date()){
  const data=createSchema.parse(input),actor=await requireCurrentSession(now); await assertStoreAccess(data.storeId,actor.userId,now);
