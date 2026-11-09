@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import SiteNavigation from "@/components/site-navigation";
+import SiteFooter from "@/components/site-footer";
+import { env } from "@/lib/env";
 import AuthJourney from "@/components/auth-journey";
 import MatjarAIAssistant from "@/components/ai/matjar-ai-assistant";
 import { getAiAssistantRuntimeSettings } from "@/server/ai/assistant-config";
@@ -40,6 +42,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <AuthJourney />
           <RegistrationNotice />
           {children}
+          <SiteFooter locale={locale} contactEmail={env.RESEND_FROM_EMAIL ?? null} />
           {aiSettings.enabled ? <MatjarAIAssistant /> : null}
           <SonnerToaster />
         </LocaleProvider>
