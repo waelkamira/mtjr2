@@ -3161,3 +3161,21 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Count opening/completion are audit logged. A warehouse cannot be deactivated while a count is in progress. Completed count replay is authorized and does not apply stock twice.
 - API routes: GET/POST /api/seller/inventory/counts, GET /api/seller/inventory/counts/[countId], PATCH /api/seller/inventory/counts/[countId]/lines/[lineId], and POST /api/seller/inventory/counts/[countId]/complete.
 - Added an explicit cancel action for an unfinished count session. Cancellation is audited and never changes inventory; completed sessions cannot be cancelled.
+
+
+## 2026-11-09 — Seller shipping address and dispatch contact editor
+
+**Implemented on `main`**
+- Added an owner-only shipping details form to the seller workspace.
+- The form loads the selected store's persisted contact name, phone, address lines, city, region, postal code, ISO country code, and delivery/pickup instructions.
+- Saving uses the existing `PATCH /api/seller/stores/[storeId]` endpoint and `updateSellerStoreSettings` service; no duplicate schema or API was introduced.
+- Existing server-side validation, store ownership / scoped permission checks, transaction, and audit event remain authoritative.
+- Switching stores reloads the form from the selected store rather than retaining the previous store's values.
+
+**Commit**
+- `3f7e63720414cb5d5067799761a402516774117a` — `Add seller shipping address and contact editor`.
+
+**Verification**
+- Confirmed `GET /api/seller/stores` already returns all shipping fields required by the form.
+- Confirmed the existing store settings service persists and audits these fields, and focused service tests already cover saving the dispatch address.
+- Exact-head CI currently reports only the Vercel `build-rate-limit` failure. No application build or browser test pass is claimed from this status.
