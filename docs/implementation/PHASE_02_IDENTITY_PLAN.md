@@ -6,7 +6,7 @@ This phase is part of the dependency-aware sequence in the repository root READM
 
 Deliver a secure identity and access foundation for buyers, sellers, staff, and administrators. Keep authentication mechanisms separate from authorization policy and enforce all decisions on the server.
 
-**Current registration policy (2026-11-06):** email confirmation is not part of registration or account activation. Password registration creates an active account and session immediately after a valid Cloudflare Turnstile challenge. Google registration uses the same challenge before starting OAuth. Persistent per-email/IP and per-IP throttles limit repeated attempts. Historical verification/resend notes below describe retired behavior; legacy database fields remain for compatibility.
+**Current registration policy (2026-11-09):** password registration creates a `PENDING` account and requires email verification before login/session creation. The server stores only a SHA-256 digest of the random verification token, with a 24-hour expiry, and sends the raw token only through the configured Resend email adapter. Verification and resend endpoints remain server-owned and rate-limited. Registration continues to enforce Cloudflare Turnstile, trusted client-IP handling, throttling, consent capture, duplicate-email conflict handling, and seller/customer account intent. Google OAuth activation must follow the same verified-email policy before a usable account session is issued. Persistent per-email/IP and per-IP throttles limit repeated attempts. Historical verification/resend notes below describe retired behavior; legacy database fields remain for compatibility.
 
 ## Current identity rebuild update — 2026-11-06
 
