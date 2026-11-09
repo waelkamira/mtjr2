@@ -3277,3 +3277,19 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level request sequencing review only. No new browser/build result is claimed for this commit.
+
+
+## 2026-11-09 — Scope seller dashboard recent orders before pagination
+
+**Implemented on `main`**
+- Added an optional `storeId` filter to `listSellerVendorOrders` and `GET /api/seller/orders`.
+- The service still derives the actor's authorized store IDs from the authenticated session, ownership/staff membership and scoped permission checks first; the requested store is intersected with that allowlist and cannot widen access.
+- Updated the seller dashboard to request recent orders for its selected store directly. Previously it fetched the latest 100 orders across all authorized stores and filtered those rows in the browser, which could hide a selected store's recent orders when another store dominated the global 100-row window.
+
+**Commits**
+- `8572827` — `Support authorized store-scoped seller order queries`.
+- `4219c48` — `Expose store filter on seller orders API`.
+- `2af3bc3` — `Load dashboard recent orders for selected store`.
+
+**Verification**
+- Source-level authorization and query-path review only. No build, test, PostgreSQL or browser result is claimed for these commits.
