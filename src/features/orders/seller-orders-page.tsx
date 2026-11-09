@@ -96,6 +96,7 @@ export default function SellerOrdersPage() {
       const data = await response.json() as { shipment?: VendorOrder["shipment"]; error?: string };
       if (!response.ok || !data.shipment) throw new Error(data.error || t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة."));
       setOrders((current) => current.map((order) => order.id === vendorOrderId ? { ...order, status: "SHIPPED", shipment: data.shipment! } : order));
+      setShipmentDrafts((current) => { const next = { ...current }; delete next[vendorOrderId]; return next; });
       toast.success(t("Shipment recorded.", "تم تسجيل الشحنة."));
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("Shipment could not be recorded.", "تعذّر تسجيل الشحنة.");
@@ -121,8 +122,11 @@ export default function SellerOrdersPage() {
       });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع."));
+      const refreshed = await fetch("/api/seller/orders", { cache: "no-store" });
+      const refreshedData = await refreshed.json() as { orders?: VendorOrder[]; error?: string };
+      if (!refreshed.ok) throw new Error(refreshedData.error || t("Tracking was saved, but the order list could not be refreshed.", "تم حفظ تحديث التتبع، لكن تعذر تحديث قائمة الطلبات."));
+      setOrders(refreshedData.orders ?? []);
       toast.success(t("Tracking update recorded.", "تم تسجيل تحديث التتبع."));
-      window.location.reload();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("Tracking update could not be recorded.", "تعذّر تسجيل تحديث التتبع.");
       setActionError(message);
@@ -132,6 +136,8 @@ export default function SellerOrdersPage() {
 
   useEffect(() => {
     let active = true;
+    setOrders([]);
+    setShipmentDrafts({});
     const timer = window.setTimeout(() => { setLoading(true); setError(""); const params = new URLSearchParams(); if (query.trim()) params.set("q", query.trim());
     fetch(`/api/seller/orders?${params.toString()}`, { cache: "no-store" }).then(async (response) => {
       const data = await response.json() as { orders?: VendorOrder[]; error?: string };
