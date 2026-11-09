@@ -283,6 +283,36 @@ async function seedDemoCatalog() {
     create: { code: "DEMO-US", name: "Demo United States", countryId: country.id, defaultCurrencyCode: currency.code, status: "ACTIVE" },
     update: { name: "Demo United States", countryId: country.id, defaultCurrencyCode: currency.code, status: "ACTIVE" },
   });
+
+  // Syria is the platform's primary launch market; USD remains an enabled
+  // secondary currency for cross-border pricing and seller market selection.
+  const syria = await prisma.country.upsert({
+    where: { iso2: "SY" },
+    create: { iso2: "SY", iso3: "SYR", name: "Syria", nativeName: "سوريا", phoneCallingCode: "+963", isActive: true },
+    update: { iso3: "SYR", name: "Syria", nativeName: "سوريا", phoneCallingCode: "+963", isActive: true },
+  });
+  const syrianPound = await prisma.currency.upsert({
+    where: { code: "SYP" },
+    create: { code: "SYP", name: "Syrian Pound", symbol: "ل.س", minorUnit: 2, isActive: true },
+    update: { name: "Syrian Pound", symbol: "ل.س", minorUnit: 2, isActive: true },
+  });
+  const usDollar = await prisma.currency.upsert({
+    where: { code: "USD" },
+    create: { code: "USD", name: "US Dollar", symbol: "$", minorUnit: 2, isActive: true },
+    update: { name: "US Dollar", symbol: "$", minorUnit: 2, isActive: true },
+  });
+  const syriaMarket = await prisma.market.upsert({
+    where: { code: "SY-SYR" },
+    create: { code: "SY-SYR", name: "Syria", countryId: syria.id, defaultCurrencyCode: syrianPound.code, status: "ACTIVE" },
+    update: { name: "Syria", countryId: syria.id, defaultCurrencyCode: syrianPound.code, status: "ACTIVE" },
+  });
+  for (const currencyRow of [syrianPound, usDollar]) {
+    await prisma.marketCurrency.upsert({
+      where: { marketId_currencyCode: { marketId: syriaMarket.id, currencyCode: currencyRow.code } },
+      create: { marketId: syriaMarket.id, currencyCode: currencyRow.code, isEnabled: true },
+      update: { isEnabled: true },
+    });
+  }
   await prisma.marketCurrency.upsert({
     where: { marketId_currencyCode: { marketId: market.id, currencyCode: currency.code } },
     create: { marketId: market.id, currencyCode: currency.code, isEnabled: true },
