@@ -37,7 +37,7 @@ describe("store shipping configuration", () => {
       id: "store-1", seller: { ownerId: "owner-1", status: "ACTIVE" }
     });
     mocks.marketFindFirst.mockResolvedValue({ id: "market-1" });
-    mocks.shippingRateFindFirst.mockResolvedValue({ id: "rate-1" });
+    mocks.shippingRateFindFirst.mockResolvedValue({ id: "rate-1", isActive: true });
     mocks.shippingRateUpdate.mockImplementation(async ({ data }) => ({ id: "rate-1", storeId: "store-1", ...data, amountMinor: BigInt(data.amountMinor), isActive: true, priority: data.priority ?? 0 }));
     mocks.shippingRateCreate.mockImplementation(async ({ data }) => ({
       id: "rate-1", ...data, amountMinor: BigInt(data.amountMinor), isActive: true, priority: 0
