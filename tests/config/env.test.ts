@@ -76,6 +76,11 @@ describe("parseEnvironment", () => {
     })).toMatchObject(validEnvironment);
   });
 
+  it("treats an empty optional cron secret as unconfigured", () => {
+    const parsed = parseEnvironment({ ...validEnvironment, CRON_SECRET: "" });
+    expect(parsed.CRON_SECRET).toBeUndefined();
+  });
+
   it("rejects an invalid public registration flag", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
