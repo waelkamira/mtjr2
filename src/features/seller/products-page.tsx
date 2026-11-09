@@ -831,7 +831,20 @@ export default function SellerProductsPage() {
                 setEditProductLocation({ city: product.city ?? undefined, district: product.district ?? undefined, localityId: product.localityId ?? undefined, neighborhoodId: product.neighborhoodId ?? undefined, neighborhood: product.neighborhood ?? undefined, latitude: product.latitude ?? undefined, longitude: product.longitude ?? undefined });
                 setEditPropertyType(product.propertyDetails?.propertyType ?? "APARTMENT"); setEditListingType(product.propertyDetails?.listingType ?? "SALE");
                 setEditBedrooms(product.propertyDetails?.bedrooms == null ? "" : String(product.propertyDetails.bedrooms)); setEditBathrooms(product.propertyDetails?.bathrooms == null ? "" : String(product.propertyDetails.bathrooms)); setEditFloorArea(product.propertyDetails?.floorArea ?? "");
-                setEditMedia(product.media); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
+                setEditMedia(product.media);
+                setEditVariantRows(product.variants.map((variant) => ({
+                  id: variant.id,
+                  sku: variant.sku,
+                  name: variant.name,
+                  prices: Object.fromEntries(availableMarkets.map((market) => {
+                    const price = variant.prices.find((entry) => entry.marketId === market.id);
+                    return [market.id, {
+                      currencyCode: price?.currencyCode ?? market.defaultCurrency.code,
+                      amount: price ? minorUnitsToInput(price.amountMinor, price.currency.minorUnit) : "",
+                      compareAt: price?.compareAtMinor ? minorUnitsToInput(price.compareAtMinor, price.currency.minorUnit) : ""
+                    }];
+                  }))
+                }))); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit draft", "تعديل المسودة")}</button>}
               {product.status === "DRAFT" && product.approvalStatus === "APPROVED" && <button disabled={busy} onClick={() => publish(product.id)} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Publish", "نشر")}</button>}
             </div>
           </article>)}</div>}
