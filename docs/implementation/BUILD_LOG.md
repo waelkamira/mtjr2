@@ -4158,3 +4158,18 @@ Reviewed locale, seller application, store staff, order management, payment life
 - No additional branch runtime/test code copied from this batch.
 
 This completes the review of all 176 shared paths with differing blob hashes between the retained branch and main as inventoried at the start of the 18 review batches. The branch-only paths and main-only paths are separately inventoried in the reconciliation sections above; obsolete legacy migrations, geography artifacts, old image storage, old test suites and Vercel configuration are not to be restored over current main.
+
+
+## 2026-11-09 — User-directed removal of email verification
+
+The platform account policy is now explicit: email verification is not required after password registration or before password sign-in.
+
+- Password registration creates an immediately ACTIVE customer account after the existing Turnstile, trusted-IP/email throttling, input validation and Terms/Privacy consent checks. No email-verification token is created and no verification email is sent.
+- Seller registration creates an ACTIVE user account while the associated Seller application remains PENDING; no seller permissions are granted until the platform approves the application.
+- Password login no longer returns an email-verification failure. Legacy PENDING accounts with no administrative hold are activated only after a correct password is verified; SUSPENDED, DISABLED and administratively held accounts remain blocked.
+- Seller application submission no longer requires `emailVerifiedAt`.
+- Registration UI confirms that the account is ready and links directly to sign-in. Login no longer redirects to `/verify-email`; the legacy page now explains that email confirmation is not required.
+- MFA for privileged access, password hashing, session protections, login/registration throttling, Turnstile, audit logging and seller approval controls remain in place.
+- Existing verification endpoints and legacy token-consumption support are retained for compatibility, but are no longer part of the new-account registration or sign-in path.
+- Tests/build/typecheck/browser checks were not run, per user instruction. Existing identity and seller-application test expectations must be updated before the deferred validation phase.
+
