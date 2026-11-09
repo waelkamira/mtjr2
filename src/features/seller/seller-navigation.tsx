@@ -130,14 +130,14 @@ export default function SellerNavigation() {
           ))}
         </nav>
 
-        <div className="mx-4 mb-4 rounded-[1.6rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#d8e9e2)] p-4 shadow-[8px_10px_20px_rgba(63,100,91,.10),inset_0_2px_0_white]">
-          <span className="grid size-10 place-items-center rounded-xl border border-white/20 bg-[#d4e9e9]/55 text-lg text-[#5d9d8c] shadow-[inset_0_1px_0_rgba(255,255,255,.2)]" aria-hidden="true">✦</span>
-          <p className="mt-3 text-sm font-extrabold text-[#344d4b]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
-          <p className="mt-1 text-[10px] leading-4 text-[#7d879d]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
-          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-white bg-[#c7e7dc] px-3 py-2 text-[11px] font-extrabold text-[#315d53] shadow-[0_5px_12px_rgba(63,100,91,.12),inset_0_1px_0_white]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
+        <div className="mx-4 mb-4 rounded-[1.6rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-4 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
+          <span className="grid size-10 place-items-center rounded-xl border border-white/20 bg-[#9fd5d4]/20 text-lg text-[#a9dcd8] shadow-[inset_0_1px_0_rgba(255,255,255,.2)]" aria-hidden="true">✦</span>
+          <p className="mt-3 text-sm font-extrabold text-white">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
+          <p className="mt-1 text-[10px] leading-4 text-[#b3c6d2]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
+          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-white/25 bg-[linear-gradient(135deg,#9fd5d4,#78b8bd)] px-3 py-2 text-[11px] font-extrabold text-[#17374b] shadow-[0_5px_12px_rgba(5,17,31,.22),inset_0_1px_0_white]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
         </div>
-        <div className="border-t border-white/80 p-4">
-          <Link href="/" className="flex items-center justify-between rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f5f3fb,#e3e2ef)] px-4 py-3 text-sm font-semibold text-[#46536a] shadow-[6px_7px_16px_rgba(74,75,112,.09),inset_0_2px_0_white] transition hover:shadow-[var(--shadow-clay)]">
+        <div className="border-t border-white/10 p-4">
+          <Link href="/" className="flex items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-[#eaf3f7] shadow-[6px_7px_16px_rgba(5,17,31,.18),inset_0_1px_0_rgba(255,255,255,.12)] transition hover:shadow-[var(--shadow-clay)]">
             <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
           </Link>
           <p className="mt-3 px-2 text-[10px] leading-5 text-[#9fb5c4]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
