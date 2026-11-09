@@ -41,6 +41,7 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
   const [error, setError] = useState("");
   const [oauthError, setOauthError] = useState(initialOAuthError);
   const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [deliveryUnavailable, setDeliveryUnavailable] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendNotice, setResendNotice] = useState("");
@@ -79,12 +80,12 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
   }
 
   async function resendVerificationEmail() {
-    if (!email.trim() || resending) return;
+    if (!registeredEmail || resending) return;
     setResending(true); setError(""); setResendNotice("");
     try {
       const response = await fetch("/api/auth/verification/resend", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }), cache: "no-store"
+        body: JSON.stringify({ email: registeredEmail }), cache: "no-store"
       });
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || t("Unable to request a verification email.", "تعذر طلب رسالة التحقق."));
@@ -110,6 +111,7 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
       setPassword("");
+      setRegisteredEmail(email.trim());
       setRegistrationComplete(true);
       setDeliveryUnavailable(response.status === 202);
       setTurnstileToken("");
