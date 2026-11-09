@@ -82,7 +82,7 @@ export default function SellerStaffPage() {
       <div className="mx-auto max-w-[1440px] px-5 py-10">
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Store access", "إمكانية الوصول إلى المتجر")}</p>
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Team & invitations", "الفريق والدعوات")}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Invite existing active accounts, review membership status, accept invitations addressed to you, and revoke access. All permissions are enforced by the server for the selected store.", "ادعُ الحسابات النشطة الحالية، وراجع حالة العضوية، واقبل الدعوات الموجهة إليك، وألغِ الوصول. يفرض الخادم جميع الأذونات على المتجر المحدد.")}</p>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Store owners invite and revoke active accounts; invited users accept their own invitations. Every action is scoped to the selected store.", "مالك المتجر يدعو الحسابات النشطة ويلغي عضويتها؛ ويقبل المدعوون دعواتهم بأنفسهم. كل إجراء مرتبط بالمتجر المحدد.")}</p>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-6 rounded-xl bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[var(--color-ink-950)]">{message}</p>}
 
