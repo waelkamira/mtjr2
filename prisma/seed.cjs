@@ -44,6 +44,7 @@ const permissions = [
   { key: "users:manage", description: "Manage user accounts and account status." },
   { key: "payments:read", description: "Read payment records within the granted scope." },
   { key: "payments:refund", description: "Initiate or approve refunds within the granted scope." },
+  { key: "payment.providers.manage", description: "Configure, verify, enable, disable and archive global payment providers." },
   { key: "support:read", description: "Read customer support cases." },
   { key: "support:manage", description: "Manage customer support cases." },
   { key: "returns:manage", description: "Review and manage customer return requests." },
