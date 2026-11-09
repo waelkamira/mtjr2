@@ -161,6 +161,16 @@ describe("checkout quote and inventory reservation", () => {
     })).rejects.toThrow("reached its redemption limit");
   });
 
+  it("does not reserve returned units that remain quarantined", async () => {
+    const cart = cartSnapshot(2);
+    cart.items[0].variant.inventories[0].quantityQuarantined = 9;
+    mocks.cartFindFirst.mockResolvedValue(cart);
+    await expect(createCheckoutQuote("opaque-guest-token", {
+      cartId: "cart-1", idempotencyKey: "checkout-quarantine-0001"
+    })).rejects.toThrow("There is not enough stock");
+    expect(mocks.executeRaw).not.toHaveBeenCalled();
+  });
+
   it("fails when inventory cannot cover the full cart quantity", async () => {
     mocks.cartFindFirst.mockResolvedValue(cartSnapshot(11));
     await expect(createCheckoutQuote("opaque-guest-token", {
