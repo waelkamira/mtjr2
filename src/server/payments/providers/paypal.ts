@@ -16,6 +16,8 @@ type PayPalOrder = {
   status?: string;
   links?: PayPalLinks[];
   purchase_units?: Array<{
+    reference_id?: string;
+    custom_id?: string;
     payments?: { captures?: PayPalCapture[] };
   }>;
 };
@@ -27,6 +29,7 @@ type PayPalWebhookEvent = {
     id?: string;
     status?: string;
     amount?: PayPalAmount;
+    custom_id?: string;
     supplementary_data?: { related_ids?: { order_id?: string } };
   };
 };
@@ -197,6 +200,9 @@ export async function captureApprovedPayPalOrder(orderId: string, paymentId: str
     order = await paypalRequest<PayPalOrder>(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, { method: "GET" }, undefined, credentials, environment);
   }
 
+  if (order.id !== orderId) throw new Error("PayPal returned a different order reference.");
+  const linkedPaymentIds = order.purchase_units?.map((unit) => unit.custom_id ?? unit.reference_id).filter(Boolean) ?? [];
+  if (!linkedPaymentIds.includes(paymentId)) throw new Error("PayPal order does not belong to the requested Matjar payment.");
   const capture = captureFromOrder(order);
   const currencyCode = capture.amount!.currency_code!.toUpperCase();
   const status = capture.status?.toUpperCase();
