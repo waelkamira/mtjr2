@@ -84,7 +84,7 @@ export default function MatjarAIAssistant() {
   return (
     <div className="fixed bottom-5 right-5 z-[70]">
       {open && (
-        <section dir="rtl" aria-label={t(t("مساعد Matjar AI", "Matjar AI assistant"), "مساعد Matjar AI")} className="mb-3 flex h-[min(650px,calc(100dvh-110px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-[var(--surface)] shadow-[0_24px_80px_rgba(48,45,59,0.24)]">
+        <section dir={locale === "ar" ? "rtl" : "ltr"} aria-label={t("Matjar AI assistant", "مساعد Matjar AI")} className="mb-3 flex h-[min(650px,calc(100dvh-110px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-[var(--surface)] shadow-[0_24px_80px_rgba(48,45,59,0.24)]">
           <header className="flex items-center justify-between bg-[var(--color-lavender-800)] px-5 py-4 text-white">
             <div>
               <p className="font-bold">Matjar AI</p>
