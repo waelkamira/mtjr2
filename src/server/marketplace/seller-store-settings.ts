@@ -7,9 +7,18 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
 import { userHasScopedPermission } from "@/server/identity/permission-repository";
 
+const publicImageUrl = z.string().trim().url().max(2048).nullable().optional().refine((value) => {
+  if (!value) return true;
+  const url = new URL(value);
+  return url.protocol === "https:" && !url.username && !url.password;
+}, "Store branding images must use HTTPS URLs without credentials.");
+
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   slug: z.string().trim().min(3).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  description: z.string().trim().max(2000).nullable().optional(),
+  logoUrl: publicImageUrl,
+  bannerUrl: publicImageUrl,
   shippingContactName: z.string().trim().min(2).max(120).nullable().optional(),
   shippingPhone: z.string().trim().min(7).max(25).regex(/^\+?[0-9\s().-]{7,25}$/).nullable().optional(),
   shippingAddressLine1: z.string().trim().min(3).max(240).nullable().optional(),
@@ -40,6 +49,7 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       where: { id: storeId },
       select: {
         id: true, sellerId: true, name: true, slug: true, status: true,
+        description: true, logoUrl: true, bannerUrl: true,
         shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true,
         shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true,
         seller: { select: { ownerId: true, status: true } }
@@ -70,6 +80,9 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
     const updateData: Prisma.StoreUpdateInput = {
       name: data.name,
       slug: data.slug,
+      ...(data.description !== undefined ? { description: data.description } : {}),
+      ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+      ...(data.bannerUrl !== undefined ? { bannerUrl: data.bannerUrl } : {}),
       ...(data.shippingContactName !== undefined ? { shippingContactName: data.shippingContactName } : {}),
       ...(data.shippingPhone !== undefined ? { shippingPhone: data.shippingPhone } : {}),
       ...(data.shippingAddressLine1 !== undefined ? { shippingAddressLine1: data.shippingAddressLine1 } : {}),
@@ -80,12 +93,12 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       ...(data.shippingCountryCode !== undefined ? { shippingCountryCode: data.shippingCountryCode } : {}),
       ...(data.shippingInstructions !== undefined ? { shippingInstructions: data.shippingInstructions } : {})
     };
-    let updated: { id: string; name: string; slug: string; status: StoreStatus; shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null; shippingCity: string | null; shippingRegion: string | null; shippingPostalCode: string | null; shippingCountryCode: string | null; shippingInstructions: string | null };
+    let updated: { id: string; name: string; slug: string; status: StoreStatus; description: string | null; logoUrl: string | null; bannerUrl: string | null; shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null; shippingCity: string | null; shippingRegion: string | null; shippingPostalCode: string | null; shippingCountryCode: string | null; shippingInstructions: string | null };
     try {
       updated = await tx.store.update({
         where: { id: storeId },
         data: updateData,
-        select: { id: true, name: true, slug: true, status: true, shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true, shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true }
+        select: { id: true, name: true, slug: true, status: true, description: true, logoUrl: true, bannerUrl: true, shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true, shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true }
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -96,7 +109,8 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
     const previousShipping = { shippingContactName: current.shippingContactName, shippingPhone: current.shippingPhone, shippingAddressLine1: current.shippingAddressLine1, shippingAddressLine2: current.shippingAddressLine2, shippingCity: current.shippingCity, shippingRegion: current.shippingRegion, shippingPostalCode: current.shippingPostalCode, shippingCountryCode: current.shippingCountryCode, shippingInstructions: current.shippingInstructions };
     const nextShipping = { shippingContactName: updated.shippingContactName, shippingPhone: updated.shippingPhone, shippingAddressLine1: updated.shippingAddressLine1, shippingAddressLine2: updated.shippingAddressLine2, shippingCity: updated.shippingCity, shippingRegion: updated.shippingRegion, shippingPostalCode: updated.shippingPostalCode, shippingCountryCode: updated.shippingCountryCode, shippingInstructions: updated.shippingInstructions };
     const changedShippingFields = Object.keys(previousShipping).filter((key) => previousShipping[key as keyof typeof previousShipping] !== nextShipping[key as keyof typeof nextShipping]);
-    if (updated.name !== current.name || updated.slug !== current.slug || changedShippingFields.length > 0) {
+    const changedBrandFields = (["description", "logoUrl", "bannerUrl"] as const).filter((key) => current[key] !== updated[key]);
+    if (updated.name !== current.name || updated.slug !== current.slug || changedShippingFields.length > 0 || changedBrandFields.length > 0) {
       await tx.auditLog.create({
         data: {
           actorType: AuditActorType.USER,
@@ -107,7 +121,11 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
           scopeType: "STORE",
           scopeId: storeId,
           occurredAt: now,
-          metadata: { previous: { name: current.name, slug: current.slug }, next: { name: updated.name, slug: updated.slug }, changedFields: [...(updated.name !== current.name ? ["name"] : []), ...(updated.slug !== current.slug ? ["slug"] : []), ...changedShippingFields] }
+          metadata: {
+            previous: { name: current.name, slug: current.slug, description: current.description, logoUrl: current.logoUrl, bannerUrl: current.bannerUrl },
+            next: { name: updated.name, slug: updated.slug, description: updated.description, logoUrl: updated.logoUrl, bannerUrl: updated.bannerUrl },
+            changedFields: [...(updated.name !== current.name ? ["name"] : []), ...(updated.slug !== current.slug ? ["slug"] : []), ...changedBrandFields, ...changedShippingFields]
+          }
         }
       });
     }
