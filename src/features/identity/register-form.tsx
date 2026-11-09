@@ -41,10 +41,6 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
   const [error, setError] = useState("");
   const [oauthError, setOauthError] = useState(initialOAuthError);
   const [registrationComplete, setRegistrationComplete] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const [deliveryUnavailable, setDeliveryUnavailable] = useState(false);
-  const [resending, setResending] = useState(false);
-  const [resendNotice, setResendNotice] = useState("");
 
   async function continueWithGoogle() {
     if (!acceptedTerms || !acceptedPrivacy) { setOauthError(t("Please accept both policy documents before continuing.", "اقبل وثيقتي السياسات قبل المتابعة.")); return; }
@@ -79,22 +75,6 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
     }
   }
 
-  async function resendVerificationEmail() {
-    if (!registeredEmail || resending) return;
-    setResending(true); setError(""); setResendNotice("");
-    try {
-      const response = await fetch("/api/auth/verification/resend", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: registeredEmail }), cache: "no-store"
-      });
-      const result = await response.json() as { message?: string; error?: string };
-      if (!response.ok) throw new Error(result.error || t("Unable to request a verification email.", "تعذر طلب رسالة التحقق."));
-      setResendNotice(result.message || t("If the account is eligible, a verification email will be sent.", "إذا كان الحساب مؤهلًا، فستُرسل رسالة تحقق."));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Unable to request a verification email.", "تعذر طلب رسالة التحقق."));
-    } finally { setResending(false); }
-  }
-
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || !registrationAvailable || registrationComplete) return;
@@ -111,9 +91,7 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
       const result = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(result.error || t("Registration could not be completed.", "تعذّر إكمال التسجيل."));
       setPassword("");
-      setRegisteredEmail(email.trim());
       setRegistrationComplete(true);
-      setDeliveryUnavailable(response.status === 202);
       setTurnstileToken("");
       setTurnstileResetVersion((version) => version + 1);
     } catch (cause) {
@@ -149,10 +127,10 @@ export default function RegisterForm({ initialOAuthError = "", turnstileSiteKey,
             <div className="mx-auto w-full max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{t("Mtjr2 account · development", "حساب متجر ٢ · نسخة تطويرية")}</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{t("Create your account", "أنشئ حسابك")}</h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{t("Create an account to explore the marketplace. Verify your email before signing in.", "أنشئ حسابًا لاستكشاف السوق. تحقق من بريدك الإلكتروني قبل تسجيل الدخول.")}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{t("Create an account to explore the marketplace. You can sign in immediately after registration.", "أنشئ حسابًا لاستكشاف السوق. يمكنك تسجيل الدخول فور إنشاء الحساب.")}</p>
           {!registrationAvailable && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{t("Account registration is currently unavailable. Existing customers can still sign in.", "تسجيل الحسابات الجديدة غير متاح حاليًا. يمكن للعملاء الحاليين تسجيل الدخول.")}</p>}
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">{t("Development preview: these policy documents are initial project drafts, not final legal terms. Public production registration remains disabled.", "معاينة تطويرية: وثائق السياسات هذه مسودات أولية للمشروع وليست شروطًا قانونية نهائية. يظل التسجيل العام في الإنتاج معطلًا.")}</p>
-          {registrationComplete && <section role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><p className="font-semibold">{t("Your account has been created.", "تم إنشاء حسابك.")}</p><p className="mt-1">{deliveryUnavailable ? t("Email delivery is temporarily unavailable. Request a new verification email below before signing in.", "إرسال البريد غير متاح مؤقتًا. اطلب رسالة تحقق جديدة أدناه قبل تسجيل الدخول.") : t("Check your inbox and verify your email address before signing in.", "تحقق من صندوق الوارد وأكد بريدك الإلكتروني قبل تسجيل الدخول.")}</p><button type="button" onClick={() => void resendVerificationEmail()} disabled={resending} className="mt-3 rounded-lg bg-[var(--color-forest-900)] px-4 py-2 font-semibold text-white disabled:opacity-50">{resending ? t("Sending…", "جارٍ الإرسال…") : t("Resend verification email", "إعادة إرسال رسالة التحقق")}</button>{resendNotice && <p className="mt-3">{resendNotice}</p>}</section>}
+          {registrationComplete && <section role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><p className="font-semibold">{t("Your account is ready.", "حسابك أصبح جاهزًا.")}</p><p className="mt-1">{t("You do not need to verify your email. Sign in to continue.", "لا تحتاج إلى تأكيد بريدك الإلكتروني. سجّل الدخول للمتابعة.")}</p><Link href="/login" className="mt-3 inline-flex rounded-lg bg-[var(--color-forest-900)] px-4 py-2 font-semibold text-white">{t("Go to sign in", "الانتقال إلى تسجيل الدخول")}</Link></section>}
           {oauthError && <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{localizeOAuthError(oauthError)}</p>}
           {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
           <form onSubmit={submit} className="mt-6 space-y-4">
