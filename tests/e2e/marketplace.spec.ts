@@ -141,7 +141,7 @@ test.describe("seller journey", () => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/seller");
-    await expect(page.getByRole("heading", { name: /Seller dashboard|لوحة تحكم البائع/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Welcome back to your store|أهلاً بعودتك إلى متجرك/i })).toBeVisible();
     await expect(page.getByRole("navigation", { name: /Seller navigation|تنقل البائع/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -151,7 +151,7 @@ test.describe("seller journey", () => {
     await page.screenshot({ path: "test-results/seller-advertising-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/seller");
-    await expect(page.getByRole("heading", { name: /Seller dashboard|لوحة تحكم البائع/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Welcome back to your store|أهلاً بعودتك إلى متجرك/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-mobile.png", fullPage: true });
