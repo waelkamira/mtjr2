@@ -703,6 +703,7 @@ model SellerStaff {
   invitedById String?
   status      SellerStaffStatus @default(INVITED)
   invitedAt   DateTime          @default(now())
+  expiresAt   DateTime?
   acceptedAt  DateTime?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
