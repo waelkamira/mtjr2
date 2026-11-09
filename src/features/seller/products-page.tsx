@@ -444,6 +444,10 @@ export default function SellerProductsPage() {
       setError(translate(locale, "Real-estate listings need a map location and a positive floor area.", "تحتاج الإعلانات العقارية إلى موقع على الخريطة ومساحة موجبة."));
       return;
     }
+    if (!variantPricesValid) {
+      setError(translate(locale, "Enter a valid price for every SKU and enabled market.", "أدخل سعراً صالحاً لكل متغير وسوق مفعّل."));
+      return;
+    }
     setBusy(true); setError(""); setMessage("");
     try {
       const product = await json<{ id: string }>(await fetch("/api/products", {
