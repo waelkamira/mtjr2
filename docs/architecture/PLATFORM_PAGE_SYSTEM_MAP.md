@@ -26,7 +26,7 @@ Use a protected account shell with a persistent account sidebar/menu. Do not mak
 
 ### Seller center
 
-Use a separate protected seller shell, selected store context, and store-scoped navigation. A seller may own multiple stores; every store-specific query and mutation must resolve the active store and permissions on the server. Do not expose seller-only controls on the public store page.
+Use a separate protected seller shell and store-scoped navigation. Each seller account may own exactly one store (`Store.sellerId` is unique); the server resolves ownership or active staff membership and the exact store scope for every query and mutation. Do not expose seller-only controls on the public store page.
 
 ### Platform administration and operations
 
