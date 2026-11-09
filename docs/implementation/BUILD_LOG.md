@@ -3462,3 +3462,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The price matrix is limited to markets currently enabled and active for the store's active country; every active SKU must retain one valid price per such market.
 - Commits: `906bf03`, `62a20b6`, `e75008f`.
 - Source-level lifecycle/market-scope review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Legacy seller profile compatibility
+
+- The seller profile GET response now normalizes optional legacy contact/display fields to empty strings for controlled form inputs. Existing null values no longer produce uncontrolled-input warnings or break the edit form.
+- Commit: `8465153` — `fix(seller): normalize legacy optional profile fields`.
+- Source-level response-shape review only; no tests or builds were run.
