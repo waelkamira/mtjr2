@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { AuthenticationRequiredError, MfaEnrollmentRequiredError, MfaVerificationRequiredError } from "@/server/identity/current-session";
-import { submitSellerApplication } from "@/server/marketplace/seller-application";
+import { SellerApplicationConflictError, submitSellerApplication } from "@/server/marketplace/seller-application";
 
 export const runtime = "nodejs";
 const bodySchema = z.object({
