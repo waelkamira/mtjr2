@@ -3114,3 +3114,4 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 - Added `tests/marketplace/seller-store-settings.test.ts` covering owner update + audit, active URL lock, exact-store permission denial for non-owners, and duplicate-slug rejection.
 - Test source added but not executed in this session; TypeScript/Vitest results remain unknown.
+- Follow-up E2E coverage also opens and closes the embedded store profile editor without mutating seeded data (`5ea32e292408824d678e4b91e416c7f7ed4a21e4`). The test remains unexecuted in this session.
