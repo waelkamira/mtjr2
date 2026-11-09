@@ -4249,3 +4249,5 @@ The platform account policy is now explicit: email verification is not required 
 - Replaced external Nominatim map search with search over imported OpenSyria localities, subdistricts, districts and governorates. Exact street-level placement remains controlled by the user's map pin.
 - Removed the legacy neighbourhood API branch and Akaar geography import command from package scripts and browser workflow.
 - Began a page-by-page seller workspace review; no tests, builds, typechecks, or browser checks were run.
+
+- Added a separate seller-entered exact street-address field to product location data; it is persisted independently from OpenSyria's official locality hierarchy and from the optional neighbourhood label.
