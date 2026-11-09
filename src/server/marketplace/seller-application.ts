@@ -38,6 +38,13 @@ const storeSchema = z.object({
 
 export type SellerApplicationInput = z.input<typeof sellerApplicationSchema>;
 
+export class SellerApplicationConflictError extends Error {
+  constructor() {
+    super("An active or suspended seller application already exists for this account.");
+    this.name = "SellerApplicationConflictError";
+  }
+}
+
 function isStoreSlugConflict(error: unknown) {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false;
   const target = error.meta?.target;
@@ -86,7 +93,7 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
         if (existing.status === SellerStatus.PENDING) {
           return { sellerId: existing.id, status: existing.status, alreadySubmitted: true };
         }
-        if (existing.status !== SellerStatus.REJECTED) throw new Error("An active or suspended seller application already exists for this account.");
+        if (existing.status !== SellerStatus.REJECTED) throw new SellerApplicationConflictError();
         const updated = await tx.seller.updateMany({
           where: { id: existing.id, ownerId: actor.userId, status: SellerStatus.REJECTED },
           data: {
