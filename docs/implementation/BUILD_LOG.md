@@ -3490,3 +3490,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added CSV quoting and formula-injection guards for untrusted product/order text, and UTF-8 BOM/CRLF output for spreadsheet compatibility.
 - Commits: `7c88b69` (export action), `95e28cf` (encoding and formula-guard correction).
 - Source review only; no tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller commission history pagination
+
+- Added stable cursor-based pagination to the seller commission API, preserving descending timestamp/ID ordering and store-scoped authorization.
+- The seller commission page can load older rows in 100-record pages without replacing the all-time per-currency aggregates; CSV export includes the detail rows currently loaded and the all-time aggregates.
+- The table now reports the number of rows actually loaded rather than implying that the first 100 rows are the complete history.
+- Commits: `fffdfe5` (service cursor), `2e39f91` (API query), `c62294a` (load older UI), `90d4025` (loaded-row label).
+- Source-level query/UI contract review only. No tests, build, browser, database, CI or deployment commands were run.
