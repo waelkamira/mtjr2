@@ -30,5 +30,14 @@ describe("seller advertising campaigns",()=>{
   expect(m.campaignCreate).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({targetCategoryId:"category-1",targetBrandId:"brand-1"})}));
  });
  it("submits only a draft with conditional state update and audit",async()=>{await submitSellerAdCampaign("campaign-1");expect(m.campaignUpdate).toHaveBeenCalledWith({where:{id:"campaign-1",status:AdCampaignStatus.DRAFT},data:expect.objectContaining({status:AdCampaignStatus.SUBMITTED})});expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({action:"advertising.campaign.submitted"})}));});
+ it("allows an approved campaign to be activated before its future start time",async()=>{
+  const now=new Date("2026-11-08T12:00:00.000Z");
+  m.campaignFind.mockResolvedValueOnce({id:"campaign-1",storeId:"store-1",status:AdCampaignStatus.APPROVED,startsAt:new Date("2026-12-01T00:00:00.000Z"),endsAt:new Date("2026-12-31T00:00:00.000Z")});
+  m.campaignFind.mockResolvedValueOnce({budgetMinor:BigInt(10000),dailyBudgetMinor:BigInt(2000),cpcBidMinor:BigInt(100),spentMinor:BigInt(0),marketId:"market-1",currencyCode:"EUR"});
+  m.campaignFindOrThrow.mockResolvedValue({...campaign,status:AdCampaignStatus.ACTIVE});
+  const result=await changeSellerAdCampaignStatus("campaign-1","ACTIVATE",now);
+  expect(result.status).toBe(AdCampaignStatus.ACTIVE);
+  expect(m.campaignUpdate).toHaveBeenCalledWith({where:{id:"campaign-1",status:AdCampaignStatus.APPROVED},data:{status:AdCampaignStatus.ACTIVE}});
+ });
  it("requires moderation permission and a rejection reason",async()=>{await expect(moderateAdCampaign("campaign-1","REJECT",undefined)).rejects.toThrow(/reason/i);expect(m.permission).toHaveBeenCalledWith(expect.objectContaining({permissionKey:"ads:moderate"}));expect(m.campaignUpdate).not.toHaveBeenCalled();});
 });
