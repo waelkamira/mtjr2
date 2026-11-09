@@ -220,8 +220,6 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   function chooseLocality(id: string) {
     const item = localities.find((entry) => entry.id === id);
     const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
-    
-    
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
     onChange({
       city: item ? (item.nameAr || item.nameEn) : undefined,
@@ -247,7 +245,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       if (!response.ok) throw new Error(payload.error ?? "Map search failed.");
       const results = Array.isArray(payload.items) ? payload.items as MapSearchResult[] : [];
       setMapSearchResults(results);
-      if (!results.length) setMapSearchError(translate(locale, "No matching places found. Try a nearby landmark or a more specific address.", "لم نعثر على موقع مطابق. جرّب معلماً قريباً أو عنواناً أكثر تحديداً."));
+      if (!results.length) setMapSearchError(translate(locale, "No matching OpenSyria places found. Try another city, town or village name.", "لم نعثر على موقع مطابق في OpenSyria. جرّب اسم مدينة أو بلدة أو قرية أخرى."));
     } catch {
       setMapSearchError(translate(locale, "Could not search the map right now. Please try again.", "تعذّر البحث على الخريطة حالياً. حاول مرة أخرى."));
       setMapSearchResults([]);
@@ -286,8 +284,6 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }
 
   function updateCoordinates(coords: { latitude: number; longitude: number }) {
-    
-    
     onChange({ ...value, ...coords });
     setFocus({ ...coords, zoom: 15 });
   }
@@ -297,7 +293,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   const kindLabel = (kind?: string | null) => {
     if (!kind) return "";
     if (!ar) return kind;
-    return ({ city: "مدينة", town: "بلدة", village: "قرية", locality: "تجمع سكاني" } as Record<string, string>)[kind] ?? "موقع";
+    return ({ city: "مدينة", town: "بلدة", village: "قرية", locality: "تجمع سكاني", district: "منطقة", subdistrict: "ناحية", governorate: "محافظة" } as Record<string, string>)[kind] ?? "موقع";
   };
 
   return (
@@ -355,7 +351,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
           {mapSearchResults.map((result) => <li key={result.id}>
             <button type="button" onClick={() => selectMapSearchResult(result)} className="w-full px-3 py-3 text-start text-sm transition hover:bg-[var(--surface-muted)] focus:bg-[var(--surface-muted)]">
               <span className="block font-medium text-[var(--color-ink-900)]">{result.label}</span>
-              {result.type && <span className="mt-1 block text-xs text-[var(--muted)]">{result.type}</span>}
+              {result.type && <span className="mt-1 block text-xs text-[var(--muted)]">{kindLabel(result.type)}</span>}
             </button>
           </li>)}
         </ul>}
