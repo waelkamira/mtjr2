@@ -102,7 +102,19 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 ## Current observed baseline
 
 - `Payment` and `PaymentWebhookEvent` exist.
-- Stripe adapter exists and is currently registered from server environment variables.
+- Stripe and PayPal adapters are compiled and registered from server environment variables. PayPal uses server-side Orders v2 create/capture and PayPal-verified capture webhooks.
 - `/admin/payments` is a transaction-inspection page, not a provider-management console.
 - `GET /api/payments/providers` exposes currently registered provider keys.
-- No persistent provider configuration model or provider-management API was found during this review.
+- No persistent provider configuration model or provider-management API was found during this review. Provider activation is still environment-driven; the Super Admin control center remains unimplemented.
+
+
+## PayPal adapter implementation update — 2026-11-10
+
+- Added the compiled `paypal` adapter at `src/server/payments/providers/paypal.ts` using PayPal REST Orders v2.
+- The server creates the order from the persisted Matjar payment amount/currency, redirects the buyer to the validated PayPal approval URL, and captures the approved order server-side through `/api/payments/paypal/return`.
+- The return handler records success only after the server receives a capture and the shared payment service validates the exact amount and currency against the stored payment.
+- The generic payment webhook route now supports PayPal through the same adapter contract. The adapter verifies the webhook signature with PayPal's `verify-webhook-signature` endpoint and the configured webhook ID before normalizing capture completed/pending/denied events.
+- Required server-only settings: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, and `PAYPAL_MODE=sandbox|live`. The adapter is registered only when all three credentials/identifiers are present.
+- Configure the PayPal webhook endpoint as `/api/webhooks/payments/paypal` and subscribe to `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.PENDING`, and `PAYMENT.CAPTURE.DENIED`.
+- This is an environment-configured adapter, not the Super Admin provider control center. No persistent provider config model, credential encryption UI, enable/disable/archive controls, or market-specific provider policy was added.
+- Sandbox credentials and webhook setup are still required before checkout can expose PayPal. No live transaction or credential verification was performed.
