@@ -3373,3 +3373,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level money-path review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller dashboard store-switch isolation for shipping edits
+
+**Implemented on `main`**
+- Switching the active seller store now clears the previous store's shipping-rate edit session, selected market/currency, price, region and delivery-window draft values.
+- Prevents a shipping draft from the previous store being accidentally submitted against the newly selected store.
+
+**Commit**
+- `1404ebe` — `fix(seller): clear store-scoped shipping editor on store switch`.
+
+**Verification**
+- Source-level state-scope review only. No tests, build, browser, database, CI or deployment commands were run.
