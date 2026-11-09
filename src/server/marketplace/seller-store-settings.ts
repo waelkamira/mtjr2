@@ -3,7 +3,7 @@ import "server-only";
 import { AuditActorType, Prisma, StoreStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { requireCurrentSession, AuthenticationRequiredError } from "@/server/identity/current-session";
+import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
 import { userHasScopedPermission } from "@/server/identity/permission-repository";
 
