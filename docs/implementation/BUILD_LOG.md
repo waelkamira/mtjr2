@@ -4335,3 +4335,11 @@ The platform account policy is now explicit: email verification is not required 
 - Documented the review in `docs/architecture/PAYPAL_SOURCE_REVIEW.md`. Matjar uses its own server-authoritative Orders v2 + webhook flow; cartoon's $1 monthly / $10 yearly subscription pricing was not imported.
 
 - Security mitigation: removed the tracked `.env` file from `waelkamira/cartoon` current `main` (commit `7ab14d65d18a0be1ed8da4db131fa785cc569a2c`). The file remains in Git history; owner-side credential revocation/rotation is still mandatory.
+
+
+## 2026-11-10 — Retry-safe payment webhook verification
+
+- Added typed provider configuration, provider unavailability and signature-verification errors.
+- Webhook processing now separates malformed/invalid-signature payloads (4xx) from database, encryption-key and PayPal API outages (503 with Retry-After), allowing providers to retry valid events after transient failures.
+- Preserved legacy PayPal sandbox/live selection from `PAYPAL_MODE` when a historical payment has no encrypted database snapshot; database-managed payments continue to use their stored TEST/LIVE environment.
+- No tests/build/typecheck were run.
