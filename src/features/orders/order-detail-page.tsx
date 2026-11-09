@@ -97,7 +97,7 @@ export default function OrderDetailPage({ orderId, returnedFromPayment }: { orde
       })
       .catch(() => { if (active) setPaymentProviders([]); });
     return () => { active = false; };
-  }, [order?.currencyCode, order?.address?.countryCode]);
+  }, [orderId, order?.currencyCode, order?.address?.countryCode]);
 
   async function startPayment(provider: PaymentProvider) {
     if (!order) return;
