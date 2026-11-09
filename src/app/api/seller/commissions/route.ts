@@ -9,13 +9,13 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const querySchema = z.object({ storeId: z.string().trim().min(1).max(128) }).strict();
+const querySchema = z.object({ storeId: z.string().trim().min(1).max(128), cursor: z.string().trim().min(1).max(128).optional() }).strict();
 
 export async function GET(request: Request): Promise<Response> {
   const parsed = querySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams.entries()));
   if (!parsed.success) return Response.json({ error: "A valid store ID is required." }, { status: 400 });
   try {
-    return Response.json(await getSellerCommissionHistory(parsed.data.storeId), {
+    return Response.json(await getSellerCommissionHistory(parsed.data.storeId, parsed.data.cursor), {
       headers: { "Cache-Control": "private, no-store" }
     });
   } catch (error) {
