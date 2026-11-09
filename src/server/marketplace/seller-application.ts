@@ -293,6 +293,7 @@ export async function getSellerWorkspace(now = new Date()) {
     select: {
       id: true, storeNumber: true, name: true, slug: true, status: true,
       description: true, logoUrl: true, bannerUrl: true,
+      shippingPolicy: true, returnsPolicy: true, privacyPolicy: true, termsOfSale: true,
       shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true,
       shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true,
       seller: { select: { ownerId: true } },
