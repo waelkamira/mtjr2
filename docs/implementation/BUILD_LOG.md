@@ -3235,3 +3235,20 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level state/dependency review only; browser verification remains pending.
+
+
+## 2026-11-09 — Seller returns and order-tracking workflow cleanup
+
+**Implemented on `main`**
+- Seller returns now use one shared loader for initial load and post-decision refresh instead of maintaining duplicate fetch implementations.
+- The returns page validates each store's selected receiving warehouse against the currently active warehouse list; a disabled/deleted warehouse is replaced by an active one, or cleared if none remain.
+- Late returns responses are ignored after the page effect is disposed, and the page clears stale return rows before a fresh load.
+- Seller order tracking events now refresh the order list in place rather than forcing a full browser reload.
+- Shipment drafts are cleared after successful dispatch, and order/search changes clear stale rows and shipment drafts while the new query loads.
+
+**Commits**
+- `b9c97d3cb3b5594a0177c1c88972eea36ad08774` — `Unify seller returns loading and validate warehouse selection`.
+- `b7854315a22e9ca622d09bde8e4ba13b4c6f39d6` — `Refresh seller order tracking without full page reload`.
+
+**Verification**
+- Source-level lifecycle and workflow review only. No browser or application-build pass is claimed.
