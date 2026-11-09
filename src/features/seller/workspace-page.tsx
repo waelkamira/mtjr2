@@ -420,6 +420,22 @@ export default function SellerWorkspacePage() {
     } finally { setBusy(false); }
   }
 
+  async function discardStoreProfileEdits() {
+    if (selectedStore && storeStagedDeleteTokens.length) {
+      await Promise.allSettled(storeStagedDeleteTokens.map((deleteToken) =>
+        fetch("/api/seller/products/media", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storeId: selectedStore.id, deleteToken })
+        })
+      ));
+    }
+    setStoreStagedDeleteTokens([]);
+    setStoreLogoDeleteToken("");
+    setStoreBannerDeleteToken("");
+    setEditingStoreProfile(false);
+  }
+
   async function uploadStoreImage(event: ChangeEvent<HTMLInputElement>, kind: "logo" | "banner") {
     const file = event.target.files?.[0];
     if (!file || !selectedStore) return;
@@ -864,11 +880,11 @@ export default function SellerWorkspacePage() {
                         {editingStoreLogoUrl.trim() && <div className="flex items-center gap-3 rounded-xl border border-white bg-white/60 p-3"><img src={editingStoreLogoUrl} alt={translate(locale, "Store logo preview", "معاينة شعار المتجر")} referrerPolicy="no-referrer" className="h-16 w-16 rounded-xl object-cover" /><span className="text-xs font-semibold text-[#526078]">{translate(locale, "Logo preview", "معاينة الشعار")}</span></div>}
                       </div>}
                       <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
-                        <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store logo", "رفع شعار المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "logo")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#ded8f5] file:px-3 file:py-2 file:font-bold file:text-[#494467]" />{storeMediaUploading === "logo" && <span className="text-[#817aa4]">{translate(locale, "Uploading logo…", "جارٍ رفع الشعار…")}</span>}</label>
-                        <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store banner", "رفع غلاف المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "banner")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#cfe8df] file:px-3 file:py-2 file:font-bold file:text-[#365b50]" />{storeMediaUploading === "banner" && <span className="text-[#5d9d8c]">{translate(locale, "Uploading banner…", "جارٍ رفع الغلاف…")}</span>}</label>
+                        <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store logo", "رفع شعار المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "logo")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#ded8f5] file:px-3 file:py-2 file:font-bold file:text-[#494467]" />{storeMediaUploading === "logo" && <span className="text-[#817aa4]">{translate(locale, "Uploading logo…", "جارٍ رفع الشعار…")}</span>}<button type="button" onClick={() => { setEditingStoreLogoUrl(""); setEditingStoreLogoStorageKey(""); setStoreLogoDeleteToken(""); }} className="justify-self-start text-[11px] font-bold text-[#89546a] underline">{translate(locale, "Remove logo from store profile", "إزالة الشعار من ملف المتجر")}</button></label>
+                        <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store banner", "رفع غلاف المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "banner")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#cfe8df] file:px-3 file:py-2 file:font-bold file:text-[#365b50]" />{storeMediaUploading === "banner" && <span className="text-[#5d9d8c]">{translate(locale, "Uploading banner…", "جارٍ رفع الغلاف…")}</span>}<button type="button" onClick={() => { setEditingStoreBannerUrl(""); setEditingStoreBannerStorageKey(""); setStoreBannerDeleteToken(""); }} className="justify-self-start text-[11px] font-bold text-[#89546a] underline">{translate(locale, "Remove banner from store profile", "إزالة الغلاف من ملف المتجر")}</button></label>
                       </div>
                       <p className="text-[10px] leading-5 text-[#8790a5] sm:col-span-2">{translate(locale, "Images use the seller-scoped media uploader and its configured provider rotation. Uploading only stages the URL in this editor; save the store profile to publish it.", "تُرفع الصور عبر خدمة الوسائط المقيّدة بمتجرك وبآلية التناوب بين مزودي الرفع المضبوطين. الرفع يضع الرابط في المحرر فقط؛ احفظ ملف المتجر لاعتماده.")}</p>
-                      <div className="flex flex-wrap gap-2 sm:col-span-2"><button disabled={busy || Boolean(storeMediaUploading) || !editingStoreName.trim() || !editingStoreSlug.trim()} className="rounded-xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_6px_14px_rgba(39,104,112,.18)] disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save store profile", "حفظ ملف المتجر")}</button><button type="button" disabled={busy} onClick={() => setEditingStoreProfile(false)} className="rounded-xl border border-white bg-white/70 px-4 py-2.5 text-xs font-semibold text-[#526078]">{translate(locale, "Cancel", "إلغاء")}</button></div>
+                      <div className="flex flex-wrap gap-2 sm:col-span-2"><button disabled={busy || Boolean(storeMediaUploading) || !editingStoreName.trim() || !editingStoreSlug.trim()} className="rounded-xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_6px_14px_rgba(39,104,112,.18)] disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save store profile", "حفظ ملف المتجر")}</button><button type="button" disabled={busy} onClick={() => { void discardStoreProfileEdits(); }} className="rounded-xl border border-white bg-white/70 px-4 py-2.5 text-xs font-semibold text-[#526078]">{translate(locale, "Cancel", "إلغاء")}</button></div>
                     </form>}
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       {selectedStore.warehouses.map((warehouse) => <div key={warehouse.id} className="rounded-xl bg-[var(--color-ivory-100)] p-4"><p className="font-medium">{warehouse.name}</p><p className="mt-1 text-xs text-[var(--muted)]">{warehouse.code} · {warehouse._count.inventories} {translate(locale, "inventory records", "سجل مخزون")}</p></div>)}
