@@ -130,3 +130,13 @@
 - Multi-store refunds are attributed by item to the correct store rather than assigning the full order refund to each seller.
 - Per-currency all-time refund totals are database-aggregated; the visible detail list is limited to the latest 100 completed allocations. CSV export includes the aggregates and visible detail rows.
 - These refund amounts are shown separately and are not currently netted against commissions or represented as seller payout balances. Seller accounting ledger, holds, settlement and withdrawals remain unimplemented.
+
+
+## Seller financial overview page (implemented in source 2026-11-09)
+
+- Added `/seller/finance` as a read-only, per-store financial overview using the existing `GET /api/seller/stores` and `GET /api/seller/commissions` contracts.
+- Shows commission-covered sales, recorded platform commissions, and completed refunds separately, grouped by currency with BigInt-safe formatting.
+- Latest commission activity links through to the full statement. The UI explicitly states that these figures are not a payable balance and does not calculate an available-to-withdraw amount.
+- No new Prisma model or migration was introduced. The accounting ledger, holds, settlement/reconciliation, payout methods and withdrawal workflow remain unimplemented.
+- Added the route to seller navigation, updated the seller route registry and page inventory, and refreshed the seller shell to the pastel clay palette.
+- Runtime, build and browser verification are intentionally deferred until the seller portal build is complete, per the current work instruction.
