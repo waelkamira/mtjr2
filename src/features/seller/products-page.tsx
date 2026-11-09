@@ -699,7 +699,7 @@ export default function SellerProductsPage() {
               if (image.deleteToken) void deleteTemporaryProductImage(image.deleteToken);
             });
             setStoreId(nextId);
-            try { localStorage.setItem("mtjr.activeStoreId", nextId); } catch { /* Storage can be unavailable in restricted browsers. */ }
+            try { localStorage.setItem("mtjr.activeStoreId", nextId); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Storage can be unavailable in restricted browsers. */ }
             setProducts([]);
             setUploadedImages([]);
             const nextStore = stores.find((store) => store.id === nextId);
