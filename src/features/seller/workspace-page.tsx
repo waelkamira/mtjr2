@@ -17,6 +17,8 @@ import {
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string; minorUnit: number; symbol: string | null } };
 type Store = {
   id: string; storeNumber: string; name: string; slug: string; status: string; isOwner: boolean;
+  shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null;
+  shippingCity: string | null; shippingRegion: string | null; shippingPostalCode: string | null; shippingCountryCode: string | null; shippingInstructions: string | null;
   markets: Array<{ market: { id: string; code: string; name: string; defaultCurrencyCode: string } }>;
   warehouses: Array<{ id: string; code: string; name: string; _count: { inventories: number } }>;
 };

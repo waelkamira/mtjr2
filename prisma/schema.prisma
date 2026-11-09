@@ -625,6 +625,15 @@ model Store {
   slug                       String                      @unique @db.VarChar(160)
   name                       String
   status                     StoreStatus                 @default(DRAFT)
+  shippingContactName        String?                     @db.VarChar(120)
+  shippingPhone              String?                     @db.VarChar(25)
+  shippingAddressLine1       String?                     @db.VarChar(240)
+  shippingAddressLine2       String?                     @db.VarChar(240)
+  shippingCity               String?                     @db.VarChar(120)
+  shippingRegion             String?                     @db.VarChar(120)
+  shippingPostalCode         String?                     @db.VarChar(40)
+  shippingCountryCode        String?                     @db.VarChar(2)
+  shippingInstructions       String?                     @db.VarChar(1000)
   createdAt                  DateTime                    @default(now())
   updatedAt                  DateTime                    @updatedAt
   seller                     Seller                      @relation(fields: [sellerId], references: [id], onDelete: Restrict)

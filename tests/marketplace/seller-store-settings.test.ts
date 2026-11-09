@@ -30,6 +30,8 @@ import {
 
 const draftStore = {
   id: "store-1", sellerId: "seller-1", name: "Original Shop", slug: "original-shop",
+  shippingContactName: null, shippingPhone: null, shippingAddressLine1: null, shippingAddressLine2: null,
+  shippingCity: null, shippingRegion: null, shippingPostalCode: null, shippingCountryCode: null, shippingInstructions: null,
   status: StoreStatus.DRAFT, seller: { ownerId: "user-1", status: "ACTIVE" }
 };
 
@@ -59,6 +61,15 @@ describe("seller store profile settings", () => {
     expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ action: "store.settings_updated", resourceId: "store-1" })
     }));
+  });
+
+  it("saves the seller dispatch address and audits the change", async () => {
+    storeFindUnique.mockResolvedValueOnce(draftStore).mockResolvedValueOnce({ id: "store-1" });
+    storeUpdate.mockResolvedValueOnce({ id: "store-1", name: "Original Shop", slug: "original-shop", status: StoreStatus.DRAFT, shippingContactName: "Sam Seller", shippingPhone: "+33123456789", shippingAddressLine1: "12 Market Street", shippingAddressLine2: null, shippingCity: "Strasbourg", shippingRegion: "Grand Est", shippingPostalCode: "67000", shippingCountryCode: "FR", shippingInstructions: "Ring the warehouse bell." });
+    const result = await updateSellerStoreSettings("store-1", { name: "Original Shop", slug: "original-shop", shippingContactName: "Sam Seller", shippingPhone: "+33123456789", shippingAddressLine1: "12 Market Street", shippingAddressLine2: null, shippingCity: "Strasbourg", shippingRegion: "Grand Est", shippingPostalCode: "67000", shippingCountryCode: "fr", shippingInstructions: "Ring the warehouse bell." });
+    expect(result).toMatchObject({ shippingCity: "Strasbourg", shippingCountryCode: "FR" });
+    expect(storeUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ shippingCity: "Strasbourg", shippingCountryCode: "FR" }) }));
+    expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "store.settings_updated" }) }));
   });
 
   it("does not allow changing an active store URL", async () => {
