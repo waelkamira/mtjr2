@@ -5,7 +5,7 @@
 ## 1. الغرض والحدود
 - **الغرض:** Invite staff and grant least-privilege store-scoped access.
 - **المتطلبات الأساسية:** owner protection, scoped permissions, invite expiry, revocation, session invalidation and audit log.
-- **الحالة السابقة الموثقة:** **Schema-only / needs verification.** Role administration exists, but store-scoped staff enforcement is not demonstrated.
+- **الحالة الحالية على main (2026-11-09):** صفحة `/seller/staff` وخدمات الدعوة والقبول والإلغاء متصلة بـ Prisma. المالك وحده يدير الفريق حالياً؛ العضو المدعو يقبل دعوته بنفسه ثم يحصل على `STORE_MANAGER` ضمن المتجر. مدة الدعوة سبعة أيام مع تجديد وإلغاء وتدقيق. الأدوار الدقيقة وتفويض إدارة الفريق وسجل جلسات الوصول ما زالت غير مكتملة.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
@@ -16,7 +16,7 @@
 
 | Route الهدف | ملف الصفحة في المصدر عند baseline |
 |---|---|
-| `/seller/team` | غير موجود بالمسار المتوقع؛ افحص route registry لاحتمال مسار بديل |
+| `/seller/staff` | `src/app/seller/staff/page.tsx` → `src/features/seller/staff-page.tsx` |
 > فحص الوجود من شجرة commit `a509196e643fc82937eed856b522c0cc5e4dbc2f` فقط. لا يثبت أن الصفحة تعرض أو تعمل. لا تنشئ مساراً بديلاً قبل مراجعة `PAGE_ROUTE_REGISTRY.md`.
 
 ## 3. آلية عمل النظام
@@ -42,7 +42,7 @@
 | إعادة المحاولة | retry | same idempotency key | actor/resource/intent match | idempotent command | unique key | لا يتكرر الأثر |
 
 ## 5. واجهات API والخدمات
-**واجهات API المستهدفة:** `/api/seller/staff`, `/api/seller/staff/invitations`, `/api/seller/staff/[id]/permissions`.
+**واجهات API الحالية:** `/api/stores/[storeId]/staff`, `/api/stores/staff-invitations`, `/api/stores/staff-invitations/[invitationId]/accept`, `/api/stores/staff-memberships/[membershipId]/revoke`.
 
 | API | route.ts في baseline |
 |---|---|
@@ -116,3 +116,14 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## 12. دورة الدعوة الحالية على main
+- إنشاء الدعوة: مالك المتجر النشط فقط؛ البريد يطابق حساباً نشطاً موجوداً. تستخدم الخدمة upsert على `(storeId,userId)` وتعيد الحالة إلى `INVITED` مع موعد انتهاء بعد سبعة أيام، وتسجل AuditLog.
+- صندوق المدعو يعرض الدعوات غير المنتهية الموجهة إلى المستخدم الحالي فقط. الدعوة المنتهية لا تظهر فيه.
+- القبول يتطلب أن يكون المستخدم الحالي هو المستلم، وأن يكون المتجر تابعاً لبائع نشط، وأن تكون الدعوة `INVITED` وغير منتهية. التحديث الشرطي داخل transaction يسبق منح `STORE_MANAGER` scoped للمتجر، ثم يسجل audit.
+- التجديد يعيد دعوة البريد نفسه ويحدّث سجل SellerStaff نفسه بدلاً من إنشاء عضوية مكررة.
+- الإلغاء يزيل صلاحية `STORE_MANAGER` المقيدة بهذا المتجر ويسجل العملية في AuditLog.
+- migration `20261109180000_seller_staff_invitation_expiry` أضافت `expiresAt` وملأت الدعوات المعلقة الحالية بتاريخ انتهاء محسوب من `invitedAt`.
+- المتبقي: أدوار أقل صلاحية من `STORE_MANAGER`، إدارة مفوضة، إبطال/إعادة تقييم الجلسات فور الإلغاء، وسجل وصول قابل للعرض. لا نمنح أدواراً جزئية غير معرفة في مخطط الصلاحيات.
+- لم تُشغّل اختبارات أو builds أو browser runs في جولة البناء هذه.
