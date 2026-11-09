@@ -255,6 +255,7 @@ export default function SellerProductsPage() {
     setProducts([]);
     setEditingId("");
     setEditMedia([]);
+    setEditVariantRows([]);
     setCategoryAttributes([]);
     setAttributeValues({});
     uploadedImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
@@ -628,6 +629,7 @@ export default function SellerProductsPage() {
         })
       }));
       setEditingId("");
+      setEditVariantRows([]);
       setMessage(translate(locale, "Draft product updated and returned to pending review.", "تم تحديث مسودة المنتج وإعادتها إلى قائمة المراجعة."));
       toast.success(translate(locale, "Product updated", "تم تحديث المنتج"));
       await loadProducts(storeId, search);
@@ -927,7 +929,7 @@ export default function SellerProductsPage() {
                 </article>)}
               </div> : <p className="rounded-lg bg-[var(--surface-soft)] p-4 text-xs text-[var(--muted)]">{translate(locale, "No images yet. Add at least one image to make the product easier to recognize.", "لا توجد صور بعد. أضف صورة واحدة على الأقل لتسهيل التعرف على المنتج.")}</p>}
             </section>
-            <div className="flex gap-2"><button disabled={busy || editMediaUploading} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" disabled={busy || editMediaUploading} onClick={() => { editMedia.forEach((item) => { if (item.deleteToken) void deleteTemporaryProductImage(item.deleteToken); }); setEditingId(""); setEditMedia([]); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
+            <div className="flex gap-2"><button disabled={busy || editMediaUploading || !editVariantPricesValid} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white">{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" disabled={busy || editMediaUploading} onClick={() => { editMedia.forEach((item) => { if (item.deleteToken) void deleteTemporaryProductImage(item.deleteToken); }); setEditingId(""); setEditMedia([]); setEditVariantRows([]); }} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs">{translate(locale, "Cancel", "إلغاء")}</button></div>
           </form>}
         </section>
       </div>}
