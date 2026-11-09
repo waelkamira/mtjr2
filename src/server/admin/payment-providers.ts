@@ -6,6 +6,8 @@ import { z } from "zod";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { requirePlatformManagement } from "@/server/identity/permission-guard";
+import { userHasPermission } from "@/server/identity/permission-repository";
+import { PermissionDeniedError } from "@/server/identity/access-errors";
 
 const providerKeySchema = z.enum(["stripe", "paypal"]);
 const environmentSchema = z.nativeEnum(PaymentProviderEnvironment);
@@ -34,6 +36,14 @@ const updateSchema = z.object({
 }).strict();
 
 type ProviderCredentials = Record<string, string>;
+
+async function requireProviderManagement() {
+  const actor = await requirePlatformManagement();
+  if (!(await userHasPermission(actor.userId, { permissionKey: "payment.providers.manage" }))) {
+    throw new PermissionDeniedError();
+  }
+  return actor;
+}
 
 function encryptionKey() {
   const value = env.PAYMENT_PROVIDER_ENCRYPTION_KEY;
@@ -109,7 +119,7 @@ function publicConfig(config: {
 }
 
 export async function listPaymentProviderConfigs() {
-  await requirePlatformManagement();
+  await requireProviderManagement();
   const items = await prisma.paymentProviderConfig.findMany({
     orderBy: [{ sortOrder: "asc" }, { providerKey: "asc" }, { environment: "asc" }]
   });
@@ -117,7 +127,7 @@ export async function listPaymentProviderConfigs() {
 }
 
 export async function createPaymentProviderConfig(input: unknown) {
-  const actor = await requirePlatformManagement();
+  const actor = await requireProviderManagement();
   const parsed = createSchema.parse(input);
   validateCredentials(parsed.providerKey, parsed.credentials);
   const created = await prisma.paymentProviderConfig.create({
@@ -147,7 +157,7 @@ export async function createPaymentProviderConfig(input: unknown) {
 }
 
 export async function updatePaymentProviderConfig(id: string, input: unknown) {
-  const actor = await requirePlatformManagement();
+  const actor = await requireProviderManagement();
   const configId = z.string().trim().min(1).max(128).parse(id);
   const parsed = updateSchema.parse(input);
   const existing = await prisma.paymentProviderConfig.findUnique({ where: { id: configId } });
@@ -224,7 +234,7 @@ async function verifyPayPal(credentials: ProviderCredentials, environment: Payme
 }
 
 export async function verifyPaymentProviderConfig(id: string) {
-  const actor = await requirePlatformManagement();
+  const actor = await requireProviderManagement();
   const configId = z.string().trim().min(1).max(128).parse(id);
   const config = await prisma.paymentProviderConfig.findUnique({ where: { id: configId } });
   if (!config || !config.encryptedCredentials || config.status === PaymentProviderConfigStatus.ARCHIVED) {
@@ -257,7 +267,7 @@ export async function verifyPaymentProviderConfig(id: string) {
 }
 
 export async function setPaymentProviderConfigStatus(id: string, enabled: boolean) {
-  const actor = await requirePlatformManagement();
+  const actor = await requireProviderManagement();
   const configId = z.string().trim().min(1).max(128).parse(id);
   const config = await prisma.paymentProviderConfig.findUnique({ where: { id: configId } });
   if (!config || config.status === PaymentProviderConfigStatus.ARCHIVED) throw new Error("Payment provider configuration was not found.");
@@ -282,7 +292,7 @@ export async function setPaymentProviderConfigStatus(id: string, enabled: boolea
 }
 
 export async function archivePaymentProviderConfig(id: string) {
-  const actor = await requirePlatformManagement();
+  const actor = await requireProviderManagement();
   const configId = z.string().trim().min(1).max(128).parse(id);
   const config = await prisma.paymentProviderConfig.findUnique({ where: { id: configId } });
   if (!config || config.status === PaymentProviderConfigStatus.ARCHIVED) throw new Error("Payment provider configuration was not found.");
