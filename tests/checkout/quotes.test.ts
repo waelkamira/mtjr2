@@ -69,7 +69,7 @@ function cartSnapshot(quantity = 2) {
           store: { name: "Store", status: "ACTIVE", seller: { status: "ACTIVE" }, markets: [{ marketId: "market-1" }] }
         },
         prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: BigInt(1200) }],
-        inventories: [{ id: "inventory-1", quantityOnHand: 10, quantityReserved: 0, warehouse: { id: "warehouse-1", storeId: "store-1" } }]
+        inventories: [{ id: "inventory-1", quantityOnHand: 10, quantityReserved: 0, quantityQuarantined: 0, warehouse: { id: "warehouse-1", storeId: "store-1" } }]
       }
     }]
   };
