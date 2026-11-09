@@ -4333,3 +4333,5 @@ The platform account policy is now explicit: email verification is not required 
 - Reviewed the legacy flow and rejected copying its client-authoritative subscription activation: the browser captures payment and writes entitlement fields through an unauthenticated email-based user PUT endpoint. The `cooking-new` copy's user PUT handler ignores subscription fields entirely.
 - Found a tracked `.env` file containing PayPal credentials in `cartoon`. No secret values were copied or used. The exposed PayPal REST app secret must be revoked/rotated by the owner, and the tracked file must be removed from the repository/history.
 - Documented the review in `docs/architecture/PAYPAL_SOURCE_REVIEW.md`. Matjar uses its own server-authoritative Orders v2 + webhook flow; cartoon's $1 monthly / $10 yearly subscription pricing was not imported.
+
+- Security mitigation: removed the tracked `.env` file from `waelkamira/cartoon` current `main` (commit `7ab14d65d18a0be1ed8da4db131fa785cc569a2c`). The file remains in Git history; owner-side credential revocation/rotation is still mandatory.
