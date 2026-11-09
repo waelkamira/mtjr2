@@ -4118,3 +4118,15 @@ Final Git tree comparison after the 18 review batches:
 - Selectively retained missing user changes on main: 20-store/200-product demo catalog, per-card admin dashboard charts, persisted auth return destination handling, authenticated product-image upload throttling, and compatible test coverage for dashboard samples, advertising targeting/analytics and email-verification lifecycle.
 - Main remains the sole source of truth. The historical branch was not merged wholesale and remains untouched. The 176 remaining content differences are intentional: main's newer/safer implementations, superseded branch behavior, or documented exclusions—not an outstanding queue of files to blindly copy.
 - Validation remains deferred exactly as requested: no tests, builds, typechecks or browser checks were executed.
+
+## 2026-11-09 — Ten-file reconciliation batch 16
+
+Reviewed shipping service and nine admin/advertising/cart/catalog test files.
+
+- Main shipping service is newer: it supports safe rate deactivation, optional active/inactive edits, currency minor-unit metadata, permission-denied semantics and case-insensitive destination matching. Branch shipping accepts coercive BigInt input and lacks deactivation; it was not copied.
+- Admin dashboard tests are identical. Main seller tests additionally assert that the private identity-document file ID never leaks and only a boolean presence flag is exposed. Main user tests cover pending holds, audit reasons and session revocation. Main catalog/cart tests additionally cover quarantined stock and the current media/category/location schema. Main advertising delivery tests cover multi-category targeting; branch-only GET cron tests are intentionally excluded because invoice generation is a state-changing worker and main exposes only POST.
+- **Carried forward:** the branch introduced a valid case where an approved campaign is activated before its future start date. This is safe because delivery remains gated by `startsAt <= now` in the sponsored-campaign query and event recorder. Main activation now rejects only campaigns whose end time has passed; it still requires approval, valid funding and a valid market/currency. Added the branch's regression case to the main advertising campaign test source without executing it.
+
+Commits: `b158689` (allow scheduled campaign pre-activation), `885f3e2` (regression case).
+
+No tests/build/typecheck/browser checks were run, per user instruction.
