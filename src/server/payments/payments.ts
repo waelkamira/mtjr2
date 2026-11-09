@@ -62,11 +62,13 @@ export async function startOrderPayment(input: {
     ? PaymentProviderEnvironment.LIVE
     : PaymentProviderEnvironment.TEST;
   const idempotentAttempt = await prisma.payment.findUnique({
-    where: { idempotencyKey: input.idempotencyKey },
-    select: { id: true, orderId: true, provider: true, status: true, checkoutUrl: true }
+    where: { idempotencyKey: input.idempotencyKey }
   });
   if (idempotentAttempt && (idempotentAttempt.orderId !== order.id || idempotentAttempt.provider !== input.providerKey)) {
     throw new Error("The payment idempotency key is already used for another request.");
+  }
+  if (idempotentAttempt && (idempotentAttempt.status !== PaymentStatus.INITIATING || idempotentAttempt.checkoutUrl)) {
+    return serializePayment(idempotentAttempt);
   }
   const activeAttempt = idempotentAttempt ? null : await prisma.payment.findFirst({
     where: {
