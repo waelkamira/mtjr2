@@ -103,6 +103,16 @@ describe("seller inventory operations", () => {
     expect(mocks.warehouseUpdate).not.toHaveBeenCalled();
   });
 
+  it("blocks warehouse deactivation while a physical count is in progress", async () => {
+    mocks.warehouseFindUnique.mockResolvedValue({
+      id: "warehouse-1", storeId: "store-1", isActive: true,
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "owner-1" } }
+    });
+    mocks.stockCountSessionFindFirst.mockResolvedValue({ id: "count-1" });
+    await expect(updateWarehouse("warehouse-1", { isActive: false })).rejects.toThrow("finish active stock counts");
+    expect(mocks.warehouseUpdate).not.toHaveBeenCalled();
+  });
+
   it("deactivates an empty warehouse only when no transfer is pending", async () => {
     mocks.warehouseFindUnique.mockResolvedValue({
       id: "warehouse-1", storeId: "store-1", isActive: true,
@@ -146,6 +156,17 @@ describe("seller inventory operations", () => {
     expect(mocks.inventoryUpdateMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: "inventory-1", quantityOnHand: 10, quantityReserved: { lte: 8 } }), data: { quantityOnHand: 8 } }));
     expect(mocks.inventoryMovementCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ type: "ADJUSTMENT", quantityDelta: -2, referenceType: "STOCK_COUNT", idempotencyKey: "stock-count:count-1:line-1" }) }));
     expect(mocks.stockCountSessionUpdateMany).toHaveBeenCalledOnce();
+  });
+
+  it("returns an authorized completed count replay without applying stock twice", async () => {
+    mocks.stockCountSessionFindUnique.mockResolvedValue({
+      id: "count-done", storeId: "store-1", status: "COMPLETED",
+      warehouse: { id: "warehouse-1", storeId: "store-1", isActive: false, store: { status: "ACTIVE", seller: { ownerId: "owner-1", status: "ACTIVE" } } },
+      lines: [{ id: "line-done", expectedQuantity: 5, countedQuantity: 7 }]
+    });
+    await expect(completeStockCount("count-done")).resolves.toMatchObject({ alreadyCompleted: true, totalVariance: 2 });
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.inventoryMovementCreate).not.toHaveBeenCalled();
   });
 
   it("rejects count reconciliation if inventory changed after the snapshot", async () => {
