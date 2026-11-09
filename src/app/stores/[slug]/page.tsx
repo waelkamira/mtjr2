@@ -46,6 +46,12 @@ export default async function StoreDetailPage({ params, searchParams }: Props) {
         <p className="pb-2 text-sm font-semibold text-[var(--muted)]">{result.pagination.total} {t("published products", "منتج منشور")}</p>
       </div>
       {store.description && <p className="max-w-4xl px-5 pb-6 text-sm leading-7 text-[var(--muted)] sm:px-7">{store.description}</p>}
+      {(store.shippingPolicy || store.returnsPolicy || store.privacyPolicy || store.termsOfSale) && <div className="grid gap-3 border-t border-[var(--border)] px-5 py-5 sm:grid-cols-2 sm:px-7">
+        {store.shippingPolicy && <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4"><summary className="cursor-pointer text-sm font-bold text-[var(--color-ink-950)]">{t("Shipping & delivery", "الشحن والتوصيل")}</summary><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--muted)]">{store.shippingPolicy}</p></details>}
+        {store.returnsPolicy && <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4"><summary className="cursor-pointer text-sm font-bold text-[var(--color-ink-950)]">{t("Returns & refunds", "الإرجاع والاسترداد")}</summary><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--muted)]">{store.returnsPolicy}</p></details>}
+        {store.privacyPolicy && <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4"><summary className="cursor-pointer text-sm font-bold text-[var(--color-ink-950)]">{t("Privacy notice", "إشعار الخصوصية")}</summary><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--muted)]">{store.privacyPolicy}</p></details>}
+        {store.termsOfSale && <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4"><summary className="cursor-pointer text-sm font-bold text-[var(--color-ink-950)]">{t("Terms of sale", "شروط البيع")}</summary><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--muted)]">{store.termsOfSale}</p></details>}
+      </div>}
     </section>
     <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} locale={locale} />
     <CatalogProductGrid products={result.items} locale={locale} />
