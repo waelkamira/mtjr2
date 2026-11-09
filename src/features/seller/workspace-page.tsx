@@ -17,7 +17,7 @@ import {
 type Market = { id: string; code: string; name: string; defaultCurrency: { code: string; minorUnit: number; symbol: string | null }; currencies: Array<{ currency: { code: string; name: string; minorUnit: number } }> };
 type Store = {
   id: string; storeNumber: string; name: string; slug: string; status: string; isOwner: boolean;
-  description: string | null; logoUrl: string | null; bannerUrl: string | null;
+  description: string | null; publicPhone: string | null; publicAddress: string | null; logoUrl: string | null; bannerUrl: string | null;
   logoStorageKey: string | null; bannerStorageKey: string | null;
   shippingPolicy: string | null; returnsPolicy: string | null; privacyPolicy: string | null; termsOfSale: string | null;
   shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null;
@@ -125,6 +125,8 @@ export default function SellerWorkspacePage() {
   const [editingStoreName, setEditingStoreName] = useState("");
   const [editingStoreSlug, setEditingStoreSlug] = useState("");
   const [editingStoreDescription, setEditingStoreDescription] = useState("");
+  const [editingStorePublicPhone, setEditingStorePublicPhone] = useState("");
+  const [editingStorePublicAddress, setEditingStorePublicAddress] = useState("");
   const [editingStoreLogoUrl, setEditingStoreLogoUrl] = useState("");
   const [editingStoreBannerUrl, setEditingStoreBannerUrl] = useState("");
   const [editingStoreLogoStorageKey, setEditingStoreLogoStorageKey] = useState("");
@@ -444,6 +446,8 @@ export default function SellerWorkspacePage() {
         body: JSON.stringify({
           name: editingStoreName, slug: editingStoreSlug,
           description: editingStoreDescription.trim() || null,
+          publicPhone: editingStorePublicPhone.trim() || null,
+          publicAddress: editingStorePublicAddress.trim() || null,
           logoUrl: editingStoreLogoUrl.trim() || null,
           bannerUrl: editingStoreBannerUrl.trim() || null,
           logoStorageKey: editingStoreLogoStorageKey || null,
@@ -931,9 +935,11 @@ export default function SellerWorkspacePage() {
                         setEditingTermsOfSale(selectedStore.termsOfSale ?? "");
                         setEditingStoreProfile((value) => !value); }} className="rounded-xl border border-white bg-[linear-gradient(145deg,#eeeaf8,#ded9f0)] px-3 py-2 text-xs font-bold text-[#526078] shadow-[0_4px_10px_rgba(35,62,81,.1),inset_0_1px_0_white]">{translate(locale, editingStoreProfile ? "Close profile editor" : "Edit store profile", editingStoreProfile ? "إغلاق تعديل المتجر" : "تعديل ملف المتجر")}</button>}</div></div>
                     {editingStoreProfile && selectedStore.isOwner && <form onSubmit={saveStoreProfile} className="mt-5 grid gap-4 rounded-[1.5rem] border border-dashed border-[#9bbbc7] bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-4 shadow-[inset_0_2px_7px_rgba(74,75,112,.08)] sm:grid-cols-2">
-                      <div className="sm:col-span-2"><h4 className="font-extrabold text-[#34445a]">{translate(locale, "Store profile", "ملف المتجر")}</h4><p className="mt-1 text-xs leading-5 text-[#8790a5]">{translate(locale, "Update your public store name and URL. Changing the URL may affect links customers have saved.", "حدّث اسم متجرك العام ورابطه. قد يؤثر تغيير الرابط في الروابط التي حفظها العملاء.")}</p></div>
+                      <div className="sm:col-span-2"><h4 className="font-extrabold text-[#34445a]">{translate(locale, "Store profile", "ملف المتجر")}</h4><p className="mt-1 text-xs leading-5 text-[#8790a5]">{translate(locale, "Update your public name, contact details, images and URL. Changing the URL may affect links customers have saved.", "حدّث اسم المتجر وبيانات التواصل والصور والرابط العام. قد يؤثر تغيير الرابط في الروابط التي حفظها العملاء.")}</p></div>
                       <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Store name", "اسم المتجر")}<input required minLength={2} maxLength={120} value={editingStoreName} onChange={(event) => setEditingStoreName(event.target.value)} className="rounded-xl border border-white bg-[linear-gradient(145deg,#f5f2fb,#e8e5f2)] px-3 py-2.5 text-sm font-normal text-[#46516b] shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                       <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Store URL slug", "معرّف رابط المتجر")}<input required minLength={3} maxLength={160} pattern="[a-z0-9]+(-[a-z0-9]+)*" value={editingStoreSlug} onChange={(event) => setEditingStoreSlug(event.target.value)} disabled={selectedStore.status === "ACTIVE"} className="rounded-xl border border-white bg-[linear-gradient(145deg,#f5f2fb,#e8e5f2)] px-3 py-2.5 text-sm font-normal text-[#46516b] shadow-[inset_0_2px_5px_rgba(74,75,112,.08)] disabled:cursor-not-allowed disabled:opacity-60" /><span className="text-[10px] font-normal text-[#8790a5]">{selectedStore.status === "ACTIVE" ? translate(locale, "Public URL is locked after activation to protect saved customer links.", "يُقفل الرابط العام بعد التفعيل لحماية روابط العملاء المحفوظة.") : translate(locale, "Public URL: ", "الرابط العام: ")} /stores/{editingStoreSlug || selectedStore.slug}</span></label>
+                      <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Public store phone", "رقم هاتف المتجر الظاهر للعملاء")}<input type="tel" minLength={7} maxLength={25} value={editingStorePublicPhone} onChange={(event) => setEditingStorePublicPhone(event.target.value)} placeholder="+963…" className="rounded-xl border border-white bg-white/80 px-3 py-2.5 text-sm font-normal text-[#46516b]" /></label>
+                      <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Public store address", "عنوان المتجر الظاهر للعملاء")}<input maxLength={500} value={editingStorePublicAddress} onChange={(event) => setEditingStorePublicAddress(event.target.value)} placeholder={translate(locale, "City, district and street", "المدينة والمنطقة والشارع")} className="rounded-xl border border-white bg-white/80 px-3 py-2.5 text-sm font-normal text-[#46516b]" /></label>
                       <label className="grid gap-1 text-xs font-semibold sm:col-span-2">{translate(locale, "Public store description", "وصف المتجر الظاهر للعملاء")}<textarea rows={4} maxLength={2000} value={editingStoreDescription} onChange={(event) => setEditingStoreDescription(event.target.value)} placeholder={translate(locale, "Tell customers what your store offers and what makes it special.", "عرّف العملاء بما يقدمه متجرك وما يميزه.")} className="rounded-xl border border-white bg-white/80 px-3 py-2.5 text-sm font-normal text-[#46516b] shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                       <div className="sm:col-span-2 mt-2"><h5 className="font-extrabold text-[#34445a]">{translate(locale, "Customer policies", "سياسات العملاء")}</h5><p className="mt-1 text-xs leading-5 text-[#8790a5]">{translate(locale, "These policies appear on your public storefront. Do not include private dispatch addresses or sensitive customer information.", "تظهر هذه السياسات في واجهة متجرك العامة. لا تضع فيها عنوان تجهيز الطلبات الخاص أو بيانات حساسة للعملاء.")}</p></div>
                       <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Shipping & delivery policy", "سياسة الشحن والتوصيل")}<textarea rows={5} maxLength={8000} value={editingShippingPolicy} onChange={(event) => setEditingShippingPolicy(event.target.value)} placeholder={translate(locale, "Delivery areas, estimated times and shipping conditions…", "مناطق التوصيل والمدد المتوقعة وشروط الشحن…")} className="rounded-xl border border-white bg-white/80 px-3 py-2.5 text-sm font-normal text-[#46516b]" /></label>
