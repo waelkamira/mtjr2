@@ -3743,3 +3743,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Not verified**
 - No test, build, typecheck, migration application, or browser run was performed. Continue applying the reference design to the remaining seller pages and finish the seller dashboard before starting the requested later verification phase.
+
+
+## 2026-11-09 — Seller feature-page visual consistency pass
+
+**Implemented on main**
+- Extended the seller-only clay surface system to shared surface, border, table, tab, form, and focus states used throughout the feature pages.
+- Restyled inventory cards and sections from lavender-heavy panels to the reference blue-grey raised clay panels.
+- Restyled advertising campaign creation and summary surfaces to the same palette.
+- Updated finance overview hero and financial metric cards while retaining distinct pastel tones for at-a-glance financial categories.
+- Aligned shipping primary actions with the turquoise action treatment.
+- The CSS scope remains limited to the seller dashboard layout; it does not restyle customer storefront or admin surfaces.
+
+**Not verified**
+- No tests, build, typecheck, migration execution, or browser checks were run. This remains a visual consistency pass; seller page behavior and remaining dashboard details are still to be completed before the seller workspace is declared finished.
