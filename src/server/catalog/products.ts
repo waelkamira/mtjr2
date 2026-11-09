@@ -409,7 +409,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, variants: { where: { isActive: true }, select: { id: true } }, store: { select: { seller: { select: { ownerId: true } }, markets: { where: { isEnabled: true }, select: { marketId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, variants: { where: { isActive: true }, select: { id: true } }, store: { select: { seller: { select: { ownerId: true } }, markets: { where: { isEnabled: true, market: { status: "ACTIVE", country: { isActive: true } } }, select: { marketId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
