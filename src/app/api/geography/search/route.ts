@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const revalidate = 3600;
 
+let lastNominatimRequestAt = 0;
+
 type NominatimResult = {
   place_id: number;
   display_name: string;
@@ -23,6 +25,12 @@ export async function GET(request: NextRequest) {
   if (query.length > 160) {
     return NextResponse.json({ error: "Search query is too long." }, { status: 400 });
   }
+
+  const now = Date.now();
+  if (now - lastNominatimRequestAt < 1000) {
+    return NextResponse.json({ error: "Please wait a moment before searching again." }, { status: 429, headers: { "Retry-After": "1" } });
+  }
+  lastNominatimRequestAt = now;
 
   try {
     const url = new URL("https://nominatim.openstreetmap.org/search");
