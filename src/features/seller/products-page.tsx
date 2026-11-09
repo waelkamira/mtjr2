@@ -63,8 +63,8 @@ export default function SellerProductsPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [sku, setSku] = useState("");
-  const [barcode, setBarcode] = useState("");
+  type VariantDraft = { id: string; sku: string; barcode: string; name: string; optionValues: Record<string, string | number | boolean | string[]> };
+  const [variantRows, setVariantRows] = useState<VariantDraft[]>([{ id: "variant-1", sku: "", barcode: "", name: "", optionValues: {} }]);
   type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const uploadedImagesRef = useRef<ProductImageDraft[]>([]);
@@ -180,11 +180,23 @@ export default function SellerProductsPage() {
     return () => { active = false; };
   }, [categoryId, locale]);
 
-  const requiredAttributesComplete = categoryAttributes.every((attribute) => {
+  const requiredAttributesComplete = categoryAttributes.filter((attribute) => !attribute.variantLevel).every((attribute) => {
     if (!attribute.required) return true;
     const value = attributeValues[attribute.id];
     return value !== undefined && value !== "" && (!Array.isArray(value) || value.length > 0);
   });
+  const requiredVariantAttributesComplete = variantRows.every((variant) => categoryAttributes.filter((attribute) => attribute.variantLevel && attribute.required).every((attribute) => {
+    const value = variant.optionValues[attribute.key];
+    return value !== undefined && value !== "" && (!Array.isArray(value) || value.length > 0);
+  }));
+  const variantSkusValid = variantRows.length > 0 && variantRows.every((variant) => variant.sku.trim().length > 0) &&
+    new Set(variantRows.map((variant) => variant.sku.trim().toLowerCase())).size === variantRows.length;
+  function updateVariant(id: string, patch: Partial<VariantDraft>) {
+    setVariantRows((rows) => rows.map((row) => row.id === id ? { ...row, ...patch } : row));
+  }
+  function updateVariantOption(id: string, key: string, value: string | number | boolean | string[]) {
+    setVariantRows((rows) => rows.map((row) => row.id === id ? { ...row, optionValues: { ...row.optionValues, [key]: value } } : row));
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset product editor and temporary media when the active store changes.
@@ -395,12 +407,18 @@ export default function SellerProductsPage() {
           }),
           ...productLocation,
           media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, storageKey: image.storageKey, width: image.width, height: image.height, altText: name, sortOrder: index, isPrimary: index === 0 })),
-          variants: [{ sku, ...(barcode.trim() ? { barcode: barcode.trim() } : {}), optionValues: Object.fromEntries(categoryAttributes.filter((attribute) => attribute.variantLevel && attributeValues[attribute.id] !== undefined && attributeValues[attribute.id] !== "" && (!Array.isArray(attributeValues[attribute.id]) || (attributeValues[attribute.id] as string[]).length > 0)).map((attribute) => [attribute.key, attributeValues[attribute.id]] as const)), prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "", ...(marketPrices[market.id]?.compareAtMinor ? { compareAtMinor: marketPrices[market.id].compareAtMinor } : {}) })) }]
+          variants: variantRows.map((variant) => ({
+            sku: variant.sku.trim(),
+            ...(variant.barcode.trim() ? { barcode: variant.barcode.trim() } : {}),
+            ...(variant.name.trim() ? { name: variant.name.trim() } : {}),
+            optionValues: Object.fromEntries(Object.entries(variant.optionValues).filter(([, value]) => value !== "" && (!Array.isArray(value) || value.length > 0))),
+            prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "", ...(marketPrices[market.id]?.compareAtMinor ? { compareAtMinor: marketPrices[market.id].compareAtMinor } : {}) }))
+          }))
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
-      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setSku(""); setBarcode(""); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
+      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {} }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -606,7 +624,28 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "هاتف التواصل")}<input type="tel" maxLength={40} className={inputClass} value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} placeholder="MAT-001" /></label><label className="grid gap-1 text-sm">{translate(locale, "Barcode (optional)", "الباركود (اختياري)")}<input maxLength={100} className={inputClass} value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="EAN / UPC" /></label></div>
+            <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+              <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-extrabold text-[#2d4a60]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Add a separate SKU for every size, color or configuration. Prices are shared across variants for each enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. الأسعار مشتركة بين المتغيرات لكل سوق مفعّل.")}</p></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {} }])} className="rounded-full border border-white bg-white/80 px-3 py-2 text-xs font-bold text-[#35566b] shadow-sm disabled:opacity-40">＋ {translate(locale, "Add variant", "إضافة متغير")}</button></div>
+              {variantRows.map((variant, index) => <article key={variant.id} className="grid gap-3 rounded-2xl border border-white/90 bg-white/65 p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(43,69,88,.05)]">
+                <div className="flex items-center justify-between"><p className="text-xs font-extrabold text-[#42677b]">{translate(locale, "Variant", "المتغير")} {index + 1}</p>{variantRows.length > 1 && <button type="button" onClick={() => setVariantRows((rows) => rows.filter((row) => row.id !== variant.id))} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-700">{translate(locale, "Remove", "حذف")}</button>}</div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <label className="grid gap-1 text-xs font-semibold">SKU<input required maxLength={100} className={inputClass} value={variant.sku} onChange={(event) => updateVariant(variant.id, { sku: event.target.value })} placeholder={`MAT-00${index + 1}`} /></label>
+                  <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Barcode (optional)", "الباركود (اختياري)")}<input maxLength={100} className={inputClass} value={variant.barcode} onChange={(event) => updateVariant(variant.id, { barcode: event.target.value })} placeholder="EAN / UPC" /></label>
+                  <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Variant name (optional)", "اسم المتغير (اختياري)")}<input maxLength={180} className={inputClass} value={variant.name} onChange={(event) => updateVariant(variant.id, { name: event.target.value })} placeholder={translate(locale, "e.g. Blue / Large", "مثال: أزرق / كبير")} /></label>
+                </div>
+                {categoryAttributes.filter((attribute) => attribute.variantLevel).length > 0 && <div className="grid gap-3 border-t border-[#d7e4e9] pt-3 sm:grid-cols-2">
+                  {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
+                    const current = variant.optionValues[attribute.key];
+                    const label = <span>{attribute.label}{attribute.required && <span className="ms-1 text-red-600">*</span>}</span>;
+                    if (attribute.valueType === "BOOLEAN") return <label key={attribute.id} className="flex items-center gap-2 rounded-xl bg-[#f0f6f7] p-3 text-sm">{label}<input type="checkbox" checked={current === true} onChange={(event) => updateVariantOption(variant.id, attribute.key, event.target.checked)} /></label>;
+                    if (attribute.valueType === "SELECT") return <label key={attribute.id} className="grid gap-1 text-sm">{label}<select required={attribute.required} className={inputClass} value={typeof current === "string" ? current : ""} onChange={(event) => updateVariantOption(variant.id, attribute.key, event.target.value)}><option value="">{translate(locale, "Choose…", "اختر…")}</option>{attribute.options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
+                    if (attribute.valueType === "MULTI_SELECT") return <fieldset key={attribute.id} className="grid gap-2 rounded-xl bg-[#f0f6f7] p-3"><legend className="px-1 text-sm font-medium">{label}</legend>{attribute.options.map((option) => { const selected = Array.isArray(current) ? current : []; return <label key={option} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selected.includes(option)} onChange={(event) => updateVariantOption(variant.id, attribute.key, event.target.checked ? [...selected, option] : selected.filter((item) => item !== option))} />{option}</label>; })}</fieldset>;
+                    return <label key={attribute.id} className="grid gap-1 text-sm">{label}<input required={attribute.required} type={attribute.valueType === "NUMBER" ? "number" : "text"} step={attribute.valueType === "NUMBER" ? "any" : undefined} className={inputClass} value={current === undefined ? "" : String(current)} onChange={(event) => updateVariantOption(variant.id, attribute.key, attribute.valueType === "NUMBER" ? (event.target.value === "" ? "" : Number(event.target.value)) : event.target.value)} placeholder={attribute.description ?? ""} /></label>;
+                  })}
+                </div>}
+              </article>)}
+              {!variantSkusValid && <p className="text-xs font-semibold text-amber-800">{translate(locale, "Every variant needs a unique SKU.", "يجب أن يكون لكل متغير رمز SKU فريد.")}</p>}
+            </section>
             <div
               className="grid gap-4 rounded-[1.75rem] border border-dashed border-[#9bbbc7] bg-[linear-gradient(145deg,#dcebf0,#c2d8e1)] p-4 shadow-[inset_0_3px_8px_rgba(43,69,88,.13),0_1px_0_white] transition-colors hover:border-[#69aeb4] sm:p-5"
               onDragOver={(event) => event.preventDefault()}
@@ -649,7 +688,7 @@ export default function SellerProductsPage() {
               </div>}
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
-            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             {categoryId && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
               <div>
                 <h3 className="text-sm font-semibold">{translate(locale, "Category-specific details", "الخصائص الخاصة بالفئة")}</h3>
@@ -712,7 +751,7 @@ export default function SellerProductsPage() {
                 </div>;
               })}
             </div>
-            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => { const price = marketPrices[market.id]; if (!/^(0|[1-9][0-9]{0,17})$/.test(price?.amountMinor ?? "")) return true; if (!price?.compareAtMinor) return false; return !/^(0|[1-9][0-9]{0,17})$/.test(price.compareAtMinor) || BigInt(price.compareAtMinor) < BigInt(price.amountMinor); })} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#8174a8,#665b8c)] px-5 py-3 text-sm font-extrabold text-white shadow-[0_9px_20px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => { const price = marketPrices[market.id]; if (!/^(0|[1-9][0-9]{0,17})$/.test(price?.amountMinor ?? "")) return true; if (!price?.compareAtMinor) return false; return !/^(0|[1-9][0-9]{0,17})$/.test(price.compareAtMinor) || BigInt(price.compareAtMinor) < BigInt(price.amountMinor); })} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#8174a8,#665b8c)] px-5 py-3 text-sm font-extrabold text-white shadow-[0_9px_20px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#e9f2f5,#cfdee4)] p-6 shadow-[0_16px_32px_rgba(35,62,81,.14),inset_0_2px_0_white,inset_0_-2px_7px_rgba(48,76,94,.05)] sm:p-7">
