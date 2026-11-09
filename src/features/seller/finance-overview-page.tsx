@@ -89,8 +89,8 @@ export default function SellerFinanceOverviewPage() {
         : data ? <>
           <div className="grid gap-4 md:grid-cols-3">
             <article className="rounded-[25px] border border-white bg-[linear-gradient(145deg,#e2f0e9,#cfe5d9)] p-5 text-[#365b50] shadow-[8px_10px_20px_rgba(63,100,91,.10),inset_0_2px_0_white]">
-              <p className="text-xs font-extrabold uppercase tracking-wide text-[#668d7f]">{t("Recorded sales", "المبيعات المسجلة")}</p>
-              {data.totals.length ? data.totals.map((item) => <p key={item.currencyCode} className="mt-3 text-xl font-black tabular-nums">{formatMinor(item.baseAmountMinor ?? "0", item.currencyCode, item.minorUnit, locale)} <span className="text-xs font-semibold">{item.transactionCount ?? 0} {t("items", "عملية")}</span></p>) : <p className="mt-3 text-sm">{t("No recorded sales yet.", "لا توجد مبيعات مسجلة بعد.")}</p>}
+              <p className="text-xs font-extrabold uppercase tracking-wide text-[#668d7f]">{t("Sales in commission records", "المبيعات ضمن سجلات العمولات")}</p>
+              {data.totals.length ? data.totals.map((item) => <p key={item.currencyCode} className="mt-3 text-xl font-black tabular-nums">{formatMinor(item.baseAmountMinor ?? "0", item.currencyCode, item.minorUnit, locale)} <span className="text-xs font-semibold">{item.transactionCount ?? 0} {t("items", "عملية")}</span></p>) : <p className="mt-3 text-sm">{t("No commissionable sales records yet.", "لا توجد مبيعات مؤهلة مسجلة بعد.")}</p>}
             </article>
             <article className="rounded-[25px] border border-white bg-[linear-gradient(145deg,#e8e3f7,#d8d1ef)] p-5 text-[#494467] shadow-[8px_10px_20px_rgba(93,83,139,.10),inset_0_2px_0_white]">
               <p className="text-xs font-extrabold uppercase tracking-wide text-[#817aa4]">{t("Recorded platform commissions", "عمولات المنصة المسجلة")}</p>
