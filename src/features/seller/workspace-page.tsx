@@ -242,7 +242,8 @@ export default function SellerWorkspacePage() {
           setSelectedSalesCurrency((current) =>
             data.metrics.grossSalesByCurrency.some((entry) => entry.currencyCode === current)
               ? current
-              : data.metrics.grossSalesByCurrency[0]?.currencyCode ?? ""
+              : (data.metrics.grossSalesByCurrency.find((entry) => entry.currencyCode === "SYP")
+                ?? data.metrics.grossSalesByCurrency[0])?.currencyCode ?? ""
           );
         })
         .catch((cause: unknown) => {
