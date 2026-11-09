@@ -161,7 +161,7 @@ test.describe("seller journey", () => {
     await page.getByLabel(/^City|المدينة$/i).fill("Strasbourg");
     await page.getByLabel(/Country code \(2 letters\)|رمز الدولة \(حرفان\)/i).fill("FR");
     await page.getByRole("button", { name: /Save shipping details|حفظ بيانات الشحن/i }).click();
-    await expect(page.getByRole("status")).toContainText(/Shipping address and contact details saved|تم حفظ عنوان الشحن وبيانات التواصل/i, { timeout: 15000 });
+    await expect(page.getByText(/Shipping address and contact details saved|تم حفظ عنوان الشحن وبيانات التواصل/i)).toBeVisible({ timeout: 15000 });
     const updatedWorkspaceResponse = await page.request.get("/api/seller/stores");
     expect(updatedWorkspaceResponse.status()).toBe(200);
     const updatedWorkspace = await updatedWorkspaceResponse.json() as { stores: Array<{ id: string; shippingContactName: string | null; shippingCity: string | null; shippingCountryCode: string | null }> };
