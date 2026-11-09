@@ -81,7 +81,7 @@ function encryptCredentials(credentials: ProviderCredentials) {
 
 function decryptCredentials(value: string, keyVersion: number): ProviderCredentials {
   const key = encryptionKeyRing().get(keyVersion);
-  if (!key) throw new Error(`Provider credential key version ${keyVersion} is unavailable; restore it before processing payments.`);
+  if (!key) throw new PaymentProviderConfigurationError(`Provider credential key version ${keyVersion} is unavailable; restore it before processing payments.`);
   const [version, noncePart, tagPart, ciphertextPart, extra] = value.split(".");
   if (version !== `v${keyVersion}` || !noncePart || !tagPart || !ciphertextPart || extra !== undefined) {
     throw new PaymentProviderConfigurationError("Stored provider credentials have an invalid encrypted envelope.");
