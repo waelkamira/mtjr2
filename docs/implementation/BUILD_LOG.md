@@ -3317,3 +3317,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Remaining verification**
 - `SyriaLocationPicker` sets neighborhood suggestion focus to zoom 16, and `LeafletLocationMap` applies the supplied focus zoom. The current browser journey verifies the administrative hierarchy and wheel zoom but does not yet make an explicit neighborhood-selection/zoom-16 assertion. Keep that as a focused follow-up rather than claiming it is browser-verified.
 - Vercel/npm still emits non-blocking install-script and npm configuration warnings; they did not prevent the verified production build.
+
+
+## 2026-11-09 — Seller shipping prices use customer-facing currency amounts
+
+**Implemented on `main`**
+- Changed the dedicated seller shipping form to accept normal major-unit prices (for example, `125.50`), rather than requiring sellers to enter internal minor-unit integers.
+- The form resolves the selected market/currency pair and uses the shared BigInt-safe `toMinorUnits` conversion before calling the existing shipping API. Currency precision comes from the selected currency, not an assumed two-decimal format.
+- Existing shipping rates are converted back to exact decimal input text for editing, and displayed with the persisted currency's own precision.
+- Syria remains configured with SYP as the market base currency and USD as an enabled additional currency; sellers can select either enabled currency for a shipping service.
+
+**Commit**
+- `e0d3e54` — `fix(seller): enter shipping prices in major currency units`.
+
+**Verification**
+- Source and API-contract review only. No tests, build, browser, database, CI or deployment commands were run, as requested.
