@@ -68,6 +68,7 @@ export default function SellerProductsPage() {
   type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [imagePreview, setImagePreview] = useState<{ url: string; alt: string } | null>(null);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string; compareAtMinor: string }>>({});
   const [categoryId, setCategoryId] = useState("");
   const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttribute[]>([]);
@@ -101,6 +102,13 @@ export default function SellerProductsPage() {
   const [editCategoryId, setEditCategoryId] = useState("");
   const [editMedia, setEditMedia] = useState<EditableProductMedia[]>([]);
   const [editMediaUploading, setEditMediaUploading] = useState(false);
+
+  useEffect(() => {
+    if (!imagePreview) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setImagePreview(null); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [imagePreview]);
 
   useEffect(() => {
     const initialSearch = new URLSearchParams(window.location.search).get("search")?.slice(0, 120) ?? "";
@@ -595,7 +603,7 @@ export default function SellerProductsPage() {
               {uploadedImages.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-white/80 bg-[#e6eff2] shadow-[0_5px_14px_rgba(43,69,88,.1),inset_0_1px_0_white]">
                   <div className="relative aspect-square bg-[var(--surface-soft)]">
-                    <img src={image.previewUrl} alt={`Product image ${index + 1}`} className={`h-full w-full object-cover ${image.status === "uploading" ? "opacity-60" : ""}`} />
+                    <button type="button" onClick={() => setImagePreview({ url: image.previewUrl, alt: `${translate(locale, "Product image", "صورة المنتج")} ${index + 1}` })} aria-label={translate(locale, "Preview image", "معاينة الصورة")} className="absolute inset-0 h-full w-full cursor-zoom-in"><img src={image.previewUrl} alt="" className={`h-full w-full object-cover ${image.status === "uploading" ? "opacity-60" : ""}`} /></button>
                     {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2.5 py-1 text-[10px] font-bold text-white">{translate(locale, "Primary image", "الصورة الرئيسية")}</span>}
                     {image.status === "uploading" && <span className="absolute inset-0 flex items-center justify-center bg-black/25 text-xs font-semibold text-white">{translate(locale, "Uploading…", "جارٍ الرفع…")}</span>}
                     {image.status === "failed" && <span className="absolute inset-0 flex items-center justify-center bg-red-950/60 p-3 text-center text-xs font-semibold text-white">{translate(locale, "Upload failed", "فشل الرفع")}</span>}
@@ -740,7 +748,7 @@ export default function SellerProductsPage() {
               {editMedia.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {editMedia.map((media, index) => <article key={media.id} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]">
                   <div className="relative aspect-square">
-                    <img src={media.url} alt={media.altText ?? editName} className="h-full w-full object-cover" />
+                    <button type="button" onClick={() => setImagePreview({ url: media.url, alt: media.altText ?? editName })} aria-label={translate(locale, "Preview image", "معاينة الصورة")} className="absolute inset-0 h-full w-full cursor-zoom-in"><img src={media.url} alt="" className="h-full w-full object-cover" /></button>
                     {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2 py-1 text-[10px] font-bold text-white">{translate(locale, "Cover", "الغلاف")}</span>}
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-1 p-2">
@@ -763,5 +771,15 @@ export default function SellerProductsPage() {
         </section>
       </div>}
     </div>
+    {imagePreview && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#201d31]/80 p-4 backdrop-blur-md" onClick={() => setImagePreview(null)}>
+      <section role="dialog" aria-modal="true" aria-label={translate(locale, "Image preview", "معاينة الصورة")} onClick={(event) => event.stopPropagation()} className="relative flex max-h-[94vh] w-full max-w-5xl flex-col items-center gap-3 rounded-[2rem] border border-white/30 bg-[linear-gradient(145deg,#f4f0fb,#e4edf0)] p-3 shadow-[0_24px_70px_rgba(12,10,24,.42),inset_0_2px_0_rgba(255,255,255,.9)] sm:p-5">
+        <div className="flex w-full items-center justify-between gap-3 px-1">
+          <p className="min-w-0 truncate text-sm font-extrabold text-[#49445f]">{imagePreview.alt}</p>
+          <button type="button" autoFocus onClick={() => setImagePreview(null)} className="grid size-10 shrink-0 place-items-center rounded-full border border-white bg-white/80 text-xl font-bold text-[#625c79] shadow-[0_4px_10px_rgba(65,59,86,.12)]" aria-label={translate(locale, "Close preview", "إغلاق المعاينة")}>×</button>
+        </div>
+        <img src={imagePreview.url} alt={imagePreview.alt} className="max-h-[calc(94vh-90px)] max-w-full rounded-2xl object-contain shadow-[0_12px_30px_rgba(36,31,54,.18)]" />
+        <p className="text-[11px] font-medium text-[#77738b]">{translate(locale, "Click outside the image or press Escape to close.", "انقر خارج الصورة أو اضغط Escape للإغلاق.")}</p>
+      </section>
+    </div>}
   </main>
 }
