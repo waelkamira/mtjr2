@@ -436,7 +436,8 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - No API, Prisma model, or migration is required: this is a navigation-only route with no business mutation.
 - Verification in this GitHub-only session: source and route wiring inspected; no local Next.js build or browser navigation run. Keep the route `Implemented / unverified` until the normal build/browser gate is completed.
 
-| Seller inventory | /api/seller/inventory/counts | GET / POST | List and open store-scoped physical stock count sessions |
-| Seller inventory | /api/seller/inventory/counts/[countId] | GET | Read one authorized count session and its snapshot lines |
-| Seller inventory | /api/seller/inventory/counts/[countId]/lines/[lineId] | PATCH | Save one counted quantity while the session is in progress |
-| Seller inventory | /api/seller/inventory/counts/[countId]/complete | POST | Atomically reconcile count variances into inventory movements |
+## Seller physical stock count API
+- `GET/POST /api/seller/inventory/counts` — list and open store-scoped physical count sessions.
+- `GET /api/seller/inventory/counts/[countId]` — read an authorized count session and its snapshot lines.
+- `PATCH /api/seller/inventory/counts/[countId]/lines/[lineId]` — save one counted quantity while the session is in progress.
+- `POST /api/seller/inventory/counts/[countId]/complete` — atomically reconcile count variances into inventory movements.
