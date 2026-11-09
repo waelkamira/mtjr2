@@ -6,6 +6,44 @@ import { processVerifiedPaymentEvent } from "@/server/payments/payments";
 export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ provider: string }> };
 
+const MAX_WEBHOOK_BODY_BYTES = 1024 * 1024;
+
+async function readBoundedWebhookBody(request: Request): Promise<Uint8Array> {
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength !== null) {
+    if (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > MAX_WEBHOOK_BODY_BYTES) {
+      throw new Error("Webhook body exceeds the configured size limit.");
+    }
+  }
+  if (!request.body) throw new Error("Webhook body is missing.");
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_WEBHOOK_BODY_BYTES) {
+        await reader.cancel();
+        throw new Error("Webhook body exceeds the configured size limit.");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
 const eventSchema = z.object({
   eventId: z.string().trim().min(1).max(200),
   eventType: z.enum(["succeeded", "processing", "failed", "cancelled"]),
@@ -22,13 +60,23 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
 
   // Invalid signatures and malformed provider events are permanent client errors.
   // Keep these separate from database/transaction failures, which providers must retry.
-  let rawBody: string;
+  let rawBody: Uint8Array;
   let rawEvent: unknown;
   try {
-    rawBody = await request.clone().text();
-    rawEvent = await provider.verifyWebhook(request);
+    rawBody = await readBoundedWebhookBody(request);
+    // Pass a fresh request containing the already bounded raw bytes so provider
+    // signature verification sees the exact payload without buffering it twice.
+    const verificationRequest = new Request(request.url, {
+      method: "POST",
+      headers: request.headers,
+      body: rawBody
+    });
+    rawEvent = await provider.verifyWebhook(verificationRequest);
   } catch {
-    return Response.json({ error: "Payment webhook verification failed." }, { status: 400 });
+    return Response.json({ error: "Payment webhook verification failed or payload exceeded the size limit." }, {
+      status: 400,
+      headers: { "Cache-Control": "no-store" }
+    });
   }
 
   const parsed = eventSchema.safeParse(rawEvent);
