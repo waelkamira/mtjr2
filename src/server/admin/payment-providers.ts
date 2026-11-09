@@ -286,7 +286,7 @@ function validateCredentials(
     if (keys.join(",") !== "clientId,clientSecret,webhookId") throw new Error("PayPal requires exactly clientId, clientSecret and webhookId.");
     if (!/^[A-Za-z0-9._-]{8,256}$/.test(credentials.clientId)) throw new Error("PayPal client ID format is invalid.");
     if (credentials.clientSecret.length < 8) throw new Error("PayPal client secret format is invalid.");
-    if (!/^[A-Za-z0-9]{8,64}$/.test(credentials.webhookId)) throw new Error("PayPal webhook ID format is invalid.");
+    if (!/^[A-Za-z0-9._-]{8,128}$/.test(credentials.webhookId)) throw new Error("PayPal webhook ID format is invalid.");
   }
 }
 
