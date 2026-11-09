@@ -3138,3 +3138,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Connected the seller inventory page with warehouse, variant, quantity, decision and inspection-note controls.
 - Added focused tests for release, disposal, insufficient quarantine balance and idempotent replay.
 - Runtime CI, PostgreSQL integration and authenticated browser verification remain pending.
+
+## 2026-11-09 — Seller commission statements
+
+- Added `/seller/commissions` as a read-only view of immutable `CommissionTransaction` snapshots. It groups the latest 100 records by currency and shows order-item base amount, recorded commission rate/amount, product/SKU, order number and order status.
+- API access requires a current session plus store ownership or an exact-store `orders:read` grant; queries constrain both store ID and the owning seller ID. The page explicitly states that these snapshots are not net seller balances, withdrawals or payout statements and do not include later refund/adjustment accounting.
+- Added focused service tests for owner scoping, commission aggregation and non-owner permission denial. No payout actions or false available-balance claims were added.
+- Commits: service `2d7c51c9af9dc1b8fee73e868e8b26d294774e3c`; API `12d24a2315b447bf9772dfe005387018fafd62bc`; store-scoped permission `8e838d20fd718b934e6781542949b9397d8296db`; page `63a6e3d354912c62be7e886191229b93f9b45839`; route `b51ca1697d3318363489ebf1db5059b1e893aaa3`; navigation `cf0e1e001cbc59a2e2375f537b7aeb472bd60c1f`; tests `e75697d189b98db615db1a49d0e0b786c5015290`; inventory/system map/route registry/matrix `a75e12c06bd2a7794c112d6da4627890c2dd6e30`, `1b1e74ea6e4aa68b6a3441299425db1edf94b2da`, `0bb493aec02313ae604d5845f9e626eccc4684f1`, `18145f7687f1227ce17c04f0fce57e5bfc847fe1`.
+- Source and test code added; Vitest, TypeScript, browser and database checks remain unrun.
