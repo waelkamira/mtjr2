@@ -3532,3 +3532,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added logo/banner previews to the seller's store profile editor.
 - Commits: `cc8f2e0` (seller editor previews), `e3f66d8` (directory query), `20a3207` (directory cards).
 - Source-level review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller workspace visual and finance overview continuation
+
+- Refreshed the seller navigation from dark navy to a pastel clay treatment, including desktop sidebar, mobile navigation, grouped active states and workspace callout surfaces.
+- Aligned the seller topbar and store-settings hero with the lavender/mint/peach clay palette; added the correct settings and finance section titles.
+- Added `/seller/finance` backed by existing store and commission APIs. It keeps currencies separate and displays commission-covered sales, platform commissions and completed refunds as distinct records.
+- Added an explicit disclosure that this is not a payable balance. No invented payout balance or withdrawal action was introduced.
+- Updated `PAGE_INVENTORY.md`, `PAGE_ROUTE_REGISTRY.md` and system 19 documentation.
+- No tests, browser experiments, builds or deployments were run, as requested. Remaining seller finance work is the accounting ledger, holds, settlement/reconciliation, payout methods and withdrawals.
