@@ -29,6 +29,7 @@ export async function inviteStoreStaff(input: z.input<typeof inviteSchema>, now 
   const actor = await requireCurrentSession(now);
   return prisma.$transaction(async (tx) => {
     await requireStoreOwner(tx, data.storeId, actor.userId);
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const target = await tx.user.findUnique({
       where: data.email ? { email: data.email } : { id: data.userId! },
       select: { id: true, status: true }
@@ -36,8 +37,8 @@ export async function inviteStoreStaff(input: z.input<typeof inviteSchema>, now 
     if (!target || target.status !== UserStatus.ACTIVE) throw new Error("Only active accounts can be invited.");
     const membership = await tx.sellerStaff.upsert({
       where: { storeId_userId: { storeId: data.storeId, userId: target.id } },
-      create: { storeId: data.storeId, userId: target.id, invitedById: actor.userId, status: SellerStaffStatus.INVITED, invitedAt: now },
-      update: { status: SellerStaffStatus.INVITED, invitedById: actor.userId, invitedAt: now, acceptedAt: null }
+      create: { storeId: data.storeId, userId: target.id, invitedById: actor.userId, status: SellerStaffStatus.INVITED, invitedAt: now, expiresAt },
+      update: { status: SellerStaffStatus.INVITED, invitedById: actor.userId, invitedAt: now, expiresAt, acceptedAt: null }
     });
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "store.staff.invited",
@@ -55,16 +56,16 @@ export async function acceptStoreStaffInvitation(membershipId: string, now = new
   return prisma.$transaction(async (tx) => {
     const membership = await tx.sellerStaff.findUnique({
       where: { id },
-      select: { id: true, userId: true, storeId: true, status: true, store: { select: { seller: { select: { status: true } } } } }
+      select: { id: true, userId: true, storeId: true, status: true, expiresAt: true, store: { select: { seller: { select: { status: true } } } } }
     });
     if (!membership || membership.userId !== actor.userId) throw new Error("Invitation not found.");
-    if (membership.status !== SellerStaffStatus.INVITED || membership.store.seller.status !== "ACTIVE") {
+    if (membership.status !== SellerStaffStatus.INVITED || membership.store.seller.status !== "ACTIVE" || (membership.expiresAt !== null && membership.expiresAt <= now)) {
       throw new Error("This staff invitation is no longer valid.");
     }
     const role = await tx.role.findUnique({ where: { key: "STORE_MANAGER" }, select: { id: true } });
     if (!role) throw new Error("STORE_MANAGER role is missing; run the identity seed first.");
     const updated = await tx.sellerStaff.updateMany({
-      where: { id, userId: actor.userId, status: SellerStaffStatus.INVITED },
+      where: { id, userId: actor.userId, status: SellerStaffStatus.INVITED, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
       data: { status: SellerStaffStatus.ACTIVE, acceptedAt: now }
     });
     if (updated.count !== 1) throw new Error("Invitation has already been accepted or revoked.");
@@ -122,7 +123,7 @@ export async function listStoreStaff(storeIdInput: string, now = new Date()) {
       orderBy: [{ status: "asc" }, { invitedAt: "desc" }],
       take: 100,
       select: {
-        id: true, status: true, invitedAt: true, acceptedAt: true,
+        id: true, status: true, invitedAt: true, expiresAt: true, acceptedAt: true,
         user: { select: { id: true, email: true, displayName: true } },
         invitedBy: { select: { id: true, email: true, displayName: true } }
       }
@@ -135,11 +136,11 @@ export async function listStoreStaff(storeIdInput: string, now = new Date()) {
 export async function listMyStaffInvitations(now = new Date()) {
   const actor = await requireCurrentSession(now);
   return prisma.sellerStaff.findMany({
-    where: { userId: actor.userId, status: SellerStaffStatus.INVITED, store: { seller: { status: "ACTIVE" } } },
+    where: { userId: actor.userId, status: SellerStaffStatus.INVITED, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }], store: { seller: { status: "ACTIVE" } } },
     orderBy: [{ invitedAt: "desc" }, { id: "desc" }],
     take: 50,
     select: {
-      id: true, invitedAt: true,
+      id: true, invitedAt: true, expiresAt: true,
       store: { select: { id: true, name: true, slug: true } },
       invitedBy: { select: { displayName: true, email: true } }
     }
