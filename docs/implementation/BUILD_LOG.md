@@ -4080,3 +4080,15 @@ Reviewed seller shipping configuration and admin/dashboard, advertising, cart an
 - Test files were updated only; no tests were executed, as requested.
 
 Test-coverage commits: `e1a0fac`, `f8a85ab`, `f265dea`, `27039c7`.
+
+## 2026-11-09 — Ten-file reconciliation batch 17
+
+Reviewed environment, API security E2E, marketplace E2E, auth return, auth routes, current return path, Google ID token, login, MFA policy and registration tests.
+
+- Main API-role and marketplace E2E suites are substantially broader and cover current seller navigation, one-store-per-account, shipping and store-profile behavior; branch E2E copies are older and were not copied.
+- Main Google ID token tests exercise the current nonce/JWKS verification contract. Main login/MFA tests preserve compatibility for active legacy accounts and require active seller status for privileged MFA policy; branch expectations would change current access policy.
+- **Carried forward:** the current-return-path test for a saved sessionStorage destination; registration tests for the pending user + hashed, single-use email-verification challenge; auth-route tests for successful verification email delivery and the 202 accepted response when delivery fails; and the CONTACT_EMAIL validation test.
+- The branch's registration-notice helper is not part of the current main verification UX. Its tests were not copied. The branch's Vercel-derived APP_URL and blank-CRON_SECRET tests were not copied because main deliberately uses explicit APP_URL configuration and treats a malformed non-empty secret as a configuration error.
+- Tests were updated only; no test execution or browser checks were performed.
+
+Test commits: `6d5d3f8`, `7d77d07`, `c48c72c`, `606877c`.
