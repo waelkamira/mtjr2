@@ -167,3 +167,37 @@
 - Additional hardening: database CHECK constraint for complete-or-empty payment snapshots; malformed snapshot detection before key rotation; bounded resumable key rotation (100 rows per model per request); provider method allowlist validation; market-filtered no-store provider discovery; PayPal capture-to-payment identity checks.
 
 - Refund boundary: provider refunds are not issued automatically yet. Refund records remain pending manual confirmation; finance enters the external provider transaction reference and confirms completion before the platform updates payment/order accounting. No browser callback can mark a refund complete.
+
+
+## 13. الحالة الحالية المؤكدة — 2026-11-10
+
+هذا القسم أحدث من ملاحظات الـbaseline التاريخية أعلاه، ويُعتمد عند وجود تعارض معها.
+
+### PayPal وStripe
+- مصدر PayPal الأصلي الذي تمت مراجعته هو `waelkamira/cartoon`. لم تُنقل شيفرته القديمة كما هي؛ أُعيد تنفيذ الدفع على خادم Matjar باستخدام Orders v2، وإنشاء الطلب من مبلغ الطلب المحفوظ، والتحقق من ارتباط PayPal order بمعرّف Payment قبل capture.
+- PayPal adapter موجود في `src/server/payments/providers/paypal.ts`، وعودة الموافقة في `src/app/api/payments/paypal/return/route.ts`، والتحقق من Webhook في `src/app/api/webhooks/payments/[provider]/route.ts`.
+- إعدادات مزودي الدفع موجودة في `/admin/payment-providers`، مع TEST/LIVE، قائمة سماح الدول والعملات وطرق الدفع، صلاحية Super Admin وMFA، وتسجيل تدقيقي.
+- الدفع المدار من قاعدة البيانات مرتبط بإنشاء Payment؛ كل دفعة جديدة تحفظ provider config/environment ونسخة مشفرة مستقلة من بيانات الاعتماد لا تتغير عند تعديل إعداد المزود لاحقاً.
+- لا تستخدم بيانات اعتماد Cartoon القديمة. أي سر سبق نشره في مستودع عام/مشترك يجب اعتباره مكشوفاً وتدويره لدى مزوده.
+
+### التشفير وتدوير المفاتيح
+- تدوير المفاتيح متعدد الإصدارات **منفذ في المصدر** وليس مهمة برمجية متبقية: `PAYMENT_PROVIDER_ENCRYPTION_KEYS` و`PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION`، مع توافق قراءة مفتاح الإصدار الأول.
+- مسار `POST /api/admin/payment-providers/rotate-credentials` يتطلب صلاحية Super Admin وMFA، ويعيد تشفير إعدادات المزود ولقطات بيانات الاعتماد التاريخية على دفعات قابلة للاستئناف، ويسجل النتيجة في AuditLog.
+- لا تحذف مفتاحاً قديماً قبل أن تكون أعداد السجلات المتبقية صفراً وبعد تأكيد خطة النسخ الاحتياطي والاستعادة.
+
+### الاسترداد والمحاسبة
+- استرداد Matjar الحالي **يدوي مؤكد من قسم المالية**: لا يستدعي Stripe أو PayPal لإرسال refund تلقائياً. ينشئ طلب استرداد بعد استلام المرتجع فعلياً، ثم يسجل موظف المالية مرجع العملية الخارجية قبل تحويل Refund وPayment إلى الحالة النهائية.
+- توجد قيود لمنع الاسترداد المكرر أو تجاوز قيمة الدفع، مع قفل على مستوى الطلب وسجل تدقيق.
+- لا توجد حتى الآن واجهة تنفيذ refund آلي عبر API المزود، ولا تسوية آلية لعمليات الاسترداد مع Webhooks، ولا ربط كامل لعكس عمولات البائع/قيود دفتر الأستاذ. لا يجوز وصف هذه الأجزاء بأنها مكتملة.
+
+### ما لم يتم إثباته بعد
+- Migration `20261110120000_payment_provider_control_center` موجودة في GitHub، لكن تطبيقها على قاعدة بيانات التشغيل لم يتم إثباته من المستودع.
+- لا توجد أدلة في هذه المراجعة على نجاح رحلة PayPal Sandbox فعلية، أو وصول Webhook حقيقي، أو نجاح build/typecheck/tests بعد هذه التغييرات.
+- لا تُفعّل LIVE ولا تنفذ أي عملية مالية حقيقية قبل تطبيق migration، وإعداد مفاتيح الخادم وWebhook sandbox، ثم نجاح تحقق Sandbox بموافقة صاحب الحساب.
+
+### الخطوة التنفيذية التالية
+1. على بيئة Matjar المحلية: `npx prisma migrate deploy`.
+2. ثم: `npx prisma generate` (أغلق عمليات Node/Next التي قد تقفل ملفات Prisma على Windows إذا ظهر EPERM).
+3. إعداد مفتاح vault مستقل 32-byte hex خارج Git وPostgreSQL backups، وإدخال بيانات PayPal Sandbox وWebhook من لوحة Super Admin.
+4. تنفيذ رحلة Sandbox كاملة: إنشاء الطلب، موافقة المشتري، capture من الخادم، Webhook مكرر، والتحقق من أن الطلب والدفع لا يتكرران.
+5. بعد ذلك فقط، بدء حزمة مستقلة لرد الأموال عبر المزود وربطها بقيود المحاسبة والتسوية، مع idempotency ومراجعة مالية مزدوجة.
