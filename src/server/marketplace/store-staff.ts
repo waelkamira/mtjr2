@@ -100,6 +100,49 @@ export async function acceptStoreStaffInvitation(membershipId: string, now = new
   });
 }
 
+/** Changes one member's role without leaving a gap in access or retaining the previous grant. */
+export async function changeStoreStaffRole(membershipIdInput: string, roleKeyInput: string, now = new Date()) {
+  const id = z.string().trim().min(1).max(128).parse(membershipIdInput);
+  const roleKey = z.enum(["STORE_MANAGER", "STORE_CATALOG_MANAGER", "STORE_INVENTORY_MANAGER", "STORE_ORDER_MANAGER", "STORE_CUSTOMER_CARE", "STORE_MARKETING_MANAGER"]).parse(roleKeyInput);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const membership = await tx.sellerStaff.findUnique({
+      where: { id }, select: { id: true, userId: true, storeId: true, status: true, roleId: true }
+    });
+    if (!membership || ![SellerStaffStatus.INVITED, SellerStaffStatus.ACTIVE].includes(membership.status)) {
+      throw new Error("An active or pending staff membership is required.");
+    }
+    await requireStoreOwner(tx, membership.storeId, actor.userId);
+    const nextRole = await tx.role.findUnique({ where: { key: roleKey }, select: { id: true, key: true } });
+    if (!nextRole) throw new Error("The selected store role is not available. Run the identity seed first.");
+    const previousRoleId = membership.roleId ?? (await tx.role.findUnique({ where: { key: "STORE_MANAGER" }, select: { id: true } }))?.id ?? null;
+    if (previousRoleId === nextRole.id) return { membershipId: id, roleKey: nextRole.key, changed: false };
+    if (membership.status === SellerStaffStatus.ACTIVE && previousRoleId) {
+      await tx.userRoleAssignment.deleteMany({
+        where: { userId: membership.userId, roleId: previousRoleId, scopeType: "STORE", scopeId: membership.storeId }
+      });
+    }
+    const updated = await tx.sellerStaff.updateMany({
+      where: { id, status: membership.status, roleId: membership.roleId },
+      data: { roleId: nextRole.id }
+    });
+    if (updated.count !== 1) throw new Error("The staff membership changed. Reload and try again.");
+    if (membership.status === SellerStaffStatus.ACTIVE) {
+      await tx.userRoleAssignment.upsert({
+        where: { userId_roleId_scopeType_scopeId: { userId: membership.userId, roleId: nextRole.id, scopeType: "STORE", scopeId: membership.storeId } },
+        create: { userId: membership.userId, roleId: nextRole.id, scopeType: "STORE", scopeId: membership.storeId, assignedBy: actor.userId },
+        update: { assignedBy: actor.userId }
+      });
+    }
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "store.staff.role_changed",
+      resource: "seller_staff", resourceId: id, scopeType: "STORE", scopeId: membership.storeId,
+      occurredAt: now, metadata: { previousRoleId, nextRoleKey: nextRole.key, membershipStatus: membership.status }
+    }});
+    return { membershipId: id, roleKey: nextRole.key, changed: true };
+  });
+}
+
 /** Only the store owner revokes membership and its store-scoped role grant. */
 export async function revokeStoreStaff(membershipId: string, now = new Date()) {
   const id = z.string().trim().min(1).parse(membershipId);
