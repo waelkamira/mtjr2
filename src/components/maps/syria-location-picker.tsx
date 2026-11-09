@@ -187,7 +187,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const item = governorates.find((entry) => entry.id === id);
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 }); else setFocus(null);
     setError("");
-    if (!id) return;
+    if (!id) { setBusy(false); return; }
     setBusy(true);
     try {
       const districtResult = await loadAllLevel("districts", { governorateId: id });
