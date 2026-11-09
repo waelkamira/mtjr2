@@ -31,7 +31,6 @@ async function postJson(path: string, payload: unknown, t: (english: string, ara
   if (!response.ok) {
     const loginErrors: Record<string, string> = {
       EMAIL_NOT_FOUND: t("No account was found with that email address.", "لم نعثر على حساب بهذا البريد الإلكتروني."),
-      EMAIL_NOT_VERIFIED: t("Verify your email address before signing in.", "تحقق من بريدك الإلكتروني قبل تسجيل الدخول."),
       INVALID_PASSWORD: t("The password is incorrect.", "كلمة المرور غير صحيحة."),
       INVALID_CREDENTIALS: t("Email or password is incorrect.", "البريد الإلكتروني أو كلمة المرور غير صحيحين."),
       RATE_LIMITED: t("Too many attempts. Try again later.", "محاولات كثيرة. حاول مرة أخرى لاحقًا.")
@@ -114,10 +113,6 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
         setPassword("");
       }
     } catch (cause) {
-      if (mode === "login" && cause instanceof Error && cause.message === t("Verify your email address before signing in.", "تحقق من بريدك الإلكتروني قبل تسجيل الدخول.")) {
-        window.location.assign(`/verify-email?email=${encodeURIComponent(email.trim())}`);
-        return;
-      }
       setError(cause instanceof Error ? cause.message : t("The request could not be completed.", "تعذّر إكمال الطلب."));
     } finally { setBusy(false); }
   }
