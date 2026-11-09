@@ -24,7 +24,7 @@ describe("seller commission snapshots", () => {
     storeFindUnique.mockResolvedValue({ id: "store-1", name: "Shop", sellerId: "seller-1", seller: { ownerId: "owner-1" } });
     commissionFindMany.mockResolvedValue([{
       id: "commission-1", orderId: "order-1", vendorOrderId: "vendor-1", categoryName: "Home",
-      rateBasisPoints: 750, baseAmountMinor: 10000n, commissionMinor: 750n, currencyCode: "USD",
+      rateBasisPoints: 750, baseAmountMinor: BigInt(10000), commissionMinor: BigInt(750), currencyCode: "USD",
       createdAt: new Date("2026-11-01T10:00:00.000Z"),
       order: { orderNumber: "MTJ-1001", status: "CONFIRMED" },
       orderItem: { productName: "Desk lamp", sku: "LAMP-01", quantity: 2 },

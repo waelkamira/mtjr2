@@ -57,8 +57,8 @@ export async function getSellerCommissionHistory(storeIdInput: string) {
     const total = totals.get(row.currencyCode) ?? {
       currencyCode: row.currencyCode,
       minorUnit: row.currency.minorUnit,
-      baseAmountMinor: 0n,
-      commissionMinor: 0n,
+      baseAmountMinor: BigInt(0),
+      commissionMinor: BigInt(0),
       count: 0
     };
     total.baseAmountMinor += row.baseAmountMinor;

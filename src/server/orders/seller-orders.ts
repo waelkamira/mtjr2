@@ -142,7 +142,7 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
         id: vendor.order.id, orderNumber: vendor.order.orderNumber, status: vendor.order.status,
         currencyCode: vendor.order.currencyCode, placedAt: vendor.order.placedAt,
         currency: vendor.order.currency,
-        address: [OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED, OrderStatus.FULFILLED, OrderStatus.COMPLETED].includes(vendor.order.status)
+        address: new Set<OrderStatus>([OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED, OrderStatus.FULFILLED, OrderStatus.COMPLETED]).has(vendor.order.status)
           ? vendor.order.address : null
       },
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),

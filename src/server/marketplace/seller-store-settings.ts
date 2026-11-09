@@ -46,7 +46,7 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       }
     });
     if (!current) throw new SellerStoreSettingsConflictError("STORE_NOT_FOUND");
-    if (current.seller.status !== "ACTIVE" || ![StoreStatus.ACTIVE, StoreStatus.DRAFT].includes(current.status)) {
+    if (current.seller.status !== "ACTIVE" || (current.status !== StoreStatus.ACTIVE && current.status !== StoreStatus.DRAFT)) {
       throw new SellerStoreSettingsConflictError("STORE_NOT_ACTIVE");
     }
 
