@@ -627,6 +627,10 @@ model Store {
   description                String?                     @db.VarChar(2000)
   logoUrl                    String?                     @db.VarChar(2048)
   bannerUrl                  String?                     @db.VarChar(2048)
+  shippingPolicy             String?                     @db.Text
+  returnsPolicy              String?                     @db.Text
+  privacyPolicy              String?                     @db.Text
+  termsOfSale                String?                     @db.Text
   status                     StoreStatus                 @default(DRAFT)
   shippingContactName        String?                     @db.VarChar(120)
   shippingPhone              String?                     @db.VarChar(25)
