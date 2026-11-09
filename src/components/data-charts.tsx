@@ -14,14 +14,14 @@ export type ScatterDatum = {
 };
 
 const palette = [
-  "#9384B5",
-  "#5E9878",
-  "#CE8A5A",
-  "#B38E3F",
-  "#C47D96",
-  "#477B98",
-  "#F06A24",
-  "#776895"
+  "#438FB4",
+  "#69B5B0",
+  "#9185B8",
+  "#D2BD7D",
+  "#C58CA5",
+  "#527F96",
+  "#78A8C6",
+  "#8AB39A"
 ];
 
 export function chartColor(index: number) {
@@ -38,7 +38,7 @@ function ChartCard({
   children: ReactNode;
 }) {
   return (
-    <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-clay)]">
+    <section className="seller-chart-card min-w-0 rounded-[1.7rem] border border-white/90 bg-[linear-gradient(145deg,#f1f7f8,#dce9ed)] p-5 shadow-[0_9px_22px_rgba(35,62,81,.1),inset_0_2px_0_white]">
       <div className="mb-4">
         <h2 className="text-base font-semibold text-[var(--color-onyx)]">{title}</h2>
         {description && <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{description}</p>}
@@ -68,7 +68,7 @@ export function ColumnChart({
           <svg role="img" aria-label={title} viewBox={`0 0 ${width} 190`} className="h-48 w-full min-w-[480px]" preserveAspectRatio="none">
             {[0, 1, 2, 3].map((line) => {
               const y = 12 + line * 42;
-              return <line key={line} x1="30" x2={width - 4} y1={y} y2={y} stroke="#E8E4DF" strokeDasharray="3 4" />;
+              return <line key={line} x1="30" x2={width - 4} y1={y} y2={y} stroke="#D6E4E9" strokeDasharray="3 4" />;
             })}
             {data.map((item, index) => {
               const barWidth = Math.max(4, Math.min(20, (width - 45) / data.length - 4));
@@ -81,7 +81,7 @@ export function ColumnChart({
                 </g>
               );
             })}
-            <line x1="30" x2={width - 4} y1="150" y2="150" stroke="#C9C4BD" />
+            <line x1="30" x2={width - 4} y1="150" y2="150" stroke="#9EB8C3" />
           </svg>
           <div className="mt-1 flex justify-between gap-2 text-[10px] text-[var(--muted)]">
             <span>{data[0]?.label}</span><span>{data.at(-1)?.label}</span>
@@ -153,12 +153,12 @@ export function LineAreaChart({
         <div className="overflow-x-auto">
           <svg role="img" aria-label={title} viewBox={`0 0 ${width} 170`} className="h-44 w-full min-w-[480px]" preserveAspectRatio="none">
             {[0, 1, 2, 3].map((lineIndex) => <line key={lineIndex} x1="26" x2={width - 8} y1={25 + lineIndex * 40} y2={25 + lineIndex * 40} stroke="#E8E4DF" strokeDasharray="3 4" />)}
-            {area && <path d={areaPath} fill="#F0660D" opacity=".14" />}
-            <polyline points={line} fill="none" stroke="#F0660D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            {area && <path d={areaPath} fill="#69B5B0" opacity=".2" />}
+            <polyline points={line} fill="none" stroke="#438FB4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
             {points.map(({ x, y, item }, index) => (
               <g key={`${item.label}-${index}`}>
                 <title>{`${item.label}: ${item.value}`}</title>
-                <circle cx={x} cy={y} r="3.5" fill="#F0660D" stroke="white" strokeWidth="2" />
+                <circle cx={x} cy={y} r="3.5" fill="#69B5B0" stroke="white" strokeWidth="2" />
               </g>
             ))}
           </svg>
@@ -267,7 +267,7 @@ export function ScatterPlot({
     <ChartCard title={title} description={description}>
       {data.length ? (
         <svg role="img" aria-label={title} viewBox="0 0 400 220" className="h-52 w-full">
-          {[0, 1, 2, 3].map((line) => <g key={line}><line x1="38" x2="390" y1={20 + line * 50} y2={20 + line * 50} stroke="#E8E4DF" strokeDasharray="3 4" /><line x1={38 + line * 88} x2={38 + line * 88} y1="20" y2="170" stroke="#F0ECE7" /></g>)}
+          {[0, 1, 2, 3].map((line) => <g key={line}><line x1="38" x2="390" y1={20 + line * 50} y2={20 + line * 50} stroke="#E8E4DF" strokeDasharray="3 4" /><line x1={38 + line * 88} x2={38 + line * 88} y1="20" y2="170" stroke="#E0EAED" /></g>)}
           <line x1="38" x2="390" y1="170" y2="170" stroke="#C9C4BD" />
           <line x1="38" x2="38" y1="20" y2="170" stroke="#C9C4BD" />
           {xLabel && <text x="214" y="207" textAnchor="middle" className="fill-[var(--muted)] text-[9px]">{xLabel}</text>}
@@ -351,10 +351,10 @@ export function RadarChart({
         <div className="flex flex-wrap items-center justify-center gap-4">
           <svg role="img" aria-label={title} viewBox="0 0 200 200" className="h-48 w-48">
             {[.25, .5, .75, 1].map((scale) => <polygon key={scale} points={data.map((_, index) => `${center + radius * scale * Math.cos(angleFor(index))},${center + radius * scale * Math.sin(angleFor(index))}`).join(" ")} fill="none" stroke="#E8E4DF" />)}
-            <polygon points={points} fill="#F0660D" fillOpacity=".2" stroke="#F0660D" strokeWidth="2.5" />
+            <polygon points={points} fill="#F0660D" fillOpacity=".2" stroke="#69B5B0" strokeWidth="2.5" />
             {data.map((item, index) => {
               const angle = angleFor(index);
-              return <g key={item.label}><circle cx={center + (item.value / max) * radius * Math.cos(angle)} cy={center + (item.value / max) * radius * Math.sin(angle)} r="3" fill="#F0660D" /><text x={center + 88 * Math.cos(angle)} y={center + 88 * Math.sin(angle)} textAnchor="middle" dominantBaseline="middle" className="fill-[var(--muted)] text-[8px]">{item.label.slice(0, 14)}</text></g>;
+              return <g key={item.label}><circle cx={center + (item.value / max) * radius * Math.cos(angle)} cy={center + (item.value / max) * radius * Math.sin(angle)} r="3" fill="#438FB4" /><text x={center + 88 * Math.cos(angle)} y={center + 88 * Math.sin(angle)} textAnchor="middle" dominantBaseline="middle" className="fill-[var(--muted)] text-[8px]">{item.label.slice(0, 14)}</text></g>;
             })}
           </svg>
           <ul className="space-y-1.5 text-xs">{data.map((item, index) => <li key={item.label} className="flex items-center gap-2"><i className="h-2 w-2 rounded-full" style={{ backgroundColor: chartColor(index) }} />{item.label}: <b>{item.value}</b></li>)}</ul>
