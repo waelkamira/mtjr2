@@ -636,6 +636,8 @@ model Store {
   slug                       String                      @unique @db.VarChar(160)
   name                       String
   description                String?                     @db.VarChar(2000)
+  publicPhone                String?                     @db.VarChar(25)
+  publicAddress              String?                     @db.VarChar(500)
   logoUrl                    String?                     @db.VarChar(2048)
   bannerUrl                  String?                     @db.VarChar(2048)
   logoStorageKey              String?                     @db.VarChar(512)
