@@ -147,7 +147,7 @@ export default function PaymentProvidersPage() {
 
   async function action(id: string, actionName: "verify" | "enable" | "disable" | "archive") {
     if (busyId) return;
-    if (actionName === "archive" && !window.confirm(t("Archive this provider? It cannot be restored or physically deleted.", "هل تريد أرشفة مزود الدفع؟ لن يمكن إعادته أو حذفه نهائياً."))) return;
+    if (actionName === "archive" && window.prompt(t("Type ARCHIVE to confirm. The record and credentials will be retained for historical payment verification.", "اكتب ARCHIVE للتأكيد. سيُحتفظ بالسجل وبيانات التحقق للمدفوعات التاريخية.")) !== "ARCHIVE") return;
     setBusyId(id); setError("");
     try {
       const method = actionName === "archive" ? "DELETE" : "POST";
