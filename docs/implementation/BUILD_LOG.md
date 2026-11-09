@@ -3514,3 +3514,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Updated the finance inventory and seller-facing wording so completed refunds are represented separately, without suggesting they have already been netted into seller earnings.
 - Commits: `b391b5c` (inventory), `96622cc` (seller-facing accounting limitation).
 - No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller-managed public store branding
+
+- Added Store description, logo URL and banner URL fields with a dedicated Prisma migration.
+- Extended the owner/scoped store settings service with HTTPS-only image URL validation, persisted branding fields and audit metadata for changed public fields.
+- Seller workspace now exposes and edits the store description, logo and banner URLs alongside the existing public name/slug controls.
+- Public store lookup and `/stores/[slug]` now expose/render the seller-managed description, logo and banner; the description is also used for page metadata.
+- Store branding image URLs are currently entered as HTTPS URLs. Integrated store-logo/banner upload and a reusable media library remain future work.
+- Commits: `6a57654` (migration), `f4a7001` (Prisma model), `d5883f4` (settings service), `4f6f6b4` (workspace API), `44ab0c4` (public store query), `21dc742` (seller editor), `7828c4d` (public storefront rendering).
+- Source-level schema/service/UI route review only. No tests, build, browser, database, CI or deployment commands were run.
