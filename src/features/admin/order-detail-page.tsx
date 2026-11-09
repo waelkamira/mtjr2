@@ -33,6 +33,8 @@ function money(amount: string, currency: string, minorUnit: number) {
 }
 
 export default function AdminOrderDetailPage({ orderId }: { orderId: string }) {
+  const { locale } = useLocale();
+  const t = (english: string, arabic: string) => translate(locale, english, arabic);
   const [order, setOrder] = useState<AdminOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
