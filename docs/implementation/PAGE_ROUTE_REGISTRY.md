@@ -202,10 +202,10 @@ Do not add Prisma models merely to satisfy a page checklist. A page without a su
 
 ### Required route targets absent from the audited tree
 
-The following dedicated page routes were **not found** in the original 30-page filesystem snapshot. Remaining missing dedicated page routes include: Existing API handlers or embedded controls do not make these page routes exist:
+The following dedicated routes remain absent or conditional after the 2026-11-09 seller route audit. Existing embedded workflows are not treated as missing pages:
 
 - Discovery/public store: `/search`, `/products`, `/categories/[slug]`, `/brands/[slug]`, `/stores/[slug]`, `/stores`.
-- Seller: `/sell`, `/seller/apply`, `/seller/application`, `/seller/dashboard`, `/seller/store`, `/seller/store/settings`, `/seller/warehouses`, `/seller/shipping`, `/seller/returns`, `/seller/orders/[orderId]`, `/seller/products/new`, `/seller/products/[productId]/edit`.
+- Seller: dedicated `/seller/store/settings` and `/seller/settings` profile/policy controls; `/seller/finance`, `/seller/commissions`, `/seller/payouts` only after ledger/reconciliation/payout services are implemented. Application, dashboard analytics, product authoring, warehouse operations, order detail and shipping-rate editing are embedded in existing `/seller`, `/seller/products`, `/seller/inventory`, `/seller/orders` and `/seller/shipping` pages.
 - Admin: `/admin` landing page, user role administration, seller detail/KYC pages, taxonomy administration, and additional order exception/action workflows remain absent or incomplete.
 
 Some absent targets may be intentionally implemented as sections or embedded workflows on an existing route. Before creating new pages, inspect the actual navigation and component behavior; do not duplicate a working embedded workflow just to satisfy a route name. Identity routes are present; their complete HTTP/browser journeys remain unverified.
