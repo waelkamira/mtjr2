@@ -4018,3 +4018,13 @@ Reviewed admin reviews, search synonyms, seller moderation, store reviews, suppo
 - Main includes toast success/error feedback across admin and checkout mutations, richer seller-application detail and private identity-document presence, and more complete current support/moderation workflows.
 - Main cart/checkout/shipping surfaces use shared `formatMinorUnits` for exact currency precision rather than converting integer minor units through floating-point `Number` arithmetic. This is a money-integrity safeguard; branch implementations were not copied.
 - No branch runtime code copied from this batch.
+
+## 2026-11-09 — Ten-file reconciliation batch 11
+
+Reviewed checkout tax, identity login/register, notifications, buyer orders/order detail, seller orders, seller advertising, inventory and product authoring pages.
+
+- Main checkout tax uses exact BigInt comparisons for coupon discounts and shared minor-unit formatting; branch floating-point conversions were not copied.
+- Main identity UI maps typed login errors (including email-not-found, unverified email, incorrect password and rate limiting) and routes successful registration to the dedicated verification lifecycle. Branch inline resend calls a retired endpoint and duplicates the current verify-email page's resend workflow.
+- Main notification pages have toast feedback. Buyer order detail includes the post-payment return context and retry/poll behavior while preserving shared currency formatting.
+- Main seller orders has cursor pagination, status metrics and the expanded paid-order address/shipment context. Main seller advertising has cursor pagination, stale-store response protection and Syria's SYP-first currency choice. Main inventory includes movements, quarantine and stock-count workflows. Main product authoring includes normalized category attributes and current media lifecycle; the branch uses superseded category presets and map model.
+- No branch runtime code copied from this batch.
