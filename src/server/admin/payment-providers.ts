@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requirePlatformManagement } from "@/server/identity/permission-guard";
 import { userHasPermission } from "@/server/identity/permission-repository";
 import { PermissionDeniedError } from "@/server/identity/access-errors";
+import { PaymentProviderConfigurationError } from "@/server/payments/providers/types";
 
 const providerKeySchema = z.enum(["stripe", "paypal"]);
 const countrySchema = z.array(z.string().regex(/^[A-Z]{2}$/)).max(250).transform((values) => [...new Set(values)]);
@@ -60,7 +61,7 @@ function encryptionKeyRing() {
     }
   }
   if (!keys.has(env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION)) {
-    throw new Error("The active provider credential encryption key version is missing from the configured key ring.");
+    throw new PaymentProviderConfigurationError("The active provider credential encryption key version is missing from the configured key ring.");
   }
   return keys;
 }
@@ -83,17 +84,24 @@ function decryptCredentials(value: string, keyVersion: number): ProviderCredenti
   if (!key) throw new Error(`Provider credential key version ${keyVersion} is unavailable; restore it before processing payments.`);
   const [version, noncePart, tagPart, ciphertextPart, extra] = value.split(".");
   if (version !== `v${keyVersion}` || !noncePart || !tagPart || !ciphertextPart || extra !== undefined) {
-    throw new Error("Stored provider credentials have an invalid encrypted envelope.");
+    throw new PaymentProviderConfigurationError("Stored provider credentials have an invalid encrypted envelope.");
   }
-  const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(noncePart, "base64url"));
-  decipher.setAuthTag(Buffer.from(tagPart, "base64url"));
-  const plaintext = Buffer.concat([
-    decipher.update(Buffer.from(ciphertextPart, "base64url")),
-    decipher.final()
-  ]).toString("utf8");
-  const parsed = JSON.parse(plaintext) as unknown;
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Stored provider credentials are invalid.");
-  return parsed as ProviderCredentials;
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(noncePart, "base64url"));
+    decipher.setAuthTag(Buffer.from(tagPart, "base64url"));
+    const plaintext = Buffer.concat([
+      decipher.update(Buffer.from(ciphertextPart, "base64url")),
+      decipher.final()
+    ]).toString("utf8");
+    const parsed = JSON.parse(plaintext) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new PaymentProviderConfigurationError("Stored provider credentials are invalid.");
+    }
+    return parsed as ProviderCredentials;
+  } catch (error) {
+    if (error instanceof PaymentProviderConfigurationError) throw error;
+    throw new PaymentProviderConfigurationError("Stored provider credentials could not be decrypted. Restore the matching key version and verify database integrity.");
+  }
 }
 
 export function decryptPaymentProviderCredentials(value: string, keyVersion: number): ProviderCredentials {
