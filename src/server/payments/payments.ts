@@ -61,6 +61,25 @@ export async function startOrderPayment(input: {
   const providerEnvironment = process.env.NODE_ENV === "production"
     ? PaymentProviderEnvironment.LIVE
     : PaymentProviderEnvironment.TEST;
+  const idempotentAttempt = await prisma.payment.findUnique({
+    where: { idempotencyKey: input.idempotencyKey },
+    select: { id: true, orderId: true, provider: true, status: true, checkoutUrl: true }
+  });
+  if (idempotentAttempt && (idempotentAttempt.orderId !== order.id || idempotentAttempt.provider !== input.providerKey)) {
+    throw new Error("The payment idempotency key is already used for another request.");
+  }
+  const activeAttempt = idempotentAttempt ? null : await prisma.payment.findFirst({
+    where: {
+      orderId: order.id,
+      status: { in: [PaymentStatus.INITIATING, PaymentStatus.REQUIRES_ACTION, PaymentStatus.PROCESSING] }
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, provider: true }
+  });
+  const reusableAttempt = idempotentAttempt ?? activeAttempt;
+  const reusableSnapshot = reusableAttempt?.provider === input.providerKey
+    ? await getPaymentProviderRuntimeSnapshot(reusableAttempt.id)
+    : null;
   const runtimeSelection = input.providerKey === "stripe" || input.providerKey === "paypal"
     ? await getActivePaymentProviderRuntimeConfig(
         input.providerKey,
@@ -69,11 +88,11 @@ export async function startOrderPayment(input: {
         order.address?.countryCode ?? null
       )
     : { managed: false as const, config: null };
-  if (runtimeSelection.managed && !runtimeSelection.config) {
+  if (runtimeSelection.managed && !runtimeSelection.config && !reusableSnapshot) {
     throw new Error("This payment provider is disabled or does not support this order's country or currency.");
   }
   const legacyProvider = runtimeSelection.managed ? null : getPaymentProvider(input.providerKey);
-  if (!runtimeSelection.config && !legacyProvider) {
+  if (!runtimeSelection.config && !legacyProvider && !reusableSnapshot) {
     throw new Error("This payment provider is not configured for the platform.");
   }
   const provider = legacyProvider;
