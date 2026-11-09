@@ -3775,3 +3775,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Re-themed the store profile editor, image upload panels and save actions to match the dashboard's blue-grey/mint palette while retaining the existing upload, preview, selection, delete-token and persistence flows.
 - No tests, builds, typechecks or browser checks were run, as requested; visual and integration verification remains deferred until the seller dashboard build is complete.
 - Sidebar business identity card now loads the authenticated seller's selected store name, URL slug and logo from the existing `GET /api/seller/stores` workspace endpoint; it honors the saved active-store selection and falls back safely when no store is available.
+
+
+## 2026-11-09 — Selective recovery of remaining branch-only pages
+
+- Rechecked the full feat/super-admin-control-panel tree against current main, rather than treating its 337-commit divergence as 337 missing features.
+- Confirmed the branch's older Syria geography endpoint and bundled dataset are superseded by the current main geography hierarchy/locality APIs and database-backed reference data; its old product-location map is superseded by the current Syria location picker.
+- Confirmed the branch's category-field preset implementation is superseded by the current category-attributes API and seeded Akaar category attribute data. Its legacy product image route/storage implementation is superseded by the current seller media API, three-provider upload path, persisted media assets, store-scoped permissions, and temporary-delete workflow.
+- Restored the branch's useful bilingual About and Contact pages on main, adapting the contact page to the environment variables that actually exist in the current main schema. Added localized About and Contact links to desktop and mobile navigation.
+- Did not copy the branch's R2 attachment implementation, demo-seed expansion, stale migrations, or legacy seller UI files. These either are not part of the current seller-media decision, would alter development data, or would overwrite newer main functionality. The branch's unused/inactive footer draft was not copied because it contains generic social destinations and service promises that are not configured as platform capabilities.
+- No tests, build, typecheck, migration execution, or browser checks were run, per instruction.
