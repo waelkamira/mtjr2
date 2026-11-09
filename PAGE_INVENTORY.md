@@ -90,7 +90,7 @@ The segment layout is `src/app/account/layout.tsx`; it calls the centralized ses
 
 ### Seller portal
 
-The seller segment layout is `src/app/seller/layout.tsx` and wraps seller routes in `src/features/seller/seller-portal-shell.tsx` with responsive pastel-clay navigation. Route APIs and services remain the authorization boundary for seller/store membership and per-action permissions. `/seller` embeds application/status and store setup; do not add redundant apply/status routes without a separate workflow requirement.
+The seller segment layout is `src/app/seller/layout.tsx` and wraps seller routes in `src/features/seller/seller-portal-shell.tsx` with responsive dark-navy grouped icon navigation with cool blue-grey raised surfaces and cyan/teal accents. Route APIs and services remain the authorization boundary for seller/store membership and per-action permissions. `/seller` embeds application/status and store setup; do not add redundant apply/status routes without a separate workflow requirement.
 
 | Page | Actual route | Exists | Page/component source | API/data and access | Status |
 |---|---|---:|---|---|---|
