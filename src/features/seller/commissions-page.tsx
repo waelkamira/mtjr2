@@ -15,7 +15,7 @@ type CommissionResponse = { store: { id: string; name: string }; limit: number; 
 
 function csvCell(value: string | number) {
   const raw = String(value);
-  const safe = /^[=+@\\-\\t\\r]/.test(raw) ? "'" + raw : raw;
+  const safe = /^[=+@\- \t\r]/.test(raw) ? "'" + raw : raw;
   return '"' + safe.replace(/"/g, '""') + '"';
 }
 
@@ -31,7 +31,7 @@ function downloadCommissionCsv(data: CommissionResponse) {
       item.commissionMinor, item.currencyCode, item.orderStatus
     ])
   ];
-  const csv = "\\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\\r\\n");
+  const csv = "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
