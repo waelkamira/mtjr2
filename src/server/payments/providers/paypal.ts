@@ -187,6 +187,15 @@ async function createIntent(input: Parameters<PaymentProviderAdapter["createInte
 
 export async function captureApprovedPayPalOrder(orderId: string, paymentId: string, credentials?: Record<string, string>, environment?: "TEST" | "LIVE"): Promise<VerifiedPaymentEvent> {
   if (!/^[A-Za-z0-9-]{8,80}$/.test(orderId)) throw new Error("PayPal order reference is invalid.");
+  // Confirm the PayPal order is linked to this exact Matjar payment before capturing.
+  const originalOrder = await paypalRequest<PayPalOrder>(
+    `/v2/checkout/orders/${encodeURIComponent(orderId)}`,
+    { method: "GET" }, undefined, credentials, environment
+  );
+  if (originalOrder.id !== orderId) throw new Error("PayPal returned a different order reference.");
+  const linkedPaymentIds = originalOrder.purchase_units?.map((unit) => unit.custom_id ?? unit.reference_id).filter(Boolean) ?? [];
+  if (!linkedPaymentIds.includes(paymentId)) throw new Error("PayPal order does not belong to the requested Matjar payment.");
+
   let order: PayPalOrder;
   try {
     order = await paypalRequest<PayPalOrder>(
@@ -201,8 +210,6 @@ export async function captureApprovedPayPalOrder(orderId: string, paymentId: str
   }
 
   if (order.id !== orderId) throw new Error("PayPal returned a different order reference.");
-  const linkedPaymentIds = order.purchase_units?.map((unit) => unit.custom_id ?? unit.reference_id).filter(Boolean) ?? [];
-  if (!linkedPaymentIds.includes(paymentId)) throw new Error("PayPal order does not belong to the requested Matjar payment.");
   const capture = captureFromOrder(order);
   const currencyCode = capture.amount!.currency_code!.toUpperCase();
   const status = capture.status?.toUpperCase();
