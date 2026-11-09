@@ -74,3 +74,52 @@ FOR EACH ROW EXECUTE FUNCTION prevent_journal_mutation();
 CREATE TRIGGER "JournalLine_immutable"
 BEFORE UPDATE OR DELETE ON "JournalLine"
 FOR EACH ROW EXECUTE FUNCTION prevent_journal_mutation();
+
+-- Enforce balance and single-currency accounting at transaction commit, even if a caller bypasses the service.
+CREATE OR REPLACE FUNCTION enforce_journal_entry_integrity() RETURNS trigger AS $$
+DECLARE
+  target_entry_id TEXT;
+  entry_currency CHAR(3);
+  debit_total NUMERIC(38, 0);
+  credit_total NUMERIC(38, 0);
+  line_count BIGINT;
+  mismatched_accounts BIGINT;
+BEGIN
+  IF TG_TABLE_NAME = 'JournalEntry' THEN
+    target_entry_id := NEW."id";
+  ELSE
+    target_entry_id := NEW."journalEntryId";
+  END IF;
+
+  SELECT "currencyCode" INTO entry_currency
+  FROM "JournalEntry" WHERE "id" = target_entry_id;
+
+  SELECT
+    COALESCE(SUM("debitMinor"), 0),
+    COALESCE(SUM("creditMinor"), 0),
+    COUNT(*)
+  INTO debit_total, credit_total, line_count
+  FROM "JournalLine" WHERE "journalEntryId" = target_entry_id;
+
+  SELECT COUNT(*) INTO mismatched_accounts
+  FROM "JournalLine" jl
+  JOIN "LedgerAccount" la ON la."id" = jl."accountId"
+  WHERE jl."journalEntryId" = target_entry_id
+    AND la."currencyCode" <> entry_currency;
+
+  IF line_count < 2 OR debit_total <= 0 OR debit_total <> credit_total OR mismatched_accounts > 0 THEN
+    RAISE EXCEPTION 'Journal entry % must contain at least two same-currency lines and balance exactly.', target_entry_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE CONSTRAINT TRIGGER "JournalEntry_balance_check"
+AFTER INSERT ON "JournalEntry"
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION enforce_journal_entry_integrity();
+
+CREATE CONSTRAINT TRIGGER "JournalLine_balance_check"
+AFTER INSERT ON "JournalLine"
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION enforce_journal_entry_integrity();
