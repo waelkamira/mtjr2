@@ -4240,3 +4240,12 @@ The platform account policy is now explicit: email verification is not required 
 - Kept Akaar-origin entries clearly marked as unverified suggestions because the source mixes neighbourhoods and nearby towns; they are not represented as official administrative divisions.
 - After pulling this commit, run npm run db:sync-syria-neighborhoods against the same DATABASE_URL used by the app. The importer is additive and will insert newly retained records without deleting existing ones.
 - No tests, builds, typechecks, or browser checks were run.
+
+
+## 2026-11-10 — OpenSyria-only geography and seller portal audit
+- Reaffirmed OpenSyria Data Geography v0.1.5 as the sole structured Syrian geography source (14 governorates, 62 districts, 272 subdistricts, 7,605 localities).
+- Removed the Akaar-derived neighbourhood suggestion importer and its source JSON from the runtime data pipeline. OpenSyria does not publish a separate verified neighbourhood directory; neighbourhood is now only an optional seller-entered text label.
+- Removed the legacy SyriaNeighborhood Prisma model and Product.neighborhoodId relation, with a migration that preserves existing product.neighborhood text by copying the legacy suggestion name where needed before dropping the old relation/table.
+- Replaced external Nominatim map search with search over imported OpenSyria localities, subdistricts, districts and governorates. Exact street-level placement remains controlled by the user's map pin.
+- Removed the legacy neighbourhood API branch and Akaar geography import command from package scripts and browser workflow.
+- Began a page-by-page seller workspace review; no tests, builds, typechecks, or browser checks were run.
