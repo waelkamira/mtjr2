@@ -3716,3 +3716,16 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The application route now returns explicit 403 codes for MFA enrollment and expired verification, with the correct account-security destination. No MFA enforcement was removed or bypassed.
 - The seller workspace now recognizes both MFA states on initial load and on submission, and presents a direct setup/verification link that returns the user to `/seller` after completion.
 - No tests, build, typecheck, or browser checks were run, per instruction.
+
+
+## 2026-11-09 — Seller dashboard visual rebuild and store identity
+
+**Implemented on main**
+- Reworked the seller desktop sidebar to the deep navy reference treatment, with pastel icon tiles, bright active navigation, and matching mobile navigation.
+- Shifted the seller workspace canvas and topbar to the cool blue-grey reference palette.
+- Dashboard hero now uses the selected store's live banner, logo, name, and public description, with a direct owner action to edit the store.
+- Added store-specific public phone and address fields to the Prisma Store model and migration; seller workspace loading, scoped settings validation, update persistence, and audit metadata include both fields.
+- Added editable public phone and address fields to the existing store profile editor. Existing store logo/banner upload, preview, reusable media library, and save flow remain in place.
+
+**Not yet verified**
+- No tests, build, typecheck, or browser checks were run, as requested. The new migration has been committed but not applied to a database. Continue the remaining dashboard layout, chart presentation, and page-by-page seller experience before declaring the seller dashboard complete.
