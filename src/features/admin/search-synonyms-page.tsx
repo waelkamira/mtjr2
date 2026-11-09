@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useLocale } from "@/components/locale-provider";
+import { translate } from "@/lib/locale";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -13,6 +15,8 @@ async function readJson(response: Response) {
 }
 
 export default function AdminSearchSynonymsPage() {
+  const { locale } = useLocale();
+  const t = (english: string, arabic: string) => translate(locale, english, arabic);
   const [items, setItems] = useState<Synonym[]>([]);
   const [locale, setLocale] = useState("en");
   const [term, setTerm] = useState("");
@@ -102,29 +106,29 @@ export default function AdminSearchSynonymsPage() {
       <header className="border-b border-[var(--border)] bg-white px-5 py-5">
         <div className="mx-auto flex max-w-5xl justify-between">
           <Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
-          <nav className="flex gap-4 text-sm"><Link href="/admin/review">Admin</Link><Link href="/admin/tax-rates">Tax rules</Link></nav>
+          <nav className="flex gap-4 text-sm"><Link href="/admin/review">{t(t("Admin", "الإدارة"), "الإدارة")}</Link><Link href="/admin/tax-rates">{t(t("Tax rules", "قواعد الضرائب"), "قواعد الضرائب")}</Link></nav>
         </div>
       </header>
       <div className="mx-auto max-w-5xl px-5 py-10">
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">Platform administration</p>
-        <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">Search synonyms</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">Manage locale-specific equivalent search terms. Active mappings expand public product searches and autocomplete; terms are matched case-insensitively.</p>
+        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t(t("Platform administration", "إدارة المنصة"), "إدارة المنصة")}</p>
+        <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{t(t("Search synonyms", "مرادفات البحث"), "مرادفات البحث")}</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{t(t("Manage locale-specific equivalent search terms. Active mappings expand public product searches and autocomplete; terms are matched case-insensitively.", "أدر مصطلحات البحث المكافئة لكل لغة. توسّع المطابقات النشطة نتائج البحث العام واقتراحات الإكمال التلقائي، وتتم مطابقة المصطلحات دون تمييز حالة الأحرف."), "أدر مصطلحات البحث المكافئة لكل لغة. توسّع المطابقات النشطة نتائج البحث العام واقتراحات الإكمال التلقائي، وتتم مطابقة المصطلحات دون تمييز حالة الأحرف.")}</p>
         {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-5 rounded-xl bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
         <form onSubmit={create} className="mt-7 grid gap-4 rounded-3xl border border-[var(--border)] bg-white p-6 sm:grid-cols-3">
-          <label className="grid gap-2 text-sm">Locale<input required minLength={2} maxLength={16} pattern="[A-Za-z0-9-]+" value={locale} onChange={(event) => setLocale(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
-          <label className="grid gap-2 text-sm">Search term<input required minLength={2} maxLength={160} value={term} onChange={(event) => setTerm(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
-          <label className="grid gap-2 text-sm">Synonym<input required minLength={2} maxLength={160} value={synonym} onChange={(event) => setSynonym(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
+          <label className="grid gap-2 text-sm">{t(t("Locale", "اللغة"), "اللغة")}<input required minLength={2} maxLength={16} pattern="[A-Za-z0-9-]+" value={locale} onChange={(event) => setLocale(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
+          <label className="grid gap-2 text-sm">{t(t("Search term", "مصطلح البحث"), "مصطلح البحث")}<input required minLength={2} maxLength={160} value={term} onChange={(event) => setTerm(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
+          <label className="grid gap-2 text-sm">{t(t("Synonym", "المرادف"), "المرادف")}<input required minLength={2} maxLength={160} value={synonym} onChange={(event) => setSynonym(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
           <button disabled={busy} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 sm:col-span-3">{busy ? "Saving…" : "Add synonym mapping"}</button>
         </form>
         <section className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-6">
-          <h2 className="text-lg font-semibold">Configured mappings</h2>
-          {loading ? <p className="py-5 text-sm text-[var(--muted)]" role="status">Loading mappings…</p> : items.length ? (
+          <h2 className="text-lg font-semibold">{t(t("Configured mappings", "المرادفات المهيأة"), "المرادفات المهيأة")}</h2>
+          {loading ? <p className="py-5 text-sm text-[var(--muted)]" role="status">{t(t("Loading mappings…", "جارٍ تحميل المرادفات…"), "جارٍ تحميل المرادفات…")}</p> : items.length ? (
             <div className="mt-4 divide-y divide-[var(--border)]">{items.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0">
               <div><p className="font-semibold">{item.term} ↔ {item.synonym}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.locale} · {item.isActive ? "Active" : "Inactive"}</p></div>
-              <div className="flex gap-2"><button type="button" disabled={busyId === item.id} onClick={() => void setActive(item, !item.isActive)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-50">{item.isActive ? "Deactivate" : "Activate"}</button><button type="button" disabled={busyId === item.id} onClick={() => void remove(item)} className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50">Delete</button></div>
+              <div className="flex gap-2"><button type="button" disabled={busyId === item.id} onClick={() => void setActive(item, !item.isActive)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-50">{item.isActive ? t("Deactivate", "تعطيل") : t("Activate", "تفعيل")}</button><button type="button" disabled={busyId === item.id} onClick={() => void remove(item)} className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50">{t(t("Delete", "حذف"), "حذف")}</button></div>
             </article>)}</div>
-          ) : !error ? <p className="py-5 text-sm text-[var(--muted)]">No synonym mappings configured.</p> : null}
+          ) : !error ? <p className="py-5 text-sm text-[var(--muted)]">{t(t("No synonym mappings configured.", "لم تتم إضافة مرادفات بعد."), "لم تتم إضافة مرادفات بعد.")}</p> : null}
         </section>
       </div>
     </main>
