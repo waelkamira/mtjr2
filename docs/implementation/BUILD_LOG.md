@@ -4046,3 +4046,15 @@ Reviewed auth return helpers, environment/money utilities, saved-address service
 - **Carried forward:** `currentReturnPath()` now consults the safe persisted auth return destination when already on `/login` or `/register`. This closes the branch-identified case where a remembered destination could be ignored when the auth page had neither a `returnTo` query nor a usable referrer. Existing URL validation remains in force.
 
 Commit: `396cfd4` — restore saved return path on auth pages.
+
+## 2026-11-09 — Ten-file reconciliation batch 14
+
+Reviewed AI assistant, cart, catalog discovery/product/taxonomy, checkout quote, login throttling, password login, MFA and registration services.
+
+- Main AI assistant includes privacy-bounded customer support-ticket lookup; the branch lacks this current tool.
+- Main cart, catalog discovery and checkout quotes subtract quarantined inventory from sellable stock. Branch availability checks ignore quarantine and were not copied.
+- Main product service uses current normalized category attributes, relational catalog/location fields and provider-aware media deletion. Branch geography JSON/map/category-preset assumptions are superseded.
+- Main taxonomy supports the current includeEmpty filter contract. Main login preserves pending-registration verification while allowing established active accounts to remain compatible; branch strict emailVerifiedAt requirement would block legacy active accounts. Main MFA only treats active seller profiles as privileged; branch would treat any seller record as privileged.
+- Carried forward: the branch authenticated upload abuse limit. Added consumeAuthenticatedActionAttempt to the current persistent throttle service and applied a limit of 20 seller product image uploads per user per 15-minute window to the canonical /api/seller/products/media route. The route returns 429 with Retry-After: 900; throttle-store failure fails closed with 503. The legacy image endpoint remains a delegate to this canonical route.
+
+Commits: d61b568 (authenticated action rate-limit helper), f8bc131 (seller image-upload rate limit).
