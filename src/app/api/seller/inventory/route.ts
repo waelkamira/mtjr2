@@ -8,8 +8,9 @@ export async function GET(request: Request): Promise<Response> {
   const params = new URL(request.url).searchParams;
   const storeId = params.get("storeId");
   const q = params.get("q") ?? undefined;
+  const cursor = params.get("cursor") ?? undefined;
   if (!storeId) return Response.json({ error: "storeId is required." }, { status: 400 });
-  try { return Response.json(await listStoreInventory(storeId, new Date(), { q })); }
+  try { return Response.json(await listStoreInventory(storeId, new Date(), { q, cursor }), { headers: { "Cache-Control": "private, no-store" } }); }
   catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid inventory query." }, { status: 400 });
