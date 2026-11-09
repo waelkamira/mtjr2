@@ -119,6 +119,16 @@ export default function SellerWorkspacePage() {
   const [editingStoreProfile, setEditingStoreProfile] = useState(false);
   const [editingStoreName, setEditingStoreName] = useState("");
   const [editingStoreSlug, setEditingStoreSlug] = useState("");
+  const [shippingContactName, setShippingContactName] = useState("");
+  const [shippingPhone, setShippingPhone] = useState("");
+  const [shippingAddressLine1, setShippingAddressLine1] = useState("");
+  const [shippingAddressLine2, setShippingAddressLine2] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
+  const [shippingRegionAddress, setShippingRegionAddress] = useState("");
+  const [shippingPostalCode, setShippingPostalCode] = useState("");
+  const [shippingCountryCode, setShippingCountryCode] = useState("");
+  const [shippingInstructions, setShippingInstructions] = useState("");
+
   const [warehouseName, setWarehouseName] = useState("");
   const [warehouseCode, setWarehouseCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -311,6 +321,34 @@ export default function SellerWorkspacePage() {
     } finally { setBusy(false); }
   }
 
+  async function saveShippingDetails(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedStore?.isOwner) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      await readJson(await fetch(`/api/seller/stores/${encodeURIComponent(selectedStore.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: selectedStore.name, slug: selectedStore.slug,
+          shippingContactName: shippingContactName.trim() || null,
+          shippingPhone: shippingPhone.trim() || null,
+          shippingAddressLine1: shippingAddressLine1.trim() || null,
+          shippingAddressLine2: shippingAddressLine2.trim() || null,
+          shippingCity: shippingCity.trim() || null,
+          shippingRegion: shippingRegionAddress.trim() || null,
+          shippingPostalCode: shippingPostalCode.trim() || null,
+          shippingCountryCode: shippingCountryCode.trim().toUpperCase() || null,
+          shippingInstructions: shippingInstructions.trim() || null
+        })
+      }));
+      await reload();
+      setMessage(translate(locale, "Shipping address and contact details saved.", "تم حفظ عنوان الشحن وبيانات التواصل."));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : translate(locale, "Shipping details could not be saved.", "تعذر حفظ بيانات الشحن."));
+    } finally { setBusy(false); }
+  }
+
   async function saveStoreProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedStore) return;
@@ -330,6 +368,19 @@ export default function SellerWorkspacePage() {
   }
 
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
+  useEffect(() => {
+    if (!selectedStore) return;
+    setShippingContactName(selectedStore.shippingContactName ?? "");
+    setShippingPhone(selectedStore.shippingPhone ?? "");
+    setShippingAddressLine1(selectedStore.shippingAddressLine1 ?? "");
+    setShippingAddressLine2(selectedStore.shippingAddressLine2 ?? "");
+    setShippingCity(selectedStore.shippingCity ?? "");
+    setShippingRegionAddress(selectedStore.shippingRegion ?? "");
+    setShippingPostalCode(selectedStore.shippingPostalCode ?? "");
+    setShippingCountryCode(selectedStore.shippingCountryCode ?? "");
+    setShippingInstructions(selectedStore.shippingInstructions ?? "");
+  }, [selectedStoreId, workspace]);
+
   const hasOwnedStore = workspace?.stores.some((store) => store.isOwner) ?? false;
   const sellerStatusLabels: Record<string, string> = {
     PENDING_PAYMENT: translate(locale, "Awaiting payment", "بانتظار الدفع"),
@@ -721,6 +772,22 @@ export default function SellerWorkspacePage() {
                       <label className="grid gap-1 text-xs">{translate(locale, "Code", "الرمز")}<input required minLength={2} maxLength={40} value={warehouseCode} onChange={(e) => setWarehouseCode(e.target.value.toUpperCase())} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                       <button disabled={busy} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Add warehouse", "إضافة مستودع")}</button>
                     </form>}
+                    {selectedStore.isOwner && <div className="mt-7 border-t border-[var(--border)] pt-6">
+                      <h3 className="font-semibold">{translate(locale, "Shipping address & contact", "عنوان الشحن وبيانات التواصل")}</h3>
+                      <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "These details are used by your team when preparing and handing over orders. Keep them current.", "تستخدم هذه البيانات عند تجهيز الطلبات وتسليمها لشركة الشحن. احرص على تحديثها.")}</p>
+                      <form onSubmit={saveShippingDetails} className="mt-4 grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-4 shadow-[0_8px_18px_rgba(40,65,84,.1),inset_0_1px_0_white] sm:grid-cols-2">
+                        <label className="grid gap-1 text-xs">{translate(locale, "Shipping contact name", "اسم مسؤول الشحن")}<input maxLength={120} value={shippingContactName} onChange={(event) => setShippingContactName(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "Shipping phone", "هاتف الشحن")}<input type="tel" maxLength={25} value={shippingPhone} onChange={(event) => setShippingPhone(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs sm:col-span-2">{translate(locale, "Address line 1", "العنوان — السطر الأول")}<input maxLength={240} value={shippingAddressLine1} onChange={(event) => setShippingAddressLine1(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs sm:col-span-2">{translate(locale, "Address line 2", "العنوان — السطر الثاني")}<input maxLength={240} value={shippingAddressLine2} onChange={(event) => setShippingAddressLine2(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "City", "المدينة")}<input maxLength={120} value={shippingCity} onChange={(event) => setShippingCity(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "Region / governorate", "المنطقة / المحافظة")}<input maxLength={120} value={shippingRegionAddress} onChange={(event) => setShippingRegionAddress(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "Postal code", "الرمز البريدي")}<input maxLength={40} value={shippingPostalCode} onChange={(event) => setShippingPostalCode(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "Country code (2 letters)", "رمز الدولة (حرفان)")}<input minLength={2} maxLength={2} pattern="[A-Za-z]{2}" value={shippingCountryCode} onChange={(event) => setShippingCountryCode(event.target.value.toUpperCase())} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm uppercase" /></label>
+                        <label className="grid gap-1 text-xs sm:col-span-2">{translate(locale, "Delivery / pickup instructions", "تعليمات التسليم والاستلام")}<textarea rows={3} maxLength={1000} value={shippingInstructions} onChange={(event) => setShippingInstructions(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" /></label>
+                        <div className="sm:col-span-2 flex justify-end"><button type="submit" disabled={busy} className="rounded-xl bg-[#315d70] px-5 py-2.5 text-xs font-semibold text-white shadow-[0_5px_12px_rgba(49,93,112,.22)] disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save shipping details", "حفظ بيانات الشحن")}</button></div>
+                      </form>
+                    </div>}
                     <div className="mt-7 border-t border-[var(--border)] pt-6">
                       <h3 className="font-semibold">{translate(locale, "Shipping services", "خدمات الشحن")}</h3>
                       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Rates are scoped to a market and optional destination region. Enter the normal amount in the market currency.", "ترتبط الأسعار بسوق ومنطقة وجهة اختيارية. أدخل تكلفة الشحن بصيغتها المعتادة بعملة السوق.")}</p>
