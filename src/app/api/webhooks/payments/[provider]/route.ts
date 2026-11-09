@@ -1,10 +1,9 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { getPaymentProviderAdapter } from "@/server/payments/providers/registry";
-import { getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
+import { getPaymentProviderRuntimeSnapshot, getActiveProviderCredentialsForWebhook } from "@/server/admin/payment-providers";
 import { prisma } from "@/lib/db/prisma";
 import { PaymentProviderEnvironment } from "@prisma/client";
-import { getActiveProviderCredentialsForWebhook } from "@/server/admin/payment-providers";
 import { processVerifiedPaymentEvent } from "@/server/payments/payments";
 
 export const runtime = "nodejs";
@@ -101,10 +100,10 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     const environment = process.env.NODE_ENV === "production"
       ? PaymentProviderEnvironment.LIVE
       : PaymentProviderEnvironment.TEST;
-    const fallbackCredentials = snapshot?.credentials ?? await getActiveProviderCredentialsForWebhook(
+    const fallbackCredentials = snapshot?.credentials ?? (!payment ? await getActiveProviderCredentialsForWebhook(
       providerKey as "stripe" | "paypal",
-      snapshot?.environment ?? environment
-    );
+      environment
+    ) : undefined);
     const verificationRequest = new Request(request.url, {
       method: "POST",
       headers: request.headers,
