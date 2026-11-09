@@ -17,7 +17,7 @@ const updateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   slug: z.string().trim().min(3).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   description: z.string().trim().max(2000).nullable().optional(),
-  publicPhone: z.string().trim().min(7).max(25).regex(/^\\+?[0-9\\s().-]{7,25}$/).nullable().optional(),
+  publicPhone: z.string().trim().min(7).max(25).regex(/^\+?[0-9\s().-]{7,25}$/).nullable().optional(),
   publicAddress: z.string().trim().max(500).nullable().optional(),
   logoUrl: publicImageUrl,
   bannerUrl: publicImageUrl,
