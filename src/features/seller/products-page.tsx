@@ -762,7 +762,7 @@ export default function SellerProductsPage() {
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each). The first image is the storefront cover. Imgur Client IDs rotate in order, then ImageKit and Cloudinary are used as fallbacks.", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة). الصورة الأولى هي غلاف المتجر. يتم تدوير معرفات Imgur بالترتيب ثم استخدام ImageKit وCloudinary كبدائل.")}</p>
               </div>
-              <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_7px_16px_rgba(93,83,139,.14),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:opacity-50">
+              <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-4 py-2.5 text-sm font-bold text-[#40375f] shadow-[0_7px_16px_rgba(93,83,139,.14),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:opacity-50">
                 {uploadingImages ? translate(locale, "Uploading images…", "جارٍ رفع الصور…") : translate(locale, "Choose images", "اختيار الصور")}
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
               </label>
