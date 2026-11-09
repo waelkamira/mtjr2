@@ -386,15 +386,8 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
 }
 
 export async function getOwnedOrder(guestToken: string, orderId: string, now = new Date()) {
-  const session = await getCurrentSession(now);
-  const owner: Owner = session
-    ? { userId: session.userId }
-    : await prisma.guestSession.findUnique({
-        where: { tokenHash: hashToken(guestToken) }, select: { id: true }
-      }).then((guest) => {
-        if (!guest) throw new Error("Order not found.");
-        return { guestSessionId: guest.id };
-      });
+  // Reuse the same expiry/conversion policy used by payment, cancellation and reorder.
+  const owner = await getOrderOwner(guestToken, now);
   const order = await prisma.order.findFirst({
     where: { id: orderId, ...ownerWhere(owner) },
     include: {
