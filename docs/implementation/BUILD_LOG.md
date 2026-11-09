@@ -3507,3 +3507,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Refunds are displayed separately from commission snapshots. They are not netted against seller earnings and do not imply a withdrawable balance or payout.
 - Commits: `c7391ff` (store refund attribution), `686543b` (seller UI and CSV), `bc7fb08` and `521bce5` (full database-side totals and response correction).
 - Source-level relation/scope review only; no tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller finance reporting follow-through
+
+- Corrected the seller commission API to return database-aggregated all-time completed-refund totals, while keeping the detailed completed-refund list bounded to 100 rows.
+- Updated the finance inventory and seller-facing wording so completed refunds are represented separately, without suggesting they have already been netted into seller earnings.
+- Commits: `b391b5c` (inventory), `96622cc` (seller-facing accounting limitation).
+- No tests, build, browser, database, CI or deployment commands were run.
