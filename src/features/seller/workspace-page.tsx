@@ -23,6 +23,7 @@ type Store = {
   shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null;
   shippingCity: string | null; shippingRegion: string | null; shippingPostalCode: string | null; shippingCountryCode: string | null; shippingInstructions: string | null;
   markets: Array<{ market: { id: string; code: string; name: string; defaultCurrencyCode: string } }>;
+  mediaAssets: Array<{ id: string; url: string; storageKey: string | null; mimeType: string | null; width: number | null; height: number | null; createdAt: string }>;
   warehouses: Array<{ id: string; code: string; name: string; _count: { inventories: number } }>;
 };
 type Workspace = {
@@ -457,7 +458,8 @@ export default function SellerWorkspacePage() {
       if (payload.data.deleteToken) setStoreStagedDeleteTokens((tokens) => [...tokens, payload.data!.deleteToken!]);
       if (kind === "logo") { setEditingStoreLogoUrl(payload.data.url); setEditingStoreLogoStorageKey(payload.data.storageKey ?? ""); setStoreLogoDeleteToken(payload.data.deleteToken ?? ""); }
       else { setEditingStoreBannerUrl(payload.data.url); setEditingStoreBannerStorageKey(payload.data.storageKey ?? ""); setStoreBannerDeleteToken(payload.data.deleteToken ?? ""); }
-      setMessage(translate(locale, "Image uploaded. Save the store profile to publish this change.", "تم رفع الصورة. احفظ ملف المتجر لاعتماد التغيير."));
+      await reload();
+      setMessage(translate(locale, "Image uploaded to your reusable store media library. Save the profile to apply it.", "تم رفع الصورة إلى مكتبة وسائط المتجر القابلة لإعادة الاستخدام. احفظ الملف لاعتمادها."));
     } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "The image could not be uploaded.", "تعذر رفع الصورة.")); }
     finally { setStoreMediaUploading(""); }
   }
@@ -884,6 +886,20 @@ export default function SellerWorkspacePage() {
                         <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store banner", "رفع غلاف المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "banner")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#cfe8df] file:px-3 file:py-2 file:font-bold file:text-[#365b50]" />{storeMediaUploading === "banner" && <span className="text-[#5d9d8c]">{translate(locale, "Uploading banner…", "جارٍ رفع الغلاف…")}</span>}<button type="button" onClick={() => { setEditingStoreBannerUrl(""); setEditingStoreBannerStorageKey(""); setStoreBannerDeleteToken(""); }} className="justify-self-start text-[11px] font-bold text-[#89546a] underline">{translate(locale, "Remove banner from store profile", "إزالة الغلاف من ملف المتجر")}</button></label>
                       </div>
                       <p className="text-[10px] leading-5 text-[#8790a5] sm:col-span-2">{translate(locale, "Images use the seller-scoped media uploader and its configured provider rotation. Uploading only stages the URL in this editor; save the store profile to publish it.", "تُرفع الصور عبر خدمة الوسائط المقيّدة بمتجرك وبآلية التناوب بين مزودي الرفع المضبوطين. الرفع يضع الرابط في المحرر فقط؛ احفظ ملف المتجر لاعتماده.")}</p>
+                      <div className="sm:col-span-2 rounded-2xl border border-white/90 bg-white/55 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2"><h5 className="text-sm font-extrabold text-[#34445a]">{translate(locale, "Store media library", "مكتبة وسائط المتجر")}</h5><span className="text-[10px] text-[#8790a5]">{selectedStore.mediaAssets.length} / 100</span></div>
+                        {selectedStore.mediaAssets.length ? <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                          {selectedStore.mediaAssets.map((asset) => <div key={asset.id} className="overflow-hidden rounded-xl border border-white bg-white/80 p-2 shadow-[inset_0_1px_0_white]">
+                            <img src={asset.url} alt="" referrerPolicy="no-referrer" className="h-24 w-full rounded-lg object-cover" />
+                            <p className="mt-2 truncate text-[10px] text-[#8790a5]">{asset.width && asset.height ? asset.width + " × " + asset.height : asset.mimeType ?? translate(locale, "Image", "صورة")}</p>
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              <button type="button" onClick={() => { setEditingStoreLogoUrl(asset.url); setEditingStoreLogoStorageKey(asset.storageKey ?? ""); setStoreLogoDeleteToken(""); }} className="rounded-lg bg-[#ded8f5] px-2 py-1 text-[10px] font-bold text-[#494467]">{translate(locale, "Use as logo", "استخدام كشعار")}</button>
+                              <button type="button" onClick={() => { setEditingStoreBannerUrl(asset.url); setEditingStoreBannerStorageKey(asset.storageKey ?? ""); setStoreBannerDeleteToken(""); }} className="rounded-lg bg-[#cfe8df] px-2 py-1 text-[10px] font-bold text-[#365b50]">{translate(locale, "Use as banner", "استخدام كغلاف")}</button>
+                              <button type="button" disabled={!asset.storageKey} onClick={async () => { try { const response = await fetch(`/api/seller/stores/${encodeURIComponent(selectedStore.id)}/media`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assetId: asset.id }) }); const data = await response.json() as { error?: string }; if (!response.ok) throw new Error(data.error || "Unable to delete media."); await reload(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to delete media."); } }} className="rounded-lg bg-[#f8e5eb] px-2 py-1 text-[10px] font-bold text-[#89546a] disabled:opacity-40">{translate(locale, "Delete", "حذف")}</button>
+                            </div>
+                          </div>)}
+                        </div> : <p className="mt-3 rounded-xl bg-white/70 p-4 text-xs text-[#8790a5]">{translate(locale, "Uploaded product and store images will appear here for reuse.", "ستظهر هنا صور المنتجات والمتجر التي ترفعها لإعادة استخدامها.")}</p>}
+                      </div>
                       <div className="flex flex-wrap gap-2 sm:col-span-2"><button disabled={busy || Boolean(storeMediaUploading) || !editingStoreName.trim() || !editingStoreSlug.trim()} className="rounded-xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_6px_14px_rgba(39,104,112,.18)] disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save store profile", "حفظ ملف المتجر")}</button><button type="button" disabled={busy} onClick={() => { void discardStoreProfileEdits(); }} className="rounded-xl border border-white bg-white/70 px-4 py-2.5 text-xs font-semibold text-[#526078]">{translate(locale, "Cancel", "إلغاء")}</button></div>
                     </form>}
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
