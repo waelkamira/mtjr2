@@ -10,12 +10,21 @@ const mocks = vi.hoisted(() => ({
   sellerCount: vi.fn(),
   storeCount: vi.fn(),
   productCount: vi.fn(),
+  userFindMany: vi.fn(),
+  sellerFindManyMetrics: vi.fn(),
+  storeFindManyMetrics: vi.fn(),
+  productFindMany: vi.fn(),
   orderGroupBy: vi.fn(),
   orderCount: vi.fn(),
+  paymentFindMany: vi.fn(),
   paymentGroupBy: vi.fn(),
+  productReviewFindMany: vi.fn(),
   productReviewCount: vi.fn(),
+  storeReviewFindMany: vi.fn(),
   storeReviewCount: vi.fn(),
+  returnRequestFindMany: vi.fn(),
   returnRequestCount: vi.fn(),
+  supportTicketFindMany: vi.fn(),
   supportTicketCount: vi.fn(),
   countryFindMany: vi.fn(),
   currencyFindMany: vi.fn(),
@@ -33,16 +42,16 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     country: { findFirst: mocks.countryFindFirst, findMany: mocks.countryFindMany },
     currency: { findFirst: mocks.currencyFindFirst, findMany: mocks.currencyFindMany },
-    seller: { count: mocks.sellerCount, findUnique: mocks.sellerFindUnique, findMany: mocks.sellerFindMany },
-    store: { count: mocks.storeCount, findUnique: mocks.storeFindUnique, findMany: mocks.storeFindMany },
-    user: { count: mocks.userCount },
-    product: { count: mocks.productCount },
+    seller: { count: mocks.sellerCount, findUnique: mocks.sellerFindUnique, findMany: (args: { where?: unknown }) => args.where ? mocks.sellerFindManyMetrics(args) : mocks.sellerFindMany(args) },
+    store: { count: mocks.storeCount, findUnique: mocks.storeFindUnique, findMany: (args: { where?: unknown }) => args.where ? mocks.storeFindManyMetrics(args) : mocks.storeFindMany(args) },
+    user: { count: mocks.userCount, findMany: mocks.userFindMany },
+    product: { count: mocks.productCount, findMany: mocks.productFindMany },
     order: { groupBy: mocks.orderGroupBy, count: mocks.orderCount, findMany: mocks.orderFindMany },
-    payment: { groupBy: mocks.paymentGroupBy },
-    productReview: { count: mocks.productReviewCount },
-    storeReview: { count: mocks.storeReviewCount },
-    returnRequest: { count: mocks.returnRequestCount },
-    supportTicket: { count: mocks.supportTicketCount },
+    payment: { groupBy: mocks.paymentGroupBy, findMany: mocks.paymentFindMany },
+    productReview: { count: mocks.productReviewCount, findMany: mocks.productReviewFindMany },
+    storeReview: { count: mocks.storeReviewCount, findMany: mocks.storeReviewFindMany },
+    returnRequest: { count: mocks.returnRequestCount, findMany: mocks.returnRequestFindMany },
+    supportTicket: { count: mocks.supportTicketCount, findMany: mocks.supportTicketFindMany },
     $queryRaw: mocks.queryRaw
   }
 }));
@@ -81,6 +90,15 @@ describe("admin dashboard", () => {
     mocks.storeReviewCount.mockResolvedValue(1);
     mocks.returnRequestCount.mockResolvedValue(3);
     mocks.supportTicketCount.mockResolvedValue(6);
+    mocks.userFindMany.mockResolvedValue([]);
+    mocks.sellerFindManyMetrics.mockResolvedValue([]);
+    mocks.storeFindManyMetrics.mockResolvedValue([]);
+    mocks.productFindMany.mockResolvedValue([]);
+    mocks.paymentFindMany.mockResolvedValue([]);
+    mocks.productReviewFindMany.mockResolvedValue([]);
+    mocks.storeReviewFindMany.mockResolvedValue([]);
+    mocks.returnRequestFindMany.mockResolvedValue([]);
+    mocks.supportTicketFindMany.mockResolvedValue([]);
     mocks.countryFindMany.mockResolvedValue([]);
     mocks.currencyFindMany.mockResolvedValue([{ code: "USD", name: "US Dollar", minorUnit: 2 }]);
     mocks.sellerFindMany.mockResolvedValue([]);
@@ -107,9 +125,45 @@ describe("admin dashboard", () => {
     expect(result.metrics.processingOrders).toBe(3);
     expect(result.metrics.grossOrderValueByCurrency).toEqual([{ currencyCode: "USD", amountMinor: "12500" }]);
     expect(result.metrics.successfulPaymentAmountByCurrency).toEqual([{ currencyCode: "USD", amountMinor: "9000" }]);
+    expect(result.orderStatusCounts).toEqual([
+      { status: "PENDING_PAYMENT", count: 2 },
+      { status: "PROCESSING", count: 3 },
+      { status: "COMPLETED", count: 1 },
+      { status: "CANCELLED", count: 1 }
+    ]);
     expect(result.dailyOrders).toEqual([{ day: "2026-11-05", count: 1 }]);
     expect(result.unavailableMetrics.marketplaceRevenue).toContain("No posted commission");
     expect(result.recentOrders[0].totalMinor).toBe("2500");
+    expect(result.metricSamples.totalOrders).toEqual([{ label: "2026-11-05", value: 1 }]);
+  });
+
+  it("returns up to 20 real database samples for every metric card", async () => {
+    const dates = Array.from({ length: 20 }, (_, index) => ({
+      createdAt: new Date(Date.UTC(2026, 10, 5 - index))
+    }));
+    mocks.userFindMany.mockResolvedValue(dates);
+    mocks.sellerFindManyMetrics.mockResolvedValue(dates);
+    mocks.storeFindManyMetrics.mockResolvedValue(dates);
+    mocks.productFindMany.mockResolvedValue(dates);
+    mocks.paymentFindMany.mockResolvedValue(dates);
+    mocks.productReviewFindMany.mockResolvedValue(dates);
+    mocks.storeReviewFindMany.mockResolvedValue(dates);
+    mocks.returnRequestFindMany.mockResolvedValue(dates.map(({ createdAt }) => ({ requestedAt: createdAt })));
+    mocks.supportTicketFindMany.mockResolvedValue(dates);
+    mocks.orderFindMany.mockResolvedValue(dates.map(({ createdAt }, index) => ({
+      id: `order-${index}`,
+      orderNumber: `MTJ-${index}`,
+      status: "PROCESSING",
+      totalMinor: BigInt(2500 + index),
+      currencyCode: "USD",
+      placedAt: createdAt
+    })));
+
+    const result = await getAdminDashboard({ from: "2026-10-17", to: "2026-11-05" }, new Date("2026-11-05T15:00:00.000Z"));
+
+    expect(Object.values(result.metricSamples)).toHaveLength(20);
+    expect(Object.values(result.metricSamples).every((samples) => samples.length === 20)).toBe(true);
+    expect(result.metricSamples.grossOrderValue.every((sample) => sample.value > 0)).toBe(true);
   });
 
   it("rejects invalid and overlong date ranges before querying data", async () => {
