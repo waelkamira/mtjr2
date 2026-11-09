@@ -4188,3 +4188,9 @@ The platform account policy is now explicit: email verification is not required 
 - Confirmed map focus animates at each hierarchy level: governorate (zoom 7), district (10), subdistrict (12), locality (15), and selected nearby neighbourhood suggestion (16). Manual map pin placement remains available.
 - Retained the existing `main` implementation instead of copying the branch's duplicate route/data/map component, preserving its provenance validation, DB-backed pagination, existing neighborhood-candidate safeguards, and product edit hydration.
 - No tests, build, typecheck, or browser validation were run; those remain deferred as requested.
+
+## 2026-11-10 — Akaar-inspired dashboard chart refresh
+- Refreshed the shared chart presentation in `src/components/data-charts.tsx` with a deep graphite/navy glass surface, vivid amber/violet/sky/emerald/pink palette, stronger contrast, cleaner grid lines, and clearer labels.
+- This shared component is used by the seller workspace and the admin dashboard's advanced analytics, so both receive the visual refresh without changing their API requests, chart datasets, calculations, filters, or empty states.
+- The existing monthly Akaar-style admin bar charts remain intact; this change focuses on the shared chart cards that had a different, less vibrant visual treatment.
+- No tests, builds, or browser checks were run, in line with the current instruction to finish implementation before testing.
