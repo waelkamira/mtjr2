@@ -193,15 +193,18 @@ export async function rotateStoredPaymentProviderCredentials() {
   let configCount = 0;
   let paymentCount = 0;
   const sourceVersions = new Set<number>();
+  const maxRowsPerRun = 100;
+  let configScanned = 0;
 
-  while (true) {
+  while (configScanned < maxRowsPerRun) {
     const batch = await prisma.paymentProviderConfig.findMany({
       where: { encryptedCredentials: { not: null }, credentialsKeyVersion: { not: activeVersion } },
       orderBy: { id: "asc" },
-      take: 100,
+      take: Math.min(50, maxRowsPerRun - configScanned),
       select: { id: true, encryptedCredentials: true, credentialsKeyVersion: true }
     });
     if (!batch.length) break;
+    configScanned += batch.length;
     let progressed = 0;
     for (const row of batch) {
       if (!row.encryptedCredentials) continue;
@@ -217,17 +220,19 @@ export async function rotateStoredPaymentProviderCredentials() {
     if (!progressed) break;
   }
 
-  while (true) {
+  let paymentScanned = 0;
+  while (paymentScanned < maxRowsPerRun) {
     const batch = await prisma.payment.findMany({
       where: {
         encryptedProviderCredentials: { not: null },
         providerCredentialsKeyVersion: { not: activeVersion }
       },
       orderBy: { id: "asc" },
-      take: 100,
+      take: Math.min(50, maxRowsPerRun - paymentScanned),
       select: { id: true, encryptedProviderCredentials: true, providerCredentialsKeyVersion: true }
     });
     if (!batch.length) break;
+    paymentScanned += batch.length;
     let progressed = 0;
     for (const row of batch) {
       if (!row.encryptedProviderCredentials || row.providerCredentialsKeyVersion === null) continue;
