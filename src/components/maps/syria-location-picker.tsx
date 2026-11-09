@@ -205,7 +205,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 10 }); else setFocus(null);
     setError("");
-    if (!id) return;
+    if (!id) { setBusy(false); return; }
     setBusy(true);
     try {
       const [subdistrictResult, localityResult] = await Promise.all([
@@ -228,7 +228,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     onChange({ district: selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined });
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 12 }); else setFocus(null);
     setError("");
-    if (!id) return;
+    if (!id) { setBusy(false); return; }
     setBusy(true);
     try { const result = await loadAllLevel("localities", { districtId, subdistrictId: id }); if (request === selectionRequest.current) setLocalities(result.items); }
     catch (cause) { if (request === selectionRequest.current) setError(locationError(cause, locale, "Unable to load localities.", "تعذّر تحميل التجمعات السكانية.")); }
