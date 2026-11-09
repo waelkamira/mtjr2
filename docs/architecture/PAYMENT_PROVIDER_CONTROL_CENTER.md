@@ -167,3 +167,7 @@ The vault supports multiple simultaneous key versions. Keep the old version in t
 ## Refund boundary
 
 Refunds remain finance-confirmed/manual. The platform records a pending refund request, requires the finance operator to enter the external provider refund reference, and only then updates the payment/order accounting state. The current Stripe/PayPal adapters do not issue refund API calls or claim a refund succeeded from a browser action. Automated provider refunds and provider-side refund-status reconciliation are a separate future tranche and must be idempotent before activation.
+
+
+- New managed payment creation locks the selected provider configuration row and revalidates its status, credentials version, country/currency allowlists and enabled method inside the same transaction that persists the Payment. Provider disable/update and checkout creation are therefore serialized for that provider record.
+- PayPal request idempotency values are stable SHA-256-derived 32-character tokens, preserving retry safety while keeping provider header values bounded and normalized.
