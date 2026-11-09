@@ -3407,3 +3407,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Aligned seller profile editing with the seller application security rule: public social links accept HTTPS only; non-HTTPS URLs are rejected by the server.
 - Commit: `9dcb9b5` — `fix(seller): restrict public profile links to HTTPS`.
 - Source-level validation review only; no tests or builds were run.
+
+## 2026-11-09 — Seller profile API MFA error handling
+
+- Mapped mandatory MFA enrollment and freshness failures to explicit 403 responses on the seller profile API instead of falling through to a generic 500.
+- Commit: `cd9ff07` — `fix(seller): map MFA access errors on profile API`.
+- Source-level route error mapping review only; no tests or builds were run.
