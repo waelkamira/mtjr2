@@ -21,7 +21,8 @@
     "db:sync-syria-geography": "node scripts/sync-syria-geography.mjs",
     "db:seed-akaar-attributes": "node scripts/seed-akaar-category-attributes.mjs",
     "db:sync-syria-neighborhoods": "node scripts/sync-syria-neighborhood-suggestions.mjs",
-    "prebuild": "prisma generate"
+    "prebuild": "prisma generate",
+    "db:seed:all": "npm run db:seed && npm run db:sync-syria-geography"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",
