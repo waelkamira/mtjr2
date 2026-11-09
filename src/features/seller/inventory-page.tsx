@@ -54,6 +54,8 @@ export default function SellerInventoryPage() {
   const [search, setSearch] = useState("");
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
+  const [movementCursor, setMovementCursor] = useState<string | null>(null);
+  const [loadingMovements, setLoadingMovements] = useState(false);
   const [stockCounts, setStockCounts] = useState<StockCountSummary[]>([]);
   const [activeStockCount, setActiveStockCount] = useState<StockCountDetail | null>(null);
   const [countWarehouseId, setCountWarehouseId] = useState("");
@@ -110,7 +112,7 @@ export default function SellerInventoryPage() {
       fetch(`/api/seller/inventory?${params.toString()}`, { cache: "no-store" }).then((r) => readJson<InventoryRow[]>(r)),
       fetch(`/api/seller/products?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Product[] }>(r)),
       fetch(`/api/seller/inventory/transfers?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Transfer[] }>(r)),
-      fetch(`/api/seller/inventory/movements?storeId=${encodeURIComponent(id)}&limit=100`, { cache: "no-store" }).then((r) => readJson<{ items: Movement[] }>(r)),
+      fetch(`/api/seller/inventory/movements?storeId=${encodeURIComponent(id)}&limit=100`, { cache: "no-store" }).then((r) => readJson<{ items: Movement[]; nextCursor: string | null }>(r)),
       fetch(`/api/seller/inventory/counts?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: StockCountSummary[] }>(r)).catch((cause: unknown) => { if (isCurrent()) setError(cause instanceof Error ? cause.message : "Stock count service is unavailable."); return { items: [] as StockCountSummary[] }; })
     ]);
     if (!isCurrent()) return;
@@ -118,8 +120,31 @@ export default function SellerInventoryPage() {
     setProducts(productResult.items);
     setTransfers(transferResult.items);
     setMovements(movementResult.items);
+    setMovementCursor(movementResult.nextCursor ?? null);
     setStockCounts(countResult.items);
   }, []);
+
+  async function loadOlderMovements() {
+    if (!storeId || !movementCursor || loadingMovements) return;
+    setLoadingMovements(true);
+    try {
+      const params = new URLSearchParams({ storeId, limit: "100", cursor: movementCursor });
+      const result = await readJson<{ items: Movement[]; nextCursor: string | null }>(
+        await fetch(`/api/seller/inventory/movements?${params.toString()}`, { cache: "no-store" })
+      );
+      setMovements((current) => {
+        const known = new Set(current.map((item) => item.id));
+        return [...current, ...result.items.filter((item) => !known.has(item.id))];
+      });
+      setMovementCursor(result.nextCursor ?? null);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to load older stock movements.", "تعذر تحميل حركات المخزون الأقدم.");
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoadingMovements(false);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -437,8 +462,9 @@ export default function SellerInventoryPage() {
           </form>
         </section>
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]">
-          <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">{translate(locale, "Stock movement ledger", "سجل حركات المخزون")}</h2><span className="text-xs text-[var(--muted)]">{translate(locale, "Latest 100 entries", "آخر 100 حركة")}</span></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">{translate(locale, "Stock movement ledger", "سجل حركات المخزون")}</h2><span className="text-xs text-[var(--muted)]">{translate(locale, "Movement ledger · paginated", "سجل الحركات · صفحات متتابعة")}</span></div>
           {!movements.length ? <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No stock movements recorded yet.", "لا توجد حركات مخزون مسجلة بعد.")}</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3">{translate(locale, "Date", "التاريخ")}</th><th>{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Warehouse", "المستودع")}</th><th>{translate(locale, "Movement", "الحركة")}</th><th>{translate(locale, "On-hand Δ", "تغير الكمية")}</th><th>{translate(locale, "Quarantine Δ", "تغير الحجر")}</th><th>{translate(locale, "Reference / note", "المرجع / الملاحظة")}</th></tr></thead><tbody>{movements.map((movement) => <tr key={movement.id} className="border-b border-[var(--border)]"><td className="py-3 whitespace-nowrap">{new Date(movement.createdAt).toLocaleString(locale === "ar" ? "ar" : "en-GB")}</td><td className="font-medium">{movement.inventory.variant.product.name}<span className="block text-xs text-[var(--muted)]">{movement.inventory.variant.sku}</span></td><td>{movement.inventory.warehouse.name}</td><td>{movement.type.replaceAll("_", " ")}</td><td className={movement.quantityDelta < 0 ? "font-semibold text-rose-700" : "font-semibold text-emerald-700"}>{movement.quantityDelta > 0 ? "+" : ""}{movement.quantityDelta}</td><td>{movement.quarantinedDelta > 0 ? "+" : ""}{movement.quarantinedDelta}</td><td className="max-w-[220px] truncate">{movement.referenceType ? movement.referenceType + " · " + (movement.referenceId ?? "") : movement.note ?? "—"}</td></tr>)}</tbody></table></div>}
+          {movementCursor && <div className="mt-4 text-center"><button type="button" onClick={() => void loadOlderMovements()} disabled={loadingMovements || busy} className={button}>{loadingMovements ? translate(locale, "Loading older movements…", "جارٍ تحميل الحركات الأقدم…") : translate(locale, "Load older movements", "تحميل الحركات الأقدم")}</button></div>}
         </section>
         <div className="grid gap-6 lg:grid-cols-2">
           <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]"><h2 className="text-lg font-semibold">{translate(locale, "Create stock transfer", "إنشاء نقل مخزون")}</h2><form onSubmit={createTransfer} className="mt-4 grid gap-3"><label className="grid gap-1 text-sm">{translate(locale, "Source warehouse", "المستودع المصدر")}<select required className={field} value={sourceWarehouseId} onChange={(e) => setSourceWarehouseId(e.target.value)}>{warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Destination warehouse", "المستودع الوجهة")}<select required className={field} value={destinationWarehouseId} onChange={(e) => setDestinationWarehouseId(e.target.value)}>{warehouses.filter((w) => w.id !== sourceWarehouseId).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Variant", "المتغير")}<select required className={field} value={transferVariantId} onChange={(e) => setTransferVariantId(e.target.value)}><option value="">{translate(locale, "Select variant", "اختر متغيرًا")}</option>{variants.map((v) => <option key={v.id} value={v.id}>{v.productName} · {v.sku}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Quantity", "الكمية")}<input required type="number" min="1" max="1000000" step="1" className={field} value={transferQuantity} onChange={(e) => setTransferQuantity(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Reference (optional)", "مرجع (اختياري)")}<input maxLength={100} className={field} value={transferReference} onChange={(e) => setTransferReference(e.target.value)} /></label><button disabled={busy || warehouses.length < 2 || !transferVariantId || !sourceWarehouseId || !destinationWarehouseId || sourceWarehouseId === destinationWarehouseId || !Number.isInteger(Number(transferQuantity)) || Number(transferQuantity) < 1} className={button}>{translate(locale, "Create transfer draft", "إنشاء مسودة نقل")}</button></form></section>
