@@ -119,7 +119,7 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
     take: 100,
     include: {
       store: { select: { id: true, name: true, slug: true } },
-      order: { select: { id: true, orderNumber: true, status: true, currencyCode: true, placedAt: true, currency: { select: { minorUnit: true } } } },
+      order: { select: { id: true, orderNumber: true, status: true, currencyCode: true, placedAt: true, currency: { select: { minorUnit: true } }, address: { select: { recipientName: true, phone: true, countryName: true, line1: true, line2: true, city: true, region: true, postalCode: true } } } },
       shipment: { include: { events: { orderBy: { occurredAt: "asc" } } } },
       items: { orderBy: { createdAt: "asc" }, select: { id: true, productName: true, sku: true, variantName: true, quantity: true, unitAmountMinor: true, lineTotalMinor: true } }
     }
@@ -138,7 +138,13 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
           occurredAt: event.occurredAt.toISOString()
         }))
       } : null,
-      order: vendor.order,
+      order: {
+        id: vendor.order.id, orderNumber: vendor.order.orderNumber, status: vendor.order.status,
+        currencyCode: vendor.order.currencyCode, placedAt: vendor.order.placedAt,
+        currency: vendor.order.currency,
+        address: [OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.PARTIALLY_FULFILLED, OrderStatus.FULFILLED, OrderStatus.COMPLETED].includes(vendor.order.status)
+          ? vendor.order.address : null
+      },
       subtotalMinor: vendor.subtotalMinor.toString(), shippingMinor: vendor.shippingMinor.toString(),
       taxMinor: vendor.taxMinor.toString(), totalMinor: vendor.totalMinor.toString(),
       items: vendor.items.map((item) => ({
