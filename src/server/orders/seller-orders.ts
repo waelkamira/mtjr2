@@ -87,7 +87,7 @@ async function updateParentFulfillmentStatus(
 }
 
 export async function listSellerVendorOrders(now = new Date(), searchInput: unknown = {}) {
-  const { q } = z.object({ q: z.string().trim().max(120).optional() }).strict().parse(searchInput);
+  const { q, storeId } = z.object({ q: z.string().trim().max(120).optional(), storeId: z.string().trim().min(1).max(128).optional() }).strict().parse(searchInput);
   const actor = await requireCurrentSession(now);
   const platformAdmin = await userHasPermission(actor.userId, { permissionKey: "users:manage", now });
   const stores = await prisma.store.findMany({
@@ -106,7 +106,9 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
     });
     return store.seller.status === "ACTIVE" && (platformAdmin || isOwner || delegated) ? store.id : null;
   }));
-  const storeIds = allowed.filter((id): id is string => Boolean(id));
+  const authorizedStoreIds = allowed.filter((id): id is string => Boolean(id));
+  // Apply the requested store only after deriving and checking the actor's server-side store scope.
+  const storeIds = storeId ? authorizedStoreIds.filter((id) => id === storeId) : authorizedStoreIds;
   if (!storeIds.length) return { orders: [] };
 
   const vendorOrders = await prisma.vendorOrder.findMany({
