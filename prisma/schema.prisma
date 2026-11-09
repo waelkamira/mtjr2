@@ -360,6 +360,12 @@ enum InventoryMovementType {
   TRANSFER_IN
 }
 
+enum StockCountStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 enum InventoryReservationStatus {
   ACTIVE
   CONSUMED
@@ -628,6 +634,7 @@ model Store {
   reviews                    StoreReview[]
   warehouses                 Warehouse[]
   stockTransfers             StockTransfer[]
+  stockCountSessions         StockCountSession[]
   shippingRates              StoreShippingRate[]
   checkoutShippingSelections CheckoutShippingSelection[]
   checkoutQuoteLines         CheckoutQuoteLine[]
@@ -990,6 +997,7 @@ model Warehouse {
   updatedAt         DateTime        @updatedAt
   store             Store           @relation(fields: [storeId], references: [id], onDelete: Restrict)
   inventories       Inventory[]
+  stockCountSessions StockCountSession[]
   outgoingTransfers StockTransfer[] @relation("StockTransferSource")
   incomingTransfers StockTransfer[] @relation("StockTransferDestination")
 
@@ -1011,10 +1019,45 @@ model Inventory {
   variant          ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Restrict)
   movements        InventoryMovement[]
   reservations     InventoryReservation[]
+  stockCountLines  StockCountLine[]
 
   @@unique([warehouseId, variantId])
   @@index([variantId, warehouseId])
   @@index([warehouseId, quantityOnHand, quantityReserved])
+}
+
+model StockCountSession {
+  id          String           @id @default(cuid())
+  storeId     String
+  warehouseId String
+  status      StockCountStatus @default(IN_PROGRESS)
+  note        String?          @db.VarChar(500)
+  createdById String?
+  openedAt    DateTime         @default(now())
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  store       Store            @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  warehouse   Warehouse        @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  lines       StockCountLine[]
+
+  @@index([storeId, status, openedAt])
+  @@index([warehouseId, status, openedAt])
+}
+
+model StockCountLine {
+  id               String             @id @default(cuid())
+  sessionId        String
+  inventoryId      String
+  expectedQuantity Int
+  countedQuantity  Int?
+  note             String?            @db.VarChar(500)
+  countedAt        DateTime?
+  session          StockCountSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  inventory        Inventory          @relation(fields: [inventoryId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, inventoryId])
+  @@index([sessionId, countedQuantity])
 }
 
 model InventoryMovement {
