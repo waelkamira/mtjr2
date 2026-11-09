@@ -33,11 +33,11 @@ type PayPalWebhookEvent = {
   };
 };
 
-function configuration() {
-  const clientId = env.PAYPAL_CLIENT_ID?.trim();
-  const clientSecret = env.PAYPAL_CLIENT_SECRET?.trim();
-  const webhookId = env.PAYPAL_WEBHOOK_ID?.trim();
-  const mode = env.PAYPAL_MODE;
+function configuration(credentials?: Record<string, string>, environment?: "TEST" | "LIVE") {
+  const clientId = (credentials?.clientId ?? env.PAYPAL_CLIENT_ID)?.trim();
+  const clientSecret = (credentials?.clientSecret ?? env.PAYPAL_CLIENT_SECRET)?.trim();
+  const webhookId = (credentials?.webhookId ?? env.PAYPAL_WEBHOOK_ID)?.trim();
+  const mode = environment ? (environment === "LIVE" ? "live" : "sandbox") : env.PAYPAL_MODE;
   if (!clientId || !clientSecret || !webhookId) {
     throw new Error("PayPal is not fully configured. Set PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET and PAYPAL_WEBHOOK_ID.");
   }
@@ -49,8 +49,8 @@ function configuration() {
   };
 }
 
-async function accessToken() {
-  const config = configuration();
+async function accessToken(credentials?: Record<string, string>, environment?: "TEST" | "LIVE") {
+  const config = configuration(credentials, environment);
   const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64");
   const response = await fetch(`${config.baseUrl}/v1/oauth2/token`, {
     method: "POST",
@@ -72,9 +72,11 @@ async function accessToken() {
 async function paypalRequest<T>(
   path: string,
   init: RequestInit = {},
-  requestId?: string
+  requestId?: string,
+  credentials?: Record<string, string>,
+  environment?: "TEST" | "LIVE"
 ): Promise<T> {
-  const { token, config } = await accessToken();
+  const { token, config } = await accessToken(credentials, environment);
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${token}`);
   headers.set("Content-Type", "application/json");
@@ -167,7 +169,9 @@ async function createIntent(input: Parameters<PaymentProviderAdapter["createInte
         }
       })
     },
-    input.idempotencyKey
+    input.idempotencyKey,
+    input.providerCredentials,
+    input.providerEnvironment
   );
 
   if (!order.id) throw new Error("PayPal did not return an order reference.");
@@ -180,19 +184,19 @@ async function createIntent(input: Parameters<PaymentProviderAdapter["createInte
   return { providerReference: order.id, checkoutUrl: approvalUrl.toString(), expiresAt: null };
 }
 
-export async function captureApprovedPayPalOrder(orderId: string, paymentId: string): Promise<VerifiedPaymentEvent> {
+export async function captureApprovedPayPalOrder(orderId: string, paymentId: string, credentials?: Record<string, string>, environment?: "TEST" | "LIVE"): Promise<VerifiedPaymentEvent> {
   if (!/^[A-Za-z0-9-]{8,80}$/.test(orderId)) throw new Error("PayPal order reference is invalid.");
   let order: PayPalOrder;
   try {
     order = await paypalRequest<PayPalOrder>(
       `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
       { method: "POST", body: "{}" },
-      `${paymentId}-capture`
+      `${paymentId}-capture`, credentials, environment
     );
   } catch {
     // A repeated return may arrive after PayPal has already captured the order.
     // Retrieve the canonical order and accept it only if a completed capture exists.
-    order = await paypalRequest<PayPalOrder>(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
+    order = await paypalRequest<PayPalOrder>(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, { method: "GET" }, undefined, credentials, environment);
   }
 
   const capture = captureFromOrder(order);
@@ -214,7 +218,7 @@ export async function captureApprovedPayPalOrder(orderId: string, paymentId: str
   };
 }
 
-async function verifyWebhook(request: Request): Promise<VerifiedPaymentEvent> {
+async function verifyWebhook(request: Request, credentials?: Record<string, string>, environment?: "TEST" | "LIVE"): Promise<VerifiedPaymentEvent> {
   const rawBody = await request.text();
   let event: PayPalWebhookEvent;
   try {
@@ -222,7 +226,7 @@ async function verifyWebhook(request: Request): Promise<VerifiedPaymentEvent> {
   } catch {
     throw new Error("PayPal webhook body is not valid JSON.");
   }
-  const config = configuration();
+  const config = configuration(credentials, environment);
   const requiredHeaders = {
     auth_algo: request.headers.get("paypal-auth-algo"),
     cert_url: request.headers.get("paypal-cert-url"),
@@ -243,7 +247,7 @@ async function verifyWebhook(request: Request): Promise<VerifiedPaymentEvent> {
         webhook_id: config.webhookId,
         webhook_event: event
       })
-    }
+    }, undefined, credentials, environment
   );
   if (verification.verification_status !== "SUCCESS") {
     throw new Error("PayPal webhook signature verification failed.");
