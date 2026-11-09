@@ -4215,3 +4215,11 @@ The platform account policy is now explicit: email verification is not required 
 - Fixed loading state cleanup when a seller clears a hierarchy selection, and corrected Arabic error-message detection.
 - Added `npm run db:seed:all` to run the existing seed, import the pinned official geography hierarchy, and then import Akaar-derived neighbourhood candidates (which remain unverified suggestions); documented that these are explicit database operations and must run against the same `DATABASE_URL` used by the app.
 - This is a source-level repair only. The GitHub integration cannot inspect or seed the user's live PostgreSQL database. No tests, build, typecheck, or browser checks were run, consistent with the deferred validation instruction.
+
+
+## 2026-11-10 — Searchable map location selection
+- Added a server-side geocoding endpoint at `/api/geography/search` backed by OpenStreetMap Nominatim, returning validated coordinates and human-readable place labels with Arabic/English result localization and server-side caching.
+- Added a search interface directly above the seller product location map. Sellers can search by street, neighbourhood, city, address or landmark, choose among matching places, and the map flies to the selected coordinates while the selected location is saved through the existing product location payload.
+- Added a browser geolocation action so a seller can use the device's current location when permission is granted; the resulting marker remains draggable and can be fine-tuned on the map.
+- Added minimum/maximum query validation, bounded result count, request timeout, service error states and a one-request-per-second process guard for the public Nominatim service.
+- No tests, builds, typechecks, or browser checks were run, consistent with the current instruction to defer validation until implementation work is complete.
