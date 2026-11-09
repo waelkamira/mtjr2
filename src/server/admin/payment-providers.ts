@@ -44,27 +44,46 @@ async function requireProviderManagement() {
   return actor;
 }
 
-function encryptionKey() {
-  const value = env.PAYMENT_PROVIDER_ENCRYPTION_KEY;
-  if (!value) throw new Error("Provider credential vault is not configured. Set PAYMENT_PROVIDER_ENCRYPTION_KEY.");
-  return Buffer.from(value, "hex");
+function encryptionKeyRing() {
+  const keys = new Map<number, Buffer>();
+  if (env.PAYMENT_PROVIDER_ENCRYPTION_KEYS) {
+    const parsed = JSON.parse(env.PAYMENT_PROVIDER_ENCRYPTION_KEYS) as Record<string, string>;
+    for (const [version, value] of Object.entries(parsed)) {
+      if (!/^\\d+$/.test(version) || !/^[a-fA-F0-9]{64}$/.test(value)) {
+        throw new Error("Provider credential key ring contains an invalid entry.");
+      }
+      keys.set(Number(version), Buffer.from(value, "hex"));
+    }
+  } else if (env.PAYMENT_PROVIDER_ENCRYPTION_KEY) {
+    keys.set(1, Buffer.from(env.PAYMENT_PROVIDER_ENCRYPTION_KEY, "hex"));
+  }
+  if (!keys.has(env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION)) {
+    throw new Error("The active provider credential encryption key version is missing from the configured key ring.");
+  }
+  return keys;
 }
 
 function encryptCredentials(credentials: ProviderCredentials) {
+  const version = env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION;
+  const key = encryptionKeyRing().get(version)!;
   const nonce = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", encryptionKey(), nonce);
+  const cipher = createCipheriv("aes-256-gcm", key, nonce);
   const plaintext = Buffer.from(JSON.stringify(credentials), "utf8");
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  return ["v1", nonce.toString("base64url"), cipher.getAuthTag().toString("base64url"), ciphertext.toString("base64url")].join(".");
+  return {
+    keyVersion: version,
+    encrypted: [`v${version}`, nonce.toString("base64url"), cipher.getAuthTag().toString("base64url"), ciphertext.toString("base64url")].join(".")
+  };
 }
 
 function decryptCredentials(value: string, keyVersion: number): ProviderCredentials {
-  if (keyVersion !== 1) throw new Error("Unsupported provider credential key version.");
+  const key = encryptionKeyRing().get(keyVersion);
+  if (!key) throw new Error(`Provider credential key version ${keyVersion} is unavailable; restore it before processing payments.`);
   const [version, noncePart, tagPart, ciphertextPart, extra] = value.split(".");
-  if (version !== "v1" || !noncePart || !tagPart || !ciphertextPart || extra !== undefined) {
+  if (version !== `v${keyVersion}` || !noncePart || !tagPart || !ciphertextPart || extra !== undefined) {
     throw new Error("Stored provider credentials have an invalid encrypted envelope.");
   }
-  const decipher = createDecipheriv("aes-256-gcm", encryptionKey(), Buffer.from(noncePart, "base64url"));
+  const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(noncePart, "base64url"));
   decipher.setAuthTag(Buffer.from(tagPart, "base64url"));
   const plaintext = Buffer.concat([
     decipher.update(Buffer.from(ciphertextPart, "base64url")),
@@ -205,13 +224,13 @@ export async function createPaymentProviderConfig(input: unknown) {
   const actor = await requireProviderManagement();
   const parsed = createSchema.parse(input);
   validateCredentials(parsed.providerKey, parsed.credentials, parsed.environment);
-  const encryptedCredentials = encryptCredentials(parsed.credentials);
+  const encrypted = encryptCredentials(parsed.credentials);
   const created = await prisma.$transaction(async (tx) => {
     const item = await tx.paymentProviderConfig.create({
       data: {
         providerKey: parsed.providerKey, displayName: parsed.displayName,
         environment: parsed.environment, status: PaymentProviderConfigStatus.CONFIGURED,
-        encryptedCredentials, credentialsKeyVersion: 1,
+        encryptedCredentials: encrypted.encrypted, credentialsKeyVersion: encrypted.keyVersion,
         credentialFingerprint: fingerprint(parsed.credentials),
         supportedCountries: parsed.supportedCountries, supportedCurrencies: parsed.supportedCurrencies,
         enabledPaymentMethods: parsed.enabledPaymentMethods, sortOrder: parsed.sortOrder
@@ -246,7 +265,8 @@ export async function updatePaymentProviderConfig(id: string, input: unknown) {
   let credentialFingerprint = existing.credentialFingerprint;
   if (parsed.credentials) {
     validateCredentials(existing.providerKey as "stripe" | "paypal", parsed.credentials, existing.environment);
-    encryptedCredentials = encryptCredentials(parsed.credentials);
+    const encrypted = encryptCredentials(parsed.credentials);
+    encryptedCredentials = encrypted.encrypted;
     credentialFingerprint = fingerprint(parsed.credentials);
   }
 
@@ -260,7 +280,7 @@ export async function updatePaymentProviderConfig(id: string, input: unknown) {
         ...(parsed.enabledPaymentMethods !== undefined ? { enabledPaymentMethods: parsed.enabledPaymentMethods } : {}),
         ...(parsed.sortOrder !== undefined ? { sortOrder: parsed.sortOrder } : {}),
         ...(parsed.credentials ? {
-          encryptedCredentials, credentialFingerprint,
+          encryptedCredentials, credentialsKeyVersion: env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION, credentialFingerprint,
           status: PaymentProviderConfigStatus.CONFIGURED,
           lastVerificationStatus: null, lastVerificationMessage: null, lastVerifiedAt: null
         } : {})
