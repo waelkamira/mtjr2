@@ -69,6 +69,26 @@ export async function postJournalEntry(input: JournalInput) {
       return { id: existing.id, postedAt: existing.postedAt, alreadyPosted: true };
     }
 
+    if (data.reversalOfId) {
+      const original = await tx.journalEntry.findUnique({
+        where: { id: data.reversalOfId },
+        include: { lines: true }
+      });
+      if (!original || original.currencyCode.trim() !== data.currencyCode) {
+        throw new Error("A reversal must reference an existing journal entry in the same currency.");
+      }
+      const expected = canonicalLines(original.lines.map((line) => ({
+        accountId: line.accountId,
+        debitMinor: line.creditMinor,
+        creditMinor: line.debitMinor,
+        memo: line.memo
+      })));
+      const actual = canonicalLines(lines.map((line) => ({ ...line, memo: line.memo })));
+      if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+        throw new Error("A reversal must exactly negate every original journal line.");
+      }
+    }
+
     const accountIds = [...new Set(lines.map((line) => line.accountId))];
     const accounts = await tx.ledgerAccount.findMany({
       where: { id: { in: accountIds }, currencyCode: data.currencyCode, isActive: true },
