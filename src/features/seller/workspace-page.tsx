@@ -812,11 +812,15 @@ export default function SellerWorkspacePage() {
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric, index) => {
                 const surface = [
-                  "bg-[linear-gradient(145deg,#d7eeeb,#a9d5d2)]",
-                  "bg-[linear-gradient(145deg,#e9edf2,#c9d9e2)]",
-                  "bg-[linear-gradient(145deg,#edf3f4,#d6e4e9)]",
-                  "bg-[linear-gradient(145deg,#e5e3f1,#c7c5df)]"
-                ][index % 4];
+                  "bg-[linear-gradient(145deg,#dff2ee_0%,#b8dfd8_100%)]",
+                  "bg-[linear-gradient(145deg,#e7edf8_0%,#c7d8eb_100%)]",
+                  "bg-[linear-gradient(145deg,#e8e5f6_0%,#cfc9e9_100%)]",
+                  "bg-[linear-gradient(145deg,#f8eee0_0%,#eed8b8_100%)]",
+                  "bg-[linear-gradient(145deg,#f7e8ee_0%,#eacbd8_100%)]",
+                  "bg-[linear-gradient(145deg,#e4f0f5_0%,#c4dfe8_100%)]",
+                  "bg-[linear-gradient(145deg,#f4f0d9_0%,#e8dfae_100%)]",
+                  "bg-[linear-gradient(145deg,#e8f1e4_0%,#c9dfc0_100%)]"
+                ][index % 8];
                 return (
                   <article key={metric.label} className={`group relative isolate overflow-hidden rounded-[1.8rem] border border-white/90 ${surface} p-5 shadow-[0_12px_26px_rgba(37,65,84,.16),inset_0_2px_0_rgba(255,255,255,.95),inset_0_-3px_7px_rgba(54,84,101,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(37,65,84,.22)]`}>
                     <div className="flex items-center gap-3">
