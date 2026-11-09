@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -67,6 +67,8 @@ export default function SellerProductsPage() {
   const [barcode, setBarcode] = useState("");
   type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
+  const uploadedImagesRef = useRef<ProductImageDraft[]>([]);
+  uploadedImagesRef.current = uploadedImages;
   const [uploadingImages, setUploadingImages] = useState(false);
   const [imagePreview, setImagePreview] = useState<{ url: string; alt: string } | null>(null);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amountMinor: string; compareAtMinor: string }>>({});
@@ -188,10 +190,8 @@ export default function SellerProductsPage() {
     setEditMedia([]);
     setCategoryAttributes([]);
     setAttributeValues({});
-    setUploadedImages((current) => {
-      current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
-      return [];
-    });
+    uploadedImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+    setUploadedImages([]);
   }, [storeId]);
 
   useEffect(() => {
