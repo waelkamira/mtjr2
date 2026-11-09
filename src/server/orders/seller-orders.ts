@@ -87,7 +87,7 @@ async function updateParentFulfillmentStatus(
 }
 
 export async function listSellerVendorOrders(now = new Date(), searchInput: unknown = {}) {
-  const { q, storeId } = z.object({ q: z.string().trim().max(120).optional(), storeId: z.string().trim().min(1).max(128).optional() }).strict().parse(searchInput);
+  const { q, storeId, cursor } = z.object({ q: z.string().trim().max(120).optional(), storeId: z.string().trim().min(1).max(128).optional(), cursor: z.string().trim().min(1).max(128).optional() }).strict().parse(searchInput);
   const actor = await requireCurrentSession(now);
   const platformAdmin = await userHasPermission(actor.userId, { permissionKey: "users:manage", now });
   const stores = await prisma.store.findMany({
@@ -118,7 +118,8 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
       { items: { some: { OR: [{ productName: { contains: q, mode: "insensitive" as const } }, { sku: { contains: q, mode: "insensitive" as const } }, { variantName: { contains: q, mode: "insensitive" as const } }] } } }
     ] } : {}) },
     orderBy: { createdAt: "desc" },
-    take: 100,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    take: 101,
     include: {
       store: { select: { id: true, name: true, slug: true } },
       order: { select: { id: true, orderNumber: true, status: true, currencyCode: true, placedAt: true, currency: { select: { minorUnit: true } }, address: { select: { recipientName: true, phone: true, countryName: true, line1: true, line2: true, city: true, region: true, postalCode: true } } } },
@@ -126,8 +127,11 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
       items: { orderBy: { createdAt: "asc" }, select: { id: true, productName: true, sku: true, variantName: true, quantity: true, unitAmountMinor: true, lineTotalMinor: true } }
     }
   });
+  const hasMore = vendorOrders.length > 100;
+  const page = hasMore ? vendorOrders.slice(0, 100) : vendorOrders;
   return {
-    orders: vendorOrders.map((vendor) => ({
+    nextCursor: hasMore ? page[page.length - 1]?.id ?? null : null,
+    orders: page.map((vendor) => ({
       id: vendor.id, status: vendor.status, store: vendor.store,
       shippingServiceName: vendor.shippingServiceName, shippingDestinationRegion: vendor.shippingDestinationRegion,
       minDeliveryDays: vendor.minDeliveryDays, maxDeliveryDays: vendor.maxDeliveryDays,
