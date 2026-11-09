@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import LeafletLocationMap from "@/components/maps/leaflet-location-map";
 import { translate, type Locale } from "@/lib/locale";
 
@@ -267,8 +267,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     if (hasCoordinates) setFocus({ latitude: item!.latitude!, longitude: item!.longitude!, zoom: 15 });
   }
 
-  async function searchMapPlaces(event?: FormEvent<HTMLFormElement>) {
-    event?.preventDefault();
+  async function searchMapPlaces() {
     const query = mapSearchQuery.trim();
     if (query.length < 3) {
       setMapSearchError(translate(locale, "Enter at least 3 characters.", "أدخل ثلاثة أحرف على الأقل."));
@@ -393,11 +392,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       {busy && <p role="status" className="text-xs text-[var(--muted)]">{labels.loading}</p>}
       {!busy && !error && governorates.length === 0 && <p role="alert" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">{translate(locale, "No Syrian geography records are available in this database. Run npm run db:sync-syria-geography to import the official dataset.", "لا توجد بيانات جغرافية سورية في قاعدة البيانات. نفّذ الأمر npm run db:sync-syria-geography لاستيراد البيانات الرسمية.")}</p>}
       {error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
-      <form onSubmit={(event) => void searchMapPlaces(event)} className="space-y-2">
+      <div role="search" className="space-y-2">
         <label className="block text-sm font-medium" htmlFor="seller-map-place-search">{translate(locale, "Find a place on the map", "ابحث عن موقع على الخريطة")}</label>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <input id="seller-map-place-search" className={fieldClass + " mt-0 min-w-0 flex-1"} value={mapSearchQuery} onChange={(event) => { setMapSearchQuery(event.target.value); setMapSearchError(""); }} placeholder={labels.mapSearch} maxLength={160} />
-          <button type="submit" disabled={mapSearchBusy || mapSearchQuery.trim().length < 3} className="rounded-xl bg-[var(--color-ink-800)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{mapSearchBusy ? labels.searching : labels.mapSearchButton}</button>
+          <input id="seller-map-place-search" className={fieldClass + " mt-0 min-w-0 flex-1"} value={mapSearchQuery} onChange={(event) => { setMapSearchQuery(event.target.value); setMapSearchError(""); setMapSearchResults([]); }} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void searchMapPlaces(); } }} placeholder={labels.mapSearch} maxLength={160} />
+          <button type="button" onClick={() => void searchMapPlaces()} disabled={mapSearchBusy || mapSearchQuery.trim().length < 3} className="rounded-xl bg-[var(--color-ink-800)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{mapSearchBusy ? labels.searching : labels.mapSearchButton}</button>
           <button type="button" onClick={useCurrentLocation} disabled={mapSearchBusy} className="rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-ink-900)] disabled:opacity-50">{labels.currentLocation}</button>
         </div>
         {mapSearchError && <p role="status" className="text-xs text-amber-700">{mapSearchError}</p>}
@@ -410,7 +409,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
           </li>)}
         </ul>}
         <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Search by street, neighbourhood, city or landmark, choose a result, then fine-tune the pin by dragging it.", "ابحث باسم الشارع أو الحي أو المدينة أو معلم قريب، ثم اختر النتيجة واضبط الدبوس بدقة بسحبه على الخريطة.")}</p>
-      </form>
+      </div>
       <LeafletLocationMap
         locale={locale}
         value={value.latitude !== undefined && value.longitude !== undefined ? { latitude: value.latitude, longitude: value.longitude } : null}
