@@ -114,14 +114,14 @@ describe("product lifecycle", () => {
       categoryIds: ["category-1"],
       variants: [
         { sku: "SHIRT-S", optionValues: { size: "S" }, prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] },
-        { sku: "SHIRT-M", optionValues: { size: "M" }, prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }
+        { sku: "SHIRT-M", optionValues: { size: "M" }, prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2699" }] }
       ]
     });
     const variants = mocks.productCreate.mock.calls[0][0].data.variants.create;
     expect(variants).toHaveLength(2);
     expect(variants.map((variant: { sku: string }) => variant.sku)).toEqual(["SHIRT-S", "SHIRT-M"]);
     expect(variants.map((variant: { attributes: { create: Array<{ value: string }> } }) => variant.attributes.create[0].value)).toEqual(["S", "M"]);
-    expect(variants.every((variant: { prices: { create: unknown[] } }) => variant.prices.create.length === 1)).toBe(true);
+    expect(variants.map((variant: { prices: { create: Array<{ amountMinor: bigint }> } }) => variant.prices.create[0].amountMinor)).toEqual([BigInt("2499"), BigInt("2699")]);
   });
 
   it("rejects a multi-variant product when any SKU omits a required variant option", async () => {
