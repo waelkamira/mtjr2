@@ -544,22 +544,22 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
-  const inputClass = "w-full rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#fcfaff,#eee9f8)] px-4 py-3 text-sm text-[#4b4565] shadow-[inset_0_2px_5px_rgba(43,69,88,.08),0_1px_0_white] outline-none transition placeholder:text-slate-400 focus:border-[#a99bcf] focus:ring-4 focus:ring-[#c7bce4]/30";
-  return <main className="min-h-screen bg-[linear-gradient(145deg,#f4f0fa_0%,#edf6f2_48%,#fbf1f4_100%)] text-[#423d59]">
+  const inputClass = "w-full rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#fcfaff,#eee9f8)] px-4 py-3 text-sm text-[#263d50] shadow-[inset_0_2px_5px_rgba(43,69,88,.08),0_1px_0_white] outline-none transition placeholder:text-slate-400 focus:border-[#a99bcf] focus:ring-4 focus:ring-[#c7bce4]/30";
+  return <main className="min-h-screen bg-[linear-gradient(145deg,#dbe6eb_0%,#cbd9e0_48%,#e5edf0_100%)] text-[#423d59]">
     <div className="mx-auto max-w-[1680px] px-1 py-2 sm:px-2 lg:px-3 lg:py-3">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.9rem] border border-white/90 bg-[linear-gradient(115deg,#e8e1f5_0%,#d8eee6_48%,#f2e2e9_100%)] p-5 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white] sm:p-7">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.9rem] border border-white/90 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] p-5 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white] sm:p-7">
         <div className="flex min-w-0 items-center gap-4">
-          <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#fcfaff,#d9d0ef)] text-2xl text-[#6a6090] shadow-[0_8px_18px_rgba(35,62,81,.13),inset_0_2px_0_white]" aria-hidden="true">▦</span>
-          <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#7a719b]">{translate(locale, "CATALOG MANAGEMENT", "إدارة الكتالوج")}</p><h1 className="mt-1 text-2xl font-black tracking-tight text-[#4b4565] sm:text-3xl">{translate(locale, "Products", "المنتجات")}</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-[#716b86]">{translate(locale, "Create, organize and maintain your store listings. Category-specific fields and publication rules are applied from the catalog.", "أنشئ منتجات متجرك ونظّمها وأدرها. تُحمّل خصائص كل فئة وتُطبق قواعد النشر من الكتالوج.")}</p></div>
+          <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f5fbfc,#c7dce3)] text-2xl text-[#6a6090] shadow-[0_8px_18px_rgba(35,62,81,.13),inset_0_2px_0_white]" aria-hidden="true">▦</span>
+          <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#628493]">{translate(locale, "CATALOG MANAGEMENT", "إدارة الكتالوج")}</p><h1 className="mt-1 text-2xl font-black tracking-tight text-[#263d50] sm:text-3xl">{translate(locale, "Products", "المنتجات")}</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-[#716b86]">{translate(locale, "Create, organize and maintain your store listings. Category-specific fields and publication rules are applied from the catalog.", "أنشئ منتجات متجرك ونظّمها وأدرها. تُحمّل خصائص كل فئة وتُطبق قواعد النشر من الكتالوج.")}</p></div>
         </div>
-        <Link href="#create-product" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#c9e9dc,#a6d7c7)] px-5 py-3 text-sm font-extrabold text-[#3e4a58] shadow-[0_7px_16px_rgba(38,94,105,.18),inset_0_2px_0_rgba(255,255,255,.85)] transition hover:-translate-y-0.5">＋ {translate(locale, "New product", "منتج جديد")}</Link>
+        <Link href="#create-product" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#a8d9d4,#75b8b8)] px-5 py-3 text-sm font-extrabold text-[#24485a] shadow-[0_7px_16px_rgba(38,94,105,.18),inset_0_2px_0_rgba(255,255,255,.85)] transition hover:-translate-y-0.5">＋ {translate(locale, "New product", "منتج جديد")}</Link>
       </header>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 2xl:grid-cols-[minmax(440px,.92fr)_minmax(540px,1.08fr)]">
         <section id="create-product" className="scroll-mt-24 rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#eee9f8,#d9f0e6)] p-5 shadow-[0_16px_34px_rgba(35,62,81,.17),inset_0_2px_0_white,inset_0_-3px_8px_rgba(48,76,94,.07)] sm:p-7">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-3 rounded-[1.5rem] border border-white/75 bg-[linear-gradient(120deg,#e8e0f4,#edf5ef_58%,#f4e3eb)] p-4 shadow-[inset_0_2px_0_white,0_6px_15px_rgba(37,65,84,.09)]">
-            <div><p className="text-[10px] font-extrabold tracking-[.18em] text-[#7a719b]">{translate(locale,"PRODUCT STUDIO","استوديو المنتجات")}</p><h2 className="mt-1 text-xl font-black tracking-tight text-[#514a6d]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2><p className="mt-1 max-w-lg text-xs leading-5 text-[#77718f]">{translate(locale,"Build a complete listing with category-aware details, variants, pricing and a polished image gallery.","أنشئ إعلاناً متكاملاً يتضمن خصائص الفئة والمتغيرات والأسعار ومعرض صور احترافياً.")}</p></div>
+            <div><p className="text-[10px] font-extrabold tracking-[.18em] text-[#628493]">{translate(locale,"PRODUCT STUDIO","استوديو المنتجات")}</p><h2 className="mt-1 text-xl font-black tracking-tight text-[#2d4a60]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2><p className="mt-1 max-w-lg text-xs leading-5 text-[#718899]">{translate(locale,"Build a complete listing with category-aware details, variants, pricing and a polished image gallery.","أنشئ إعلاناً متكاملاً يتضمن خصائص الفئة والمتغيرات والأسعار ومعرض صور احترافياً.")}</p></div>
             <span className="rounded-full border border-white/80 bg-[#b9d6df] px-3 py-1.5 text-[10px] font-extrabold text-[#35566b] shadow-[inset_0_1px_0_white,0_3px_8px_rgba(43,69,88,.1)]">{translate(locale,"DRAFT WORKFLOW","مسار المسودة")}</span>
           </div>
           <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
@@ -586,7 +586,7 @@ export default function SellerProductsPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">SKU<input required maxLength={100} className={inputClass} value={sku} onChange={(e) => setSku(e.target.value)} placeholder="MAT-001" /></label><label className="grid gap-1 text-sm">{translate(locale, "Barcode (optional)", "الباركود (اختياري)")}<input maxLength={100} className={inputClass} value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="EAN / UPC" /></label></div>
             <div
-              className="grid gap-4 rounded-[1.75rem] border border-dashed border-[#c5b9df] bg-[linear-gradient(145deg,#e8e0f4,#d6eee4)] p-4 shadow-[inset_0_3px_8px_rgba(43,69,88,.13),0_1px_0_white] transition-colors hover:border-[#9c8fc4] sm:p-5"
+              className="grid gap-4 rounded-[1.75rem] border border-dashed border-[#9bbbc7] bg-[linear-gradient(145deg,#e8e0f4,#d6eee4)] p-4 shadow-[inset_0_3px_8px_rgba(43,69,88,.13),0_1px_0_white] transition-colors hover:border-[#9c8fc4] sm:p-5"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); void uploadProductImageFiles(Array.from(event.dataTransfer.files)); }}
               aria-label={translate(locale, "Product image upload area", "منطقة رفع صور المنتج")}
@@ -598,7 +598,7 @@ export default function SellerProductsPage() {
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each). The first image is the storefront cover. Imgur Client IDs rotate in order, then ImageKit and Cloudinary are used as fallbacks.", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة). الصورة الأولى هي غلاف المتجر. يتم تدوير معرفات Imgur بالترتيب ثم استخدام ImageKit وCloudinary كبدائل.")}</p>
               </div>
-              <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[linear-gradient(135deg,#8174a8,#665b8c)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_7px_16px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:opacity-50">
+              <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[linear-gradient(135deg,#68b4b5,#3d8993)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_7px_16px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:opacity-50">
                 {uploadingImages ? translate(locale, "Uploading images…", "جارٍ رفع الصور…") : translate(locale, "Choose images", "اختيار الصور")}
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
               </label>
@@ -628,7 +628,7 @@ export default function SellerProductsPage() {
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
             <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-            {categoryId && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#f4effa,#e3f2ec)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+            {categoryId && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
               <div>
                 <h3 className="text-sm font-semibold">{translate(locale, "Category-specific details", "الخصائص الخاصة بالفئة")}</h3>
                 <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "These fields are defined by the catalog and validated again on the server.", "هذه الحقول معرّفة في الكتالوج ويعاد التحقق منها في الخادم قبل الحفظ.")}</p>
@@ -646,8 +646,8 @@ export default function SellerProductsPage() {
                   })}
                 </div>}
             </section>}
-            {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#f4effa,#e3f2ec)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
-              <div><h3 className="text-sm font-extrabold text-[#514a6d]">{translate(locale, "Variant options", "خيارات المتغير")}</h3><p className="mt-1 text-xs text-[#77718f]">{translate(locale, "These values are saved on the SKU variant, such as size or color.", "تُحفظ هذه القيم على متغير رمز SKU، مثل المقاس أو اللون.")}</p></div>
+            {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+              <div><h3 className="text-sm font-extrabold text-[#2d4a60]">{translate(locale, "Variant options", "خيارات المتغير")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "These values are saved on the SKU variant, such as size or color.", "تُحفظ هذه القيم على متغير رمز SKU، مثل المقاس أو اللون.")}</p></div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
                   const current = attributeValues[attribute.id];
@@ -675,7 +675,7 @@ export default function SellerProductsPage() {
               </div>
             </fieldset>}
             <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
-            <div className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#f4effa,#e3f2ec)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
+            <div className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
               <p className="text-sm font-semibold">{translate(locale, "Prices for every enabled store market", "أسعار كل سوق مفعّل للمتجر")}</p>
               {!availableMarkets.length && <p className="text-xs text-amber-800">{translate(locale, "This store has no active markets enabled.", "لا توجد أسواق مفعّلة لهذا المتجر.")}</p>}
               {availableMarkets.map((market) => {
@@ -686,7 +686,7 @@ export default function SellerProductsPage() {
                   <p className="text-sm font-semibold">{market.name}</p>
                   <label className="grid gap-1 text-sm">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={draft.currencyCode} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, currencyCode: e.target.value } }))}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
                   <label className="grid gap-1 text-sm">{translate(locale, "Price in minor units", "السعر بالوحدات الصغرى")}<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.amountMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amountMinor: e.target.value } }))} placeholder={translate(locale, "e.g. 1299", "مثال: 1299")} /><span className="text-xs text-[var(--muted)]">{translate(locale, "Integer minor units · precision", "عدد صحيح بالوحدات الصغرى · الدقة")} {currency.minorUnit}.</span></label>
-                  <label className="grid gap-1 text-sm">{translate(locale, "Compare-at price (optional, minor units)", "السعر قبل الخصم (اختياري، بالوحدات الصغرى)")}<input inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.compareAtMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, compareAtMinor: e.target.value } }))} placeholder={translate(locale, "Original price", "السعر الأصلي")} /><span className="text-xs text-[#77718f]">{translate(locale, "Must be equal to or higher than the selling price.", "يجب أن يساوي سعر البيع أو يزيد عليه.")}</span></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Compare-at price (optional, minor units)", "السعر قبل الخصم (اختياري، بالوحدات الصغرى)")}<input inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.compareAtMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, compareAtMinor: e.target.value } }))} placeholder={translate(locale, "Original price", "السعر الأصلي")} /><span className="text-xs text-[#718899]">{translate(locale, "Must be equal to or higher than the selling price.", "يجب أن يساوي سعر البيع أو يزيد عليه.")}</span></label>
                 </div>;
               })}
             </div>
@@ -694,7 +694,7 @@ export default function SellerProductsPage() {
           </form>}
         </section>
         <section className="rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#eee9f8,#d9f0e6)] p-6 shadow-[0_16px_32px_rgba(35,62,81,.14),inset_0_2px_0_white,inset_0_-2px_7px_rgba(48,76,94,.05)] sm:p-7">
-          <h2 className="text-xl font-extrabold tracking-tight text-[#514a6d]">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
+          <h2 className="text-xl font-extrabold tracking-tight text-[#2d4a60]">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
           {!loading && products.length > 0 && <section aria-label="Seller catalog analytics" className="mt-5 grid gap-4 sm:grid-cols-2">
             <MetricBarChart title="Product approval pipeline" description="Counts reflect the currently loaded product list and active search." rows={Object.entries(approvalCounts).map(([status, count], index) => ({
               label: status.replaceAll("_", " ").toLowerCase(),
