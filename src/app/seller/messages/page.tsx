@@ -50,7 +50,12 @@ export default function Page() {
     setId("");
     setConversation(null);
     setError("");
-    if (!store) { setLoadingInbox(false); return () => { active = false; }; }
+    if (!store) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the inbox loading state when there is no active store.
+      setLoadingInbox(false);
+      return () => { active = false; };
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- show the inbox loading state before the store query starts.
     setLoadingInbox(true);
     fetch("/api/stores/" + store + "/messages", { cache: "no-store" }).then(async (response) => {
       const data = await response.json();
@@ -67,7 +72,12 @@ export default function Page() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- avoid showing the previous conversation while the selected thread loads.
     setConversation(null);
     setError("");
-    if (!store || !id) { setLoadingConversation(false); return () => { active = false; }; }
+    if (!store || !id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the conversation loading state when no thread is selected.
+      setLoadingConversation(false);
+      return () => { active = false; };
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- show the conversation loading state before the thread query starts.
     setLoadingConversation(true);
     fetch("/api/stores/" + store + "/messages/" + id, { cache: "no-store" }).then(async (response) => {
       const data = await response.json();
