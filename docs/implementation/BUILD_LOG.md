@@ -3999,3 +3999,14 @@ Reviewed Syria location picker, footer, navigation, customer Q&A/returns/reviews
 - Main customer return/review/support/ticket/wishlist pages include mutation toasts, refund visibility, and guest-wishlist merge feedback that the branch versions lack.
 - Main admin navigation includes current Brands and Refunds destinations absent from the branch.
 - No branch runtime code copied from this batch.
+
+## 2026-11-09 — Ten-file reconciliation batch 9
+
+Reviewed admin AI settings, catalog product management, categories, commissions, coupons, dashboard, product Q&A moderation/reports, product moderation and returns pages.
+
+- Main customer/admin mutation surfaces have success/error toast feedback missing from the branch versions.
+- Main commission UI uses the shared BigInt-safe `formatMinorUnits` utility; the branch duplicates conversion logic and should not replace it.
+- Main dashboard retains currency-safe formatting and the complete operational chart sections. The branch additionally renders a compact chart in each of the 20 metric cards using `metricSamples` already returned by the current main dashboard service.
+- **Carried forward:** merged the branch's mini-chart concept and 20 metric-to-sample mappings into the current main dashboard page. The main page keeps its safer shared money formatter, filter behavior, current chart sections and operational links. All 20 cards now show a small colored chart sourced from the existing PostgreSQL aggregate/sample response; no schema or API change was needed.
+
+Commit: `9d3b584` — add colorful metric charts to admin dashboard cards.
