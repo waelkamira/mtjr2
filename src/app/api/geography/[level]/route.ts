@@ -9,9 +9,6 @@ const querySchema = z.object({
   districtId: z.string().trim().min(1).max(100).optional(),
   subdistrictId: z.string().trim().min(1).max(100).optional(),
   q: z.string().trim().max(100).optional(),
-  nearLat: z.coerce.number().min(-90).max(90).optional(),
-  nearLng: z.coerce.number().min(-180).max(180).optional(),
-  radiusKm: z.coerce.number().min(1).max(50).default(15),
   page: z.coerce.number().int().min(1).max(1000).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(100)
 }).strict();
@@ -70,38 +67,12 @@ export async function GET(
         prisma.syriaLocality.findMany({ where, orderBy: [{ nameAr: "asc" }, { nameEn: "asc" }], skip, take: query.limit, select: { id: true, governorateId: true, districtId: true, subdistrictId: true, nameAr: true, nameEn: true, kind: true, latitude: true, longitude: true } }),
         prisma.syriaLocality.count({ where })
       ]);
-    } else if (level === "neighborhoods") {
-      if (!query.governorateId) {
-        return Response.json({ error: "governorateId is required." }, { status: 400 });
-      }
-      const where = { governorateId: query.governorateId, verificationStatus: { in: ["CANDIDATE", "VERIFIED"] } };
-      const candidates = await prisma.syriaNeighborhood.findMany({
-        where,
-        orderBy: [{ cityGroupNameAr: "asc" }, { nameAr: "asc" }],
-        select: { id: true, nameAr: true, cityGroupNameAr: true, latitude: true, longitude: true, verificationStatus: true, source: true }
-      });
-      const radians = (value: number) => value * Math.PI / 180;
-      const distance = (lat: number, lng: number) => {
-        const dLat = radians(lat - query.nearLat!);
-        const dLng = radians(lng - query.nearLng!);
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(query.nearLat!)) * Math.cos(radians(lat)) * Math.sin(dLng / 2) ** 2;
-        return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      };
-      const suggestions = candidates.map((item) => ({
-        ...item,
-        distanceKm: query.nearLat !== undefined && query.nearLng !== undefined ? distance(item.latitude, item.longitude) : null
-      }));
-      if (query.nearLat !== undefined && query.nearLng !== undefined) {
-        suggestions.sort((left, right) => (left.distanceKm ?? 0) - (right.distanceKm ?? 0));
-      }
-      total = suggestions.length;
-      items = suggestions.slice(skip, skip + query.limit);
     } else {
       return Response.json({ error: "Unknown geography level." }, { status: 404 });
     }
 
     return Response.json({ items, pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) } }, {
-      headers: { "Cache-Control": level === "neighborhoods" ? "no-store" : "public, s-maxage=86400, stale-while-revalidate=604800" }
+      headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" }
     });
   } catch (error) {
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid geography query." }, { status: 400 });
