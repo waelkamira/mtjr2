@@ -2131,6 +2131,44 @@ model StoreMessageAttachment {
   @@index([messageId])
 }
 
+enum PaymentProviderEnvironment {
+  TEST
+  LIVE
+}
+
+enum PaymentProviderConfigStatus {
+  DRAFT
+  CONFIGURED
+  ACTIVE
+  DISABLED
+  ARCHIVED
+}
+
+model PaymentProviderConfig {
+  id                       String                       @id @default(cuid())
+  providerKey              String                       @db.VarChar(64)
+  displayName              String                       @db.VarChar(120)
+  environment              PaymentProviderEnvironment
+  status                   PaymentProviderConfigStatus @default(DRAFT)
+  encryptedCredentials    String?                      @db.Text
+  credentialsKeyVersion   Int                          @default(1)
+  credentialFingerprint   String?                      @db.VarChar(24)
+  supportedCountries      String[]                     @default([])
+  supportedCurrencies     String[]                     @default([])
+  enabledPaymentMethods   String[]                     @default([])
+  sortOrder               Int                          @default(0)
+  lastVerifiedAt          DateTime?
+  lastVerificationStatus  String?                      @db.VarChar(32)
+  lastVerificationMessage String?                      @db.VarChar(300)
+  createdAt               DateTime                     @default(now())
+  updatedAt               DateTime                     @updatedAt
+  archivedAt              DateTime?
+
+  @@unique([providerKey, environment])
+  @@index([status, sortOrder])
+  @@index([environment, status])
+}
+
 model Payment {
   id                  String                @id @default(cuid())
   orderId             String
