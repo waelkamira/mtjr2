@@ -139,7 +139,7 @@ export default function SellerProductsPage() {
       DRAFT: "مسودة", ACTIVE: "نشط", INACTIVE: "غير نشط", ARCHIVED: "مؤرشف",
       PENDING: "قيد المراجعة", APPROVED: "مقبول", REJECTED: "مرفوض"
     };
-    return translate(locale, status.replaceAll("_", " "), labels[status] ?? status.replaceAll("_", " "));
+    return translate(locale, status.toLowerCase().replaceAll("_", " "), labels[status] ?? status.toLowerCase().replaceAll("_", " "));
   };
   const approvalCounts = products.reduce((counts, product) => {
     counts[product.approvalStatus] = (counts[product.approvalStatus] ?? 0) + 1;
