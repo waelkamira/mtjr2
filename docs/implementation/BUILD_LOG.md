@@ -3774,3 +3774,4 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Refined shared analytics chart cards with the same clay/pastel visual language and multicolor chart accents; line-chart points now use the existing chart palette.
 - Re-themed the store profile editor, image upload panels and save actions to match the dashboard's blue-grey/mint palette while retaining the existing upload, preview, selection, delete-token and persistence flows.
 - No tests, builds, typechecks or browser checks were run, as requested; visual and integration verification remains deferred until the seller dashboard build is complete.
+- Sidebar business identity card now loads the authenticated seller's selected store name, URL slug and logo from the existing `GET /api/seller/stores` workspace endpoint; it honors the saved active-store selection and falls back safely when no store is available.
