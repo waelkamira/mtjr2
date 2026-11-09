@@ -128,10 +128,7 @@ export async function getSellerCommissionHistory(storeIdInput: string, cursorInp
     limit: 100,
     nextCursor: rows.length === 100 ? rows[rows.length - 1]?.id ?? null : null,
     totals,
-    completedRefundTotals: [...refundTotalsMap.values()].map((row) => ({
-      currencyCode: row.currencyCode, minorUnit: row.minorUnit,
-      amountMinor: row.amountMinor.toString(), itemCount: row.itemCount
-    })),
+    completedRefundTotals,
     completedRefunds: refundRows.map((row) => ({
       id: row.id,
       orderNumber: row.refund.order.orderNumber,
