@@ -334,3 +334,10 @@ No seller portal slice is marked complete solely because these components exist.
 | Seller opens carrier tracking | Same seller order card | Tracking URL is the seller-supplied HTTPS URL validated by shipment service; opened with `noopener noreferrer`. | Tracking number, carrier and tracking events remain on the store-scoped Shipment record. | Source inspected; browser check pending. |
 
 **Privacy boundary:** do not expose recipient name, phone or street address for unpaid orders; do not add parent-order address access to seller routes without the same per-vendor store authorization.
+## Seller store profile update — 2026-11-09
+
+| Actor action | UI → API | Authorization and validation | Persistence / outcome | Verification |
+|---|---|---|---|---|
+| Owner edits store name or draft URL | `/seller` → `PATCH /api/seller/stores/[storeId]` → `updateSellerStoreSettings` | Current session; active seller; owner or exact-store `store:manage`; strict name/slug validation; store row lock; duplicate slug conflict handling. | Store name and slug update atomically with `store.settings_updated` AuditLog. URL changes are allowed only while the store is DRAFT; active store URLs are locked to protect saved customer links. | Source implemented; route/UI, DB uniqueness race and browser verification pending. |
+
+Dedicated store policies, localization, notification preferences and a richer profile remain separate follow-up capabilities; the new form does not claim to edit them.
