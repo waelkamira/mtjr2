@@ -3890,4 +3890,20 @@ No tests, builds, typechecks, or browser checks were run, in line with the reque
 - Classified branch-only QA reports and execution logs as historical evidence for an earlier code snapshot, not current verification. Branch-only test files are deferred because the requested validation phase has not started. The old seller-listings operations guide conflicts with the current media-provider fallback and listing contracts. The branch-only `vercel.json` is intentionally not adopted.
 - The branch-only demo-dashboard seeder remains deferred; it needs a new isolated fixture design against the canonical schema and must not be restored as a production-capable seed command.
 - No runtime source changes were warranted by this sweep. No tests, builds, typechecks, or browser checks were run, in line with the requested build-first workflow.
+## 2026-11-09 — Retained branch tree inventory and legacy-artifact disposition
 
+Re-read both recursive Git trees at the current refs after the prior documentation sweep.
+
+- main was a6779626b42a60d10fb370d4de675bfc598e5857; feat/super-admin-control-panel was 9235f48ff81781a057e759251cf43d8d72654066. The retained branch head was unchanged.
+- The tree inventory contains 816 files on main and 738 on the retained branch: 181 shared paths have different blob contents, 104 paths exist only on main, and 26 paths exist only on the retained branch. These are file-tree counts, not a claim that 181 files remain unreviewed; many shared-path differences were reconciled in the preceding focused reviews.
+- Classified all 26 branch-only paths:
+  - 3 old geography/listing migrations: superseded by the current main schema and migrations; do not replay.
+  - 1 old Syria geography API, 1 bundled geography dataset, 1 geography README, and 1 old product-location map: superseded by the current relational geography and location-picker implementation.
+  - 1 old category-field preset helper: superseded by normalized category attributes and definitions.
+  - 1 old product-image storage service: legacy Imgur/ImageKit-only upload implementation; superseded by the current seller media workflow and provider fallback/rotation. Do not restore its old API contract.
+  - 10 QA inventory/results/execution documents: historical evidence from an earlier snapshot, not current verification and not suitable as a current status report.
+  - 5 branch-only test files: deferred to the explicitly postponed validation phase; their old contracts must be reconciled before any reuse.
+  - 1 seller-listings operations guide: conflicts with the current listing/media contracts.
+  - 1 vercel.json: intentionally not adopted.
+- The 104 main-only paths are retained as main's newer implementation surface; their presence is not a reason to import branch snapshots over them.
+- No additional runtime source change was justified by this inventory pass. No tests, builds, typechecks, migration execution, or browser checks were run, in line with the requested build-first workflow.
