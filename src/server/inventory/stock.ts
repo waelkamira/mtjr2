@@ -361,3 +361,82 @@ export async function listStoreInventoryMovements(storeIdInput: string, now = ne
     }
   });
 }
+
+
+const quarantineDecisionSchema = z.object({
+  warehouseId: z.string().trim().min(1),
+  variantId: z.string().trim().min(1),
+  quantity: z.number().int().min(1).max(1000000),
+  decision: z.enum(["RELEASE", "DISPOSE"]),
+  idempotencyKey: z.string().trim().min(16).max(160),
+  note: z.string().trim().max(500).optional()
+}).strict();
+
+/** Releases inspected returns to sellable stock or removes them from quarantine as disposed. */
+export async function decideQuarantinedStock(input: unknown, now = new Date()) {
+  const data = quarantineDecisionSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const warehouse = await requireWarehouseAccess(tx, data.warehouseId, actor.userId, now);
+    const variant = await tx.productVariant.findFirst({
+      where: { id: data.variantId, product: { storeId: warehouse.storeId } },
+      select: { id: true }
+    });
+    if (!variant) throw new Error("The product variant does not belong to this store.");
+
+    const existing = await tx.inventoryMovement.findUnique({
+      where: { idempotencyKey: data.idempotencyKey },
+      select: { id: true, inventoryId: true, quantityDelta: true, quarantinedDelta: true, type: true, note: true }
+    });
+    const inventory = await tx.inventory.findUnique({
+      where: { warehouseId_variantId: { warehouseId: warehouse.id, variantId: variant.id } }
+    });
+    const expectedOnHandDelta = data.decision === "RELEASE" ? data.quantity : 0;
+    if (existing) {
+      if (!inventory || existing.inventoryId !== inventory.id || existing.type !== InventoryMovementType.ADJUSTMENT ||
+        existing.quantityDelta !== expectedOnHandDelta || existing.quarantinedDelta !== -data.quantity) {
+        throw new Error("The idempotency key was already used for a different quarantine decision.");
+      }
+      return { movementId: existing.id, inventoryId: existing.inventoryId, alreadyApplied: true };
+    }
+    if (!inventory || inventory.quantityQuarantined < data.quantity) {
+      throw new Error("Insufficient quarantined quantity for this decision.");
+    }
+
+    const changed = await tx.inventory.updateMany({
+      where: {
+        id: inventory.id,
+        quantityOnHand: inventory.quantityOnHand,
+        quantityReserved: inventory.quantityReserved,
+        quantityQuarantined: { gte: data.quantity }
+      },
+      data: {
+        ...(data.decision === "RELEASE" ? { quantityOnHand: { increment: data.quantity } } : {}),
+        quantityQuarantined: { decrement: data.quantity }
+      }
+    });
+    if (changed.count !== 1) throw new Error("Quarantined stock changed concurrently; retry the decision.");
+
+    const movement = await tx.inventoryMovement.create({
+      data: {
+        inventoryId: inventory.id,
+        type: InventoryMovementType.ADJUSTMENT,
+        quantityDelta: expectedOnHandDelta,
+        quarantinedDelta: -data.quantity,
+        idempotencyKey: data.idempotencyKey,
+        note: data.note || (data.decision === "RELEASE" ? "Inspected return released to sellable stock." : "Inspected return disposed from quarantine."),
+        referenceType: "QUARANTINE_DECISION",
+        referenceId: data.idempotencyKey,
+        createdById: actor.userId
+      },
+      select: { id: true }
+    });
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId,
+      action: data.decision === "RELEASE" ? "inventory.quarantine.released" : "inventory.quarantine.disposed",
+      resource: "inventory", resourceId: inventory.id, scopeType: "STORE", scopeId: warehouse.storeId,
+      occurredAt: now, metadata: { quantity: data.quantity, movementId: movement.id, warehouseId: warehouse.id, variantId: variant.id }
+    }});
+    return { movementId: movement.id, inventoryId: inventory.id, alreadyApplied: false };
+  }, { isolationLevel: "Serializable" });
+}
