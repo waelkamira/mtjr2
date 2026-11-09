@@ -95,6 +95,10 @@ export async function getActivePaymentProviderRuntimeConfig(
   if (config.supportedCurrencies.length && !config.supportedCurrencies.includes(currencyCode)) {
     return { managed: true as const, config: null };
   }
+  const adapterMethod = providerKey === "stripe" ? "card" : "paypal";
+  if (config.enabledPaymentMethods.length && !config.enabledPaymentMethods.includes(adapterMethod)) {
+    return { managed: true as const, config: null };
+  }
   if (config.supportedCountries.length && (!countryCode || !config.supportedCountries.includes(countryCode))) {
     return { managed: true as const, config: null };
   }
