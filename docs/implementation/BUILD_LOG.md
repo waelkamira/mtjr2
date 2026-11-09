@@ -3765,3 +3765,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Recovered the still-useful post-PR update: Turnstile now surfaces provider error codes, explains common retry causes in Arabic/English, and offers an in-place retry.
 - Recovered typed seller-application conflict handling: active/suspended duplicate applications now return HTTP 409 rather than being reported as a generic client error. Existing email verification and MFA-specific response codes/action URLs on main were preserved.
 - The branch's additional demo-seed expansion to 20 stores and its route test written against the older API contract were not copied: the former changes the local demo dataset materially, and the latter does not match the current main request schema and MFA response contract. No test, build, typecheck, or browser run was performed, per the current build-first instruction.
+
+## 2026-11-09 — Seller dashboard visual and store-profile continuation
+
+- Dashboard hero now surfaces the selected store's public phone as a tap-to-call link and public address as a visible contact chip; both values come from the existing store workspace data.
+- Corrected the hero's `Edit store` action to navigate to `/seller#store-management`, the actual store profile editor, instead of the general seller settings page.
+- Expanded the seller dashboard metric-card surfaces from four repeating gradients to eight distinct pastel treatments (mint, sky, lavender, peach, blush, blue, butter and green).
+- Refined shared analytics chart cards with the same clay/pastel visual language and multicolor chart accents; line-chart points now use the existing chart palette.
+- Re-themed the store profile editor, image upload panels and save actions to match the dashboard's blue-grey/mint palette while retaining the existing upload, preview, selection, delete-token and persistence flows.
+- No tests, builds, typechecks or browser checks were run, as requested; visual and integration verification remains deferred until the seller dashboard build is complete.
