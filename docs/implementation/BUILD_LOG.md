@@ -3901,8 +3901,8 @@ Re-read both recursive Git trees at the current refs after the prior documentati
   - 1 old Syria geography API, 1 bundled geography dataset, 1 geography README, and 1 old product-location map: superseded by the current relational geography and location-picker implementation.
   - 1 old category-field preset helper: superseded by normalized category attributes and definitions.
   - 1 old product-image storage service: legacy Imgur/ImageKit-only upload implementation; superseded by the current seller media workflow and provider fallback/rotation. Do not restore its old API contract.
-  - 10 QA inventory/results/execution documents: historical evidence from an earlier snapshot, not current verification and not suitable as a current status report.
-  - 5 branch-only test files: deferred to the explicitly postponed validation phase; their old contracts must be reconciled before any reuse.
+  - 8 QA inventory/results/execution documents: historical evidence from an earlier snapshot, not current verification and not suitable as a current status report.
+  - 6 branch-only test files: deferred to the explicitly postponed validation phase; their old contracts must be reconciled before any reuse.
   - 1 seller-listings operations guide: conflicts with the current listing/media contracts.
   - 1 vercel.json: intentionally not adopted.
 - The 104 main-only paths are retained as main's newer implementation surface; their presence is not a reason to import branch snapshots over them.
