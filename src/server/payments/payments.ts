@@ -1,11 +1,12 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { PaymentStatus, OrderStatus, VendorOrderStatus, Prisma } from "@prisma/client";
+import { PaymentStatus, OrderStatus, VendorOrderStatus, Prisma, PaymentProviderEnvironment } from "@prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { getPaymentProvider } from "./providers/registry";
+import { getActivePaymentProviderRuntimeConfig, getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
 import type { VerifiedPaymentEvent } from "./providers/types";
 import { createInAppNotification } from "@/server/notifications/notifications";
 import {
@@ -38,9 +39,6 @@ export async function startOrderPayment(input: {
   guestToken: string; orderId: string; providerKey: string; idempotencyKey: string; now?: Date;
 }) {
   const now = input.now ?? new Date();
-  const provider = getPaymentProvider(input.providerKey);
-  if (!provider) throw new Error("This payment provider is not configured for the platform.");
-
   const session = await getCurrentSession(now);
   const owner: Owner = session
     ? { userId: session.userId }
@@ -54,11 +52,31 @@ export async function startOrderPayment(input: {
 
   const order = await prisma.order.findFirst({
     where: { id: input.orderId, ...ownerWhere(owner) },
-    select: { id: true, orderNumber: true, status: true, totalMinor: true, currencyCode: true }
+    select: { id: true, orderNumber: true, status: true, totalMinor: true, currencyCode: true, address: { select: { countryCode: true } } }
   });
   if (!order) throw new Error("Order not found.");
   if (order.status !== OrderStatus.PENDING_PAYMENT) throw new Error("This order is not awaiting payment.");
   if (order.totalMinor <= BigInt(0)) throw new Error("A zero-value order does not require a payment.");
+
+  const providerEnvironment = process.env.NODE_ENV === "production"
+    ? PaymentProviderEnvironment.LIVE
+    : PaymentProviderEnvironment.TEST;
+  const runtimeSelection = input.providerKey === "stripe" || input.providerKey === "paypal"
+    ? await getActivePaymentProviderRuntimeConfig(
+        input.providerKey,
+        providerEnvironment,
+        order.currencyCode,
+        order.address?.countryCode ?? null
+      )
+    : { managed: false as const, config: null };
+  if (runtimeSelection.managed && !runtimeSelection.config) {
+    throw new Error("This payment provider is disabled or does not support this order's country or currency.");
+  }
+  const legacyProvider = runtimeSelection.managed ? null : getPaymentProvider(input.providerKey);
+  if (!runtimeSelection.config && !legacyProvider) {
+    throw new Error("This payment provider is not configured for the platform.");
+  }
+  const provider = legacyProvider;
 
   const payment = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${order.id}, 0))`);
@@ -69,7 +87,7 @@ export async function startOrderPayment(input: {
     if (!currentOrder) throw new Error("This order is no longer awaiting payment.");
     const existing = await tx.payment.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
     if (existing) {
-      if (existing.orderId !== order.id || existing.provider !== provider.key) {
+      if (existing.orderId !== order.id || existing.provider !== input.providerKey) {
         throw new Error("The payment idempotency key is already used for another request.");
       }
       return existing;
@@ -79,13 +97,19 @@ export async function startOrderPayment(input: {
       orderBy: { createdAt: "desc" }
     });
     if (active) {
-      if (active.provider !== provider.key) throw new Error("A payment attempt is already active with another provider. Complete or cancel it before switching methods.");
+      if (active.provider !== input.providerKey) throw new Error("A payment attempt is already active with another provider. Complete or cancel it before switching methods.");
       return active;
     }
     return tx.payment.create({
       data: {
-        orderId: order.id, provider: provider.key, amountMinor: order.totalMinor,
+        orderId: order.id, provider: input.providerKey, amountMinor: order.totalMinor,
         currencyCode: order.currencyCode, idempotencyKey: input.idempotencyKey,
+        ...(runtimeSelection.config ? {
+          providerConfigId: runtimeSelection.config.id,
+          providerEnvironment: runtimeSelection.config.environment,
+          encryptedProviderCredentials: runtimeSelection.config.encryptedCredentials,
+          providerCredentialsKeyVersion: runtimeSelection.config.credentialsKeyVersion
+        } : {}),
         status: PaymentStatus.INITIATING
       }
     });
@@ -95,10 +119,18 @@ export async function startOrderPayment(input: {
 
   try {
     const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.APP_URL).toString();
-    const intent = await provider.createIntent({
+    const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
+    const providerCredentials = snapshot?.credentials ?? runtimeSelection.config?.credentials;
+    const providerAdapter = provider ?? getPaymentProvider(payment.provider);
+    if (!providerAdapter) throw new Error("The payment provider adapter is unavailable.");
+    const intent = await providerAdapter.createIntent({
       paymentId: payment.id, orderNumber: order.orderNumber, amountMinor: order.totalMinor.toString(),
       currencyCode: order.currencyCode, idempotencyKey: payment.idempotencyKey, returnUrl,
-      metadata: { orderId: order.id, paymentId: payment.id }
+      metadata: { orderId: order.id, paymentId: payment.id },
+      ...(providerCredentials ? { providerCredentials } : {}),
+      ...((snapshot?.environment ?? runtimeSelection.config?.environment)
+        ? { providerEnvironment: snapshot?.environment ?? runtimeSelection.config!.environment }
+        : {})
     });
     const checkoutUrl = new URL(intent.checkoutUrl);
     if (checkoutUrl.protocol !== "https:") throw new Error("Payment provider returned an insecure checkout URL.");
