@@ -3130,3 +3130,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Removed `store:staff:manage` from the seeded `STORE_MANAGER` grant and added seed cleanup for that legacy permission link. Least-privilege delegated roles are explicitly deferred rather than silently granting full manager access.
 - Commits: service guard `964d3b455e5db0c3ef345de54d96394b751840ac`; team UI `49947a5a320f334b1cfdb14df828b01d543043e1`, JSX correction `5dfe2ee05c12277a1bf1a74555f94d69dc3dde87`; seed `faca43d6d910645d6515c74f212a30e07cf38cf8`; existing lifecycle tests updated `94ebc3adba864aea2603814f7f13fe83f50eedd2`; inventory/registry/matrix `70a616b6e35ec7c2bf817c13d51abf05b4ce6a67`, `652999d9d1375d0129c68a6297f1d5bb4e06a3a2`, `e17795a2912db17818b2291036c1ec0c440e56b1`.
 - Source-level changes only; run focused staff lifecycle tests and the seller browser journey before marking this slice verified.
+
+## Seller inventory quarantine inspection — 2026-11-09
+
+- Added an idempotent store-scoped quarantine decision service and POST /api/seller/inventory/quarantine.
+- RELEASE moves a requested quantity from quantityQuarantined into quantityOnHand; DISPOSE reduces quantityQuarantined without increasing sellable stock. Both decisions create an inventory movement and audit record in one serializable transaction.
+- Connected the seller inventory page with warehouse, variant, quantity, decision and inspection-note controls.
+- Added focused tests for release, disposal, insufficient quarantine balance and idempotent replay.
+- Runtime CI, PostgreSQL integration and authenticated browser verification remain pending.
