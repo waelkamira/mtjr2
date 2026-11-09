@@ -51,6 +51,8 @@ export default function SellerInventoryPage() {
   const [storeId, setStoreId] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
+  const [inventoryCursor, setInventoryCursor] = useState<string | null>(null);
+  const [loadingInventoryMore, setLoadingInventoryMore] = useState(false);
   const [search, setSearch] = useState("");
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
@@ -109,14 +111,15 @@ export default function SellerInventoryPage() {
     const params = new URLSearchParams({ storeId: id });
     if (q.trim()) params.set("q", q.trim());
     const [stock, productResult, transferResult, movementResult, countResult] = await Promise.all([
-      fetch(`/api/seller/inventory?${params.toString()}`, { cache: "no-store" }).then((r) => readJson<InventoryRow[]>(r)),
+      fetch(`/api/seller/inventory?${params.toString()}`, { cache: "no-store" }).then((r) => readJson<{ items: InventoryRow[]; nextCursor: string | null }>(r)),
       fetch(`/api/seller/products?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Product[] }>(r)),
       fetch(`/api/seller/inventory/transfers?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Transfer[] }>(r)),
       fetch(`/api/seller/inventory/movements?storeId=${encodeURIComponent(id)}&limit=100`, { cache: "no-store" }).then((r) => readJson<{ items: Movement[]; nextCursor: string | null }>(r)),
       fetch(`/api/seller/inventory/counts?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: StockCountSummary[] }>(r)).catch((cause: unknown) => { if (isCurrent()) setError(cause instanceof Error ? cause.message : "Stock count service is unavailable."); return { items: [] as StockCountSummary[] }; })
     ]);
     if (!isCurrent()) return;
-    setInventory(stock);
+    setInventory(stock.items);
+    setInventoryCursor(stock.nextCursor ?? null);
     setProducts(productResult.items);
     setTransfers(transferResult.items);
     setMovements(movementResult.items);
