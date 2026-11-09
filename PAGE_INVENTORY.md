@@ -37,7 +37,7 @@
 
 ## Existing App Router pages
 
-There are **76 `page.tsx` routes** in the audited source tree: 20 public/auth/commerce routes, 17 account routes, 11 seller routes, and 28 admin routes. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below.
+There are **78 `page.tsx` routes** in the audited source tree: 20 public/auth/commerce routes, 17 account routes, 11 seller routes, and 30 admin routes. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below.
 
 ### Public marketplace, cart, checkout, authentication, and legal
 
