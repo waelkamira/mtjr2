@@ -3856,3 +3856,16 @@ Compared the remaining account, seller messaging, storefront, cart, checkout, an
 
 No source changes were warranted by this batch. No tests, builds, typechecks, or browser checks were run, in line with the requested build-first workflow.
 
+## 2026-11-09 — Continued configuration, schema, and shared-component reconciliation
+
+Compared the retained branch versions of environment documentation, package scripts/dependencies, Prisma schema, API-route audit tooling, and global theme styles.
+
+- Kept `main`'s expanded `.env.example`: it documents the current geography, media-provider, mail, AI, marketplace, and security configuration surface beyond the older branch snapshot.
+- Kept `main`'s package manifest and lockfile. The branch manifest predates current scripts and dependencies for the relational geography/category-attribute workflows and current media/service integrations.
+- Kept the current Prisma schema. Main includes additional platform, audit, advertising, seller, geography, listing, and operational models/relations absent from the branch schema. Replacing it would discard current persistence contracts.
+- Kept the current API-route audit script. Main recognizes the current public geography and category-attribute read routes and the broader set of security evidence patterns used by current APIs.
+- Kept the current centralized theme and global styles. Main contains the active clay/pastel token system and shared design variables; the branch's longer global stylesheet includes obsolete Leaflet-global styling and older theme aliases. No global CSS replacement was justified.
+- No source changes were warranted by this batch. The comparison remains a selective reconciliation, not a wholesale branch merge.
+
+No tests, builds, typechecks, or browser checks were run, in line with the requested build-first workflow.
+
