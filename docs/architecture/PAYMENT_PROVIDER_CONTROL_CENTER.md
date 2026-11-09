@@ -162,3 +162,8 @@ The vault supports multiple simultaneous key versions. Keep the old version in t
 
 
 - Webhook delivery handling distinguishes permanent malformed/invalid-signature payloads (4xx) from provider API, encryption-key and database outages (503/5xx with retry guidance). This prevents a temporary PayPal verification outage or missing historical key from being acknowledged as a permanently invalid webhook.
+
+
+## Refund boundary
+
+Refunds remain finance-confirmed/manual. The platform records a pending refund request, requires the finance operator to enter the external provider refund reference, and only then updates the payment/order accounting state. The current Stripe/PayPal adapters do not issue refund API calls or claim a refund succeeded from a browser action. Automated provider refunds and provider-side refund-status reconciliation are a separate future tranche and must be idempotent before activation.
