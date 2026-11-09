@@ -3293,3 +3293,27 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level authorization and query-path review only. No build, test, PostgreSQL or browser result is claimed for these commits.
+
+
+## 2026-11-09 — Seller product pricing and reproducible Prisma production build
+
+**Implemented on `main`**
+- Diagnosed the failing seller catalog browser journey from the prior `40af4c6` run. The create button validated the active per-variant market prices and also checked a legacy `marketPrices` state object that the current editor no longer updates. This duplicate stale-state check kept the button disabled even after every SKU price and image upload was valid.
+- Removed the redundant legacy check. `variantPricesValid` remains the authoritative validation across every product variant and every market enabled for the selected store; the no-active-market guard remains.
+- Added a browser assertion that the create-draft button becomes enabled after the SKU price and image-upload steps, before submitting the draft.
+- Vercel build logs for commit `af18e1f` showed TypeScript errors caused by a Prisma Client generated from an older schema. The install log also showed Prisma lifecycle scripts were not automatically run. Added the npm `prebuild` lifecycle script to run `prisma generate` before `next build`; no secrets or Vercel project settings were changed.
+
+**Commits**
+- `8a895af` — `fix(seller): validate prices from product variants consistently`.
+- `eaa3a68` — `fix(build): generate Prisma Client before production builds`.
+- `8c64e75` — `test(seller): assert draft form is enabled after pricing and upload`.
+
+**Verification**
+- GitHub Actions CI on `8c64e752dd14a018b99fcf676980adce45ce8070`, run `42593700600`: **passed**. Prisma validate, migration deploy and generation passed; TypeScript and ESLint passed; Vitest passed **109 files / 542 tests**; the new `prebuild` generated Prisma Client successfully and the Next.js production build compiled and generated all 161 static pages.
+- Browser E2E on the same commit, run `42593700583`: **passed 9/9**. The seller draft creation/edit journey now confirms the submit button is enabled after price and media upload. The Syria location journey passed through governorate, district, subdistrict and locality selection, and Leaflet wheel zoom.
+- Platform PostgreSQL Integration on `eaa3a68`, run `42593616403`: **passed**.
+- Vercel production deployment for `8c64e752dd14a018b99fcf676980adce45ce8070`, deployment `dpl_7wuxeidgqCPrnBTM3KocTQKp18eM`: **READY**. Build logs confirm `prebuild` ran `prisma generate`, Next.js compiled, and deployment completed. The earlier `af18e1f` failure was a real generated-client/type mismatch, not a build-rate-limit event.
+
+**Remaining verification**
+- `SyriaLocationPicker` sets neighborhood suggestion focus to zoom 16, and `LeafletLocationMap` applies the supplied focus zoom. The current browser journey verifies the administrative hierarchy and wheel zoom but does not yet make an explicit neighborhood-selection/zoom-16 assertion. Keep that as a focused follow-up rather than claiming it is browser-verified.
+- Vercel/npm still emits non-blocking install-script and npm configuration warnings; they did not prevent the verified production build.
