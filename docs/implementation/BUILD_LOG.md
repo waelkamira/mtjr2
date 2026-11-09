@@ -4068,3 +4068,15 @@ Reviewed request security, inventory stock, public stores, seller application, s
 - Main order services include store-scoped cursor pagination, delivery address privacy and safe cancellation when payment attempts are only failed/cancelled. Main payment webhook processing prevents late success events from overwriting refund/dispute states; the branch does not preserve that boundary. Main provider registry also wires the configured Stripe adapter.
 - Main returns service includes refund state/amount summaries; branch omits this current buyer-facing data.
 - No additional runtime code copied from this batch.
+
+## 2026-11-09 — Ten-file reconciliation batch 16
+
+Reviewed seller shipping configuration and admin/dashboard, advertising, cart and catalog service tests.
+
+- Main shipping service uses validated decimal-string minor units, explicit permission errors, editable activation/deactivation and non-destructive shipping-rate deactivation. The branch's older service omits current activation semantics and was not copied.
+- Main admin dashboard service now exposes 20 per-metric sample series and the UI renders those samples in every metric card. Carried forward the branch's compatible dashboard tests for the 20 sample series and order-status counts.
+- Carried forward compatible advertising coverage for active market/currency product pricing, matching category/brand targets and currency-precision analytics. Added the missing combined category+brand delivery query case.
+- Did not carry forward the branch's advertising cron GET test: the invoice worker mutates billing state and must remain POST-only. Did not copy the branch's old seller/user/cart/catalog test assumptions where main now enforces private identity-document handling, admin status reasons, quarantined stock and relational catalog/media models.
+- Test files were updated only; no tests were executed, as requested.
+
+Test-coverage commits: `e1a0fac`, `f8a85ab`, `f265dea`, `27039c7`.
