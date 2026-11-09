@@ -22,6 +22,7 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
     if (error instanceof SellerStoreSettingsConflictError) {
       const message = error.code === "STORE_NOT_FOUND" ? "Store not found."
         : error.code === "SLUG_TAKEN" ? "This store URL is already in use."
+        : error.code === "SLUG_LOCKED" ? "The public store URL is locked after activation to protect existing customer links."
         : "Store settings cannot be changed while the seller or store is inactive.";
       return Response.json({ error: message, code: error.code }, { status: error.code === "STORE_NOT_FOUND" ? 404 : 409 });
     }
