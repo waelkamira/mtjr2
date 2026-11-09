@@ -1050,6 +1050,7 @@ model StockCountLine {
   sessionId        String
   inventoryId      String
   expectedQuantity Int
+  expectedUpdatedAt DateTime
   countedQuantity  Int?
   note             String?            @db.VarChar(500)
   countedAt        DateTime?
