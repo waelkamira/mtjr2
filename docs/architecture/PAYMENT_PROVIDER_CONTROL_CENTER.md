@@ -139,3 +139,12 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 - The generic webhook route finds the payment by provider reference or provider metadata, then verifies with that payment's snapshot. The PayPal return/capture route also uses the snapshot. Legacy payments without snapshots continue to use the legacy environment configuration.
 - Disabling a provider blocks new attempts while an existing attempt with a stored snapshot can still resume and its webhook can still be verified. Public provider discovery is no-store to avoid stale enabled-provider lists.
 - Remaining: multi-key encryption master-key rotation (only key version 1 is currently supported), payment-method-level enforcement beyond provider/country/currency selection, database migration application, and owner-side sandbox/live journey verification. No tests or builds were run in this tranche.
+
+
+## Versioned credential encryption and rotation
+
+- AES-256-GCM envelopes are versioned (`vN`) and every provider config/payment snapshot stores the matching key version.
+- Legacy `PAYMENT_PROVIDER_ENCRYPTION_KEY` remains supported as version 1. For rotation, configure `PAYMENT_PROVIDER_ENCRYPTION_KEYS` as a JSON object mapping integer versions to 64-hex-character keys, set `PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION` to the active version, and retain every older key in the key ring.
+- The Super Admin page exposes an audited re-encryption operation. It migrates provider configurations and historical payment snapshots in bounded batches, uses conditional updates to avoid overwriting concurrent changes, and reports remaining rows. It is safe to rerun after an interruption.
+- Do not remove an older key until the operation reports both remaining counts as zero and a separate backup/recovery plan is confirmed. Restoring an old database backup also requires restoring the corresponding historical key material.
+- No migration is required for key rotation; the key version is already persisted in both models. Key material must never be committed to source control or stored in database backups.
