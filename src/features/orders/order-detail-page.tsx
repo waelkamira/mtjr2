@@ -17,7 +17,7 @@ type Order = {
   subtotalMinor: string; discountMinor: string; couponCode: string | null; shippingMinor: string; taxMinor: string; totalMinor: string; canCancel: boolean;
   statusHistory: Array<{ status: string; note: string | null; createdAt: string }>;
   tax: { ruleName: string; rateBasisPoints: number; inclusive: boolean; includesShipping: boolean; destinationRegion: string | null }; placedAt: string;
-  address: { recipientName: string; phone: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
+  address: { recipientName: string; phone: string; countryCode: string; countryName: string; line1: string; line2: string | null; city: string; region: string | null; postalCode: string | null } | null;
   vendorOrders: Array<{
     id: string; status: string; store: { id: string; name: string; slug: string }; shippingServiceName: string; shippingDestinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null;
     subtotalMinor: string; discountMinor: string; shippingMinor: string; taxMinor: string; totalMinor: string;
@@ -87,14 +87,17 @@ export default function OrderDetailPage({ orderId, returnedFromPayment }: { orde
 
   useEffect(() => {
     let active = true;
-    fetch("/api/payments/providers", { cache: "no-store" })
+    if (!order) return;
+    const query = new URLSearchParams({ currency: order.currencyCode });
+    if (order.address?.countryCode) query.set("country", order.address.countryCode);
+    fetch("/api/payments/providers?" + query.toString(), { cache: "no-store" })
       .then(async (response) => {
         const data = await response.json() as { providers?: PaymentProvider[] };
         if (active && response.ok) setPaymentProviders(data.providers || []);
       })
       .catch(() => { if (active) setPaymentProviders([]); });
     return () => { active = false; };
-  }, []);
+  }, [order?.currencyCode, order?.address?.countryCode]);
 
   async function startPayment(provider: PaymentProvider) {
     if (!order) return;
