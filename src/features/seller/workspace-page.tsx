@@ -27,7 +27,7 @@ type Store = {
   warehouses: Array<{ id: string; code: string; name: string; _count: { inventories: number } }>;
 };
 type Workspace = {
-  seller: null | { id: string; status: string; legalName: string | null; displayName: string | null };
+  seller: null | { id: string; status: string; legalName: string | null; displayName: string | null; rejectionReason: string | null; reviewedAt: string | null };
   stores: Store[];
 };
 type ShippingRate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; currency: { minorUnit: number }; name: string; description: string | null; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean };
@@ -678,7 +678,8 @@ export default function SellerWorkspacePage() {
                 {["01 · Business","02 · Products","03 · Location","04 · Profile"].map((step,index)=><div key={step} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-[10px] font-bold text-white/90"><span className="me-1 text-[#a9ded7]">●</span>{translate(locale,step,["01 · النشاط","02 · المنتجات","03 · الموقع","04 · الملف"][index])}</div>)}
               </div>
             </div>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{workspace?.seller?.status === "REJECTED" ? translate(locale, "Your previous application was not approved. Correct the information below and submit it again for a new review.", "لم تتم الموافقة على طلبك السابق. صحح البيانات أدناه ثم أعد إرساله للمراجعة.") : translate(locale, "Complete the business details below. Your application will remain pending until reviewed by the marketplace team.", "أكمل بيانات نشاطك التجاري أدناه. سيظل طلبك قيد المراجعة حتى يراجعه فريق السوق.")}</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{workspace?.seller?.status === "REJECTED" ? translate(locale, "Your previous application was not approved. Review the feedback below, correct the information and submit it again.", "لم تتم الموافقة على طلبك السابق. راجع الملاحظات أدناه وصحح البيانات ثم أعد الإرسال.") : translate(locale, "Complete the business details below. Your application will remain pending until reviewed by the marketplace team.", "أكمل بيانات نشاطك التجاري أدناه. سيظل طلبك قيد المراجعة حتى يراجعه فريق السوق.")}</p>
+            {workspace?.seller?.status === "REJECTED" && workspace.seller.rejectionReason && <div role="alert" className="mt-4 rounded-2xl border border-[#e7c6ce] bg-[linear-gradient(145deg,#f9e9ed,#f2dce3)] p-4 text-sm leading-7 text-[#75495a] shadow-[inset_0_1px_0_white]"><p className="font-extrabold">{translate(locale, "Reviewer feedback", "ملاحظات المراجع")}</p><p className="mt-1 whitespace-pre-wrap">{workspace.seller.rejectionReason}</p>{workspace.seller.reviewedAt && <p className="mt-2 text-xs text-[#987384]">{translate(locale, "Reviewed", "تاريخ المراجعة")}: {new Date(workspace.seller.reviewedAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>}</div>}
             <form onSubmit={(event) => {
               if (sellerLatitude === null || sellerLongitude === null) {
                 event.preventDefault();
