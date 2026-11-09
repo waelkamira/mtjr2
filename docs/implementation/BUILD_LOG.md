@@ -3625,3 +3625,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added a confirmation-based “Pause service” action to the seller shipping workspace; successful changes refresh the service list and preserve the existing edit/reactivation path.
 - Commits: d202551f015cd69dc4ca2de7ded1c5cfa94575d0, bd03a74a26459cf57542a8e43c3e075f6df669cc, c89a7b7eaff859c2d5222e7d617f976b2c41e0d6.
 - No tests/build/typecheck/browser verification performed, per the current build-first instruction.
+
+## 2026-11-09 — Seller advertising campaign history pagination
+
+- Replaced the seller campaign list's fixed first-100 response with stable cursor pagination ordered by `createdAt DESC, id DESC` and one look-ahead row.
+- The store-scoped campaign API now accepts an optional cursor and returns `items` plus `nextCursor`; the advertising workspace appends older campaigns without duplicating already-loaded entries.
+- Existing campaign creation, moderation transitions, activation, pause, archive, spend metrics, and invoices remain on their existing flows.
+- Commits: c115c7b04a355ff070fb559f0da81f1833ce3456, 92912cf0a71ff7cfac88b6883a228cfb6839f15b, 8fd1edca64a1cede638b6f8b138939ddee1a9abe.
+- No tests/build/typecheck/browser verification performed, per the current build-first instruction.
