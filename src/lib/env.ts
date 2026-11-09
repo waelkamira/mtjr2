@@ -18,6 +18,8 @@ const environmentSchema = z.object({
   AI_ASSISTANT_ENABLED: z.preprocess((value) => value === "" ? undefined : value, z.enum(["true", "false"]).default("false")),
   MFA_ENCRYPTION_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(32).optional()),
   PAYMENT_PROVIDER_ENCRYPTION_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().regex(/^[a-fA-F0-9]{64}$/, "PAYMENT_PROVIDER_ENCRYPTION_KEY must be exactly 64 hexadecimal characters").optional()),
+  PAYMENT_PROVIDER_ENCRYPTION_KEYS: z.preprocess((value) => value === "" ? undefined : value, z.string().optional()),
+  PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION: z.preprocess((value) => value === "" || value === undefined ? undefined : value, z.coerce.number().int().min(1).max(100).default(1)),
   CRON_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional()),
   VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
   VERCEL_URL: z.string().trim().min(1).optional(),
@@ -60,6 +62,17 @@ const environmentSchema = z.object({
       path: ["STRIPE_WEBHOOK_SECRET"],
       message: "STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be configured together"
     });
+  }
+  if (value.PAYMENT_PROVIDER_ENCRYPTION_KEYS) {
+    try {
+      const parsed = JSON.parse(value.PAYMENT_PROVIDER_ENCRYPTION_KEYS) as Record<string, unknown>;
+      const valid = parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.entries(parsed).every(([version, key]) => /^\\d+$/.test(version) && Number(version) >= 1 && typeof key === "string" && /^[a-fA-F0-9]{64}$/.test(key));
+      if (!valid || !parsed[String(value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION)]) throw new Error("invalid key ring");
+    } catch {
+      context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER_ENCRYPTION_KEYS"], message: "Must be a JSON object mapping key versions to 64-character hexadecimal keys and include the active version." });
+    }
+  } else if (value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION !== 1 || !value.PAYMENT_PROVIDER_ENCRYPTION_KEY) {
+    context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION"], message: "Version 1 requires PAYMENT_PROVIDER_ENCRYPTION_KEY; versions above 1 require PAYMENT_PROVIDER_ENCRYPTION_KEYS." });
   }
   const paypalValues = [value.PAYPAL_CLIENT_ID, value.PAYPAL_CLIENT_SECRET, value.PAYPAL_WEBHOOK_ID];
   if (paypalValues.some(Boolean) && !paypalValues.every(Boolean)) {
