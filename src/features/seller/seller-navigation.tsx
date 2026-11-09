@@ -19,7 +19,8 @@ const groups: Array<{
       { href: "/seller/products", label: "Products", ar: "المنتجات", icon: "package", tone: "mint" },
       { href: "/seller/orders", label: "Orders", ar: "الطلبات", icon: "orders", tone: "peach" },
       { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" },
-      { href: "/seller/shipping", label: "Shipping", ar: "الشحن", icon: "shipping", tone: "sky" }
+      { href: "/seller/shipping", label: "Shipping", ar: "الشحن", icon: "shipping", tone: "sky" },
+      { href: "/seller#store-management", label: "Store settings", ar: "إعدادات المتجر", icon: "home", tone: "lavender" }
     ]
   },
   {
