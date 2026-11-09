@@ -144,6 +144,7 @@ test.describe("seller journey", () => {
     await expect(page.getByRole("heading", { name: /Welcome back to your store|أهلاً بعودتك إلى متجرك/i })).toBeVisible();
     await expect(page.getByRole("navigation", { name: /Seller navigation|تنقل البائع/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
+    await expect(page.getByText(/This account is linked to one store|هذا الحساب مرتبط بمتجر واحد/i)).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-desktop.png", fullPage: true });
     await page.goto("/seller/advertising");
