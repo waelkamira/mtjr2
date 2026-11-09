@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { AuditActorType, ConsentType, Prisma, SellerStatus, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
@@ -31,9 +31,13 @@ export class IdentityConflictError extends Error {
 
 export interface RegistrationResult {
   userId: string;
+  /** Raw token is returned only to the trusted email-delivery caller. */
+  verificationToken: string;
+  verificationExpiresAt: Date;
 }
 
 const VERIFICATION_PURPOSE = "EMAIL_VERIFICATION";
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
 function digestToken(token: string): string {
   return createHash("sha256").update(token, "utf8").digest("hex");
@@ -74,6 +78,8 @@ export async function registerUser(
   if (existingUser) throw new IdentityConflictError();
 
   const passwordHash = await hashPassword(parsed.password);
+  const verificationToken = randomBytes(32).toString("base64url");
+  const verificationExpiresAt = new Date(now.getTime() + VERIFICATION_TTL_MS);
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -83,7 +89,7 @@ export async function registerUser(
           emailNormalized,
           passwordHash,
           displayName: parsed.displayName,
-          status: UserStatus.ACTIVE
+          status: UserStatus.PENDING
         },
         select: { id: true }
       });
@@ -98,6 +104,15 @@ export async function registerUser(
           data: { userId: createdUser.id, roleId: customerRole.id, scopeType: "GLOBAL", scopeId: "GLOBAL" }
         });
       }
+
+      await tx.verificationToken.create({
+        data: {
+          userId: createdUser.id,
+          tokenHash: digestToken(verificationToken),
+          purpose: VERIFICATION_PURPOSE,
+          expiresAt: verificationExpiresAt
+        }
+      });
 
       if (parsed.accountType === "SELLER") {
         await tx.seller.create({ data: { ownerId: createdUser.id, legalName: parsed.sellerLegalName, displayName: parsed.sellerDisplayName, status: SellerStatus.PENDING } });
@@ -124,12 +139,12 @@ export async function registerUser(
         ]
       });
 
-      await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.registration.created", resource: "user", resourceId: createdUser.id, occurredAt: now, metadata: { emailVerificationRequired: false } } });
+      await tx.auditLog.create({ data: { actorType: AuditActorType.SYSTEM, action: "identity.registration.created", resource: "user", resourceId: createdUser.id, occurredAt: now, metadata: { emailVerificationRequired: true } } });
 
       return createdUser;
     });
 
-    return { userId: user.id };
+    return { userId: user.id, verificationToken, verificationExpiresAt };
   } catch (error) {
     if (isUniqueConstraintError(error)) throw new IdentityConflictError();
     throw error;
