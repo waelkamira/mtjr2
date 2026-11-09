@@ -163,6 +163,15 @@ export async function POST(request: Request): Promise<Response> {
   const contentTypeRejected = validateIdentityImageUploadRequest(request);
   if (contentTypeRejected) return contentTypeRejected;
 
+  // Reject obviously oversized requests before formData() buffers/parses the body.
+  // The hosting ingress must also enforce a hard body limit for chunked requests.
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength !== null) {
+    if (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > MAX_FILE_SIZE + 256 * 1024) {
+      return jsonError("Image upload request exceeds the 10 MB limit.", 413);
+    }
+  }
+
   let form: FormData;
   try { form = await request.formData(); } catch { return jsonError("A multipart form upload is required.", 400); }
 
@@ -240,8 +249,24 @@ export async function DELETE(request: Request): Promise<Response> {
     return jsonError("Unable to verify the current session.", 401);
   }
 
+  try {
+    if (await consumeAuthenticatedActionAttempt(actor.userId, "seller-product-image-delete", 30)) {
+      return Response.json({ success: false, error: "Too many image deletion attempts. Please try again later." }, {
+        status: 429,
+        headers: { "Cache-Control": "no-store", "Retry-After": "900" }
+      });
+    }
+  } catch {
+    return jsonError("Unable to verify image deletion rate limits.", 503);
+  }
+
   const contentTypeRejected = validateIdentityMutationRequest(request);
   if (contentTypeRejected) return contentTypeRejected;
+
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength !== null && (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > 16 * 1024)) {
+    return jsonError("Image deletion request is too large.", 413);
+  }
 
   const parsed = z.object({
     storeId: z.string().trim().min(1).max(128),
