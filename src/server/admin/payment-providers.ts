@@ -75,6 +75,58 @@ function decryptCredentials(value: string, keyVersion: number): ProviderCredenti
   return parsed as ProviderCredentials;
 }
 
+export function decryptPaymentProviderCredentials(value: string, keyVersion: number): ProviderCredentials {
+  return decryptCredentials(value, keyVersion);
+}
+
+export async function getActivePaymentProviderRuntimeConfig(
+  providerKey: "stripe" | "paypal",
+  environment: PaymentProviderEnvironment,
+  currencyCode: string,
+  countryCode?: string | null
+) {
+  const config = await prisma.paymentProviderConfig.findFirst({
+    where: {
+      providerKey,
+      environment,
+      status: PaymentProviderConfigStatus.ACTIVE,
+      encryptedCredentials: { not: null },
+      OR: [{ supportedCurrencies: { isEmpty: true } }, { supportedCurrencies: { has: currencyCode } }],
+      AND: countryCode
+        ? [{ OR: [{ supportedCountries: { isEmpty: true } }, { supportedCountries: { has: countryCode } }] }]
+        : []
+    },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+  });
+  if (!config?.encryptedCredentials) return null;
+  return {
+    id: config.id,
+    providerKey: config.providerKey as "stripe" | "paypal",
+    environment: config.environment,
+    encryptedCredentials: config.encryptedCredentials,
+    credentialsKeyVersion: config.credentialsKeyVersion,
+    credentials: decryptCredentials(config.encryptedCredentials, config.credentialsKeyVersion)
+  };
+}
+
+export async function getPaymentProviderRuntimeSnapshot(paymentId: string) {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    select: {
+      provider: true,
+      providerEnvironment: true,
+      encryptedProviderCredentials: true,
+      providerCredentialsKeyVersion: true
+    }
+  });
+  if (!payment?.encryptedProviderCredentials || !payment.providerCredentialsKeyVersion || !payment.providerEnvironment) return null;
+  return {
+    provider: payment.provider,
+    environment: payment.providerEnvironment,
+    credentials: decryptCredentials(payment.encryptedProviderCredentials, payment.providerCredentialsKeyVersion)
+  };
+}
+
 function validateCredentials(
   providerKey: "stripe" | "paypal",
   credentials: ProviderCredentials,
