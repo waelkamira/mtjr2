@@ -481,7 +481,7 @@ export async function updateWarehouse(warehouseIdInput: string, input: unknown, 
         tx.stockCountSession.findFirst({ where: { warehouseId, status: StockCountStatus.IN_PROGRESS }, select: { id: true } })
       ]);
       if (stock || pendingTransfers || activeCount) {
-        throw new Error("Move or reconcile all stock and complete pending transfers before deactivating this warehouse.");
+        throw new Error("Move or reconcile all stock, complete pending transfers, and finish active stock counts before deactivating this warehouse.");
       }
     }
     const warehouse = await tx.warehouse.update({
@@ -606,6 +606,11 @@ export async function completeStockCount(sessionIdInput: string, now = new Date(
       }
     });
     if (!session) throw new Error("Stock count session not found.");
+    if (session.warehouse.store.seller.status !== "ACTIVE" ||
+        session.warehouse.store.status === "SUSPENDED" || session.warehouse.store.status === "CLOSED" ||
+        !(await canManageInventory(actor.userId, session.warehouse.store.seller.ownerId, session.storeId, now))) {
+      throw new Error("You do not have access to this stock count.");
+    }
     if (session.status === StockCountStatus.COMPLETED) {
       return { sessionId: session.id, status: session.status, alreadyCompleted: true, adjustedLines: 0, totalVariance: session.lines.reduce((sum, line) => sum + ((line.countedQuantity ?? line.expectedQuantity) - line.expectedQuantity), 0) };
     }
