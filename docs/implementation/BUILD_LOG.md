@@ -3729,3 +3729,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Not yet verified**
 - No tests, build, typecheck, or browser checks were run, as requested. The new migration has been committed but not applied to a database. Continue the remaining dashboard layout, chart presentation, and page-by-page seller experience before declaring the seller dashboard complete.
+
+
+## 2026-11-09 — Seller reference design continuation
+
+**Implemented on main**
+- Added a seller-only design scope to the seller application layout so the reference palette can be applied consistently without changing customer or admin workspaces.
+- Unified top-level seller page panels, forms, raised surfaces, borders, shadows, and typography around the cool blue-grey clay treatment.
+- Restyled the seller settings page and topbar actions to the turquoise/blue-grey palette.
+- Corrected the seller sidebar footer to remain consistently navy with readable contrast in the growth panel and marketplace link.
+- Updated shared seller analytics chart cards and chart series to the reference's turquoise, sky-blue, mint, lavender, and warm pastel palette.
+- Corrected store settings persistence so public phone and address values are written to Prisma, returned by the update operation, and included in audit change tracking.
+
+**Not verified**
+- No test, build, typecheck, migration application, or browser run was performed. Continue applying the reference design to the remaining seller pages and finish the seller dashboard before starting the requested later verification phase.
