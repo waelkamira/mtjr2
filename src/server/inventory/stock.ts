@@ -467,7 +467,7 @@ export async function updateWarehouse(warehouseIdInput: string, input: unknown, 
       throw new Error("You do not have inventory access to this store.");
     }
     if (data.isActive === false && current.isActive) {
-      const [stock, pendingTransfers] = await Promise.all([
+      const [stock, pendingTransfers, activeCount] = await Promise.all([
         tx.inventory.findFirst({
           where: { warehouseId, OR: [
             { quantityOnHand: { gt: 0 } }, { quantityReserved: { gt: 0 } }, { quantityQuarantined: { gt: 0 } }
@@ -477,9 +477,10 @@ export async function updateWarehouse(warehouseIdInput: string, input: unknown, 
         tx.stockTransfer.findFirst({
           where: { OR: [{ sourceWarehouseId: warehouseId }, { destinationWarehouseId: warehouseId }], status: { in: [StockTransferStatus.DRAFT, StockTransferStatus.SHIPPED] } },
           select: { id: true }
-        })
+        }),
+        tx.stockCountSession.findFirst({ where: { warehouseId, status: StockCountStatus.IN_PROGRESS }, select: { id: true } })
       ]);
-      if (stock || pendingTransfers) {
+      if (stock || pendingTransfers || activeCount) {
         throw new Error("Move or reconcile all stock and complete pending transfers before deactivating this warehouse.");
       }
     }
