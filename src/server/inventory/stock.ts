@@ -88,7 +88,10 @@ export async function createWarehouse(input: unknown, now = new Date()) {
 
 export async function listStoreInventory(storeId: string, now = new Date(), searchInput: unknown = {}) {
   const id = z.string().trim().min(1).parse(storeId);
-  const { q } = z.object({ q: z.string().trim().max(120).optional() }).strict().parse(searchInput);
+  const { q, cursor } = z.object({
+    q: z.string().trim().max(120).optional(),
+    cursor: z.string().trim().min(1).max(128).optional()
+  }).strict().parse(searchInput);
   const actor = await requireCurrentSession(now);
   const store = await prisma.store.findUnique({
     where: { id },
@@ -103,15 +106,21 @@ export async function listStoreInventory(storeId: string, now = new Date(), sear
       { variant: { sku: { contains: q, mode: "insensitive" as const } } }, { variant: { name: { contains: q, mode: "insensitive" as const } } },
       { variant: { product: { name: { contains: q, mode: "insensitive" as const } } } }, { variant: { product: { slug: { contains: q, mode: "insensitive" as const } } } }
     ] } : {}) },
-    orderBy: [{ warehouse: { name: "asc" } }, { variant: { sku: "asc" } }],
-    take: 500,
+    orderBy: [{ warehouse: { name: "asc" } }, { variant: { sku: "asc" } }, { id: "asc" }],
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    take: 501,
     select: {
       id: true, quantityOnHand: true, quantityQuarantined: true, quantityReserved: true, reorderPoint: true,
       warehouse: { select: { id: true, code: true, name: true } },
       variant: { select: { id: true, sku: true, name: true, product: { select: { id: true, name: true, slug: true } } } }
     }
   });
-  return rows.map((row) => ({ ...row, quantityAvailable: row.quantityOnHand - row.quantityReserved - row.quantityQuarantined, isLowStock: row.quantityOnHand - row.quantityReserved - row.quantityQuarantined <= row.reorderPoint }));
+  const hasMore = rows.length > 500;
+  const page = hasMore ? rows.slice(0, 500) : rows;
+  return {
+    items: page.map((row) => ({ ...row, quantityAvailable: row.quantityOnHand - row.quantityReserved - row.quantityQuarantined, isLowStock: row.quantityOnHand - row.quantityReserved - row.quantityQuarantined <= row.reorderPoint })),
+    nextCursor: hasMore ? page[page.length - 1]?.id ?? null : null
+  };
 }
 
 export async function adjustInventory(input: unknown, now = new Date()) {
