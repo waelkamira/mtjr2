@@ -3147,3 +3147,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Commits: service `2d7c51c9af9dc1b8fee73e868e8b26d294774e3c`; API `12d24a2315b447bf9772dfe005387018fafd62bc`; store-scoped permission `8e838d20fd718b934e6781542949b9397d8296db`; page `63a6e3d354912c62be7e886191229b93f9b45839`; route `b51ca1697d3318363489ebf1db5059b1e893aaa3`; navigation `cf0e1e001cbc59a2e2375f537b7aeb472bd60c1f`; tests `e75697d189b98db615db1a49d0e0b786c5015290`; inventory/system map/route registry/matrix `a75e12c06bd2a7794c112d6da4627890c2dd6e30`, `1b1e74ea6e4aa68b6a3441299425db1edf94b2da`, `0bb493aec02313ae604d5845f9e626eccc4684f1`, `18145f7687f1227ce17c04f0fce57e5bfc847fe1`.
 - Source and test code added; Vitest, TypeScript, browser and database checks remain unrun.
 - Added a responsive seller E2E navigation assertion for `/seller/commissions`; this source test is not yet executed (`4f7c486d9c5b81f4dc84d3c9133c24175eb6afda`).
+
+## Seller warehouse lifecycle management
+- Added a seller-scoped warehouse update API for changing warehouse code/name and activating or deactivating a warehouse.
+- Seller workspace now includes inactive warehouses so they can be reviewed and reactivated; operational selectors continue to show active warehouses only.
+- Deactivation is deliberately non-destructive and is rejected while any on-hand, reserved, or quarantined stock remains, or while a draft/shipped transfer references the warehouse.
+- Every successful change is recorded in the store-scoped audit log. Focused tests cover metadata updates, stock-blocked deactivation, and safe empty-warehouse deactivation.
