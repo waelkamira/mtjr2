@@ -86,5 +86,6 @@ This schema snapshot does not yet provide a complete implementation for all 49 s
 - `VendorOrder`, `VendorOrderStatusHistory`, `Order`, `OrderStatusHistory`, and `AuditLog` are consumed by `src/server/orders/seller-orders.ts` for the initial seller preparation transitions.
 - No Prisma change is required for `CONFIRMED → PROCESSING → READY_TO_SHIP`; shipment labels/tracking and later delivery states are not implemented by this slice.
 
-| StockCountSession | Seller inventory count workflow | Store + warehouse scoped count session; tracks progress and completion |
-| StockCountLine | Seller inventory count workflow | Snapshot quantity and inventory version per SKU; stores counted quantity and line note |
+## Seller inventory count models
+- `StockCountSession` — store- and warehouse-scoped count session, tracking progress and completion.
+- `StockCountLine` — snapshot quantity and inventory version per SKU; stores the counted quantity and line note.
