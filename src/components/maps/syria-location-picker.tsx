@@ -24,6 +24,7 @@ type LocationValue = {
   district?: string;
   localityId?: string;
   neighborhood?: string;
+  streetAddress?: string;
   latitude?: number;
   longitude?: number;
 };
@@ -335,6 +336,10 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       <label className="block text-sm font-medium">{labels.neighborhood}
         <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => onChange({ ...value, neighborhood: event.target.value || undefined })} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
         <span className="mt-1 block text-xs font-normal leading-5 text-[var(--muted)]">{translate(locale, "OpenSyria does not publish a verified neighbourhood directory. Enter the local neighbourhood name here; the administrative selections above remain sourced from OpenSyria.", "لا تنشر OpenSyria دليلاً موثقاً مستقلاً للأحياء. اكتب اسم الحي هنا، أما التقسيمات الإدارية أعلاه فمصدرها OpenSyria حصراً.")}</span>
+      </label>
+      <label className="block text-sm font-medium">{translate(locale, "Exact street address", "العنوان الدقيق")}
+        <input className={fieldClass} value={value.streetAddress ?? ""} maxLength={500} onChange={(event) => onChange({ ...value, streetAddress: event.target.value || undefined })} placeholder={translate(locale, "Street, building, floor, landmark…", "الشارع، البناء، الطابق، علامة مميزة…")} />
+        <span className="mt-1 block text-xs font-normal leading-5 text-[var(--muted)]">{translate(locale, "Enter the exact address manually, then place the pin as accurately as possible. This is seller-provided information, not an OpenSyria administrative field.", "اكتب العنوان الدقيق يدوياً ثم ضع دبوس الخريطة في موقعه الصحيح. هذه معلومة يدخلها البائع وليست حقلاً إدارياً من OpenSyria.")}</span>
       </label>
       {busy && <p role="status" className="text-xs text-[var(--muted)]">{labels.loading}</p>}
       {!busy && !error && governorates.length === 0 && <p role="alert" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">{translate(locale, "No Syrian geography records are available in this database. Run npm run db:sync-syria-geography to import the official dataset.", "لا توجد بيانات جغرافية سورية في قاعدة البيانات. نفّذ الأمر npm run db:sync-syria-geography لاستيراد البيانات الرسمية.")}</p>}
