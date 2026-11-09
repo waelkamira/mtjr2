@@ -124,6 +124,7 @@ export default function SellerWorkspacePage() {
   const [editingStoreDescription, setEditingStoreDescription] = useState("");
   const [editingStoreLogoUrl, setEditingStoreLogoUrl] = useState("");
   const [editingStoreBannerUrl, setEditingStoreBannerUrl] = useState("");
+  const [storeMediaUploading, setStoreMediaUploading] = useState<"logo" | "banner" | "">("");
   const [shippingContactName, setShippingContactName] = useState("");
   const [shippingPhone, setShippingPhone] = useState("");
   const [shippingAddressLine1, setShippingAddressLine1] = useState("");
@@ -397,6 +398,29 @@ export default function SellerWorkspacePage() {
     } finally { setBusy(false); }
   }
 
+  async function uploadStoreImage(event: ChangeEvent<HTMLInputElement>, kind: "logo" | "banner") {
+    const file = event.target.files?.[0];
+    if (!file || !selectedStore) return;
+    event.target.value = "";
+    if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+      setError(translate(locale, "Choose a JPG, PNG, WebP or AVIF image.", "اختر صورة بصيغة JPG أو PNG أو WebP أو AVIF."));
+      return;
+    }
+    if (file.size <= 0 || file.size > 10 * 1024 * 1024) {
+      setError(translate(locale, "Store images must be 10 MB or smaller.", "يجب ألا يتجاوز حجم صورة المتجر 10 ميغابايت."));
+      return;
+    }
+    setStoreMediaUploading(kind); setError(""); setMessage("");
+    try {
+      const form = new FormData(); form.append("storeId", selectedStore.id); form.append("file", file);
+      const response = await fetch("/api/seller/products/media", { method: "POST", body: form });
+      const payload = await response.json() as { success?: boolean; data?: { url?: string }; error?: string };
+      if (!response.ok || !payload.success || !payload.data?.url) throw new Error(payload.error || translate(locale, "The image could not be uploaded.", "تعذر رفع الصورة."));
+      if (kind === "logo") setEditingStoreLogoUrl(payload.data.url); else setEditingStoreBannerUrl(payload.data.url);
+      setMessage(translate(locale, "Image uploaded. Save the store profile to publish this change.", "تم رفع الصورة. احفظ ملف المتجر لاعتماد التغيير."));
+    } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "The image could not be uploaded.", "تعذر رفع الصورة.")); }
+    finally { setStoreMediaUploading(""); }
+  }
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
   useEffect(() => {
     if (!selectedStore) return;
@@ -804,7 +828,11 @@ export default function SellerWorkspacePage() {
                         {editingStoreBannerUrl.trim() && <div className="overflow-hidden rounded-xl border border-white bg-white/60"><p className="px-3 py-2 text-[10px] font-bold text-[#718899]">{translate(locale, "Banner preview", "معاينة الغلاف")}</p><img src={editingStoreBannerUrl} alt={translate(locale, "Store banner preview", "معاينة غلاف المتجر")} referrerPolicy="no-referrer" className="h-28 w-full object-cover" /></div>}
                         {editingStoreLogoUrl.trim() && <div className="flex items-center gap-3 rounded-xl border border-white bg-white/60 p-3"><img src={editingStoreLogoUrl} alt={translate(locale, "Store logo preview", "معاينة شعار المتجر")} referrerPolicy="no-referrer" className="h-16 w-16 rounded-xl object-cover" /><span className="text-xs font-semibold text-[#35566b]">{translate(locale, "Logo preview", "معاينة الشعار")}</span></div>}
                       </div>}
-                      <p className="text-[10px] leading-5 text-[#718899] sm:col-span-2">{translate(locale, "Use secure HTTPS image URLs from your image host. Image upload and media-library management can be connected in the next seller media pass.", "استخدم روابط صور آمنة عبر HTTPS من مستضيف الصور. يمكن ربط الرفع ومكتبة الوسائط في مرحلة إدارة وسائط البائع.")}</p>
+                      <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+                        <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store logo", "رفع شعار المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "logo")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#ded8f5] file:px-3 file:py-2 file:font-bold file:text-[#494467]" />{storeMediaUploading === "logo" && <span className="text-[#817aa4]">{translate(locale, "Uploading logo…", "جارٍ رفع الشعار…")}</span>}</label>
+                        <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store banner", "رفع غلاف المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "banner")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#cfe8df] file:px-3 file:py-2 file:font-bold file:text-[#365b50]" />{storeMediaUploading === "banner" && <span className="text-[#5d9d8c]">{translate(locale, "Uploading banner…", "جارٍ رفع الغلاف…")}</span>}</label>
+                      </div>
+                      <p className="text-[10px] leading-5 text-[#718899] sm:col-span-2">{translate(locale, "Images use the seller-scoped media uploader and its configured provider rotation. Uploading only stages the URL in this editor; save the store profile to publish it.", "تُرفع الصور عبر خدمة الوسائط المقيّدة بمتجرك وبآلية التناوب بين مزودي الرفع المضبوطين. الرفع يضع الرابط في المحرر فقط؛ احفظ ملف المتجر لاعتماده.")}</p>
                       <div className="flex flex-wrap gap-2 sm:col-span-2"><button disabled={busy || !editingStoreName.trim() || !editingStoreSlug.trim()} className="rounded-xl bg-[linear-gradient(135deg,#68b4b5,#3d8993)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_6px_14px_rgba(39,104,112,.18)] disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save store profile", "حفظ ملف المتجر")}</button><button type="button" disabled={busy} onClick={() => setEditingStoreProfile(false)} className="rounded-xl border border-white bg-white/70 px-4 py-2.5 text-xs font-semibold text-[#35566b]">{translate(locale, "Cancel", "إلغاء")}</button></div>
                     </form>}
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
