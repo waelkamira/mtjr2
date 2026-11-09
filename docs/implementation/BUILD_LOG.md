@@ -3869,3 +3869,12 @@ Compared the retained branch versions of environment documentation, package scri
 
 No tests, builds, typechecks, or browser checks were run, in line with the requested build-first workflow.
 
+## 2026-11-09 — Implementation-plan consistency reconciliation
+
+- Compared the remaining identity, buying, seller/admin phase plans, end-to-end delivery standard, and demo catalog seed documentation.
+- Found and corrected a stale identity-plan statement that still described immediate activation without email confirmation. The plan now reflects the current pending-account, token-digest, 24-hour verification, email-delivery, and pre-session verification lifecycle implemented in main.
+- Kept the main buying and end-to-end journey plans, which include newer operational status and acceptance criteria than the retained branch.
+- Kept the main seller/admin plan, including the current seller-portal closeout scope and explicit remaining work packages.
+- Kept the main demo catalog seed documentation. The branch describes a larger multi-store fixture, but it is not safe to restore its assumptions without reconciling the current seed implementation and schema; the synthetic demo-dashboard seed remains deferred.
+- This batch corrected documentation only; it did not change runtime behavior.
+
