@@ -4,36 +4,30 @@ import { AuditActorType, SellerStaffStatus, UserStatus, type Prisma } from "@pri
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
-import { userHasScopedPermission } from "@/server/identity/permission-repository";
 
 const inviteSchema = z.object({
   storeId: z.string().trim().min(1),
   userId: z.string().trim().min(1)
 });
 
-async function requireStoreStaffManager(tx: Prisma.TransactionClient, storeId: string, userId: string, now: Date) {
+async function requireStoreOwner(tx: Prisma.TransactionClient, storeId: string, userId: string) {
   const store = await tx.store.findUnique({
     where: { id: storeId },
     select: { id: true, seller: { select: { ownerId: true, status: true } } }
   });
   if (!store || store.seller.status !== "ACTIVE") throw new Error("Active store not found.");
   if (store.seller.ownerId !== userId) {
-    const allowed = await userHasScopedPermission(userId, {
-      permissionKey: "store:staff:manage",
-      scope: { type: "STORE", id: storeId },
-      now
-    });
-    if (!allowed) throw new Error("You cannot manage staff for this store.");
+    throw new Error("Only the store owner can invite or revoke team members until delegated staff roles are available.");
   }
   return store;
 }
 
-/** Store owner or explicitly scoped staff manager invites an active account. */
+/** Only the store owner may invite an active account until delegated staff roles exist. */
 export async function inviteStoreStaff(input: z.input<typeof inviteSchema>, now = new Date()) {
   const data = inviteSchema.parse(input);
   const actor = await requireCurrentSession(now);
   return prisma.$transaction(async (tx) => {
-    await requireStoreStaffManager(tx, data.storeId, actor.userId, now);
+    await requireStoreOwner(tx, data.storeId, actor.userId);
     const target = await tx.user.findUnique({ where: { id: data.userId }, select: { id: true, status: true } });
     if (!target || target.status !== UserStatus.ACTIVE) throw new Error("Only active accounts can be invited.");
     const membership = await tx.sellerStaff.upsert({
@@ -84,7 +78,7 @@ export async function acceptStoreStaffInvitation(membershipId: string, now = new
   });
 }
 
-/** Store owner or scoped manager revokes membership and its store-scoped role grant. */
+/** Only the store owner revokes membership and its store-scoped role grant. */
 export async function revokeStoreStaff(membershipId: string, now = new Date()) {
   const id = z.string().trim().min(1).parse(membershipId);
   const actor = await requireCurrentSession(now);
@@ -93,7 +87,7 @@ export async function revokeStoreStaff(membershipId: string, now = new Date()) {
       where: { id }, select: { id: true, userId: true, storeId: true, status: true }
     });
     if (!membership) return false;
-    await requireStoreStaffManager(tx, membership.storeId, actor.userId, now);
+    await requireStoreOwner(tx, membership.storeId, actor.userId);
     const updated = await tx.sellerStaff.updateMany({
       where: { id, status: { in: [SellerStaffStatus.INVITED, SellerStaffStatus.ACTIVE] } },
       data: { status: SellerStaffStatus.REVOKED }
@@ -113,12 +107,12 @@ export async function revokeStoreStaff(membershipId: string, now = new Date()) {
 }
 
 
-/** Lists staff and outstanding invitations for a store after checking management scope. */
+/** Lists staff and outstanding invitations for a store after checking store ownership. */
 export async function listStoreStaff(storeIdInput: string, now = new Date()) {
   const storeId = z.string().trim().min(1).parse(storeIdInput);
   const actor = await requireCurrentSession(now);
   return prisma.$transaction(async (tx) => {
-    await requireStoreStaffManager(tx, storeId, actor.userId, now);
+    await requireStoreOwner(tx, storeId, actor.userId);
     return tx.sellerStaff.findMany({
       where: { storeId },
       orderBy: [{ status: "asc" }, { invitedAt: "desc" }],
