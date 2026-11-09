@@ -51,16 +51,16 @@ describe("seller inventory operations", () => {
     }));
     mocks.productVariantFindFirst.mockResolvedValue({ id: "variant-1" });
     mocks.inventoryMovementFindUnique.mockResolvedValue(null);
-    mocks.inventoryFindUnique.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 2 });
+    mocks.inventoryFindUnique.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 2 });
     mocks.inventoryMovementCreate.mockResolvedValue({ id: "movement-1" });
-    mocks.inventoryCreate.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 0 });
+    mocks.inventoryCreate.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 0, quantityQuarantined: 0 });
     mocks.inventoryUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
   });
 
   it("rejects a negative adjustment that would consume reserved stock", async () => {
     mocks.inventoryFindUnique.mockResolvedValue({
-      id: "inventory-1", quantityOnHand: 10, quantityReserved: 4
+      id: "inventory-1", quantityOnHand: 10, quantityReserved: 4, quantityQuarantined: 2
     });
     await expect(adjustInventory({
       warehouseId: "warehouse-1", variantId: "variant-1",
@@ -80,7 +80,7 @@ describe("seller inventory operations", () => {
     });
     expect(result).toEqual({ movementId: "movement-1", inventoryId: "inventory-1", alreadyApplied: false });
     expect(mocks.inventoryUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2 },
+      where: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 2 },
       data: { quantityOnHand: { increment: 5 } }
     }));
     expect(mocks.inventoryMovementCreate).toHaveBeenCalledOnce();
