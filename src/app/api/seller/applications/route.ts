@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { AuthenticationRequiredError, MfaEnrollmentRequiredError, MfaVerificationRequiredError } from "@/server/identity/current-session";
 import { submitSellerApplication } from "@/server/marketplace/seller-application";
 
 export const runtime = "nodejs";
@@ -34,7 +34,9 @@ export async function POST(request: Request): Promise<Response> {
     const result = await submitSellerApplication(parsed.data);
     return Response.json(result, { status: result.alreadySubmitted ? 200 : 201 });
   } catch (error) {
-    if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
+    if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required.", code: "AUTHENTICATION_REQUIRED" }, { status: 401 });
+    if (error instanceof MfaEnrollmentRequiredError) return Response.json({ error: "Complete multi-factor authentication setup before continuing.", code: "MFA_ENROLLMENT_REQUIRED", actionUrl: "/account/security?mfa=setup&returnTo=%2Fseller" }, { status: 403 });
+    if (error instanceof MfaVerificationRequiredError) return Response.json({ error: "Verify your multi-factor authentication before continuing.", code: "MFA_VERIFICATION_REQUIRED", actionUrl: "/account/security?mfa=verify&returnTo=%2Fseller" }, { status: 403 });
     if (error instanceof Error && /verify your email/i.test(error.message)) return Response.json({ error: error.message }, { status: 403 });
     return Response.json({ error: error instanceof Error ? error.message : "Unable to submit seller application." }, { status: 400 });
   }
