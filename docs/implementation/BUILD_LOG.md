@@ -4350,3 +4350,9 @@ The platform account policy is now explicit: email verification is not required 
 - New database-managed payment creation now locks the selected provider configuration row and revalidates status, encrypted credential version, market allowlists and method policy inside the same transaction that writes Payment. Concurrent disablement/configuration changes are serialized against new payment creation.
 - PayPal Orders v2 create and capture requests now use deterministic SHA-256-derived 32-character request IDs, so retries reuse the same provider idempotency token and do not depend on arbitrary client key length/characters.
 - No tests/build/typecheck were run.
+
+
+## 2026-11-10 — Explicit TEST/LIVE runtime selection
+
+- Added `PAYMENT_PROVIDER_RUNTIME_ENVIRONMENT=TEST|LIVE` override, defaulting to TEST outside production and LIVE in production. Checkout discovery, payment creation and managed webhook verification now share one resolver, allowing sandbox verification on a production deployment before switching to live credentials.
+- Existing payment snapshots continue to select their original environment for webhook/capture verification; legacy PayPal payments continue to use `PAYPAL_MODE`.
