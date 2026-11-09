@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "@/lib/env";
+import { PaymentProviderConfigurationError } from "./types";
 import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
 
 type StripeSession = {
@@ -24,7 +25,7 @@ type StripeEvent = {
 function requireStripeSecrets(credentials?: Record<string, string>) {
   if (credentials?.secretKey && credentials?.webhookSecret) return { secretKey: credentials.secretKey, webhookSecret: credentials.webhookSecret };
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) {
-    throw new Error("Stripe is not fully configured. Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.");
+    throw new PaymentProviderConfigurationError("Stripe is not fully configured. Set server-side Stripe API and webhook credentials.");
   }
   return { secretKey: env.STRIPE_SECRET_KEY, webhookSecret: env.STRIPE_WEBHOOK_SECRET };
 }
