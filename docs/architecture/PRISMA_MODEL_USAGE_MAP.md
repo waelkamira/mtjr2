@@ -91,4 +91,4 @@ This schema snapshot does not yet provide a complete implementation for all 49 s
 - `StockCountLine` — snapshot quantity and inventory version per SKU; stores the counted quantity and line note.
 
 
-| `PaymentProviderConfig` | `src/server/admin/payment-providers.ts`; `/admin/payment-providers`; `/api/admin/payment-providers` | Super Admin provider configuration, encrypted credentials, environment/status, supported markets/currencies/methods, verification and soft archive. Runtime checkout selection is not yet bound to this model. |
+| `PaymentProviderConfig` | `src/server/admin/payment-providers.ts`; `/admin/payment-providers`; `/api/admin/payment-providers` | Super Admin provider configuration, encrypted credentials, environment/status, supported country/currency/method metadata, verification and soft archive. New Payment records reference the selected configuration and retain an encrypted credential snapshot/key version for historical webhook and PayPal return verification. |
