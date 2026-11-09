@@ -3639,3 +3639,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Seller advertising campaign creation now selects SYP as the initial billing currency when that currency is enabled for the selected market; otherwise it safely falls back to that market's configured default. The same rule applies when changing markets.
 - Seller shipping-rate creation now follows the same SYP-first/default-fallback behavior on initial load, store changes, market changes, and form reset. The full enabled-currency lists remain available, including USD wherever the market enables it; existing saved rate currencies are preserved when editing.
 - Commits: 2dd13d4edaacf310f65573b72d5b5ab81c5b9e12, db0958476daa766ea7f17aeb29d4ccc0e5662068.
+
+
+## 2026-11-09 — Seller staff invitation expiry and renewal
+
+- Added nullable `SellerStaff.expiresAt` with additive migration `20261109180000_seller_staff_invitation_expiry`; existing pending invitations are backfilled to expire seven days after their original invitation timestamp.
+- New invitations and re-invitations expire after seven days. Acceptance is rejected after expiry and uses a conditional update that also checks the expiry boundary, preventing a stale invitation from granting the Store Manager role.
+- The invitee inbox excludes expired invitations; the owner team list shows expiry and offers a seven-day resend action for expired invitations. Re-inviting the same account renews the existing membership rather than creating a duplicate.
+- Owner-only access, store scoping, transactional role grant/revocation and audit events remain enforced. The existing broad STORE_MANAGER grant is intentionally unchanged until granular permission roles are implemented.
+- Commits: 4c95a4a (schema), 2cc7a61 (migration), c142fd2 (service enforcement), 51d9e62 (seller team UI).
+- No tests, builds, typechecks, browser sessions or deployments were run, as requested.
