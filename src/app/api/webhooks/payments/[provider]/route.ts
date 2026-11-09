@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { getPaymentProvider } from "@/server/payments/providers/registry";
+import { getPaymentProviderAdapter } from "@/server/payments/providers/registry";
+import { getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
+import { prisma } from "@/lib/db/prisma";
 import { processVerifiedPaymentEvent } from "@/server/payments/payments";
 
 export const runtime = "nodejs";
@@ -55,7 +57,7 @@ const eventSchema = z.object({
 
 export async function POST(request: Request, context: RouteContext): Promise<Response> {
   const { provider: providerKey } = await context.params;
-  const provider = getPaymentProvider(providerKey);
+  const provider = getPaymentProviderAdapter(providerKey);
   if (!provider) return Response.json({ error: "Payment provider is not configured." }, { status: 404 });
 
   // Invalid signatures and malformed provider events are permanent client errors.
@@ -66,12 +68,31 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     rawBody = await readBoundedWebhookBody(request);
     // Pass a fresh request containing the already bounded raw bytes so provider
     // signature verification sees the exact payload without buffering it twice.
+    let paymentReference: string | undefined;
+    try {
+      const payload = JSON.parse(new TextDecoder().decode(rawBody)) as {
+        data?: { object?: { id?: string } };
+        resource?: { supplementary_data?: { related_ids?: { order_id?: string } } };
+      };
+      paymentReference = providerKey === "stripe"
+        ? payload.data?.object?.id
+        : payload.resource?.supplementary_data?.related_ids?.order_id;
+    } catch {
+      throw new Error("Webhook payload is not valid JSON.");
+    }
+    if (!paymentReference) throw new Error("Webhook payment reference is missing.");
+    const payment = await prisma.payment.findUnique({
+      where: { provider_providerReference: { provider: providerKey, providerReference: paymentReference } },
+      select: { id: true }
+    });
+    if (!payment) throw new Error("Webhook payment reference is unknown.");
+    const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
     const verificationRequest = new Request(request.url, {
       method: "POST",
       headers: request.headers,
       body: rawBody
     });
-    rawEvent = await provider.verifyWebhook(verificationRequest);
+    rawEvent = await provider.verifyWebhook(verificationRequest, snapshot?.credentials, snapshot?.environment);
   } catch {
     return Response.json({ error: "Payment webhook verification failed or payload exceeded the size limit." }, {
       status: 400,
