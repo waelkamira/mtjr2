@@ -4251,3 +4251,8 @@ The platform account policy is now explicit: email verification is not required 
 - Began a page-by-page seller workspace review; no tests, builds, typechecks, or browser checks were run.
 
 - Added a separate seller-entered exact street-address field to product location data; it is persisted independently from OpenSyria's official locality hierarchy and from the optional neighbourhood label.
+
+- Added `Product.streetAddress` (500 characters) as a separate seller-entered exact address field in product create/edit, with a Prisma migration; it remains distinct from OpenSyria locality IDs and the optional neighbourhood label.
+- Seller portal review fixes: topbar product search now initializes the catalog filter from its query parameter; active-store changes refresh the sidebar store identity; message sending/loading now has explicit busy/error states; Q&A and reviews are localized and use consistent readable surfaces; seller order currency formatting follows the selected locale; product analytics/status labels and seller/store status labels are translated.
+- Seller portal scope review covered Overview, Products, Orders, Inventory, Shipping, Returns, Messages, Questions, Reviews, Advertising, Finance, Commissions, Staff, Store Settings, mobile/desktop navigation, and loading/error boundaries.
+- Outstanding by design: seller withdrawals/payout methods and seller payable balances are not implemented. The accounting journal foundation is not yet connected to captured payments/refunds, and settlement/hold/chargeback policy is not approved. Do not calculate or label commissions/refunds as an available-to-withdraw balance. See `docs/implementation/SELLER_WORKSPACE_AUDIT.md`.
