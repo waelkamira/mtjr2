@@ -119,6 +119,20 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
     map.on("zoomend", updateViewport);
     map.on("moveend", updateViewport);
     mapRef.current = map;
+
+    // If coordinates were selected before Leaflet finished loading, render the pin
+    // as soon as the map is ready instead of waiting for another coordinate change.
+    const initialLocation = locationRef.current.value;
+    if (initialLocation) {
+      const initialPoint: [number, number] = [initialLocation.latitude, initialLocation.longitude];
+      markerRef.current = L.marker(initialPoint, { icon, draggable: true }).addTo(map);
+      markerRef.current.on("dragend", (event) => {
+        const position = event.target.getLatLng();
+        onChangeRef.current({ latitude: position.lat, longitude: position.lng });
+      });
+      map.setView(initialPoint, locationRef.current.focus?.zoom ?? 15);
+    }
+
     updateViewport();
     const resize = () => map.invalidateSize();
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null;
