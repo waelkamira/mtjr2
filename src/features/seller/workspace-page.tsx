@@ -701,12 +701,18 @@ export default function SellerWorkspacePage() {
                   </label>
                   <span className="text-xs font-semibold text-[#78909c]">{selectedStore.status}</span>
                 </div>}
+                {selectedStore && (selectedStore.publicPhone || selectedStore.publicAddress) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedStore.publicPhone && <a href={`tel:${selectedStore.publicPhone.replace(/[^+\\d]/g, "")}`} dir="ltr" className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/55 px-3 py-1.5 text-xs font-semibold text-[#46697b] shadow-[inset_0_1px_0_white]"><span aria-hidden="true">☎</span>{selectedStore.publicPhone}</a>}
+                    {selectedStore.publicAddress && <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/90 bg-white/55 px-3 py-1.5 text-xs font-semibold text-[#46697b] shadow-[inset_0_1px_0_white]"><span aria-hidden="true">⌖</span><span className="truncate">{selectedStore.publicAddress}</span></span>}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-wrap gap-3 lg:justify-end">
               {selectedStore && <Link href="/seller/products#create-product" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#a8d9d4,#75b8b8)] px-5 py-3 text-sm font-extrabold text-[#24485a] shadow-[0_7px_16px_rgba(38,94,105,.18),inset_0_2px_0_rgba(255,255,255,.85)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(38,94,105,.2)]"><span aria-hidden="true" className="text-lg leading-none">＋</span>{translate(locale, "Create product", "إنشاء منتج")}</Link>}
               <Link href="/seller/orders" className="inline-flex items-center justify-center rounded-full border border-white/90 bg-[linear-gradient(145deg,#eaf3f5,#e1dfed)] px-5 py-3 text-sm font-bold text-[#526078] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "View orders", "عرض الطلبات")}</Link>
-              {selectedStore?.isOwner && <Link href="/seller/settings" className="inline-flex items-center justify-center rounded-full border border-white/90 bg-white/55 px-5 py-3 text-sm font-bold text-[#405a6d] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "Edit store", "تعديل المتجر")}</Link>}
+              {selectedStore?.isOwner && <Link href="/seller#store-management" className="inline-flex items-center justify-center rounded-full border border-white/90 bg-white/55 px-5 py-3 text-sm font-bold text-[#405a6d] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "Edit store", "تعديل المتجر")}</Link>}
             </div>
           </div>
         </section>
