@@ -154,7 +154,7 @@ export async function revokeStoreStaff(membershipId: string, now = new Date()) {
     if (!membership) return false;
     await requireStoreOwner(tx, membership.storeId, actor.userId);
     const updated = await tx.sellerStaff.updateMany({
-      where: { id, status: { in: [SellerStaffStatus.INVITED, SellerStaffStatus.ACTIVE] } },
+      where: { id, status: { in: [SellerStaffStatus.INVITED, SellerStaffStatus.ACTIVE, SellerStaffStatus.SUSPENDED] } },
       data: { status: SellerStaffStatus.REVOKED }
     });
     if (updated.count !== 1) return false;
