@@ -101,7 +101,7 @@ export async function GET(
     }
 
     return Response.json({ items, pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) } }, {
-      headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" }
+      headers: { "Cache-Control": level === "neighborhoods" ? "no-store" : "public, s-maxage=86400, stale-while-revalidate=604800" }
     });
   } catch (error) {
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid geography query." }, { status: 400 });
