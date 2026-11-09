@@ -122,6 +122,27 @@ export async function startOrderPayment(input: {
       if (active.provider !== input.providerKey) throw new Error("A payment attempt is already active with another provider. Complete or cancel it before switching methods.");
       return active;
     }
+    // Re-check the selected database configuration inside the payment transaction.
+    // This closes the window where an administrator disables or changes a provider
+    // after the initial lookup but before a new payment attempt is persisted.
+    if (runtimeSelection.config) {
+      const currentConfig = await tx.paymentProviderConfig.findUnique({
+        where: { providerKey_environment: { providerKey: input.providerKey, environment: providerEnvironment } }
+      });
+      const method = input.providerKey === "stripe" ? "card" : "paypal";
+      if (
+        !currentConfig ||
+        currentConfig.id !== runtimeSelection.config.id ||
+        currentConfig.status !== "ACTIVE" ||
+        currentConfig.encryptedCredentials !== runtimeSelection.config.encryptedCredentials ||
+        currentConfig.credentialsKeyVersion !== runtimeSelection.config.credentialsKeyVersion ||
+        (currentConfig.supportedCurrencies.length > 0 && !currentConfig.supportedCurrencies.includes(order.currencyCode)) ||
+        (currentConfig.supportedCountries.length > 0 && (!order.address?.countryCode || !currentConfig.supportedCountries.includes(order.address.countryCode))) ||
+        (currentConfig.enabledPaymentMethods.length > 0 && !currentConfig.enabledPaymentMethods.includes(method))
+      ) {
+        throw new Error("This payment provider was changed or disabled before the payment attempt could be created. Refresh and choose an available method.");
+      }
+    }
     return tx.payment.create({
       data: {
         orderId: order.id, provider: input.providerKey, amountMinor: order.totalMinor,
