@@ -3055,3 +3055,28 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Verification and limitations**
 - Source-level review only in this GitHub-connected session. No local TypeScript/lint/build, focused service test, disposable PostgreSQL, or browser journey has been run for this slice. Do not mark these routes Verified until those checks pass.
 - Current implementation lists all brands in one response; pagination/search should be added before the brand catalogue becomes large.
+
+
+## 2026-11-09 — Seller portal redesign and product image preview
+
+**Implemented on `main`**
+- Replaced the seller segment's previous dark sidebar/topbar layout with a unified responsive pastel-clay seller shell. The shell links only to existing seller sections: overview, products, orders, inventory, shipping, returns, reviews, questions, messages, team, advertising and notifications.
+- Harmonized the seller dashboard and product studio backgrounds/cards with the lavender, mint, blush and butter pastel palette while preserving the existing live dashboard data, analytics, onboarding and product workflows.
+- Added an accessible full-size image preview overlay to both product draft creation and draft editing galleries. Images can be opened from thumbnails and the preview closes by the close control, backdrop click or Escape. Existing upload, retry, replace, remove and reorder actions remain wired to the media API.
+- Re-verified the one-store-per-seller invariant in source: `Store.sellerId` has a database unique constraint; store creation additionally serializes requests with a PostgreSQL advisory transaction lock and rejects a second distinct store configuration.
+- Confirmed that the seller application service, category-attribute loading, market-specific prices, seller shipping create/update APIs and shipping editor already exist; these were retained rather than duplicated.
+- Updated `PAGE_INVENTORY.md` to record the actual seller layout, shipping and advertising routes and the current source-level UI capabilities.
+
+**Commits**
+- Seller shell component: `76adf3a79cf3c5bdace2ea8470fe3087e5003396`
+- Seller layout: `7131f7b1be1df412171cc89b035b5b06c9a04598`
+- Seller shell/navigation refinements: `9e6d061ca3bdc59abeaec8f89981bb15f72c5466`, `4bfb8f8a799a05d5aaeec850ed5d5bbd158d71c8`
+- Seller image preview: `c86536b36a6258b9b407d0918bdf3129879371d7`, `ff7dbf339199c9c06fd9c99b3b518043ac26c9ae`
+- Dashboard palette: `058860081894a59bdf913b1edf68bd702b1976b7`
+- Product studio palette: `cac567bf1cb8754b1bb06b1ddde389fa4f647c14`
+- Route inventory: `15913bf9523d83104a17a3a4e32e46a7df6c9d56`
+
+**Verification and limitations**
+- Source files were re-fetched from `main` after writes. The seller layout, navigation routes, image preview interactions, one-store database constraint and existing service/API connections were inspected.
+- No local Node runtime, TypeScript, ESLint, production build, browser screenshot, or disposable PostgreSQL session was available in this GitHub-only session. Do not mark the redesign or seller portal as complete until those checks pass.
+- Vercel's previous status failure was an account build-rate limit, not a verified application build failure. No deployment was attempted.
