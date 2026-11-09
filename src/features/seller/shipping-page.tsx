@@ -52,11 +52,12 @@ export default function SellerShippingPage() {
         if (!active) return;
         setStores(workspace.stores);
         setMarkets(marketResult.items);
-        const savedId = localStorage.getItem("mtjr.activeStoreId") || "";
+        let savedId = "";
+        try { savedId = localStorage.getItem("mtjr.activeStoreId") || ""; } catch { /* Keep the page usable when browser storage is blocked. */ }
         const initialStore = workspace.stores.find((item) => item.id === savedId) ?? workspace.stores[0];
         if (initialStore) {
           setStoreId(initialStore.id);
-          localStorage.setItem("mtjr.activeStoreId", initialStore.id);
+          try { localStorage.setItem("mtjr.activeStoreId", initialStore.id); } catch { /* Store selection still works for this session. */ }
         }
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Unable to load shipping settings.", "تعذر تحميل إعدادات الشحن."));
@@ -135,7 +136,7 @@ export default function SellerShippingPage() {
         <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--muted)]">{translate(locale, "Store operations", "عمليات المتجر")}</p>
         <h1 className="mt-2 text-2xl font-black text-[var(--color-ink-950)] sm:text-3xl">{translate(locale, "Shipping settings", "إعدادات الشحن")}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-ink-600)]">{translate(locale, "Create and maintain delivery services, destination regions, prices and estimated delivery windows for each enabled market.", "أنشئ وعدّل خدمات التوصيل ومناطق الوجهة والأسعار والمدة المتوقعة لكل سوق مفعّل.")}</p>
-        {stores.length > 1 && <label className="mt-5 block max-w-sm text-sm font-semibold">{translate(locale, "Store", "المتجر")}<select className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" value={storeId} onChange={(event) => { setStoreId(event.target.value); localStorage.setItem("mtjr.activeStoreId", event.target.value); resetForm(); }}><option value="">{translate(locale, "Choose a store", "اختر متجراً")}</option>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>}
+        {stores.length > 1 && <label className="mt-5 block max-w-sm text-sm font-semibold">{translate(locale, "Store", "المتجر")}<select className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" value={storeId} onChange={(event) => { setStoreId(event.target.value); try { localStorage.setItem("mtjr.activeStoreId", event.target.value); } catch { /* Store selection still works for this session. */ } resetForm(); }}><option value="">{translate(locale, "Choose a store", "اختر متجراً")}</option>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>}
       </header>
 
       {error && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
