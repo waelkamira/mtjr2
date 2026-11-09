@@ -68,7 +68,7 @@ export async function loginWithPassword(
 
   const user = await prisma.user.findUnique({
     where: { emailNormalized: email },
-    select: { id: true, passwordHash: true, status: true, adminStatusReason: true, emailVerifiedAt: true }
+    select: { id: true, passwordHash: true, status: true, adminStatusReason: true }
   });
 
   const passwordMatches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
