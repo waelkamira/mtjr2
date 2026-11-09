@@ -3840,3 +3840,19 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Compared customer support, support-ticket detail, wishlist, account profile/addresses, and storefront surfaces. Main retains newer API integration and current components; no branch-only behavior was found that warranted a source replacement in this pass.
 - Reviewed CI workflow differences: main intentionally retains non-cancelling concurrency for quality/browser runs and broader path coverage; the branch versions are older. The branch-only dashboard demo seeder was not copied because it creates a large synthetic customer/order/payment/review dataset and depends on schema assumptions that have since evolved. It requires a separately designed, isolated demo-fixture workflow before reuse.
 - No tests, build, typecheck, migration execution, or browser checks were run.
+
+## 2026-11-09 — Continued storefront, account, checkout, and order reconciliation
+
+Compared the remaining account, seller messaging, storefront, cart, checkout, and order surfaces against the retained `feat/super-admin-control-panel` snapshot.
+
+- Kept the current account address editor and normalized country-code contract in `main`; the branch page is a reduced earlier implementation with fewer address fields and a different country response shape.
+- Kept the current profile page, which consumes the dedicated account analytics API and renders the existing metric chart, rather than restoring the branch's direct customer-order analytics fetch.
+- Kept seller messaging in `main`, including loading the seller's available stores and handling store selection; the branch assumes a single locally persisted store without the current store-loading/error lifecycle.
+- Kept the current storefront routes. The main product route adds not-found handling and sponsored-campaign integration; the store detail route is materially more complete, with current catalog controls and store reviews.
+- Kept the main cart, checkout, delivery-address, shipping-option, tax-summary, and order components. The current versions consistently use the centralized minor-unit money formatter and toast feedback, and preserve the current quote/shipping/tax contracts.
+- Kept the main order detail and seller-order pages, which contain additional current workflow and analytics behavior. The main order route also preserves the payment-return query state.
+- Reviewed shared auth journey and chart components. Main's auth journey preserves richer registration-notice states and return-path handling. The branch chart palette is an older orange/neutral palette; it was not copied over the current shared dashboard palette because the active clay theme is already applied across current surfaces.
+- The product-detail branch file is longer, but length alone is not evidence of a safe improvement. Its differences are tied to older client-side contracts; current main component remains integrated with the current storefront services and shared money formatting.
+
+No source changes were warranted by this batch. No tests, builds, typechecks, or browser checks were run, in line with the requested build-first workflow.
+
