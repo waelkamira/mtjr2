@@ -12,6 +12,7 @@ Target API:
 - `POST /api/admin/payment-providers/[id]/enable`
 - `POST /api/admin/payment-providers/[id]/disable`
 - `POST /api/admin/payment-providers/[id]/verify`
+- `POST /api/admin/payment-providers/rotate-credentials` (MFA-protected, audited, resumable re-encryption)
 - `DELETE /api/admin/payment-providers/[id]` (soft-delete only)
 
 ## Provider lifecycle
