@@ -100,7 +100,7 @@ export default function MatjarAIAssistant() {
                 </div>
                 <Link href="/account/support" className="block text-center text-xs font-semibold text-[var(--color-lavender-800)] underline">{t("Contact customer support", t("Contact customer support", "التواصل مع خدمة العملاء"))}</Link>
                 {suggestions.map((suggestion) => (
-                  <button key={suggestion} type="button" onClick={() => void send(suggestion)} className="block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 {locale === "ar" ? "text-right" : "text-left"} text-xs text-[var(--color-lavender-800)] hover:bg-[var(--color-lavender-50)]">
+                  <button key={suggestion} type="button" onClick={() => void send(suggestion)} className={`block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 ${locale === "ar" ? "text-right" : "text-left"} text-xs text-[var(--color-lavender-800)] hover:bg-[var(--color-lavender-50)]`}>
                     {suggestion}
                   </button>
                 ))}
