@@ -4145,3 +4145,16 @@ Reviewed environment parsing, API-route security and marketplace E2E specificati
 Commits: `919f4eb` (normalize optional cron secret), `f964e3a` (environment regression case).
 
 No tests/build/typecheck/browser checks were run, per user instruction.
+
+## 2026-11-09 — Final six-file reconciliation batch 18
+
+Reviewed locale, seller application, store staff, order management, payment lifecycle and shipping test files.
+
+- Main locale test checks secure HttpOnly cookie flags while mocking the current origin guard; the branch cookie-object assertions are less compatible with the framework response API.
+- Main seller-application tests cover the full required applicant profile and current one-store-per-seller invariant. Branch tests exercise the older minimal application payload and pre-current store creation behavior.
+- Main store-staff tests enforce owner-only team administration, email invitations, exact identifier validation and prevention of manager privilege escalation. Branch delegated-manager expectations conflict with the current least-privilege policy.
+- Main order tests allow cancellation only after all payment attempts are failed/cancelled; branch rejects cancellation after any historical payment attempt. Main payment tests also protect partially-refunded states from late webhook success events.
+- Main shipping tests cover the current owner-scoped rate lifecycle and deactivation; branch tests target the older service contract.
+- No additional branch runtime/test code copied from this batch.
+
+This completes the review of all 176 shared paths with differing blob hashes between the retained branch and main as inventoried at the start of the 18 review batches. The branch-only paths and main-only paths are separately inventoried in the reconciliation sections above; obsolete legacy migrations, geography artifacts, old image storage, old test suites and Vercel configuration are not to be restored over current main.
