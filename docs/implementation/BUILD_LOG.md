@@ -4105,3 +4105,16 @@ Reviewed locale, seller application/store creation, store staff, order managemen
 - No branch test or runtime code copied from this batch.
 
 This closes the final six shared changed paths in the current tree inventory. The branch is not merged wholesale; compatible user changes have been selectively reconciled into main, and superseded differences remain intentionally excluded.
+
+## 2026-11-09 — Final retained-branch reconciliation inventory
+
+Final Git tree comparison after the 18 review batches:
+- Canonical main HEAD before this final log update: `cb9d0acbeb39459036f314a0bf6bd5c98a4dccb1`.
+- Retained workstation branch HEAD: `9235f48ff81781a057e759251cf43d8d72654066`.
+- Main: 816 blob files; retained branch: 738 blob files.
+- Shared paths: 712; shared paths with different content: 176; branch-only paths: 26; main-only paths: 104.
+- All 176 shared changed paths were reviewed in 18 batches (17 batches of ten and a final six-file batch). The five paths that became byte-identical through selective reconciliation no longer count as changed in the final tree comparison.
+- All 26 branch-only paths remain classified: 10 documentation/QA artifacts, 3 superseded migrations, 4 superseded geography/map artifacts, 1 superseded category-preset helper, 1 legacy image-storage service, 6 historical tests deferred to validation, and 1 ignored Vercel config. No unclassified branch-only runtime file remains.
+- Selectively retained missing user changes on main: 20-store/200-product demo catalog, per-card admin dashboard charts, persisted auth return destination handling, authenticated product-image upload throttling, and compatible test coverage for dashboard samples, advertising targeting/analytics and email-verification lifecycle.
+- Main remains the sole source of truth. The historical branch was not merged wholesale and remains untouched. The 176 remaining content differences are intentional: main's newer/safer implementations, superseded branch behavior, or documented exclusions—not an outstanding queue of files to blindly copy.
+- Validation remains deferred exactly as requested: no tests, builds, typechecks or browser checks were executed.
