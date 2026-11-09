@@ -65,7 +65,8 @@ export default function SellerStaffPage() {
       setMessage(success);
       toast.success(success);
       await reload();
-    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Request failed.", "فشل الطلب."); setError(message); toast.error(message); }
+      return true;
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Request failed.", "فشل الطلب."); setError(message); toast.error(message); return false; }
     finally { setBusy(false); }
   }
 
