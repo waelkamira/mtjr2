@@ -13,9 +13,9 @@ const sellerProfileSchema = z.object({
   phoneNumber: z.string().trim().min(7).max(25).regex(/^\+?[0-9\s().-]{7,25}$/),
   residence: z.string().trim().min(3).max(240),
   description: z.string().trim().max(4000).nullable(),
-  facebookUrl: z.string().trim().url().max(2048).nullable(),
-  youtubeUrl: z.string().trim().url().max(2048).nullable(),
-  twitterUrl: z.string().trim().url().max(2048).nullable()
+  facebookUrl: z.string().trim().url().max(2048).refine((value) => new URL(value).protocol === "https:", "Only HTTPS links are accepted.").nullable(),
+  youtubeUrl: z.string().trim().url().max(2048).refine((value) => new URL(value).protocol === "https:", "Only HTTPS links are accepted.").nullable(),
+  twitterUrl: z.string().trim().url().max(2048).refine((value) => new URL(value).protocol === "https:", "Only HTTPS links are accepted.").nullable()
 }).strict();
 
 const sellerProfileSelect = {
