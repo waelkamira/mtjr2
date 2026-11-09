@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
+import { userHasScopedPermission } from "@/server/identity/permission-repository";
 
 const storeIdSchema = z.string().trim().min(1).max(128);
 
@@ -26,7 +27,10 @@ export async function getSellerCommissionHistory(storeIdInput: string) {
     select: { id: true, name: true, sellerId: true, seller: { select: { ownerId: true } } }
   });
   if (!store) throw new SellerCommissionStoreNotFoundError();
-  if (store.seller.ownerId !== actor.userId) throw new PermissionDeniedError();
+  const canRead = store.seller.ownerId === actor.userId || await userHasScopedPermission(actor.userId, {
+    permissionKey: "orders:read", scope: { type: "STORE", id: storeId }
+  });
+  if (!canRead) throw new PermissionDeniedError();
 
   const rows = await prisma.commissionTransaction.findMany({
     where: { storeId: store.id, sellerId: store.sellerId },
