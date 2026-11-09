@@ -20,6 +20,7 @@ const environmentSchema = z.object({
   PAYMENT_PROVIDER_ENCRYPTION_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().regex(/^[a-fA-F0-9]{64}$/, "PAYMENT_PROVIDER_ENCRYPTION_KEY must be exactly 64 hexadecimal characters").optional()),
   PAYMENT_PROVIDER_ENCRYPTION_KEYS: z.preprocess((value) => value === "" ? undefined : value, z.string().optional()),
   PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION: z.preprocess((value) => value === "" || value === undefined ? undefined : value, z.coerce.number().int().min(1).max(100).default(1)),
+  PAYMENT_PROVIDER_RUNTIME_ENVIRONMENT: z.preprocess((value) => value === "" ? undefined : value, z.enum(["TEST", "LIVE"]).optional()),
   CRON_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(32, "CRON_SECRET must contain at least 32 characters").optional()),
   VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
   VERCEL_URL: z.string().trim().min(1).optional(),
