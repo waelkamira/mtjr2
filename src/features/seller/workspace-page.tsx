@@ -319,9 +319,9 @@ export default function SellerWorkspacePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: editingStoreName, slug: editingStoreSlug })
       }));
+      await reload();
       setEditingStoreProfile(false);
       setMessage(translate(locale, "Store profile updated and recorded in the audit log.", "تم تحديث ملف المتجر وتسجيل التغيير في سجل التدقيق."));
-      await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Unable to update store profile.", "تعذر تحديث ملف المتجر."));
     } finally { setBusy(false); }
