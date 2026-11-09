@@ -153,3 +153,8 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 ## Key rotation operations
 
 The vault supports multiple simultaneous key versions. Keep the old version in the key ring while selecting a new active version; then use the Super Admin page's **Re-encrypt with active key** action. It updates provider configuration secrets and historical payment snapshots in batches, audits the counts, and is repeatable if interrupted. Only remove a retired key after both remaining counts are zero and backups/restore points no longer require it. Existing `PAYMENT_PROVIDER_ENCRYPTION_KEY` is treated as version 1 for backward compatibility.
+
+
+- The payment snapshot columns have a database-level all-or-none CHECK constraint to prevent partial credential snapshots. The rotation operation fails closed on malformed snapshots and processes bounded, resumable batches (up to 100 rows per table per request).
+- The compiled adapters currently enforce only their supported payment methods: Stripe `card`, PayPal `paypal`. Unsupported method names are rejected when configuration is saved.
+- Checkout discovery is market-aware: restricted providers are hidden when the current order country/currency is missing or unsupported, and the server independently enforces the same rules when creating a payment.
