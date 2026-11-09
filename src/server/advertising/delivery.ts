@@ -183,19 +183,21 @@ export async function listSellerAdInvoices(storeId: string, now = new Date()) {
 
 export async function getAdminAdvertisingAnalytics(now = new Date()) {
   await (await import("@/server/identity/permission-guard")).requirePermission({ permissionKey: "ads:moderate", now });
-  const [campaigns, spendByCurrency, invoicesByCurrency, activeCampaigns] = await Promise.all([
+  const [campaigns, spendByCurrency, invoicesByCurrency, activeCampaigns, currencies] = await Promise.all([
     prisma.adCampaign.aggregate({ _count: { _all: true }, _sum: { impressionCount: true, clickCount: true } }),
     prisma.adSpendLedgerEntry.groupBy({ by: ["currencyCode"], _sum: { amountMinor: true } }),
     prisma.adInvoice.groupBy({ by: ["currencyCode", "status"], _sum: { amountMinor: true }, _count: { _all: true } }),
-    prisma.adCampaign.count({ where: { status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now } } })
+    prisma.adCampaign.count({ where: { status: AdCampaignStatus.ACTIVE, startsAt: { lte: now }, endsAt: { gt: now } } }),
+    prisma.currency.findMany({ select: { code: true, minorUnit: true } })
   ]);
+  const minorUnitFor = (code: string) => currencies.find((currency) => currency.code === code)?.minorUnit ?? 2;
   return {
     campaignCount: campaigns._count._all,
     activeCampaigns,
     impressions: (campaigns._sum.impressionCount ?? BigInt(0)).toString(),
     clicks: (campaigns._sum.clickCount ?? BigInt(0)).toString(),
-    spendByCurrency: spendByCurrency.map((row) => ({ currencyCode: row.currencyCode, amountMinor: (row._sum.amountMinor ?? BigInt(0)).toString() })),
-    invoicesByCurrency: invoicesByCurrency.map((row) => ({ currencyCode: row.currencyCode, status: row.status, amountMinor: (row._sum.amountMinor ?? BigInt(0)).toString(), count: row._count._all }))
+    spendByCurrency: spendByCurrency.map((row) => ({ currencyCode: row.currencyCode, amountMinor: (row._sum.amountMinor ?? BigInt(0)).toString(), minorUnit: minorUnitFor(row.currencyCode) })),
+    invoicesByCurrency: invoicesByCurrency.map((row) => ({ currencyCode: row.currencyCode, status: row.status, amountMinor: (row._sum.amountMinor ?? BigInt(0)).toString(), minorUnit: minorUnitFor(row.currencyCode), count: row._count._all }))
   };
 }
 
