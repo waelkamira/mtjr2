@@ -111,6 +111,18 @@ export async function getActivePaymentProviderRuntimeConfig(
   };
 }
 
+export async function getActiveProviderCredentialsForWebhook(
+  providerKey: "stripe" | "paypal",
+  environment: PaymentProviderEnvironment
+) {
+  const config = await prisma.paymentProviderConfig.findUnique({
+    where: { providerKey_environment: { providerKey, environment } },
+    select: { status: true, encryptedCredentials: true, credentialsKeyVersion: true }
+  });
+  if (!config || config.status !== PaymentProviderConfigStatus.ACTIVE || !config.encryptedCredentials) return null;
+  return decryptCredentials(config.encryptedCredentials, config.credentialsKeyVersion);
+}
+
 export async function getPaymentProviderRuntimeSnapshot(paymentId: string) {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
