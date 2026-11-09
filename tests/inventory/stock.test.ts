@@ -39,7 +39,7 @@ vi.mock("@/server/identity/permission-repository", () => ({
   userHasPermission: mocks.userHasPermission
 }));
 
-import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements } from "@/server/inventory/stock";
+import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements, decideQuarantinedStock } from "@/server/inventory/stock";
 
 describe("seller inventory operations", () => {
   beforeEach(() => {
@@ -77,6 +77,58 @@ describe("seller inventory operations", () => {
     mocks.storeFindUnique.mockResolvedValue({ id: "store-other", seller: { ownerId: "another-owner", status: "ACTIVE" } });
     await expect(listStoreInventoryMovements("store-other")).rejects.toThrow("inventory access");
     expect(mocks.inventoryMovementFindMany).not.toHaveBeenCalled();
+  });
+
+  it("releases inspected quarantine into sellable stock and records both ledger deltas", async () => {
+    const result = await decideQuarantinedStock({
+      warehouseId: "warehouse-1", variantId: "variant-1", quantity: 2,
+      decision: "RELEASE", idempotencyKey: "quarantine-release-0001"
+    });
+    expect(result.alreadyApplied).toBe(false);
+    expect(mocks.inventoryUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ quantityQuarantined: { gte: 2 } }),
+      data: { quantityOnHand: { increment: 2 }, quantityQuarantined: { decrement: 2 } }
+    }));
+    expect(mocks.inventoryMovementCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ type: "ADJUSTMENT", quantityDelta: 2, quarantinedDelta: -2, idempotencyKey: "quarantine-release-0001" })
+    }));
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("disposes quarantined stock without increasing sellable on-hand", async () => {
+    await decideQuarantinedStock({
+      warehouseId: "warehouse-1", variantId: "variant-1", quantity: 1,
+      decision: "DISPOSE", idempotencyKey: "quarantine-dispose-0001"
+    });
+    expect(mocks.inventoryUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      data: { quantityQuarantined: { decrement: 1 } }
+    }));
+    expect(mocks.inventoryMovementCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ quantityDelta: 0, quarantinedDelta: -1 })
+    }));
+  });
+
+  it("rejects quarantine decisions larger than the quarantined balance", async () => {
+    mocks.inventoryFindUnique.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 1 });
+    await expect(decideQuarantinedStock({
+      warehouseId: "warehouse-1", variantId: "variant-1", quantity: 2,
+      decision: "RELEASE", idempotencyKey: "quarantine-release-0002"
+    })).rejects.toThrow("Insufficient quarantined quantity");
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("replays an identical quarantine decision without changing stock twice", async () => {
+    mocks.inventoryMovementFindUnique.mockResolvedValue({
+      id: "movement-existing", inventoryId: "inventory-1", quantityDelta: 2,
+      quarantinedDelta: -2, type: "ADJUSTMENT", note: "released"
+    });
+    const result = await decideQuarantinedStock({
+      warehouseId: "warehouse-1", variantId: "variant-1", quantity: 2,
+      decision: "RELEASE", idempotencyKey: "quarantine-release-0003"
+    });
+    expect(result.alreadyApplied).toBe(true);
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.inventoryMovementCreate).not.toHaveBeenCalled();
   });
 
   it("rejects a negative adjustment that would consume reserved stock", async () => {
