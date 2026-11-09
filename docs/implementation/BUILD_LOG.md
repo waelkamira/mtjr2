@@ -3577,3 +3577,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added `DELETE /api/seller/stores/[storeId]/media`: requires owner or exact-store catalog management, checks saved branding and ProductMedia references, deletes the provider asset, then removes its library record and writes an audit event. Unsupported deletion leaves the asset record intact.
 - Temporary upload deletion also removes the library record only after provider deletion succeeds. Product media cleanup now preserves an asset if it is still referenced by store branding and removes the library row only after successful provider deletion.
 - No tests, build, typecheck, browser session or deployment was run.
+
+## 2026-11-09 — Seller media-provider consistency
+
+- Follow-up correction on main: ImageKit and Cloudinary product uploads now use the same store-scoped media-library persistence path as Imgur. The response includes the persisted asset ID and store-bound temporary-delete token.
+- This prevents successful uploads from being absent from the seller's reusable media library and keeps provider metadata/deletion lifecycle consistent across configured providers.
+- Commit: 24b60fbc0b1b0dcc3b3f3c7701349f6fcfc7e445.
+- Per the current work instruction, no tests, build, typecheck or browser verification was run; these remain for the post-build verification pass.
