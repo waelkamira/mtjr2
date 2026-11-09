@@ -389,7 +389,11 @@ const updateProductSchema = z.object({
     altText: z.string().trim().max(300).nullable().optional(),
     sortOrder: z.number().int().min(0).max(1000).default(0),
     isPrimary: z.boolean().default(false)
-  }).strict()).max(30).optional()
+  }).strict()).max(30).optional(),
+  variants: z.array(z.object({
+    id: z.string().trim().min(1),
+    prices: z.array(priceSchema).min(1).max(20)
+  }).strict()).min(1).max(100).optional()
 }).strict()
   .refine((data) => Object.keys(data).length > 0, "At least one product field must be updated.")
   .refine((data) => !data.media || data.media.filter((item) => item.isPrimary).length <= 1, "Only one primary product image is allowed.");
@@ -405,11 +409,45 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, store: { select: { seller: { select: { ownerId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, variants: { where: { isActive: true }, select: { id: true } }, store: { select: { seller: { select: { ownerId: true } }, markets: { where: { isEnabled: true }, select: { marketId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
       throw new Error("You do not have catalog access to this store.");
+    }
+    if (data.variants !== undefined) {
+      const currentVariantIds = new Set(current.variants.map((variant) => variant.id));
+      const submittedVariantIds = data.variants.map((variant) => variant.id);
+      if (new Set(submittedVariantIds).size !== submittedVariantIds.length ||
+          submittedVariantIds.length !== currentVariantIds.size ||
+          submittedVariantIds.some((variantId) => !currentVariantIds.has(variantId))) {
+        throw new Error("Product price updates must include every active variant exactly once.");
+      }
+      const enabledMarketIds = new Set(current.store.markets.map((market) => market.marketId));
+      const submittedMarketIds = new Set(data.variants.flatMap((variant) => variant.prices.map((price) => price.marketId)));
+      if (submittedMarketIds.size !== enabledMarketIds.size ||
+          [...enabledMarketIds].some((marketId) => !submittedMarketIds.has(marketId))) {
+        throw new Error("Every enabled store market must retain a price for every active variant.");
+      }
+      const markets = await tx.market.findMany({
+        where: { id: { in: [...enabledMarketIds] }, status: "ACTIVE", country: { isActive: true } },
+        select: { id: true, currencies: { where: { isEnabled: true, currency: { isActive: true } }, select: { currencyCode: true } } }
+      });
+      if (markets.length !== enabledMarketIds.size) throw new Error("Every priced market must be active.");
+      const enabledPairs = new Set(markets.flatMap((market) => market.currencies.map((currency) => market.id + ":" + currency.currencyCode)));
+      for (const variant of data.variants) {
+        const marketIds = variant.prices.map((price) => price.marketId);
+        if (new Set(marketIds).size !== marketIds.length ||
+            marketIds.length !== enabledMarketIds.size ||
+            marketIds.some((marketId) => !enabledMarketIds.has(marketId))) {
+          throw new Error("Each variant must have exactly one price for every enabled store market.");
+        }
+        for (const price of variant.prices) {
+          if (!enabledPairs.has(price.marketId + ":" + price.currencyCode)) {
+            throw new Error("A product price uses a currency not enabled for its market.");
+          }
+        }
+      }
     }
     const nextLocalityId = data.localityId === undefined ? current.localityId : data.localityId;
     const localityChanged = data.localityId !== undefined && data.localityId !== current.localityId;
@@ -510,6 +548,20 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         await tx.productMedia.createMany({
           data: data.media.map((item) => ({ productId: id, type: "IMAGE", ...item }))
         });
+      }
+    }
+    if (data.variants !== undefined) {
+      for (const variant of data.variants) {
+        for (const price of variant.prices) {
+          await tx.productPrice.deleteMany({
+            where: { variantId: variant.id, marketId: price.marketId, currencyCode: { not: price.currencyCode } }
+          });
+          await tx.productPrice.upsert({
+            where: { variantId_marketId_currencyCode: { variantId: variant.id, marketId: price.marketId, currencyCode: price.currencyCode } },
+            create: { variantId: variant.id, marketId: price.marketId, currencyCode: price.currencyCode, amountMinor: BigInt(price.amountMinor), compareAtMinor: price.compareAtMinor === undefined ? null : BigInt(price.compareAtMinor) },
+            update: { amountMinor: BigInt(price.amountMinor), compareAtMinor: price.compareAtMinor === undefined ? null : BigInt(price.compareAtMinor) }
+          });
+        }
       }
     }
     await tx.auditLog.create({ data: {
