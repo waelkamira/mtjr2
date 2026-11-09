@@ -3022,3 +3022,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 
 - Sidebar polish: added a compact business-workspace identity panel and a direct growth/campaign shortcut while preserving all existing seller navigation routes. Commit: `a6a14952d30bd2889c09ba61799db66aaa792147`.
+
+## 2026-11-09 — Seller workspace storage resilience
+
+- Guarded the post-submission seller workspace reload when persisting the active store preference. The initial workspace load and other seller sections already tolerate restricted browser storage; the reload path now follows the same rule, so a storage exception cannot turn a successfully-created store/application into a failed-looking submission.
+- No API, permission, schema or migration behavior changed.
+- Commit: `f1e511b1a4a9d105df4ee92215afc2400aba6ec6`.
+- Verification: the updated source was committed directly to `main`. TypeScript, lint, browser and PostgreSQL checks remain unverified in this GitHub-only session.
