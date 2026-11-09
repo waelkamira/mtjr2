@@ -3252,3 +3252,14 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level lifecycle and workflow review only. No browser or application-build pass is claimed.
+
+
+## 2026-11-09 — Seller portal closeout verification
+
+- Canonical source remains main; verified code/test head: a5bb22e212973be2f14c7c2fc8d7383ba7948a16 (Model active shipping rate state in tests). No feature branch or PR merge was used.
+- Seller workspace now includes owner-only dispatch contact/address/instructions persisted on Store through the existing store-settings API. Audit metadata records changed field names only; private address and phone values are not copied into audit logs or public store serializers.
+- Store context switching is hardened across seller workspace, catalog, inventory, orders, returns, shipping, advertising, messages and commission statements: stale data is cleared or guarded before late responses can overwrite the selected context.
+- Staff invitation uses email; the accepted invitation grants the existing STORE_MANAGER role. Owner-only invite/revoke remains the safe boundary until least-privilege store roles are designed.
+- Exact-head CI passed: Prisma validate/migrate/generate, TypeScript, ESLint, 109 test files / 540 tests, production build, API route security inventory, API authorization-boundary inventory and UI mutation-feedback inventory.
+- Exact-head Platform PostgreSQL Integration passed. Exact-head Browser E2E passed 9/9, including seller workspace, product create/edit, shipping-rate edit and dispatch-address persistence.
+- Seller portal scope is closed for the current navigation surface. Phase 5 overall remains partial (procurement/admin command center); seller payout execution remains Phase 6; live carrier integrations remain conditional. No Vercel deployment was performed.

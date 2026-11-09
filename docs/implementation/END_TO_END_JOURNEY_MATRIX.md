@@ -354,3 +354,17 @@ Dedicated store policies, localization, notification preferences and a richer pr
 | Seller reviews recorded platform fees | `/seller/commissions` → `GET /api/seller/commissions?storeId=...` → `getSellerCommissionHistory` | Current session; store owner or exact-store `orders:read`; query is constrained by both `storeId` and the store's `sellerId`. | Reads the latest 100 immutable CommissionTransaction snapshots with order item, order status, currency, base amount and recorded commission. Totals are grouped by currency. No net seller balance, payout, withdrawal or refund-adjustment amount is inferred. | Service test added; API/page browser and database checks pending. |
 
 **Financial boundary:** commission snapshots explain the fee applied to an order item; they are not an accounting ledger or payable balance. Do not add payout actions until the platform ledger, refunds/adjustments and payout reconciliation are implemented.
+
+## Seller portal verification — 2026-11-09
+
+| Journey | UI → backend → persistence | Result |
+|---|---|---|
+| Owner saves dispatch origin | /seller#store-management → PATCH /api/seller/stores/[storeId] → updateSellerStoreSettings → Store shipping* fields → fresh GET /api/seller/stores | Browser E2E verifies the updated contact, phone, address, city and ISO country code. Audit records changed field names only. |
+| Seller creates and edits a product | /seller/products → seller product/media APIs → Product, ProductVariant, ProductPrice and ProductMedia | Browser E2E verifies draft creation and edit persistence; image-provider response is isolated at the external storage boundary. |
+| Seller edits shipping services | /seller/shipping → shipping-rate APIs → StoreShippingRate and active StoreMarket/currency checks | Browser E2E and focused shipping service tests pass. |
+| Seller changes store context | Workspace, product, inventory, order, return, shipping, advertising, message and commission loaders | Store-scoped state is cleared or refreshed and late responses are guarded where the page has a store selector. Owner accounts remain limited to one store by unique constraints and serialized creation. |
+| Owner invites a team member | /seller/staff → store staff API → SellerStaff invitation and scoped role assignment after acceptance | Email-based invitation and service tests pass. The accepted role is STORE_MANAGER; only the owner can invite/revoke until least-privilege roles are implemented. |
+
+**Verification evidence on exact main head a5bb22e212973be2f14c7c2fc8d7383ba7948a16:** CI passed with Prisma validation/migration/generation, typecheck, lint, 109 test files / 540 tests, production build and all three route/authorization/mutation inventories. PostgreSQL integration passed. Browser E2E passed 9/9, including seller workspace, product draft create/edit, shipping-rate editing and dispatch-address persistence.
+
+**Boundaries:** this closes the current seller portal surface, not all Phase 5 work. Procurement and the admin command center remain open. Seller commission statements do not create a payable balance or payout; those belong to Phase 6. Live carrier integrations remain conditional. No Vercel deployment was performed.

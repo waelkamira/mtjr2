@@ -3,6 +3,9 @@
 **Systems:** 12–18, 20–28, 34, 38 (admin operational surfaces only; customer trust ownership remains Phase 7).  
 **Status:** Partial implementation exists; exact end-to-end acceptance is still required.
 
+**Seller portal sub-slice (2026-11-09):** the current seller navigation/workspace surfaces were verified on main at a5bb22e212973be2f14c7c2fc8d7383ba7948a16. See the closeout evidence in PAGE_ROUTE_REGISTRY.md, END_TO_END_JOURNEY_MATRIX.md and BUILD_LOG.md. This does not close Phase 5 as a whole: procurement, the broader admin command center, and least-privilege staff-role design remain separate work packages. Seller payout execution remains Phase 6.
+
+
 ## Objective
 Enable approved sellers and authorized staff to operate stores, products, stock, procurement, orders and fulfillment, while platform administrators review and govern these workflows with least privilege.
 

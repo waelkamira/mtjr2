@@ -20,7 +20,7 @@
 | Prisma models | Primary code ownership | Notes |
 |---|---|---|
 | `Country`, `Currency`, `Market`, `MarketCurrency` | `src/server/marketplace/market-query.ts`; `src/app/api/markets/*`, `countries`, `currencies` | Reference data and market/currency availability. Launch activation and seed data remain owner decisions. |
-| `Seller`, `Store`, `StoreMarket`, `SellerStaff` | `src/server/marketplace/seller-application.ts`, `store-staff.ts`; `src/app/api/seller/*`, `src/app/api/stores/*` | Seller application, stores, active markets, and store-scoped staff. Store creation retry/duplicate behavior remains an acceptance gap. |
+| `Seller`, `Store`, `StoreMarket`, `SellerStaff` | `src/server/marketplace/seller-application.ts`, `store-staff.ts`, `seller-store-settings.ts`; `src/app/api/seller/*`, `src/app/api/stores/*` | Seller application; one owned store per seller (Seller.ownerId @unique, Store.sellerId @unique) with serialized/idempotent creation; active markets and store-scoped staff. Store.shippingContactName, shippingPhone, shippingAddressLine1/2, shippingCity, shippingRegion, shippingPostalCode, shippingCountryCode and shippingInstructions persist the private dispatch origin edited in the seller workspace. Changes are audited by field name only; these fields are not part of public store serializers. |
 
 ## 3. Catalog and discovery — Systems 02–03
 
