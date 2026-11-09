@@ -148,3 +148,8 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 - The Super Admin page exposes an audited re-encryption operation. It migrates provider configurations and historical payment snapshots in bounded batches, uses conditional updates to avoid overwriting concurrent changes, and reports remaining rows. It is safe to rerun after an interruption.
 - Do not remove an older key until the operation reports both remaining counts as zero and a separate backup/recovery plan is confirmed. Restoring an old database backup also requires restoring the corresponding historical key material.
 - No migration is required for key rotation; the key version is already persisted in both models. Key material must never be committed to source control or stored in database backups.
+
+
+## Key rotation operations
+
+The vault supports multiple simultaneous key versions. Keep the old version in the key ring while selecting a new active version; then use the Super Admin page's **Re-encrypt with active key** action. It updates provider configuration secrets and historical payment snapshots in batches, audits the counts, and is repeatable if interrupted. Only remove a retired key after both remaining counts are zero and backups/restore points no longer require it. Existing `PAYMENT_PROVIDER_ENCRYPTION_KEY` is treated as version 1 for backward compatibility.
