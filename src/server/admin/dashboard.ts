@@ -86,11 +86,107 @@ export async function getAdminDashboard(input: unknown, now = new Date()) {
     ...baseOrderWhere,
     placedAt: { gte: previousFrom, lt: previousTo }
   } satisfies Prisma.OrderWhereInput;
+  const sampleOrderWhere = {
+    ...orderWhere,
+    status: { not: "CANCELLED" }
+  } satisfies Prisma.OrderWhereInput;
+
+  const metricSampleRowsPromise = Promise.all([
+    prisma.order.findMany({
+      where: orderWhere, orderBy: [{ placedAt: "desc" }, { id: "desc" }], take: 20,
+      select: { placedAt: true }
+    }),
+    prisma.order.findMany({
+      where: { ...orderWhere, status: "PENDING_PAYMENT" },
+      orderBy: [{ placedAt: "desc" }, { id: "desc" }], take: 20,
+      select: { placedAt: true }
+    }),
+    prisma.order.findMany({
+      where: { ...orderWhere, status: { in: ["CONFIRMED", "PROCESSING", "PARTIALLY_FULFILLED"] } },
+      orderBy: [{ placedAt: "desc" }, { id: "desc" }], take: 20,
+      select: { placedAt: true }
+    }),
+    prisma.order.findMany({
+      where: { ...orderWhere, status: { in: ["FULFILLED", "COMPLETED"] } },
+      orderBy: [{ placedAt: "desc" }, { id: "desc" }], take: 20,
+      select: { placedAt: true }
+    }),
+    prisma.order.findMany({
+      where: sampleOrderWhere,
+      orderBy: [{ placedAt: "desc" }, { id: "desc" }], take: 20,
+      select: { placedAt: true, totalMinor: true, currencyCode: true }
+    }),
+    prisma.payment.findMany({
+      where: { status: "SUCCEEDED", order: { is: orderWhere } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.payment.findMany({
+      where: { status: "FAILED", order: { is: orderWhere } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.payment.findMany({
+      where: { status: { in: ["INITIATING", "REQUIRES_ACTION", "PROCESSING"] }, order: { is: orderWhere } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.user.findMany({
+      where: { status: "ACTIVE" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.user.findMany({
+      where: { createdAt: { gte: from, lt: toExclusive } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.seller.findMany({
+      where: { status: "ACTIVE" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.seller.findMany({
+      where: { status: "PENDING" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.store.findMany({
+      where: { status: "ACTIVE" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.store.findMany({
+      where: { status: "SUSPENDED" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.product.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.product.findMany({
+      where: { approvalStatus: "PENDING" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.productReview.findMany({
+      where: { status: "PENDING" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.storeReview.findMany({
+      where: { status: "PENDING" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    }),
+    prisma.returnRequest.findMany({
+      where: { status: "REQUESTED" }, orderBy: [{ requestedAt: "desc" }, { id: "desc" }], take: 20,
+      select: { requestedAt: true }
+    }),
+    prisma.supportTicket.findMany({
+      where: { status: { in: ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"] } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 20,
+      select: { createdAt: true }
+    })
+  ]);
 
   const [activeUsers, newUsers, activeSellers, pendingSellers, activeStores, suspendedStores,
     totalProducts, pendingProducts, orderStatuses, previousOrders, orderValues, paymentStatuses,
     paymentValues, pendingProductReviews, pendingStoreReviews, requestedReturns, openSupportTickets,
-    countries, currencies, sellers, stores, recentOrders, dailyOrderRows] = await Promise.all([
+    countries, currencies, sellers, stores, recentOrders, dailyOrderRows, metricSampleRows] = await Promise.all([
     prisma.user.count({ where: { status: "ACTIVE" } }),
     prisma.user.count({ where: { createdAt: { gte: from, lt: toExclusive } } }),
     prisma.seller.count({ where: { status: "ACTIVE" } }),
@@ -134,7 +230,8 @@ export async function getAdminDashboard(input: unknown, now = new Date()) {
       where: orderWhere, orderBy: [{ placedAt: "desc" }, { id: "desc" }], take: 8,
       select: { id: true, orderNumber: true, status: true, totalMinor: true, currencyCode: true, placedAt: true }
     }),
-    loadDailyOrderCounts(from, toExclusive, filters)
+    loadDailyOrderCounts(from, toExclusive, filters),
+    metricSampleRowsPromise
   ]);
 
   const counts = new Map(orderStatuses.map((row) => [row.status, row._count._all]));
@@ -193,6 +290,33 @@ export async function getAdminDashboard(input: unknown, now = new Date()) {
       requestedReturns,
       openSupportTickets
     },
+    metricSamples: Object.fromEntries([
+      ["totalOrders", metricSampleRows[0].map((row) => ({ label: formatDay(row.placedAt), value: 1 }))],
+      ["pendingOrders", metricSampleRows[1].map((row) => ({ label: formatDay(row.placedAt), value: 1 }))],
+      ["processingOrders", metricSampleRows[2].map((row) => ({ label: formatDay(row.placedAt), value: 1 }))],
+      ["completedOrders", metricSampleRows[3].map((row) => ({ label: formatDay(row.placedAt), value: 1 }))],
+      ["grossOrderValue", metricSampleRows[4].map((row) => ({
+        label: `${formatDay(row.placedAt)} · ${row.currencyCode}`,
+        value: Number(row.totalMinor)
+      }))],
+      ["successfulPayments", metricSampleRows[5].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["failedPayments", metricSampleRows[6].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["pendingPayments", metricSampleRows[7].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["activeUsers", metricSampleRows[8].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["newUsers", metricSampleRows[9].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["activeSellers", metricSampleRows[10].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["pendingSellers", metricSampleRows[11].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["activeStores", metricSampleRows[12].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["suspendedStores", metricSampleRows[13].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["totalProducts", metricSampleRows[14].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["pendingProducts", metricSampleRows[15].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["pendingProductReviews", metricSampleRows[16].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["pendingStoreReviews", metricSampleRows[17].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))],
+      ["requestedReturns", metricSampleRows[18].map((row) => ({ label: formatDay(row.requestedAt), value: 1 }))],
+      ["openSupportTickets", metricSampleRows[19].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))]
+    ]),
+    orderStatusCounts: [...counts.entries()].map(([status, count]) => ({ status, count })),
+    orderStatusCounts: [...counts.entries()].map(([status, count]) => ({ status, count })),
     dailyOrders,
     recentOrders: recentOrders.map((order) => ({
       ...order,
