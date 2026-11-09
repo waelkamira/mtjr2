@@ -41,7 +41,7 @@ Do not persist raw API keys, webhook secrets, private keys, or cardholder data i
 ## Secrets and key management (P0 prerequisite)
 
 - Use authenticated encryption (AES-256-GCM) with a random nonce per write and an explicit key version.
-- Master encryption key must be a high-entropy secret injected at runtime (not stored in PostgreSQL, source control, browser code, or the same database backup).
+- Master encryption key must be a high-entropy secret injected at runtime (not stored in PostgreSQL, source control, browser code, or the same database backup). Generate a 32-byte key with `openssl rand -hex 32` and set `PAYMENT_PROVIDER_ENCRYPTION_KEY`.
 - Support key rotation by version; fail closed if the configured key is missing or invalid.
 - Mask secrets in UI; updates must be explicit and blank fields must mean “keep existing secret”, never “clear”.
 - Never offer a “reveal secret” action. Show only a non-reversible fingerprint/last few characters where safe.
