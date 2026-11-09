@@ -126,6 +126,7 @@ export async function startOrderPayment(input: {
     // This closes the window where an administrator disables or changes a provider
     // after the initial lookup but before a new payment attempt is persisted.
     if (runtimeSelection.config) {
+      await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "PaymentProviderConfig" WHERE "id" = ${runtimeSelection.config.id} FOR UPDATE`);
       const currentConfig = await tx.paymentProviderConfig.findUnique({
         where: { providerKey_environment: { providerKey: input.providerKey, environment: providerEnvironment } }
       });
