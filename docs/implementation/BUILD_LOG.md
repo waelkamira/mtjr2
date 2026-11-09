@@ -4213,5 +4213,5 @@ The platform account policy is now explicit: email verification is not required 
 - Removed the unnecessary locality preload when a governorate is selected; district choices now load first, followed by the next level after the seller selects a district.
 - Added explicit empty-state messages for missing governorates, districts, subdistricts and localities, plus a clear instruction when the database has not been populated with the pinned OpenSyria dataset.
 - Fixed loading state cleanup when a seller clears a hierarchy selection, and corrected Arabic error-message detection.
-- Added `npm run db:seed:all` to run the existing seed and then import the pinned Syrian geography dataset; documented that geography import is an explicit database step and must run against the same `DATABASE_URL` used by the app.
+- Added `npm run db:seed:all` to run the existing seed, import the pinned official geography hierarchy, and then import Akaar-derived neighbourhood candidates (which remain unverified suggestions); documented that these are explicit database operations and must run against the same `DATABASE_URL` used by the app.
 - This is a source-level repair only. The GitHub integration cannot inspect or seed the user's live PostgreSQL database. No tests, build, typecheck, or browser checks were run, consistent with the deferred validation instruction.
