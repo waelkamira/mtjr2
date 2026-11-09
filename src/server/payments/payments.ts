@@ -76,7 +76,7 @@ export async function startOrderPayment(input: {
       status: { in: [PaymentStatus.INITIATING, PaymentStatus.REQUIRES_ACTION, PaymentStatus.PROCESSING] }
     },
     orderBy: { createdAt: "desc" },
-    select: { id: true, provider: true }
+    select: { id: true, provider: true, providerConfigId: true }
   });
   const reusableAttempt = idempotentAttempt ?? activeAttempt;
   const reusableSnapshot = reusableAttempt?.provider === input.providerKey
@@ -141,8 +141,11 @@ export async function startOrderPayment(input: {
   try {
     const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.APP_URL).toString();
     const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
-    const providerCredentials = snapshot?.credentials ?? runtimeSelection.config?.credentials;
-    const providerAdapter = provider ?? getPaymentProviderAdapter(payment.provider);
+    const reusableIsLegacy = Boolean(reusableAttempt && !reusableAttempt.providerConfigId);
+    const providerCredentials = snapshot?.credentials ?? (reusableIsLegacy ? undefined : runtimeSelection.config?.credentials);
+    const providerAdapter = reusableIsLegacy
+      ? getPaymentProvider(payment.provider)
+      : provider ?? getPaymentProviderAdapter(payment.provider);
     if (!providerAdapter) throw new Error("The payment provider adapter is unavailable.");
     const intent = await providerAdapter.createIntent({
       paymentId: payment.id, orderNumber: order.orderNumber, amountMinor: order.totalMinor.toString(),
