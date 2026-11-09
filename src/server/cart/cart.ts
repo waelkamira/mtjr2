@@ -117,9 +117,9 @@ async function resolveOwner(
 async function getAvailableStock(tx: Prisma.TransactionClient, variantId: string, storeId: string) {
   const rows = await tx.inventory.findMany({
     where: { variantId, warehouse: { isActive: true, storeId } },
-    select: { quantityOnHand: true, quantityReserved: true }
+    select: { quantityOnHand: true, quantityReserved: true, quantityQuarantined: true }
   });
-  return rows.reduce((total, row) => total + row.quantityOnHand - row.quantityReserved, 0);
+  return rows.reduce((total, row) => total + row.quantityOnHand - row.quantityReserved - row.quantityQuarantined, 0);
 }
 
 async function validatePurchasableVariant(
@@ -201,7 +201,7 @@ export async function getActiveCarts(guestToken: string, now = new Date()) {
                   where: { marketId: { not: "" } },
                   select: { marketId: true, currencyCode: true, amountMinor: true, compareAtMinor: true, currency: { select: { minorUnit: true } } }
                 },
-                inventories: { where: { warehouse: { isActive: true } }, select: { quantityOnHand: true, quantityReserved: true, warehouse: { select: { storeId: true } } } }
+                inventories: { where: { warehouse: { isActive: true } }, select: { quantityOnHand: true, quantityReserved: true, quantityQuarantined: true, warehouse: { select: { storeId: true } } } }
               }
             }
           }
@@ -214,7 +214,7 @@ export async function getActiveCarts(guestToken: string, now = new Date()) {
       currency: cart.currency,
       items: cart.items.map((item) => {
         const price = item.variant.prices.find((candidate) => candidate.marketId === cart.marketId && candidate.currencyCode === cart.currencyCode);
-        const availableQuantity = item.variant.inventories.filter((stock) => stock.warehouse.storeId === item.variant.product.storeId).reduce((total, stock) => total + stock.quantityOnHand - stock.quantityReserved, 0);
+        const availableQuantity = item.variant.inventories.filter((stock) => stock.warehouse.storeId === item.variant.product.storeId).reduce((total, stock) => total + stock.quantityOnHand - stock.quantityReserved - stock.quantityQuarantined, 0);
         return {
           id: item.id, quantity: item.quantity,
           variant: {
