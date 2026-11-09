@@ -230,7 +230,7 @@ export default function SellerCommissionsPage() {
               </button>
             </div>}
           </section>
-          <p className="mt-4 rounded-xl border border-[#9bbbc7] bg-white/55 p-4 text-xs leading-5 text-[#718899]">{t("Totals aggregate every commission snapshot currently recorded for this store, grouped by currency. The table loads commission details in pages of 100. These figures are not seller net balances or withdrawable funds; refunds, adjustments, holds and payouts are not yet represented in a seller accounting ledger.", "تجمع الإجماليات كل لقطات العمولات المسجلة حالياً لهذا المتجر حسب العملة، ويحمّل الجدول التفاصيل على صفحات من 100 سجل. هذه الأرقام ليست صافي مستحقات البائع أو أموالاً قابلة للسحب؛ إذ لم تُربط بعد بدفتر محاسبي للبائع يشمل الاستردادات والتسويات والمبالغ المحجوزة والدفعات.")}</p>
+          <p className="mt-4 rounded-xl border border-[#9bbbc7] bg-white/55 p-4 text-xs leading-5 text-[#718899]">{t("Totals aggregate every commission snapshot currently recorded for this store, grouped by currency. The table loads commission details in pages of 100. These figures are not seller net balances or withdrawable funds; refunds are now shown separately; adjustments, holds, seller ledger balances and payouts are not yet represented.", "تجمع الإجماليات كل لقطات العمولات المسجلة حالياً لهذا المتجر حسب العملة، ويحمّل الجدول التفاصيل على صفحات من 100 سجل. هذه الأرقام ليست صافي مستحقات البائع أو أموالاً قابلة للسحب؛ ولا تزال التسويات والمبالغ المحجوزة وأرصدة دفتر البائع والدفعات غير ممثلة في دفتر محاسبي متكامل.")}</p>
         </>}
       </div>
     </main>
