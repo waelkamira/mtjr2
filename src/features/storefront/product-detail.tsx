@@ -8,6 +8,7 @@ import ProductReviews from "@/features/storefront/product-reviews";
 import StoreReviews from "@/features/storefront/store-reviews";
 import ProductQuestions from "@/features/storefront/product-questions";
 import SponsoredProductCard from "@/features/storefront/sponsored-product-card";
+import ProductLocationMap from "@/components/maps/product-location-map";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -206,7 +207,7 @@ export default function ProductDetail({ initialProduct, initialSponsored }: { in
             </dl>
           </>}
           {(product.city || product.district) && <p className="text-sm text-[var(--color-ink-700)]">{[product.city, product.district].filter(Boolean).join(" · ")}</p>}
-          {product.location && <a className="inline-flex w-fit items-center gap-2 text-sm font-semibold underline" href={`https://www.openstreetmap.org/?mlat=${product.location.latitude}&mlon=${product.location.longitude}#map=14/${product.location.latitude}/${product.location.longitude}`} target="_blank" rel="noreferrer">{t("View approximate location", "عرض الموقع التقريبي")} <span aria-hidden="true">↗</span></a>}
+          {product.location && <div className="mt-2"><ProductLocationMap value={product.location} locale={locale} /></div>}
           {product.contactPhone && <a className="w-fit text-sm font-semibold underline" href={`tel:${product.contactPhone}`}>{t("Call seller", "اتصل بالبائع")}: {product.contactPhone}</a>}
           {product.videoUrl && <a className="w-fit text-sm font-semibold underline" href={product.videoUrl} target="_blank" rel="noreferrer">{t("Watch product video", "مشاهدة فيديو المنتج")}</a>}
         </section>}
