@@ -4194,3 +4194,13 @@ The platform account policy is now explicit: email verification is not required 
 - This shared component is used by the seller workspace and the admin dashboard's advanced analytics, so both receive the visual refresh without changing their API requests, chart datasets, calculations, filters, or empty states.
 - The existing monthly Akaar-style admin bar charts remain intact; this change focuses on the shared chart cards that had a different, less vibrant visual treatment.
 - No tests, builds, or browser checks were run, in line with the current instruction to finish implementation before testing.
+
+## 2026-11-10 — Platform localization audit and fixes
+- Audited the 88 application page routes and traced route wrappers to their shared feature components; the public storefront, account, seller, and admin surfaces use the shared Arabic/English locale provider and server-preferred locale for server-rendered routes.
+- Added selected-language UI translations to admin order detail, payment detail, product approvals, refunds, returns, seller/product moderation, search synonyms, shipment detail, and store-review moderation pages.
+- Localized the Matjar AI assistant interface and suggestions, and made its direction and request locale follow the selected language rather than inferring the language from each message.
+- Localized Syrian geography picker error fallbacks so English API errors do not leak into the Arabic interface.
+- Corrected the old registration journey notice: it no longer tells users to verify email or resend a verification message. It now reflects the current policy that users can sign in immediately without email verification.
+- Localized page metadata for seller commissions, seller finance, AI assistant settings, and the informational email-verification route.
+- Kept API contracts, authorization, business logic, and stored data unchanged.
+- No tests, builds, or browser checks were run, consistent with the instruction to defer testing until implementation is complete.
