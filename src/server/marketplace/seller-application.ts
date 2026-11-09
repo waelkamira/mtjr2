@@ -296,6 +296,7 @@ export async function getSellerWorkspace(now = new Date()) {
       shippingPolicy: true, returnsPolicy: true, privacyPolicy: true, termsOfSale: true,
       shippingContactName: true, shippingPhone: true, shippingAddressLine1: true, shippingAddressLine2: true,
       shippingCity: true, shippingRegion: true, shippingPostalCode: true, shippingCountryCode: true, shippingInstructions: true,
+      mediaAssets: { orderBy: { createdAt: "desc" }, take: 100, select: { id: true, url: true, storageKey: true, mimeType: true, width: true, height: true, createdAt: true } },
       seller: { select: { ownerId: true } },
       markets: { where: { isEnabled: true }, select: { market: { select: { id: true, code: true, name: true, defaultCurrencyCode: true } } } },
       warehouses: {
