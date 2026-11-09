@@ -171,3 +171,8 @@ Refunds remain finance-confirmed/manual. The platform records a pending refund r
 
 - New managed payment creation locks the selected provider configuration row and revalidates its status, credentials version, country/currency allowlists and enabled method inside the same transaction that persists the Payment. Provider disable/update and checkout creation are therefore serialized for that provider record.
 - PayPal request idempotency values are stable SHA-256-derived 32-character tokens, preserving retry safety while keeping provider header values bounded and normalized.
+
+
+## Runtime environment selection
+
+The runtime defaults to TEST outside production and LIVE in production. Set `PAYMENT_PROVIDER_RUNTIME_ENVIRONMENT=TEST` or `LIVE` to override this explicitly. This allows a production deployment to run a sandbox checkout verification phase without switching application `NODE_ENV`; unset the override before enabling real-money LIVE checkout. Webhook verification uses the same resolver, while each existing payment still takes precedence through its stored environment snapshot.
