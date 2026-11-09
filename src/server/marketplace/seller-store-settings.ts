@@ -26,6 +26,7 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
   const data = updateSchema.parse(input);
 
   return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "Store" WHERE "id" = ${storeId} FOR UPDATE`;
     const current = await tx.store.findUnique({
       where: { id: storeId },
       select: {
@@ -48,7 +49,6 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       if (!allowed) throw new PermissionDeniedError();
     }
 
-    await tx.$queryRaw`SELECT "id" FROM "Store" WHERE "id" = ${storeId} FOR UPDATE`;
     const slugOwner = await tx.store.findUnique({ where: { slug: data.slug }, select: { id: true } });
     if (slugOwner && slugOwner.id !== storeId) throw new SellerStoreSettingsConflictError("SLUG_TAKEN");
 
