@@ -101,6 +101,48 @@ describe("product lifecycle", () => {
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
+  it("creates multiple distinct SKU variants with their own required category options", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-size",
+      isRequired: true,
+      isVariantLevel: true,
+      options: ["S", "M", "L"],
+      attribute: { key: "size", valueType: "SELECT" }
+    }]);
+    await createDraftProduct({
+      storeId: "store-1", name: "Cotton Shirt", slug: "cotton-shirt",
+      categoryIds: ["category-1"],
+      variants: [
+        { sku: "SHIRT-S", optionValues: { size: "S" }, prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] },
+        { sku: "SHIRT-M", optionValues: { size: "M" }, prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }
+      ]
+    });
+    const variants = mocks.productCreate.mock.calls[0][0].data.variants.create;
+    expect(variants).toHaveLength(2);
+    expect(variants.map((variant: { sku: string }) => variant.sku)).toEqual(["SHIRT-S", "SHIRT-M"]);
+    expect(variants.map((variant: { attributes: { create: Array<{ value: string }> } }) => variant.attributes.create[0].value)).toEqual(["S", "M"]);
+    expect(variants.every((variant: { prices: { create: unknown[] } }) => variant.prices.create.length === 1)).toBe(true);
+  });
+
+  it("rejects a multi-variant product when any SKU omits a required variant option", async () => {
+    mocks.categoryAttributeFindMany.mockResolvedValue([{
+      attributeDefinitionId: "attribute-size",
+      isRequired: true,
+      isVariantLevel: true,
+      options: ["S", "M", "L"],
+      attribute: { key: "size", valueType: "SELECT" }
+    }]);
+    await expect(createDraftProduct({
+      storeId: "store-1", name: "Cotton Shirt", slug: "cotton-shirt",
+      categoryIds: ["category-1"],
+      variants: [
+        { sku: "SHIRT-S", optionValues: { size: "S" }, prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] },
+        { sku: "SHIRT-M", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }
+      ]
+    })).rejects.toThrow(/required variant options/i);
+    expect(mocks.productCreate).not.toHaveBeenCalled();
+  });
+
   it("persists structured property details while using the existing private product coordinates", async () => {
     mocks.categoryFindMany.mockResolvedValue([{ id: "category-1", slug: "real-estate" }]);
     await createDraftProduct({
