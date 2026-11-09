@@ -23,7 +23,7 @@ The flow creates one-time PayPal Orders v2 payments with fixed USD amounts ($1 o
 
 The cartoon user update endpoint accepts an email address and subscription fields in a public PUT request, then updates the user row by email without authenticating that the caller owns the account. This makes subscription entitlement changes forgeable and must not be copied into Matjar.
 
-The legacy repository also contains a tracked `.env` file with PayPal credentials. Those credentials are considered exposed. They are deliberately not copied, displayed, or used. The owner must revoke/rotate the PayPal REST app secret and remove the tracked environment file; deleting the file from the latest commit alone does not remove it from Git history.
+The legacy repository also contains a tracked `.env` file with PayPal credentials. Those credentials are considered exposed. They are deliberately not copied, displayed, or used. The tracked `.env` file has now been removed from the current `cartoon/main` tree. Its contents remain recoverable from Git history, so the owner must still revoke/rotate the PayPal REST app secret and any other credentials that were stored in that file; a current-branch deletion does not erase historical commits.
 
 ## Findings in cooking-new
 
