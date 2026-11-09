@@ -117,7 +117,7 @@ export async function listSellerVendorOrders(now = new Date(), searchInput: unkn
       { store: { name: { contains: q, mode: "insensitive" as const } } },
       { items: { some: { OR: [{ productName: { contains: q, mode: "insensitive" as const } }, { sku: { contains: q, mode: "insensitive" as const } }, { variantName: { contains: q, mode: "insensitive" as const } }] } } }
     ] } : {}) },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     take: 101,
     include: {
