@@ -122,3 +122,11 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## Seller-facing completed refund visibility (implemented 2026-11-09)
+
+- The seller commission statement now includes completed refund item allocations attributable to the selected store, derived from RefundItem → ReturnItem → OrderItem → VendorOrder.
+- Multi-store refunds are attributed by item to the correct store rather than assigning the full order refund to each seller.
+- Per-currency all-time refund totals are database-aggregated; the visible detail list is limited to the latest 100 completed allocations. CSV export includes the aggregates and visible detail rows.
+- These refund amounts are shown separately and are not currently netted against commissions or represented as seller payout balances. Seller accounting ledger, holds, settlement and withdrawals remain unimplemented.
