@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuthenticationRequiredError, requireCurrentSession } from "@/server/identity/current-session";
+import { consumeAuthenticatedActionAttempt } from "@/server/identity/login-throttle";
 import { userHasPermission, userHasScopedPermission } from "@/server/identity/permission-repository";
 import {
   validateIdentityImageUploadRequest,
@@ -146,6 +147,17 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return jsonError("Authentication required.", 401);
     return jsonError("Unable to verify the current session.", 401);
+  }
+
+  try {
+    if (await consumeAuthenticatedActionAttempt(actor.userId, "seller-product-image-upload", 20)) {
+      return Response.json({ success: false, error: "Too many image uploads. Please try again later." }, {
+        status: 429,
+        headers: { "Cache-Control": "no-store", "Retry-After": "900" }
+      });
+    }
+  } catch {
+    return jsonError("Unable to verify upload rate limits.", 503);
   }
 
   const contentTypeRejected = validateIdentityImageUploadRequest(request);
