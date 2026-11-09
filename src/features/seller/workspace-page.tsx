@@ -140,8 +140,17 @@ export default function SellerWorkspacePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- close the previous store's profile editor on store switch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear editors and form values scoped to the previous store.
     setEditingStoreProfile(false);
+    setEditingShippingRateId("");
+    setShippingMarketId("");
+    setShippingCurrencyCode("");
+    setShippingName("");
+    setShippingDescription("");
+    setShippingAmount("0");
+    setShippingRegion("");
+    setShippingMinDays("");
+    setShippingMaxDays("");
   }, [selectedStoreId]);
 
   const reload = useCallback(async () => {
