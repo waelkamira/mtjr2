@@ -440,3 +440,60 @@ export async function decideQuarantinedStock(input: unknown, now = new Date()) {
     return { movementId: movement.id, inventoryId: inventory.id, alreadyApplied: false };
   }, { isolationLevel: "Serializable" });
 }
+
+const warehouseUpdateSchema = z.object({
+  code: z.string().trim().toUpperCase().regex(/^[A-Z0-9][A-Z0-9_-]{1,39}$/).optional(),
+  name: z.string().trim().min(2).max(120).optional(),
+  isActive: z.boolean().optional()
+}).strict().refine((value) => Object.keys(value).length > 0, "At least one warehouse field must be supplied.");
+
+/** Updates a store-owned warehouse. Deactivation is blocked while stock or transfers remain. */
+export async function updateWarehouse(warehouseIdInput: string, input: unknown, now = new Date()) {
+  const warehouseId = z.string().trim().min(1).parse(warehouseIdInput);
+  const data = warehouseUpdateSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.warehouse.findUnique({
+      where: { id: warehouseId },
+      select: {
+        id: true, storeId: true, isActive: true,
+        store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } }
+      }
+    });
+    if (!current || current.store.seller.status !== "ACTIVE" || current.store.status === "SUSPENDED" || current.store.status === "CLOSED") {
+      throw new Error("An active seller store warehouse is required.");
+    }
+    if (!(await canManageInventory(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
+      throw new Error("You do not have inventory access to this store.");
+    }
+    if (data.isActive === false && current.isActive) {
+      const [stock, pendingTransfers] = await Promise.all([
+        tx.inventory.findFirst({
+          where: { warehouseId, OR: [
+            { quantityOnHand: { gt: 0 } }, { quantityReserved: { gt: 0 } }, { quantityQuarantined: { gt: 0 } }
+          ] },
+          select: { id: true }
+        }),
+        tx.stockTransfer.findFirst({
+          where: { OR: [{ sourceWarehouseId: warehouseId }, { destinationWarehouseId: warehouseId }], status: { in: [StockTransferStatus.DRAFT, StockTransferStatus.SHIPPED] } },
+          select: { id: true }
+        })
+      ]);
+      if (stock || pendingTransfers) {
+        throw new Error("Move or reconcile all stock and complete pending transfers before deactivating this warehouse.");
+      }
+    }
+    const warehouse = await tx.warehouse.update({
+      where: { id: warehouseId },
+      data: { ...(data.code !== undefined ? { code: data.code } : {}), ...(data.name !== undefined ? { name: data.name } : {}), ...(data.isActive !== undefined ? { isActive: data.isActive } : {}) },
+      select: { id: true, storeId: true, code: true, name: true, isActive: true }
+    });
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId,
+      action: data.isActive === false ? "inventory.warehouse.deactivated" : data.isActive === true ? "inventory.warehouse.reactivated" : "inventory.warehouse.updated",
+      resource: "warehouse", resourceId: warehouse.id, scopeType: "STORE", scopeId: current.storeId,
+      occurredAt: now, metadata: { changedFields: Object.keys(data) }
+    }});
+    return warehouse;
+  });
+}
