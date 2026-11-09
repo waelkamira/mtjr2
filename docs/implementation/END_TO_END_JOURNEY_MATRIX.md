@@ -344,9 +344,10 @@ No seller portal slice is marked complete solely because these components exist.
 Policy localization/versioning, market/currency controls, seller-specific notification rules and deletion of detached provider assets without deletion credentials remain follow-up capabilities.
 ## Seller team invitation privilege boundary — 2026-11-09
 
-- The current invitation lifecycle grants the broad `STORE_MANAGER` role only after the invited user accepts. Until least-privilege store roles and a safe role-selection workflow exist, invite, revoke and team-list operations are restricted to the store owner. A delegated manager cannot grant another full manager role, even if a stale `store:staff:manage` assignment exists.
-- The staff UI mirrors this policy: owners see invite/revoke controls; non-owner staff see the limitation and can still accept invitations addressed to themselves.
-- The seed removes `store:staff:manage` from the default `STORE_MANAGER` role and deletes that legacy role-permission link when the seed is rerun. No schema migration is required.
+- The current invitation flow defaults the UI to `STORE_CATALOG_MANAGER`; owners may choose catalog, inventory, order, customer-care, marketing or explicitly full `STORE_MANAGER`. New role assignments are store-scoped and only granted after the invited user accepts.
+- Invitations expire after seven days. Owners can renew an expired invitation by re-inviting the same email; the existing SellerStaff membership is reused. Acceptance checks the invitee identity, active seller and expiry boundary.
+- Owners may change an invited or active member's role. Active role changes remove the previous store-scoped assignment and upsert the new one in a single transaction with audit. Owners alone may invite/change/revoke; staff cannot delegate access.
+- Role definitions are seeded by `prisma/seed.cjs`; run the identity seed before using the new role keys. Session invalidation on revocation and a readable access-history screen remain open.
 - Verification: service and test source updated; Vitest and browser tests not run.
 ## Seller commission statements — 2026-11-09
 
