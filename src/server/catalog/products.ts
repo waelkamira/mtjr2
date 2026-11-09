@@ -120,7 +120,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
   return prisma.$transaction(async (tx) => {
     const store = await tx.store.findUnique({
       where: { id: data.storeId },
-      select: { id: true, status: true, seller: { select: { status: true, ownerId: true } }, markets: { where: { isEnabled: true }, select: { marketId: true } } }
+      select: { id: true, status: true, seller: { select: { status: true, ownerId: true } }, markets: { where: { isEnabled: true, market: { status: "ACTIVE", country: { isActive: true } } }, select: { marketId: true } } }
     });
     if (!store || store.seller.status !== "ACTIVE" || store.status === "SUSPENDED" || store.status === "CLOSED") {
       throw new Error("An active seller store is required to manage products.");
