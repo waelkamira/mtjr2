@@ -3080,3 +3080,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Source files were re-fetched from `main` after writes. The seller layout, navigation routes, image preview interactions, one-store database constraint and existing service/API connections were inspected.
 - No local Node runtime, TypeScript, ESLint, production build, browser screenshot, or disposable PostgreSQL session was available in this GitHub-only session. Do not mark the redesign or seller portal as complete until those checks pass.
 - Vercel's previous status failure was an account build-rate limit, not a verified application build failure. No deployment was attempted.
+
+## 2026-11-09 — Seller visual reference alignment correction
+
+- Rechecked the recorded reference review: the supplied seller dashboard reference is a dark-navy grouped sidebar, cool blue-grey raised/clay surfaces, pale cyan/teal accents, rounded inset controls and layered soft shadows—not a lavender/blush sidebar.
+- Restored the established `SellerNavigation` + `SellerTopbar` in `src/app/seller/layout.tsx`. This preserves the grouped SVG icon navigation, mobile horizontal navigation, seller-wide product search, and the intended dark-navy/blue-grey visual system.
+- Removed the temporary `seller-portal-shell.tsx` experiment and reverted the accidental lavender/blush palette substitutions from the seller dashboard, product studio, inventory, staff, reviews, questions and advertising pages. The product image preview overlay and paid-order delivery-address enhancement remain.
+- Updated the seller navigation E2E locator to the existing translated navigation label. The existing E2E flow now checks seller navigation and opens/closes the full-size image preview with Escape.
+- Commits: layout restoration `a602f4f23f0e8c9d1c8d2aecca28f40074949069`; temporary shell removal `d60f4eb60ed05be3f7aeebca62257a709ecad04d`; seller style restoration commits `d8c3a47b92080f8fc67e45601b6c9e4cd487bc6c`, `97229511452e3b938bc66f0fe03f9c97da81066a`, `8e443f83fcc3698b688066ef599807a7c41f1577`, `ed7a91052fef042b721f42b82bdb971a68e404c7`, `1a92dfc2553231ce543006988da44f13faa8e5e8`, `90dbec9fed8f13081b8a2f01905afd500bc573a9`, `01a9b139957bd140a48fa7afd50a330455bde75c`; E2E label update `ea452c53101e39a450359a3cbc1d3c4521cc93a7`.
+- Verification remains pending on the exact current `main` head: no local TypeScript/lint/build, browser screenshot, or disposable PostgreSQL run was available in this session. No deployment was attempted.
