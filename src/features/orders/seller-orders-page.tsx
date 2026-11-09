@@ -32,6 +32,8 @@ export default function SellerOrdersPage() {
     return translate(locale, english, labels[status] ?? english);
   };
   const [orders, setOrders] = useState<VendorOrder[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -138,17 +140,39 @@ export default function SellerOrdersPage() {
     let active = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- prevent stale orders from a previous search from remaining visible.
     setOrders([]);
+    setNextCursor(null);
     setShipmentDrafts({});
     const timer = window.setTimeout(() => { setLoading(true); setError(""); const params = new URLSearchParams(); if (query.trim()) params.set("q", query.trim());
     fetch(`/api/seller/orders?${params.toString()}`, { cache: "no-store" }).then(async (response) => {
-      const data = await response.json() as { orders?: VendorOrder[]; error?: string };
+      const data = await response.json() as { orders?: VendorOrder[]; nextCursor?: string | null; error?: string };
       if (!response.ok) throw new Error(data.error || t("Seller orders could not be loaded.", "تعذّر تحميل طلبات البائع."));
-      if (active) setOrders(data.orders || []);
+      if (active) { setOrders(data.orders || []); setNextCursor(data.nextCursor ?? null); }
     }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : t("Seller orders could not be loaded.", "تعذّر تحميل طلبات البائع.")); })
       .finally(() => { if (active) setLoading(false); });
     }, 250);
     return () => { active = false; window.clearTimeout(timer); };
   }, [query, t]);
+  async function loadOlderOrders() {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const params = new URLSearchParams({ cursor: nextCursor });
+      if (query.trim()) params.set("q", query.trim());
+      const response = await fetch(`/api/seller/orders?${params.toString()}`, { cache: "no-store" });
+      const data = await response.json() as { orders?: VendorOrder[]; nextCursor?: string | null; error?: string };
+      if (!response.ok) throw new Error(data.error || t("Older orders could not be loaded.", "تعذر تحميل الطلبات الأقدم."));
+      setOrders((current) => {
+        const known = new Set(current.map((order) => order.id));
+        return [...current, ...(data.orders ?? []).filter((order) => !known.has(order.id))];
+      });
+      setNextCursor(data.nextCursor ?? null);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : t("Older orders could not be loaded.", "تعذر تحميل الطلبات الأقدم."));
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
   return <main className="min-h-screen bg-transparent">
     <div className="mx-auto max-w-[1440px] px-5 py-10"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Seller operations", "عمليات البائع")}</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Seller orders", "طلبات البائع")}</h1><p className="mt-2 text-sm text-[var(--muted)]">{t("Orders are separated by store. Paid orders can move through seller preparation and seller-entered shipment tracking.", "تُعرض الطلبات لكل متجر على حدة. يمكن متابعة الطلبات المدفوعة خلال تجهيز البائع وإدخال بيانات تتبع الشحنة.")}</p>
       {error && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}{actionError && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{actionError}</p>}
@@ -185,6 +209,7 @@ export default function SellerOrdersPage() {
         </section>}
 
       </article>)}</div> : !error ? <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-8 text-center text-sm text-[var(--muted)]">{query ? t("No orders match this search.", "لا توجد طلبات تطابق هذا البحث.") : t("No seller orders yet.", "لا توجد طلبات للبائع بعد.")}</div> : null}
+      {nextCursor && <div className="mt-6 text-center"><button type="button" onClick={() => void loadOlderOrders()} disabled={loadingMore || loading} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-3 text-sm font-semibold text-[var(--color-ink-800)] shadow-clay-raised disabled:opacity-50">{loadingMore ? t("Loading older orders…", "جارٍ تحميل الطلبات الأقدم…") : t("Load older orders", "تحميل الطلبات الأقدم")}</button></div>}
     </div>
   </main>;
 }
