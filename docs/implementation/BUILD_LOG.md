@@ -3649,3 +3649,14 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Owner-only access, store scoping, transactional role grant/revocation and audit events remain enforced. The existing broad STORE_MANAGER grant is intentionally unchanged until granular permission roles are implemented.
 - Commits: 4c95a4a (schema), 2cc7a61 (migration), c142fd2 (service enforcement), 51d9e62 (seller team UI).
 - No tests, builds, typechecks, browser sessions or deployments were run, as requested.
+
+
+## 2026-11-09 — Seller team least-privilege role controls
+
+- Added `SellerStaff.roleId` with additive migration `20261109190000_seller_staff_roles`; existing memberships retain their prior broad `STORE_MANAGER` behavior through a backfill.
+- Seeded five narrower store roles: catalog, inventory, orders, customer care and marketing. The full `STORE_MANAGER` remains available only as an explicit owner choice; the invitation form defaults to Catalog Manager.
+- Invitation acceptance now grants the role selected by the owner, scoped to the exact store. Re-inviting an existing member clears the prior membership-owned grant before resetting the invitation.
+- Added transactional role changes for pending/active memberships and `PATCH /api/stores/staff-memberships/[membershipId]`. Active role changes remove the previous scoped assignment, update SellerStaff.roleId, grant the new role and write an audit event atomically.
+- The team page now displays each member's actual role and lets the owner change it; the API allowlists only the six store role keys.
+- Commits: d837a8d (Prisma relation), 8dc790f (migration), 2bc96e4 (seed roles), 98ac5f4 (invite/accept/revoke role handling), 280a7b1 (invite API contract), d35f124 (accept role lookup correction), e7afb81 (transactional role-change service), cbd7857 (PATCH route), 321201a (team role editor).
+- Updated system 22, route registry, model usage map and journey matrix. Run the identity seed before using the new roles. No tests, builds, typechecks, browser sessions or deployments were run.
