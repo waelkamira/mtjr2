@@ -331,3 +331,33 @@ export async function listStoreStockTransfers(storeIdInput: string, now = new Da
     }
   });
 }
+
+
+/** Returns the latest stock ledger entries for a store without exposing other stores. */
+export async function listStoreInventoryMovements(storeIdInput: string, now = new Date(), limitInput = 100) {
+  const storeId = z.string().trim().min(1).parse(storeIdInput);
+  const limit = z.number().int().min(1).max(200).parse(limitInput);
+  const actor = await requireCurrentSession(now);
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { id: true, seller: { select: { ownerId: true, status: true } } }
+  });
+  if (!store || store.seller.status !== "ACTIVE" || !(await canManageInventory(actor.userId, store.seller.ownerId, storeId, now))) {
+    throw new Error("You do not have inventory access to this store.");
+  }
+  return prisma.inventoryMovement.findMany({
+    where: { inventory: { warehouse: { storeId } } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit,
+    select: {
+      id: true, type: true, quantityDelta: true, quarantinedDelta: true,
+      referenceType: true, referenceId: true, note: true, createdAt: true,
+      inventory: {
+        select: {
+          warehouse: { select: { id: true, name: true, code: true } },
+          variant: { select: { id: true, sku: true, name: true, product: { select: { name: true } } } }
+        }
+      }
+    }
+  });
+}
