@@ -183,13 +183,32 @@ export default function SellerProductsPage() {
   });
 
   useEffect(() => {
+    setProducts([]);
+    setEditingId("");
+    setEditMedia([]);
+    setCategoryAttributes([]);
+    setAttributeValues({});
+    setUploadedImages((current) => {
+      current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+      return [];
+    });
+  }, [storeId]);
+
+  useEffect(() => {
     if (!storeId) return;
     let active = true;
-    const timer = window.setTimeout(() => { void loadProducts(storeId, search).catch((cause: unknown) => {
-      if (active) setError(cause instanceof Error ? cause.message : "Unable to load products.");
-    }); }, 250);
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams({ storeId });
+      if (search.trim()) params.set("q", search.trim());
+      fetch(`/api/seller/products?${params.toString()}`, { cache: "no-store" })
+        .then((response) => json<{ items: Product[] }>(response))
+        .then((result) => { if (active) setProducts(result.items); })
+        .catch((cause: unknown) => {
+          if (active) setError(cause instanceof Error ? cause.message : "Unable to load products.");
+        });
+    }, 250);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [storeId, search, loadProducts]);
+  }, [storeId, search]);
 
   async function uploadProductImageFiles(files: File[]) {
     if (!files.length) return;
