@@ -441,3 +441,4 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - `GET /api/seller/inventory/counts/[countId]` — read an authorized count session and its snapshot lines.
 - `PATCH /api/seller/inventory/counts/[countId]/lines/[lineId]` — save one counted quantity while the session is in progress.
 - `POST /api/seller/inventory/counts/[countId]/complete` — atomically reconcile count variances into inventory movements.
+- `POST /api/seller/inventory/counts/[countId]/cancel` — cancel an unfinished count without changing inventory.
