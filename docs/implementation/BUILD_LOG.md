@@ -4037,3 +4037,12 @@ Reviewed seller questions, returns, reviews, staff, workspace and storefront cat
 - Main seller returns/reviews include stale-store response protection, warehouse scoping, refund/return detail and analytics. Main staff includes email invitations, scoped role selection, invitation expiry/renewal and stale-request protection. Main workspace includes current store branding, provider storage keys, public policy fields, private dispatch address and current market/currency/location workflows.
 - Main storefront cards and home/product detail use the shared minor-unit money formatter. The branch product detail uses the superseded product-location-map and older product response shape; main keeps relational location metadata and sponsored content in the current server-rendered flow.
 - No branch runtime code copied from this batch.
+
+## 2026-11-09 — Ten-file reconciliation batch 13
+
+Reviewed auth return helpers, environment/money utilities, saved-address service, admin catalog/dashboard/seller/user services and advertising campaign service.
+
+- Main uses stricter/current email and provider configuration, BigInt-based money parsing/formatting, serialized single-default address-book mutations, richer admin seller application detail, current brand CRUD, expanded dashboard samples, and cursor-paginated seller campaigns. Branch service implementations are older/narrower.
+- **Carried forward:** `currentReturnPath()` now consults the safe persisted auth return destination when already on `/login` or `/register`. This closes the branch-identified case where a remembered destination could be ignored when the auth page had neither a `returnTo` query nor a usable referrer. Existing URL validation remains in force.
+
+Commit: `396cfd4` — restore saved return path on auth pages.
