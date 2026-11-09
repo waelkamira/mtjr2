@@ -15,9 +15,12 @@ hierarchy and required provenance fields before inserting records into the
 canonical geography tables. Import is an explicit database operation; the
 regular identity seed does not download this dataset. After applying Prisma
 migrations to a database, run `npm run db:sync-syria-geography` (or
-`npm run db:seed:all` to run the regular seed followed by the geography import)
-against that same `DATABASE_URL`. The application cannot display location
-options until this import has populated the geography tables. The pinned release is expected to contain 14
+`npm run db:seed:all` to run the regular seed, import the official hierarchy,
+and import Akaar-derived neighbourhood candidates) against that same
+`DATABASE_URL`. The application cannot display location options until the
+official geography import has populated the geography tables. Neighbourhood
+candidates remain explicitly unverified suggestions and are not official
+administrative divisions. The pinned release is expected to contain 14
 governorates, 62 districts, 272 subdistricts, and 7,605 localities.
 
 The seller location picker reads paginated records from the database-backed
