@@ -85,27 +85,29 @@ export async function getActivePaymentProviderRuntimeConfig(
   currencyCode: string,
   countryCode?: string | null
 ) {
-  const config = await prisma.paymentProviderConfig.findFirst({
-    where: {
-      providerKey,
-      environment,
-      status: PaymentProviderConfigStatus.ACTIVE,
-      encryptedCredentials: { not: null },
-      OR: [{ supportedCurrencies: { isEmpty: true } }, { supportedCurrencies: { has: currencyCode } }],
-      AND: countryCode
-        ? [{ OR: [{ supportedCountries: { isEmpty: true } }, { supportedCountries: { has: countryCode } }] }]
-        : []
-    },
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+  const config = await prisma.paymentProviderConfig.findUnique({
+    where: { providerKey_environment: { providerKey, environment } }
   });
-  if (!config?.encryptedCredentials) return null;
+  if (!config) return { managed: false as const, config: null };
+  if (config.status !== PaymentProviderConfigStatus.ACTIVE || !config.encryptedCredentials) {
+    return { managed: true as const, config: null };
+  }
+  if (config.supportedCurrencies.length && !config.supportedCurrencies.includes(currencyCode)) {
+    return { managed: true as const, config: null };
+  }
+  if (countryCode && config.supportedCountries.length && !config.supportedCountries.includes(countryCode)) {
+    return { managed: true as const, config: null };
+  }
   return {
-    id: config.id,
-    providerKey: config.providerKey as "stripe" | "paypal",
-    environment: config.environment,
-    encryptedCredentials: config.encryptedCredentials,
-    credentialsKeyVersion: config.credentialsKeyVersion,
-    credentials: decryptCredentials(config.encryptedCredentials, config.credentialsKeyVersion)
+    managed: true as const,
+    config: {
+      id: config.id,
+      providerKey: config.providerKey as "stripe" | "paypal",
+      environment: config.environment,
+      encryptedCredentials: config.encryptedCredentials,
+      credentialsKeyVersion: config.credentialsKeyVersion,
+      credentials: decryptCredentials(config.encryptedCredentials, config.credentialsKeyVersion)
+    }
   };
 }
 
