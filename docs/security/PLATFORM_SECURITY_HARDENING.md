@@ -74,6 +74,7 @@ Absolute prevention cannot be guaranteed. The target is defense in depth, least 
 ### 8. Supply chain and engineering
 - Pin dependencies with a lockfile; use automated dependency updates and vulnerability review.
 - Enable GitHub secret scanning and push protection, dependency review, CodeQL/SAST and protected branch reviews in repository settings.
+- **Current repository setting observed during this review:** GitHub reports `main` as unprotected. Branch protection/ruleset administration is not exposed by the connected repository actions here, so this must be enabled in GitHub repository settings before production; require pull requests, block force pushes/deletions, and require security/CI checks once the project verification workflow is ready.
 - Review all new API routes against both route inventories; every public route must have a documented reason and narrow data contract.
 - Add security-focused tests for IDOR/BOLA, CSRF, privilege escalation, mass assignment, replay, race conditions, upload abuse, webhook forgery and financial idempotency.
 
