@@ -295,9 +295,8 @@ export async function getSellerWorkspace(now = new Date()) {
       seller: { select: { ownerId: true } },
       markets: { where: { isEnabled: true }, select: { market: { select: { id: true, code: true, name: true, defaultCurrencyCode: true } } } },
       warehouses: {
-        where: { isActive: true },
-        orderBy: { name: "asc" },
-        select: { id: true, code: true, name: true, _count: { select: { inventories: true } } }
+        orderBy: [{ isActive: "desc" }, { name: "asc" }],
+        select: { id: true, code: true, name: true, isActive: true, _count: { select: { inventories: true } } }
       }
     }
   });
