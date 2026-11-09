@@ -82,6 +82,7 @@ export async function startOrderPayment(input: {
   const reusableSnapshot = reusableAttempt?.provider === input.providerKey
     ? await getPaymentProviderRuntimeSnapshot(reusableAttempt.id)
     : null;
+  const reusableIsLegacy = Boolean(reusableAttempt && !reusableAttempt.providerConfigId);
   const runtimeSelection = input.providerKey === "stripe" || input.providerKey === "paypal"
     ? await getActivePaymentProviderRuntimeConfig(
         input.providerKey,
@@ -90,10 +91,10 @@ export async function startOrderPayment(input: {
         order.address?.countryCode ?? null
       )
     : { managed: false as const, config: null };
-  if (runtimeSelection.managed && !runtimeSelection.config && !reusableSnapshot) {
+  if (runtimeSelection.managed && !runtimeSelection.config && !reusableSnapshot && !reusableIsLegacy) {
     throw new Error("This payment provider is disabled or does not support this order's country or currency.");
   }
-  const legacyProvider = runtimeSelection.managed ? null : getPaymentProvider(input.providerKey);
+  const legacyProvider = runtimeSelection.managed && !reusableIsLegacy ? null : getPaymentProvider(input.providerKey);
   if (!runtimeSelection.config && !legacyProvider && !reusableSnapshot) {
     throw new Error("This payment provider is not configured for the platform.");
   }
@@ -141,7 +142,6 @@ export async function startOrderPayment(input: {
   try {
     const returnUrl = new URL(`/orders/${encodeURIComponent(order.id)}`, env.APP_URL).toString();
     const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
-    const reusableIsLegacy = Boolean(reusableAttempt && !reusableAttempt.providerConfigId);
     const providerCredentials = snapshot?.credentials ?? (reusableIsLegacy ? undefined : runtimeSelection.config?.credentials);
     const providerAdapter = reusableIsLegacy
       ? getPaymentProvider(payment.provider)
