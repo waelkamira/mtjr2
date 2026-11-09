@@ -90,7 +90,7 @@ export default function MatjarAIAssistant() {
               <p className="font-bold">Matjar AI</p>
               <p className="text-xs text-white/75">{t("Shopping and customer support assistant", t("Shopping and customer support assistant", "مساعد التسوق وخدمة العملاء"))}</p>
             </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label={t(t("إغلاق المساعد", "Close assistant"), "إغلاق المساعد")} className="rounded-full px-3 py-1 text-xl hover:bg-white/15">×</button>
+            <button type="button" onClick={() => setOpen(false)} aria-label={t("Close assistant", "إغلاق المساعد")} className="rounded-full px-3 py-1 text-xl hover:bg-white/15">×</button>
           </header>
           <div className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
             {messages.length === 0 && (
@@ -159,7 +159,7 @@ export default function MatjarAIAssistant() {
             {error && <p role="alert" className="rounded-xl bg-[var(--color-blush-50)] p-3 text-xs text-[var(--color-danger)]">{error}</p>}
           </div>
           <form onSubmit={(event) => { event.preventDefault(); void send(); }} className="flex gap-2 border-t border-[var(--border)] bg-white/70 p-3">
-            <input value={message} onChange={(event) => setMessage(event.target.value)} maxLength={1200} placeholder={t("Ask your question...", t("Ask your question...", "اكتب سؤالك..."))} aria-label={t(t("رسالتك", "Your message"), "رسالتك")} className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-lavender-600)]" />
+            <input value={message} onChange={(event) => setMessage(event.target.value)} maxLength={1200} placeholder={t("Ask your question...", "اكتب سؤالك...")} aria-label={t("Your message", "رسالتك")} className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-lavender-600)]" />
             <button type="submit" disabled={busy || !message.trim()} className="rounded-xl bg-[var(--color-lavender-800)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{t("Send", t("Send", "إرسال"))}</button>
           </form>
         </section>
