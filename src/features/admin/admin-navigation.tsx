@@ -15,6 +15,7 @@ const links = [
   { href: "/admin/brands", label: "Brands", ar: "العلامات التجارية" },
   { href: "/admin/orders", label: "Orders", ar: "الطلبات" },
   { href: "/admin/payments", label: "Payments", ar: "المدفوعات" },
+  { href: "/admin/payment-providers", label: "Payment providers", ar: "مزودو الدفع", platformOnly: true },
   { href: "/admin/logistics", label: "Shipments", ar: "الشحنات" },
   { href: "/admin/returns", label: "Returns", ar: "المرتجعات" },
   { href: "/admin/refunds", label: "Refunds", ar: "استرداد المدفوعات" },
