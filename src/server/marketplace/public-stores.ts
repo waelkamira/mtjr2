@@ -48,7 +48,7 @@ export async function getDiscoverableStoreBySlug(slug: string) {
   const store = await prisma.store.findFirst({
     where: { slug: key, status: StoreStatus.ACTIVE, seller: { status: SellerStatus.ACTIVE } },
     select: {
-      id: true, slug: true, name: true, description: true, logoUrl: true, bannerUrl: true, createdAt: true,
+      id: true, slug: true, name: true, description: true, logoUrl: true, bannerUrl: true, shippingPolicy: true, returnsPolicy: true, privacyPolicy: true, termsOfSale: true, createdAt: true,
       seller: { select: { displayName: true } },
       _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } } } }
     }
@@ -56,6 +56,7 @@ export async function getDiscoverableStoreBySlug(slug: string) {
   return store ? {
     id: store.id, slug: store.slug, name: store.name,
     description: store.description, logoUrl: store.logoUrl, bannerUrl: store.bannerUrl,
+    shippingPolicy: store.shippingPolicy, returnsPolicy: store.returnsPolicy, privacyPolicy: store.privacyPolicy, termsOfSale: store.termsOfSale,
     sellerDisplayName: store.seller.displayName,
     productCount: store._count.products, createdAt: store.createdAt
   } : null;
