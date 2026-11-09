@@ -400,7 +400,26 @@ export async function processVerifiedPaymentEvent(input: {
   }
 }
 
-export async function listAvailablePaymentProviders() {
+export async function listAvailablePaymentProviders(input?: { currencyCode?: string; countryCode?: string }) {
+  const environment = process.env.NODE_ENV === "production"
+    ? PaymentProviderEnvironment.LIVE
+    : PaymentProviderEnvironment.TEST;
+  const managed = await prisma.paymentProviderConfig.findMany({
+    where: { environment },
+    select: {
+      providerKey: true, displayName: true, status: true,
+      supportedCurrencies: true, supportedCountries: true
+    },
+    orderBy: [{ sortOrder: "asc" }, { providerKey: "asc" }]
+  });
+  const managedKeys = new Set(managed.map((item) => item.providerKey));
+  const activeManaged = managed.filter((item) =>
+    item.status === "ACTIVE" &&
+    (!input?.currencyCode || item.supportedCurrencies.length === 0 || item.supportedCurrencies.includes(input.currencyCode)) &&
+    (!input?.countryCode || item.supportedCountries.length === 0 || item.supportedCountries.includes(input.countryCode))
+  ).map(({ providerKey, displayName }) => ({ key: providerKey, displayName }));
+
   const { listPaymentProviders } = await import("./providers/registry");
-  return listPaymentProviders();
+  const legacy = listPaymentProviders().filter((item) => !managedKeys.has(item.key));
+  return [...activeManaged, ...legacy];
 }
