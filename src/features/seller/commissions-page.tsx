@@ -154,7 +154,7 @@ export default function SellerCommissionsPage() {
 
         {data && !loading && <>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-            <div><h2 className="text-lg font-extrabold text-[#263d50]">{data.store.name}</h2><p className="mt-1 text-xs text-[#718899]">{t("Latest", "أحدث")} {data.limit} {t("commission snapshots", "لقطة عمولة")}</p></div>
+            <div><h2 className="text-lg font-extrabold text-[#263d50]">{data.store.name}</h2><p className="mt-1 text-xs text-[#718899]">{t("Loaded", "تم تحميل")} {data.transactions.length} {t("commission detail rows", "سجل تفصيلي للعمولات")}</p></div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-white bg-white/70 px-3 py-1.5 text-xs font-bold text-[#42677b]">{data.transactions.length} {t("detail rows", "تفصيل")}</span>
               <button type="button" onClick={() => downloadCommissionCsv(data)} className="rounded-xl border border-white bg-white/75 px-4 py-2 text-xs font-extrabold text-[#35566b] shadow-[0_3px_8px_rgba(38,66,84,.08)] transition hover:bg-white">{t("Export CSV", "تصدير CSV")}</button>
