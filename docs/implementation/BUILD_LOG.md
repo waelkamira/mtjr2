@@ -3599,3 +3599,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added a seller-facing “Load older orders” action that appends subsequent pages without replacing the current list and avoids duplicate rows.
 - Commits: 045163680f323b9808c0409004aea236822b27b8, 9f88cf5b4efdfe8d4bdf7fc4b80c0cfd0194b0da, 389ae27905eafb4ead14b2e5592b9d3f7da43d58, 3c974f2948610d4c433ce6d5d0bb93e9443c7d4b.
 - No tests/build/typecheck/browser verification performed, per the current build-first instruction.
+
+## 2026-11-09 — Seller inventory movement ledger pagination
+
+- Replaced the fixed first-100 movement response with stable cursor pagination ordered by `createdAt DESC, id DESC`.
+- The API retains store-scoped authorization, validates page size (1–200), fetches one look-ahead row, and returns `nextCursor` only when another page exists.
+- The seller inventory workspace now appends older ledger rows without discarding the current page or duplicating entries, and exposes a load-more control.
+- Commits: f572411fc8514e64daea3e53eb920a400d3aaa04, 58e55bad07e11bdf59f72cf777aee5b4f0898832, 27b18b709bfb18d32c0c378af5473e669293cb7d.
+- No tests/build/typecheck/browser verification performed, per the current build-first instruction.
