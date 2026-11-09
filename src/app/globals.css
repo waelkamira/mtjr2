@@ -254,3 +254,64 @@ html body [data-sonner-toaster].clay-toaster[data-sonner-theme="light"] {
   border-radius: 50%;
   background: #fff;
 }
+
+
+/* Seller dashboard reference skin: cool blue-grey clay canvas and raised pastel panels. */
+.seller-dashboard {
+  --seller-ink: #344d60;
+  --seller-muted: #688394;
+  --seller-line: rgb(255 255 255 / 82%);
+  --seller-shadow: 0 12px 28px rgb(35 62 81 / 12%), inset 0 2px 0 rgb(255 255 255 / 92%), inset 0 -3px 8px rgb(48 76 94 / 5%);
+  color: var(--seller-ink);
+}
+.seller-dashboard main {
+  color: var(--seller-ink);
+}
+.seller-dashboard main > header,
+.seller-dashboard main > section {
+  border-color: var(--seller-line) !important;
+  box-shadow: var(--seller-shadow) !important;
+}
+.seller-dashboard main > header {
+  background: linear-gradient(125deg, #dcebef 0%, #c5dbe2 48%, #e2e5ef 100%) !important;
+  color: var(--seller-ink) !important;
+}
+.seller-dashboard main > section {
+  background: linear-gradient(145deg, #e8f1f4 0%, #d1e0e6 100%) !important;
+}
+.seller-dashboard main > section article,
+.seller-dashboard main > section [data-chart-card],
+.seller-dashboard .seller-clay-card {
+  border-color: rgb(255 255 255 / 88%);
+  background: linear-gradient(145deg, #f1f7f8, #dce9ed);
+  box-shadow: 0 7px 17px rgb(35 62 81 / 9%), inset 0 1px 0 white;
+}
+.seller-dashboard input:not([type="checkbox"]):not([type="radio"]),
+.seller-dashboard textarea,
+.seller-dashboard select {
+  border-color: rgb(255 255 255 / 95%);
+  background-color: rgb(246 251 252 / 88%);
+  color: #344d60;
+  box-shadow: inset 0 2px 5px rgb(48 76 94 / 7%), 0 1px 0 white;
+}
+.seller-dashboard input::placeholder,
+.seller-dashboard textarea::placeholder {
+  color: #829aa7;
+}
+.seller-dashboard button[type="submit"],
+.seller-dashboard main > section a[class*="rounded-full"] {
+  box-shadow: 0 7px 16px rgb(35 62 81 / 12%), inset 0 1px 0 rgb(255 255 255 / 80%);
+}
+.seller-dashboard main h1,
+.seller-dashboard main h2,
+.seller-dashboard main h3 {
+  color: #344d60;
+}
+.seller-dashboard main p {
+  text-wrap: pretty;
+}
+@media (max-width: 1023px) {
+  .seller-dashboard main {
+    padding-bottom: 2rem;
+  }
+}
