@@ -206,7 +206,7 @@ export async function rotateStoredPaymentProviderCredentials() {
     const batch = await prisma.payment.findMany({
       where: {
         encryptedProviderCredentials: { not: null },
-        providerCredentialsKeyVersion: { not: null, notIn: [activeVersion] }
+        providerCredentialsKeyVersion: { not: activeVersion }
       },
       orderBy: { id: "asc" },
       take: 100,
