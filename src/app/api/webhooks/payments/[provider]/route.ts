@@ -100,10 +100,13 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     const environment = process.env.NODE_ENV === "production"
       ? PaymentProviderEnvironment.LIVE
       : PaymentProviderEnvironment.TEST;
-    const fallbackCredentials = snapshot?.credentials ?? (!payment ? await getActiveProviderCredentialsForWebhook(
-      providerKey as "stripe" | "paypal",
-      environment
-    ) : undefined);
+    const managedFallbackCredentials = !payment
+      ? await getActiveProviderCredentialsForWebhook(providerKey as "stripe" | "paypal", environment)
+      : null;
+    const fallbackCredentials = snapshot?.credentials ?? managedFallbackCredentials ?? undefined;
+    // Existing legacy payments must keep using PAYPAL_MODE from their environment
+    // rather than having NODE_ENV silently override their original sandbox/live mode.
+    const verificationEnvironment = snapshot?.environment ?? (managedFallbackCredentials ? environment : undefined);
     const verificationRequest = new Request(request.url, {
       method: "POST",
       headers: request.headers,
@@ -111,8 +114,8 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     });
     rawEvent = await provider.verifyWebhook(
       verificationRequest,
-      fallbackCredentials ?? undefined,
-      snapshot?.environment ?? environment
+      fallbackCredentials,
+      verificationEnvironment
     );
   } catch {
     return Response.json({ error: "Payment webhook verification failed or payload exceeded the size limit." }, {
