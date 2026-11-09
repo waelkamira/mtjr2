@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { getCurrentReturnPath } from "@/lib/current-return-path";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { currentReturnPath, getCurrentReturnPath } from "@/lib/current-return-path";
 
 describe("getCurrentReturnPath", () => {
   const origin = "https://market.example";
+
+  afterEach(() => vi.unstubAllGlobals());
 
   it("uses the current page including query and hash", () => {
     expect(getCurrentReturnPath({
@@ -58,5 +60,16 @@ describe("getCurrentReturnPath", () => {
       hash: "",
       origin
     })).toBe("/");
+  });
+
+  it("uses the last remembered application page when opened directly on an auth page", () => {
+    const stored = new Map([["mtjr2.auth.returnTo", "/checkout?step=delivery"]]);
+    vi.stubGlobal("window", {
+      location: { pathname: "/login", search: "", hash: "", origin },
+      sessionStorage: { getItem: (key: string) => stored.get(key) ?? null }
+    });
+    vi.stubGlobal("document", { referrer: "" });
+
+    expect(currentReturnPath()).toBe("/checkout?step=delivery");
   });
 });
