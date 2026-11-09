@@ -166,7 +166,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
           { href: "/account/orders", label: translate(locale, "Orders", "الطلبات") }
         ]
       : []),
-    ...publicLinks.slice(0, 6).map((link) => ({
+    ...publicLinks.slice(0, 8).map((link) => ({
       ...link,
       label: translate(locale, link.label, {
         Home: "الرئيسية",
@@ -180,7 +180,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
     ...(account ? signedInLinks : []),
     ...publicLinks.slice(6).map((link) => ({
       ...link,
-      label: translate(locale, link.label, { Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)
+      label: translate(locale, link.label, { About: "من نحن", Contact: "اتصل بنا", Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)
     }))
   ];
 
@@ -315,6 +315,8 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 Brands: "العلامات التجارية",
                 Stores: "المتاجر",
                 "Sell on Mtjr": "بع على متجر",
+                About: "من نحن",
+                Contact: "اتصل بنا",
                 Terms: "الشروط",
                 Privacy: "الخصوصية"
               }[link.label] ?? link.label)}
@@ -326,7 +328,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
               href={link.href}
               className="whitespace-nowrap rounded-full px-4 py-2 transition hover:bg-[var(--color-lavender-100)] hover:text-[var(--color-lavender-950)]"
             >
-              {translate(locale, link.label, { Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)}
+              {translate(locale, link.label, { About: "من نحن", Contact: "اتصل بنا", Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)}
             </Link>
           ))}
           {publicLinks.slice(6).map((link) => (
