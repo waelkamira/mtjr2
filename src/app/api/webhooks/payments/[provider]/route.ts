@@ -71,20 +71,30 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     // Pass a fresh request containing the already bounded raw bytes so provider
     // signature verification sees the exact payload without buffering it twice.
     let paymentReference: string | undefined;
+    let paymentId: string | undefined;
     try {
       const payload = JSON.parse(new TextDecoder().decode(rawBody)) as {
-        data?: { object?: { id?: string } };
-        resource?: { supplementary_data?: { related_ids?: { order_id?: string } } };
+        data?: { object?: { id?: string; metadata?: { paymentId?: string } } };
+        resource?: { custom_id?: string; supplementary_data?: { related_ids?: { order_id?: string } } };
       };
       paymentReference = providerKey === "stripe"
         ? payload.data?.object?.id
         : payload.resource?.supplementary_data?.related_ids?.order_id;
+      paymentId = providerKey === "stripe"
+        ? payload.data?.object?.metadata?.paymentId
+        : payload.resource?.custom_id;
     } catch {
       throw new Error("Webhook payload is not valid JSON.");
     }
     if (!paymentReference) throw new Error("Webhook payment reference is missing.");
-    const payment = await prisma.payment.findUnique({
-      where: { provider_providerReference: { provider: providerKey, providerReference: paymentReference } },
+    const payment = await prisma.payment.findFirst({
+      where: {
+        provider: providerKey,
+        OR: [
+          { providerReference: paymentReference },
+          ...(paymentId ? [{ id: paymentId }] : [])
+        ]
+      },
       select: { id: true }
     });
     const snapshot = payment ? await getPaymentProviderRuntimeSnapshot(payment.id) : null;
