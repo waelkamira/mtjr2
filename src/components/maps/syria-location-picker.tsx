@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import LeafletLocationMap from "@/components/maps/leaflet-location-map";
 import { translate, type Locale } from "@/lib/locale";
 
@@ -18,6 +18,7 @@ function locationError(cause: unknown, locale: Locale, english: string, arabic: 
   const message = cause instanceof Error ? cause.message : "";
   return /[\\u0600-\\u06FF]/.test(message) ? message : translate(locale, english, arabic);
 }
+type MapSearchResult = { id: string; label: string; latitude: number; longitude: number; type: string };
 type NeighborhoodSuggestion = {
   id: string; nameAr: string; cityGroupNameAr: string; latitude: number; longitude: number;
   verificationStatus: "CANDIDATE" | "VERIFIED"; source: string; distanceKm: number;
@@ -75,6 +76,10 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   const [districtId, setDistrictId] = useState("");
   const [subdistrictId, setSubdistrictId] = useState("");
   const [localityQuery, setLocalityQuery] = useState("");
+  const [mapSearchQuery, setMapSearchQuery] = useState("");
+  const [mapSearchResults, setMapSearchResults] = useState<MapSearchResult[]>([]);
+  const [mapSearchBusy, setMapSearchBusy] = useState(false);
+  const [mapSearchError, setMapSearchError] = useState("");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [focus, setFocus] = useState<{ latitude: number; longitude: number; zoom: number } | null>(null);
@@ -89,7 +94,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     choose: translate(locale, "Choose", "اختر"),
     search: translate(locale, "Search places", "ابحث عن تجمع سكاني"),
     searchButton: translate(locale, "Search", "بحث"),
-    loading: translate(locale, "Loading locations…", "جارٍ تحميل المواقع…")
+    loading: translate(locale, "Loading locations…", "جارٍ تحميل المواقع…"),
+    mapSearch: translate(locale, "Search an address, place or landmark", "ابحث عن عنوان أو مكان أو معلم"),
+    mapSearchButton: translate(locale, "Find on map", "ابحث على الخريطة"),
+    currentLocation: translate(locale, "Use my current location", "استخدم موقعي الحالي"),
+    searching: translate(locale, "Searching the map…", "جارٍ البحث على الخريطة…")
   }), [locale]);
 
   useEffect(() => {
@@ -258,6 +267,60 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     if (hasCoordinates) setFocus({ latitude: item!.latitude!, longitude: item!.longitude!, zoom: 15 });
   }
 
+  async function searchMapPlaces(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const query = mapSearchQuery.trim();
+    if (query.length < 3) {
+      setMapSearchError(translate(locale, "Enter at least 3 characters.", "أدخل ثلاثة أحرف على الأقل."));
+      setMapSearchResults([]);
+      return;
+    }
+    setMapSearchBusy(true);
+    setMapSearchError("");
+    try {
+      const response = await fetch(`/api/geography/search?q=${encodeURIComponent(query)}&locale=${locale}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Map search failed.");
+      const results = Array.isArray(payload.items) ? payload.items as MapSearchResult[] : [];
+      setMapSearchResults(results);
+      if (!results.length) setMapSearchError(translate(locale, "No matching places found. Try a nearby landmark or a more specific address.", "لم نعثر على موقع مطابق. جرّب معلماً قريباً أو عنواناً أكثر تحديداً."));
+    } catch {
+      setMapSearchError(translate(locale, "Could not search the map right now. Please try again.", "تعذّر البحث على الخريطة حالياً. حاول مرة أخرى."));
+      setMapSearchResults([]);
+    } finally {
+      setMapSearchBusy(false);
+    }
+  }
+
+  function selectMapSearchResult(result: MapSearchResult) {
+    setMapSearchQuery(result.label);
+    setMapSearchResults([]);
+    setMapSearchError("");
+    updateCoordinates({ latitude: result.latitude, longitude: result.longitude });
+  }
+
+  function useCurrentLocation() {
+    setMapSearchError("");
+    if (!navigator.geolocation) {
+      setMapSearchError(translate(locale, "Your browser does not support location access.", "متصفحك لا يدعم تحديد الموقع."));
+      return;
+    }
+    setMapSearchBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        updateCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+        setMapSearchQuery(translate(locale, "Current location", "موقعي الحالي"));
+        setMapSearchResults([]);
+        setMapSearchBusy(false);
+      },
+      () => {
+        setMapSearchError(translate(locale, "Location access was denied or unavailable. You can search for a place instead.", "تعذّر الوصول إلى موقعك أو لم تسمح للمتصفح بذلك. يمكنك البحث عن المكان بدلاً من ذلك."));
+        setMapSearchBusy(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+    );
+  }
+
   function updateCoordinates(coords: { latitude: number; longitude: number }) {
     setSelectedNeighborhoodId("");
     setNeighborhoodSuggestions([]);
@@ -330,6 +393,24 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       {busy && <p role="status" className="text-xs text-[var(--muted)]">{labels.loading}</p>}
       {!busy && !error && governorates.length === 0 && <p role="alert" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">{translate(locale, "No Syrian geography records are available in this database. Run npm run db:sync-syria-geography to import the official dataset.", "لا توجد بيانات جغرافية سورية في قاعدة البيانات. نفّذ الأمر npm run db:sync-syria-geography لاستيراد البيانات الرسمية.")}</p>}
       {error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
+      <form onSubmit={(event) => void searchMapPlaces(event)} className="space-y-2">
+        <label className="block text-sm font-medium" htmlFor="seller-map-place-search">{translate(locale, "Find a place on the map", "ابحث عن موقع على الخريطة")}</label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input id="seller-map-place-search" className={fieldClass + " mt-0 min-w-0 flex-1"} value={mapSearchQuery} onChange={(event) => { setMapSearchQuery(event.target.value); setMapSearchError(""); }} placeholder={labels.mapSearch} maxLength={160} />
+          <button type="submit" disabled={mapSearchBusy || mapSearchQuery.trim().length < 3} className="rounded-xl bg-[var(--color-ink-800)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{mapSearchBusy ? labels.searching : labels.mapSearchButton}</button>
+          <button type="button" onClick={useCurrentLocation} disabled={mapSearchBusy} className="rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-ink-900)] disabled:opacity-50">{labels.currentLocation}</button>
+        </div>
+        {mapSearchError && <p role="status" className="text-xs text-amber-700">{mapSearchError}</p>}
+        {mapSearchResults.length > 0 && <ul className="max-h-56 divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]" aria-label={translate(locale, "Map search results", "نتائج البحث على الخريطة")}>
+          {mapSearchResults.map((result) => <li key={result.id}>
+            <button type="button" onClick={() => selectMapSearchResult(result)} className="w-full px-3 py-3 text-start text-sm transition hover:bg-[var(--surface-muted)] focus:bg-[var(--surface-muted)]">
+              <span className="block font-medium text-[var(--color-ink-900)]">{result.label}</span>
+              {result.type && <span className="mt-1 block text-xs text-[var(--muted)]">{result.type}</span>}
+            </button>
+          </li>)}
+        </ul>}
+        <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Search by street, neighbourhood, city or landmark, choose a result, then fine-tune the pin by dragging it.", "ابحث باسم الشارع أو الحي أو المدينة أو معلم قريب، ثم اختر النتيجة واضبط الدبوس بدقة بسحبه على الخريطة.")}</p>
+      </form>
       <LeafletLocationMap
         locale={locale}
         value={value.latitude !== undefined && value.longitude !== undefined ? { latitude: value.latitude, longitude: value.longitude } : null}
