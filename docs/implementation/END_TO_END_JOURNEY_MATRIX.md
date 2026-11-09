@@ -347,3 +347,10 @@ Dedicated store policies, localization, notification preferences and a richer pr
 - The staff UI mirrors this policy: owners see invite/revoke controls; non-owner staff see the limitation and can still accept invitations addressed to themselves.
 - The seed removes `store:staff:manage` from the default `STORE_MANAGER` role and deletes that legacy role-permission link when the seed is rerun. No schema migration is required.
 - Verification: service and test source updated; Vitest and browser tests not run.
+## Seller commission statements — 2026-11-09
+
+| Actor action | UI → API | Authorization and data boundary | Persistence / outcome | Verification |
+|---|---|---|---|---|
+| Seller reviews recorded platform fees | `/seller/commissions` → `GET /api/seller/commissions?storeId=...` → `getSellerCommissionHistory` | Current session; store owner or exact-store `orders:read`; query is constrained by both `storeId` and the store's `sellerId`. | Reads the latest 100 immutable CommissionTransaction snapshots with order item, order status, currency, base amount and recorded commission. Totals are grouped by currency. No net seller balance, payout, withdrawal or refund-adjustment amount is inferred. | Service test added; API/page browser and database checks pending. |
+
+**Financial boundary:** commission snapshots explain the fee applied to an order item; they are not an accounting ledger or payable balance. Do not add payout actions until the platform ledger, refunds/adjustments and payout reconciliation are implemented.
