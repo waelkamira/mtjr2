@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AuditActorType, StoreStatus } from "@prisma/client";
+import { AuditActorType, Prisma, StoreStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession, AuthenticationRequiredError } from "@/server/identity/current-session";
@@ -13,7 +13,7 @@ const updateSchema = z.object({
 }).strict();
 
 export class SellerStoreSettingsConflictError extends Error {
-  constructor(readonly code: "STORE_NOT_FOUND" | "STORE_NOT_ACTIVE" | "SLUG_TAKEN") {
+  constructor(readonly code: "STORE_NOT_FOUND" | "STORE_NOT_ACTIVE" | "SLUG_TAKEN" | "SLUG_LOCKED") {
     super(code);
     this.name = "SellerStoreSettingsConflictError";
   }
@@ -39,6 +39,10 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       throw new SellerStoreSettingsConflictError("STORE_NOT_ACTIVE");
     }
 
+    if (current.status === StoreStatus.ACTIVE && data.slug !== current.slug) {
+      throw new SellerStoreSettingsConflictError("SLUG_LOCKED");
+    }
+
     const isOwner = current.seller.ownerId === actor.userId;
     if (!isOwner) {
       const allowed = await userHasScopedPermission(actor.userId, {
@@ -52,11 +56,19 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
     const slugOwner = await tx.store.findUnique({ where: { slug: data.slug }, select: { id: true } });
     if (slugOwner && slugOwner.id !== storeId) throw new SellerStoreSettingsConflictError("SLUG_TAKEN");
 
-    const updated = await tx.store.update({
-      where: { id: storeId },
-      data: { name: data.name, slug: data.slug },
-      select: { id: true, name: true, slug: true, status: true }
-    });
+    let updated: { id: string; name: string; slug: string; status: StoreStatus };
+    try {
+      updated = await tx.store.update({
+        where: { id: storeId },
+        data: { name: data.name, slug: data.slug },
+        select: { id: true, name: true, slug: true, status: true }
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        throw new SellerStoreSettingsConflictError("SLUG_TAKEN");
+      }
+      throw error;
+    }
     if (updated.name !== current.name || updated.slug !== current.slug) {
       await tx.auditLog.create({
         data: {
