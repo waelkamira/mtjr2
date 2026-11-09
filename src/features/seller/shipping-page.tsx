@@ -63,6 +63,9 @@ export default function SellerShippingPage() {
         if (initialStore) {
           setStoreId(initialStore.id);
           setOriginDraft(originDraftFromStore(initialStore));
+          const enabledIds = new Set(initialStore.markets.map((entry) => entry.market.id));
+          const firstMarket = marketResult.items.find((market) => enabledIds.has(market.id));
+          setDraft({ ...emptyDraft, marketId: firstMarket?.id ?? "", currencyCode: firstMarket?.defaultCurrency.code ?? "" });
           try { localStorage.setItem("mtjr.activeStoreId", initialStore.id); } catch { /* Store selection still works for this session. */ }
         }
       } catch (cause) {
@@ -109,7 +112,10 @@ export default function SellerShippingPage() {
     try { localStorage.setItem("mtjr.activeStoreId", id); } catch { /* Store selection still works for this session. */ }
     const store = stores.find((item) => item.id === id);
     setOriginDraft(store ? originDraftFromStore(store) : emptyOriginDraft);
-    resetForm();
+    const enabledIds = new Set(store?.markets.map((entry) => entry.market.id) ?? []);
+    const firstMarket = markets.find((market) => enabledIds.has(market.id));
+    setEditingId("");
+    setDraft({ ...emptyDraft, marketId: firstMarket?.id ?? "", currencyCode: firstMarket?.defaultCurrency.code ?? "" });
   }
 
   async function saveOrigin(event: FormEvent<HTMLFormElement>) {
