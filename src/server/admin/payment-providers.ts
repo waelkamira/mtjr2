@@ -104,6 +104,16 @@ function decryptCredentials(value: string, keyVersion: number): ProviderCredenti
   }
 }
 
+export function getPaymentProviderRuntimeEnvironment(): PaymentProviderEnvironment {
+  return env.PAYMENT_PROVIDER_RUNTIME_ENVIRONMENT === "TEST"
+    ? PaymentProviderEnvironment.TEST
+    : env.PAYMENT_PROVIDER_RUNTIME_ENVIRONMENT === "LIVE"
+      ? PaymentProviderEnvironment.LIVE
+      : process.env.NODE_ENV === "production"
+        ? PaymentProviderEnvironment.LIVE
+        : PaymentProviderEnvironment.TEST;
+}
+
 export function decryptPaymentProviderCredentials(value: string, keyVersion: number): ProviderCredentials {
   return decryptCredentials(value, keyVersion);
 }
