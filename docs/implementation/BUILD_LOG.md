@@ -3541,3 +3541,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added an explicit disclosure that this is not a payable balance. No invented payout balance or withdrawal action was introduced.
 - Updated `PAGE_INVENTORY.md`, `PAGE_ROUTE_REGISTRY.md` and system 19 documentation.
 - No tests, browser experiments, builds or deployments were run, as requested. Remaining seller finance work is the accounting ledger, holds, settlement/reconciliation, payout methods and withdrawals.
+
+
+## 2026-11-09 — Seller media workflow and clay theme continuation
+
+- Added store logo and banner file upload controls to the seller workspace profile editor. Uploads reuse the existing authenticated, store-scoped `/api/seller/products/media` endpoint, its file-signature/type/10 MB validation, Imgur client-ID rotation and configured ImageKit/Cloudinary fallbacks.
+- Uploads stage the returned HTTPS URL in the editor; the seller must explicitly save the store profile to persist it. The save action is disabled during an active upload.
+- Replaced the previous “upload can be connected later” message with the real workflow and updated seller page inventory. Asset-library indexing and provider-side deletion/replacement lifecycle remain open; removing a URL from the profile does not claim to delete the remote asset.
+- Extended the pastel clay palette through the seller workspace dashboard, settings, product management, inventory, advertising, commission statements, questions, reviews and staff pages. Shipping, returns, orders and finance already use the updated palette family.
+- No tests, builds, browser experiments or deployments were run.
