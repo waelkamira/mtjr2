@@ -27,7 +27,7 @@ export type LoginResult =
       mfaRequired: boolean;
       mfaSetupRequired: boolean;
     }
-  | { authenticated: false; reason: "EMAIL_NOT_FOUND" | "EMAIL_NOT_VERIFIED" | "INVALID_PASSWORD" | "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
+  | { authenticated: false; reason: "EMAIL_NOT_FOUND" | "INVALID_PASSWORD" | "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
 
 function digestLoginValue(kind: "identifier" | "ip", value: string): string {
   return createHmac("sha256", env.AUTH_SECRET)
@@ -36,10 +36,10 @@ function digestLoginValue(kind: "identifier" | "ip", value: string): string {
 }
 
 /**
- * Password login requires an active account; pending registrations must verify
- * their email before a session can be created. The conditional user-row write
- * and session creation share one transaction,
- * so concurrent password changes or account suspensions cannot race a session.
+ * Password login accepts active accounts and safely activates legacy pending
+ * registrations after a correct password. Suspended/disabled accounts remain
+ * blocked. The conditional user-row write and session creation share one
+ * transaction so account-state changes cannot race a session.
  * MFA remains a separate mandatory step for platform administrators.
  */
 export async function loginWithPassword(
@@ -77,15 +77,15 @@ export async function loginWithPassword(
     return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." };
   }
 
-  const eligible = user.status === UserStatus.ACTIVE && user.passwordHash !== null;
+  const eligible = (
+    user.status === UserStatus.ACTIVE ||
+    (user.status === UserStatus.PENDING && user.adminStatusReason === null)
+  ) && user.passwordHash !== null;
 
   if (!eligible || !passwordMatches) {
     await prisma.loginAttempt.create({
       data: { userId: user.id, identifierHash, ipHash, succeeded: false, attemptedAt: now }
     });
-    if (user.status === UserStatus.PENDING && user.adminStatusReason === null && passwordMatches) {
-      return { authenticated: false, reason: "EMAIL_NOT_VERIFIED", message: "Verify your email address before signing in." };
-    }
     return !eligible
       ? { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS }
       : { authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect." };
@@ -100,12 +100,13 @@ export async function loginWithPassword(
     const current = await tx.user.updateMany({
       where: {
         id: user.id,
-        status: UserStatus.ACTIVE,
         passwordHash: user.passwordHash,
-        adminStatusReason: user.adminStatusReason,
-        emailVerifiedAt: user.emailVerifiedAt
+        OR: [
+          { status: UserStatus.ACTIVE },
+          { status: UserStatus.PENDING, adminStatusReason: null }
+        ]
       },
-      data: { lastLoginAt: now }
+      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
     });
     if (current.count !== 1) return null;
 
@@ -120,6 +121,18 @@ export async function loginWithPassword(
         expiresAt
       }
     });
+    if (user.status === UserStatus.PENDING) {
+      await tx.auditLog.create({
+        data: {
+          actorType: AuditActorType.SYSTEM,
+          action: "identity.legacy_pending_account.activated_on_login",
+          resource: "user",
+          resourceId: user.id,
+          occurredAt: now,
+          metadata: { emailVerificationRequired: false }
+        }
+      });
+    }
     await tx.loginAttempt.create({
       data: { userId: user.id, identifierHash, ipHash, succeeded: true, attemptedAt: now }
     });
