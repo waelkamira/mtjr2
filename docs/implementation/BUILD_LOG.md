@@ -3208,3 +3208,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level request lifecycle review only. Exact-head CI and browser verification remain pending; no build/test pass is claimed.
+
+
+## 2026-11-09 — Seller inventory store-switch isolation
+
+**Implemented on `main`**
+- Clear inventory rows, products, transfers, movement history, stock-count history, and any open count editor when the active store changes.
+- Guard the combined inventory refresh with the effect's active flag so an older store's slower API responses cannot overwrite the selected store's data.
+- Suppress stale stock-count request errors after a store switch.
+
+**Commit**
+- `4399ce0f4004e429039e9bcdfb12921e5e99078b` — `Isolate seller inventory data across store switches`.
+
+**Verification**
+- Source-level request lifecycle review only; exact-head browser and build verification remain pending.
