@@ -5,6 +5,9 @@ const mocks = vi.hoisted(() => ({
   userHasScopedPermission: vi.fn(),
   userHasPermission: vi.fn(),
   warehouseFindUnique: vi.fn(),
+  warehouseUpdate: vi.fn(),
+  inventoryFindFirst: vi.fn(),
+  stockTransferFindFirst: vi.fn(),
   productVariantFindFirst: vi.fn(),
   productVariantFindMany: vi.fn(),
   inventoryFindUnique: vi.fn(),
@@ -21,12 +24,12 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const tx = {
-  warehouse: { findUnique: mocks.warehouseFindUnique },
+  warehouse: { findUnique: mocks.warehouseFindUnique, update: mocks.warehouseUpdate },
   productVariant: { findFirst: mocks.productVariantFindFirst, findMany: mocks.productVariantFindMany },
-  inventory: { findUnique: mocks.inventoryFindUnique, create: mocks.inventoryCreate, updateMany: mocks.inventoryUpdateMany },
+  inventory: { findUnique: mocks.inventoryFindUnique, findFirst: mocks.inventoryFindFirst, create: mocks.inventoryCreate, updateMany: mocks.inventoryUpdateMany },
   inventoryMovement: { findUnique: mocks.inventoryMovementFindUnique, create: mocks.inventoryMovementCreate, findMany: mocks.inventoryMovementFindMany },
   auditLog: { create: mocks.auditCreate },
-  stockTransfer: { findUnique: mocks.stockTransferFindUnique, create: mocks.stockTransferCreate, updateMany: mocks.stockTransferUpdateMany }
+  stockTransfer: { findUnique: mocks.stockTransferFindUnique, findFirst: mocks.stockTransferFindFirst, create: mocks.stockTransferCreate, updateMany: mocks.stockTransferUpdateMany }
 };
 
 vi.mock("server-only", () => ({}));
@@ -39,7 +42,7 @@ vi.mock("@/server/identity/permission-repository", () => ({
   userHasPermission: mocks.userHasPermission
 }));
 
-import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements, decideQuarantinedStock } from "@/server/inventory/stock";
+import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements, decideQuarantinedStock, updateWarehouse } from "@/server/inventory/stock";
 
 describe("seller inventory operations", () => {
   beforeEach(() => {
@@ -47,6 +50,9 @@ describe("seller inventory operations", () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "owner-1" });
     mocks.userHasScopedPermission.mockResolvedValue(false);
     mocks.userHasPermission.mockResolvedValue(false);
+    mocks.warehouseUpdate.mockImplementation(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => ({ id: where.id, storeId: "store-1", code: String(data.code ?? "MAIN"), name: String(data.name ?? "Main"), isActive: Boolean(data.isActive ?? true) }));
+    mocks.inventoryFindFirst.mockResolvedValue(null);
+    mocks.stockTransferFindFirst.mockResolvedValue(null);
     mocks.warehouseFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) => ({
       id: where.id, storeId: "store-1", isActive: true,
       store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "owner-1" } }
@@ -60,6 +66,38 @@ describe("seller inventory operations", () => {
     mocks.auditCreate.mockResolvedValue({});
     mocks.storeFindUnique.mockResolvedValue({ id: "store-1", seller: { ownerId: "owner-1", status: "ACTIVE" } });
     mocks.inventoryMovementFindMany.mockResolvedValue([]);
+  });
+
+
+  it("updates warehouse details and writes a scoped audit record", async () => {
+    mocks.warehouseFindUnique.mockResolvedValue({
+      id: "warehouse-1", storeId: "store-1", isActive: true,
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "owner-1" } }
+    });
+    await expect(updateWarehouse("warehouse-1", { name: "Central depot", code: "CENTRAL" })).resolves.toMatchObject({ id: "warehouse-1", name: "Central depot", code: "CENTRAL" });
+    expect(mocks.warehouseUpdate).toHaveBeenCalledOnce();
+    expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "inventory.warehouse.updated", scopeId: "store-1" }) }));
+  });
+
+  it("blocks warehouse deactivation while stock remains", async () => {
+    mocks.warehouseFindUnique.mockResolvedValue({
+      id: "warehouse-1", storeId: "store-1", isActive: true,
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "owner-1" } }
+    });
+    mocks.inventoryFindFirst.mockResolvedValue({ id: "inventory-1" });
+    await expect(updateWarehouse("warehouse-1", { isActive: false })).rejects.toThrow("Move or reconcile all stock");
+    expect(mocks.warehouseUpdate).not.toHaveBeenCalled();
+  });
+
+  it("deactivates an empty warehouse only when no transfer is pending", async () => {
+    mocks.warehouseFindUnique.mockResolvedValue({
+      id: "warehouse-1", storeId: "store-1", isActive: true,
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "owner-1" } }
+    });
+    await expect(updateWarehouse("warehouse-1", { isActive: false })).resolves.toMatchObject({ isActive: false });
+    expect(mocks.inventoryFindFirst).toHaveBeenCalledOnce();
+    expect(mocks.stockTransferFindFirst).toHaveBeenCalledOnce();
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
   it("lists only the requested store's latest ledger movements", async () => {
