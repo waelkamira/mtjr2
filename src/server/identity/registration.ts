@@ -34,7 +34,6 @@ export interface RegistrationResult {
 }
 
 const VERIFICATION_PURPOSE = "EMAIL_VERIFICATION";
-const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
 function digestToken(token: string): string {
   return createHash("sha256").update(token, "utf8").digest("hex");
