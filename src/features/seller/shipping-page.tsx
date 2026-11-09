@@ -69,7 +69,7 @@ export default function SellerShippingPage() {
           const enabledIds = new Set(initialStore.markets.map((entry) => entry.market.id));
           const firstMarket = marketResult.items.find((market) => enabledIds.has(market.id));
           setDraft({ ...emptyDraft, marketId: firstMarket?.id ?? "", currencyCode: firstMarket ? (firstMarket.currencies.some((entry) => entry.currency.code === "SYP") ? "SYP" : firstMarket.defaultCurrency.code) : "" });
-          try { localStorage.setItem("mtjr.activeStoreId", initialStore.id); } catch { /* Store selection still works for this session. */ }
+          try { localStorage.setItem("mtjr.activeStoreId", initialStore.id); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Store selection still works for this session. */ }
         }
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Unable to load shipping settings.", "تعذر تحميل إعدادات الشحن."));
@@ -112,7 +112,7 @@ export default function SellerShippingPage() {
 
   function selectStore(id: string) {
     setStoreId(id);
-    try { localStorage.setItem("mtjr.activeStoreId", id); } catch { /* Store selection still works for this session. */ }
+    try { localStorage.setItem("mtjr.activeStoreId", id); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Store selection still works for this session. */ }
     const store = stores.find((item) => item.id === id);
     const enabledIds = new Set(store?.markets.map((entry) => entry.market.id) ?? []);
     const firstMarket = markets.find((market) => enabledIds.has(market.id));
