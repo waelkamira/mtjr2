@@ -77,7 +77,7 @@
 - [ ] `/seller/reviews` — Store/product review responses and moderation state.
 - [ ] `/seller/questions` — Questions requiring seller answers.
 - [ ] `/seller/messages` and `/seller/messages/[conversationId]` — Store inbox and conversations.
-- [ ] `/seller/staff` — Staff invitations, roles/permissions, revoke access.
+- [x] `/seller/staff` — Owner-scoped invitations with seven-day expiry/renewal, invitee acceptance, seeded least-privilege store roles, transactional role changes and revoke. Runtime verification, session invalidation and delegated administration remain open.
 - [ ] `/seller/notifications` — Seller alerts and preferences.
 - [ ] `/seller/analytics` — Sales/performance reporting when supported by trustworthy data.
 - [ ] `/seller/finance`, `/seller/commissions`, `/seller/payouts` — Financial statements only when ledger/reconciliation/payout workflows are implemented.
