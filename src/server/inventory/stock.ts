@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AuditActorType, InventoryMovementType, Prisma, StockTransferStatus } from "@prisma/client";
+import { AuditActorType, InventoryMovementType, Prisma, StockCountStatus, StockTransferStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
@@ -495,5 +495,165 @@ export async function updateWarehouse(warehouseIdInput: string, input: unknown, 
       occurredAt: now, metadata: { changedFields: Object.keys(data) }
     }});
     return warehouse;
+  }, { isolationLevel: "Serializable" });
+}
+
+
+const createStockCountSchema = z.object({
+  warehouseId: z.string().trim().min(1),
+  note: z.string().trim().max(500).optional()
+}).strict();
+const recordStockCountLineSchema = z.object({
+  countedQuantity: z.number().int().min(0).max(100000000),
+  note: z.string().trim().max(500).optional()
+}).strict();
+
+export async function createStockCount(input: unknown, now = new Date()) {
+  const data = createStockCountSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const warehouse = await requireWarehouseAccess(tx, data.warehouseId, actor.userId, now);
+    const inventories = await tx.inventory.findMany({
+      where: { warehouseId: warehouse.id },
+      orderBy: [{ variant: { sku: "asc" } }, { id: "asc" }],
+      select: { id: true, quantityOnHand: true }
+    });
+    if (!inventories.length) throw new Error("There are no inventory records in this warehouse to count.");
+    const session = await tx.stockCountSession.create({
+      data: {
+        storeId: warehouse.storeId, warehouseId: warehouse.id, note: data.note,
+        createdById: actor.userId,
+        lines: { create: inventories.map((inventory) => ({
+          inventoryId: inventory.id, expectedQuantity: inventory.quantityOnHand
+        })) }
+      },
+      include: { lines: { include: { inventory: { select: {
+        id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true,
+        variant: { select: { id: true, sku: true, name: true, product: { select: { name: true } } }
+        }
+      } } } }, warehouse: { select: { id: true, code: true, name: true } } }
+    });
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "inventory.stock_count.opened",
+      resource: "stock_count_session", resourceId: session.id, scopeType: "STORE", scopeId: warehouse.storeId,
+      occurredAt: now, metadata: { warehouseId: warehouse.id, lineCount: inventories.length }
+    }});
+    return session;
+  }, { isolationLevel: "Serializable" });
+}
+
+export async function listStoreStockCounts(storeIdInput: string, now = new Date()) {
+  const storeId = z.string().trim().min(1).parse(storeIdInput);
+  const actor = await requireCurrentSession(now);
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { id: true, seller: { select: { ownerId: true, status: true } } }
+  });
+  if (!store || store.seller.status !== "ACTIVE" || !(await canManageInventory(actor.userId, store.seller.ownerId, storeId, now))) {
+    throw new Error("You do not have inventory access to this store.");
+  }
+  return prisma.stockCountSession.findMany({
+    where: { storeId },
+    orderBy: [{ openedAt: "desc" }, { id: "desc" }],
+    take: 50,
+    select: {
+      id: true, status: true, note: true, openedAt: true, completedAt: true,
+      warehouse: { select: { id: true, code: true, name: true } },
+      _count: { select: { lines: true } },
+      lines: { select: { countedQuantity: true } }
+    }
+  });
+}
+
+export async function recordStockCountLine(sessionIdInput: string, lineIdInput: string, input: unknown, now = new Date()) {
+  const sessionId = z.string().trim().min(1).parse(sessionIdInput);
+  const lineId = z.string().trim().min(1).parse(lineIdInput);
+  const data = recordStockCountLineSchema.parse(input);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const session = await tx.stockCountSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, status: true, warehouseId: true, storeId: true }
+    });
+    if (!session) throw new Error("Stock count session not found.");
+    if (session.status !== StockCountStatus.IN_PROGRESS) throw new Error("This stock count is no longer editable.");
+    const warehouse = await requireWarehouseAccess(tx, session.warehouseId, actor.userId, now);
+    if (warehouse.storeId !== session.storeId) throw new Error("Stock count warehouse scope is invalid.");
+    const changed = await tx.stockCountLine.updateMany({
+      where: { id: lineId, sessionId },
+      data: { countedQuantity: data.countedQuantity, note: data.note, countedAt: now }
+    });
+    if (changed.count !== 1) throw new Error("Stock count line not found in this session.");
+    return tx.stockCountLine.findUnique({
+      where: { id: lineId },
+      include: { inventory: { select: { id: true, variant: { select: { sku: true, name: true, product: { select: { name: true } } } } } } }
+    });
+  }, { isolationLevel: "Serializable" });
+}
+
+export async function completeStockCount(sessionIdInput: string, now = new Date()) {
+  const sessionId = z.string().trim().min(1).parse(sessionIdInput);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const session = await tx.stockCountSession.findUnique({
+      where: { id: sessionId },
+      include: {
+        warehouse: { select: { id: true, storeId: true, isActive: true, store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } } } },
+        lines: { orderBy: [{ id: "asc" }], include: { inventory: { select: {
+          id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true
+        } } } }
+      }
+    });
+    if (!session) throw new Error("Stock count session not found.");
+    if (session.status === StockCountStatus.COMPLETED) {
+      return { sessionId: session.id, status: session.status, alreadyCompleted: true, adjustedLines: 0, totalVariance: session.lines.reduce((sum, line) => sum + ((line.countedQuantity ?? line.expectedQuantity) - line.expectedQuantity), 0) };
+    }
+    if (session.status !== StockCountStatus.IN_PROGRESS) throw new Error("This stock count cannot be completed.");
+    const warehouse = await requireWarehouseAccess(tx, session.warehouseId, actor.userId, now);
+    if (warehouse.storeId !== session.storeId) throw new Error("Stock count warehouse scope is invalid.");
+    const uncounted = session.lines.filter((line) => line.countedQuantity === null);
+    if (uncounted.length) throw new Error("Every stock item must be counted before reconciliation.");
+    let adjustedLines = 0;
+    let totalVariance = 0;
+    for (const line of session.lines) {
+      const countedQuantity = line.countedQuantity as number;
+      const delta = countedQuantity - line.expectedQuantity;
+      if (line.inventory.quantityOnHand !== line.expectedQuantity) {
+        throw new Error("Inventory changed after this count was opened. Cancel this count and start a fresh one.");
+      }
+      if (countedQuantity < line.inventory.quantityReserved) {
+        throw new Error("A counted quantity cannot be lower than the quantity already reserved for orders.");
+      }
+      if (delta !== 0) {
+        const changed = await tx.inventory.updateMany({
+          where: {
+            id: line.inventoryId, quantityOnHand: line.expectedQuantity,
+            quantityReserved: { lte: countedQuantity }
+          },
+          data: { quantityOnHand: countedQuantity }
+        });
+        if (changed.count !== 1) throw new Error("Inventory changed during reconciliation; no partial count may be accepted.");
+        await tx.inventoryMovement.create({ data: {
+          inventoryId: line.inventoryId, type: InventoryMovementType.ADJUSTMENT,
+          quantityDelta: delta, referenceType: "STOCK_COUNT", referenceId: session.id,
+          idempotencyKey: `stock-count:${session.id}:${line.id}`,
+          note: line.note ?? session.note ?? "Physical stock count reconciliation",
+          createdById: actor.userId, createdAt: now
+        }});
+        adjustedLines += 1;
+        totalVariance += delta;
+      }
+    }
+    const completed = await tx.stockCountSession.updateMany({
+      where: { id: session.id, status: StockCountStatus.IN_PROGRESS },
+      data: { status: StockCountStatus.COMPLETED, completedAt: now }
+    });
+    if (completed.count !== 1) throw new Error("Stock count was completed by another request.");
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "inventory.stock_count.completed",
+      resource: "stock_count_session", resourceId: session.id, scopeType: "STORE", scopeId: session.storeId,
+      occurredAt: now, metadata: { warehouseId: session.warehouseId, lineCount: session.lines.length, adjustedLines, totalVariance }
+    }});
+    return { sessionId: session.id, status: StockCountStatus.COMPLETED, alreadyCompleted: false, adjustedLines, totalVariance };
   }, { isolationLevel: "Serializable" });
 }
