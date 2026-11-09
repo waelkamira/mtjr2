@@ -73,7 +73,7 @@ export default function SellerStaffPage() {
   function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!storeId) return;
-    void action(`/api/stores/${encodeURIComponent(storeId)}/staff`, translate(locale, "Invitation created.", "تم إنشاء الدعوة."), "POST", { userId }).then(() => setUserId(""));
+    void action(`/api/stores/${encodeURIComponent(storeId)}/staff`, translate(locale, "Invitation created.", "تم إنشاء الدعوة."), "POST", { email: inviteEmail }).then((success) => { if (success) setInviteEmail(""); });
   }
 
   const selectedStore = stores.find((store) => store.id === storeId);
