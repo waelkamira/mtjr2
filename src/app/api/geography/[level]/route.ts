@@ -71,13 +71,13 @@ export async function GET(
         prisma.syriaLocality.count({ where })
       ]);
     } else if (level === "neighborhoods") {
-      if (!query.governorateId || query.nearLat === undefined || query.nearLng === undefined) {
-        return Response.json({ error: "governorateId, nearLat and nearLng are required." }, { status: 400 });
+      if (!query.governorateId) {
+        return Response.json({ error: "governorateId is required." }, { status: 400 });
       }
+      const where = { governorateId: query.governorateId, verificationStatus: { in: ["CANDIDATE", "VERIFIED"] } };
       const candidates = await prisma.syriaNeighborhood.findMany({
-        where: { governorateId: query.governorateId, verificationStatus: { in: ["CANDIDATE", "VERIFIED"] } },
+        where,
         orderBy: [{ cityGroupNameAr: "asc" }, { nameAr: "asc" }],
-        take: 1000,
         select: { id: true, nameAr: true, cityGroupNameAr: true, latitude: true, longitude: true, verificationStatus: true, source: true }
       });
       const radians = (value: number) => value * Math.PI / 180;
@@ -87,11 +87,15 @@ export async function GET(
         const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(query.nearLat!)) * Math.cos(radians(lat)) * Math.sin(dLng / 2) ** 2;
         return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       };
-      const nearby = candidates.map((item) => ({ ...item, distanceKm: distance(item.latitude, item.longitude) }))
-        .filter((item) => item.distanceKm <= query.radiusKm)
-        .sort((left, right) => left.distanceKm - right.distanceKm);
-      total = nearby.length;
-      items = nearby.slice(skip, skip + query.limit);
+      const suggestions = candidates.map((item) => ({
+        ...item,
+        distanceKm: query.nearLat !== undefined && query.nearLng !== undefined ? distance(item.latitude, item.longitude) : null
+      }));
+      if (query.nearLat !== undefined && query.nearLng !== undefined) {
+        suggestions.sort((left, right) => (left.distanceKm ?? 0) - (right.distanceKm ?? 0));
+      }
+      total = suggestions.length;
+      items = suggestions.slice(skip, skip + query.limit);
     } else {
       return Response.json({ error: "Unknown geography level." }, { status: 404 });
     }
