@@ -74,6 +74,7 @@ For each route record: **Route | Audience/role | Owning system(s) (1–49) | Pag
 | `/seller/products` | Store owner/authorized staff | 02 | seller catalog APIs; Product, ProductVariant, ProductPrice, category attributes, ProductMedia | Implemented in source / verification pending | Search/status filters, category-dependent attributes, variant fields, market/currency pricing, draft edit and media lifecycle are wired; exact-head browser/store-isolation verification pending. |
 | `/seller/products/new`, `/seller/products/[productId]/edit` | No separate routes | 02 | Create/edit studios are integrated into `/seller/products`; product and media APIs | Equivalent route | Keep one integrated authoring experience; full-size image preview is available in create/edit galleries. |
 | `/seller/inventory` | Store owner/authorized staff | inventory | inventory APIs; Warehouse, Inventory, InventoryMovement | Implemented / unverified | Verify adjustments, transfers and scope checks |
+| `GET /api/seller/inventory/movements` | Store owner / authorized staff with exact-store `inventory:manage` | inventory | `listStoreInventoryMovements`; InventoryMovement → Inventory → Warehouse → Store | Implemented in source / runtime verification pending | Latest 100 ledger entries, store-scoped, newest first; includes on-hand and quarantine deltas, product/SKU, warehouse, reference and note. |
 | `/seller/orders` | Store owner/authorized staff | 05, 07 | seller order/status/shipment/tracking APIs; VendorOrder, OrderItem, OrderAddress, Shipment, ShipmentTrackingEvent | Implemented / journey verification pending | Payment-confirmed preparation; delivery recipient/address is returned only for paid/fulfillment statuses; one seller-entered shipment and forward-only manual tracking updates per vendor order. |
 | `/seller/shipping` | Store owner | 04 | `src/app/seller/shipping/page.tsx`; seller shipping-rate APIs; StoreShippingRate | Implemented / unverified | Store-scoped shipping-rate list/create/update; confirm persistence and checkout quote behavior. |
 | `/seller/staff` | Store owner/authorized staff | seller access control | staff APIs; SellerStaff/invitation models | Implemented / unverified | Exact store-scoped permissions and invitation lifecycle |
@@ -298,6 +299,7 @@ No Prisma schema change was needed. Existing Category, Brand, Store, Seller and 
 | `/seller/products` | Search product name, slug, description, SKU and barcode within selected store | `listSellerStoreProducts` after catalog permission check | Implemented / pending verification |
 | `/seller/orders` | Search order number, store, product, SKU and variant across authorized stores | `listSellerVendorOrders` after permission-derived store scope | Implemented / pending verification |
 | `/seller/inventory` | Search product, SKU and warehouse name/code within selected store | `listStoreInventory` after inventory permission check | Implemented / pending verification |
+| `/seller/inventory` | Read latest stock movement ledger for selected store | `listStoreInventoryMovements` via `/api/seller/inventory/movements` | Implemented / pending verification |
 
 
 ## Seller return visibility — 2026-11-04
