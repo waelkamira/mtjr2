@@ -67,7 +67,7 @@ describe("store shipping configuration", () => {
       minDeliveryDays: 1, maxDeliveryDays: 2, priority: 5
     });
     expect(mocks.shippingRateFindFirst).toHaveBeenCalledWith({
-      where: { id: "rate-1", storeId: "store-1" }, select: { id: true }
+      where: { id: "rate-1", storeId: "store-1" }, select: { id: true, isActive: true }
     });
     expect(mocks.shippingRateUpdate).toHaveBeenCalledOnce();
     expect(result.amountMinor).toBe("799");
