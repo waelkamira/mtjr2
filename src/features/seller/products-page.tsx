@@ -21,11 +21,11 @@ type CategoryAttribute = {
   valueType: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "MULTI_SELECT";
   required: boolean; variantLevel: boolean; options: string[];
 };
-type ProductLocationDraft = { city?: string; district?: string; localityId?: string; neighborhoodId?: string; neighborhood?: string; latitude?: number; longitude?: number };
+type ProductLocationDraft = { city?: string; district?: string; localityId?: string; neighborhood?: string; latitude?: number; longitude?: number };
 type Product = {
   id: string; productNumber: string; name: string; slug: string; description: string | null;
   city: string | null; district: string | null; contactPhone: string | null; videoUrl: string | null;
-  localityId: string | null; neighborhoodId: string | null; neighborhood: string | null;
+  localityId: string | null; neighborhood: string | null;
   latitude: number | null; longitude: number | null;
   propertyDetails: { propertyType: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"; listingType: "SALE" | "RENT"; bedrooms: number | null; bathrooms: number | null; floorArea: string } | null;
   categories: Array<{ category: { id: string; name: string; slug: string } }>;
@@ -619,7 +619,6 @@ export default function SellerProductsPage() {
           name: editName, slug: editSlug, description: editDescription,
           city: editProductLocation.city ?? null, district: editProductLocation.district ?? null,
           localityId: editProductLocation.localityId ?? null,
-          neighborhoodId: editProductLocation.neighborhoodId ?? null,
           neighborhood: editProductLocation.neighborhood ?? null,
           latitude: editProductLocation.latitude ?? null,
           longitude: editProductLocation.longitude ?? null,
@@ -861,7 +860,7 @@ export default function SellerProductsPage() {
             <div className="flex flex-wrap gap-2">
               {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? "");
                 setEditCategoryId(product.categories[0]?.category.id ?? "");
-                setEditProductLocation({ city: product.city ?? undefined, district: product.district ?? undefined, localityId: product.localityId ?? undefined, neighborhoodId: product.neighborhoodId ?? undefined, neighborhood: product.neighborhood ?? undefined, latitude: product.latitude ?? undefined, longitude: product.longitude ?? undefined });
+                setEditProductLocation({ city: product.city ?? undefined, district: product.district ?? undefined, localityId: product.localityId ?? undefined, neighborhood: product.neighborhood ?? undefined, latitude: product.latitude ?? undefined, longitude: product.longitude ?? undefined });
                 setEditPropertyType(product.propertyDetails?.propertyType ?? "APARTMENT"); setEditListingType(product.propertyDetails?.listingType ?? "SALE");
                 setEditBedrooms(product.propertyDetails?.bedrooms == null ? "" : String(product.propertyDetails.bedrooms)); setEditBathrooms(product.propertyDetails?.bathrooms == null ? "" : String(product.propertyDetails.bathrooms)); setEditFloorArea(product.propertyDetails?.floorArea ?? "");
                 setEditMedia(product.media);
