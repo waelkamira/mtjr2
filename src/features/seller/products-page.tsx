@@ -625,6 +625,7 @@ export default function SellerProductsPage() {
           city: editProductLocation.city ?? null, district: editProductLocation.district ?? null,
           localityId: editProductLocation.localityId ?? null,
           neighborhood: editProductLocation.neighborhood ?? null,
+          streetAddress: editProductLocation.streetAddress ?? null,
           latitude: editProductLocation.latitude ?? null,
           longitude: editProductLocation.longitude ?? null,
           contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
