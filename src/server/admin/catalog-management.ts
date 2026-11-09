@@ -320,7 +320,7 @@ export async function saveAdminBrand(input: unknown, brandId?: string, now = new
   const data = brandSchema.parse(input);
   const actor = await requirePermission({ permissionKey: "catalog:manage", now });
   if (data.logoUrl && !isSafeCatalogMediaUrl(data.logoUrl)) throw new Error("Brand logo URL is not allowed.");
-  if (data.websiteUrl && !/^https?:\\/\\//i.test(data.websiteUrl)) throw new Error("Brand website URL is not allowed.");
+  if (data.websiteUrl && !["http:", "https:"].includes(new URL(data.websiteUrl).protocol)) throw new Error("Brand website URL is not allowed.");
   const id = brandId ? z.string().trim().min(1).max(128).parse(brandId) : undefined;
 
   return prisma.$transaction(async (tx) => {
