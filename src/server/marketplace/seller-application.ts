@@ -281,6 +281,22 @@ export async function getSellerWorkspace(now = new Date()) {
     where: { ownerId: actor.userId },
     select: { id: true, status: true, legalName: true, displayName: true }
   });
+  const latestRejection = seller?.status === SellerStatus.REJECTED
+    ? await prisma.auditLog.findFirst({
+        where: {
+          resource: "seller",
+          resourceId: seller.id,
+          action: "seller.application.rejected",
+          actorType: AuditActorType.USER
+        },
+        orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+        select: { occurredAt: true, metadata: true }
+      })
+    : null;
+  const rejectionMetadata = latestRejection?.metadata && typeof latestRejection.metadata === "object" && !Array.isArray(latestRejection.metadata)
+    ? latestRejection.metadata as Prisma.JsonObject
+    : null;
+  const rejectionReason = typeof rejectionMetadata?.reason === "string" ? rejectionMetadata.reason : null;
   const stores = await prisma.store.findMany({
     where: {
       OR: [
@@ -306,7 +322,7 @@ export async function getSellerWorkspace(now = new Date()) {
     }
   });
   return {
-    seller,
+    seller: seller ? { ...seller, rejectionReason, reviewedAt: latestRejection?.occurredAt ?? null } : null,
     stores: stores.map(({ seller: storeSeller, ...store }) => ({
       ...store,
       storeNumber: store.storeNumber.toString(),
