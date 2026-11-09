@@ -291,3 +291,96 @@ export async function archiveAdminCategory(categoryId: string, reason: string, n
     return { categoryId: id, status: CatalogEntityStatus.ARCHIVED };
   });
 }
+
+
+const brandSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  slug: z.string().trim().min(2).max(180).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  description: z.string().trim().max(2000).nullable().optional(),
+  logoUrl: z.string().trim().url().max(2048).nullable().optional(),
+  websiteUrl: z.string().trim().url().max(2048).nullable().optional(),
+  status: z.nativeEnum(CatalogEntityStatus)
+}).strict();
+
+export async function listAdminBrands(now = new Date()) {
+  await requirePermission({ permissionKey: "catalog:read", now });
+  return prisma.brand.findMany({
+    orderBy: [{ status: "asc" }, { name: "asc" }, { id: "asc" }],
+    select: {
+      id: true, name: true, slug: true, description: true, logoUrl: true,
+      websiteUrl: true, status: true, updatedAt: true,
+      _count: { select: { products: true } }
+    }
+  }).then((items) => items.map(({ _count, ...item }) => ({
+    ...item, productCount: _count.products, updatedAt: item.updatedAt.toISOString()
+  })));
+}
+
+export async function saveAdminBrand(input: unknown, brandId?: string, now = new Date()) {
+  const data = brandSchema.parse(input);
+  const actor = await requirePermission({ permissionKey: "catalog:manage", now });
+  if (data.logoUrl && !isSafeCatalogMediaUrl(data.logoUrl)) throw new Error("Brand logo URL is not allowed.");
+  if (data.websiteUrl && !/^https?:\\/\\//i.test(data.websiteUrl)) throw new Error("Brand website URL is not allowed.");
+  const id = brandId ? z.string().trim().min(1).max(128).parse(brandId) : undefined;
+
+  return prisma.$transaction(async (tx) => {
+    const previous = id
+      ? await tx.brand.findUnique({ where: { id }, select: { id: true, status: true, slug: true } })
+      : null;
+    if (id && !previous) throw new Error("Brand was not found.");
+    const brand = id
+      ? await tx.brand.update({
+        where: { id },
+        data: {
+          name: data.name, slug: data.slug, description: data.description ?? null,
+          logoUrl: data.logoUrl ?? null, websiteUrl: data.websiteUrl ?? null, status: data.status
+        },
+        select: { id: true, status: true, slug: true }
+      })
+      : await tx.brand.create({
+        data: {
+          name: data.name, slug: data.slug, description: data.description ?? null,
+          logoUrl: data.logoUrl ?? null, websiteUrl: data.websiteUrl ?? null, status: data.status
+        },
+        select: { id: true, status: true, slug: true }
+      });
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId,
+        action: id ? "catalog.brand.updated" : "catalog.brand.created",
+        resource: "brand", resourceId: brand.id, occurredAt: now,
+        metadata: {
+          previousStatus: previous?.status ?? null, previousSlug: previous?.slug ?? null,
+          status: brand.status, slug: brand.slug
+        }
+      }
+    });
+    return brand;
+  });
+}
+
+export async function archiveAdminBrand(brandId: string, reason: string, now = new Date()) {
+  const id = z.string().trim().min(1).max(128).parse(brandId);
+  const note = z.string().trim().min(5).max(500).parse(reason);
+  const actor = await requirePermission({ permissionKey: "catalog:manage", now });
+  return prisma.$transaction(async (tx) => {
+    const brand = await tx.brand.findUnique({
+      where: { id }, select: { id: true, status: true, slug: true }
+    });
+    if (!brand) throw new Error("Brand was not found.");
+    if (brand.status === CatalogEntityStatus.ARCHIVED) throw new Error("Brand is already archived.");
+    const updated = await tx.brand.updateMany({
+      where: { id, status: brand.status },
+      data: { status: CatalogEntityStatus.ARCHIVED }
+    });
+    if (updated.count !== 1) throw new Error("The brand changed concurrently. Reload and retry.");
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId,
+        action: "catalog.brand.archived", resource: "brand", resourceId: id,
+        occurredAt: now, metadata: { slug: brand.slug, previousStatus: brand.status, reason: note }
+      }
+    });
+    return { brandId: id, status: CatalogEntityStatus.ARCHIVED };
+  });
+}
