@@ -149,4 +149,14 @@
 - Prisma: `PaymentProviderConfig`, `PaymentProviderEnvironment`, `PaymentProviderConfigStatus`; migration `20261110120000_payment_provider_control_center`.
 - Secret vault: AES-256-GCM using independent `PAYMENT_PROVIDER_ENCRYPTION_KEY`; secrets/ciphertext never leave server responses.
 - Authorization: `platform:manage` with MFA step-up plus dedicated `payment.providers.manage`; sensitive changes are audited.
-- Status: configuration CRUD, verification and administrative lifecycle are implemented. Runtime checkout selection still uses the legacy environment registry and must be refactored before the database status can control real checkout availability.
+- Status: configuration CRUD, verification, administrative lifecycle and database-driven checkout binding are implemented in source. Migration application and end-to-end sandbox/live verification remain pending.
+
+
+## ربط إعدادات المزود بمحرك الدفع — المرحلة الثانية
+
+- اختيار مزود الدفع الجديد يعتمد على سجل قاعدة البيانات النشط في بيئة TEST أو LIVE، مع التحقق من العملة والدولة. وجود سجل مُدار معطّل يمنع الرجوع الصامت إلى مفاتيح البيئة لإنشاء مدفوعات جديدة.
+- يرتبط كل Payment جديد بإعداد المزود ويحفظ نسخة مشفرة من بيانات الاعتماد وإصدار المفتاح المستخدم؛ تحديث بيانات المزود لا يغيّر نسخة المدفوعات السابقة.
+- إشعارات Stripe وPayPal تستخدم نسخة بيانات الاعتماد المحفوظة للدفع المعني. كما يستخدم مسار عودة PayPal النسخة نفسها عند تنفيذ capture. المدفوعات القديمة التي لا تملك نسخة محفوظة تستخدم مسار متغيرات البيئة القديم.
+- تعطيل المزود يمنع بدء محاولات جديدة، لكنه لا يلغي التحقق من إشعارات محاولات قائمة ذات نسخة محفوظة.
+- المتبقي: دعم تدوير مفتاح التشفير الرئيسي بأكثر من إصدار (المتاح حالياً الإصدار 1 فقط)، إنفاذ اختيار طريقة الدفع داخل كل مزود، تطبيق migrations على قاعدة بيانات المستخدم، ثم إجراء رحلة sandbox حقيقية والتحقق من الإشعارات دون تنفيذ أي عملية إنتاجية قبل موافقة صاحب الحساب.
+- لم تُشغّل الاختبارات أو build أو typecheck في هذه المرحلة التزاماً بتأجيلها.
