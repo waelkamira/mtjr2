@@ -439,8 +439,8 @@ export async function listAvailablePaymentProviders(input?: { currencyCode?: str
   const managedKeys = new Set(managed.map((item) => item.providerKey));
   const activeManaged = managed.filter((item) =>
     item.status === "ACTIVE" &&
-    (!input?.currencyCode || item.supportedCurrencies.length === 0 || item.supportedCurrencies.includes(input.currencyCode)) &&
-    (!input?.countryCode || item.supportedCountries.length === 0 || item.supportedCountries.includes(input.countryCode)) &&
+    (item.supportedCurrencies.length === 0 || Boolean(input?.currencyCode && item.supportedCurrencies.includes(input.currencyCode))) &&
+    (item.supportedCountries.length === 0 || Boolean(input?.countryCode && item.supportedCountries.includes(input.countryCode))) &&
     (item.enabledPaymentMethods.length === 0 || item.enabledPaymentMethods.includes(item.providerKey === "stripe" ? "card" : "paypal"))
   ).map(({ providerKey, displayName }) => ({ key: providerKey, displayName }));
 
