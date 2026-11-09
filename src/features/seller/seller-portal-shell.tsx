@@ -64,7 +64,12 @@ export default function SellerPortalShell({ children }: Readonly<{ children: Rea
 
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/90 bg-white/60 px-4 py-3 shadow-[0_7px_18px_rgba(82,79,105,.07),inset_0_1px_0_white] backdrop-blur-sm sm:px-5">
-            <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#9189aa]">{t("SELLER WORKSPACE", "مساحة عمل البائع")}</p><p className="mt-0.5 text-sm font-bold text-[#4e4b64]">{t("Manage your store from one place", "أدر متجرك من مكان واحد")}</p></div>
+            <div className="min-w-[150px]"><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#9189aa]">{t("SELLER WORKSPACE", "مساحة عمل البائع")}</p><p className="mt-0.5 text-sm font-bold text-[#4e4b64]">{t("Manage your store from one place", "أدر متجرك من مكان واحد")}</p></div>
+            <form action="/seller/products" method="GET" role="search" className="order-3 flex w-full min-w-0 flex-1 items-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#f4effa,#e2f1e9)] px-4 py-2 shadow-[inset_0_2px_5px_rgba(76,65,105,.08),0_1px_0_white] sm:order-none sm:max-w-[440px]">
+              <label htmlFor="seller-global-search" className="sr-only">{t("Search products", "ابحث عن المنتجات")}</label>
+              <input id="seller-global-search" name="search" maxLength={120} placeholder={t("Search products, SKU or barcode…", "ابحث عن منتج أو SKU أو باركود...")} className="min-w-0 flex-1 bg-transparent text-sm text-[#514a6d] outline-none placeholder:text-[#9189aa]" />
+              <button type="submit" className="rounded-full bg-[linear-gradient(135deg,#8174a8,#665b8c)] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_3px_8px_rgba(76,65,105,.14)]">{t("Search", "بحث")}</button>
+            </form>
             <Link href="/" className="rounded-full border border-white bg-white/75 px-4 py-2 text-xs font-bold text-[#6f6888] shadow-[0_3px_8px_rgba(70,65,91,.07)] transition hover:-translate-y-0.5">{t("View marketplace", "عرض السوق")} ↗</Link>
           </div>
           {children}
