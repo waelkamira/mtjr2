@@ -7,8 +7,9 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 
 const inviteSchema = z.object({
   storeId: z.string().trim().min(1),
-  userId: z.string().trim().min(1)
-});
+  userId: z.string().trim().min(1).max(128).optional(),
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()).optional()
+}).refine((value) => Boolean(value.userId) !== Boolean(value.email), { message: "Provide exactly one account ID or email address." });
 
 async function requireStoreOwner(tx: Prisma.TransactionClient, storeId: string, userId: string) {
   const store = await tx.store.findUnique({
@@ -28,7 +29,10 @@ export async function inviteStoreStaff(input: z.input<typeof inviteSchema>, now 
   const actor = await requireCurrentSession(now);
   return prisma.$transaction(async (tx) => {
     await requireStoreOwner(tx, data.storeId, actor.userId);
-    const target = await tx.user.findUnique({ where: { id: data.userId }, select: { id: true, status: true } });
+    const target = await tx.user.findUnique({
+      where: data.email ? { email: data.email } : { id: data.userId! },
+      select: { id: true, status: true }
+    });
     if (!target || target.status !== UserStatus.ACTIVE) throw new Error("Only active accounts can be invited.");
     const membership = await tx.sellerStaff.upsert({
       where: { storeId_userId: { storeId: data.storeId, userId: target.id } },
