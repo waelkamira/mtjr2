@@ -42,7 +42,14 @@ export async function getMySellerProfile(now = new Date()) {
   if (!seller || seller.status !== SellerStatus.ACTIVE) {
     throw new PermissionDeniedError("An active seller profile is required.");
   }
-  return seller;
+  return {
+    ...seller,
+    displayName: seller.displayName ?? "",
+    contactName: seller.contactName ?? "",
+    contactEmail: seller.contactEmail ?? "",
+    phoneNumber: seller.phoneNumber ?? "",
+    residence: seller.residence ?? ""
+  };
 }
 
 export async function updateMySellerProfile(input: unknown, now = new Date()) {
