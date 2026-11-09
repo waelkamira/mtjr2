@@ -25,14 +25,14 @@ export default function SellerTopbar() {
     : translate(locale, "Seller studio", "استوديو البائع");
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-[#e3dff0] bg-[#f0eef8]/95 px-4 py-3 shadow-[0_8px_24px_rgba(74,75,112,.08),inset_0_1px_0_rgba(255,255,255,.95)] backdrop-blur-xl sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
+    <header className="sticky top-0 z-20 flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-white/75 bg-[#dce7ec]/95 px-4 py-3 shadow-[0_8px_24px_rgba(74,75,112,.08),inset_0_1px_0_rgba(255,255,255,.95)] backdrop-blur-xl sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
       <div className="min-w-[150px]">
-        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#8b83aa]">MATJAR / SELLER STUDIO</p>
-        <p className="mt-1 text-base font-black text-[#34445a]">{section}</p>
+        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#658394]">MATJAR / SELLER STUDIO</p>
+        <p className="mt-1 text-base font-black text-[#344d60]">{section}</p>
       </div>
-      <form action="/seller/products" method="GET" role="search" className="order-3 flex w-full max-w-none flex-1 items-center gap-3 rounded-full border border-white/95 bg-[linear-gradient(145deg,#f5f2fb,#e1e1ef)] px-4 py-2.5 text-[#68728b] shadow-[inset_0_3px_8px_rgba(74,75,112,.10),0_1px_0_white] lg:order-none lg:mx-6 lg:max-w-[440px]">
+      <form action="/seller/products" method="GET" role="search" className="order-3 flex w-full max-w-none flex-1 items-center gap-3 rounded-full border border-white/95 bg-[linear-gradient(145deg,#eef4f6,#cbdce3)] px-4 py-2.5 text-[#5e7888] shadow-[inset_0_3px_8px_rgba(74,75,112,.10),0_1px_0_white] lg:order-none lg:mx-6 lg:max-w-[440px]">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="size-5 shrink-0"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>
-        <input name="search" aria-label={translate(locale, "Search products", "ابحث عن المنتجات")} placeholder={translate(locale, "Search products, SKU…", "ابحث عن المنتجات أو رمز SKU...")} className="min-w-0 flex-1 bg-transparent text-sm text-[#46516b] outline-none placeholder:text-[#9a9eb0]" />
+        <input name="search" aria-label={translate(locale, "Search products", "ابحث عن المنتجات")} placeholder={translate(locale, "Search products, SKU…", "ابحث عن المنتجات أو رمز SKU...")} className="min-w-0 flex-1 bg-transparent text-sm text-[#405a6d] outline-none placeholder:text-[#829aa7]" />
         <button type="submit" className="rounded-full bg-[linear-gradient(135deg,#d8d1f0,#bcb4e3)] px-3 py-1.5 text-[11px] font-bold text-[#454064] shadow-[0_4px_9px_rgba(93,83,139,.13),inset_0_1px_0_white]">{translate(locale, "Search", "بحث")}</button>
       </form>
       <div className="flex items-center gap-2 sm:gap-3">
