@@ -12,7 +12,7 @@ const publicReads = new Set([
   "markets/route.ts", "markets/[code]/route.ts", "search/route.ts", "search/suggestions/route.ts",
   "recommendations/route.ts", "payments/providers/route.ts", "stores/route.ts",
   "advertising/sponsored/route.ts", "categories/[categoryId]/attributes/route.ts",
-  "geography/[level]/route.ts"
+  "geography/[level]/route.ts", "geography/localities/[localityId]/route.ts"
 ]);
 
 const authorizationPatterns = [
