@@ -89,19 +89,32 @@ export default function SellerNavigation() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/seller/stores", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return null;
-        return await response.json() as { stores?: SidebarStore[] };
-      })
-      .then((data) => {
-        if (!active || !data?.stores?.length) return;
-        let preferredId = "";
-        try { preferredId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
-        setStore(data.stores.find((item) => item.id === preferredId) ?? data.stores[0]);
-      })
-      .catch(() => undefined);
-    return () => { active = false; };
+    const loadActiveStore = () => {
+      fetch("/api/seller/stores", { cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) return null;
+          return await response.json() as { stores?: SidebarStore[] };
+        })
+        .then((data) => {
+          if (!active) return;
+          const available = data?.stores ?? [];
+          let preferredId = "";
+          try { preferredId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
+          setStore(available.find((item) => item.id === preferredId) ?? available[0] ?? null);
+        })
+        .catch(() => undefined);
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "mtjr.activeStoreId") loadActiveStore();
+    };
+    loadActiveStore();
+    window.addEventListener("mtjr:active-store-changed", loadActiveStore);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      active = false;
+      window.removeEventListener("mtjr:active-store-changed", loadActiveStore);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   return (
