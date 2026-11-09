@@ -72,7 +72,7 @@ describe("seller inventory operations", () => {
 
   it("applies a stock adjustment once and records movement plus audit", async () => {
     mocks.inventoryFindUnique.mockResolvedValue({
-      id: "inventory-1", quantityOnHand: 10, quantityReserved: 2
+      id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 2
     });
     const result = await adjustInventory({
       warehouseId: "warehouse-1", variantId: "variant-1",
@@ -146,7 +146,7 @@ describe("seller inventory operations", () => {
         store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "owner-1" } }
       });
     mocks.inventoryFindUnique.mockResolvedValue({
-      id: "inventory-1", quantityOnHand: 10, quantityReserved: 4
+      id: "inventory-1", quantityOnHand: 10, quantityReserved: 4, quantityQuarantined: 2
     });
     await expect(shipStockTransfer("transfer-1")).rejects.toThrow("Insufficient available stock");
     expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
