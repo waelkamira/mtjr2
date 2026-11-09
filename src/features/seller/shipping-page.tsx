@@ -4,13 +4,22 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
-import { formatMinorUnits } from "@/lib/money";
+import { formatMinorUnits, toMinorUnits } from "@/lib/money";
 
 type Store = { id: string; name: string; markets: Array<{ market: { id: string; code: string; name: string; defaultCurrencyCode: string } }> };
-type Market = { id: string; code: string; name: string; defaultCurrency: { code: string }; currencies: Array<{ currency: { code: string; name: string } }> };
+type Market = { id: string; code: string; name: string; defaultCurrency: { code: string }; currencies: Array<{ currency: { code: string; name: string; minorUnit: number } }> };
 type Rate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; currency: { minorUnit: number }; name: string; description: string | null; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean; priority: number };
-type Draft = { marketId: string; currencyCode: string; name: string; description: string; amountMinor: string; destinationRegion: string; minDeliveryDays: string; maxDeliveryDays: string; priority: string; isActive: boolean };
-const emptyDraft: Draft = { marketId: "", currencyCode: "", name: "", description: "", amountMinor: "", destinationRegion: "", minDeliveryDays: "", maxDeliveryDays: "", priority: "0", isActive: true };
+type Draft = { marketId: string; currencyCode: string; name: string; description: string; amount: string; destinationRegion: string; minDeliveryDays: string; maxDeliveryDays: string; priority: string; isActive: boolean };
+const emptyDraft: Draft = { marketId: "", currencyCode: "", name: "", description: "", amount: "", destinationRegion: "", minDeliveryDays: "", maxDeliveryDays: "", priority: "0", isActive: true };
+
+function minorUnitsToInput(amountMinor: string, minorUnit: number): string {
+  const amount = BigInt(amountMinor);
+  const scale = BigInt(10) ** BigInt(minorUnit);
+  const whole = amount / scale;
+  if (minorUnit === 0) return whole.toString();
+  const fraction = (amount % scale).toString().padStart(minorUnit, "0");
+  return whole.toString() + "." + fraction;
+}
 
 async function readJson<T>(response: Response): Promise<T> {
   const data = await response.json();
@@ -88,7 +97,7 @@ export default function SellerShippingPage() {
     setEditingId(rate.id);
     setDraft({
       marketId: rate.marketId, currencyCode: rate.currencyCode, name: rate.name,
-      description: rate.description ?? "", amountMinor: rate.amountMinor,
+      description: rate.description ?? "", amount: minorUnitsToInput(rate.amountMinor, rate.currency.minorUnit),
       destinationRegion: rate.destinationRegion ?? "",
       minDeliveryDays: rate.minDeliveryDays?.toString() ?? "",
       maxDeliveryDays: rate.maxDeliveryDays?.toString() ?? "",
@@ -117,10 +126,15 @@ export default function SellerShippingPage() {
     setSaving(true);
     setError("");
     try {
+      const selectedCurrency = enabledMarkets
+        .find((market) => market.id === draft.marketId)?.currencies
+        .find((entry) => entry.currency.code === draft.currencyCode)?.currency;
+      if (!selectedCurrency) throw new Error(translate(locale, "Choose a currency enabled for this market.", "اختر عملة مفعّلة لهذا السوق."));
+      const amountMinor = toMinorUnits(draft.amount, selectedCurrency.minorUnit);
       const payload = {
         storeId, marketId: draft.marketId, currencyCode: draft.currencyCode,
         name: draft.name, description: draft.description || undefined,
-        amountMinor: draft.amountMinor,
+        amountMinor,
         destinationRegion: draft.destinationRegion || null,
         minDeliveryDays: draft.minDeliveryDays === "" ? null : Number(draft.minDeliveryDays),
         maxDeliveryDays: draft.maxDeliveryDays === "" ? null : Number(draft.maxDeliveryDays),
@@ -176,13 +190,13 @@ export default function SellerShippingPage() {
               <label className="block text-sm font-semibold">{translate(locale, "Currency", "العملة")}<select required value={draft.currencyCode} onChange={(event) => updateDraft("currencyCode", event.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3"><option value="">{translate(locale, "Select currency", "اختر العملة")}</option>{(enabledMarkets.find((market) => market.id === draft.marketId)?.currencies ?? []).map(({ currency }) => <option key={currency.code} value={currency.code}>{currency.name} ({currency.code})</option>)}</select><span className="mt-1 block text-xs font-normal text-[var(--muted)]">{translate(locale, "Choose any currency enabled for this market. Syria supports SYP as its base currency and USD as an additional currency.", "اختر أي عملة مفعّلة لهذا السوق. العملة الأساسية لسوريا هي الليرة السورية مع إتاحة الدولار كعملة إضافية.")}</span></label>
               <label className="block text-sm font-semibold">{translate(locale, "Service name", "اسم الخدمة")}<input required minLength={2} maxLength={120} value={draft.name} onChange={(e) => updateDraft("name", e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" placeholder={translate(locale, "Standard delivery", "التوصيل العادي")} /></label>
               <label className="block text-sm font-semibold">{translate(locale, "Description", "الوصف")}<textarea maxLength={500} value={draft.description} onChange={(e) => updateDraft("description", e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" rows={2} /></label>
-              <label className="block text-sm font-semibold">{translate(locale, "Price in minor currency units", "السعر بوحدات العملة الصغرى")}<input required inputMode="numeric" pattern="[0-9]+" value={draft.amountMinor} onChange={(e) => updateDraft("amountMinor", e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" placeholder="0" /></label>
+              <label className="block text-sm font-semibold">{translate(locale, "Delivery price", "سعر التوصيل")} ({draft.currencyCode || "—"})<input required inputMode="decimal" type="text" value={draft.amount} onChange={(e) => updateDraft("amount", e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" placeholder="0.00" /></label>
               <label className="block text-sm font-semibold">{translate(locale, "Destination region (optional)", "منطقة الوجهة (اختياري)")}<input value={draft.destinationRegion} onChange={(e) => updateDraft("destinationRegion", e.target.value)} maxLength={120} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" placeholder={translate(locale, "e.g. North Holland", "مثلاً: شمال هولندا")} /></label>
               <div className="grid grid-cols-2 gap-3"><label className="text-sm font-semibold">{translate(locale, "Minimum days", "أقل مدة بالأيام")}<input type="number" min="0" max="365" value={draft.minDeliveryDays} onChange={(e) => updateDraft("minDeliveryDays", e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" /></label><label className="text-sm font-semibold">{translate(locale, "Maximum days", "أقصى مدة بالأيام")}<input type="number" min="0" max="365" value={draft.maxDeliveryDays} onChange={(e) => updateDraft("maxDeliveryDays", e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" /></label></div>
               <label className="block text-sm font-semibold">{translate(locale, "Priority (lower appears first)", "الأولوية (الأقل يظهر أولاً)")}<input type="number" min="0" max="10000" value={draft.priority} onChange={(e) => updateDraft("priority", e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3" /></label>
               <label className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3 text-sm font-semibold"><input type="checkbox" checked={draft.isActive} onChange={(e) => updateDraft("isActive", e.target.checked)} className="h-4 w-4 accent-[var(--color-lavender-700)]" />{translate(locale, "Offer this service at checkout", "إتاحة خدمة الشحن عند الدفع")}</label>
               <div className="flex flex-wrap gap-2"><button disabled={saving || !storeId || !enabledMarkets.length} type="submit" className="rounded-xl bg-[var(--color-lavender-700)] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{saving ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save shipping service", "حفظ خدمة الشحن")}</button>{editingId && <button type="button" onClick={resetForm} className="rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-bold">{translate(locale, "Cancel", "إلغاء")}</button>}</div>
-              <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Prices are entered in the currency's minor units (for example, cents). Only active services matching the buyer's market and delivery region are offered at checkout.", "تُدخل الأسعار بوحدات العملة الصغرى (مثل السنت). تظهر عند الدفع الخدمات النشطة المطابقة لسوق المشتري ومنطقة التوصيل.")}</p>
+              <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Enter the normal customer-facing price. It is converted safely to the selected currency minor units before saving.", "أدخل السعر المعتاد الذي سيظهر للعملاء، وسيُحوّل بدقة إلى الوحدات الصغرى للعملة المختارة قبل الحفظ.")}</p>
             </form>
           </section>
         </div>
