@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
@@ -18,7 +19,7 @@ const navigation = [
   { href: "/seller/staff", en: "Team", ar: "الفريق", mark: "10" }
 ] as const;
 
-export default function SellerPortalShell({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function SellerPortalShell({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
   const { locale } = useLocale();
   const t = (en: string, ar: string) => translate(locale, en, ar);
