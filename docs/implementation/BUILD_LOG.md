@@ -4205,3 +4205,13 @@ The platform account policy is now explicit: email verification is not required 
 - Kept API contracts, authorization, business logic, and stored data unchanged.
 - No tests, builds, or browser checks were run, consistent with the instruction to defer testing until implementation is complete.
 - Added a shared `translateStatus` helper for common order, payment, return, refund, and shipment states, and applied it to the affected admin detail/finance screens so enum values do not remain in English when Arabic is selected.
+
+
+## 2026-11-10 — Repair seller product geography selectors
+- Changed geography API reads in `SyriaLocationPicker` to bypass stale browser cache entries and validate the returned JSON shape before using it.
+- Added complete pagination for district, subdistrict and locality choices instead of silently showing only the first 100 localities.
+- Removed the unnecessary locality preload when a governorate is selected; district choices now load first, followed by the next level after the seller selects a district.
+- Added explicit empty-state messages for missing governorates, districts, subdistricts and localities, plus a clear instruction when the database has not been populated with the pinned OpenSyria dataset.
+- Fixed loading state cleanup when a seller clears a hierarchy selection, and corrected Arabic error-message detection.
+- Added `npm run db:seed:all` to run the existing seed and then import the pinned Syrian geography dataset; documented that geography import is an explicit database step and must run against the same `DATABASE_URL` used by the app.
+- This is a source-level repair only. The GitHub integration cannot inspect or seed the user's live PostgreSQL database. No tests, build, typecheck, or browser checks were run, consistent with the deferred validation instruction.
