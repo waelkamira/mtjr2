@@ -3029,3 +3029,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No API, permission, schema or migration behavior changed.
 - Commit: `f1e511b1a4a9d105df4ee92215afc2400aba6ec6`.
 - Verification: the updated source was committed directly to `main`. TypeScript, lint, browser and PostgreSQL checks remain unverified in this GitHub-only session.
+
+
+## 2026-11-09 — Canonical admin entry route
+
+**Implemented**
+- Added `/admin` at `src/app/admin/page.tsx`, redirecting to `/admin/dashboard` so the administration area has a predictable root entry.
+- The route remains inside the existing admin layout, preserving its session, permission and MFA checks.
+- No schema or migration change; this is navigation only.
+
+**Verification**
+- Confirmed the route was absent in the current route registry and added the route on `main`.
+- Source-level inspection only. Next.js build and browser navigation have not been run in this GitHub-only session; do not mark the route verified yet.
