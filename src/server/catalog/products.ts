@@ -413,7 +413,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (!(await canManageStoreCatalog(actor.userId, current.store.seller.ownerId, current.storeId, now))) {
-      throw new Error("You do not have catalog access to this store.");
+      throw new PermissionDeniedError("You do not have catalog access to this store.");
     }
     if (data.variants !== undefined) {
       const currentVariantIds = new Set(current.variants.map((variant) => variant.id));
