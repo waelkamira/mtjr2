@@ -114,6 +114,9 @@ export default function SellerWorkspacePage() {
   const [sellerLongitude, setSellerLongitude] = useState<number | null>(null);
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
+  const [editingStoreProfile, setEditingStoreProfile] = useState(false);
+  const [editingStoreName, setEditingStoreName] = useState("");
+  const [editingStoreSlug, setEditingStoreSlug] = useState("");
   const [warehouseName, setWarehouseName] = useState("");
   const [warehouseCode, setWarehouseCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -301,6 +304,24 @@ export default function SellerWorkspacePage() {
         return;
       }
       setError(cause instanceof Error ? cause.message : translate(locale, "The request failed.", "تعذر إكمال الطلب."));
+    } finally { setBusy(false); }
+  }
+
+  async function saveStoreProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedStore) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      await readJson(await fetch(`/api/seller/stores/${encodeURIComponent(selectedStore.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editingStoreName, slug: editingStoreSlug })
+      }));
+      setEditingStoreProfile(false);
+      setMessage(translate(locale, "Store profile updated and recorded in the audit log.", "تم تحديث ملف المتجر وتسجيل التغيير في سجل التدقيق."));
+      await reload();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : translate(locale, "Unable to update store profile.", "تعذر تحديث ملف المتجر."));
     } finally { setBusy(false); }
   }
 
@@ -681,7 +702,13 @@ export default function SellerWorkspacePage() {
                   <div className="mt-4"><Link href="/seller/messages" className="inline-flex rounded-2xl bg-[linear-gradient(135deg,#68b4b5,#3d8993)] px-4 py-2 text-sm font-bold text-white shadow-[0_6px_14px_rgba(39,104,112,.18),inset_0_1px_0_rgba(255,255,255,.3)]">{translate(locale, "Open store inbox", "فتح صندوق وارد المتجر")}</Link></div>
                   <div className="mt-4 flex flex-wrap gap-2">{workspace.stores.map((store) => <button key={store.id} onClick={() => { setSelectedStoreId(store.id); localStorage.setItem("mtjr.activeStoreId", store.id); }} className={`rounded-xl border px-4 py-2 text-sm ${selectedStoreId === store.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-900)] text-white" : "border-[var(--border)]"}`}>{store.name}</button>)}</div>
                   {selectedStore && <div className="mt-6 border-t border-[var(--border)] pt-5">
-                    <div className="flex flex-wrap items-center justify-between gap-2"><div><div><h3 className="font-semibold">{selectedStore.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">STR-{selectedStore.storeNumber.padStart(8, "0")} · /{selectedStore.slug} · {selectedStore.status}</p></div><div className="mt-2 flex flex-wrap gap-2"><Link href="/seller/products" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Manage products", "إدارة المنتجات")}</Link><Link href="/seller/orders" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Seller orders", "طلبات البائع")}</Link><Link href="/seller/inventory" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Inventory operations", "إدارة المخزون")}</Link><Link href="/seller/staff" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Team & access", "الفريق والصلاحيات")}</Link></div></div><span className="text-xs text-[var(--muted)]">{selectedStore.markets.length} {translate(locale, "active markets", "أسواق نشطة")}</span></div>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><div><div><h3 className="font-semibold">{selectedStore.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">STR-{selectedStore.storeNumber.padStart(8, "0")} · /{selectedStore.slug} · {selectedStore.status}</p></div><div className="mt-2 flex flex-wrap gap-2"><Link href="/seller/products" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Manage products", "إدارة المنتجات")}</Link><Link href="/seller/orders" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Seller orders", "طلبات البائع")}</Link><Link href="/seller/inventory" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Inventory operations", "إدارة المخزون")}</Link><Link href="/seller/staff" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Team & access", "الفريق والصلاحيات")}</Link></div></div><div className="flex items-center gap-3"><span className="text-xs text-[var(--muted)]">{selectedStore.markets.length} {translate(locale, "active markets", "أسواق نشطة")}</span>{selectedStore.isOwner && <button type="button" onClick={() => { setEditingStoreName(selectedStore.name); setEditingStoreSlug(selectedStore.slug); setEditingStoreProfile((value) => !value); }} className="rounded-xl border border-white bg-[linear-gradient(145deg,#e7f1f4,#cbdde4)] px-3 py-2 text-xs font-bold text-[#35566b] shadow-[0_4px_10px_rgba(35,62,81,.1),inset_0_1px_0_white]">{translate(locale, editingStoreProfile ? "Close profile editor" : "Edit store profile", editingStoreProfile ? "إغلاق تعديل المتجر" : "تعديل ملف المتجر")}</button>}</div></div>
+                    {editingStoreProfile && selectedStore.isOwner && <form onSubmit={saveStoreProfile} className="mt-5 grid gap-4 rounded-[1.5rem] border border-dashed border-[#9bbbc7] bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-4 shadow-[inset_0_2px_7px_rgba(43,69,88,.08)] sm:grid-cols-2">
+                      <div className="sm:col-span-2"><h4 className="font-extrabold text-[#2d4a60]">{translate(locale, "Store profile", "ملف المتجر")}</h4><p className="mt-1 text-xs leading-5 text-[#718899]">{translate(locale, "Update your public store name and URL. Changing the URL may affect links customers have saved.", "حدّث اسم متجرك العام ورابطه. قد يؤثر تغيير الرابط في الروابط التي حفظها العملاء.")}</p></div>
+                      <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Store name", "اسم المتجر")}<input required minLength={2} maxLength={120} value={editingStoreName} onChange={(event) => setEditingStoreName(event.target.value)} className="rounded-xl border border-white bg-[linear-gradient(145deg,#f7fbfc,#e8f0f3)] px-3 py-2.5 text-sm font-normal text-[#263d50] shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /></label>
+                      <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Store URL slug", "معرّف رابط المتجر")}<input required minLength={3} maxLength={160} pattern="[a-z0-9]+(-[a-z0-9]+)*" value={editingStoreSlug} onChange={(event) => setEditingStoreSlug(event.target.value)} className="rounded-xl border border-white bg-[linear-gradient(145deg,#f7fbfc,#e8f0f3)] px-3 py-2.5 text-sm font-normal text-[#263d50] shadow-[inset_0_2px_5px_rgba(43,69,88,.08)]" /><span className="text-[10px] font-normal text-[#718899]">/stores/{editingStoreSlug || selectedStore.slug}</span></label>
+                      <div className="flex flex-wrap gap-2 sm:col-span-2"><button disabled={busy || !editingStoreName.trim() || !editingStoreSlug.trim()} className="rounded-xl bg-[linear-gradient(135deg,#68b4b5,#3d8993)] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_6px_14px_rgba(39,104,112,.18)] disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save store profile", "حفظ ملف المتجر")}</button><button type="button" disabled={busy} onClick={() => setEditingStoreProfile(false)} className="rounded-xl border border-white bg-white/70 px-4 py-2.5 text-xs font-semibold text-[#35566b]">{translate(locale, "Cancel", "إلغاء")}</button></div>
+                    </form>}
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       {selectedStore.warehouses.map((warehouse) => <div key={warehouse.id} className="rounded-xl bg-[var(--color-ivory-100)] p-4"><p className="font-medium">{warehouse.name}</p><p className="mt-1 text-xs text-[var(--muted)]">{warehouse.code} · {warehouse._count.inventories} {translate(locale, "inventory records", "سجل مخزون")}</p></div>)}
                     </div>
