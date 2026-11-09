@@ -13,6 +13,11 @@ type GeoItem = {
   kind?: string | null;
 };
 type GeoResponse = { items: GeoItem[]; pagination: { total: number; totalPages: number } };
+
+function locationError(cause: unknown, locale: Locale, english: string, arabic: string) {
+  const message = cause instanceof Error ? cause.message : "";
+  return /[\\u0600-\\u06FF]/.test(message) ? message : translate(locale, english, arabic);
+}
 type NeighborhoodSuggestion = {
   id: string; nameAr: string; cityGroupNameAr: string; latitude: number; longitude: number;
   verificationStatus: "CANDIDATE" | "VERIFIED"; source: string; distanceKm: number;
@@ -72,7 +77,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   useEffect(() => {
     let active = true;
     loadLevel("governorates").then((result) => { if (active) setGovernorates(result.items); })
-      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load governorates."); })
+      .catch((cause) => { if (active) setError(locationError(cause, locale, "Unable to load governorates.", "تعذّر تحميل المحافظات.")); })
       .finally(() => { if (active) setBusy(false); });
     return () => { active = false; };
   }, []);
@@ -122,7 +127,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
             : null;
         if (coordinates) setFocus({ ...coordinates, zoom: 15 });
       } catch (cause) {
-        if (active) setError(cause instanceof Error ? cause.message : "Unable to load the selected locality.");
+        if (active) setError(locationError(cause, locale, "Unable to load the selected locality.", "تعذّر تحميل التجمع السكاني المحدد."));
       } finally {
         if (active) setBusy(false);
       }
@@ -153,7 +158,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         return result as GeoResponse & { items: NeighborhoodSuggestion[] };
       })
       .then((result) => { if (active) setNeighborhoodSuggestions(result.items); })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load neighbourhood suggestions."); });
+      .catch((cause: unknown) => { if (active) setError(locationError(cause, locale, "Unable to load neighbourhood suggestions.", "تعذّر تحميل اقتراحات الأحياء القريبة.")); });
     return () => { active = false; };
   }, [governorateId, focus, value.latitude, value.longitude]);
 
@@ -175,7 +180,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         setDistricts(districtResult.items);
         setLocalities(localityResult.items);
       }
-    } catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load districts."); }
+    } catch (cause) { if (request === selectionRequest.current) setError(locationError(cause, locale, "Unable to load districts.", "تعذّر تحميل المناطق.")); }
     finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
@@ -197,7 +202,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         setSubdistricts(subdistrictResult.items);
         setLocalities(localityResult.items);
       }
-    } catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load subdistricts."); }
+    } catch (cause) { if (request === selectionRequest.current) setError(locationError(cause, locale, "Unable to load subdistricts.", "تعذّر تحميل النواحي.")); }
     finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
@@ -212,7 +217,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     if (!id) return;
     setBusy(true);
     try { const result = await loadLevel("localities", { districtId, subdistrictId: id, limit: "100" }); if (request === selectionRequest.current) setLocalities(result.items); }
-    catch (cause) { if (request === selectionRequest.current) setError(cause instanceof Error ? cause.message : "Unable to load localities."); }
+    catch (cause) { if (request === selectionRequest.current) setError(locationError(cause, locale, "Unable to load localities.", "تعذّر تحميل التجمعات السكانية.")); }
     finally { if (request === selectionRequest.current) setBusy(false); }
   }
 
@@ -220,7 +225,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     if (!districtId || !localityQuery.trim()) return;
     setBusy(true); setError("");
     try { setLocalities((await loadLevel("localities", { districtId, ...(subdistrictId ? { subdistrictId } : {}), q: localityQuery.trim(), limit: "100" })).items); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to search localities."); }
+    catch (cause) { setError(locationError(cause, locale, "Unable to search localities.", "تعذّر البحث عن التجمعات السكانية.")); }
     finally { setBusy(false); }
   }
 
