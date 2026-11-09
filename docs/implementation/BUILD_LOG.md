@@ -3757,3 +3757,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Not verified**
 - No tests, build, typecheck, migration execution, or browser checks were run. This remains a visual consistency pass; seller page behavior and remaining dashboard details are still to be completed before the seller workspace is declared finished.
+
+## 2026-11-09 — Reconcile seller-control branch updates onto main
+
+- Reviewed `feat/super-admin-control-panel` against current `main`; the branch is substantially divergent and its old PR #69 was closed as superseded by merged PR #76. The branch's older seller product editor, store workspace, structured listing, shipping, and chart work must not be copied wholesale over newer main implementations.
+- Confirmed current `main` already contains the current seller media endpoint, provider fallback (Imgur, ImageKit, Cloudinary), persisted store media assets, temporary-delete tokens, provider deletion, product editor, and store-scoped access checks. The branch's legacy `src/server/storage/product-images.ts` and older upload route were therefore not transplanted.
+- Recovered the still-useful post-PR update: Turnstile now surfaces provider error codes, explains common retry causes in Arabic/English, and offers an in-place retry.
+- Recovered typed seller-application conflict handling: active/suspended duplicate applications now return HTTP 409 rather than being reported as a generic client error. Existing email verification and MFA-specific response codes/action URLs on main were preserved.
+- The branch's additional demo-seed expansion to 20 stores and its route test written against the older API contract were not copied: the former changes the local demo dataset materially, and the latter does not match the current main request schema and MFA response contract. No test, build, typecheck, or browser run was performed, per the current build-first instruction.
