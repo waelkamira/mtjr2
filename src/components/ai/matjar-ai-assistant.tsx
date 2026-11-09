@@ -41,16 +41,12 @@ type SupportTicket = {
 };
 type Message = { role: "user" | "assistant"; content: string; products?: Product[]; orders?: Order[]; returns?: ReturnRequest[]; supportTickets?: SupportTicket[] };
 
-const suggestions = [
-  "ابحث عن منتجات إلكترونية",
-  "ما المنتجات المتوفرة في المتجر؟",
-  "كيف أتواصل مع خدمة العملاء؟",
-  "اعرض تذاكر الدعم الخاصة بي"
-];
-
 export default function MatjarAIAssistant() {
   const { locale } = useLocale();
   const t = (english: string, arabic: string) => translate(locale, english, arabic);
+  const suggestions = locale === "ar"
+    ? ["ابحث عن منتجات إلكترونية", "ما المنتجات المتوفرة في المتجر؟", "كيف أتواصل مع خدمة العملاء؟", "اعرض تذاكر الدعم الخاصة بي"]
+    : ["Find electronic products", "What products are available?", "How can I contact customer support?", "Show my support tickets"];
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -104,7 +100,7 @@ export default function MatjarAIAssistant() {
                 </div>
                 <Link href="/account/support" className="block text-center text-xs font-semibold text-[var(--color-lavender-800)] underline">{t("Contact customer support", t("Contact customer support", "التواصل مع خدمة العملاء"))}</Link>
                 {suggestions.map((suggestion) => (
-                  <button key={suggestion} type="button" onClick={() => void send(suggestion)} className="block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-right text-xs text-[var(--color-lavender-800)] hover:bg-[var(--color-lavender-50)]">
+                  <button key={suggestion} type="button" onClick={() => void send(suggestion)} className="block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 {locale === "ar" ? "text-right" : "text-left"} text-xs text-[var(--color-lavender-800)] hover:bg-[var(--color-lavender-50)]">
                     {suggestion}
                   </button>
                 ))}
@@ -118,7 +114,7 @@ export default function MatjarAIAssistant() {
                     <div className="flex items-center justify-between gap-2 font-bold">
                       <span>{request.returnNumber}</span><span>{request.status}</span>
                     </div>
-                    <p className="mt-1">طلب الشراء: {request.orderNumber}</p>
+                    <p className="mt-1">{t("Order:", "الطلب:")} {request.orderNumber}</p>
                     <p className="mt-1">{request.items.map((item) => item.productName + " × " + item.quantity).join("، ")}</p>
                     <p className="mt-1 text-[var(--muted)]">{new Date(request.requestedAt).toLocaleDateString()}</p>
                   </div>
@@ -129,7 +125,7 @@ export default function MatjarAIAssistant() {
                       <span>{ticket.ticketNumber}</span><span>{ticket.status}</span>
                     </div>
                     <p className="mt-1 font-semibold">{ticket.subject}</p>
-                    <p className="mt-1 text-[var(--muted)]">{ticket.messageCount} رسالة · {new Date(ticket.updatedAt).toLocaleDateString()}</p>
+                    <p className="mt-1 text-[var(--muted)]">{ticket.messageCount} {t("messages", "رسالة")} · {new Date(ticket.updatedAt).toLocaleDateString()}</p>
                     <span className="mt-2 inline-block font-semibold underline">{t("Open ticket", t("Open ticket", "فتح التذكرة"))}</span>
                   </Link>
                 ))}
