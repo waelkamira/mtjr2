@@ -159,3 +159,6 @@ The vault supports multiple simultaneous key versions. Keep the old version in t
 - The payment snapshot columns have a database-level all-or-none CHECK constraint to prevent partial credential snapshots. The rotation operation fails closed on malformed snapshots and processes bounded, resumable batches (up to 100 rows per table per request).
 - The compiled adapters currently enforce only their supported payment methods: Stripe `card`, PayPal `paypal`. Unsupported method names are rejected when configuration is saved.
 - Checkout discovery is market-aware: restricted providers are hidden when the current order country/currency is missing or unsupported, and the server independently enforces the same rules when creating a payment.
+
+
+- Webhook delivery handling distinguishes permanent malformed/invalid-signature payloads (4xx) from provider API, encryption-key and database outages (503/5xx with retry guidance). This prevents a temporary PayPal verification outage or missing historical key from being acknowledged as a permanently invalid webhook.
