@@ -164,6 +164,112 @@ export async function getPaymentProviderRuntimeSnapshot(paymentId: string) {
   };
 }
 
+/**
+ * Re-encrypts every stored provider secret with the configured active key.
+ * Keep every old key in PAYMENT_PROVIDER_ENCRYPTION_KEYS until this finishes
+ * successfully and the resulting counts are confirmed to be zero.
+ */
+export async function rotateStoredPaymentProviderCredentials() {
+  const actor = await requireProviderManagement();
+  const activeVersion = env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION;
+  // Fail before touching data if the active key is absent or malformed.
+  encryptionKeyRing().get(activeVersion) ?? (() => { throw new Error("The active provider encryption key is unavailable."); })();
+
+  let configCount = 0;
+  let paymentCount = 0;
+  const sourceVersions = new Set<number>();
+
+  while (true) {
+    const batch = await prisma.paymentProviderConfig.findMany({
+      where: { encryptedCredentials: { not: null }, credentialsKeyVersion: { not: activeVersion } },
+      orderBy: { id: "asc" },
+      take: 100,
+      select: { id: true, encryptedCredentials: true, credentialsKeyVersion: true }
+    });
+    if (!batch.length) break;
+    let progressed = 0;
+    for (const row of batch) {
+      if (!row.encryptedCredentials) continue;
+      sourceVersions.add(row.credentialsKeyVersion);
+      const encrypted = encryptCredentials(decryptCredentials(row.encryptedCredentials, row.credentialsKeyVersion));
+      const changed = await prisma.paymentProviderConfig.updateMany({
+        where: { id: row.id, credentialsKeyVersion: row.credentialsKeyVersion },
+        data: { encryptedCredentials: encrypted.encrypted, credentialsKeyVersion: encrypted.keyVersion }
+      });
+      configCount += changed.count;
+      progressed += changed.count;
+    }
+    if (!progressed) break;
+  }
+
+  while (true) {
+    const batch = await prisma.payment.findMany({
+      where: {
+        encryptedProviderCredentials: { not: null },
+        providerCredentialsKeyVersion: { not: null, notIn: [activeVersion] }
+      },
+      orderBy: { id: "asc" },
+      take: 100,
+      select: { id: true, encryptedProviderCredentials: true, providerCredentialsKeyVersion: true }
+    });
+    if (!batch.length) break;
+    let progressed = 0;
+    for (const row of batch) {
+      if (!row.encryptedProviderCredentials || row.providerCredentialsKeyVersion === null) continue;
+      sourceVersions.add(row.providerCredentialsKeyVersion);
+      const encrypted = encryptCredentials(decryptCredentials(row.encryptedProviderCredentials, row.providerCredentialsKeyVersion));
+      const changed = await prisma.payment.updateMany({
+        where: { id: row.id, providerCredentialsKeyVersion: row.providerCredentialsKeyVersion },
+        data: {
+          encryptedProviderCredentials: encrypted.encrypted,
+          providerCredentialsKeyVersion: encrypted.keyVersion
+        }
+      });
+      paymentCount += changed.count;
+      progressed += changed.count;
+    }
+    if (!progressed) break;
+  }
+
+  const [remainingConfigs, remainingPayments] = await Promise.all([
+    prisma.paymentProviderConfig.count({
+      where: { encryptedCredentials: { not: null }, credentialsKeyVersion: { not: activeVersion } }
+    }),
+    prisma.payment.count({
+      where: { encryptedProviderCredentials: { not: null }, providerCredentialsKeyVersion: { not: activeVersion } }
+    })
+  ]);
+
+  await prisma.auditLog.create({
+    data: {
+      actorType: AuditActorType.USER,
+      actorId: actor.userId,
+      action: "payment.provider.credentials_reencrypted",
+      resource: "payment_provider_credential_vault",
+      resourceId: "GLOBAL",
+      scopeType: "GLOBAL",
+      scopeId: "GLOBAL",
+      metadata: {
+        activeKeyVersion: activeVersion,
+        sourceKeyVersions: [...sourceVersions].sort((a, b) => a - b),
+        providerConfigsReencrypted: configCount,
+        paymentSnapshotsReencrypted: paymentCount,
+        remainingProviderConfigs: remainingConfigs,
+        remainingPaymentSnapshots: remainingPayments
+      }
+    }
+  });
+
+  return {
+    activeKeyVersion: activeVersion,
+    providerConfigsReencrypted: configCount,
+    paymentSnapshotsReencrypted: paymentCount,
+    remainingProviderConfigs: remainingConfigs,
+    remainingPaymentSnapshots: remainingPayments,
+    complete: remainingConfigs === 0 && remainingPayments === 0
+  };
+}
+
 function validateCredentials(
   providerKey: "stripe" | "paypal",
   credentials: ProviderCredentials,
