@@ -53,10 +53,9 @@ jobs:
         env:
           SEED_DEMO_CATALOG: "true"
           ALLOW_DEMO_CATALOG_SEED: "true"
-      - name: Import pinned Syrian geography and Akaar catalog fields
+      - name: Import pinned OpenSyria geography and Akaar catalog fields
         run: |
           npm run db:sync-syria-geography
-          npm run db:sync-syria-neighborhoods
           npm run db:seed-akaar-attributes
       - run: node scripts/e2e-bootstrap.cjs
       - run: npm install --no-save --package-lock=false @playwright/test
