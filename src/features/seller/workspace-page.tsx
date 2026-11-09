@@ -126,6 +126,8 @@ export default function SellerWorkspacePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => { setEditingStoreProfile(false); }, [selectedStoreId]);
+
   const reload = useCallback(async () => {
     const data = await readJson<Workspace>(await fetch("/api/seller/stores", { cache: "no-store" }));
     setWorkspace(data);
