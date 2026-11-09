@@ -4179,3 +4179,12 @@ The platform account policy is now explicit: email verification is not required 
 - Ported the branch's shared global surface, control, hover, selection, and form styling into `src/app/globals.css`, while retaining the dedicated seller-dashboard reference skin and seller map styling from the current `main` implementation.
 - Added a role-gated Control panel link to the desktop header and mobile navigation. Admin accounts route to `/admin/dashboard`; Super Admin accounts route to `/admin/control-panel`. Ordinary customers and sellers do not receive the link.
 - No tests, build, typecheck, or browser validation were run, consistent with the current instruction to finish implementation before testing.
+
+## 2026-11-10 — Reconcile OpenSyria geography and automatic map zoom
+
+- Reviewed the geography implementation on `feat/super-admin-control-panel`: pinned OpenSyria `v0.1.5` data, hierarchical governorate/district/subdistrict/locality selection, and Leaflet animated map focus.
+- Confirmed `main` already contains the same capability using the canonical PostgreSQL-backed geography tables and the pinned importer `scripts/sync-syria-geography.mjs`, rather than the branch's duplicate bundled JSON dataset and parallel `/api/geography/syria` endpoint.
+- Confirmed the seller product create and draft-edit forms both render `SyriaLocationPicker`; selected locality IDs, neighbourhood fields, city/district labels and coordinates are passed into product create/update payloads.
+- Confirmed map focus animates at each hierarchy level: governorate (zoom 7), district (10), subdistrict (12), locality (15), and selected nearby neighbourhood suggestion (16). Manual map pin placement remains available.
+- Retained the existing `main` implementation instead of copying the branch's duplicate route/data/map component, preserving its provenance validation, DB-backed pagination, existing neighborhood-candidate safeguards, and product edit hydration.
+- No tests, build, typecheck, or browser validation were run; those remain deferred as requested.
