@@ -14,7 +14,7 @@ import {
   PieChart,
 } from "@/components/data-charts";
 
-type Market = { id: string; code: string; name: string; defaultCurrency: { code: string; minorUnit: number; symbol: string | null } };
+type Market = { id: string; code: string; name: string; defaultCurrency: { code: string; minorUnit: number; symbol: string | null }; currencies: Array<{ currency: { code: string; name: string; minorUnit: number } }> };
 type Store = {
   id: string; storeNumber: string; name: string; slug: string; status: string; isOwner: boolean;
   shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null;
@@ -90,6 +90,7 @@ export default function SellerWorkspacePage() {
   const [selectedSalesCurrency, setSelectedSalesCurrency] = useState("");
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingMarketId, setShippingMarketId] = useState("");
+  const [shippingCurrencyCode, setShippingCurrencyCode] = useState("");
   const [shippingName, setShippingName] = useState("");
   const [shippingDescription, setShippingDescription] = useState("");
   const [shippingAmount, setShippingAmount] = useState("0");
@@ -817,9 +818,9 @@ export default function SellerWorkspacePage() {
                             method: editingShippingRateId ? "PATCH" : "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                              storeId: selectedStore.id, marketId: market.market.id, currencyCode: market.market.defaultCurrencyCode,
+                              storeId: selectedStore.id, marketId: market.market.id, currencyCode: shippingCurrencyCode || market.market.defaultCurrencyCode,
                               name: shippingName, description: shippingDescription || null,
-                              amountMinor: toMinorUnits(shippingAmount, markets.find((item) => item.id === market.market.id)?.defaultCurrency.minorUnit ?? 2),
+                              amountMinor: toMinorUnits(shippingAmount, markets.find((item) => item.id === market.market.id)?.currencies.find((entry) => entry.currency.code === (shippingCurrencyCode || market.market.defaultCurrencyCode))?.currency.minorUnit ?? market.market.defaultCurrency.minorUnit),
                               destinationRegion: shippingRegion || null,
                               minDeliveryDays: shippingMinDays ? Number(shippingMinDays) : null,
                               maxDeliveryDays: shippingMaxDays ? Number(shippingMaxDays) : null
@@ -832,10 +833,11 @@ export default function SellerWorkspacePage() {
                         } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "Shipping service could not be saved.", "تعذر حفظ خدمة الشحن.")); }
                         finally { setBusy(false); }
                       }} className="mt-4 grid gap-3 rounded-[1.5rem] border border-dashed border-[#a9c7d1] bg-[#eaf3f6] p-4 shadow-[inset_0_2px_7px_rgba(43,69,88,.06)] sm:grid-cols-2">
-                        <label className="grid gap-1 text-xs">{translate(locale, "Market", "السوق")}<select required value={shippingMarketId} onChange={(e) => setShippingMarketId(e.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"><option value="">{translate(locale, "Choose market", "اختر سوقًا")}</option>{selectedStore.markets.map(({ market }) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrencyCode}</option>)}</select></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "Market", "السوق")}<select required value={shippingMarketId} onChange={(e) => { setShippingMarketId(e.target.value); setShippingCurrencyCode(markets.find((item) => item.id === e.target.value)?.defaultCurrency.code ?? ""); }} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"><option value="">{translate(locale, "Choose market", "اختر سوقًا")}</option>{selectedStore.markets.map(({ market }) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrencyCode}</option>)}</select></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "Currency", "العملة")}<select required value={shippingCurrencyCode} onChange={(e) => setShippingCurrencyCode(e.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm">{(markets.find((item) => item.id === shippingMarketId)?.currencies ?? []).map(({ currency }) => <option key={currency.code} value={currency.code}>{currency.name} ({currency.code})</option>)}</select></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Service name", "اسم الخدمة")}<input required minLength={2} maxLength={120} value={shippingName} onChange={(e) => setShippingName(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Description", "الوصف")}<input maxLength={500} value={shippingDescription} onChange={(e) => setShippingDescription(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
-                        <label className="grid gap-1 text-xs">{translate(locale, "Shipping amount", "تكلفة الشحن")}<input required type="number" min="0" step={1 / (10 ** (markets.find((item) => item.id === shippingMarketId)?.defaultCurrency.minorUnit ?? 2))} value={shippingAmount} onChange={(e) => setShippingAmount(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
+                        <label className="grid gap-1 text-xs">{translate(locale, "Shipping amount", "تكلفة الشحن")}<input required type="number" min="0" step={1 / (10 ** (markets.find((item) => item.id === shippingMarketId)?.currencies.find((entry) => entry.currency.code === shippingCurrencyCode)?.currency.minorUnit ?? 2))} value={shippingAmount} onChange={(e) => setShippingAmount(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Destination region", "منطقة الوجهة")}<input maxLength={120} value={shippingRegion} onChange={(e) => setShippingRegion(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Minimum days", "الحد الأدنى للأيام")}<input type="number" min="0" max="365" value={shippingMinDays} onChange={(e) => setShippingMinDays(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
                         <label className="grid gap-1 text-xs">{translate(locale, "Maximum days", "الحد الأقصى للأيام")}<input type="number" min="0" max="365" value={shippingMaxDays} onChange={(e) => setShippingMaxDays(e.target.value)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm" /></label>
