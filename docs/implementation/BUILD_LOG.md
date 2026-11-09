@@ -3989,3 +3989,13 @@ Reviewed `src/app/layout.tsx`, buyer order detail, product detail, seller messag
 - Main auth journey reflects the verified-email lifecycle and provides a verification/resend link. The branch's immediate-signed-in notice is obsolete under the current registration policy.
 - Main chart colors match the current pastel dashboard theme; no chart or theme CSS was replaced.
 - No runtime code copied from this batch.
+
+## 2026-11-09 — Ten-file reconciliation batch 8
+
+Reviewed Syria location picker, footer, navigation, customer Q&A/returns/reviews/support/ticket/wishlist pages, and admin navigation.
+
+- Main Syria picker is the current relational-geography + Leaflet implementation; the branch component is a shorter legacy picker backed by the superseded bundled geography data.
+- Main footer/navigation are the maintained implementations with current public policy/contact links and safe auth-return behavior. The branch footer contains extensive commented-out legacy markup; its navigation copy does not improve current auth-aware links.
+- Main customer return/review/support/ticket/wishlist pages include mutation toasts, refund visibility, and guest-wishlist merge feedback that the branch versions lack.
+- Main admin navigation includes current Brands and Refunds destinations absent from the branch.
+- No branch runtime code copied from this batch.
