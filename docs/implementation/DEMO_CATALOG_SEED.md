@@ -6,8 +6,8 @@ This seed is for local/disposable development databases only. It is not launch-m
 
 Running the demo catalog seed creates or updates:
 - 8 active bilingual categories: phones/electronics, clothing/fashion, furniture/home, home appliances, beauty/personal care, sports/outdoors, books/stationery, and automotive accessories.
-- 10 active products per category (80 total), with Arabic and English names/descriptions.
-- 8 demo brands and 4 demo seller users, approved seller profiles, and active stores.
+- 200 active product listings: 10 per store across 20 demo seller-owned stores, with all 8 top-level categories represented in each store and bilingual names/descriptions.
+- 8 demo brands and 20 demo seller users, approved seller profiles, and active stores.
 - A dedicated `DEMO-US` market, US country reference, USD currency, and enabled store-market links.
 - Product media, one standard variant per product, USD prices with compare-at prices, a demo warehouse, and initial stock with receipt movements.
 - Search synonyms in English and Arabic.
@@ -50,7 +50,7 @@ Run `npm run db:seed` again to verify repeatability. Existing demo stock is not 
 ## Verification checklist
 
 - [ ] Prisma migrations deploy successfully to the disposable PostgreSQL database.
-- [ ] First seed reports 80 products, 8 categories, and 4 stores.
+- [ ] First seed reports 20 stores with 10 active products each, covering all 8 top-level categories per store.
 - [ ] Second seed leaves those counts unchanged and does not duplicate media, variants, prices, translations, inventory, or stock movements.
 - [ ] Public active-market, category, product listing, product detail, and search endpoints return demo records.
 - [ ] The storefront shows the seeded categories and products using the normal API path.
