@@ -24,6 +24,19 @@ type Movement = {
   id: string; type: string; quantityDelta: number; quarantinedDelta: number; referenceType: string | null; referenceId: string | null;
   note: string | null; createdAt: string;
   inventory: { warehouse: Warehouse; variant: { sku: string; product: { name: string } } };
+type StockCountSummary = {
+  id: string; status: string; note: string | null; openedAt: string; completedAt: string | null;
+  warehouse: Warehouse; _count: { lines: number }; lines: Array<{ countedQuantity: number | null }>;
+};
+type StockCountLine = {
+  id: string; expectedQuantity: number; countedQuantity: number | null; note: string | null;
+  inventory: { id: string; quantityOnHand: number; quantityReserved: number; quantityQuarantined: number; variant: { sku: string; name: string | null; product: { name: string } } };
+};
+type StockCountDetail = {
+  id: string; status: string; note: string | null; openedAt: string; completedAt: string | null;
+  warehouse: Warehouse; lines: StockCountLine[];
+};
+
 };
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -41,6 +54,10 @@ export default function SellerInventoryPage() {
   const [search, setSearch] = useState("");
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
+  const [stockCounts, setStockCounts] = useState<StockCountSummary[]>([]);
+  const [activeStockCount, setActiveStockCount] = useState<StockCountDetail | null>(null);
+  const [countWarehouseId, setCountWarehouseId] = useState("");
+  const [countDrafts, setCountDrafts] = useState<Record<string, string>>({});
   const [warehouseCode, setWarehouseCode] = useState("");
   const [warehouseName, setWarehouseName] = useState("");
   const [editingWarehouseId, setEditingWarehouseId] = useState("");
@@ -89,16 +106,18 @@ export default function SellerInventoryPage() {
     if (!id) return;
     const params = new URLSearchParams({ storeId: id });
     if (q.trim()) params.set("q", q.trim());
-    const [stock, productResult, transferResult, movementResult] = await Promise.all([
+    const [stock, productResult, transferResult, movementResult, countResult] = await Promise.all([
       fetch(`/api/seller/inventory?${params.toString()}`, { cache: "no-store" }).then((r) => readJson<InventoryRow[]>(r)),
       fetch(`/api/seller/products?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Product[] }>(r)),
       fetch(`/api/seller/inventory/transfers?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Transfer[] }>(r)),
-      fetch(`/api/seller/inventory/movements?storeId=${encodeURIComponent(id)}&limit=100`, { cache: "no-store" }).then((r) => readJson<{ items: Movement[] }>(r))
+      fetch(`/api/seller/inventory/movements?storeId=${encodeURIComponent(id)}&limit=100`, { cache: "no-store" }).then((r) => readJson<{ items: Movement[] }>(r)),
+      fetch(`/api/seller/inventory/counts?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: StockCountSummary[] }>(r))
     ]);
     setInventory(stock);
     setProducts(productResult.items);
     setTransfers(transferResult.items);
     setMovements(movementResult.items);
+    setStockCounts(countResult.items);
   }, []);
 
   useEffect(() => {
@@ -179,34 +198,64 @@ export default function SellerInventoryPage() {
     finally { setBusy(false); }
   }
 
-  async function saveWarehouse(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (!editingWarehouseId) return;
+
+  async function openStockCount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!countWarehouseId) return;
     setBusy(true); setError(""); setNotice("");
     try {
-      const updated = await readJson<Warehouse>(await fetch(`/api/seller/warehouses/${encodeURIComponent(editingWarehouseId)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: editingWarehouseCode, name: editingWarehouseName }) }));
-      setStores((current) => current.map((store) => store.id === storeId ? { ...store, warehouses: store.warehouses.map((item) => item.id === updated.id ? updated : item) } : store));
-      setEditingWarehouseId(""); setNotice(translate(locale, "Warehouse details saved.", "تم حفظ بيانات المستودع.")); toast.success(translate(locale, "Warehouse details saved.", "تم حفظ بيانات المستودع."));
-    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to update warehouse.", "تعذر تحديث المستودع."); setError(message); toast.error(message); }
+      const session = await readJson<StockCountDetail>(await fetch("/api/seller/inventory/counts", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ warehouseId: countWarehouseId })
+      }));
+      setActiveStockCount(session);
+      setCountDrafts(Object.fromEntries(session.lines.map((line) => [line.id, line.countedQuantity === null ? "" : String(line.countedQuantity)])));
+      await refreshStore(storeId, search);
+      setNotice(translate(locale, "Physical stock count opened. Record each item, then reconcile.", "تم فتح جلسة الجرد. أدخل الكمية الفعلية لكل صنف ثم اعتمد التسوية."));
+      toast.success(translate(locale, "Stock count opened.", "تم فتح جلسة الجرد."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to open stock count.", "تعذر فتح جلسة الجرد."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
-  async function toggleWarehouse(warehouse: Warehouse) {
-    const nextActive = !warehouse.isActive;
-    if (!nextActive && !window.confirm(translate(locale, "Deactivate this warehouse? It must have no stock and no pending transfers.", "هل تريد تعطيل هذا المستودع؟ يجب ألا يحتوي على مخزون أو عمليات نقل معلقة."))) return;
-    setBusy(true); setError(""); setNotice("");
+  async function selectStockCount(id: string) {
+    setBusy(true); setError("");
     try {
-      const updated = await readJson<Warehouse>(await fetch(`/api/seller/warehouses/${encodeURIComponent(warehouse.id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: nextActive }) }));
-      setStores((current) => current.map((store) => store.id === storeId ? { ...store, warehouses: store.warehouses.map((item) => item.id === updated.id ? updated : item) } : store));
-      if (!updated.isActive) {
-        setInventory((current) => current.filter((row) => row.warehouse.id !== updated.id));
-        if (adjustWarehouseId === updated.id) setAdjustWarehouseId("");
-        if (sourceWarehouseId === updated.id) setSourceWarehouseId("");
-        if (destinationWarehouseId === updated.id) setDestinationWarehouseId("");
-      }
-      setNotice(updated.isActive ? translate(locale, "Warehouse reactivated.", "تمت إعادة تفعيل المستودع.") : translate(locale, "Warehouse deactivated.", "تم تعطيل المستودع."));
-      toast.success(updated.isActive ? translate(locale, "Warehouse reactivated.", "تمت إعادة تفعيل المستودع.") : translate(locale, "Warehouse deactivated.", "تم تعطيل المستودع."));
+      const session = await readJson<StockCountDetail>(await fetch(`/api/seller/inventory/counts/${encodeURIComponent(id)}`, { cache: "no-store" }));
+      setActiveStockCount(session);
+      setCountDrafts(Object.fromEntries(session.lines.map((line) => [line.id, line.countedQuantity === null ? "" : String(line.countedQuantity)])));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to load stock count.", "تعذر تحميل جلسة الجرد."); setError(message); toast.error(message); }
+    finally { setBusy(false); }
+  }
+
+  async function saveCountLine(line: StockCountLine) {
+    const raw = countDrafts[line.id] ?? "";
+    const countedQuantity = Number(raw);
+    if (!raw.trim() || !Number.isSafeInteger(countedQuantity) || countedQuantity < 0) {
+      setError(translate(locale, "Enter a whole counted quantity of zero or more.", "أدخل كمية صحيحة كاملة تساوي صفراً أو أكثر.")); return;
+    }
+    if (!activeStockCount) return;
+    setBusy(true); setError("");
+    try {
+      const updated = await readJson<StockCountLine>(await fetch(`/api/seller/inventory/counts/${encodeURIComponent(activeStockCount.id)}/lines/${encodeURIComponent(line.id)}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ countedQuantity })
+      }));
+      setActiveStockCount((current) => current ? { ...current, lines: current.lines.map((item) => item.id === updated.id ? updated : item) } : current);
+      setNotice(translate(locale, "Counted quantity saved.", "تم حفظ الكمية المعدودة."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to save count.", "تعذر حفظ الجرد."); setError(message); toast.error(message); }
+    finally { setBusy(false); }
+  }
+
+  async function completeCount() {
+    if (!activeStockCount) return;
+    if (!window.confirm(translate(locale, "Reconcile this physical count and apply its variances to inventory?", "هل تريد اعتماد هذا الجرد وتطبيق الفروقات على المخزون؟"))) return;
+    setBusy(true); setError("");
+    try {
+      const result = await readJson<{ status: string; adjustedLines: number; totalVariance: number }>(await fetch(`/api/seller/inventory/counts/${encodeURIComponent(activeStockCount.id)}/complete`, { method: "POST", headers: { "Content-Type": "application/json" } }));
+      setNotice(translate(locale, `Count reconciled. ${result.adjustedLines} items adjusted; net variance ${result.totalVariance}.`, `تم اعتماد الجرد. تمت تسوية ${result.adjustedLines} أصناف؛ صافي الفرق ${result.totalVariance}.`));
+      toast.success(translate(locale, "Stock count reconciled.", "تم اعتماد الجرد وتسوية المخزون."));
+      setActiveStockCount((current) => current ? { ...current, status: result.status, completedAt: new Date().toISOString() } : current);
       await refreshStore(storeId, search);
-    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to change warehouse status.", "تعذر تغيير حالة المستودع."); setError(message); toast.error(message); }
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to reconcile stock count.", "تعذر اعتماد الجرد."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
 
@@ -329,6 +378,16 @@ export default function SellerInventoryPage() {
           </section>
           <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)] lg:col-span-2"><h2 className="text-lg font-semibold">{translate(locale, "Stock adjustment", "تعديل المخزون")}</h2><form onSubmit={adjustStock} className="mt-4 grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{translate(locale, "Warehouse", "المستودع")}<select required className={field} value={adjustWarehouseId} onChange={(e) => setAdjustWarehouseId(e.target.value)}>{warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Product variant", "متغير المنتج")}<select required className={field} value={adjustVariantId} onChange={(e) => setAdjustVariantId(e.target.value)}><option value="">{translate(locale, "Select variant", "اختر متغيرًا")}</option>{variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.productName} · {variant.sku}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Quantity change (+/-)", "تغيير الكمية (+/−)")}<input required type="number" step="1" min="-1000000" max="1000000" className={field} value={quantityDelta} onChange={(e) => setQuantityDelta(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Note", "ملاحظة")}<input maxLength={500} className={field} value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} /></label><button disabled={busy || !adjustWarehouseId || !adjustVariantId || !Number.isInteger(Number(quantityDelta)) || Number(quantityDelta) === 0} className={button + " sm:col-span-2"}>{translate(locale, "Record stock adjustment", "تسجيل تعديل المخزون")}</button></form></section>
         </div>
+        <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]">
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold">{translate(locale, "Physical stock count", "الجرد الفعلي للمخزون")}</h2><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Snapshot a warehouse, enter the physically counted sellable quantity for every SKU, then reconcile differences into the stock ledger.", "أنشئ لقطة للمستودع، وأدخل الكمية القابلة للبيع التي تم عدّها فعلياً لكل صنف، ثم اعتمد الفروقات في سجل المخزون.")}</p></div><span className="rounded-full bg-white/70 px-3 py-1 text-xs">{stockCounts.length} {translate(locale, "count sessions", "جلسات جرد")}</span></div>
+          <form onSubmit={openStockCount} className="mt-4 flex flex-wrap items-end gap-3"><label className="grid min-w-[220px] flex-1 gap-1 text-sm">{translate(locale, "Warehouse to count", "المستودع المراد جرده")}<select required className={field} value={countWarehouseId} onChange={(e) => setCountWarehouseId(e.target.value)}><option value="">{translate(locale, "Select warehouse", "اختر المستودع")}</option>{warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>)}</select></label><button disabled={busy || !countWarehouseId} className={button}>{translate(locale, "Open count session", "فتح جلسة جرد")}</button></form>
+          {stockCounts.length > 0 && <div className="mt-4 flex flex-wrap gap-2">{stockCounts.map((count) => <button type="button" key={count.id} disabled={busy} onClick={() => void selectStockCount(count.id)} className={activeStockCount?.id === count.id ? "rounded-xl border border-[var(--accent)] bg-white px-3 py-2 text-xs font-semibold shadow-sm" : "rounded-xl border border-[var(--border)] bg-white/60 px-3 py-2 text-xs"}>{count.warehouse.name} · {new Date(count.openedAt).toLocaleDateString(locale === "ar" ? "ar" : "en-GB")} · {count.status === "COMPLETED" ? translate(locale, "Completed", "مكتمل") : translate(locale, "In progress", "قيد التنفيذ")}</button>)}</div>}
+          {activeStockCount && <div className="mt-5 rounded-2xl border border-white/80 bg-white/65 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-semibold">{activeStockCount.warehouse.name}</h3><p className="text-xs text-[var(--muted)]">{translate(locale, "Snapshot", "تاريخ فتح الجرد")}: {new Date(activeStockCount.openedAt).toLocaleString(locale === "ar" ? "ar" : "en-GB")} · {activeStockCount.lines.length} {translate(locale, "items", "أصناف")}</p></div><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 text-xs">{activeStockCount.status === "COMPLETED" ? translate(locale, "Completed", "مكتمل") : translate(locale, "In progress", "قيد التنفيذ")}</span></div>
+            <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-2">{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Expected", "المسجل")}</th><th>{translate(locale, "Reserved", "محجوز")}</th><th>{translate(locale, "Physical count", "الكمية الفعلية")}</th><th>{translate(locale, "Variance", "الفرق")}</th><th>{translate(locale, "Action", "الإجراء")}</th></tr></thead><tbody>{activeStockCount.lines.map((line) => { const raw = countDrafts[line.id] ?? (line.countedQuantity === null ? "" : String(line.countedQuantity)); const qty = raw.trim() ? Number(raw) : null; const variance = qty === null || !Number.isSafeInteger(qty) ? null : qty - line.expectedQuantity; return <tr key={line.id} className="border-b border-[var(--border)]"><td className="py-3 font-medium">{line.inventory.variant.product.name}<span className="block text-xs text-[var(--muted)]">{line.inventory.variant.sku}</span></td><td>{line.expectedQuantity}</td><td>{line.inventory.quantityReserved}</td><td><input aria-label={translate(locale, "Physically counted quantity", "الكمية المعدودة فعلياً")} disabled={busy || activeStockCount.status !== "IN_PROGRESS"} type="number" min="0" step="1" className="w-24 rounded-lg border border-[var(--border)] bg-white px-2 py-1.5" value={raw} onChange={(e) => setCountDrafts((current) => ({ ...current, [line.id]: e.target.value }))} /></td><td className={variance === null ? "" : variance < 0 ? "font-semibold text-rose-700" : variance > 0 ? "font-semibold text-emerald-700" : ""}>{variance === null ? "—" : variance > 0 ? "+" + variance : variance}</td><td>{activeStockCount.status === "IN_PROGRESS" && <button type="button" disabled={busy || qty === null || !Number.isSafeInteger(qty) || qty < 0} onClick={() => void saveCountLine(line)} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold">{translate(locale, "Save", "حفظ")}</button>}</td></tr>; })}</tbody></table></div>
+            {activeStockCount.status === "IN_PROGRESS" && <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-[var(--muted)]">{activeStockCount.lines.filter((line) => line.countedQuantity !== null).length} / {activeStockCount.lines.length} {translate(locale, "items counted and saved", "أصناف تم عدّها وحفظها")}</p><button type="button" disabled={busy || activeStockCount.lines.some((line) => line.countedQuantity === null)} onClick={() => void completeCount()} className={button}>{translate(locale, "Reconcile and complete count", "اعتماد التسوية وإنهاء الجرد")}</button></div>}
+          </div>}
+        </section>
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]"><h2 className="text-lg font-semibold">{translate(locale, "Current stock", "المخزون الحالي")}</h2><label className="mt-4 block max-w-xl text-xs font-medium">{translate(locale, "Search inventory", "البحث في المخزون")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product, SKU, warehouse or code", "المنتج أو SKU أو المستودع أو الرمز")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>{!inventory.length ? <p className="mt-4 text-sm text-[var(--muted)]">{search ? translate(locale, "No inventory records match this search.", "لا توجد سجلات مخزون تطابق هذا البحث.") : translate(locale, "No inventory records in this store yet.", "لا توجد سجلات مخزون في هذا المتجر بعد.")}</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3">{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Warehouse", "المستودع")}</th><th>{translate(locale, "Sellable on hand", "المخزون القابل للبيع")}</th><th>{translate(locale, "Quarantined", "قيد الحجر")}</th><th>{translate(locale, "Reserved", "محجوز")}</th><th>{translate(locale, "Available", "المتاح")}</th></tr></thead><tbody>{inventory.map((row) => <tr key={row.id} className="border-b border-[var(--border)]"><td className="py-3 font-medium">{row.variant.product.name}<span className="block text-xs text-[var(--muted)]">{row.variant.sku}</span></td><td>{row.warehouse.name}</td><td>{row.quantityOnHand}</td><td>{row.quantityQuarantined}</td><td>{row.quantityReserved}</td><td><span className={row.isLowStock ? "font-semibold text-amber-700" : ""}>{row.quantityAvailable}</span></td></tr>)}</tbody></table></div>}</section>
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]">
           <h2 className="text-lg font-semibold">{translate(locale, "Return inspection & quarantine", "فحص المرتجعات والحجر")}</h2>
