@@ -33,8 +33,9 @@ export async function GET(request: Request): Promise<Response> {
       event,
       payloadHash
     });
-    const state = result.status === "SUCCEEDED" ? "success" :
-      result.status === "FAILED" ? "failed" : "pending";
+    const resultStatus = "status" in result ? result.status : null;
+    const state = resultStatus === "SUCCEEDED" ? "success" :
+      resultStatus === "FAILED" ? "failed" : "pending";
     return orderRedirect(payment.orderId, state);
   } catch {
     // A timeout is not proof of a failed payment. The verified webhook remains
