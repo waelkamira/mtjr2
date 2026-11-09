@@ -52,9 +52,9 @@ describe("store staff lifecycle", () => {
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
-  it("requires an exact store-scoped grant for non-owner managers", async () => {
+  it("requires the store owner for team management", async () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "manager-1" });
-    await expect(inviteStoreStaff({ storeId: "store-1", userId: "staff-1" })).rejects.toThrow(/cannot manage staff/i);
+    await expect(inviteStoreStaff({ storeId: "store-1", userId: "staff-1" })).rejects.toThrow(/Only the store owner can invite or revoke team members/i);
     expect(mocks.membershipUpsert).not.toHaveBeenCalled();
   });
 
@@ -84,14 +84,13 @@ describe("store staff lifecycle", () => {
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
-  it("accepts a delegated manager only through an exact store-scoped staff grant", async () => {
+  it("does not allow a delegated manager to grant another manager role", async () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "manager-1" });
     mocks.userHasScopedPermission.mockResolvedValue(true);
-    const result = await inviteStoreStaff({ storeId: "store-1", userId: "staff-1" });
-    expect(result.status).toBe("INVITED");
-    expect(mocks.userHasScopedPermission).toHaveBeenCalledWith("manager-1", expect.objectContaining({
-      permissionKey: "store:staff:manage", scope: { type: "STORE", id: "store-1" }
-    }));
+    await expect(inviteStoreStaff({ storeId: "store-1", userId: "staff-1" }))
+      .rejects.toThrow(/Only the store owner can invite or revoke team members/i);
+    expect(mocks.membershipUpsert).not.toHaveBeenCalled();
+    expect(mocks.userHasScopedPermission).not.toHaveBeenCalled();
   });
 
 });
