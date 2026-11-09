@@ -269,4 +269,4 @@ These are platform requirements or conditional targets, not present pages. Some 
 6. Keep verification evidence, conditional provider/policy decisions, and known gaps explicit. Route presence and static source inspection do not certify a complete user journey or production readiness.
 
 
-| Payment provider control center | `/admin/payment-providers` | First tranche implemented | Super Admin-only encrypted provider configuration and administration for compiled Stripe/PayPal adapters; runtime checkout still environment-driven pending payment-to-config association and historical webhook credential routing. |
+| Payment provider control center | `/admin/payment-providers` | First tranche implemented | Super Admin-only encrypted provider configuration for compiled Stripe/PayPal adapters; active TEST/LIVE records now drive new checkout sessions with country/currency allowlists, and each Payment retains an encrypted credential snapshot for webhook/PayPal return verification. Runtime journey and database migration still require owner-side execution and later verification. |
