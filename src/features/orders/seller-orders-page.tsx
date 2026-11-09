@@ -132,7 +132,7 @@ export default function SellerOrdersPage() {
 
   useEffect(() => {
     let active = true;
-    const timer = window.setTimeout(() => { setLoading(true); const params = new URLSearchParams(); if (query.trim()) params.set("q", query.trim());
+    const timer = window.setTimeout(() => { setLoading(true); setError(""); const params = new URLSearchParams(); if (query.trim()) params.set("q", query.trim());
     fetch(`/api/seller/orders?${params.toString()}`, { cache: "no-store" }).then(async (response) => {
       const data = await response.json() as { orders?: VendorOrder[]; error?: string };
       if (!response.ok) throw new Error(data.error || t("Seller orders could not be loaded.", "تعذّر تحميل طلبات البائع."));
