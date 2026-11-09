@@ -118,3 +118,14 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 - Configure the PayPal webhook endpoint as `/api/webhooks/payments/paypal` and subscribe to `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.PENDING`, and `PAYMENT.CAPTURE.DENIED`.
 - This is an environment-configured adapter, not the Super Admin provider control center. No persistent provider config model, credential encryption UI, enable/disable/archive controls, or market-specific provider policy was added.
 - Sandbox credentials and webhook setup are still required before checkout can expose PayPal. No live transaction or credential verification was performed.
+
+
+## Provider configuration center — implementation tranche 1
+
+- Added `PaymentProviderConfig`, `PaymentProviderEnvironment` and `PaymentProviderConfigStatus` with a forward-only PostgreSQL migration at `prisma/migrations/20261110120000_payment_provider_control_center`.
+- Added a dedicated `payment.providers.manage` permission to the identity seed; the service requires both this permission and the global Super Admin `platform:manage` gate, which enforces the platform MFA step-up policy.
+- Added AES-256-GCM credential encryption with a fresh 96-bit nonce and authentication tag per write. The 32-byte master key is supplied as `PAYMENT_PROVIDER_ENCRYPTION_KEY` (64 hexadecimal characters), never stored in the database. API responses expose only a one-way credential fingerprint and configured/not-configured state.
+- Added server-side create, metadata/credential update, non-charge connection verification, enable/disable state changes and soft-archive operations. All changes create AuditLog entries without secret values. Archive blocks while the provider has in-flight payment attempts or unprocessed webhook events.
+- Added the Super Admin page at `/admin/payment-providers`, bilingual controls, navigation entry, add/edit forms, masked credential display, verification, enable/disable and archive actions.
+- Important runtime boundary: this tranche persists and manages configuration records, but the checkout provider registry still reads its existing server environment configuration. Database records do not yet drive checkout selection or historical webhook credential resolution. The UI states this explicitly; do not treat an ACTIVE record as a live checkout switch until the runtime integration phase is complete.
+- Key rotation, payment-to-config environment snapshots, per-market runtime filtering and historical multi-configuration webhook resolution remain prerequisites before replacing the environment-based provider registry.
