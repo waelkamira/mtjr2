@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentSession } from "@/server/identity/current-session";
 import { getPaymentProvider, getPaymentProviderAdapter } from "./providers/registry";
-import { getActivePaymentProviderRuntimeConfig, getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
+import { getActivePaymentProviderRuntimeConfig, getPaymentProviderRuntimeSnapshot, getPaymentProviderRuntimeEnvironment } from "@/server/admin/payment-providers";
 import type { VerifiedPaymentEvent } from "./providers/types";
 import { createInAppNotification } from "@/server/notifications/notifications";
 import {
@@ -58,9 +58,7 @@ export async function startOrderPayment(input: {
   if (order.status !== OrderStatus.PENDING_PAYMENT) throw new Error("This order is not awaiting payment.");
   if (order.totalMinor <= BigInt(0)) throw new Error("A zero-value order does not require a payment.");
 
-  const providerEnvironment = process.env.NODE_ENV === "production"
-    ? PaymentProviderEnvironment.LIVE
-    : PaymentProviderEnvironment.TEST;
+  const providerEnvironment = getPaymentProviderRuntimeEnvironment();
   const idempotentAttempt = await prisma.payment.findUnique({
     where: { idempotencyKey: input.idempotencyKey }
   });
@@ -448,9 +446,7 @@ export async function processVerifiedPaymentEvent(input: {
 }
 
 export async function listAvailablePaymentProviders(input?: { currencyCode?: string; countryCode?: string }) {
-  const environment = process.env.NODE_ENV === "production"
-    ? PaymentProviderEnvironment.LIVE
-    : PaymentProviderEnvironment.TEST;
+  const environment = getPaymentProviderRuntimeEnvironment();
   const managed = await prisma.paymentProviderConfig.findMany({
     where: { environment },
     select: {
