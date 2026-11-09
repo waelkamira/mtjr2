@@ -4130,3 +4130,18 @@ Reviewed shipping service and nine admin/advertising/cart/catalog test files.
 Commits: `b158689` (allow scheduled campaign pre-activation), `885f3e2` (regression case).
 
 No tests/build/typecheck/browser checks were run, per user instruction.
+
+## 2026-11-09 — Ten-file reconciliation batch 17
+
+Reviewed environment parsing, API-route security and marketplace E2E specifications, auth-return and auth-route tests, Google ID-token tests, login/MFA tests, PostgreSQL identity integration coverage and inventory stock tests.
+
+- Main API security E2E suite is broader and includes buyer/seller role-boundary probes; main marketplace E2E suite covers the current seller dashboard, store profile and shipping journeys. Branch tests are older and narrower.
+- Main auth route/login tests reflect the current public error contract, admin holds and session revocation. Branch tests assert retired registration/login response shapes. Main MFA policy correctly requires enrollment only for ACTIVE seller profiles, not pending applications.
+- Main Google token tests cover additional issuer/audience/nonce/key validation cases. Main inventory tests cover stock counts, quarantine, transfer state and current movement constraints; branch suite predates these models.
+- The branch's PostgreSQL identity integration test expects the older mandatory email-verification activation lifecycle, while current main intentionally has a different active-account registration contract; it was not copied.
+- **Carried forward:** normalize an empty optional CRON_SECRET environment value to undefined, matching other optional secrets and avoiding startup failure when deployment configuration supplies an empty value. Added a focused environment test source. The branch's Vercel-preview URL derivation test was not imported; deployment-platform behavior remains outside the requested reconciliation scope.
+- The branch's registration-notice sessionStorage helper/test was not carried over because the current dedicated verify-email page already owns that lifecycle and the helper has no required caller in the current main flow.
+
+Commits: `919f4eb` (normalize optional cron secret), `f964e3a` (environment regression case).
+
+No tests/build/typecheck/browser checks were run, per user instruction.
