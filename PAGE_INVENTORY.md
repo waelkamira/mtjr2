@@ -158,7 +158,7 @@ These are roadmap targets, not permission to create duplicates. Existing aliases
 | Seller store/settings pages | `/seller/store`, `/seller/store/settings` | No | Store setup is embedded in `/seller`; no separate settings route. | INCOMPLETE |
 | Seller warehouse management | `/seller/warehouses` | No | Warehouse management is embedded in `/seller`; API exists. | INCOMPLETE |
 | Seller order detail | `/seller/orders/[orderId]` | No | Only seller order list route exists; detail/fulfillment workflow is not exposed as a page. | MISSING |
-| Seller shipping settings | `/seller/shipping` | No | Shipping-rate editor is embedded in `/seller`; API exists. | INCOMPLETE |
+| Seller shipping settings | `/seller/shipping` | Yes | `src/app/seller/shipping/page.tsx` → `src/features/seller/shipping-page.tsx`; seller shipping-rate APIs and `StoreShippingRate`. | NEEDS_TESTING |
 | Seller notification settings | `/seller/notifications` | No | Shared `/notifications` route exists; dedicated seller setting surface absent. | MISSING |
 | Seller analytics | `/seller/analytics` | No | Trustworthy seller analytics page not implemented. | MISSING |
 | Seller finance | `/seller/finance` | No | Seller ledger/balances/statements not implemented. | MISSING |
