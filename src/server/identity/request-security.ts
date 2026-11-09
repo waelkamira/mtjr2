@@ -8,7 +8,7 @@ const MAX_MULTIPART_MUTATION_BYTES = 10 * 1024 * 1024 + 256 * 1024;
 function declaredBodyTooLarge(request: Request, maximumBytes: number): boolean {
   const declaredLength = request.headers.get("content-length");
   if (declaredLength === null) return false;
-  return !/^\\d+$/.test(declaredLength) || Number(declaredLength) > maximumBytes;
+  return !/^\d+$/.test(declaredLength) || Number(declaredLength) > maximumBytes;
 }
 
 /** Reject cross-origin state-changing requests before any identity mutation. */
