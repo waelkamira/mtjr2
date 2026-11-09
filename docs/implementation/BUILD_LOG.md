@@ -3633,3 +3633,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Existing campaign creation, moderation transitions, activation, pause, archive, spend metrics, and invoices remain on their existing flows.
 - Commits: c115c7b04a355ff070fb559f0da81f1833ce3456, 92912cf0a71ff7cfac88b6883a228cfb6839f15b, 8fd1edca64a1cede638b6f8b138939ddee1a9abe.
 - No tests/build/typecheck/browser verification performed, per the current build-first instruction.
+
+## 2026-11-09 — Seller advertising and shipping currency defaults
+
+- Seller advertising campaign creation now selects SYP as the initial billing currency when that currency is enabled for the selected market; otherwise it safely falls back to that market's configured default. The same rule applies when changing markets.
+- Seller shipping-rate creation now follows the same SYP-first/default-fallback behavior on initial load, store changes, market changes, and form reset. The full enabled-currency lists remain available, including USD wherever the market enables it; existing saved rate currencies are preserved when editing.
+- Commits: 2dd13d4edaacf310f65573b72d5b5ab81c5b9e12, db0958476daa766ea7f17aeb29d4ccc0e5662068.
