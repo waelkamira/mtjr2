@@ -263,7 +263,7 @@ export default function SellerWorkspacePage() {
     setRecentOrders([]);
     setRecentOrdersLoading(true);
     setRecentOrdersError("");
-    fetch("/api/seller/orders", { cache: "no-store" })
+    fetch(`/api/seller/orders?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
       .then(async (response) => {
         const data = await response.json() as { orders?: RecentSellerOrder[]; error?: string };
         if (!response.ok) throw new Error(data.error || translate(locale, "Recent orders could not be loaded.", "تعذر تحميل الطلبات الأخيرة."));
