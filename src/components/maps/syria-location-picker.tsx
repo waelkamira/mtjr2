@@ -71,6 +71,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   const [subdistricts, setSubdistricts] = useState<GeoItem[]>([]);
   const [localities, setLocalities] = useState<GeoItem[]>([]);
   const [neighborhoodSuggestions, setNeighborhoodSuggestions] = useState<NeighborhoodSuggestion[]>([]);
+  const [neighborhoodsLoaded, setNeighborhoodsLoaded] = useState(false);
   const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState("");
   const [governorateId, setGovernorateId] = useState("");
   const [districtId, setDistrictId] = useState("");
@@ -165,9 +166,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   useEffect(() => {
     if (!governorateId) {
       setNeighborhoodSuggestions([]);
+      setNeighborhoodsLoaded(false);
       return;
     }
     let active = true;
+    setNeighborhoodsLoaded(false);
     const searchPoint = focus ?? (
       value.latitude !== undefined && value.longitude !== undefined
         ? { latitude: value.latitude, longitude: value.longitude }
@@ -184,8 +187,8 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         if (!response.ok) throw new Error(result.error ?? "Unable to load neighbourhood suggestions.");
         return result as GeoResponse & { items: NeighborhoodSuggestion[] };
       })
-      .then((result) => { if (active) setNeighborhoodSuggestions(result.items); })
-      .catch((cause: unknown) => { if (active) setError(locationError(cause, locale, "Unable to load neighbourhood suggestions.", "تعذّر تحميل اقتراحات الأحياء.")); });
+      .then((result) => { if (active) { setNeighborhoodSuggestions(result.items); setNeighborhoodsLoaded(true); } })
+      .catch((cause: unknown) => { if (active) { setNeighborhoodsLoaded(true); setError(locationError(cause, locale, "Unable to load neighbourhood suggestions.", "تعذّر تحميل اقتراحات الأحياء.")); } });
     return () => { active = false; };
   }, [governorateId, focus, value.latitude, value.longitude]);
 
@@ -371,6 +374,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <input className={fieldClass + " mt-0 min-w-0"} value={localityQuery} onChange={(event) => setLocalityQuery(event.target.value)} placeholder={labels.search} />
         <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[var(--color-ink-800)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{labels.searchButton}</button>
       </div>}
+      {governorateId && neighborhoodsLoaded && neighborhoodSuggestions.length === 0 && <p role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">{translate(locale, "No neighbourhood suggestions are stored for this governorate yet. Run npm run db:sync-syria-neighborhoods against the application database.", "لا توجد أحياء مقترحة محفوظة لهذه المحافظة بعد. نفّذ الأمر npm run db:sync-syria-neighborhoods على قاعدة بيانات التطبيق.")}</p>}
       {neighborhoodSuggestions.length > 0 && <label className="block text-sm font-medium">{translate(locale, "Neighbourhoods in this governorate", "أحياء هذه المحافظة")}
         <select className={fieldClass} value={selectedNeighborhoodId} onChange={(event) => {
           const selected = neighborhoodSuggestions.find((item) => item.id === event.target.value);
