@@ -27,7 +27,7 @@ export type LoginResult =
       mfaRequired: boolean;
       mfaSetupRequired: boolean;
     }
-  | { authenticated: false; reason: "EMAIL_NOT_FOUND" | "INVALID_PASSWORD" | "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
+  | { authenticated: false; reason: "EMAIL_NOT_FOUND" | "EMAIL_NOT_VERIFIED" | "INVALID_PASSWORD" | "INVALID_CREDENTIALS" | "RATE_LIMITED"; message: string };
 
 function digestLoginValue(kind: "identifier" | "ip", value: string): string {
   return createHmac("sha256", env.AUTH_SECRET)
@@ -36,9 +36,9 @@ function digestLoginValue(kind: "identifier" | "ip", value: string): string {
 }
 
 /**
- * Password login accepts active accounts without requiring email verification.
- * Legacy pending accounts are activated only after successful password proof.
- * The conditional user-row write and session creation share one transaction,
+ * Password login requires an active account; pending registrations must verify
+ * their email before a session can be created. The conditional user-row write
+ * and session creation share one transaction,
  * so concurrent password changes or account suspensions cannot race a session.
  * MFA remains a separate mandatory step for platform administrators.
  */
@@ -68,7 +68,7 @@ export async function loginWithPassword(
 
   const user = await prisma.user.findUnique({
     where: { emailNormalized: email },
-    select: { id: true, passwordHash: true, status: true, adminStatusReason: true }
+    select: { id: true, passwordHash: true, status: true, adminStatusReason: true, emailVerifiedAt: true }
   });
 
   const passwordMatches = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
@@ -77,14 +77,15 @@ export async function loginWithPassword(
     return { authenticated: false, reason: "EMAIL_NOT_FOUND", message: "No account was found with this email address." };
   }
 
-  const eligible = (user.status === UserStatus.ACTIVE ||
-    (user.status === UserStatus.PENDING && user.adminStatusReason === null)) &&
-    user.passwordHash !== null;
+  const eligible = user.status === UserStatus.ACTIVE && user.passwordHash !== null;
 
   if (!eligible || !passwordMatches) {
     await prisma.loginAttempt.create({
       data: { userId: user.id, identifierHash, ipHash, succeeded: false, attemptedAt: now }
     });
+    if (user.status === UserStatus.PENDING && user.adminStatusReason === null && passwordMatches) {
+      return { authenticated: false, reason: "EMAIL_NOT_VERIFIED", message: "Verify your email address before signing in." };
+    }
     return !eligible
       ? { authenticated: false, reason: "INVALID_CREDENTIALS", message: INVALID_CREDENTIALS }
       : { authenticated: false, reason: "INVALID_PASSWORD", message: "The password is incorrect." };
@@ -99,20 +100,14 @@ export async function loginWithPassword(
     const current = await tx.user.updateMany({
       where: {
         id: user.id,
-        status: user.status,
+        status: UserStatus.ACTIVE,
         passwordHash: user.passwordHash,
-        adminStatusReason: user.adminStatusReason
+        adminStatusReason: user.adminStatusReason,
+        emailVerifiedAt: user.emailVerifiedAt
       },
-      data: { status: UserStatus.ACTIVE, adminStatusReason: null, lastLoginAt: now }
+      data: { lastLoginAt: now }
     });
     if (current.count !== 1) return null;
-
-    if (user.status === UserStatus.PENDING) {
-      await tx.verificationToken.updateMany({
-        where: { userId: user.id, purpose: "EMAIL_VERIFICATION", consumedAt: null },
-        data: { consumedAt: now }
-      });
-    }
 
     await tx.userSession.create({
       data: {
