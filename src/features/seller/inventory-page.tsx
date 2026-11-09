@@ -6,7 +6,7 @@ import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
-type Warehouse = { id: string; code: string; name: string };
+type Warehouse = { id: string; code: string; name: string; isActive?: boolean };
 type Store = { id: string; name: string; warehouses: Warehouse[] };
 type Workspace = { stores: Store[] };
 type Variant = { id: string; sku: string; name: string | null };
@@ -43,6 +43,9 @@ export default function SellerInventoryPage() {
   const [movements, setMovements] = useState<Movement[]>([]);
   const [warehouseCode, setWarehouseCode] = useState("");
   const [warehouseName, setWarehouseName] = useState("");
+  const [editingWarehouseId, setEditingWarehouseId] = useState("");
+  const [editingWarehouseCode, setEditingWarehouseCode] = useState("");
+  const [editingWarehouseName, setEditingWarehouseName] = useState("");
   const [adjustWarehouseId, setAdjustWarehouseId] = useState("");
   const [adjustVariantId, setAdjustVariantId] = useState("");
   const [quantityDelta, setQuantityDelta] = useState("1");
@@ -139,6 +142,42 @@ export default function SellerInventoryPage() {
     finally { setBusy(false); }
   }
 
+  async function saveWarehouse(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!editingWarehouseId) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const updated = await readJson<Warehouse>(await fetch(`/api/seller/warehouses/${encodeURIComponent(editingWarehouseId)}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: editingWarehouseCode, name: editingWarehouseName })
+      }));
+      setStores((current) => current.map((store) => store.id === storeId ? { ...store, warehouses: store.warehouses.map((item) => item.id === updated.id ? updated : item) } : store));
+      setEditingWarehouseId(""); setNotice(translate(locale, "Warehouse details saved.", "تم حفظ بيانات المستودع.")); toast.success(translate(locale, "Warehouse details saved.", "تم حفظ بيانات المستودع."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to update warehouse.", "تعذر تحديث المستودع."); setError(message); toast.error(message); }
+    finally { setBusy(false); }
+  }
+
+  async function toggleWarehouse(warehouse: Warehouse) {
+    const nextActive = warehouse.isActive === false;
+    if (!nextActive && !window.confirm(translate(locale, "Deactivate this warehouse? It must have no stock and no pending transfers.", "هل تريد تعطيل هذا المستودع؟ يجب ألا يحتوي على مخزون أو عمليات نقل معلقة."))) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const updated = await readJson<Warehouse>(await fetch(`/api/seller/warehouses/${encodeURIComponent(warehouse.id)}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: nextActive })
+      }));
+      setStores((current) => current.map((store) => store.id === storeId ? { ...store, warehouses: store.warehouses.map((item) => item.id === updated.id ? updated : item) } : store));
+      if (!updated.isActive) {
+        setInventory((current) => current.filter((row) => row.warehouse.id !== updated.id));
+        if (adjustWarehouseId === updated.id) setAdjustWarehouseId("");
+        if (sourceWarehouseId === updated.id) setSourceWarehouseId("");
+        if (destinationWarehouseId === updated.id) setDestinationWarehouseId("");
+      }
+      setNotice(updated.isActive ? translate(locale, "Warehouse reactivated.", "تمت إعادة تفعيل المستودع.") : translate(locale, "Warehouse deactivated.", "تم تعطيل المستودع."));
+      toast.success(updated.isActive ? translate(locale, "Warehouse reactivated.", "تمت إعادة تفعيل المستودع.") : translate(locale, "Warehouse deactivated.", "تم تعطيل المستودع."));
+      await refreshStore(storeId, search);
+    } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to change warehouse status.", "تعذر تغيير حالة المستودع."); setError(message); toast.error(message); }
+    finally { setBusy(false); }
+  }
+
   async function adjustStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(""); setNotice("");
     try {
@@ -232,6 +271,18 @@ export default function SellerInventoryPage() {
         </section>
         <div className="grid gap-6 lg:grid-cols-3">
           <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]"><h2 className="text-lg font-semibold">{translate(locale, "Add warehouse", "إضافة مستودع")}</h2><form onSubmit={createWarehouse} className="mt-4 grid gap-3"><label className="grid gap-1 text-sm">{translate(locale, "Warehouse code", "رمز المستودع")}<input required minLength={2} maxLength={40} pattern="[A-Za-z0-9][A-Za-z0-9_-]+" className={field} value={warehouseCode} onChange={(e) => setWarehouseCode(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={120} className={field} value={warehouseName} onChange={(e) => setWarehouseName(e.target.value)} /></label><button disabled={busy || !storeId} className={button}>{translate(locale, "Create warehouse", "إنشاء مستودع")}</button></form></section>
+          <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)] lg:col-span-3">
+            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">{translate(locale, "Warehouse management", "إدارة المستودعات")}</h2><span className="text-xs text-[var(--muted)]">{warehouses.length} {translate(locale, "warehouses", "مستودعات")}</span></div>
+            {!warehouses.length ? <p className="mt-3 text-sm text-[var(--muted)]">{translate(locale, "No warehouses have been created for this store.", "لم يتم إنشاء مستودعات لهذا المتجر بعد.")}</p> : <div className="mt-3 grid gap-3 md:grid-cols-2">{warehouses.map((warehouse) => <article key={warehouse.id} className="rounded-2xl border border-white/80 bg-white/65 p-4">
+              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{warehouse.name}</p><p className="text-xs text-[var(--muted)]">{warehouse.code}</p></div><span className={warehouse.isActive === false ? "rounded-full bg-slate-200 px-2 py-1 text-xs" : "rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-800"}>{warehouse.isActive === false ? translate(locale, "Inactive", "معطل") : translate(locale, "Active", "نشط")}</span></div>
+              <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={busy} onClick={() => { setEditingWarehouseId(warehouse.id); setEditingWarehouseCode(warehouse.code); setEditingWarehouseName(warehouse.name); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit details", "تعديل البيانات")}</button><button type="button" disabled={busy} onClick={() => void toggleWarehouse(warehouse)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{warehouse.isActive === false ? translate(locale, "Reactivate", "إعادة التفعيل") : translate(locale, "Deactivate", "تعطيل")}</button></div>
+            </article>)}</div>}
+            {editingWarehouseId && <form onSubmit={saveWarehouse} className="mt-4 grid gap-3 rounded-2xl border border-[var(--border)] bg-white/60 p-4 sm:grid-cols-3">
+              <label className="grid gap-1 text-sm">{translate(locale, "Warehouse code", "رمز المستودع")}<input required minLength={2} maxLength={40} pattern="[A-Za-z0-9][A-Za-z0-9_-]+" className={field} value={editingWarehouseCode} onChange={(e) => setEditingWarehouseCode(e.target.value)} /></label>
+              <label className="grid gap-1 text-sm">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={120} className={field} value={editingWarehouseName} onChange={(e) => setEditingWarehouseName(e.target.value)} /></label>
+              <div className="flex items-end gap-2"><button disabled={busy} className={button}>{translate(locale, "Save changes", "حفظ التغييرات")}</button><button type="button" disabled={busy} onClick={() => setEditingWarehouseId("")} className="rounded-xl border border-[var(--border)] px-4 py-3 text-sm">{translate(locale, "Cancel", "إلغاء")}</button></div>
+            </form>}
+          </section>
           <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)] lg:col-span-2"><h2 className="text-lg font-semibold">{translate(locale, "Stock adjustment", "تعديل المخزون")}</h2><form onSubmit={adjustStock} className="mt-4 grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{translate(locale, "Warehouse", "المستودع")}<select required className={field} value={adjustWarehouseId} onChange={(e) => setAdjustWarehouseId(e.target.value)}>{warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Product variant", "متغير المنتج")}<select required className={field} value={adjustVariantId} onChange={(e) => setAdjustVariantId(e.target.value)}><option value="">{translate(locale, "Select variant", "اختر متغيرًا")}</option>{variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.productName} · {variant.sku}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Quantity change (+/-)", "تغيير الكمية (+/−)")}<input required type="number" step="1" min="-1000000" max="1000000" className={field} value={quantityDelta} onChange={(e) => setQuantityDelta(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Note", "ملاحظة")}<input maxLength={500} className={field} value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} /></label><button disabled={busy || !adjustWarehouseId || !adjustVariantId || !Number.isInteger(Number(quantityDelta)) || Number(quantityDelta) === 0} className={button + " sm:col-span-2"}>{translate(locale, "Record stock adjustment", "تسجيل تعديل المخزون")}</button></form></section>
         </div>
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]"><h2 className="text-lg font-semibold">{translate(locale, "Current stock", "المخزون الحالي")}</h2><label className="mt-4 block max-w-xl text-xs font-medium">{translate(locale, "Search inventory", "البحث في المخزون")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product, SKU, warehouse or code", "المنتج أو SKU أو المستودع أو الرمز")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>{!inventory.length ? <p className="mt-4 text-sm text-[var(--muted)]">{search ? translate(locale, "No inventory records match this search.", "لا توجد سجلات مخزون تطابق هذا البحث.") : translate(locale, "No inventory records in this store yet.", "لا توجد سجلات مخزون في هذا المتجر بعد.")}</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3">{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Warehouse", "المستودع")}</th><th>{translate(locale, "Sellable on hand", "المخزون القابل للبيع")}</th><th>{translate(locale, "Quarantined", "قيد الحجر")}</th><th>{translate(locale, "Reserved", "محجوز")}</th><th>{translate(locale, "Available", "المتاح")}</th></tr></thead><tbody>{inventory.map((row) => <tr key={row.id} className="border-b border-[var(--border)]"><td className="py-3 font-medium">{row.variant.product.name}<span className="block text-xs text-[var(--muted)]">{row.variant.sku}</span></td><td>{row.warehouse.name}</td><td>{row.quantityOnHand}</td><td>{row.quantityQuarantined}</td><td>{row.quantityReserved}</td><td><span className={row.isLowStock ? "font-semibold text-amber-700" : ""}>{row.quantityAvailable}</span></td></tr>)}</tbody></table></div>}</section>
