@@ -6,7 +6,7 @@
 - **الغرض:** Transparent seller balance, fees, commissions, settlement statements and payout requests.
 - **المتطلبات الأساسية:** immutable ledger, double-entry postings, fees/taxes/refunds, holds, available vs pending balance, payout eligibility and reconciliation.
 - **الحالة عند تدقيق baseline:** **Schema-only.** Finance models existed; audit found no direct model delegates or complete seller finance workflow.
-- **الحالة الحالية (2026-11-06):** Commission rules and payment-success transaction snapshots are partially implemented for Super Admins. Seller balances/statements, payout methods/requests, accounting ledger, and reconciliation remain unimplemented.
+- **الحالة الحالية على main (2026-11-09):** CommissionRule وإدارة قواعد العمولة وCommissionTransaction snapshots عند نجاح الدفع الموثق موجودة. صفحة `/seller/commissions` تعرض snapshots واستردادات مكتملة حسب المتجر والعملة، وصفحة `/seller/finance` تعرض ملخصاً للقراءة فقط. لا يوجد بعد دفتر أستاذ مزدوج، أو أرصدة مستحقة/معلقة، أو حجوزات/تسويات، أو وسائل سحب وطلبات دفع، أو reconciliation.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
@@ -67,12 +67,12 @@
 | `LedgerAccount` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `JournalEntry` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `JournalLine` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `CommissionRule` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `CommissionTransaction` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `CommissionRule` | موجود؛ قواعد فعالة زمنياً بنطاق البائع/الفئة وتُدار من Super Admin |
+| `CommissionTransaction` | موجود؛ snapshot ثابت لكل عنصر طلب عند نجاح الدفع الموثق، مع unique على orderItemId |
 | `PayoutMethod` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `Payout` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
 | `Payment` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
-| `Refund` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `Refund` | موجود؛ طلب استرداد يدوي مرتبط بطلب الدفع والمرتجع، مع RefundItem allocations وإتمام يدوي موثق |
 | `Currency` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
 - قبل أي تعديل، افحص `prisma/schema.prisma` وكل migrations و`PRISMA_MODEL_USAGE_MAP.md` والخدمات والـAPI المستهلكة.
 - لا تنشئ model لكل صفحة/زر. أضف نموذجاً فقط لحقيقة دائمة/علاقة/سجل حركة لها lifecycle مستقل غير ممثل حالياً.
@@ -140,3 +140,11 @@
 - No new Prisma model or migration was introduced. The accounting ledger, holds, settlement/reconciliation, payout methods and withdrawal workflow remain unimplemented.
 - Added the route to seller navigation, updated the seller route registry and page inventory, and refreshed the seller shell to the pastel clay palette.
 - Runtime, build and browser verification are intentionally deferred until the seller portal build is complete, per the current work instruction.
+
+
+## Seller finance current-main boundary
+- `GET /api/seller/commissions` يقرأ `CommissionTransaction` و`RefundItem` المخصصة للمتجر عبر `ReturnItem → OrderItem → VendorOrder`. الإجماليات مجمعة حسب العملة، والتفاصيل paginated؛ المبالغ المستردة تعرض منفصلة ولا تخصم من مستحقات البائع.
+- `/seller/finance` يعيد استخدام هذا المصدر ويعرض بيانات مسجلة فقط. لا يجوز تسمية أي مجموع حالياً «الرصيد المتاح للسحب».
+- نجاح الدفع الموثق يسجل commission snapshot، لكنه لا ينشئ seller payable journal. إكمال Refund يغير Refund/Payment status ويسجل التدقيق، لكنه لا ينشئ ledger reversal.
+- **قرار عدم التنفيذ المالي المتسرع:** `VendorOrder` يحتوي subtotal/discount/shipping/tax/total، بينما commission base يستبعد الشحن والضريبة. لا توجد سياسة مالية معتمدة تحدد ملكية رسوم الشحن والضرائب، توقيت الاستحقاق، reserve/hold، chargeback/dispute، أو قيد clearing عند capture. لذلك لا يُنشأ رصيد أو journal posting اعتماداً على commission snapshot وحده.
+- الخطوة التالية قبل ledger posting: اعتماد chart of accounts وتخصيص كل مكون من VendorOrder، وتحديد seller payable trigger (capture/delivery/return window)، معالجة refund/chargeback، settlement source، وقيود الحسابات السالبة. بعد ذلك يُبنى journal مزدوج immutable مع unique source idempotency وreversal-only correction، ثم صفحة seller balances/payouts.
