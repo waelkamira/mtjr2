@@ -21,7 +21,8 @@ type StripeEvent = {
   data: { object: StripeSession };
 };
 
-function requireStripeSecrets() {
+function requireStripeSecrets(credentials?: Record<string, string>) {
+  if (credentials?.secretKey && credentials?.webhookSecret) return { secretKey: credentials.secretKey, webhookSecret: credentials.webhookSecret };
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) {
     throw new Error("Stripe is not fully configured. Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.");
   }
@@ -49,7 +50,7 @@ function verifyStripeSignature(rawBody: string, signatureHeader: string, secret:
 }
 
 async function createIntent(input: Parameters<PaymentProviderAdapter["createIntent"]>[0]) {
-  const { secretKey } = requireStripeSecrets();
+  const { secretKey } = requireStripeSecrets(input.providerCredentials);
   const currency = input.currencyCode.toLowerCase();
   if (!/^[a-z]{3}$/.test(currency) || !/^(0|[1-9]\d*)$/.test(input.amountMinor) || BigInt(input.amountMinor) <= BigInt("0") || BigInt(input.amountMinor) > BigInt("99999999")) {
     throw new Error("Stripe payment amount or currency is invalid.");
@@ -95,8 +96,8 @@ async function createIntent(input: Parameters<PaymentProviderAdapter["createInte
   };
 }
 
-async function verifyWebhook(request: Request): Promise<VerifiedPaymentEvent> {
-  const { webhookSecret } = requireStripeSecrets();
+async function verifyWebhook(request: Request, credentials?: Record<string, string>): Promise<VerifiedPaymentEvent> {
+  const { webhookSecret } = requireStripeSecrets(credentials);
   const rawBody = await request.text();
   const signature = request.headers.get("stripe-signature");
   if (!signature) throw new Error("Stripe signature header is missing.");
