@@ -144,19 +144,19 @@ export default function SellerNavigation() {
         </div>
       </aside>
 
-      <div className="border-b border-white/10 bg-[linear-gradient(135deg,#f0eef8,#e2e5ef)] px-4 py-3 text-[#eaf3f7] shadow-[0_8px_22px_rgba(74,75,112,.10)] lg:hidden">
+      <div className="border-b border-white/10 bg-[linear-gradient(180deg,#20364d,#172b40)] px-4 py-3 text-[#eaf3f7] shadow-[0_8px_22px_rgba(74,75,112,.10)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#34445a]">
-            <span className="grid size-8 place-items-center rounded-xl border border-white bg-[linear-gradient(145deg,#e4def6,#d3cbed)] text-sm text-[#494467] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
+          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#f0f6fa]">
+            <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
-          <Link href="/" className="rounded-full border border-white bg-white/75 px-3 py-2 text-xs font-semibold text-[#d1e0e8] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
+          <Link href="/" className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
         </div>
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex gap-2 overflow-x-auto pb-1">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-[linear-gradient(135deg,#ded8f5,#c9c2eb)] text-[#343451] ring-1 ring-white shadow-[0_5px_14px_rgba(93,83,139,.15),inset_0_2px_0_white]" : "bg-white/55 text-[#526078] hover:bg-white/90"}`}>
+              className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-[linear-gradient(135deg,#9fd5d4,#78b8bd)] text-[#17374b] ring-1 ring-white/70 shadow-[0_5px_14px_rgba(5,17,31,.22),inset_0_2px_0_white]" : "bg-white/10 text-[#d1e0e8] hover:bg-white/20"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
