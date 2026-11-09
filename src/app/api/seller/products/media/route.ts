@@ -228,6 +228,17 @@ export async function DELETE(request: Request): Promise<Response> {
   }
   if (!allowed) return jsonError("You do not have access to this store.", 403);
 
+  let attachedStoreAsset: { id: string } | null;
+  try {
+    attachedStoreAsset = await prisma.store.findFirst({
+      where: { OR: [{ logoStorageKey: storageKey }, { bannerStorageKey: storageKey }] },
+      select: { id: true }
+    });
+  } catch {
+    return jsonError("Unable to verify whether the image is used by a store.", 500);
+  }
+  if (attachedStoreAsset) return jsonError("This image is currently used as store branding. Remove it from the store profile before deleting the asset.", 409);
+
   let attached: { id: string } | null;
   try {
     attached = await prisma.productMedia.findFirst({
