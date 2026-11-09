@@ -174,7 +174,7 @@ export default function PaymentProvidersPage() {
           <button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">{showForm ? t("Close form", "إغلاق النموذج") : t("Add provider", "إضافة مزود دفع")}</button>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+        <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--foreground)]">
           {t("Active database configurations now drive new checkout sessions for their selected TEST/LIVE environment, supported countries and currencies. Each payment retains an encrypted credential snapshot so later credential rotation or provider disablement does not break verification of its existing webhook events.", "تتحكم الإعدادات النشطة المخزنة في قاعدة البيانات الآن بعمليات الدفع الجديدة وفق بيئة TEST/LIVE والدول والعملات المدعومة. يحتفظ كل دفع بنسخة مشفرة من بيانات الاعتماد حتى لا يؤدي تدوير المفاتيح أو تعطيل المزود إلى تعطيل التحقق من إشعارات المدفوعات القائمة.")}
         </div>
 
