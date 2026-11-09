@@ -124,6 +124,29 @@ export default function SellerInventoryPage() {
     setStockCounts(countResult.items);
   }, []);
 
+  async function loadMoreInventory() {
+    if (!storeId || !inventoryCursor || loadingInventoryMore) return;
+    setLoadingInventoryMore(true);
+    try {
+      const params = new URLSearchParams({ storeId, cursor: inventoryCursor });
+      if (search.trim()) params.set("q", search.trim());
+      const result = await readJson<{ items: InventoryRow[]; nextCursor: string | null }>(
+        await fetch(`/api/seller/inventory?${params.toString()}`, { cache: "no-store" })
+      );
+      setInventory((current) => {
+        const known = new Set(current.map((item) => item.id));
+        return [...current, ...result.items.filter((item) => !known.has(item.id))];
+      });
+      setInventoryCursor(result.nextCursor ?? null);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to load more inventory.", "تعذر تحميل المزيد من المخزون.");
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoadingInventoryMore(false);
+    }
+  }
+
   async function loadOlderMovements() {
     if (!storeId || !movementCursor || loadingMovements) return;
     setLoadingMovements(true);
@@ -448,7 +471,8 @@ export default function SellerInventoryPage() {
             {activeStockCount.status === "IN_PROGRESS" && <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-[var(--muted)]">{activeStockCount.lines.filter((line) => line.countedQuantity !== null).length} / {activeStockCount.lines.length} {translate(locale, "items counted and saved", "أصناف تم عدّها وحفظها")}</p><div className="flex flex-wrap gap-2"><button type="button" disabled={busy || activeStockCount.lines.some((line) => line.countedQuantity === null)} onClick={() => void completeCount()} className={button}>{translate(locale, "Reconcile and complete count", "اعتماد التسوية وإنهاء الجرد")}</button><button type="button" disabled={busy} onClick={() => void cancelCount()} className="rounded-xl border border-[var(--border)] px-4 py-3 text-sm">{translate(locale, "Cancel session", "إلغاء الجلسة")}</button></div></div>}
           </div>}
         </section>
-        <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]"><h2 className="text-lg font-semibold">{translate(locale, "Current stock", "المخزون الحالي")}</h2><label className="mt-4 block max-w-xl text-xs font-medium">{translate(locale, "Search inventory", "البحث في المخزون")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product, SKU, warehouse or code", "المنتج أو SKU أو المستودع أو الرمز")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>{!inventory.length ? <p className="mt-4 text-sm text-[var(--muted)]">{search ? translate(locale, "No inventory records match this search.", "لا توجد سجلات مخزون تطابق هذا البحث.") : translate(locale, "No inventory records in this store yet.", "لا توجد سجلات مخزون في هذا المتجر بعد.")}</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3">{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Warehouse", "المستودع")}</th><th>{translate(locale, "Sellable on hand", "المخزون القابل للبيع")}</th><th>{translate(locale, "Quarantined", "قيد الحجر")}</th><th>{translate(locale, "Reserved", "محجوز")}</th><th>{translate(locale, "Available", "المتاح")}</th></tr></thead><tbody>{inventory.map((row) => <tr key={row.id} className="border-b border-[var(--border)]"><td className="py-3 font-medium">{row.variant.product.name}<span className="block text-xs text-[var(--muted)]">{row.variant.sku}</span></td><td>{row.warehouse.name}</td><td>{row.quantityOnHand}</td><td>{row.quantityQuarantined}</td><td>{row.quantityReserved}</td><td><span className={row.isLowStock ? "font-semibold text-amber-700" : ""}>{row.quantityAvailable}</span></td></tr>)}</tbody></table></div>}</section>
+        <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]"><h2 className="text-lg font-semibold">{translate(locale, "Current stock", "المخزون الحالي")}</h2><label className="mt-4 block max-w-xl text-xs font-medium">{translate(locale, "Search inventory", "البحث في المخزون")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product, SKU, warehouse or code", "المنتج أو SKU أو المستودع أو الرمز")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>{!inventory.length ? <p className="mt-4 text-sm text-[var(--muted)]">{search ? translate(locale, "No inventory records match this search.", "لا توجد سجلات مخزون تطابق هذا البحث.") : translate(locale, "No inventory records in this store yet.", "لا توجد سجلات مخزون في هذا المتجر بعد.")}</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3">{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Warehouse", "المستودع")}</th><th>{translate(locale, "Sellable on hand", "المخزون القابل للبيع")}</th><th>{translate(locale, "Quarantined", "قيد الحجر")}</th><th>{translate(locale, "Reserved", "محجوز")}</th><th>{translate(locale, "Available", "المتاح")}</th></tr></thead><tbody>{inventory.map((row) => <tr key={row.id} className="border-b border-[var(--border)]"><td className="py-3 font-medium">{row.variant.product.name}<span className="block text-xs text-[var(--muted)]">{row.variant.sku}</span></td><td>{row.warehouse.name}</td><td>{row.quantityOnHand}</td><td>{row.quantityQuarantined}</td><td>{row.quantityReserved}</td><td><span className={row.isLowStock ? "font-semibold text-amber-700" : ""}>{row.quantityAvailable}</span></td></tr>)}</tbody></table></div>}
+          {inventoryCursor && <div className="mt-4 text-center"><button type="button" onClick={() => void loadMoreInventory()} disabled={loadingInventoryMore || busy} className={button}>{loadingInventoryMore ? translate(locale, "Loading more inventory…", "جارٍ تحميل المزيد من المخزون…") : translate(locale, "Load more inventory", "تحميل المزيد من المخزون")}</button></div>}</section>
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]">
           <h2 className="text-lg font-semibold">{translate(locale, "Return inspection & quarantine", "فحص المرتجعات والحجر")}</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Release inspected units back to sellable stock, or record disposal. Only physically quarantined quantities can be processed.", "حرر الوحدات التي اجتازت الفحص إلى المخزون القابل للبيع أو سجل إتلافها. لا يمكن معالجة إلا الكميات الموجودة فعلياً في الحجر.")}</p>
