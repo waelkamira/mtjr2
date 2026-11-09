@@ -20,7 +20,7 @@ Enable approved sellers and authorized staff to operate stores, products, stock,
 Every action follows UI → route → session/permission/resource-scope check → Zod validation → seller/admin service → repository/Prisma transaction → audit/event → response → refreshed UI. Store IDs and user IDs are resolved/authorized server-side, never trusted from the browser.
 
 ## P0 acceptance
-- Seller application → admin review → approved seller → store access.
+- Seller application → admin review → approved seller → store access. Source audit: the application is owner-unique (`Seller.ownerId @unique`), store is seller-unique (`Store.sellerId @unique`), store creation serializes per seller with a PostgreSQL advisory transaction lock, and repeat identical requests are idempotent. UI/API/PostgreSQL end-to-end journey remains pending; do not mark P0 accepted until verified.
 - Cross-store reads/writes denied, including delegated staff with wrong/missing scope.
 - Product draft → moderation → publish/reject; rejected product never appears in public search.
 - Stock adjustment and transfer are transactional, idempotent where retried, and preserve non-negative/reservation invariants.
