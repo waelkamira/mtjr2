@@ -11,7 +11,7 @@ type CommissionTransaction = {
   quantity: number; categoryName: string | null; rateBasisPoints: number;
   baseAmountMinor: string; commissionMinor: string; currencyCode: string; minorUnit: number; createdAt: string;
 };
-type CommissionResponse = { store: { id: string; name: string }; limit: number; totals: CommissionTotal[]; transactions: CommissionTransaction[] };
+type CommissionResponse = { store: { id: string; name: string }; limit: number; nextCursor: string | null; totals: CommissionTotal[]; transactions: CommissionTransaction[] };
 
 function csvCell(value: string | number) {
   const raw = String(value);
@@ -26,7 +26,7 @@ function downloadCommissionCsv(data: CommissionResponse) {
     [],
     ["SECTION", "DATE", "ORDER", "PRODUCT", "SKU", "CATEGORY", "QUANTITY", "RATE_BPS", "BASE_AMOUNT_MINOR", "COMMISSION_MINOR", "CURRENCY", "ORDER_STATUS"],
     ...data.transactions.map((item) => [
-      "LATEST_100_DETAIL", item.createdAt, item.orderNumber, item.productName, item.sku,
+      "DETAIL", item.createdAt, item.orderNumber, item.productName, item.sku,
       item.categoryName ?? "", item.quantity, item.rateBasisPoints, item.baseAmountMinor,
       item.commissionMinor, item.currencyCode, item.orderStatus
     ])
@@ -64,6 +64,7 @@ export default function SellerCommissionsPage() {
   const [data, setData] = useState<CommissionResponse | null>(null);
   const [loadingStores, setLoadingStores] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -108,6 +109,28 @@ export default function SellerCommissionsPage() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [storeId, locale]);
+
+  async function loadOlderCommissionRows() {
+    if (!storeId || !data?.nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setError("");
+    try {
+      const query = new URLSearchParams({ storeId, cursor: data.nextCursor });
+      const response = await fetch(`/api/seller/commissions?${query.toString()}`, { cache: "no-store" });
+      const result = await response.json() as CommissionResponse & { error?: string };
+      if (!response.ok) throw new Error(result.error || translate(locale, "Unable to load older commission rows.", "تعذر تحميل سجلات العمولات الأقدم."));
+      if (result.store.id !== storeId) return;
+      setData((current) => current && current.store.id === storeId ? {
+        ...current,
+        nextCursor: result.nextCursor,
+        transactions: [...current.transactions, ...result.transactions]
+      } : current);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : translate(locale, "Unable to load older commission rows.", "تعذر تحميل سجلات العمولات الأقدم."));
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const storeOptions = useMemo(() => stores.map((store) => ({ value: store.id, label: store.name })), [stores]);
   const t = (en: string, ar: string) => translate(locale, en, ar);
@@ -168,8 +191,13 @@ export default function SellerCommissionsPage() {
                 </tbody>
               </table>
             </div>}
+            {data.nextCursor && <div className="border-t border-white/80 p-4 text-center">
+              <button type="button" onClick={() => void loadOlderCommissionRows()} disabled={loadingMore} className="rounded-xl border border-white bg-white/80 px-5 py-2.5 text-xs font-extrabold text-[#35566b] shadow-[0_3px_8px_rgba(38,66,84,.08)] disabled:opacity-60">
+                {loadingMore ? t("Loading…", "جارٍ التحميل…") : t("Load older commission records", "تحميل سجلات العمولات الأقدم")}
+              </button>
+            </div>}
           </section>
-          <p className="mt-4 rounded-xl border border-[#9bbbc7] bg-white/55 p-4 text-xs leading-5 text-[#718899]">{t("Totals aggregate every commission snapshot currently recorded for this store, grouped by currency. The table shows only the latest 100 details. These figures are not seller net balances or withdrawable funds; refunds, adjustments, holds and payouts are not yet represented in a seller accounting ledger.", "تجمع الإجماليات كل لقطات العمولات المسجلة حالياً لهذا المتجر حسب العملة، بينما يعرض الجدول أحدث 100 تفصيل فقط. هذه الأرقام ليست صافي مستحقات البائع أو أموالاً قابلة للسحب؛ إذ لم تُربط بعد بدفتر محاسبي للبائع يشمل الاستردادات والتسويات والمبالغ المحجوزة والدفعات.")}</p>
+          <p className="mt-4 rounded-xl border border-[#9bbbc7] bg-white/55 p-4 text-xs leading-5 text-[#718899]">{t("Totals aggregate every commission snapshot currently recorded for this store, grouped by currency. The table loads commission details in pages of 100. These figures are not seller net balances or withdrawable funds; refunds, adjustments, holds and payouts are not yet represented in a seller accounting ledger.", "تجمع الإجماليات كل لقطات العمولات المسجلة حالياً لهذا المتجر حسب العملة، ويحمّل الجدول التفاصيل على صفحات من 100 سجل. هذه الأرقام ليست صافي مستحقات البائع أو أموالاً قابلة للسحب؛ إذ لم تُربط بعد بدفتر محاسبي للبائع يشمل الاستردادات والتسويات والمبالغ المحجوزة والدفعات.")}</p>
         </>}
       </div>
     </main>
