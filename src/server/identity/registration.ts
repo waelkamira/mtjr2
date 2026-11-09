@@ -51,8 +51,9 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 /**
- * Creates an active account immediately after the caller has verified the
- * registration challenge. Email verification is intentionally not required.
+ * Creates a pending account after the caller has verified the registration
+ * challenge. A single-use email-verification challenge must be completed before
+ * the account can sign in and receive a session.
  * Seller applications remain pending and receive no seller permissions.
  */
 export async function registerUser(
