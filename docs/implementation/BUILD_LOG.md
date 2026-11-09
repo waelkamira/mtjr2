@@ -3811,3 +3811,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Preserved the current main Turnstile validation, trusted-proxy IP handling, registration throttling, consent capture, seller-pending status, unique-email conflict handling, password policy, audit logging, and differentiated login errors.
 - The old branch route/service versions were not copied wholesale because they predate the current hardened registration and login contracts.
 - No tests, build, typecheck, or browser checks were run, per the current build-first instruction.
+## 2026-11-09 — Advertising safeguards and currency-correct analytics
+
+- Restored the seller campaign prerequisite found in the retained branch: the selected approved product must have at least one active variant with a price for the selected market and currency before a campaign can be created.
+- Preserved main's stronger campaign activation schedule check, including both start and end bounds, and its market/store eligibility, targeting validation, positive-budget checks, transactional state changes, and audit events.
+- Admin advertising analytics now include each currency's configured minor-unit precision. The dashboard formats spend and open invoice balances as actual currency amounts rather than displaying raw minor-unit integers.
+- Retained main's more complete keyword matching and public search-budget enforcement; no older advertising delivery implementation was copied.
+- No tests, build, typecheck, or browser checks were run.
