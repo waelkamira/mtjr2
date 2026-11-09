@@ -3419,3 +3419,19 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The seller dashboard now defaults its sales chart/selector to SYP whenever SYP sales are present, while preserving a seller's current currency selection and retaining all other currencies (including USD) in the selector.
 - Commit: `af91e88` — `feat(seller): prefer SYP in seller sales overview`.
 - Source-level currency selection review only; no tests or builds were run.
+
+## 2026-11-09 — Seller product prices use customer-facing amounts
+
+**Implemented on `main`**
+- Seller product creation now accepts normal decimal prices for every SKU and enabled market instead of exposing internal minor-unit integers.
+- The selected market currency determines the permitted decimal precision; the shared BigInt-safe `toMinorUnits` conversion builds the API payload.
+- Optional compare-at prices use the same conversion and must not be lower than the selling price.
+- Changing a SKU's currency clears both entered amounts to prevent accidentally reusing a numeric value in a different currency.
+- The server API and Prisma money representation remain unchanged: persisted prices are integer minor units with an explicit currency code.
+
+**Commits**
+- `e18b3ca` — `feat(seller): enter product prices in normal currency units`.
+- `b743be1` — `fix(seller): reset product price when currency changes`.
+
+**Verification**
+- Source-level editor validation and API payload review only. No tests, build, browser, database, CI or deployment commands were run.
