@@ -422,3 +422,11 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - One-store-per-seller rule: UI hides create-store form after an owned store exists; backend serializes store creation and rejects a second distinct store setup.
 - Syrian geography/Leaflet selection and zoom journey passes in the same Browser E2E run.
 - Exact `main` SHA `8d19568415f0a9139987774e7697cbf8dfbb90be`: Browser E2E run `42494633661` PASS; CI run `42494633784` PASS.
+
+
+## 2026-11-09 — Canonical admin entry route
+
+- Added `src/app/admin/page.tsx` as the canonical `/admin` entry point.
+- The route redirects to `/admin/dashboard`; the existing `src/app/admin/layout.tsx` continues to enforce the authenticated admin-area permission gate and mandatory administrator MFA before the dashboard is rendered.
+- No API, Prisma model, or migration is required: this is a navigation-only route with no business mutation.
+- Verification in this GitHub-only session: source and route wiring inspected; no local Next.js build or browser navigation run. Keep the route `Implemented / unverified` until the normal build/browser gate is completed.
