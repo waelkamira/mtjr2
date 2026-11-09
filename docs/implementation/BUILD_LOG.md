@@ -3831,3 +3831,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Removed one duplicate product-not-found guard in the current advertising campaign service while retaining the active-variant market/currency price prerequisite.
 - The branch-only QA reports and old geography/product-listing artifacts remain excluded because they describe obsolete implementation snapshots or contradict current main architecture. No wholesale merge was performed; only changes with a current, demonstrable gap are recovered.
 - No tests, build, typecheck, migration execution, or browser checks were run, per instruction.
+
+
+## 2026-11-09 — Continued admin and customer-surface comparison
+
+- Compared the remaining admin dashboard, seller/user/product moderation, commissions, coupons, categories, support, AI settings, product Q&A, and review-management pages. Main keeps the newer localized workflows and more complete current data contracts. The older branch's isolated catch-message differences and compact one-line UI handlers do not justify replacing the current pages.
+- The current main admin dashboard already includes the chart suite (daily trend, order status, queues, distribution, scatter, box plot, and radar) and uses the restored service response; the branch's sparkline-heavy metric-card implementation was not transplanted over it.
+- Compared customer support, support-ticket detail, wishlist, account profile/addresses, and storefront surfaces. Main retains newer API integration and current components; no branch-only behavior was found that warranted a source replacement in this pass.
+- Reviewed CI workflow differences: main intentionally retains non-cancelling concurrency for quality/browser runs and broader path coverage; the branch versions are older. The branch-only dashboard demo seeder was not copied because it creates a large synthetic customer/order/payment/review dataset and depends on schema assumptions that have since evolved. It requires a separately designed, isolated demo-fixture workflow before reuse.
+- No tests, build, typecheck, migration execution, or browser checks were run.
