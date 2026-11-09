@@ -3795,3 +3795,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Recovered the useful storefront footer concept from the branch, but adapted it for current main: localized marketplace/help/information links, current contact email configuration, and no inactive newsletter form, unconfigured social accounts, or unsupported payment/security claims. Mounted it in the root layout.
 - The old seller listing operations note was not copied because it explicitly contradicts current provider rotation and fallback policy. The old QA execution/security reports were not copied as current evidence because they refer to a different code snapshot and could be mistaken for current verification results.
 - No tests, build, typecheck, migration execution, or browser checks were run.
+
+
+## 2026-11-09 — Recovered missing admin dashboard data contract
+
+- A shared-file comparison exposed an important branch-only server change that had not reached main: the admin dashboard UI on main consumes metricSamples and orderStatusCounts, but the main dashboard service did not return either field.
+- Ported the bounded, latest-20-record metric sample queries from the branch into the current main service and restored metricSamples plus orderStatusCounts in its response. Kept main's newer dashboard authorization, filters, aggregate metrics, and smaller recent-orders list; did not replace the current service wholesale.
+- This is a targeted recovery of the dashboard data contract, not a claim that the dashboard has been tested. No tests, build, typecheck, migration execution, or browser checks were run.
