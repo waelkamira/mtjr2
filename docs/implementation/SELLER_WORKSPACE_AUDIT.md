@@ -11,7 +11,7 @@ The review covered every seller route currently present in `src/app/seller`, the
 | Route | Page / responsibility | Current integration and review notes |
 |---|---|---|
 | `/seller` | Seller onboarding, workspace overview, store identity, warehouses and delivery setup | Uses seller workspace/store APIs; one-store-per-seller is enforced in the server transaction with an advisory lock and existing-store check. Store details, public phone/address, logo/banner, warehouse and shipping data are editable from the workspace. |
-| `/seller/products` | Product drafts, media, categories, attributes, variants, prices, real-estate fields and location | Connected to product APIs, category attributes, markets and media upload. Topbar search now feeds the catalog filter. Location hierarchy and map place search use imported OpenSyria records only. Exact street address is now a separate seller-entered field. |
+| `/seller/products` | Product drafts, media, categories, attributes, variants, prices, real-estate fields and location | Connected to product APIs, category attributes, markets and media upload. Topbar search query is hydrated into the catalog filter. Location hierarchy and map place search use imported OpenSyria records only. Exact street address is now a separate seller-entered field. |
 | `/seller/orders` | Vendor orders, fulfillment status, dispatch and tracking events | Connected to seller order/status/shipment/tracking APIs. Currency formatting follows the active locale. |
 | `/seller/inventory` | Warehouses, stock ledger, adjustments, counts, quarantine and transfers | Connected to warehouse, inventory, stock-count, adjustment, quarantine and transfer APIs. Quantity actions are guarded by required selections and busy states. |
 | `/seller/shipping` | Store delivery services and rate management | Connected to shipping-rate APIs; store/market selection and rate editing are present. |
@@ -45,7 +45,7 @@ This is not a UI-only omission. The accounting journal foundation exists, but it
 - Removed all active Akaar-derived geography from the application and import pipeline; added a migration to remove the legacy table/relation without losing existing product neighbourhood text.
 - Changed map place search to OpenSyria database records and localized returned place labels.
 - Added a separate `Product.streetAddress` field and wired it through product creation, draft editing, seller API validation and Prisma.
-- Connected topbar search to the product catalog query.
+- Confirmed the existing topbar query hydration and removed a duplicate initial-search effect.
 - Synchronized the sidebar's selected-store identity with active-store changes.
 - Hardened seller inbox sending/loading/error states.
 - Reworked seller Q&A and localized Q&A/review/product/order/status presentation.
