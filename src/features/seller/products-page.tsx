@@ -880,6 +880,23 @@ export default function SellerProductsPage() {
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input type="number" min="0.01" step="0.01" required className={inputClass} value={editFloorArea} onChange={(event) => setEditFloorArea(event.target.value)} /></label>
               </div>
             </fieldset>}
+            {editVariantRows.length > 0 && <fieldset className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+              <legend className="px-1 text-sm font-semibold">{translate(locale, "SKU market prices", "أسعار المتغيرات حسب السوق")}</legend>
+              {editVariantRows.map((variant) => <div key={variant.id} className="grid gap-3 rounded-xl border border-white bg-white/70 p-3">
+                <p className="text-xs font-extrabold text-[#42677b]">{variant.sku}{variant.name ? " · " + variant.name : ""}</p>
+                {availableMarkets.map((market) => {
+                  const price = variant.prices[market.id];
+                  const currency = market.currencies.find((entry) => entry.currency.code === price.currencyCode)?.currency ?? market.defaultCurrency;
+                  return <div key={market.id} className="grid gap-2 rounded-lg bg-[#f5fafb] p-3 sm:grid-cols-3">
+                    <p className="self-center text-xs font-bold">{market.name}</p>
+                    <label className="grid gap-1 text-xs">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={price.currencyCode} onChange={(event) => updateEditVariantPrice(variant.id, market.id, { currencyCode: event.target.value, amount: "", compareAt: "" })}>{market.currencies.map(({ currency: item }) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
+                    <label className="grid gap-1 text-xs">{translate(locale, "Selling price", "سعر البيع")} ({currency.code})<input required type="text" inputMode="decimal" className={inputClass} value={price.amount} onChange={(event) => updateEditVariantPrice(variant.id, market.id, { amount: event.target.value })} placeholder={currency.minorUnit === 0 ? "1299" : "1299.00"} /></label>
+                    <label className="grid gap-1 text-xs sm:col-start-2 sm:col-span-2">{translate(locale, "Compare-at price (optional)", "السعر قبل الخصم (اختياري)")} ({currency.code})<input type="text" inputMode="decimal" className={inputClass} value={price.compareAt} onChange={(event) => updateEditVariantPrice(variant.id, market.id, { compareAt: event.target.value })} /></label>
+                  </div>;
+                })}
+              </div>)}
+              {!editVariantPricesValid && <p className="text-xs text-amber-800">{translate(locale, "Enter a valid price for every SKU and enabled market. Compare-at prices cannot be lower than selling prices.", "أدخل سعراً صالحاً لكل متغير وسوق مفعّل. لا يجوز أن يكون السعر قبل الخصم أقل من سعر البيع.")}</p>}
+            </fieldset>}
             <SyriaLocationPicker locale={locale} value={editProductLocation} onChange={setEditProductLocation} />
             <section className="grid gap-3 rounded-2xl border border-white/80 bg-[linear-gradient(145deg,#f4effa,#e1f1e9)] p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(43,69,88,.06)]" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
               <div className="flex flex-wrap items-center justify-between gap-2">
