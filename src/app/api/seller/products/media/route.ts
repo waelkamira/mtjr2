@@ -186,7 +186,7 @@ export async function POST(request: Request): Promise<Response> {
   if (imageKitConfigured) {
     try {
       const result = await uploadToImageKit(file);
-      return Response.json({ success: true, data: withTemporaryDeleteToken(result, storeId.data) }, { headers: { "Cache-Control": "no-store" } });
+      return Response.json({ success: true, data: await persistStoreMediaAsset(storeId.data, result) }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
       errors.push(error instanceof Error ? error.message : "ImageKit upload failed.");
     }
@@ -197,7 +197,7 @@ export async function POST(request: Request): Promise<Response> {
   if (cloudinaryConfigured) {
     try {
       const result = await uploadToCloudinary(file);
-      return Response.json({ success: true, data: withTemporaryDeleteToken(result, storeId.data) }, { headers: { "Cache-Control": "no-store" } });
+      return Response.json({ success: true, data: await persistStoreMediaAsset(storeId.data, result) }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
       errors.push(error instanceof Error ? error.message : "Cloudinary upload failed.");
     }
