@@ -3568,3 +3568,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Seller workspace retains temporary delete tokens while the profile editor is open, supports removing logo/banner from the profile, cleans replaced staged uploads after save, and attempts cleanup on cancel. Saved branding references are retained; removal of a previously saved provider asset is still a separate lifecycle task.
 - The existing provider rotation and upload endpoint remain in use. A full reusable media library and safe deletion of detached, persisted assets are not yet implemented.
 - No tests, build, typecheck or browser run was performed.
+
+
+## 2026-11-09 — Reusable seller store media library
+
+- Added `StoreMediaAsset` and additive migration `20261109170000_seller_store_media_library`. The shared seller media upload endpoint now records store-scoped asset metadata for both product and store uploads, including URL, provider key, MIME type and dimensions.
+- Seller workspace now loads the latest 100 media assets and provides reuse as logo/banner plus a scoped delete action.
+- Added `DELETE /api/seller/stores/[storeId]/media`: requires owner or exact-store catalog management, checks saved branding and ProductMedia references, deletes the provider asset, then removes its library record and writes an audit event. Unsupported deletion leaves the asset record intact.
+- Temporary upload deletion also removes the library record only after provider deletion succeeds. Product media cleanup now preserves an asset if it is still referenced by store branding and removes the library row only after successful provider deletion.
+- No tests, build, typecheck, browser session or deployment was run.
