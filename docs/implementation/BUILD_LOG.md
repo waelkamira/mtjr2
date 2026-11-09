@@ -3332,3 +3332,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source and API-contract review only. No tests, build, browser, database, CI or deployment commands were run, as requested.
+
+## 2026-11-09 — Seller dashboard shipping currency consistency
+
+**Implemented on `main`**
+- Updated the embedded seller dashboard shipping-rate editor to retain the rate's actual currency when editing, rather than silently switching every edited rate to the market default.
+- Added a currency selector populated only from currencies enabled for the selected market, including SYP and USD for Syria.
+- The editor now uses the selected currency's minor-unit precision for exact conversion and formats each existing rate using the rate's persisted currency precision. The dedicated shipping page remains the full shipping-management surface.
+
+**Commits**
+- `5a9e2ff` — `fix(seller): format shipping rates with their own currency precision`.
+- `2a0bc18` — `feat(seller): select currency for dashboard shipping rates`.
+
+**Verification**
+- Source/API-contract review only. No tests, build, browser, database, CI or deployment commands were run.
