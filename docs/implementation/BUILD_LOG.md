@@ -3709,3 +3709,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added the singular `/api/seller/application` endpoint as a compatibility alias to the canonical `/api/seller/applications` handler, so older clients or cached UI builds reach the same validated submission flow.
 - The authorization checks remain unchanged: the request must pass same-origin validation, the user must have a valid session, and the account email must be verified before a seller application is accepted. A 403 from the canonical handler can therefore still indicate an origin mismatch or an unverified email; the response body carries the specific reason.
 - No tests, build, typecheck, or browser checks were run, per instruction.
+
+
+## Seller application MFA recovery flow — 2026-11-09
+- Identified that `submitSellerApplication()` uses `requireCurrentSession()`, which correctly enforces mandatory MFA for already-approved sellers. The application API previously converted MFA policy exceptions into a generic 400, so the seller UI could not guide the account owner to the required step.
+- The application route now returns explicit 403 codes for MFA enrollment and expired verification, with the correct account-security destination. No MFA enforcement was removed or bypassed.
+- The seller workspace now recognizes both MFA states on initial load and on submission, and presents a direct setup/verification link that returns the user to `/seller` after completion.
+- No tests, build, typecheck, or browser checks were run, per instruction.
