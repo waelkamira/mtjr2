@@ -16,7 +16,9 @@ const navigation = [
   { href: "/seller/reviews", en: "Reviews", ar: "التقييمات", mark: "07" },
   { href: "/seller/questions", en: "Questions", ar: "الأسئلة", mark: "08" },
   { href: "/seller/messages", en: "Messages", ar: "الرسائل", mark: "09" },
-  { href: "/seller/staff", en: "Team", ar: "الفريق", mark: "10" }
+  { href: "/seller/staff", en: "Team", ar: "الفريق", mark: "10" },
+  { href: "/seller/advertising", en: "Advertising", ar: "الإعلانات", mark: "11" },
+  { href: "/notifications", en: "Notifications", ar: "الإشعارات", mark: "12" }
 ] as const;
 
 export default function SellerPortalShell({ children }: Readonly<{ children: ReactNode }>) {
@@ -25,7 +27,7 @@ export default function SellerPortalShell({ children }: Readonly<{ children: Rea
   const t = (en: string, ar: string) => translate(locale, en, ar);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_left,rgba(214,207,246,.34),transparent_38%),radial-gradient(ellipse_at_top_right,rgba(188,231,218,.38),transparent_34%),linear-gradient(145deg,#f8f7fb,#f1f5f7_48%,#f8f4f5)]">
+    <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(214,207,246,.34),transparent_38%),radial-gradient(ellipse_at_top_right,rgba(188,231,218,.38),transparent_34%),linear-gradient(145deg,#f8f7fb,#f1f5f7_48%,#f8f4f5)]">
       <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-44 size-72 rounded-full bg-[#e5dcfa]/35 blur-3xl" />
       <div aria-hidden="true" className="pointer-events-none absolute -right-24 top-[38rem] size-80 rounded-full bg-[#d7eee7]/40 blur-3xl" />
       <div className="relative mx-auto grid w-full max-w-[1720px] gap-5 px-3 py-4 sm:px-5 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-7 lg:px-7 lg:py-7">
@@ -38,7 +40,7 @@ export default function SellerPortalShell({ children }: Readonly<{ children: Rea
             </div>
           </div>
 
-          <nav aria-label={t("Seller navigation", "قائمة البائع")} className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-1">
+          <nav aria-label={t("Seller navigation", "قائمة البائع")} className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
             {navigation.map((item) => {
               const active = item.href === "/seller" ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
               return (
