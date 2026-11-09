@@ -4257,3 +4257,11 @@ The platform account policy is now explicit: email verification is not required 
 - Seller portal scope review covered Overview, Products, Orders, Inventory, Shipping, Returns, Messages, Questions, Reviews, Advertising, Finance, Commissions, Staff, Store Settings, mobile/desktop navigation, and loading/error boundaries.
 - Outstanding by design: seller withdrawals/payout methods and seller payable balances are not implemented. The accounting journal foundation is not yet connected to captured payments/refunds, and settlement/hold/chargeback policy is not approved. Do not calculate or label commissions/refunds as an available-to-withdraw balance. See `docs/implementation/SELLER_WORKSPACE_AUDIT.md`.
 - Completed remaining seller localization pass for inventory movement/transfer statuses and return order references; seller dashboard styling retains dark readable text on pale clay surfaces and white text only on dark surfaces.
+
+
+## 2026-11-10 — Payment provider control-center specification
+- Reviewed the current payment implementation: Stripe is registered from server environment variables; `Payment` and `PaymentWebhookEvent` already exist; `/admin/payments` inspects transactions and is not a provider-management console; the public provider discovery route lists compiled adapters.
+- Added `docs/architecture/PAYMENT_PROVIDER_CONTROL_CENTER.md` defining provider setup, edit, enable/disable, market/currency/method availability, connection verification, audit history and archive lifecycle.
+- Security invariants: disabled providers stop new checkout only; signed webhooks and reconciliation for historical/in-flight payments remain operational; provider identifiers map only to compiled allowlisted adapters; provider records are archived rather than physically deleted.
+- Specified AES-256-GCM credential encryption, key versioning/rotation, secret masking, Super Admin-only server-side authorization, recent MFA for live-mode changes, and audit logging without secret material.
+- This commit adds the implementation specification only. No provider configuration model, credential storage, admin API/UI, migration, tests, build, or live payment changes are claimed or performed. Those implementation steps must follow the security prerequisites in the specification.
