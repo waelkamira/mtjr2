@@ -3584,3 +3584,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - This prevents successful uploads from being absent from the seller's reusable media library and keeps provider metadata/deletion lifecycle consistent across configured providers.
 - Commit: 24b60fbc0b1b0dcc3b3f3c7701349f6fcfc7e445.
 - Per the current work instruction, no tests, build, typecheck or browser verification was run; these remain for the post-build verification pass.
+
+## 2026-11-09 — Seller product image completion guard
+
+- Product creation now blocks submission until at least one image has uploaded successfully; failed or in-progress uploads cannot satisfy the requirement.
+- Product editing now prevents removing the final image unless a replacement has been added first. This aligns the save behavior with the product gallery's existing instruction that every listing needs a recognizable primary image.
+- Commit: 945d8e7d2bdb8aedfd4775cd812161ae1e6ca5a7.
+- No tests/build/typecheck/browser verification performed, per the current build-first instruction.
