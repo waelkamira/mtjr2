@@ -102,6 +102,8 @@ function MenuIcon({ open }: { open: boolean }) {
 
 export default function SiteNavigationContent({ account }: { account: AccountSummary | null }) {
   const { locale } = useLocale();
+  const isAdministrator = account?.accountType === "Admin" || account?.accountType === "Super Admin";
+  const controlPanelHref = account?.accountType === "Super Admin" ? "/admin/control-panel" : "/admin/dashboard";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
@@ -178,6 +180,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
       }[link.label] ?? link.label)
     })),
     ...(account ? signedInLinks : []),
+    ...(isAdministrator ? [{ href: controlPanelHref, label: translate(locale, "Control panel", "لوحة التحكم") }] : []),
     ...publicLinks.slice(6).map((link) => ({
       ...link,
       label: translate(locale, link.label, { About: "من نحن", Contact: "اتصل بنا", Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)
@@ -201,6 +204,11 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
         <MarketplaceSearchBox />
 
         <div className="hidden shrink-0 items-center gap-1 md:ml-auto md:flex md:gap-2">
+          {isAdministrator && (
+            <Link href={controlPanelHref} className="clay-interactive rounded-xl px-3 py-2 text-sm font-semibold text-[var(--color-lavender-800)] transition hover:bg-[var(--color-lavender-100)]">
+              {translate(locale, "Control panel", "لوحة التحكم")}
+            </Link>
+          )}
           <Link
             href="/cart"
             className="clay-interactive rounded-xl px-3 py-2 text-sm font-semibold text-[var(--color-lavender-800)] transition hover:bg-[var(--color-lavender-100)]"
