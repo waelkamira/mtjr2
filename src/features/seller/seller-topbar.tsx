@@ -25,7 +25,7 @@ export default function SellerTopbar() {
     : translate(locale, "Seller studio", "استوديو البائع");
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-white/75 bg-[#dce7ec]/95 px-4 py-3 shadow-[0_8px_24px_rgba(74,75,112,.08),inset_0_1px_0_rgba(255,255,255,.95)] backdrop-blur-xl sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
+    <header className="relative z-20 flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-[#d7e0e6] bg-white px-4 py-3 shadow-[0_3px_12px_rgba(22,42,58,.06)] sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
       <div className="min-w-[150px]">
         <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#658394]">MATJAR / SELLER STUDIO</p>
         <p className="mt-1 text-base font-black text-[#344d60]">{section}</p>
