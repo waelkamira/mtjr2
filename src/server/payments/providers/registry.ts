@@ -23,6 +23,12 @@ export function registerPaymentProvider(adapter: PaymentProviderAdapter) {
   providers.set(adapter.key, adapter);
 }
 
+export function getPaymentProviderAdapter(key: string) {
+  if (key === stripePaymentProvider.key) return stripePaymentProvider;
+  if (key === paypalPaymentProvider.key) return paypalPaymentProvider;
+  return null;
+}
+
 export function getPaymentProvider(key: string) {
   return providers.get(key) ?? null;
 }
