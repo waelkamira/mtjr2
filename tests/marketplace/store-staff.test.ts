@@ -52,6 +52,18 @@ describe("store staff lifecycle", () => {
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
+  it("invites an existing active account by normalized email address", async () => {
+    const result = await inviteStoreStaff({ storeId: "store-1", email: "STAFF@EXAMPLE.COM" });
+    expect(result.status).toBe("INVITED");
+    expect(mocks.userFind).toHaveBeenCalledWith({ where: { email: "staff@example.com" }, select: { id: true, status: true } });
+  });
+
+  it("requires exactly one account identifier when creating an invitation", async () => {
+    await expect(inviteStoreStaff({ storeId: "store-1", email: "staff@example.com", userId: "staff-1" })).rejects.toThrow();
+    await expect(inviteStoreStaff({ storeId: "store-1" } as never)).rejects.toThrow();
+    expect(mocks.requireCurrentSession).not.toHaveBeenCalled();
+  });
+
   it("requires the store owner for team management", async () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "manager-1" });
     await expect(inviteStoreStaff({ storeId: "store-1", userId: "staff-1" })).rejects.toThrow(/Only the store owner can invite or revoke team members/i);
