@@ -3435,3 +3435,23 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level editor validation and API payload review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller draft SKU price editing
+
+**Implemented on `main`**
+- Extended the seller draft-product update contract to accept all active variant IDs and one price per enabled store market.
+- The server verifies exact active-variant membership, exact market coverage, active markets, enabled currencies and compare-at ordering inside the existing product update transaction.
+- Product prices are upserted using the unique variant/market/currency key; a currency switch replaces the previous currency price for that market. Product and price changes share the same transaction and audit event.
+- Seller catalog responses now include compare-at values and currency precision so the edit form can restore exact decimal values.
+- Added SKU-by-market price controls to draft editing. Sellers can edit prices in normal decimal units; the UI converts to minor units with BigInt and clears amounts when currency changes. Both create and edit handlers enforce price validity before submission.
+- Product edit authorization failures now return 403 rather than being reported as a generic bad request.
+
+**Commits**
+- `01c7669` — `feat(catalog): update draft variant market prices`.
+- `cd41caf` — `feat(catalog): expose draft variant price snapshots for editing`.
+- `5a5bbd7`, `cb53938`, `7526e03`, `f27e7c8`, `3b43bd6`, `95b9b4e` — seller SKU edit UI/state and payload.
+- `f99cd23`, `9c1dfe2` — create/edit submit validation guards.
+- `85d18d5`, `304118f` — product edit authorization error mapping.
+
+**Verification**
+- Source-level schema/service/UI contract review only. No tests, build, browser, database, CI or deployment commands were run.
