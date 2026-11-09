@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -79,9 +80,29 @@ function SellerIcon({ name }: { name: IconName }) {
   );
 }
 
+type SidebarStore = { id: string; name: string; slug: string; logoUrl: string | null };
+
 export default function SellerNavigation() {
   const pathname = usePathname();
   const { locale } = useLocale();
+  const [store, setStore] = useState<SidebarStore | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/seller/stores", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return await response.json() as { stores?: SidebarStore[] };
+      })
+      .then((data) => {
+        if (!active || !data?.stores?.length) return;
+        let preferredId = "";
+        try { preferredId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
+        setStore(data.stores.find((item) => item.id === preferredId) ?? data.stores[0]);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
 
   return (
     <>
@@ -99,8 +120,10 @@ export default function SellerNavigation() {
         </div>
 
         <div className="mx-4 mt-5 flex items-center gap-3 rounded-[1.6rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-3 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
-          <span className="grid size-14 shrink-0 place-items-center rounded-[1.25rem] border border-white/35 bg-[linear-gradient(145deg,#d8edf0,#9fc8d2)] text-xl font-black text-[#29475b] shadow-[0_7px_16px_rgba(9,24,38,.2),inset_0_2px_0_white]">M</span>
-          <span className="min-w-0"><span className="block text-sm font-extrabold text-white">{translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block text-[10px] leading-4 text-[#b3c6d2]">{translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
+          <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[1.25rem] border border-white/35 bg-[linear-gradient(145deg,#d8edf0,#9fc8d2)] text-xl font-black text-[#29475b] shadow-[0_7px_16px_rgba(9,24,38,.2),inset_0_2px_0_white]">
+            {store?.logoUrl ? <img src={store.logoUrl} alt="" className="size-full object-cover" /> : (store?.name ?? "M").trim().slice(0, 1).toLocaleUpperCase()}
+          </span>
+          <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-white">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block truncate text-[10px] leading-4 text-[#b3c6d2]">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
         </div>
 
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
