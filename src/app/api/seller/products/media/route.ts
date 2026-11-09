@@ -58,6 +58,26 @@ function withTemporaryDeleteToken<T extends { storageKey?: string }>(result: T, 
   };
 }
 
+async function persistStoreMediaAsset<T extends { url: string; storageKey?: string; mimeType?: string; width?: number; height?: number }>(storeId: string, result: T) {
+  try {
+    const asset = await prisma.storeMediaAsset.create({
+      data: {
+        storeId,
+        url: result.url,
+        storageKey: result.storageKey ?? null,
+        mimeType: result.mimeType ?? null,
+        width: result.width ?? null,
+        height: result.height ?? null
+      },
+      select: { id: true }
+    });
+    return { ...withTemporaryDeleteToken(result, storeId), assetId: asset.id };
+  } catch (error) {
+    if (result.storageKey) await deleteProductImage(result.storageKey).catch(() => undefined);
+    throw error;
+  }
+}
+
 async function uploadToImgur(file: File) {
   const clientId = getNextImgurClientId();
   const response = await fetch("https://api.imgur.com/3/image", {
@@ -155,7 +175,7 @@ export async function POST(request: Request): Promise<Response> {
   if (imgurConfigured) {
     try {
       const result = await uploadToImgur(file);
-      return Response.json({ success: true, data: withTemporaryDeleteToken(result, storeId.data) }, { headers: { "Cache-Control": "no-store" } });
+      return Response.json({ success: true, data: await persistStoreMediaAsset(storeId.data, result) }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
       errors.push(error instanceof Error ? error.message : "Imgur upload failed.");
     }
@@ -252,6 +272,9 @@ export async function DELETE(request: Request): Promise<Response> {
 
   try {
     const result = await deleteProductImage(storageKey);
+    if (result === "deleted") {
+      await prisma.storeMediaAsset.deleteMany({ where: { storeId: parsed.data.storeId, storageKey } });
+    }
     return Response.json({
       success: true,
       deleted: result === "deleted",
