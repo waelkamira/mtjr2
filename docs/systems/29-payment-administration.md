@@ -165,3 +165,5 @@
 - Key management: versioned AES-256-GCM key ring, backward-compatible v1 setting, active-version writes, and MFA-protected audited batch re-encryption of provider credentials plus historical payment snapshots. Old keys must remain configured until re-encryption reports zero remaining rows.
 
 - Additional hardening: database CHECK constraint for complete-or-empty payment snapshots; malformed snapshot detection before key rotation; bounded resumable key rotation (100 rows per model per request); provider method allowlist validation; market-filtered no-store provider discovery; PayPal capture-to-payment identity checks.
+
+- Refund boundary: provider refunds are not issued automatically yet. Refund records remain pending manual confirmation; finance enters the external provider transaction reference and confirms completion before the platform updates payment/order accounting. No browser callback can mark a refund complete.
