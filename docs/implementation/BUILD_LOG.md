@@ -3263,3 +3263,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exact-head CI passed: Prisma validate/migrate/generate, TypeScript, ESLint, 109 test files / 540 tests, production build, API route security inventory, API authorization-boundary inventory and UI mutation-feedback inventory.
 - Exact-head Platform PostgreSQL Integration passed. Exact-head Browser E2E passed 9/9, including seller workspace, product create/edit, shipping-rate edit and dispatch-address persistence.
 - Seller portal scope is closed for the current navigation surface. Phase 5 overall remains partial (procurement/admin command center); seller payout execution remains Phase 6; live carrier integrations remain conditional. No Vercel deployment was performed.
+
+
+## 2026-11-09 — Seller staff workspace stale-response protection
+
+**Implemented on `main`**
+- Added a monotonically increasing reload sequence to the seller team page. Only the latest workspace/invitation/staff response may update the UI; an older request is ignored after a newer reload or store selection.
+- Clear the previous staff list immediately when the selected store changes, so membership rows from the previous store are not shown while the next store loads.
+- Keep the server-side owner-only invitation/revocation and exact-store role assignment boundary unchanged.
+
+**Commit**
+- `e615975e9336c245c2ea916c1c3cc75edae79247` — `Prevent stale staff data across store switches`.
+
+**Verification**
+- Source-level request sequencing review only. No new browser/build result is claimed for this commit.
