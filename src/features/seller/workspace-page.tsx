@@ -210,7 +210,7 @@ export default function SellerWorkspacePage() {
     if (!selectedStoreId && data.stores[0]) {
       setSelectedStoreId(data.stores[0].id);
       try {
-        localStorage.setItem("mtjr.activeStoreId", data.stores[0].id);
+        localStorage.setItem("mtjr.activeStoreId", data.stores[0].id); window.dispatchEvent(new Event("mtjr:active-store-changed"));
       } catch {
         // The workspace must remain usable when browser storage is unavailable.
       }
@@ -229,7 +229,7 @@ export default function SellerWorkspacePage() {
       let preferredStoreId = "";
       try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage can be unavailable in restricted browsers. */ }
       const initialStore = sellerResult.stores.find((store) => store.id === preferredStoreId) ?? sellerResult.stores[0];
-      if (initialStore) { setSelectedStoreId(initialStore.id); try { localStorage.setItem("mtjr.activeStoreId", initialStore.id); } catch { /* Storage can be unavailable in restricted browsers. */ } }
+      if (initialStore) { setSelectedStoreId(initialStore.id); try { localStorage.setItem("mtjr.activeStoreId", initialStore.id); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Storage can be unavailable in restricted browsers. */ } }
     }).catch((cause: unknown) => {
       if (!active) return;
       if (cause instanceof ApiError && cause.status === 401) {
@@ -727,7 +727,7 @@ export default function SellerWorkspacePage() {
                   <label className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/90 bg-white/55 px-3 py-1.5 text-xs font-bold text-[#3e6478] shadow-[inset_0_1px_0_white]">
                     <span className="size-2 shrink-0 rounded-full bg-[#62a9a0]" />
                     <span className="shrink-0 text-[#78909c]">{translate(locale, "Active store", "المتجر النشط")}</span>
-                    {(workspace?.stores.length ?? 0) > 1 ? <select aria-label={translate(locale, "Choose active store", "اختر المتجر النشط")} value={selectedStoreId} onChange={(event) => { setSelectedStoreId(event.target.value); try { localStorage.setItem("mtjr.activeStoreId", event.target.value); } catch { /* Storage can be unavailable in restricted browsers. */ } }} className="max-w-[190px] bg-transparent font-extrabold text-[#526078] outline-none">{(workspace?.stores ?? []).map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select> : <span className="truncate">{selectedStore.name}</span>}
+                    {(workspace?.stores.length ?? 0) > 1 ? <select aria-label={translate(locale, "Choose active store", "اختر المتجر النشط")} value={selectedStoreId} onChange={(event) => { setSelectedStoreId(event.target.value); try { localStorage.setItem("mtjr.activeStoreId", event.target.value); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Storage can be unavailable in restricted browsers. */ } }} className="max-w-[190px] bg-transparent font-extrabold text-[#526078] outline-none">{(workspace?.stores ?? []).map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select> : <span className="truncate">{selectedStore.name}</span>}
                   </label>
                   <span className="text-xs font-semibold text-[#78909c]">{selectedStore.status}</span>
                 </div>}
@@ -961,7 +961,7 @@ export default function SellerWorkspacePage() {
               {!workspace.stores.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">{translate(locale, "No stores have been created yet.", "لم يتم إنشاء أي متاجر بعد.")}</p> : (
                 <>
                   <div className="mt-4"><Link href="/seller/messages" className="inline-flex rounded-2xl bg-[linear-gradient(135deg,#a8d9d4,#75b8b8)] px-4 py-2 text-sm font-bold text-[#23485a] shadow-[0_6px_14px_rgba(39,104,112,.18),inset_0_1px_0_rgba(255,255,255,.3)]">{translate(locale, "Open store inbox", "فتح صندوق وارد المتجر")}</Link></div>
-                  <div className="mt-4 flex flex-wrap gap-2">{workspace.stores.map((store) => <button key={store.id} onClick={() => { setSelectedStoreId(store.id); try { localStorage.setItem("mtjr.activeStoreId", store.id); } catch { /* Storage can be unavailable in restricted browsers. */ } }} className={`rounded-xl border px-4 py-2 text-sm ${selectedStoreId === store.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-900)] text-white" : "border-[var(--border)]"}`}>{store.name}</button>)}</div>
+                  <div className="mt-4 flex flex-wrap gap-2">{workspace.stores.map((store) => <button key={store.id} onClick={() => { setSelectedStoreId(store.id); try { localStorage.setItem("mtjr.activeStoreId", store.id); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Storage can be unavailable in restricted browsers. */ } }} className={`rounded-xl border px-4 py-2 text-sm ${selectedStoreId === store.id ? "border-[var(--color-forest-800)] bg-[var(--color-forest-900)] text-white" : "border-[var(--border)]"}`}>{store.name}</button>)}</div>
                   {selectedStore && <div className="mt-6 border-t border-[var(--border)] pt-5">
                     <div className="flex flex-wrap items-center justify-between gap-2"><div><div><h3 className="font-semibold">{selectedStore.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">STR-{selectedStore.storeNumber.padStart(8, "0")} · /{selectedStore.slug} · {selectedStore.status}</p></div><div className="mt-2 flex flex-wrap gap-2"><Link href="/seller/products" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Manage products", "إدارة المنتجات")}</Link><Link href="/seller/orders" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Seller orders", "طلبات البائع")}</Link><Link href="/seller/inventory" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Inventory operations", "إدارة المخزون")}</Link><Link href="/seller/staff" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--color-forest-900)]">{translate(locale, "Team & access", "الفريق والصلاحيات")}</Link></div></div><div className="flex items-center gap-3"><span className="text-xs text-[var(--muted)]">{selectedStore.markets.length} {translate(locale, "active markets", "أسواق نشطة")}</span>{selectedStore.isOwner && <button type="button" onClick={() => { setEditingStoreName(selectedStore.name); setEditingStoreSlug(selectedStore.slug);
                         setEditingStoreDescription(selectedStore.description ?? "");
