@@ -13,6 +13,13 @@ Absolute prevention cannot be guaranteed. The target is defense in depth, least 
 - The app already has server-side, HttpOnly cookie-backed sessions; session resolution from PostgreSQL; permission checks; scoped authorization primitives; MFA support and step-up timestamps; persistent login/registration/reset/verification throttles; same-origin mutation guards; and audit-log models. These are foundations, not proof that every route is correctly protected.
 - Existing API inventory scripts classify mutation request boundaries and authorization boundaries. Their output is static evidence only and must not be interpreted as proof of tenant isolation or exploit resistance.
 
+## Security fixes applied during route review
+
+- Seller product-media upload now rejects invalid or oversized declared `Content-Length` values before parsing multipart form data. The hosting ingress must still enforce a hard request-body limit for chunked requests where `Content-Length` is absent.
+- Temporary seller image deletion now uses its own persistent per-user action budget and rejects oversized JSON requests before parsing.
+- Payment webhooks now read the request stream with a strict 1 MiB maximum, reject oversized declared lengths, and pass the bounded raw bytes to the provider signature verifier. This prevents unbounded webhook-body buffering and avoids reading the same body twice.
+- These are targeted application-layer controls; they do not replace ingress limits, malware scanning, or full route-by-route authorization review.
+
 ## Mandatory security layers and completion gates
 
 ### 1. Edge and transport
