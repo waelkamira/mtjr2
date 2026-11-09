@@ -64,14 +64,14 @@ export async function inviteStoreStaff(input: z.input<typeof inviteSchema>, now 
   });
 }
 
-/** The invited account accepts its own invitation and receives a store-scoped STORE_MANAGER grant. */
+/** The invited account accepts its own invitation and receives its selected store-scoped role grant. */
 export async function acceptStoreStaffInvitation(membershipId: string, now = new Date()) {
   const id = z.string().trim().min(1).parse(membershipId);
   const actor = await requireCurrentSession(now);
   return prisma.$transaction(async (tx) => {
     const membership = await tx.sellerStaff.findUnique({
       where: { id },
-      select: { id: true, userId: true, storeId: true, status: true, expiresAt: true, store: { select: { seller: { select: { status: true } } } } }
+      select: { id: true, userId: true, storeId: true, status: true, roleId: true, expiresAt: true, store: { select: { seller: { select: { status: true } } } } }
     });
     if (!membership || membership.userId !== actor.userId) throw new Error("Invitation not found.");
     if (membership.status !== SellerStaffStatus.INVITED || membership.store.seller.status !== "ACTIVE" || (membership.expiresAt !== null && membership.expiresAt <= now)) {
