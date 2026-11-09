@@ -1,5 +1,6 @@
 import "server-only";
 
+import { env } from "@/lib/env";
 import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
 
 type PayPalLinks = { rel?: string; href?: string };
@@ -31,10 +32,10 @@ type PayPalWebhookEvent = {
 };
 
 function configuration() {
-  const clientId = process.env.PAYPAL_CLIENT_ID?.trim();
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET?.trim();
-  const webhookId = process.env.PAYPAL_WEBHOOK_ID?.trim();
-  const mode = process.env.PAYPAL_MODE === "live" ? "live" : "sandbox";
+  const clientId = env.PAYPAL_CLIENT_ID?.trim();
+  const clientSecret = env.PAYPAL_CLIENT_SECRET?.trim();
+  const webhookId = env.PAYPAL_WEBHOOK_ID?.trim();
+  const mode = env.PAYPAL_MODE;
   if (!clientId || !clientSecret || !webhookId) {
     throw new Error("PayPal is not fully configured. Set PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET and PAYPAL_WEBHOOK_ID.");
   }
@@ -109,7 +110,9 @@ function minorToMajor(amountMinor: string, currencyCode: string) {
   const whole = amount / scale;
   if (digits === 0) return whole.toString();
   const fraction = (amount % scale).toString().padStart(digits, "0");
-  return `${whole.toString()}.${fraction}`;
+  const formatted = `${whole.toString()}.${fraction}`;
+  if (formatted.length > 32) throw new Error("PayPal amount exceeds the supported API length.");
+  return formatted;
 }
 
 function majorToMinor(value: string, currencyCode: string) {
