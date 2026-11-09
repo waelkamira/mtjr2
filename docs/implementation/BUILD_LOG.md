@@ -4356,3 +4356,13 @@ The platform account policy is now explicit: email verification is not required 
 
 - Added `PAYMENT_PROVIDER_RUNTIME_ENVIRONMENT=TEST|LIVE` override, defaulting to TEST outside production and LIVE in production. Checkout discovery, payment creation and managed webhook verification now share one resolver, allowing sandbox verification on a production deployment before switching to live credentials.
 - Existing payment snapshots continue to select their original environment for webhook/capture verification; legacy PayPal payments continue to use `PAYPAL_MODE`.
+
+
+## 2026-11-10 — Payment integration status reconciliation
+- Reconciled System 29 and the page route registry with the current main source after the PayPal and provider-control-center implementation.
+- Confirmed the original source was waelkamira/cartoon; Matjar uses a server-authoritative PayPal Orders v2 adapter, server-side capture, historical encrypted credential snapshots and PayPal-verified capture webhooks.
+- Confirmed multi-version AES-256-GCM key rotation is implemented through the MFA-protected, audited /api/admin/payment-providers/rotate-credentials operation. It is not a remaining code task.
+- Confirmed refunds are implemented as finance-confirmed manual operations after physical return receipt. Provider-side automatic refunds, refund webhook reconciliation, ledger reversals, seller payable adjustments and settlement reconciliation remain future work.
+- Migration 20261110120000_payment_provider_control_center is present in the repository. Applying it to the owner's active database and completing a PayPal Sandbox journey are still unverified and cannot be inferred from source inspection.
+- No database migration was applied, no credentials were read or changed, and no tests/build/typecheck or live/Sandbox payment were executed in this documentation-only reconciliation.
+- Documentation commit: 27115d092146d99f4459f4e5cf8711603371aeeb; route-registry correction follows in this commit.
