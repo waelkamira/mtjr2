@@ -38,9 +38,10 @@ function ChartCard({
   children: ReactNode;
 }) {
   return (
-    <section className="seller-chart-card min-w-0 rounded-[1.7rem] border border-white/90 bg-[linear-gradient(145deg,#f1f7f8,#dce9ed)] p-5 shadow-[0_9px_22px_rgba(35,62,81,.1),inset_0_2px_0_white]">
+    <section className="seller-chart-card min-w-0 overflow-hidden rounded-[1.7rem] border border-white/95 bg-[linear-gradient(145deg,#f3f6fb_0%,#e2edf0_55%,#e9e6f4_100%)] p-5 shadow-[0_12px_26px_rgba(35,62,81,.12),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.04)]">
       <div className="mb-4">
-        <h2 className="text-base font-semibold text-[var(--color-onyx)]">{title}</h2>
+        <div aria-hidden="true" className="mb-3 h-1.5 w-16 rounded-full bg-[linear-gradient(90deg,#69B5B0_0%,#438FB4_35%,#9185B8_68%,#D2BD7D_100%)]" />
+        <h2 className="text-base font-extrabold text-[#344d60]">{title}</h2>
         {description && <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{description}</p>}
       </div>
       {children}
@@ -153,12 +154,12 @@ export function LineAreaChart({
         <div className="overflow-x-auto">
           <svg role="img" aria-label={title} viewBox={`0 0 ${width} 170`} className="h-44 w-full min-w-[480px]" preserveAspectRatio="none">
             {[0, 1, 2, 3].map((lineIndex) => <line key={lineIndex} x1="26" x2={width - 8} y1={25 + lineIndex * 40} y2={25 + lineIndex * 40} stroke="#E8E4DF" strokeDasharray="3 4" />)}
-            {area && <path d={areaPath} fill="#69B5B0" opacity=".2" />}
+            {area && <path d={areaPath} fill="#9185B8" opacity=".16" />}
             <polyline points={line} fill="none" stroke="#438FB4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
             {points.map(({ x, y, item }, index) => (
               <g key={`${item.label}-${index}`}>
                 <title>{`${item.label}: ${item.value}`}</title>
-                <circle cx={x} cy={y} r="3.5" fill="#69B5B0" stroke="white" strokeWidth="2" />
+                <circle cx={x} cy={y} r="3.8" fill={chartColor(index + 1)} stroke="white" strokeWidth="2" />
               </g>
             ))}
           </svg>
