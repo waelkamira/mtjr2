@@ -118,3 +118,11 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## Store profile and customer-facing policies — 2026-11-09
+
+- Seller workspace includes owner-managed public store identity, branding, and customer policy content.
+- Shipping/delivery, returns/refunds, privacy notice and terms-of-sale text persist on Store via the audited, exact-store-scoped settings service and render on the public store detail page.
+- Private dispatch-origin contact/address/instructions remain separate and are not exposed by public store serializers.
+- Additive migration: `20261109160000_seller_store_policies`. Policy localization/versioning and legal approval workflow remain outstanding.
