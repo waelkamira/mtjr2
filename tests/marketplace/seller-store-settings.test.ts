@@ -69,7 +69,8 @@ describe("seller store profile settings", () => {
     const result = await updateSellerStoreSettings("store-1", { name: "Original Shop", slug: "original-shop", shippingContactName: "Sam Seller", shippingPhone: "+33123456789", shippingAddressLine1: "12 Market Street", shippingAddressLine2: null, shippingCity: "Strasbourg", shippingRegion: "Grand Est", shippingPostalCode: "67000", shippingCountryCode: "fr", shippingInstructions: "Ring the warehouse bell." });
     expect(result).toMatchObject({ shippingCity: "Strasbourg", shippingCountryCode: "FR" });
     expect(storeUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ shippingCity: "Strasbourg", shippingCountryCode: "FR" }) }));
-    expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "store.settings_updated" }) }));
+    expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "store.settings_updated", metadata: expect.objectContaining({ changedFields: expect.arrayContaining(["shippingCity", "shippingCountryCode"]) }) }) }));
+    expect(JSON.stringify(auditCreate.mock.calls[0][0].data.metadata)).not.toContain("12 Market Street");
   });
 
   it("rejects malformed dispatch phone numbers and country codes", async () => {
