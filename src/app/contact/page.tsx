@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ContactPage() {
   const locale = await getPreferredLocale();
-  const contactEmail = env.RESEND_FROM_EMAIL ?? null;
+  const contactEmail = env.CONTACT_EMAIL ?? env.RESEND_FROM_EMAIL ?? null;
 
   return (
     <main className="min-h-[60vh] px-4 py-12 sm:px-6">
