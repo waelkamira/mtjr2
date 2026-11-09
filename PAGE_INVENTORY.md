@@ -1,6 +1,6 @@
 # Matjar page inventory and route audit
 
-**Audit date:** 2026-11-06  
+**Audit date:** 2026-11-09  
 **Scope:** Marketplace application pages and required-but-unimplemented route targets.  
 **No deployment was performed.**
 
@@ -37,7 +37,7 @@
 
 ## Existing App Router pages
 
-There are **74 `page.tsx` routes** in the audited source tree: 20 public/auth/commerce routes, 17 account routes, 9 seller routes, and 28 admin routes. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below.
+There are **76 `page.tsx` routes** in the audited source tree: 20 public/auth/commerce routes, 17 account routes, 11 seller routes, and 28 admin routes. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below.
 
 ### Public marketplace, cart, checkout, authentication, and legal
 
@@ -90,15 +90,17 @@ The segment layout is `src/app/account/layout.tsx`; it calls the centralized ses
 
 ### Seller portal
 
-There is no seller `layout.tsx`; route APIs and services must enforce seller/store membership and per-action permissions. `/seller` embeds application/status, store setup, market and warehouse workflows; do not add redundant apply/status routes without a separate workflow requirement.
+The seller segment layout is `src/app/seller/layout.tsx` and wraps seller routes in `src/features/seller/seller-portal-shell.tsx` with responsive pastel-clay navigation. Route APIs and services remain the authorization boundary for seller/store membership and per-action permissions. `/seller` embeds application/status and store setup; do not add redundant apply/status routes without a separate workflow requirement.
 
 | Page | Actual route | Exists | Page/component source | API/data and access | Status |
 |---|---|---:|---|---|---|
-| Seller workspace/onboarding | `/seller` | Yes | `src/app/seller/page.tsx` → `features/seller/workspace-page.tsx` | Seller application/store APIs; Seller, Store, StoreMarket, Warehouse, Inventory and StoreShippingRate data; anonymous state offers sign-in. | NEEDS_TESTING |
+| Seller workspace/onboarding | `/seller` | Yes | `src/app/seller/layout.tsx` → `features/seller/seller-portal-shell.tsx`; `src/app/seller/page.tsx` → `features/seller/workspace-page.tsx` | Shared responsive seller navigation; seller application/store APIs; Seller, Store, StoreMarket, Warehouse, Inventory and StoreShippingRate data; anonymous state offers sign-in. Clay palette and real dashboard metrics are source-connected; responsive/browser journey remains unverified. | NEEDS_TESTING |
 | Inventory | `/seller/inventory` | Yes | `src/app/seller/inventory/page.tsx` → `features/seller/inventory-page.tsx` | Store-scoped inventory/adjustment/transfer APIs; Inventory, Warehouse, InventoryMovement, StockTransfer and StockTransferItem. | NEEDS_TESTING |
 | Seller messages | `/seller/messages` | Yes | `src/app/seller/messages/page.tsx` (page-local) | Store message APIs; StoreConversation/StoreMessage; member scope and inbox controls require testing. | NEEDS_TESTING |
 | Seller orders | `/seller/orders` | Yes | `src/app/seller/orders/page.tsx` → `features/orders/seller-orders-page.tsx` | Store-scoped order/shipment/status/tracking APIs; VendorOrder, Shipment and tracking records. | NEEDS_TESTING |
-| Seller products | `/seller/products` | Yes | `src/app/seller/products/page.tsx` → `features/seller/products-page.tsx` | Seller product API; Product, ProductVariant, ProductPrice and media data; owner/staff permissions and publication states need testing. | NEEDS_TESTING |
+| Seller shipping | `/seller/shipping` | Yes | `src/app/seller/shipping/page.tsx` → `features/seller/shipping-page.tsx` | Store-scoped shipping-rate list/create/update APIs; StoreShippingRate and enabled StoreMarket/Currency data; create/edit persistence and checkout eligibility need browser verification. | NEEDS_TESTING |
+| Seller advertising | `/seller/advertising` | Yes | `src/app/seller/advertising/page.tsx` → `features/seller/advertising-page.tsx` | Seller campaign and ad billing APIs; store-scoped campaigns and spend/invoice data; provider/budget and billing journeys need verification. | NEEDS_TESTING |
+| Seller products | `/seller/products` | Yes | `src/app/seller/products/page.tsx` → `features/seller/products-page.tsx` | Seller product API; Product, ProductVariant, ProductPrice, category attributes and media data. Draft creation includes category-dependent fields, market pricing, variants, image upload/retry/replace/remove/reorder and full-size preview; owner/staff permissions and publication states need testing. | NEEDS_TESTING |
 | Seller Q&A | `/seller/questions` | Yes | `src/app/seller/questions/page.tsx` → `features/seller/questions-page.tsx` | Seller question/answer APIs; ProductQuestion/ProductAnswer; store authorization must be verified. | NEEDS_TESTING |
 | Seller returns | `/seller/returns` | Yes | `src/app/seller/returns/page.tsx` → `features/seller/returns-page.tsx` | Seller return APIs and ReturnRequest/ReturnItem; no unsupported refund promise should be exposed. | NEEDS_TESTING |
 | Seller reviews | `/seller/reviews` | Yes | `src/app/seller/reviews/page.tsx` → `features/seller/reviews-page.tsx` | Seller review/response APIs; ProductReview/StoreReview; response permissions and success/error states need testing. | NEEDS_TESTING |
