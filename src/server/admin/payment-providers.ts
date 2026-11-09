@@ -46,6 +46,10 @@ async function requireProviderManagement() {
 
 function encryptionKeyRing() {
   const keys = new Map<number, Buffer>();
+  // Backward-compatible v1 source remains readable during a gradual migration.
+  if (env.PAYMENT_PROVIDER_ENCRYPTION_KEY) {
+    keys.set(1, Buffer.from(env.PAYMENT_PROVIDER_ENCRYPTION_KEY, "hex"));
+  }
   if (env.PAYMENT_PROVIDER_ENCRYPTION_KEYS) {
     const parsed = JSON.parse(env.PAYMENT_PROVIDER_ENCRYPTION_KEYS) as Record<string, string>;
     for (const [version, value] of Object.entries(parsed)) {
@@ -54,8 +58,6 @@ function encryptionKeyRing() {
       }
       keys.set(Number(version), Buffer.from(value, "hex"));
     }
-  } else if (env.PAYMENT_PROVIDER_ENCRYPTION_KEY) {
-    keys.set(1, Buffer.from(env.PAYMENT_PROVIDER_ENCRYPTION_KEY, "hex"));
   }
   if (!keys.has(env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION)) {
     throw new Error("The active provider credential encryption key version is missing from the configured key ring.");
