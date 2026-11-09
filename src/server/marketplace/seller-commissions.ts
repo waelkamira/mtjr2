@@ -33,7 +33,7 @@ export async function getSellerCommissionHistory(storeIdInput: string, cursorInp
   });
   if (!canRead) throw new PermissionDeniedError();
 
-  const [rows, aggregateRows, refundRows] = await Promise.all([
+  const [rows, aggregateRows, refundRows, refundAggregateRows] = await Promise.all([
     prisma.commissionTransaction.findMany({
       where: { storeId: store.id, sellerId: store.sellerId },
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -87,7 +87,22 @@ export async function getSellerCommissionHistory(storeIdInput: string, cursorInp
           }
         }
       }
-    })
+    }),
+    prisma.$queryRaw<Array<{ currencyCode: string; minorUnit: number; amountMinor: bigint; itemCount: bigint }>>(Prisma.sql`
+      SELECT r."currencyCode" AS "currencyCode",
+             c."minorUnit" AS "minorUnit",
+             SUM(ri."amountMinor") AS "amountMinor",
+             COUNT(ri."id") AS "itemCount"
+      FROM "RefundItem" ri
+      INNER JOIN "Refund" r ON r."id" = ri."refundId"
+      INNER JOIN "ReturnItem" ret ON ret."id" = ri."returnItemId"
+      INNER JOIN "OrderItem" oi ON oi."id" = ret."orderItemId"
+      INNER JOIN "VendorOrder" vo ON vo."id" = oi."vendorOrderId"
+      INNER JOIN "Currency" c ON c."code" = r."currencyCode"
+      WHERE r."status" = 'COMPLETED' AND vo."storeId" = ${store.id}
+      GROUP BY r."currencyCode", c."minorUnit"
+      ORDER BY r."currencyCode" ASC
+    `)
   ]);
   const currencies = await prisma.currency.findMany({
     where: { code: { in: aggregateRows.map((row) => row.currencyCode) } },
@@ -101,16 +116,12 @@ export async function getSellerCommissionHistory(storeIdInput: string, cursorInp
     commissionMinor: (row._sum.commissionMinor ?? BigInt(0)).toString(),
     transactionCount: row._count._all
   }));
-  const refundTotalsMap = new Map<string, { currencyCode: string; minorUnit: number; amountMinor: bigint; itemCount: number }>();
-  for (const row of refundRows) {
-    const currencyCode = row.refund.currencyCode;
-    const current = refundTotalsMap.get(currencyCode) ?? {
-      currencyCode, minorUnit: row.refund.currency.minorUnit, amountMinor: BigInt(0), itemCount: 0
-    };
-    current.amountMinor += row.amountMinor;
-    current.itemCount += 1;
-    refundTotalsMap.set(currencyCode, current);
-  }
+  const completedRefundTotals = refundAggregateRows.map((row) => ({
+    currencyCode: row.currencyCode,
+    minorUnit: row.minorUnit,
+    amountMinor: row.amountMinor.toString(),
+    itemCount: Number(row.itemCount)
+  }));
 
   return {
     store: { id: store.id, name: store.name },
