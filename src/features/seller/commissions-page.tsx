@@ -11,7 +11,9 @@ type CommissionTransaction = {
   quantity: number; categoryName: string | null; rateBasisPoints: number;
   baseAmountMinor: string; commissionMinor: string; currencyCode: string; minorUnit: number; createdAt: string;
 };
-type CommissionResponse = { store: { id: string; name: string }; limit: number; nextCursor: string | null; totals: CommissionTotal[]; transactions: CommissionTransaction[] };
+type CompletedRefundTotal = { currencyCode: string; minorUnit: number; amountMinor: string; itemCount: number };
+type CompletedRefund = { id: string; orderNumber: string; productName: string; sku: string; quantity: number; amountMinor: string; currencyCode: string; minorUnit: number; completedAt: string | null };
+type CommissionResponse = { store: { id: string; name: string }; limit: number; nextCursor: string | null; totals: CommissionTotal[]; completedRefundTotals: CompletedRefundTotal[]; completedRefunds: CompletedRefund[]; transactions: CommissionTransaction[] };
 
 function csvCell(value: string | number) {
   const raw = String(value);
@@ -26,9 +28,18 @@ function downloadCommissionCsv(data: CommissionResponse) {
     [],
     ["SECTION", "DATE", "ORDER", "PRODUCT", "SKU", "CATEGORY", "QUANTITY", "RATE_BPS", "BASE_AMOUNT_MINOR", "COMMISSION_MINOR", "CURRENCY", "ORDER_STATUS"],
     ...data.transactions.map((item) => [
-      "DETAIL", item.createdAt, item.orderNumber, item.productName, item.sku,
+      "COMMISSION_DETAIL", item.createdAt, item.orderNumber, item.productName, item.sku,
       item.categoryName ?? "", item.quantity, item.rateBasisPoints, item.baseAmountMinor,
       item.commissionMinor, item.currencyCode, item.orderStatus
+    ]),
+    [],
+    ["SECTION", "ORDER", "PRODUCT", "SKU", "QUANTITY", "REFUND_AMOUNT_MINOR", "CURRENCY", "COMPLETED_AT"],
+    ...data.completedRefunds.map((item) => [
+      "COMPLETED_REFUND_DETAIL", item.orderNumber, item.productName, item.sku,
+      item.quantity, item.amountMinor, item.currencyCode, item.completedAt ?? ""
+    ]),
+    ...data.completedRefundTotals.map((item) => [
+      "COMPLETED_REFUND_TOTAL", "", "", "", item.itemCount, item.amountMinor, item.currencyCode, ""
     ])
   ];
   const csv = "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
@@ -168,6 +179,28 @@ export default function SellerCommissionsPage() {
               <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/70 pt-3"><div><p className="text-[11px] text-[#718899]">{t("All-time recorded platform commission", "إجمالي عمولة المنصة المسجلة")}</p><p className="mt-1 text-lg font-extrabold text-[#42677b]">{formatMinor(total.commissionMinor, total.currencyCode, total.minorUnit, locale)}</p></div><p className="text-xs font-semibold text-[#718899]">{total.transactionCount} {t("items", "عنصر")}</p></div>
             </section>)}
           </div>}
+
+          {data.completedRefundTotals.length > 0 && <section className="mt-6 rounded-[24px] border border-white/90 bg-[linear-gradient(145deg,#f5e9e6,#e9d7d2)] p-5 shadow-[8px_10px_20px_rgba(38,66,84,.08),inset_0_2px_0_white]">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div><h2 className="font-extrabold text-[#5b4140]">{t("Completed customer refunds", "المبالغ المستردة للعملاء")}</h2><p className="mt-1 text-xs leading-5 text-[#866d69]">{t("Refund item allocations attributed to this store after finance confirms the refund. These are shown separately and are not deducted from seller earnings here.", "تخصيصات مبالغ الاسترداد لعناصر هذا المتجر بعد تأكيد المالية للاسترداد. تُعرض منفصلة ولا تُخصم من أرباح البائع هنا.")}</p></div>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {data.completedRefundTotals.map((total) => <div key={total.currencyCode} className="rounded-2xl border border-white/80 bg-white/55 p-4">
+                <p className="text-xs font-bold text-[#866d69]">{t("Refunded to customers", "المسترد للعملاء")} · {total.currencyCode}</p>
+                <p className="mt-2 text-xl font-black tabular-nums text-[#5b4140]">{formatMinor(total.amountMinor, total.currencyCode, total.minorUnit, locale)}</p>
+                <p className="mt-1 text-[11px] text-[#866d69]">{total.itemCount} {t("returned item allocations", "تخصيص استرداد للعناصر")}</p>
+              </div>)}
+            </div>
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-white/70 bg-white/40">
+              <table className="w-full min-w-[720px] text-left text-xs">
+                <thead className="text-[#866d69]"><tr><th className="px-3 py-3">{t("Order", "الطلب")}</th><th className="px-3 py-3">{t("Product", "المنتج")}</th><th className="px-3 py-3">{t("Qty", "الكمية")}</th><th className="px-3 py-3">{t("Refunded", "المبلغ المسترد")}</th><th className="px-3 py-3">{t("Completed", "تاريخ الإتمام")}</th></tr></thead>
+                <tbody className="divide-y divide-white/70">{data.completedRefunds.map((item) => <tr key={item.id}>
+                  <td className="px-3 py-3 font-bold text-[#5b4140]">{item.orderNumber}</td><td className="px-3 py-3"><p className="font-semibold">{item.productName}</p><p className="mt-1 text-[10px]">{item.sku}</p></td><td className="px-3 py-3 tabular-nums">{item.quantity}</td><td className="px-3 py-3 font-bold tabular-nums">{formatMinor(item.amountMinor, item.currencyCode, item.minorUnit, locale)}</td><td className="px-3 py-3">{item.completedAt ? new Date(item.completedAt).toLocaleDateString(locale) : "—"}</td>
+                </tr>)}</tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-[11px] leading-5 text-[#866d69]">{t("The refund detail list is limited to the latest 100 completed allocations; the totals above cover all completed allocations currently recorded for this store.", "قائمة تفاصيل الاسترداد محدودة بأحدث 100 تخصيص مكتمل؛ أما الإجماليات فتشمل جميع التخصيصات المكتملة المسجلة لهذا المتجر.")}</p>
+          </section>}
 
           <section className="mt-6 overflow-hidden rounded-[24px] border border-white/90 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] shadow-[10px_12px_24px_rgba(38,66,84,.1),inset_0_2px_0_white]">
             <div className="border-b border-white/80 p-5"><h2 className="font-extrabold text-[#263d50]">{t("Commission history", "سجل العمولات")}</h2><p className="mt-1 text-xs text-[#718899]">{t("The immutable rate and amount snapshot recorded for each order item.", "لقطة النسبة والمبلغ المحفوظة لكل عنصر طلب.")}</p></div>
