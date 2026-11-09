@@ -32,51 +32,50 @@ export async function getSellerCommissionHistory(storeIdInput: string) {
   });
   if (!canRead) throw new PermissionDeniedError();
 
-  const rows = await prisma.commissionTransaction.findMany({
-    where: { storeId: store.id, sellerId: store.sellerId },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: 100,
-    select: {
-      id: true,
-      orderId: true,
-      vendorOrderId: true,
-      categoryName: true,
-      rateBasisPoints: true,
-      baseAmountMinor: true,
-      commissionMinor: true,
-      currencyCode: true,
-      createdAt: true,
-      order: { select: { orderNumber: true, status: true } },
-      orderItem: { select: { productName: true, sku: true, quantity: true } },
-      currency: { select: { minorUnit: true } }
-    }
+  const [rows, aggregateRows] = await Promise.all([
+    prisma.commissionTransaction.findMany({
+      where: { storeId: store.id, sellerId: store.sellerId },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 100,
+      select: {
+        id: true,
+        orderId: true,
+        vendorOrderId: true,
+        categoryName: true,
+        rateBasisPoints: true,
+        baseAmountMinor: true,
+        commissionMinor: true,
+        currencyCode: true,
+        createdAt: true,
+        order: { select: { orderNumber: true, status: true } },
+        orderItem: { select: { productName: true, sku: true, quantity: true } },
+        currency: { select: { minorUnit: true } }
+      }
+    }),
+    prisma.commissionTransaction.groupBy({
+      by: ["currencyCode"],
+      where: { storeId: store.id, sellerId: store.sellerId },
+      _sum: { baseAmountMinor: true, commissionMinor: true },
+      _count: { _all: true }
+    })
+  ]);
+  const currencies = await prisma.currency.findMany({
+    where: { code: { in: aggregateRows.map((row) => row.currencyCode) } },
+    select: { code: true, minorUnit: true }
   });
-
-  const totals = new Map<string, { currencyCode: string; minorUnit: number; baseAmountMinor: bigint; commissionMinor: bigint; count: number }>();
-  for (const row of rows) {
-    const total = totals.get(row.currencyCode) ?? {
-      currencyCode: row.currencyCode,
-      minorUnit: row.currency.minorUnit,
-      baseAmountMinor: BigInt(0),
-      commissionMinor: BigInt(0),
-      count: 0
-    };
-    total.baseAmountMinor += row.baseAmountMinor;
-    total.commissionMinor += row.commissionMinor;
-    total.count += 1;
-    totals.set(row.currencyCode, total);
-  }
+  const minorUnits = new Map(currencies.map((currency) => [currency.code, currency.minorUnit]));
+  const totals = aggregateRows.map((row) => ({
+    currencyCode: row.currencyCode,
+    minorUnit: minorUnits.get(row.currencyCode) ?? 2,
+    baseAmountMinor: (row._sum.baseAmountMinor ?? BigInt(0)).toString(),
+    commissionMinor: (row._sum.commissionMinor ?? BigInt(0)).toString(),
+    transactionCount: row._count._all
+  }));
 
   return {
     store: { id: store.id, name: store.name },
     limit: 100,
-    totals: [...totals.values()].map((total) => ({
-      currencyCode: total.currencyCode,
-      minorUnit: total.minorUnit,
-      baseAmountMinor: total.baseAmountMinor.toString(),
-      commissionMinor: total.commissionMinor.toString(),
-      transactionCount: total.count
-    })),
+    totals,
     transactions: rows.map((row) => ({
       id: row.id,
       orderNumber: row.order.orderNumber,
