@@ -3179,3 +3179,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Confirmed `GET /api/seller/stores` already returns all shipping fields required by the form.
 - Confirmed the existing store settings service persists and audits these fields, and focused service tests already cover saving the dispatch address.
 - Exact-head CI currently reports only the Vercel `build-rate-limit` failure. No application build or browser test pass is claimed from this status.
+
+
+## 2026-11-09 — Prevent stale seller data during store switching
+
+**Implemented on `main`**
+- Clear the prior store's inventory, shipping-rate list, analytics and recent orders as soon as the selected store changes.
+- Prevent the previous store's metrics or operational rows from remaining visible while the next store's requests are in flight.
+- Preserve the existing request cancellation guards so late responses from an unselected store cannot overwrite the current workspace.
+
+**Commit**
+- `c3f8091f4ad05972de69af1a26ca2a8664a9a666` — `Clear seller workspace data when switching stores`.
+
+**Verification**
+- Source-level effect/dependency review only. Exact-head CI is still constrained by the Vercel build-rate limit; no browser test or production build pass is claimed.
