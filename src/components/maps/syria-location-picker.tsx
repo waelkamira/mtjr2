@@ -16,18 +16,13 @@ type GeoResponse = { items: GeoItem[]; pagination: { total: number; totalPages: 
 
 function locationError(cause: unknown, locale: Locale, english: string, arabic: string) {
   const message = cause instanceof Error ? cause.message : "";
-  return /[\\u0600-\\u06FF]/.test(message) ? message : translate(locale, english, arabic);
+  return /[\u0600-\u06FF]/.test(message) ? message : translate(locale, english, arabic);
 }
 type MapSearchResult = { id: string; label: string; latitude: number; longitude: number; type: string };
-type NeighborhoodSuggestion = {
-  id: string; nameAr: string; cityGroupNameAr: string; latitude: number; longitude: number;
-  verificationStatus: "CANDIDATE" | "VERIFIED"; source: string; distanceKm: number | null;
-};
 type LocationValue = {
   city?: string;
   district?: string;
   localityId?: string;
-  neighborhoodId?: string;
   neighborhood?: string;
   latitude?: number;
   longitude?: number;
@@ -70,9 +65,6 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   const [districts, setDistricts] = useState<GeoItem[]>([]);
   const [subdistricts, setSubdistricts] = useState<GeoItem[]>([]);
   const [localities, setLocalities] = useState<GeoItem[]>([]);
-  const [neighborhoodSuggestions, setNeighborhoodSuggestions] = useState<NeighborhoodSuggestion[]>([]);
-  const [neighborhoodsLoaded, setNeighborhoodsLoaded] = useState(false);
-  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState("");
   const [governorateId, setGovernorateId] = useState("");
   const [districtId, setDistrictId] = useState("");
   const [subdistrictId, setSubdistrictId] = useState("");
@@ -96,7 +88,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     search: translate(locale, "Search places", "ابحث عن تجمع سكاني"),
     searchButton: translate(locale, "Search", "بحث"),
     loading: translate(locale, "Loading locations…", "جارٍ تحميل المواقع…"),
-    mapSearch: translate(locale, "Search an address, place or landmark", "ابحث عن عنوان أو مكان أو معلم"),
+    mapSearch: translate(locale, "Search OpenSyria governorates, districts, subdistricts and localities", "ابحث في بيانات OpenSyria عن المحافظات والمناطق والنواحي والتجمعات السكانية"),
     mapSearchButton: translate(locale, "Find on map", "ابحث على الخريطة"),
     currentLocation: translate(locale, "Use my current location", "استخدم موقعي الحالي"),
     searching: translate(locale, "Searching the map…", "جارٍ البحث على الخريطة…")
@@ -147,7 +139,6 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         setLocalities(localityResult.items.some((item) => item.id === locality.id)
           ? localityResult.items
           : [locality, ...localityResult.items]);
-        setSelectedNeighborhoodId(value.neighborhoodId ?? "");
         const coordinates = locality.latitude != null && locality.longitude != null
           ? { latitude: locality.latitude, longitude: locality.longitude }
           : value.latitude !== undefined && value.longitude !== undefined
@@ -161,40 +152,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       }
     });
     return () => { active = false; };
-  }, [value.localityId, value.neighborhoodId, value.latitude, value.longitude]);
-
-  useEffect(() => {
-    if (!governorateId) {
-      setNeighborhoodSuggestions([]);
-      setNeighborhoodsLoaded(false);
-      return;
-    }
-    let active = true;
-    setNeighborhoodsLoaded(false);
-    const searchPoint = focus ?? (
-      value.latitude !== undefined && value.longitude !== undefined
-        ? { latitude: value.latitude, longitude: value.longitude }
-        : null
-    );
-    const query = new URLSearchParams({ governorateId, limit: "100" });
-    if (searchPoint) {
-      query.set("nearLat", String(searchPoint.latitude));
-      query.set("nearLng", String(searchPoint.longitude));
-    }
-    fetch(`/api/geography/neighborhoods?${query.toString()}`, { cache: "no-store" })
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "Unable to load neighbourhood suggestions.");
-        return result as GeoResponse & { items: NeighborhoodSuggestion[] };
-      })
-      .then((result) => { if (active) { setNeighborhoodSuggestions(result.items); setNeighborhoodsLoaded(true); } })
-      .catch((cause: unknown) => { if (active) { setNeighborhoodsLoaded(true); setError(locationError(cause, locale, "Unable to load neighbourhood suggestions.", "تعذّر تحميل اقتراحات الأحياء.")); } });
-    return () => { active = false; };
-  }, [governorateId, focus, value.latitude, value.longitude]);
+  }, [value.localityId, value.latitude, value.longitude]);
 
   async function chooseGovernorate(id: string) {
     const request = ++selectionRequest.current;
-    setGovernorateId(id); setDistrictId(""); setSubdistrictId(""); setDistricts([]); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
+    setGovernorateId(id); setDistrictId(""); setSubdistrictId(""); setDistricts([]); setSubdistricts([]); setLocalities([]); 
     onChange({});
     const item = governorates.find((entry) => entry.id === id);
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 }); else setFocus(null);
@@ -212,7 +174,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   async function chooseDistrict(id: string) {
     const request = ++selectionRequest.current;
-    setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
+    setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); 
     const item = districts.find((entry) => entry.id === id);
     onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 10 }); else setFocus(null);
@@ -234,7 +196,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
 
   async function chooseSubdistrict(id: string) {
     const request = ++selectionRequest.current;
-    setSubdistrictId(id); setLocalities([]); setNeighborhoodSuggestions([]); setSelectedNeighborhoodId("");
+    setSubdistrictId(id); setLocalities([]); 
     const item = subdistricts.find((entry) => entry.id === id);
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
     onChange({ district: selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined });
@@ -258,8 +220,8 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   function chooseLocality(id: string) {
     const item = localities.find((entry) => entry.id === id);
     const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
-    setSelectedNeighborhoodId("");
-    setNeighborhoodSuggestions([]);
+    
+    
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
     onChange({
       city: item ? (item.nameAr || item.nameEn) : undefined,
@@ -324,9 +286,9 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   }
 
   function updateCoordinates(coords: { latitude: number; longitude: number }) {
-    setSelectedNeighborhoodId("");
-    setNeighborhoodSuggestions([]);
-    onChange({ ...value, neighborhoodId: undefined, ...coords });
+    
+    
+    onChange({ ...value, ...coords });
     setFocus({ ...coords, zoom: 15 });
   }
 
@@ -374,24 +336,9 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <input className={fieldClass + " mt-0 min-w-0"} value={localityQuery} onChange={(event) => setLocalityQuery(event.target.value)} placeholder={labels.search} />
         <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[var(--color-ink-800)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{labels.searchButton}</button>
       </div>}
-      {governorateId && neighborhoodsLoaded && neighborhoodSuggestions.length === 0 && <p role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">{translate(locale, "No neighbourhood suggestions are stored for this governorate yet. Run npm run db:sync-syria-neighborhoods against the application database.", "لا توجد أحياء مقترحة محفوظة لهذه المحافظة بعد. نفّذ الأمر npm run db:sync-syria-neighborhoods على قاعدة بيانات التطبيق.")}</p>}
-      {neighborhoodSuggestions.length > 0 && <label className="block text-sm font-medium">{translate(locale, "Neighbourhoods in this governorate", "أحياء هذه المحافظة")}
-        <select className={fieldClass} value={selectedNeighborhoodId} onChange={(event) => {
-          const selected = neighborhoodSuggestions.find((item) => item.id === event.target.value);
-          setSelectedNeighborhoodId(event.target.value);
-          if (selected) {
-            onChange({ ...value, neighborhoodId: selected.id, neighborhood: selected.nameAr, latitude: selected.latitude, longitude: selected.longitude });
-            setFocus({ latitude: selected.latitude, longitude: selected.longitude, zoom: 16 });
-          }
-        }}>
-          <option value="">{translate(locale, "Choose a neighbourhood…", "اختر حياً…")}</option>
-          {neighborhoodSuggestions.map((item) => <option key={item.id} value={item.id}>{item.nameAr}{item.distanceKm !== null ? ` · ${item.distanceKm.toFixed(1)} km` : ""}</option>)}
-        </select>
-        <span className="mt-1 block text-xs font-normal leading-5 text-amber-700">{translate(locale, "Neighbourhood names are sourced from Akaar's legacy list and may include nearby towns; they are not official administrative divisions. Confirm the name and pin before saving.", "أسماء الأحياء مأخوذة من قائمة عكار القديمة وقد تتضمن بلدات قريبة؛ وهي ليست تقسيمات إدارية رسمية. تحقق من الاسم والدبوس قبل الحفظ.")}</span>
-      </label>}
       <label className="block text-sm font-medium">{labels.neighborhood}
-        <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => { setSelectedNeighborhoodId(""); onChange({ ...value, neighborhoodId: undefined, neighborhood: event.target.value || undefined }); }} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
-        <span className="mt-1 block text-xs font-normal leading-5 text-[var(--muted)]">{translate(locale, "You can choose a nearby suggestion or enter the local name manually. Neighbourhood is stored separately from the official locality.", "يمكنك اختيار اقتراح قريب أو كتابة الاسم المحلي يدوياً. يُحفظ الحي منفصلاً عن التجمع الإداري الرسمي.")}</span>
+        <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => onChange({ ...value, neighborhood: event.target.value || undefined })} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
+        <span className="mt-1 block text-xs font-normal leading-5 text-[var(--muted)]">{translate(locale, "OpenSyria does not publish a verified neighbourhood directory. Enter the local neighbourhood name here; the administrative selections above remain sourced from OpenSyria.", "لا تنشر OpenSyria دليلاً موثقاً مستقلاً للأحياء. اكتب اسم الحي هنا، أما التقسيمات الإدارية أعلاه فمصدرها OpenSyria حصراً.")}</span>
       </label>
       {busy && <p role="status" className="text-xs text-[var(--muted)]">{labels.loading}</p>}
       {!busy && !error && governorates.length === 0 && <p role="alert" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">{translate(locale, "No Syrian geography records are available in this database. Run npm run db:sync-syria-geography to import the official dataset.", "لا توجد بيانات جغرافية سورية في قاعدة البيانات. نفّذ الأمر npm run db:sync-syria-geography لاستيراد البيانات الرسمية.")}</p>}
@@ -412,7 +359,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
             </button>
           </li>)}
         </ul>}
-        <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Search by street, neighbourhood, city or landmark, choose a result, then fine-tune the pin by dragging it.", "ابحث باسم الشارع أو الحي أو المدينة أو معلم قريب، ثم اختر النتيجة واضبط الدبوس بدقة بسحبه على الخريطة.")}</p>
+        <p className="text-xs leading-5 text-[var(--muted)]">{translate(locale, "Search official OpenSyria places, then fine-tune the exact address by dragging the map pin.", "ابحث عن المواقع المنشورة في OpenSyria، ثم حدد العنوان الدقيق بتحريك دبوس الخريطة.")}</p>
       </div>
       <LeafletLocationMap
         locale={locale}
