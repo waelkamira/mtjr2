@@ -102,7 +102,7 @@ export default function SellerInventoryPage() {
     value: inventory.filter((row) => row.warehouse.id === warehouse.id).reduce((sum, row) => sum + row.quantityAvailable, 0)
   })).filter((row) => row.value > 0).slice(0, 8);
 
-  const refreshStore = useCallback(async (id: string, q = "") => {
+  const refreshStore = useCallback(async (id: string, q = "", isCurrent: () => boolean = () => true) => {
     if (!id) return;
     const params = new URLSearchParams({ storeId: id });
     if (q.trim()) params.set("q", q.trim());
@@ -111,8 +111,9 @@ export default function SellerInventoryPage() {
       fetch(`/api/seller/products?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Product[] }>(r)),
       fetch(`/api/seller/inventory/transfers?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: Transfer[] }>(r)),
       fetch(`/api/seller/inventory/movements?storeId=${encodeURIComponent(id)}&limit=100`, { cache: "no-store" }).then((r) => readJson<{ items: Movement[] }>(r)),
-      fetch(`/api/seller/inventory/counts?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: StockCountSummary[] }>(r)).catch((cause: unknown) => { setError(cause instanceof Error ? cause.message : "Stock count service is unavailable."); return { items: [] as StockCountSummary[] }; })
+      fetch(`/api/seller/inventory/counts?storeId=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) => readJson<{ items: StockCountSummary[] }>(r)).catch((cause: unknown) => { if (isCurrent()) setError(cause instanceof Error ? cause.message : "Stock count service is unavailable."); return { items: [] as StockCountSummary[] }; })
     ]);
+    if (!isCurrent()) return;
     setInventory(stock);
     setProducts(productResult.items);
     setTransfers(transferResult.items);
@@ -144,7 +145,14 @@ export default function SellerInventoryPage() {
   useEffect(() => {
     if (!storeId) return;
     let active = true;
-    const timer = window.setTimeout(() => { void refreshStore(storeId, search).catch((cause: unknown) => {
+    setInventory([]);
+    setProducts([]);
+    setTransfers([]);
+    setMovements([]);
+    setStockCounts([]);
+    setActiveStockCount(null);
+    setCountDrafts({});
+    const timer = window.setTimeout(() => { void refreshStore(storeId, search, () => active).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load inventory.");
     }); }, 250);
     return () => { active = false; window.clearTimeout(timer); };
