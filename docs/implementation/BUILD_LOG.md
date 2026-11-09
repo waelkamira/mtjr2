@@ -4010,3 +4010,11 @@ Reviewed admin AI settings, catalog product management, categories, commissions,
 - **Carried forward:** merged the branch's mini-chart concept and 20 metric-to-sample mappings into the current main dashboard page. The main page keeps its safer shared money formatter, filter behavior, current chart sections and operational links. All 20 cards now show a small colored chart sourced from the existing PostgreSQL aggregate/sample response; no schema or API change was needed.
 
 Commit: `9d3b584` — add colorful metric charts to admin dashboard cards.
+
+## 2026-11-09 — Ten-file reconciliation batch 10
+
+Reviewed admin reviews, search synonyms, seller moderation, store reviews, support, user detail, cart, checkout address, checkout review and shipping options.
+
+- Main includes toast success/error feedback across admin and checkout mutations, richer seller-application detail and private identity-document presence, and more complete current support/moderation workflows.
+- Main cart/checkout/shipping surfaces use shared `formatMinorUnits` for exact currency precision rather than converting integer minor units through floating-point `Number` arithmetic. This is a money-integrity safeguard; branch implementations were not copied.
+- No branch runtime code copied from this batch.
