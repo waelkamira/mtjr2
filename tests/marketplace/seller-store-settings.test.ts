@@ -45,7 +45,7 @@ describe("seller store profile settings", () => {
       $queryRaw: queryRaw,
       store: { findUnique: storeFindUnique, update: storeUpdate },
       auditLog: { create: auditCreate }
-    }));
+    } as unknown as Prisma.TransactionClient));
   });
 
   it("updates an owned draft store and writes an audit event atomically", async () => {
