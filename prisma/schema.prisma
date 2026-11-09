@@ -106,6 +106,7 @@ model Role {
   updatedAt   DateTime             @updatedAt
   permissions RolePermission[]
   assignments UserRoleAssignment[]
+  staffMemberships SellerStaff[]
 }
 
 model Permission {
@@ -700,6 +701,7 @@ model SellerStaff {
   id          String            @id @default(cuid())
   storeId     String
   userId      String
+  roleId      String?
   invitedById String?
   status      SellerStaffStatus @default(INVITED)
   invitedAt   DateTime          @default(now())
@@ -709,11 +711,13 @@ model SellerStaff {
   updatedAt   DateTime          @updatedAt
   store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   user        User              @relation("SellerStaffUser", fields: [userId], references: [id], onDelete: Cascade)
+  role        Role?             @relation(fields: [roleId], references: [id], onDelete: Restrict)
   invitedBy   User?             @relation("SellerStaffInviter", fields: [invitedById], references: [id], onDelete: SetNull)
 
   @@unique([storeId, userId])
   @@index([userId, status])
   @@index([storeId, status])
+  @@index([roleId])
 }
 
 model Category {
