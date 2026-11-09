@@ -3222,3 +3222,16 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level request lifecycle review only; exact-head browser and build verification remain pending.
+
+
+## 2026-11-09 — Reset inventory controls with store context
+
+**Implemented on `main`**
+- On store changes, reset adjustment, quarantine, count, and transfer warehouse/variant selectors to IDs belonging to the newly selected store.
+- This complements the inventory data clearing and stale-request guard, preventing a control from retaining a warehouse or variant identifier from the previous store.
+
+**Commit**
+- `d4bb4b606be05c7fdc7a247d40bdc158f7846533` — `Reset seller inventory selectors for the selected store`.
+
+**Verification**
+- Source-level state/dependency review only; browser verification remains pending.
