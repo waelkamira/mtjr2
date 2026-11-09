@@ -252,7 +252,7 @@ function relevanceSql(
       JOIN "Warehouse" warehouse ON warehouse.id = inventory."warehouseId"
       WHERE stock_variant."productId" = p.id AND stock_variant."isActive" = true
         AND warehouse."isActive" = true
-        AND inventory."quantityOnHand" > inventory."quantityReserved"
+        AND inventory."quantityOnHand" - inventory."quantityReserved" - inventory."quantityQuarantined" > 0
     )` : Prisma.empty
   ];
   return Prisma.sql`
