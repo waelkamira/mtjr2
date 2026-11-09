@@ -230,7 +230,7 @@ export default function SellerProductsPage() {
       return false;
     }
   }));
-  const editVariantPricesValid = editVariantRows.length > 0 && availableMarkets.length > 0 && editVariantRows.every((variant) =>
+  const editVariantPricesValid = editVariantRows.length === 0 || availableMarkets.length === 0 || editVariantRows.every((variant) =>
     availableMarkets.every((market) => {
       const price = variant.prices[market.id];
       const currency = market.currencies.find((entry) => entry.currency.code === price?.currencyCode)?.currency;
@@ -621,19 +621,21 @@ export default function SellerProductsPage() {
             propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea }
           } : {}),
           media: editMedia.map(({ id: _id, deleteToken: _deleteToken, ...item }, index) => ({ ...item, sortOrder: index, isPrimary: index === 0 })),
-          variants: editVariantRows.map((variant) => ({
-            id: variant.id,
-            prices: availableMarkets.map((market) => {
-              const price = variant.prices[market.id];
-              const currency = market.currencies.find((entry) => entry.currency.code === price.currencyCode)!.currency;
-              return {
-                marketId: market.id,
-                currencyCode: price.currencyCode,
-                amountMinor: toMinorUnits(price.amount, currency.minorUnit),
-                ...(price.compareAt.trim() ? { compareAtMinor: toMinorUnits(price.compareAt, currency.minorUnit) } : {})
-              };
-            })
-          }))
+          ...(editVariantRows.length > 0 && availableMarkets.length > 0 ? {
+            variants: editVariantRows.map((variant) => ({
+              id: variant.id,
+              prices: availableMarkets.map((market) => {
+                const price = variant.prices[market.id];
+                const currency = market.currencies.find((entry) => entry.currency.code === price.currencyCode)!.currency;
+                return {
+                  marketId: market.id,
+                  currencyCode: price.currencyCode,
+                  amountMinor: toMinorUnits(price.amount, currency.minorUnit),
+                  ...(price.compareAt.trim() ? { compareAtMinor: toMinorUnits(price.compareAt, currency.minorUnit) } : {})
+                };
+              })
+            }))
+          } : {})
         })
       }));
       setEditingId("");
