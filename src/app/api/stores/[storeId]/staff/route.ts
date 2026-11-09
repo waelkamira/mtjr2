@@ -6,7 +6,8 @@ import { inviteStoreStaff, listStoreStaff } from "@/server/marketplace/store-sta
 export const runtime = "nodejs";
 const bodySchema = z.object({
   userId: z.string().trim().min(1).max(128).optional(),
-  email: z.string().trim().email().max(254).optional()
+  email: z.string().trim().email().max(254).optional(),
+  roleKey: z.enum(["STORE_MANAGER", "STORE_CATALOG_MANAGER", "STORE_INVENTORY_MANAGER", "STORE_ORDER_MANAGER", "STORE_CUSTOMER_CARE", "STORE_MARKETING_MANAGER"]).optional()
 }).strict().refine((value) => Boolean(value.userId) !== Boolean(value.email));
 
 export async function GET(_request: Request, context: { params: Promise<{ storeId: string }> }): Promise<Response> {
