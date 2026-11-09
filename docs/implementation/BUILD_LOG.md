@@ -3346,3 +3346,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source/API-contract review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller settings hub
+
+**Implemented on `main`**
+- Added a dedicated `/seller/settings` page using the seller workspace clay-style visual language.
+- The hub links to existing persisted store profile/dispatch settings, full shipping management, notification preferences, account security and store team permissions. It deliberately reuses the existing routes and APIs rather than creating duplicate settings state or placeholder controls.
+- Updated desktop and mobile seller navigation to open the dedicated settings hub instead of jumping directly to the store-management anchor.
+
+**Commits**
+- `d0205fe` — `feat(seller): add connected seller settings hub`.
+- `f263218` — `feat(seller): expose seller settings route`.
+- `c0060a9` — `feat(seller): link dedicated settings hub in navigation`.
+
+**Verification**
+- Source-level route/link review only. No tests, build, browser, database, CI or deployment commands were run.
