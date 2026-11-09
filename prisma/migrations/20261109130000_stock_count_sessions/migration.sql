@@ -23,6 +23,7 @@ CREATE TABLE "StockCountLine" (
   "sessionId" TEXT NOT NULL,
   "inventoryId" TEXT NOT NULL,
   "expectedQuantity" INTEGER NOT NULL,
+  "expectedUpdatedAt" TIMESTAMP(3) NOT NULL,
   "countedQuantity" INTEGER,
   "note" VARCHAR(500),
   "countedAt" TIMESTAMP(3),
