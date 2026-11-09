@@ -19,9 +19,10 @@ export class SellerCommissionStoreNotFoundError extends Error {
  * Read-only commission snapshots for the owning seller.
  * These rows explain the fee recorded for each paid order item; they are not a payout balance or a general ledger.
  */
-export async function getSellerCommissionHistory(storeIdInput: string) {
+export async function getSellerCommissionHistory(storeIdInput: string, cursorInput?: string | null) {
   const actor = await requireCurrentSession();
   const storeId = storeIdSchema.parse(storeIdInput);
+  const cursor = cursorInput == null ? null : z.string().trim().min(1).max(128).parse(cursorInput);
   const store = await prisma.store.findUnique({
     where: { id: storeId },
     select: { id: true, name: true, sellerId: true, seller: { select: { ownerId: true } } }
@@ -35,6 +36,7 @@ export async function getSellerCommissionHistory(storeIdInput: string) {
   const [rows, aggregateRows] = await Promise.all([
     prisma.commissionTransaction.findMany({
       where: { storeId: store.id, sellerId: store.sellerId },
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: 100,
       select: {
@@ -75,6 +77,7 @@ export async function getSellerCommissionHistory(storeIdInput: string) {
   return {
     store: { id: store.id, name: store.name },
     limit: 100,
+    nextCursor: rows.length === 100 ? rows[rows.length - 1]?.id ?? null : null,
     totals,
     transactions: rows.map((row) => ({
       id: row.id,
