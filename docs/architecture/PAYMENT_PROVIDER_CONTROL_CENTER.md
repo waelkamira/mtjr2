@@ -105,7 +105,7 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 - Stripe and PayPal adapters are compiled and registered from server environment variables. PayPal uses server-side Orders v2 create/capture and PayPal-verified capture webhooks.
 - `/admin/payments` is a transaction-inspection page, not a provider-management console.
 - `GET /api/payments/providers` exposes currently registered provider keys.
-- The persistent provider configuration model, Super Admin management API and bilingual page are now implemented as tranche 1. Provider activation and checkout selection remain environment-driven until the runtime/config-binding phase is complete.
+- The persistent provider configuration model, Super Admin management API and bilingual page are now implemented as tranche 1. Provider activation now controls new checkout selection through the database-managed TEST/LIVE configuration. Each new Payment stores its provider configuration relation and an encrypted credential snapshot; webhooks and PayPal return/capture resolve the original snapshot so credential rotation does not invalidate existing payment verification. Legacy payments without snapshots continue through the environment-configured adapter fallback.
 
 
 ## PayPal adapter implementation update — 2026-11-10
