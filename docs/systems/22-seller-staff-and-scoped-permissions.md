@@ -5,7 +5,7 @@
 ## 1. الغرض والحدود
 - **الغرض:** Invite staff and grant least-privilege store-scoped access.
 - **المتطلبات الأساسية:** owner protection, scoped permissions, invite expiry, revocation, session invalidation and audit log.
-- **الحالة الحالية على main (2026-11-09):** صفحة `/seller/staff` وخدمات الدعوة والقبول والإلغاء متصلة بـ Prisma. المالك وحده يدير الفريق حالياً؛ العضو المدعو يقبل دعوته بنفسه ثم يحصل على `STORE_MANAGER` ضمن المتجر. مدة الدعوة سبعة أيام مع تجديد وإلغاء وتدقيق. الأدوار الدقيقة وتفويض إدارة الفريق وسجل جلسات الوصول ما زالت غير مكتملة.
+- **الحالة الحالية على main (2026-11-09):** صفحة `/seller/staff` وخدمات الدعوة والقبول والإلغاء متصلة بـ Prisma. المالك وحده يدير الفريق حالياً؛ المالك يختار أقل دور مناسب (إدارة المنتجات أو المخزون أو الطلبات أو خدمة العملاء أو التسويق) أو يختار `STORE_MANAGER` صراحةً. العضو المدعو يقبل الدعوة ثم يحصل على الدور المختار ضمن نطاق المتجر فقط. يستطيع المالك تغيير دور العضو النشط بمعاملة تستبدل الإسناد القديم بالجديد. مدة الدعوة سبعة أيام مع تجديد وإلغاء وتدقيق. الأدوار الدقيقة وتفويض إدارة الفريق وسجل جلسات الوصول ما زالت غير مكتملة.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
@@ -42,7 +42,7 @@
 | إعادة المحاولة | retry | same idempotency key | actor/resource/intent match | idempotent command | unique key | لا يتكرر الأثر |
 
 ## 5. واجهات API والخدمات
-**واجهات API الحالية:** `/api/stores/[storeId]/staff`, `/api/stores/staff-invitations`, `/api/stores/staff-invitations/[invitationId]/accept`, `/api/stores/staff-memberships/[membershipId]/revoke`.
+**واجهات API الحالية:** `/api/stores/[storeId]/staff`, `/api/stores/staff-invitations`, `/api/stores/staff-invitations/[invitationId]/accept`, `/api/stores/staff-memberships/[membershipId]` (PATCH لتغيير الدور), `/api/stores/staff-memberships/[membershipId]/revoke`.
 
 | API | route.ts في baseline |
 |---|---|
@@ -125,5 +125,16 @@
 - التجديد يعيد دعوة البريد نفسه ويحدّث سجل SellerStaff نفسه بدلاً من إنشاء عضوية مكررة.
 - الإلغاء يزيل صلاحية `STORE_MANAGER` المقيدة بهذا المتجر ويسجل العملية في AuditLog.
 - migration `20261109180000_seller_staff_invitation_expiry` أضافت `expiresAt` وملأت الدعوات المعلقة الحالية بتاريخ انتهاء محسوب من `invitedAt`.
-- المتبقي: أدوار أقل صلاحية من `STORE_MANAGER`، إدارة مفوضة، إبطال/إعادة تقييم الجلسات فور الإلغاء، وسجل وصول قابل للعرض. لا نمنح أدواراً جزئية غير معرفة في مخطط الصلاحيات.
+- المتبقي: إدارة مفوضة، إبطال/إعادة تقييم الجلسات فور الإلغاء، وسجل وصول قابل للعرض. يعتمد تطبيق الصلاحيات على إعادة فحص role assignments في كل طلب؛ لم تُنفذ جلسات وصول مستقلة للموظف. لا نمنح أدواراً جزئية غير معرفة في مخطط الصلاحيات.
 - لم تُشغّل اختبارات أو builds أو browser runs في جولة البناء هذه.
+
+
+## 13. الأدوار المتاحة على main
+- `STORE_CATALOG_MANAGER`: `store:read`, `catalog:read`, `catalog:manage`.
+- `STORE_INVENTORY_MANAGER`: `store:read`, `catalog:read`, `inventory:manage`.
+- `STORE_ORDER_MANAGER`: `store:read`, `orders:read`, `orders:manage`, `returns:manage`.
+- `STORE_CUSTOMER_CARE`: `store:read`, `orders:read`, `reviews:manage`, `messages:manage`.
+- `STORE_MARKETING_MANAGER`: `store:read`, `catalog:read`, `ads:manage`.
+- `STORE_MANAGER`: الدور الأوسع ويُختار صراحةً فقط؛ لا يُمنح كافتراضي من واجهة الدعوة.
+- الأدوار تُنشأ/تُحدّث عبر `prisma/seed.cjs`. يجب تشغيل identity seed بعد نشر التغييرات وقبل استخدام الأدوار الجديدة.
+- تغيير الدور يتم عبر PATCH ويحدّث `SellerStaff.roleId` وإسناد `UserRoleAssignment` scoped في transaction واحدة، مع سجل تدقيق. لا يمكن للموظف تغيير دوره أو إدارة أعضاء آخرين.
