@@ -175,7 +175,7 @@ export default function PaymentProvidersPage() {
         </div>
 
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-          {t("Credential storage and administration are being introduced in stages. The existing checkout registry is still environment-driven until the payment runtime is switched to these database configurations. Do not treat an ACTIVE label here as proof that checkout has started using this record yet.", "يجري إدخال تخزين بيانات الاعتماد وإدارتها على مراحل. ما زال سجل الدفع المستخدم في إتمام الشراء يعتمد على متغيرات بيئة التشغيل إلى أن يتم ربط محرك الدفع بهذه الإعدادات المخزنة. لا تعتبر حالة «نشط» هنا دليلاً على أن صفحة الدفع تستخدم هذا السجل حتى الآن.")}
+          {t("Active database configurations now drive new checkout sessions for their selected TEST/LIVE environment, supported countries and currencies. Each payment retains an encrypted credential snapshot so later credential rotation or provider disablement does not break verification of its existing webhook events.", "يجري إدخال تخزين بيانات الاعتماد وإدارتها على مراحل. ما زال سجل الدفع المستخدم في إتمام الشراء يعتمد على متغيرات بيئة التشغيل إلى أن يتم ربط محرك الدفع بهذه الإعدادات المخزنة. لا تعتبر حالة «نشط» هنا دليلاً على أن صفحة الدفع تستخدم هذا السجل حتى الآن.")}
         </div>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
