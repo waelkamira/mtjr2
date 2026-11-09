@@ -270,12 +270,12 @@ describe("product lifecycle", () => {
     mocks.localityFindUnique.mockResolvedValue({ id: "sy-locality-1", governorateId: "sy-damascus" });
     await createDraftProduct({
       storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
-      localityId: "sy-locality-1", neighborhood: "المزة",
+      localityId: "sy-locality-1", neighborhood: "المزة", streetAddress: "شارع الجلاء، بناء ١٢",
       latitude: 33.505004, longitude: 36.278227,
       variants: [{ sku: "MUG-BLK", prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }] }]
     });
     expect(mocks.productCreate.mock.calls[0][0].data).toMatchObject({
-      localityId: "sy-locality-1", neighborhood: "المزة",
+      localityId: "sy-locality-1", neighborhood: "المزة", streetAddress: "شارع الجلاء، بناء ١٢",
       latitude: 33.505004, longitude: 36.278227
     });
   });
