@@ -8,7 +8,8 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 const inviteSchema = z.object({
   storeId: z.string().trim().min(1),
   userId: z.string().trim().min(1).max(128).optional(),
-  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()).optional()
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()).optional(),
+  roleKey: z.enum(["STORE_MANAGER", "STORE_CATALOG_MANAGER", "STORE_INVENTORY_MANAGER", "STORE_ORDER_MANAGER", "STORE_CUSTOMER_CARE", "STORE_MARKETING_MANAGER"]).default("STORE_MANAGER")
 }).refine((value) => Boolean(value.userId) !== Boolean(value.email), { message: "Provide exactly one account ID or email address." });
 
 async function requireStoreOwner(tx: Prisma.TransactionClient, storeId: string, userId: string) {
@@ -30,20 +31,34 @@ export async function inviteStoreStaff(input: z.input<typeof inviteSchema>, now 
   return prisma.$transaction(async (tx) => {
     await requireStoreOwner(tx, data.storeId, actor.userId);
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const role = await tx.role.findUnique({ where: { key: data.roleKey }, select: { id: true, key: true } });
+    if (!role) throw new Error("The selected store role is not available. Run the identity seed first.");
     const target = await tx.user.findUnique({
       where: data.email ? { email: data.email } : { id: data.userId! },
       select: { id: true, status: true }
     });
     if (!target || target.status !== UserStatus.ACTIVE) throw new Error("Only active accounts can be invited.");
+    const previousMembership = await tx.sellerStaff.findUnique({
+      where: { storeId_userId: { storeId: data.storeId, userId: target.id } },
+      select: { id: true, status: true, roleId: true }
+    });
+    if (previousMembership) {
+      const previousRole = previousMembership.roleId
+        ? previousMembership.roleId
+        : (await tx.role.findUnique({ where: { key: "STORE_MANAGER" }, select: { id: true } }))?.id;
+      if (previousRole) await tx.userRoleAssignment.deleteMany({
+        where: { userId: target.id, roleId: previousRole, scopeType: "STORE", scopeId: data.storeId }
+      });
+    }
     const membership = await tx.sellerStaff.upsert({
       where: { storeId_userId: { storeId: data.storeId, userId: target.id } },
-      create: { storeId: data.storeId, userId: target.id, invitedById: actor.userId, status: SellerStaffStatus.INVITED, invitedAt: now, expiresAt },
-      update: { status: SellerStaffStatus.INVITED, invitedById: actor.userId, invitedAt: now, expiresAt, acceptedAt: null }
+      create: { storeId: data.storeId, userId: target.id, roleId: role.id, invitedById: actor.userId, status: SellerStaffStatus.INVITED, invitedAt: now, expiresAt },
+      update: { roleId: role.id, status: SellerStaffStatus.INVITED, invitedById: actor.userId, invitedAt: now, expiresAt, acceptedAt: null }
     });
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "store.staff.invited",
       resource: "seller_staff", resourceId: membership.id, scopeType: "STORE", scopeId: data.storeId,
-      occurredAt: now, metadata: { invitedUserId: target.id }
+      occurredAt: now, metadata: { invitedUserId: target.id, roleKey: role.key }
     }});
     return { membershipId: membership.id, status: membership.status };
   });
@@ -62,10 +77,12 @@ export async function acceptStoreStaffInvitation(membershipId: string, now = new
     if (membership.status !== SellerStaffStatus.INVITED || membership.store.seller.status !== "ACTIVE" || (membership.expiresAt !== null && membership.expiresAt <= now)) {
       throw new Error("This staff invitation is no longer valid.");
     }
-    const role = await tx.role.findUnique({ where: { key: "STORE_MANAGER" }, select: { id: true } });
-    if (!role) throw new Error("STORE_MANAGER role is missing; run the identity seed first.");
+    const role = membership.roleId
+      ? await tx.role.findUnique({ where: { id: membership.roleId }, select: { id: true, key: true } })
+      : await tx.role.findUnique({ where: { key: "STORE_MANAGER" }, select: { id: true, key: true } });
+    if (!role) throw new Error("The invited store role is missing; run the identity seed first.");
     const updated = await tx.sellerStaff.updateMany({
-      where: { id, userId: actor.userId, status: SellerStaffStatus.INVITED, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      where: { id, userId: actor.userId, status: SellerStaffStatus.INVITED, roleId: membership.roleId, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
       data: { status: SellerStaffStatus.ACTIVE, acceptedAt: now }
     });
     if (updated.count !== 1) throw new Error("Invitation has already been accepted or revoked.");
@@ -89,7 +106,7 @@ export async function revokeStoreStaff(membershipId: string, now = new Date()) {
   const actor = await requireCurrentSession(now);
   return prisma.$transaction(async (tx) => {
     const membership = await tx.sellerStaff.findUnique({
-      where: { id }, select: { id: true, userId: true, storeId: true, status: true }
+      where: { id }, select: { id: true, userId: true, storeId: true, status: true, roleId: true }
     });
     if (!membership) return false;
     await requireStoreOwner(tx, membership.storeId, actor.userId);
@@ -98,9 +115,9 @@ export async function revokeStoreStaff(membershipId: string, now = new Date()) {
       data: { status: SellerStaffStatus.REVOKED }
     });
     if (updated.count !== 1) return false;
-    const role = await tx.role.findUnique({ where: { key: "STORE_MANAGER" }, select: { id: true } });
-    if (role) await tx.userRoleAssignment.deleteMany({
-      where: { userId: membership.userId, roleId: role.id, scopeType: "STORE", scopeId: membership.storeId }
+    const roleId = membership.roleId ?? (await tx.role.findUnique({ where: { key: "STORE_MANAGER" }, select: { id: true } }))?.id;
+    if (roleId) await tx.userRoleAssignment.deleteMany({
+      where: { userId: membership.userId, roleId, scopeType: "STORE", scopeId: membership.storeId }
     });
     await tx.auditLog.create({ data: {
       actorType: AuditActorType.USER, actorId: actor.userId, action: "store.staff.revoked",
@@ -124,6 +141,7 @@ export async function listStoreStaff(storeIdInput: string, now = new Date()) {
       take: 100,
       select: {
         id: true, status: true, invitedAt: true, expiresAt: true, acceptedAt: true,
+        role: { select: { key: true, name: true } },
         user: { select: { id: true, email: true, displayName: true } },
         invitedBy: { select: { id: true, email: true, displayName: true } }
       }
