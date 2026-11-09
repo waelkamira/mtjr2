@@ -23,6 +23,8 @@ function money(amount: string, currency: string, minorUnit: number) {
 }
 
 export default function AdminPaymentDetailPage({ paymentId }: { paymentId: string }) {
+  const { locale } = useLocale();
+  const t = (english: string, arabic: string) => translate(locale, english, arabic);
   const [payment, setPayment] = useState<AdminPayment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
