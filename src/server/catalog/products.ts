@@ -579,8 +579,15 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   // deletion is logged for operational follow-up and never rolls back the saved edit.
   for (const storageKey of new Set(removedStorageKeys)) {
     try {
+      const retainedAsStoreBranding = await prisma.store.findFirst({
+        where: { OR: [{ logoStorageKey: storageKey }, { bannerStorageKey: storageKey }] },
+        select: { id: true }
+      });
+      if (retainedAsStoreBranding) continue;
       const deletion = await deleteProductImage(storageKey);
-      if (deletion === "unsupported") {
+      if (deletion === "deleted") {
+        await prisma.storeMediaAsset.deleteMany({ where: { storageKey } });
+      } else {
         console.warn("Product image was unlinked but its provider deletion is not configured.", {
           provider: storageKey.slice(0, storageKey.indexOf(":"))
         });
