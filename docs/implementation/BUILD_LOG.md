@@ -3413,3 +3413,9 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Mapped mandatory MFA enrollment and freshness failures to explicit 403 responses on the seller profile API instead of falling through to a generic 500.
 - Commit: `cd9ff07` — `fix(seller): map MFA access errors on profile API`.
 - Source-level route error mapping review only; no tests or builds were run.
+
+## 2026-11-09 — Syria-first seller sales currency
+
+- The seller dashboard now defaults its sales chart/selector to SYP whenever SYP sales are present, while preserving a seller's current currency selection and retaining all other currencies (including USD) in the selector.
+- Commit: `af91e88` — `feat(seller): prefer SYP in seller sales overview`.
+- Source-level currency selection review only; no tests or builds were run.
