@@ -683,3 +683,32 @@ export async function getStockCount(sessionIdInput: string, now = new Date()) {
   }
   return session;
 }
+
+
+export async function cancelStockCount(sessionIdInput: string, now = new Date()) {
+  const sessionId = z.string().trim().min(1).parse(sessionIdInput);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const session = await tx.stockCountSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, storeId: true, status: true, warehouse: { select: { store: { select: { seller: { select: { ownerId: true, status: true } } } } } } }
+    });
+    if (!session || session.warehouse.store.seller.status !== "ACTIVE" ||
+        !(await canManageInventory(actor.userId, session.warehouse.store.seller.ownerId, session.storeId, now))) {
+      throw new Error("You do not have access to this stock count.");
+    }
+    if (session.status === StockCountStatus.CANCELLED) return { sessionId, status: StockCountStatus.CANCELLED, alreadyCancelled: true };
+    if (session.status !== StockCountStatus.IN_PROGRESS) throw new Error("A completed stock count cannot be cancelled.");
+    const changed = await tx.stockCountSession.updateMany({
+      where: { id: sessionId, status: StockCountStatus.IN_PROGRESS },
+      data: { status: StockCountStatus.CANCELLED }
+    });
+    if (changed.count !== 1) throw new Error("Stock count changed concurrently; refresh and try again.");
+    await tx.auditLog.create({ data: {
+      actorType: AuditActorType.USER, actorId: actor.userId, action: "inventory.stock_count.cancelled",
+      resource: "stock_count_session", resourceId: sessionId, scopeType: "STORE", scopeId: session.storeId,
+      occurredAt: now, metadata: { cancelledWithoutStockAdjustment: true }
+    }});
+    return { sessionId, status: StockCountStatus.CANCELLED, alreadyCancelled: false };
+  }, { isolationLevel: "Serializable" });
+}
