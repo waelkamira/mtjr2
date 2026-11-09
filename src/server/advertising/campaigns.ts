@@ -40,12 +40,13 @@ export async function listSellerAdCampaigns(storeId:string,now=new Date(),search
 export async function createSellerAdCampaign(input:CreateAdCampaignInput,now=new Date()){
  const data=createSchema.parse(input),actor=await requireCurrentSession(now); await assertStoreAccess(data.storeId,actor.userId,now);
  const [product,market,storeMarket]=await Promise.all([
-  prisma.product.findFirst({where:{id:data.productId,storeId:data.storeId,status:"ACTIVE",approvalStatus:"APPROVED"},select:{id:true,brandId:true,categories:{select:{categoryId:true}}}}),
+  prisma.product.findFirst({where:{id:data.productId,storeId:data.storeId,status:"ACTIVE",approvalStatus:"APPROVED"},select:{id:true,brandId:true,categories:{select:{categoryId:true}},variants:{where:{isActive:true},select:{prices:{where:{marketId:data.marketId,currencyCode:data.currencyCode},select:{id:true}}}}}}),
   prisma.market.findFirst({where:{id:data.marketId,status:"ACTIVE",country:{isActive:true},currencies:{some:{currencyCode:data.currencyCode,isEnabled:true,currency:{isActive:true}}}},select:{id:true,defaultCurrencyCode:true}}),
   prisma.storeMarket.findUnique({where:{storeId_marketId:{storeId:data.storeId,marketId:data.marketId}},select:{isEnabled:true}})
 ]);
 if(!market||!storeMarket?.isEnabled)throw new Error("Choose an active market enabled for this store and currency.");
 if(!product)throw new Error("Choose an approved, published product belonging to this store.");
+if(!product.variants.some(variant=>variant.prices.length>0))throw new Error("The product needs an active price in the selected market and currency before advertising.");
 if(data.targetBrandId&&product.brandId!==data.targetBrandId)throw new Error("The selected brand does not match the advertised product.");
 if(data.targetCategoryId&&!product.categories.some(category=>category.categoryId===data.targetCategoryId))throw new Error("The selected category does not match the advertised product.");
  if(!product)throw new Error("Choose an approved, published product belonging to this store.");
