@@ -152,11 +152,21 @@ export default function SellerInventoryPage() {
     setStockCounts([]);
     setActiveStockCount(null);
     setCountDrafts({});
+    const nextWarehouses = stores.find((store) => store.id === storeId)?.warehouses ?? [];
+    const nextActiveWarehouse = nextWarehouses.find((warehouse) => warehouse.isActive)?.id ?? "";
+    setAdjustWarehouseId(nextActiveWarehouse);
+    setCountWarehouseId(nextActiveWarehouse);
+    setSourceWarehouseId(nextWarehouses[0]?.id ?? "");
+    setDestinationWarehouseId(nextWarehouses[1]?.id ?? "");
+    setAdjustVariantId("");
+    setQuarantineWarehouseId(nextActiveWarehouse);
+    setQuarantineVariantId("");
+    setTransferVariantId("");
     const timer = window.setTimeout(() => { void refreshStore(storeId, search, () => active).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load inventory.");
     }); }, 250);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [storeId, search, refreshStore]);
+  }, [storeId, search, refreshStore, stores]);
 
   async function createWarehouse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(""); setNotice("");
