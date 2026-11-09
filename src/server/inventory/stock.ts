@@ -334,9 +334,12 @@ export async function listStoreStockTransfers(storeIdInput: string, now = new Da
 
 
 /** Returns the latest stock ledger entries for a store without exposing other stores. */
-export async function listStoreInventoryMovements(storeIdInput: string, now = new Date(), limitInput = 100) {
+export async function listStoreInventoryMovements(storeIdInput: string, now = new Date(), searchInput: unknown = {}) {
   const storeId = z.string().trim().min(1).parse(storeIdInput);
-  const limit = z.number().int().min(1).max(200).parse(limitInput);
+  const { limit, cursor } = z.object({
+    limit: z.number().int().min(1).max(200).default(100),
+    cursor: z.string().trim().min(1).max(128).optional()
+  }).strict().parse(searchInput);
   const actor = await requireCurrentSession(now);
   const store = await prisma.store.findUnique({
     where: { id: storeId },
@@ -345,10 +348,11 @@ export async function listStoreInventoryMovements(storeIdInput: string, now = ne
   if (!store || store.seller.status !== "ACTIVE" || !(await canManageInventory(actor.userId, store.seller.ownerId, storeId, now))) {
     throw new Error("You do not have inventory access to this store.");
   }
-  return prisma.inventoryMovement.findMany({
+  const rows = await prisma.inventoryMovement.findMany({
     where: { inventory: { warehouse: { storeId } } },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: limit,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    take: limit + 1,
     select: {
       id: true, type: true, quantityDelta: true, quarantinedDelta: true,
       referenceType: true, referenceId: true, note: true, createdAt: true,
@@ -360,6 +364,9 @@ export async function listStoreInventoryMovements(storeIdInput: string, now = ne
       }
     }
   });
+  const hasMore = rows.length > limit;
+  const items = hasMore ? rows.slice(0, limit) : rows;
+  return { items, nextCursor: hasMore ? items[items.length - 1]?.id ?? null : null };
 }
 
 
