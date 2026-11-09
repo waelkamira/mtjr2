@@ -115,6 +115,34 @@ export async function updateStoreShippingRate(rateId: string, input: unknown, no
   });
 }
 
+/** Deactivates a shipping option without deleting checkout/order history. */
+export async function deactivateStoreShippingRate(rateId: string, now = new Date()) {
+  const id = z.string().trim().min(1).parse(rateId);
+  const actor = await requireCurrentSession(now);
+  return prisma.$transaction(async (tx) => {
+    const rate = await tx.storeShippingRate.findUnique({
+      where: { id },
+      select: { id: true, storeId: true, isActive: true, store: { select: { seller: { select: { ownerId: true, status: true } } } } }
+    });
+    if (!rate || rate.store.seller.status !== "ACTIVE" ||
+      !(await canManageShipping(actor.userId, rate.store.seller.ownerId, rate.storeId, now))) {
+      throw new PermissionDeniedError("You do not have shipping configuration access to this service.");
+    }
+    if (!rate.isActive) return { id: rate.id, isActive: false, alreadyInactive: true };
+    const updated = await tx.storeShippingRate.updateMany({
+      where: { id: rate.id, storeId: rate.storeId, isActive: true },
+      data: { isActive: false }
+    });
+    if (updated.count !== 1) throw new Error("Shipping service changed concurrently. Reload and try again.");
+    await tx.auditLog.create({ data: {
+      actorType: "USER", actorId: actor.userId, action: "shipping.rate.deactivated",
+      resource: "store_shipping_rate", resourceId: rate.id, scopeType: "STORE", scopeId: rate.storeId,
+      occurredAt: now, metadata: {}
+    }});
+    return { id: rate.id, isActive: false, alreadyInactive: false };
+  });
+}
+
 export async function listStoreShippingRates(storeId: string, now = new Date()) {
   const actor = await requireCurrentSession(now);
   const store = await prisma.store.findUnique({
