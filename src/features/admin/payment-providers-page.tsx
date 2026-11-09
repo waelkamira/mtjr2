@@ -145,6 +145,49 @@ export default function PaymentProvidersPage() {
     } finally { setBusyId(""); }
   }
 
+  const [rotationBusy, setRotationBusy] = useState(false);
+  const [rotationReport, setRotationReport] = useState<{
+    activeKeyVersion: number; providerConfigsReencrypted: number;
+    paymentSnapshotsReencrypted: number; remainingProviderConfigs: number;
+    remainingPaymentSnapshots: number; complete: boolean;
+  } | null>(null);
+
+  async function rotateCredentials() {
+    if (rotationBusy) return;
+    const confirmed = window.confirm(t(
+      "Re-encrypt all stored provider credentials and historical payment snapshots using the active key version? Keep all previous keys in the key ring until the report confirms zero remaining records.",
+      "هل تريد إعادة تشفير جميع بيانات مزودي الدفع ونسخ المدفوعات التاريخية بالمفتاح النشط؟ احتفظ بجميع المفاتيح السابقة حتى يؤكد التقرير عدم بقاء أي سجلات."
+    ));
+    if (!confirmed) return;
+    setRotationBusy(true);
+    setRotationReport(null);
+    try {
+      const response = await fetch("/api/admin/payment-providers/rotate-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+        cache: "no-store"
+      });
+      const data = await response.json() as {
+        result?: NonNullable<typeof rotationReport>;
+        error?: string;
+      };
+      if (!response.ok || !data.result) throw new Error(data.error || t("Credential re-encryption failed.", "فشلت إعادة تشفير بيانات الاعتماد."));
+      setRotationReport(data.result);
+      if (data.result.complete) {
+        toast.success(t("All stored payment credentials were re-encrypted.", "تمت إعادة تشفير جميع بيانات الدفع."));
+      } else {
+        toast.warning(t("Some records still use previous keys. Keep the old keys and run rotation again.", "لا تزال بعض السجلات تستخدم مفاتيح سابقة. احتفظ بالمفاتيح القديمة وأعد التدوير."));
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : t("Credential re-encryption failed.", "فشلت إعادة تشفير بيانات الاعتماد.");
+      setError(message);
+      toast.error(message);
+    } finally {
+      setRotationBusy(false);
+    }
+  }
+
   async function action(id: string, actionName: "verify" | "enable" | "disable" | "archive") {
     if (busyId) return;
     if (actionName === "archive" && window.prompt(t("Type ARCHIVE to confirm. The record and credentials will be retained for historical payment verification.", "اكتب ARCHIVE للتأكيد. سيُحتفظ بالسجل وبيانات التحقق للمدفوعات التاريخية.")) !== "ARCHIVE") return;
@@ -209,6 +252,24 @@ export default function PaymentProvidersPage() {
           </div>
           <div className="mt-5 flex flex-wrap gap-3"><button type="button" disabled={saving} onClick={() => void create()} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving ? t("Saving…", "جارٍ الحفظ…") : t("Save encrypted configuration", "حفظ الإعدادات المشفرة")}</button><button type="button" onClick={() => { setDraft(emptyDraft); setShowForm(false); }} className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold">{t("Cancel", "إلغاء")}</button></div>
         </section>}
+
+        <section className="mt-6 rounded-2xl border border-[var(--border)] bg-white p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-3xl">
+              <h2 className="font-semibold">{t("Credential encryption key rotation", "تدوير مفاتيح تشفير بيانات الاعتماد")}</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{t("After adding the new key to PAYMENT_PROVIDER_ENCRYPTION_KEYS and selecting its version, run this operation to re-encrypt provider configurations and historical payment snapshots. Never remove old keys until both remaining counts are zero.", "بعد إضافة المفتاح الجديد إلى PAYMENT_PROVIDER_ENCRYPTION_KEYS وتحديد إصداره، نفّذ هذه العملية لإعادة تشفير إعدادات المزود ونسخ المدفوعات التاريخية. لا تحذف المفاتيح القديمة قبل وصول كلا العدادين إلى الصفر.")}</p>
+            </div>
+            <button type="button" disabled={rotationBusy} onClick={() => void rotateCredentials()} className="rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{rotationBusy ? t("Re-encrypting…", "جارٍ إعادة التشفير…") : t("Re-encrypt with active key", "إعادة التشفير بالمفتاح النشط")}</button>
+          </div>
+          {rotationReport && <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+            <div className="rounded-xl bg-[var(--color-ivory-100)] p-3"><p className="text-xs text-[var(--muted)]">{t("Active key version", "إصدار المفتاح النشط")}</p><p className="mt-1 font-semibold">{rotationReport.activeKeyVersion}</p></div>
+            <div className="rounded-xl bg-[var(--color-ivory-100)] p-3"><p className="text-xs text-[var(--muted)]">{t("Provider configs re-encrypted", "إعدادات المزود المعاد تشفيرها")}</p><p className="mt-1 font-semibold">{rotationReport.providerConfigsReencrypted}</p></div>
+            <div className="rounded-xl bg-[var(--color-ivory-100)] p-3"><p className="text-xs text-[var(--muted)]">{t("Payment snapshots re-encrypted", "نسخ المدفوعات المعاد تشفيرها")}</p><p className="mt-1 font-semibold">{rotationReport.paymentSnapshotsReencrypted}</p></div>
+            <div className="rounded-xl bg-[var(--color-ivory-100)] p-3"><p className="text-xs text-[var(--muted)]">{t("Remaining provider configs", "إعدادات المزود المتبقية")}</p><p className="mt-1 font-semibold">{rotationReport.remainingProviderConfigs}</p></div>
+            <div className="rounded-xl bg-[var(--color-ivory-100)] p-3"><p className="text-xs text-[var(--muted)]">{t("Remaining payment snapshots", "نسخ المدفوعات المتبقية")}</p><p className="mt-1 font-semibold">{rotationReport.remainingPaymentSnapshots}</p></div>
+            <div className="rounded-xl bg-[var(--color-ivory-100)] p-3"><p className="text-xs text-[var(--muted)]">{t("Rotation status", "حالة التدوير")}</p><p className="mt-1 font-semibold">{rotationReport.complete ? t("Complete", "مكتمل") : t("Incomplete — keep old keys", "غير مكتمل — احتفظ بالمفاتيح القديمة")}</p></div>
+          </div>}
+        </section>
 
         <section className="mt-6 space-y-4">
           {loading ? <div className="rounded-2xl border border-[var(--border)] bg-white p-8 text-sm text-[var(--muted)]">{t("Loading providers…", "جارٍ تحميل مزودي الدفع…")}</div> : visibleItems.length === 0 ? <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white p-10 text-center"><h2 className="font-semibold">{t("No provider configurations yet", "لا توجد إعدادات لمزودي الدفع بعد")}</h2><p className="mt-2 text-sm text-[var(--muted)]">{t("Add Stripe or PayPal in test mode first.", "ابدأ بإضافة Stripe أو PayPal في بيئة الاختبار.")}</p></div> : visibleItems.map((item) => <article key={item.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
