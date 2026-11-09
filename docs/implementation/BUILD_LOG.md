@@ -4306,3 +4306,12 @@ The platform account policy is now explicit: email verification is not required 
 - Added an MFA-protected Super Admin re-encryption endpoint and UI. It processes provider configuration credentials and historical Payment snapshots in bounded batches, uses conditional updates, writes an audit event, and reports remaining rows so interrupted runs can be safely repeated.
 - Fixed a duplicate declaration in the PayPal adapter's OAuth token function and removed its duplicate `server-only` import.
 - No migrations were needed for key rotation because both provider configs and payment snapshots already persist key versions. No tests/build/typecheck were run, as requested.
+
+
+## 2026-11-10 — Market-aware checkout provider discovery and webhook compatibility
+
+- Checkout provider discovery now accepts the order currency and destination country and returns only providers whose configured allowlists match. Country-restricted providers are hidden when the order has no known country; the payment creation endpoint independently enforces the same policy.
+- Public provider discovery now uses `private, no-store` caching so provider disablement and market policy changes are reflected immediately.
+- Fixed webhook credential resolution so legacy payments without encrypted snapshots continue to verify with their original environment credentials instead of accidentally using a newer database-managed provider secret.
+- Preserved PayPal legacy environment compatibility while fixing the duplicate OAuth credential variable declaration.
+- Updated the payment provider control-center documentation to describe multi-key rotation rather than the superseded single-key limitation. No tests, typechecks or builds were run.
