@@ -142,6 +142,7 @@ test.describe("seller journey", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/seller");
     await expect(page.getByRole("heading", { name: /Seller dashboard|لوحة تحكم البائع/i })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: /Seller navigation|قائمة البائع/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-desktop.png", fullPage: true });
@@ -218,6 +219,10 @@ test.describe("seller catalog authoring", () => {
       buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
     });
     await expect(page.getByText(/Images uploaded successfully|تم رفع الصور بنجاح/i)).toBeVisible({ timeout: 15000 });
+    await page.getByRole("button", { name: /Preview image|معاينة الصورة/i }).first().click();
+    await expect(page.getByRole("dialog", { name: /Image preview|معاينة الصورة/i })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: /Image preview|معاينة الصورة/i })).toHaveCount(0);
     await page.getByRole("button", { name: /Create draft product|إنشاء مسودة منتج/i }).click();
     await expect(page.getByRole("status")).toContainText(/Draft product created|تم إنشاء مسودة المنتج/i, { timeout: 20000 });
 
