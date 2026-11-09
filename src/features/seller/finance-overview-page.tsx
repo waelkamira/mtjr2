@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
@@ -31,7 +31,7 @@ export default function SellerFinanceOverviewPage() {
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const t = (en: string, ar: string) => translate(locale, en, ar);
+  const t = useCallback((en: string, ar: string) => translate(locale, en, ar), [locale]);
 
   useEffect(() => {
     let active = true;
@@ -48,7 +48,7 @@ export default function SellerFinanceOverviewPage() {
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : t("Unable to load stores.", "تعذر تحميل المتاجر.")); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [locale]);
+  }, [locale, t]);
 
   useEffect(() => {
     if (!storeId) { setData(null); return; }
@@ -65,7 +65,7 @@ export default function SellerFinanceOverviewPage() {
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : t("Unable to load financial summary.", "تعذر تحميل الملخص المالي.")); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [storeId, locale]);
+  }, [storeId, locale, t]);
 
   const storeOptions = useMemo(() => stores.map((store) => ({ id: store.id, name: store.name })), [stores]);
   return (
