@@ -326,3 +326,11 @@ The address book does not expose another user's records. No Prisma migration was
 | Shipping editor | `/seller/shipping` supports listing, create and update of store shipping services. | `GET/POST /api/seller/shipping-rates` and `PATCH /api/seller/shipping-rates/[id]`; StoreShippingRate, active StoreMarket and currency checks. | Implemented in source; persisted reload and checkout quote behavior require browser/PostgreSQL verification. |
 
 No seller portal slice is marked complete solely because these components exist. Run the existing focused seller E2E/API and disposable PostgreSQL workflows against the exact current `main` head before closing the portal.
+## Seller delivery address visibility — 2026-11-09
+
+| Actor action | UI → API | Authorization and privacy | Persistence / outcome | Verification |
+|---|---|---|---|---|
+| Seller views delivery instructions | `/seller/orders` → `GET /api/seller/orders` → `listSellerVendorOrders` | Server resolves active owned stores or active staff membership plus exact-store `orders:manage` permission. Only the seller's VendorOrder rows are queried. | Includes the immutable `OrderAddress` snapshot only when parent Order status is `CONFIRMED`, `PROCESSING`, `PARTIALLY_FULFILLED`, `FULFILLED` or `COMPLETED`. `PENDING_PAYMENT` and `CANCELLED` orders return `address: null`. | Source inspected; exact-head API/browser privacy test pending. |
+| Seller opens carrier tracking | Same seller order card | Tracking URL is the seller-supplied HTTPS URL validated by shipment service; opened with `noopener noreferrer`. | Tracking number, carrier and tracking events remain on the store-scoped Shipment record. | Source inspected; browser check pending. |
+
+**Privacy boundary:** do not expose recipient name, phone or street address for unpaid orders; do not add parent-order address access to seller routes without the same per-vendor store authorization.
