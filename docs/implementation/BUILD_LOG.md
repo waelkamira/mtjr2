@@ -3550,3 +3550,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Replaced the previous “upload can be connected later” message with the real workflow and updated seller page inventory. Asset-library indexing and provider-side deletion/replacement lifecycle remain open; removing a URL from the profile does not claim to delete the remote asset.
 - Extended the pastel clay palette through the seller workspace dashboard, settings, product management, inventory, advertising, commission statements, questions, reviews and staff pages. Shipping, returns, orders and finance already use the updated palette family.
 - No tests, builds, browser experiments or deployments were run.
+
+
+## 2026-11-09 — Seller-managed public store policies
+
+- Added nullable PostgreSQL text fields to Store for shipping/delivery, returns/refunds, privacy notice and terms of sale, with additive migration `20261109160000_seller_store_policies`.
+- Extended the exact-store owner/staff settings service with strict 8,000-character validation, transactionally persisted policy values and audit field tracking.
+- Exposed the policies to the seller workspace editor and public store detail serializer/page. Private dispatch-origin fields remain excluded from public output.
+- Policy content is plain text with line breaks; localization/versioning and legal review workflows are not yet implemented. Sellers must not treat these free-text fields as legal approval.
+- No tests, build, typecheck, browser session or deployment was run, per instruction to finish implementation before testing.
