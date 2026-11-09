@@ -516,7 +516,7 @@ export async function createStockCount(input: unknown, now = new Date()) {
     const inventories = await tx.inventory.findMany({
       where: { warehouseId: warehouse.id },
       orderBy: [{ variant: { sku: "asc" } }, { id: "asc" }],
-      select: { id: true, quantityOnHand: true }
+      select: { id: true, quantityOnHand: true, updatedAt: true }
     });
     if (!inventories.length) throw new Error("There are no inventory records in this warehouse to count.");
     const session = await tx.stockCountSession.create({
@@ -524,11 +524,11 @@ export async function createStockCount(input: unknown, now = new Date()) {
         storeId: warehouse.storeId, warehouseId: warehouse.id, note: data.note,
         createdById: actor.userId,
         lines: { create: inventories.map((inventory) => ({
-          inventoryId: inventory.id, expectedQuantity: inventory.quantityOnHand
+          inventoryId: inventory.id, expectedQuantity: inventory.quantityOnHand, expectedUpdatedAt: inventory.updatedAt
         })) }
       },
       include: { lines: { include: { inventory: { select: {
-        id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true,
+        id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true, updatedAt: true,
         variant: { select: { id: true, sku: true, name: true, product: { select: { name: true } } }
         }
       } } } }, warehouse: { select: { id: true, code: true, name: true } } }
@@ -618,7 +618,7 @@ export async function completeStockCount(sessionIdInput: string, now = new Date(
     for (const line of session.lines) {
       const countedQuantity = line.countedQuantity as number;
       const delta = countedQuantity - line.expectedQuantity;
-      if (line.inventory.quantityOnHand !== line.expectedQuantity) {
+      if (line.inventory.quantityOnHand !== line.expectedQuantity || line.inventory.updatedAt.getTime() !== line.expectedUpdatedAt.getTime()) {
         throw new Error("Inventory changed after this count was opened. Cancel this count and start a fresh one.");
       }
       if (countedQuantity < line.inventory.quantityReserved) {
