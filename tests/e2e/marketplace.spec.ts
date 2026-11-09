@@ -244,6 +244,7 @@ test.describe("seller catalog authoring", () => {
       buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
     });
     await expect(page.getByText(/Images uploaded successfully|تم رفع الصور بنجاح/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /Create draft product|إنشاء مسودة منتج/i })).toBeEnabled();
     await page.getByRole("button", { name: /Preview image|معاينة الصورة/i }).first().click();
     await expect(page.getByRole("dialog", { name: /Image preview|معاينة الصورة/i })).toBeVisible();
     await page.keyboard.press("Escape");
