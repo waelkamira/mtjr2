@@ -26,7 +26,7 @@ export async function listDiscoverableStores(input: unknown = {}) {
       where, orderBy: [{ createdAt: "desc" }, { id: "asc" }],
       skip: (query.page - 1) * query.limit, take: query.limit,
       select: {
-        id: true, slug: true, name: true,
+        id: true, slug: true, name: true, description: true, logoUrl: true, bannerUrl: true,
         seller: { select: { displayName: true } },
         _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } } } }
       }
