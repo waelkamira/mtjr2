@@ -22,6 +22,8 @@ const publicLinks = [
   { href: "/brands", label: "Brands" },
   { href: "/stores", label: "Stores" },
   { href: "/seller", label: "Sell on Mtjr" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" }
 ];
