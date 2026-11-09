@@ -33,7 +33,7 @@ export async function getSellerCommissionHistory(storeIdInput: string, cursorInp
   });
   if (!canRead) throw new PermissionDeniedError();
 
-  const [rows, aggregateRows] = await Promise.all([
+  const [rows, aggregateRows, refundRows] = await Promise.all([
     prisma.commissionTransaction.findMany({
       where: { storeId: store.id, sellerId: store.sellerId },
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -59,6 +59,34 @@ export async function getSellerCommissionHistory(storeIdInput: string, cursorInp
       where: { storeId: store.id, sellerId: store.sellerId },
       _sum: { baseAmountMinor: true, commissionMinor: true },
       _count: { _all: true }
+    }),
+    prisma.refundItem.findMany({
+      where: {
+        refund: { status: "COMPLETED" },
+        returnItem: { orderItem: { vendorOrder: { storeId: store.id } } }
+      },
+      orderBy: [{ refund: { completedAt: "desc" } }, { id: "desc" }],
+      take: 100,
+      select: {
+        id: true, quantity: true, amountMinor: true,
+        refund: {
+          select: {
+            currencyCode: true, completedAt: true,
+            order: { select: { orderNumber: true } },
+            currency: { select: { minorUnit: true } }
+          }
+        },
+        returnItem: {
+          select: {
+            orderItem: {
+              select: {
+                productName: true, sku: true,
+                vendorOrder: { select: { storeId: true, store: { select: { sellerId: true } } } }
+              }
+            }
+          }
+        }
+      }
     })
   ]);
   const currencies = await prisma.currency.findMany({
@@ -73,12 +101,37 @@ export async function getSellerCommissionHistory(storeIdInput: string, cursorInp
     commissionMinor: (row._sum.commissionMinor ?? BigInt(0)).toString(),
     transactionCount: row._count._all
   }));
+  const refundTotalsMap = new Map<string, { currencyCode: string; minorUnit: number; amountMinor: bigint; itemCount: number }>();
+  for (const row of refundRows) {
+    const currencyCode = row.refund.currencyCode;
+    const current = refundTotalsMap.get(currencyCode) ?? {
+      currencyCode, minorUnit: row.refund.currency.minorUnit, amountMinor: BigInt(0), itemCount: 0
+    };
+    current.amountMinor += row.amountMinor;
+    current.itemCount += 1;
+    refundTotalsMap.set(currencyCode, current);
+  }
 
   return {
     store: { id: store.id, name: store.name },
     limit: 100,
     nextCursor: rows.length === 100 ? rows[rows.length - 1]?.id ?? null : null,
     totals,
+    completedRefundTotals: [...refundTotalsMap.values()].map((row) => ({
+      currencyCode: row.currencyCode, minorUnit: row.minorUnit,
+      amountMinor: row.amountMinor.toString(), itemCount: row.itemCount
+    })),
+    completedRefunds: refundRows.map((row) => ({
+      id: row.id,
+      orderNumber: row.refund.order.orderNumber,
+      productName: row.returnItem.orderItem.productName,
+      sku: row.returnItem.orderItem.sku,
+      quantity: row.quantity,
+      amountMinor: row.amountMinor.toString(),
+      currencyCode: row.refund.currencyCode,
+      minorUnit: row.refund.currency.minorUnit,
+      completedAt: row.refund.completedAt?.toISOString() ?? null
+    })),
     transactions: rows.map((row) => ({
       id: row.id,
       orderNumber: row.order.orderNumber,
