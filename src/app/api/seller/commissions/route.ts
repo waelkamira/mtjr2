@@ -20,7 +20,7 @@ export async function GET(request: Request): Promise<Response> {
     });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
-    if (error instanceof PermissionDeniedError) return Response.json({ error: "Only the store owner can view commission statements." }, { status: 403 });
+    if (error instanceof PermissionDeniedError) return Response.json({ error: "You do not have permission to view commission statements for this store." }, { status: 403 });
     if (error instanceof SellerCommissionStoreNotFoundError) return Response.json({ error: "Store not found." }, { status: 404 });
     return Response.json({ error: "Unable to load seller commission statements." }, { status: 500 });
   }
