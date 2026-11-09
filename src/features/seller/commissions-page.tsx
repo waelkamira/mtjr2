@@ -50,6 +50,7 @@ export default function SellerCommissionsPage() {
   useEffect(() => {
     if (!storeId) { setData(null); return; }
     let active = true;
+    setData(null);
     setLoading(true);
     setError("");
     void fetch(`/api/seller/commissions?storeId=${encodeURIComponent(storeId)}`, { cache: "no-store" })

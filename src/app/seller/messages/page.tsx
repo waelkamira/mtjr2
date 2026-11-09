@@ -41,32 +41,47 @@ export default function Page() {
     return () => { active = false; };
   }, [locale]);
   useEffect(() => {
-    if (store) fetch("/api/stores/" + store + "/messages", { cache: "no-store" }).then(async (response) => {
+    let active = true;
+    setRows([]);
+    setId("");
+    setConversation(null);
+    if (!store) return () => { active = false; };
+    fetch("/api/stores/" + store + "/messages", { cache: "no-store" }).then(async (response) => {
       const data = await response.json();
       if (!response.ok) throw Error(data.error);
+      if (!active) return;
       setRows(data.items || []);
       if (data.items?.[0]) setId(data.items[0].id);
-    }).catch((cause) => setError(cause.message));
+    }).catch((cause) => { if (active) setError(cause.message); });
+    return () => { active = false; };
   }, [store]);
   useEffect(() => {
-    if (store && id) fetch("/api/stores/" + store + "/messages/" + id, { cache: "no-store" }).then(async (response) => {
+    let active = true;
+    setConversation(null);
+    if (!store || !id) return () => { active = false; };
+    fetch("/api/stores/" + store + "/messages/" + id, { cache: "no-store" }).then(async (response) => {
       const data = await response.json();
       if (!response.ok) throw Error(data.error);
-      setConversation(data.conversation);
-    }).catch((cause) => setError(cause.message));
+      if (active) setConversation(data.conversation);
+    }).catch((cause) => { if (active) setError(cause.message); });
+    return () => { active = false; };
   }, [store, id]);
   async function send(event: FormEvent) {
     event.preventDefault();
-    const response = await fetch("/api/stores/" + store + "/messages/" + id, {
+    const targetStore = store;
+    const targetId = id;
+    const response = await fetch("/api/stores/" + targetStore + "/messages/" + targetId, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body })
     });
     const data = await response.json();
-    if (!response.ok) { setError(data.error); return; }
+    if (!response.ok) { if (store === targetStore && id === targetId) setError(data.error); return; }
+    if (store !== targetStore || id !== targetId) return;
     setBody("");
-    const refreshed = await fetch("/api/stores/" + store + "/messages/" + id);
-    setConversation((await refreshed.json()).conversation);
+    const refreshed = await fetch("/api/stores/" + targetStore + "/messages/" + targetId);
+    const refreshedData = await refreshed.json();
+    if (store === targetStore && id === targetId) setConversation(refreshedData.conversation);
   }
 
   return <main className="min-h-screen bg-transparent px-4 py-6 sm:px-6 lg:px-8">
