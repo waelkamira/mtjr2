@@ -38,7 +38,7 @@ export default function Page() {
       try { saved = localStorage.getItem("mtjr.activeStoreId") || ""; } catch { /* Messaging remains available when browser storage is blocked. */ }
       const selected = available.some((item) => item.id === saved) ? saved : available[0]?.id ?? "";
       setStore(selected);
-      if (selected) { try { localStorage.setItem("mtjr.activeStoreId", selected); } catch { /* Store selection remains available for this session. */ } }
+      if (selected) { try { localStorage.setItem("mtjr.activeStoreId", selected); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Store selection remains available for this session. */ } }
     }).catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Unable to load stores.", "تعذر تحميل المتاجر.")); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -109,7 +109,7 @@ export default function Page() {
     <div className="mx-auto max-w-[1440px]">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#628493]">{translate(locale,"CUSTOMER OPERATIONS","عمليات العملاء")}</p><h1 className="mt-2 text-3xl font-black tracking-tight text-[#263d50]">{translate(locale, "Store inbox", "صندوق وارد المتجر")}</h1><p className="mt-2 text-sm text-[#647d8d]">{translate(locale,"Respond to customer conversations from your store workspace.","تابع محادثات العملاء ورد عليها من مساحة متجرك.")}</p></div>
-        <label className="grid gap-1 text-xs font-bold text-[#557184]">{translate(locale,"Active store","المتجر النشط")}<select value={store} onChange={(event)=>{setStore(event.target.value);setId("");setRows([]);setConversation(null);setError("");setBody("");try{localStorage.setItem("mtjr.activeStoreId",event.target.value);}catch{/* Store selection remains available for this session. */}}} disabled={loading || !stores.length} className="min-w-[220px] rounded-2xl border border-white bg-[linear-gradient(145deg,#f7fbfc,#e4eef2)] px-4 py-3 text-sm text-[#29475b] shadow-[inset_0_2px_6px_rgba(43,69,88,.1),0_1px_0_white]">{stores.map((item)=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className="grid gap-1 text-xs font-bold text-[#557184]">{translate(locale,"Active store","المتجر النشط")}<select value={store} onChange={(event)=>{setStore(event.target.value);setId("");setRows([]);setConversation(null);setError("");setBody("");try{localStorage.setItem("mtjr.activeStoreId", event.target.value); window.dispatchEvent(new Event("mtjr:active-store-changed"));}catch{/* Store selection remains available for this session. */}}} disabled={loading || !stores.length} className="min-w-[220px] rounded-2xl border border-white bg-[linear-gradient(145deg,#f7fbfc,#e4eef2)] px-4 py-3 text-sm text-[#29475b] shadow-[inset_0_2px_6px_rgba(43,69,88,.1),0_1px_0_white]">{stores.map((item)=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       </header>
       {error && <p role="alert" className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
       <div className="grid gap-5 lg:grid-cols-[minmax(260px,.38fr)_minmax(0,1fr)]">
