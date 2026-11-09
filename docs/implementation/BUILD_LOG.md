@@ -3660,3 +3660,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The team page now displays each member's actual role and lets the owner change it; the API allowlists only the six store role keys.
 - Commits: d837a8d (Prisma relation), 8dc790f (migration), 2bc96e4 (seed roles), 98ac5f4 (invite/accept/revoke role handling), 280a7b1 (invite API contract), d35f124 (accept role lookup correction), e7afb81 (transactional role-change service), cbd7857 (PATCH route), 321201a (team role editor).
 - Updated system 22, route registry, model usage map and journey matrix. Run the identity seed before using the new roles. No tests, builds, typechecks, browser sessions or deployments were run.
+
+
+## 2026-11-09 — Seller staff lifecycle edge-case corrections
+
+- Owner revocation now also handles memberships in the SUSPENDED state; the team UI labels suspended members and prevents editing their role until reactivated.
+- Updated the seller team documentation and page inventories to reflect the actual selected-role grant, role-change endpoint, and current remaining gaps.
+- Commits: 6ea8d27 (suspended membership revoke), 34c573f (team UI status handling), 21a7c3e (staff API inventory correction), 54ac52e (page inventory), 7386733 (platform page inventory).
+- No tests, builds, typechecks, browser sessions or deployments were run.
