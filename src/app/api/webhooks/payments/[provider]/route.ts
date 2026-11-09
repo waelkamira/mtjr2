@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { getPaymentProviderAdapter } from "@/server/payments/providers/registry";
-import { getPaymentProviderRuntimeSnapshot, getActiveProviderCredentialsForWebhook } from "@/server/admin/payment-providers";
+import { getPaymentProviderRuntimeSnapshot, getActiveProviderCredentialsForWebhook, getPaymentProviderRuntimeEnvironment } from "@/server/admin/payment-providers";
 import { prisma } from "@/lib/db/prisma";
 import { PaymentProviderEnvironment } from "@prisma/client";
 import { processVerifiedPaymentEvent } from "@/server/payments/payments";
@@ -113,9 +113,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
       select: { id: true }
     });
     snapshot = payment ? await getPaymentProviderRuntimeSnapshot(payment.id) : null;
-    const environment = process.env.NODE_ENV === "production"
-      ? PaymentProviderEnvironment.LIVE
-      : PaymentProviderEnvironment.TEST;
+    const environment = getPaymentProviderRuntimeEnvironment();
     managedFallbackCredentials = !payment
       ? await getActiveProviderCredentialsForWebhook(providerKey as "stripe" | "paypal", environment)
       : null;
@@ -126,9 +124,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     });
   }
 
-  const environment = process.env.NODE_ENV === "production"
-    ? PaymentProviderEnvironment.LIVE
-    : PaymentProviderEnvironment.TEST;
+  const environment = getPaymentProviderRuntimeEnvironment();
   const fallbackCredentials = snapshot?.credentials ?? managedFallbackCredentials ?? undefined;
   // Legacy payments without snapshots retain the legacy provider environment configuration.
   const verificationEnvironment = snapshot?.environment ?? (managedFallbackCredentials ? environment : undefined);
