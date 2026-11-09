@@ -47,6 +47,11 @@ export default function SellerInventoryPage() {
   const [adjustVariantId, setAdjustVariantId] = useState("");
   const [quantityDelta, setQuantityDelta] = useState("1");
   const [adjustNote, setAdjustNote] = useState("");
+  const [quarantineWarehouseId, setQuarantineWarehouseId] = useState("");
+  const [quarantineVariantId, setQuarantineVariantId] = useState("");
+  const [quarantineQuantity, setQuarantineQuantity] = useState("1");
+  const [quarantineDecision, setQuarantineDecision] = useState<"RELEASE" | "DISPOSE">("RELEASE");
+  const [quarantineNote, setQuarantineNote] = useState("");
   const [sourceWarehouseId, setSourceWarehouseId] = useState("");
   const [destinationWarehouseId, setDestinationWarehouseId] = useState("");
   const [transferVariantId, setTransferVariantId] = useState("");
@@ -147,6 +152,28 @@ export default function SellerInventoryPage() {
     finally { setBusy(false); }
   }
 
+  async function decideQuarantine(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setError(""); setNotice("");
+    try {
+      await readJson(await fetch("/api/seller/inventory/quarantine", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          warehouseId: quarantineWarehouseId, variantId: quarantineVariantId,
+          quantity: Number(quarantineQuantity), decision: quarantineDecision,
+          idempotencyKey: crypto.randomUUID(), note: quarantineNote || undefined
+        })
+      }));
+      const success = quarantineDecision === "RELEASE"
+        ? translate(locale, "Inspected units released to sellable stock.", "تم تحرير الكمية المفحوصة إلى المخزون القابل للبيع.")
+        : translate(locale, "Quarantined units marked as disposed.", "تم تسجيل إتلاف الكمية الموجودة في الحجر.");
+      setNotice(success); toast.success(success); setQuarantineNote("");
+      await refreshStore(storeId, search);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to process quarantined stock.", "تعذرت معالجة المخزون المحجور.");
+      setError(message); toast.error(message);
+    } finally { setBusy(false); }
+  }
+
   async function createTransfer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(""); setNotice("");
     try {
@@ -208,6 +235,18 @@ export default function SellerInventoryPage() {
           <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)] lg:col-span-2"><h2 className="text-lg font-semibold">{translate(locale, "Stock adjustment", "تعديل المخزون")}</h2><form onSubmit={adjustStock} className="mt-4 grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{translate(locale, "Warehouse", "المستودع")}<select required className={field} value={adjustWarehouseId} onChange={(e) => setAdjustWarehouseId(e.target.value)}>{warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Product variant", "متغير المنتج")}<select required className={field} value={adjustVariantId} onChange={(e) => setAdjustVariantId(e.target.value)}><option value="">{translate(locale, "Select variant", "اختر متغيرًا")}</option>{variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.productName} · {variant.sku}</option>)}</select></label><label className="grid gap-1 text-sm">{translate(locale, "Quantity change (+/-)", "تغيير الكمية (+/−)")}<input required type="number" step="1" min="-1000000" max="1000000" className={field} value={quantityDelta} onChange={(e) => setQuantityDelta(e.target.value)} /></label><label className="grid gap-1 text-sm">{translate(locale, "Note", "ملاحظة")}<input maxLength={500} className={field} value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} /></label><button disabled={busy || !adjustWarehouseId || !adjustVariantId || !Number.isInteger(Number(quantityDelta)) || Number(quantityDelta) === 0} className={button + " sm:col-span-2"}>{translate(locale, "Record stock adjustment", "تسجيل تعديل المخزون")}</button></form></section>
         </div>
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]"><h2 className="text-lg font-semibold">{translate(locale, "Current stock", "المخزون الحالي")}</h2><label className="mt-4 block max-w-xl text-xs font-medium">{translate(locale, "Search inventory", "البحث في المخزون")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product, SKU, warehouse or code", "المنتج أو SKU أو المستودع أو الرمز")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>{!inventory.length ? <p className="mt-4 text-sm text-[var(--muted)]">{search ? translate(locale, "No inventory records match this search.", "لا توجد سجلات مخزون تطابق هذا البحث.") : translate(locale, "No inventory records in this store yet.", "لا توجد سجلات مخزون في هذا المتجر بعد.")}</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3">{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Warehouse", "المستودع")}</th><th>{translate(locale, "Sellable on hand", "المخزون القابل للبيع")}</th><th>{translate(locale, "Quarantined", "قيد الحجر")}</th><th>{translate(locale, "Reserved", "محجوز")}</th><th>{translate(locale, "Available", "المتاح")}</th></tr></thead><tbody>{inventory.map((row) => <tr key={row.id} className="border-b border-[var(--border)]"><td className="py-3 font-medium">{row.variant.product.name}<span className="block text-xs text-[var(--muted)]">{row.variant.sku}</span></td><td>{row.warehouse.name}</td><td>{row.quantityOnHand}</td><td>{row.quantityQuarantined}</td><td>{row.quantityReserved}</td><td><span className={row.isLowStock ? "font-semibold text-amber-700" : ""}>{row.quantityAvailable}</span></td></tr>)}</tbody></table></div>}</section>
+        <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]">
+          <h2 className="text-lg font-semibold">{translate(locale, "Return inspection & quarantine", "فحص المرتجعات والحجر")}</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Release inspected units back to sellable stock, or record disposal. Only physically quarantined quantities can be processed.", "حرر الوحدات التي اجتازت الفحص إلى المخزون القابل للبيع أو سجل إتلافها. لا يمكن معالجة إلا الكميات الموجودة فعلياً في الحجر.")}</p>
+          <form onSubmit={decideQuarantine} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <label className="grid gap-1 text-sm">{translate(locale, "Warehouse", "المستودع")}<select required className={field} value={quarantineWarehouseId} onChange={(e) => setQuarantineWarehouseId(e.target.value)}><option value="">{translate(locale, "Select warehouse", "اختر المستودع")}</option>{warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Product variant", "متغير المنتج")}<select required className={field} value={quarantineVariantId} onChange={(e) => setQuarantineVariantId(e.target.value)}><option value="">{translate(locale, "Select variant", "اختر متغيراً")}</option>{variants.map((v) => <option key={v.id} value={v.id}>{v.productName} · {v.sku}</option>)}</select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Quantity", "الكمية")}<input required type="number" min="1" max="1000000" step="1" className={field} value={quarantineQuantity} onChange={(e) => setQuarantineQuantity(e.target.value)} /></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Decision", "القرار")}<select className={field} value={quarantineDecision} onChange={(e) => setQuarantineDecision(e.target.value as "RELEASE" | "DISPOSE")}><option value="RELEASE">{translate(locale, "Release to sellable", "تحرير للبيع")}</option><option value="DISPOSE">{translate(locale, "Dispose", "إتلاف")}</option></select></label>
+            <label className="grid gap-1 text-sm">{translate(locale, "Inspection note", "ملاحظة الفحص")}<input maxLength={500} className={field} value={quarantineNote} onChange={(e) => setQuarantineNote(e.target.value)} /></label>
+            <button disabled={busy || !quarantineWarehouseId || !quarantineVariantId || !Number.isInteger(Number(quarantineQuantity)) || Number(quarantineQuantity) < 1} className={button + " sm:col-span-2 lg:col-span-5"}>{quarantineDecision === "RELEASE" ? translate(locale, "Release inspected stock", "تحرير المخزون المفحوص") : translate(locale, "Record disposal", "تسجيل الإتلاف")}</button>
+          </form>
+        </section>
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]">
           <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">{translate(locale, "Stock movement ledger", "سجل حركات المخزون")}</h2><span className="text-xs text-[var(--muted)]">{translate(locale, "Latest 100 entries", "آخر 100 حركة")}</span></div>
           {!movements.length ? <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No stock movements recorded yet.", "لا توجد حركات مخزون مسجلة بعد.")}</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-3">{translate(locale, "Date", "التاريخ")}</th><th>{translate(locale, "Product / SKU", "المنتج / SKU")}</th><th>{translate(locale, "Warehouse", "المستودع")}</th><th>{translate(locale, "Movement", "الحركة")}</th><th>{translate(locale, "On-hand Δ", "تغير الكمية")}</th><th>{translate(locale, "Quarantine Δ", "تغير الحجر")}</th><th>{translate(locale, "Reference / note", "المرجع / الملاحظة")}</th></tr></thead><tbody>{movements.map((movement) => <tr key={movement.id} className="border-b border-[var(--border)]"><td className="py-3 whitespace-nowrap">{new Date(movement.createdAt).toLocaleString(locale === "ar" ? "ar" : "en-GB")}</td><td className="font-medium">{movement.inventory.variant.product.name}<span className="block text-xs text-[var(--muted)]">{movement.inventory.variant.sku}</span></td><td>{movement.inventory.warehouse.name}</td><td>{movement.type.replaceAll("_", " ")}</td><td className={movement.quantityDelta < 0 ? "font-semibold text-rose-700" : "font-semibold text-emerald-700"}>{movement.quantityDelta > 0 ? "+" : ""}{movement.quantityDelta}</td><td>{movement.quarantinedDelta > 0 ? "+" : ""}{movement.quarantinedDelta}</td><td className="max-w-[220px] truncate">{movement.referenceType ? movement.referenceType + " · " + (movement.referenceId ?? "") : movement.note ?? "—"}</td></tr>)}</tbody></table></div>}
