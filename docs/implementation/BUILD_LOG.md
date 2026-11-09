@@ -4028,3 +4028,12 @@ Reviewed checkout tax, identity login/register, notifications, buyer orders/orde
 - Main notification pages have toast feedback. Buyer order detail includes the post-payment return context and retry/poll behavior while preserving shared currency formatting.
 - Main seller orders has cursor pagination, status metrics and the expanded paid-order address/shipment context. Main seller advertising has cursor pagination, stale-store response protection and Syria's SYP-first currency choice. Main inventory includes movements, quarantine and stock-count workflows. Main product authoring includes normalized category attributes and current media lifecycle; the branch uses superseded category presets and map model.
 - No branch runtime code copied from this batch.
+
+## 2026-11-09 — Ten-file reconciliation batch 12
+
+Reviewed seller questions, returns, reviews, staff, workspace and storefront catalog grid/home/product detail/product reviews/sponsored product card.
+
+- Main seller Q&A retains answer edit + moderation resubmission + answer history, while adding question/answer analytics and toast feedback; the branch is not functionally ahead.
+- Main seller returns/reviews include stale-store response protection, warehouse scoping, refund/return detail and analytics. Main staff includes email invitations, scoped role selection, invitation expiry/renewal and stale-request protection. Main workspace includes current store branding, provider storage keys, public policy fields, private dispatch address and current market/currency/location workflows.
+- Main storefront cards and home/product detail use the shared minor-unit money formatter. The branch product detail uses the superseded product-location-map and older product response shape; main keeps relational location metadata and sponsored content in the current server-rendered flow.
+- No branch runtime code copied from this batch.
