@@ -58,7 +58,7 @@ describe("guest and customer cart", () => {
       prices: [{ amountMinor: BigInt(1250), compareAtMinor: null, currency: { minorUnit: 2 } }],
       product: { id: "product-1", slug: "item", name: "Item", store: { name: "Store", slug: "store" }, media: [] }
     });
-    mocks.inventoryFindMany.mockResolvedValue([{ quantityOnHand: 5, quantityReserved: 1 }]);
+    mocks.inventoryFindMany.mockResolvedValue([{ quantityOnHand: 5, quantityReserved: 1, quantityQuarantined: 0 }]);
     mocks.cartItemFindUnique.mockResolvedValue(null);
     mocks.cartItemFindMany.mockResolvedValue([]);
     mocks.cartItemCreate.mockResolvedValue({ id: "cart-item-1" });
@@ -122,7 +122,7 @@ describe("guest and customer cart", () => {
   });
 
   it("rejects an add that exceeds available stock", async () => {
-    mocks.inventoryFindMany.mockResolvedValue([{ quantityOnHand: 2, quantityReserved: 1 }]);
+    mocks.inventoryFindMany.mockResolvedValue([{ quantityOnHand: 2, quantityReserved: 1, quantityQuarantined: 0 }]);
     await expect(addCartItem("opaque-guest-token", {
       marketId: "market-1", currencyCode: "EUR", variantId: "variant-1", quantity: 2
     })).rejects.toThrow("not enough available stock");
@@ -141,7 +141,7 @@ describe("guest and customer cart", () => {
 
   it("does not partially reorder when any original variant is no longer purchasable", async () => {
     mocks.inventoryFindMany
-      .mockResolvedValueOnce([{ quantityOnHand: 5, quantityReserved: 0 }])
+      .mockResolvedValueOnce([{ quantityOnHand: 5, quantityReserved: 0, quantityQuarantined: 0 }])
       .mockResolvedValueOnce([]);
 
     await expect(addCartItems("opaque-guest-token", {
