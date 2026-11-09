@@ -23,6 +23,13 @@ const storeSchema = z.object({
 
 export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
 
+export class SellerApplicationConflictError extends Error {
+  constructor() {
+    super("A seller application already exists for this account.");
+    this.name = "SellerApplicationConflictError";
+  }
+}
+
 function isStoreSlugConflict(error: unknown) {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false;
   const target = error.meta?.target;
@@ -54,7 +61,7 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
     return await prisma.$transaction(async (tx) => {
       const existing = await tx.seller.findUnique({ where: { ownerId: actor.userId }, select: { id: true, status: true } });
       if (existing) {
-        if (existing.status !== SellerStatus.PENDING) throw new Error("A seller application already exists for this account.");
+        if (existing.status !== SellerStatus.PENDING) throw new SellerApplicationConflictError();
         return { sellerId: existing.id, status: existing.status, alreadySubmitted: true };
       }
       const seller = await tx.seller.create({

@@ -70,7 +70,7 @@ const image = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=
 
 const demoCategories = [
   {
-    slug: "phones-electronics", name: "Phones & Electronics", ar: "الهواتف والإلكترونيات", description: "Smartphones, computers and everyday electronics.", store: 0,
+    slug: "phones-electronics", name: "Phones & Electronics", ar: "الهواتف والإلكترونيات", description: "Smartphones, computers and everyday electronics.",
     images: [image("photo-1511707171634-5f897ff02aa9"), image("photo-1592899677977-9c10ca588bbd"), image("photo-1512499617640-c74ae3a79d37")],
     products: [
       ["Nova X Pro Smartphone", "هاتف نوفا X برو", "Flagship smartphone with vivid OLED display and all-day battery.", "هاتف رائد بشاشة OLED زاهية وبطارية تدوم طوال اليوم.", 899],
@@ -86,7 +86,7 @@ const demoCategories = [
     ],
   },
   {
-    slug: "clothing-fashion", name: "Clothing & Fashion", ar: "الملابس والأزياء", description: "Clothing, footwear and accessories for every day.", store: 1,
+    slug: "clothing-fashion", name: "Clothing & Fashion", ar: "الملابس والأزياء", description: "Clothing, footwear and accessories for every day.",
     images: [image("photo-1521572163474-6864f9cf17ab"), image("photo-1529139574466-a303027c1d8"), image("photo-1542291026-7eec264c27ff")],
     products: [
       ["Essential Cotton T-Shirt", "قميص قطني أساسي", "Soft premium cotton T-shirt with a relaxed everyday fit.", "قميص قطني ناعم بقصة مريحة للاستخدام اليومي.", 24],
@@ -102,7 +102,7 @@ const demoCategories = [
     ],
   },
   {
-    slug: "furniture-home", name: "Furniture & Home", ar: "الأثاث والمنزل", description: "Furniture and thoughtful details for living spaces.", store: 2,
+    slug: "furniture-home", name: "Furniture & Home", ar: "الأثاث والمنزل", description: "Furniture and thoughtful details for living spaces.",
     images: [image("photo-1555041469-a586c61ea9bc"), image("photo-1505693416388-ac5ce068fe85"), image("photo-1494438639946-1ebd1d20bf85")],
     products: [
       ["Luna Three-Seat Sofa", "أريكة لونا بثلاثة مقاعد", "Contemporary sofa with supportive cushions and textured fabric.", "أريكة عصرية بوسائد داعمة وقماش ذي ملمس مميز.", 1299],
@@ -119,7 +119,7 @@ const demoCategories = [
     ],
   },
   {
-    slug: "home-appliances", name: "Home Appliances", ar: "الأجهزة المنزلية", description: "Useful appliances for a more comfortable home.", store: 2,
+    slug: "home-appliances", name: "Home Appliances", ar: "الأجهزة المنزلية", description: "Useful appliances for a more comfortable home.",
     images: [image("photo-1556911220-bff31c812dba"), image("photo-1574269909862-7e1d70bb8078"), image("photo-1585238342024-78d387f4a707")],
     products: [
       ["BrewMaster Coffee Machine", "آلة قهوة بروماستر", "Programmable coffee machine for consistent morning brews.", "آلة قهوة قابلة للبرمجة لتحضير قهوة صباحية ثابتة الجودة.", 179],
@@ -135,7 +135,7 @@ const demoCategories = [
     ],
   },
   {
-    slug: "beauty-personal-care", name: "Beauty & Personal Care", ar: "الجمال والعناية الشخصية", description: "Everyday beauty, skincare and personal care essentials.", store: 3,
+    slug: "beauty-personal-care", name: "Beauty & Personal Care", ar: "الجمال والعناية الشخصية", description: "Everyday beauty, skincare and personal care essentials.",
     images: [image("photo-1608248543803-ba4f8c70ae0b"), image("photo-1596462502278-27bfdc403348"), image("photo-1556228720-195a672e8a03")],
     products: [
       ["HydraGlow Daily Moisturizer", "مرطب هيدرا جلو اليومي", "Lightweight daily moisturizer for a comfortable skin feel.", "مرطب يومي خفيف يمنح البشرة إحساساً مريحاً.", 28],
@@ -151,7 +151,7 @@ const demoCategories = [
     ],
   },
   {
-    slug: "sports-outdoors", name: "Sports & Outdoors", ar: "الرياضة والأنشطة الخارجية", description: "Fitness, training and outdoor essentials.", store: 3,
+    slug: "sports-outdoors", name: "Sports & Outdoors", ar: "الرياضة والأنشطة الخارجية", description: "Fitness, training and outdoor essentials.",
     images: [image("photo-1461896836934-ffe607ba8211"), image("photo-1517836357463-d25dfeac3438"), image("photo-1530549387789-4c1017266635")],
     products: [
       ["FlexFit Yoga Mat", "بساط يوغا فليكس فيت", "Non-slip exercise mat for yoga and floor workouts.", "بساط تمارين مانع للانزلاق لليوغا والتمارين الأرضية.", 35],
@@ -167,7 +167,7 @@ const demoCategories = [
     ],
   },
   {
-    slug: "books-stationery", name: "Books & Stationery", ar: "الكتب والقرطاسية", description: "Reading, learning and creative desk essentials.", store: 3,
+    slug: "books-stationery", name: "Books & Stationery", ar: "الكتب والقرطاسية", description: "Reading, learning and creative desk essentials.",
     images: [image("photo-1544947950-fa07a98d237f"), image("photo-1512820790803-83ca734da794"), image("photo-1455390582262-044cdead277a")],
     products: [
       ["The Creative Focus Journal", "دفتر التركيز الإبداعي", "Guided journal for planning, reflection and ideas.", "دفتر موجه للتخطيط والتأمل وتدوين الأفكار.", 18],
@@ -183,7 +183,7 @@ const demoCategories = [
     ],
   },
   {
-    slug: "automotive-accessories", name: "Automotive Accessories", ar: "السيارات والإكسسوارات", description: "Practical accessories for drivers and vehicles.", store: 3,
+    slug: "automotive-accessories", name: "Automotive Accessories", ar: "السيارات والإكسسوارات", description: "Practical accessories for drivers and vehicles.",
     images: [image("photo-1486262715619-67b85e0b08d3"), image("photo-1492144534655-ae79c964c9d7"), image("photo-1503376780353-7e6692767b70")],
     products: [
       ["DriveSafe Dash Camera", "كاميرا سيارة درايف سيف", "Compact dash camera for recording everyday journeys.", "كاميرا سيارة مدمجة لتسجيل الرحلات اليومية.", 89],
@@ -261,6 +261,22 @@ const storeDefinitions = [
   { slug: "demo-fashion-store", name: "Demo Fashion", ar: "متجر الأزياء التجريبي", sellerEmail: "fashion@demo.mtjr2.test", sellerName: "Demo Fashion Seller" },
   { slug: "demo-home-store", name: "Demo Home", ar: "متجر المنزل التجريبي", sellerEmail: "home@demo.mtjr2.test", sellerName: "Demo Home Seller" },
   { slug: "demo-lifestyle-store", name: "Demo Lifestyle", ar: "متجر أسلوب الحياة التجريبي", sellerEmail: "lifestyle@demo.mtjr2.test", sellerName: "Demo Lifestyle Seller" },
+  { slug: "demo-tech-hub-store", name: "Demo Tech Hub", ar: "متجر التقنية", sellerEmail: "tech-hub@demo.mtjr2.test", sellerName: "Demo Tech Hub Seller" },
+  { slug: "demo-urban-threads-store", name: "Demo Urban Threads", ar: "متجر الأزياء الحضرية", sellerEmail: "urban-threads@demo.mtjr2.test", sellerName: "Demo Urban Threads Seller" },
+  { slug: "demo-cozy-living-store", name: "Demo Cozy Living", ar: "متجر المعيشة المريحة", sellerEmail: "cozy-living@demo.mtjr2.test", sellerName: "Demo Cozy Living Seller" },
+  { slug: "demo-beauty-boutique-store", name: "Demo Beauty Boutique", ar: "متجر الجمال", sellerEmail: "beauty-boutique@demo.mtjr2.test", sellerName: "Demo Beauty Boutique Seller" },
+  { slug: "demo-trail-outfitters-store", name: "Demo Trail Outfitters", ar: "متجر الرحلات", sellerEmail: "trail-outfitters@demo.mtjr2.test", sellerName: "Demo Trail Outfitters Seller" },
+  { slug: "demo-paper-house-store", name: "Demo Paper House", ar: "متجر القرطاسية", sellerEmail: "paper-house@demo.mtjr2.test", sellerName: "Demo Paper House Seller" },
+  { slug: "demo-road-ready-store", name: "Demo Road Ready", ar: "متجر مستلزمات السيارات", sellerEmail: "road-ready@demo.mtjr2.test", sellerName: "Demo Road Ready Seller" },
+  { slug: "demo-gadget-grove-store", name: "Demo Gadget Grove", ar: "متجر الأدوات الذكية", sellerEmail: "gadget-grove@demo.mtjr2.test", sellerName: "Demo Gadget Grove Seller" },
+  { slug: "demo-style-studio-store", name: "Demo Style Studio", ar: "متجر التصميم والأناقة", sellerEmail: "style-studio@demo.mtjr2.test", sellerName: "Demo Style Studio Seller" },
+  { slug: "demo-home-and-hearth-store", name: "Demo Home & Hearth", ar: "متجر البيت والدفء", sellerEmail: "home-hearth@demo.mtjr2.test", sellerName: "Demo Home & Hearth Seller" },
+  { slug: "demo-glow-and-care-store", name: "Demo Glow & Care", ar: "متجر العناية والإشراقة", sellerEmail: "glow-care@demo.mtjr2.test", sellerName: "Demo Glow & Care Seller" },
+  { slug: "demo-active-life-store", name: "Demo Active Life", ar: "متجر الحياة النشطة", sellerEmail: "active-life@demo.mtjr2.test", sellerName: "Demo Active Life Seller" },
+  { slug: "demo-reading-room-store", name: "Demo Reading Room", ar: "متجر القراءة", sellerEmail: "reading-room@demo.mtjr2.test", sellerName: "Demo Reading Room Seller" },
+  { slug: "demo-auto-essentials-store", name: "Demo Auto Essentials", ar: "متجر أساسيات السيارات", sellerEmail: "auto-essentials@demo.mtjr2.test", sellerName: "Demo Auto Essentials Seller" },
+  { slug: "demo-kitchen-corner-store", name: "Demo Kitchen Corner", ar: "متجر المطبخ", sellerEmail: "kitchen-corner@demo.mtjr2.test", sellerName: "Demo Kitchen Corner Seller" },
+  { slug: "demo-weekend-market-store", name: "Demo Weekend Market", ar: "متجر عطلة نهاية الأسبوع", sellerEmail: "weekend-market@demo.mtjr2.test", sellerName: "Demo Weekend Market Seller" },
 ];
 
 async function upsertTranslation(model, where, create, update) {
@@ -321,6 +337,14 @@ async function seedDemoCatalog() {
     });
     stores.push({ store, warehouse });
   }
+
+  const legacyProductSlugs = demoCategories.flatMap((definition) =>
+    definition.products.map((_, index) => `demo-${definition.slug}-${String(index + 1).padStart(2, "0")}`),
+  );
+  await prisma.product.updateMany({
+    where: { storeId: { in: stores.map(({ store }) => store.id) }, slug: { in: legacyProductSlugs } },
+    data: { status: "DRAFT", approvalStatus: "PENDING", approvedAt: null, publishedAt: null },
+  });
 
   const categoryRows = new Map();
   const subcategoryRows = new Map();
@@ -383,14 +407,16 @@ async function seedDemoCatalog() {
     }, { brandId: brand.id, locale: "en", name: definition.name }, { name: definition.name });
   }
 
-  for (const [categoryIndex, definition] of demoCategories.entries()) {
-    const category = categoryRows.get(definition.slug);
-    const { store, warehouse } = stores[definition.store];
-    const brand = brandRows.get(demoBrands[categoryIndex].slug);
-
-    for (const [productIndex, productDefinition] of definition.products.entries()) {
-      const [name, nameAr, description, descriptionAr, price] = productDefinition;
-      const slug = `demo-${definition.slug}-${String(productIndex + 1).padStart(2, "0")}`;
+  for (const [storeIndex, storeEntry] of stores.entries()) {
+    const { store, warehouse } = storeEntry;
+    for (let productIndex = 0; productIndex < 10; productIndex += 1) {
+      const categoryIndex = (storeIndex + productIndex) % demoCategories.length;
+      const definition = demoCategories[categoryIndex];
+      const sourceProductIndex = (storeIndex * 3 + productIndex) % definition.products.length;
+      const category = categoryRows.get(definition.slug);
+      const brand = brandRows.get(demoBrands[categoryIndex].slug);
+      const [name, nameAr, description, descriptionAr, price] = definition.products[sourceProductIndex];
+      const slug = `demo-${store.slug}-${definition.slug}-${String(productIndex + 1).padStart(2, "0")}`;
       const product = await prisma.product.upsert({
         where: { storeId_slug: { storeId: store.id, slug } },
         create: {
@@ -415,7 +441,7 @@ async function seedDemoCatalog() {
         update: { isPrimary: true, sortOrder: 0 },
       });
       for (const childDefinition of demoSubcategories[definition.slug] ?? []) {
-        if (!childDefinition.productIndexes.includes(productIndex)) continue;
+        if (!childDefinition.productIndexes.includes(sourceProductIndex)) continue;
         const child = subcategoryRows.get(childDefinition.slug);
         await prisma.productCategory.upsert({
           where: { productId_categoryId: { productId: product.id, categoryId: child.id } },
@@ -424,7 +450,7 @@ async function seedDemoCatalog() {
         });
       }
 
-      const imageUrl = definition.images[productIndex % definition.images.length];
+      const imageUrl = definition.images[sourceProductIndex % definition.images.length];
       const existingMedia = await prisma.productMedia.findFirst({ where: { productId: product.id, url: imageUrl } });
       if (!existingMedia) {
         await prisma.productMedia.create({
@@ -434,7 +460,7 @@ async function seedDemoCatalog() {
         await prisma.productMedia.update({ where: { id: existingMedia.id }, data: { isPrimary: true } });
       }
 
-      const sku = `DEMO-${definition.slug.toUpperCase()}-${String(productIndex + 1).padStart(2, "0")}`;
+      const sku = `DEMO-${store.slug.toUpperCase()}-${String(productIndex + 1).padStart(2, "0")}`;
       const variant = await prisma.productVariant.upsert({
         where: { sku },
         create: { productId: product.id, sku, name: "Standard", optionValues: { option: "Standard" }, isActive: true },
@@ -484,16 +510,27 @@ async function seedDemoCatalog() {
     ...demoCategories.map((item) => item.slug),
     ...Object.values(demoSubcategories).flatMap((items) => items.map((item) => item.slug)),
   ];
-  const [productCount, categoryCount, storeCount, inventoryCount] = await Promise.all([
-    prisma.product.count({ where: { slug: { startsWith: "demo-" } } }),
+  const [categoryCount, seededStores] = await Promise.all([
     prisma.category.count({ where: { slug: { in: expectedCategorySlugs }, status: "ACTIVE" } }),
-    prisma.store.count({ where: { slug: { startsWith: "demo-" }, status: "ACTIVE" } }),
-    prisma.inventory.count({ where: { warehouse: { store: { slug: { startsWith: "demo-" } } } } }),
+    prisma.store.findMany({
+      where: { slug: { in: storeDefinitions.map(({ slug }) => slug) }, status: "ACTIVE" },
+      select: {
+        slug: true,
+        products: {
+          where: { status: "ACTIVE", approvalStatus: "APPROVED", publishedAt: { not: null } },
+          select: { categories: { where: { isPrimary: true }, select: { categoryId: true } } },
+        },
+      },
+    }),
   ]);
-  if (categoryCount !== expectedCategorySlugs.length || productCount < demoCategories.length * 10) {
-    throw new Error(`Demo catalog verification failed: ${categoryCount} categories, ${productCount} products.`);
+  const invalidStores = seededStores.filter((seededStore) => {
+    const categoryIds = new Set(seededStore.products.flatMap((product) => product.categories.map(({ categoryId }) => categoryId)));
+    return seededStore.products.length !== 10 || categoryIds.size !== demoCategories.length;
+  });
+  if (categoryCount !== expectedCategorySlugs.length || seededStores.length !== 20 || invalidStores.length > 0) {
+    throw new Error(`Demo catalog verification failed: ${categoryCount} categories, ${seededStores.length} stores, ${invalidStores.length} stores with invalid product/category counts.`);
   }
-  console.log(`Demo catalog verified: ${productCount} products across ${categoryCount} categories, ${storeCount} stores, ${inventoryCount} inventory rows in DEMO-US/USD.`);
+  console.log(`Demo catalog verified: ${seededStores.length} stores with 10 products each across ${categoryCount} categories in DEMO-US/USD.`);
 
 }
 

@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
-import { AuthenticationRequiredError } from "@/server/identity/current-session";
-import { submitSellerApplication } from "@/server/marketplace/seller-application";
+import {
+  AuthenticationRequiredError,
+  MfaEnrollmentRequiredError,
+  MfaVerificationRequiredError
+} from "@/server/identity/current-session";
+import {
+  SellerApplicationConflictError,
+  submitSellerApplication
+} from "@/server/marketplace/seller-application";
 
 export const runtime = "nodejs";
 const bodySchema = z.object({
@@ -21,6 +28,12 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(result, { status: result.alreadySubmitted ? 200 : 201 });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
-    return Response.json({ error: error instanceof Error ? error.message : "Unable to submit seller application." }, { status: 400 });
+    if (error instanceof MfaEnrollmentRequiredError || error instanceof MfaVerificationRequiredError) {
+      return Response.json({ error: "Complete multi-factor authentication before continuing." }, { status: 403 });
+    }
+    if (error instanceof SellerApplicationConflictError) {
+      return Response.json({ error: error.message }, { status: 409 });
+    }
+    return Response.json({ error: "Unable to submit seller application." }, { status: 500 });
   }
 }
