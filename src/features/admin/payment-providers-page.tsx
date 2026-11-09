@@ -48,6 +48,8 @@ export default function PaymentProvidersPage() {
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState("");
+  const [editDraft, setEditDraft] = useState({ displayName: "", countries: "", currencies: "", methods: "", sortOrder: 0, secretA: "", secretB: "", webhookId: "" });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -104,6 +106,43 @@ export default function PaymentProvidersPage() {
       const message = cause instanceof Error ? cause.message : t("Unable to save provider.", "تعذر حفظ مزود الدفع.");
       setError(message); toast.error(message);
     } finally { setSaving(false); }
+  }
+
+  function beginEdit(item: Provider) {
+    setEditingId(item.id);
+    setEditDraft({
+      displayName: item.displayName,
+      countries: item.supportedCountries.join(", "),
+      currencies: item.supportedCurrencies.join(", "),
+      methods: item.enabledPaymentMethods.join(", "),
+      sortOrder: item.sortOrder,
+      secretA: "", secretB: "", webhookId: ""
+    });
+  }
+
+  async function saveEdit(item: Provider) {
+    setBusyId(item.id); setError("");
+    try {
+      const body: Record<string, unknown> = {
+        displayName: editDraft.displayName,
+        supportedCountries: editDraft.countries.split(",").map((x) => x.trim().toUpperCase()).filter(Boolean),
+        supportedCurrencies: editDraft.currencies.split(",").map((x) => x.trim().toUpperCase()).filter(Boolean),
+        enabledPaymentMethods: editDraft.methods.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean),
+        sortOrder: editDraft.sortOrder
+      };
+      const hasCredentialChange = Boolean(editDraft.secretA || editDraft.secretB || editDraft.webhookId);
+      if (hasCredentialChange) {
+        body.credentials = item.providerKey === "paypal"
+          ? { clientId: editDraft.secretA, clientSecret: editDraft.secretB, webhookId: editDraft.webhookId }
+          : { secretKey: editDraft.secretA, webhookSecret: editDraft.secretB };
+      }
+      await mutate("/api/admin/payment-providers/" + encodeURIComponent(item.id), "PATCH", body);
+      setEditingId("");
+      toast.success(t("Provider configuration updated.", "تم تحديث إعدادات مزود الدفع."));
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : t("Unable to update provider.", "تعذر تحديث مزود الدفع.");
+      setError(message); toast.error(message);
+    } finally { setBusyId(""); }
   }
 
   async function action(id: string, actionName: "verify" | "enable" | "disable" | "archive") {
@@ -186,6 +225,20 @@ export default function PaymentProvidersPage() {
               <div><p className="text-xs text-[var(--muted)]">{t("Currencies", "العملات")}</p><p className="mt-1">{item.supportedCurrencies.join(", ") || t("Not restricted", "غير محددة")}</p></div>
               <div><p className="text-xs text-[var(--muted)]">{t("Methods", "الطرق")}</p><p className="mt-1">{item.enabledPaymentMethods.join(", ") || "—"}</p></div>
             </div>
+            {editingId === item.id && <div className="mt-5 rounded-xl bg-[var(--color-ivory-100)] p-4">
+              <h3 className="font-semibold">{t("Edit provider configuration", "تعديل إعدادات مزود الدفع")}</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <label className="text-xs font-medium">{t("Display name", "الاسم الظاهر")}<input className={inputClass} value={editDraft.displayName} onChange={(e) => setEditDraft((x) => ({ ...x, displayName: e.target.value }))} /></label>
+                <label className="text-xs font-medium">{t("Countries", "الدول")}<input className={inputClass} value={editDraft.countries} onChange={(e) => setEditDraft((x) => ({ ...x, countries: e.target.value }))} /></label>
+                <label className="text-xs font-medium">{t("Currencies", "العملات")}<input className={inputClass} value={editDraft.currencies} onChange={(e) => setEditDraft((x) => ({ ...x, currencies: e.target.value }))} /></label>
+                <label className="text-xs font-medium">{t("Methods", "طرق الدفع")}<input className={inputClass} value={editDraft.methods} onChange={(e) => setEditDraft((x) => ({ ...x, methods: e.target.value }))} /></label>
+                <label className="text-xs font-medium">{t("Display order", "ترتيب العرض")}<input type="number" min={0} max={10000} className={inputClass} value={editDraft.sortOrder} onChange={(e) => setEditDraft((x) => ({ ...x, sortOrder: Number(e.target.value) }))} /></label>
+                <label className="text-xs font-medium">{t("Replace credentials (optional)", "استبدال بيانات الاعتماد (اختياري)")}<input type="password" autoComplete="new-password" className={inputClass} placeholder={item.providerKey === "paypal" ? "New Client ID" : "New Secret Key"} value={editDraft.secretA} onChange={(e) => setEditDraft((x) => ({ ...x, secretA: e.target.value }))} /></label>
+                <label className="text-xs font-medium">{item.providerKey === "paypal" ? "New Client Secret" : "New Webhook Secret"}<input type="password" autoComplete="new-password" className={inputClass} value={editDraft.secretB} onChange={(e) => setEditDraft((x) => ({ ...x, secretB: e.target.value }))} /></label>
+                {item.providerKey === "paypal" && <label className="text-xs font-medium">New Webhook ID<input className={inputClass} value={editDraft.webhookId} onChange={(e) => setEditDraft((x) => ({ ...x, webhookId: e.target.value }))} /></label>}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busyId === item.id} onClick={() => void saveEdit(item)} className="rounded-lg bg-[var(--color-forest-900)] px-4 py-2 text-xs font-semibold text-white">{t("Save changes", "حفظ التغييرات")}</button><button type="button" onClick={() => setEditingId("")} className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs font-semibold">{t("Cancel", "إلغاء")}</button></div>
+            </div>}
             <p className="mt-3 text-xs text-[var(--muted)]">{item.lastVerifiedAt ? t("Last verified", "آخر تحقق") + ": " + new Date(item.lastVerifiedAt).toLocaleString() : t("Not verified yet", "لم يتم التحقق بعد")} {item.lastVerificationMessage ? "· " + item.lastVerificationMessage : ""}</p>
           </article>)}
         </section>
