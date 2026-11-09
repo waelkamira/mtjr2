@@ -176,13 +176,13 @@ export async function createCheckoutQuote(guestToken: string, input: unknown, no
       const inventories = variant.inventories.filter((inventory) => inventory.warehouse.storeId === product.storeId);
       for (const inventory of inventories) {
         if (remaining === 0) break;
-        const available = inventory.quantityOnHand - inventory.quantityReserved;
+        const available = inventory.quantityOnHand - inventory.quantityReserved - inventory.quantityQuarantined;
         const allocation = Math.min(remaining, available);
         if (allocation <= 0) continue;
         const changed = await tx.$executeRaw`UPDATE "Inventory"
           SET "quantityReserved" = "quantityReserved" + ${allocation}, "updatedAt" = ${now}
           WHERE "id" = ${inventory.id}
-            AND "quantityOnHand" - "quantityReserved" >= ${allocation}`;
+            AND "quantityOnHand" - "quantityReserved" - "quantityQuarantined" >= ${allocation}`;
         if (changed !== 1) throw new Error("Stock changed while creating the quote. Please try again.");
         await tx.inventoryReservation.create({
           data: {
