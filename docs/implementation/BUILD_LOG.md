@@ -3483,3 +3483,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The UI explicitly labels totals as all-time recorded snapshots and repeats that these are not seller net balances or withdrawable funds; refunds, adjustments, holds and payouts still require a real seller accounting ledger.
 - Commits: `a2b4e41` (precision-safe currency formatting), `3e25c8e` (all-time grouped totals), `3d977a0` (truthful finance labels).
 - Source-level review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller commission CSV export
+
+- Added a CSV export for the seller commission view. It contains the all-time per-currency aggregates plus the latest 100 detail rows, with raw minor-unit values and currency codes preserved to avoid decimal rounding.
+- Added CSV quoting and formula-injection guards for untrusted product/order text, and UTF-8 BOM/CRLF output for spreadsheet compatibility.
+- Commits: `7c88b69` (export action), `95e28cf` (encoding and formula-guard correction).
+- Source review only; no tests, build, browser, database, CI or deployment commands were run.
