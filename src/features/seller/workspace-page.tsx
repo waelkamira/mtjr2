@@ -18,6 +18,7 @@ type Market = { id: string; code: string; name: string; defaultCurrency: { code:
 type Store = {
   id: string; storeNumber: string; name: string; slug: string; status: string; isOwner: boolean;
   description: string | null; logoUrl: string | null; bannerUrl: string | null;
+  logoStorageKey: string | null; bannerStorageKey: string | null;
   shippingPolicy: string | null; returnsPolicy: string | null; privacyPolicy: string | null; termsOfSale: string | null;
   shippingContactName: string | null; shippingPhone: string | null; shippingAddressLine1: string | null; shippingAddressLine2: string | null;
   shippingCity: string | null; shippingRegion: string | null; shippingPostalCode: string | null; shippingCountryCode: string | null; shippingInstructions: string | null;
@@ -125,6 +126,10 @@ export default function SellerWorkspacePage() {
   const [editingStoreDescription, setEditingStoreDescription] = useState("");
   const [editingStoreLogoUrl, setEditingStoreLogoUrl] = useState("");
   const [editingStoreBannerUrl, setEditingStoreBannerUrl] = useState("");
+  const [editingStoreLogoStorageKey, setEditingStoreLogoStorageKey] = useState("");
+  const [editingStoreBannerStorageKey, setEditingStoreBannerStorageKey] = useState("");
+  const [storeLogoDeleteToken, setStoreLogoDeleteToken] = useState("");
+  const [storeBannerDeleteToken, setStoreBannerDeleteToken] = useState("");
   const [editingShippingPolicy, setEditingShippingPolicy] = useState("");
   const [editingReturnsPolicy, setEditingReturnsPolicy] = useState("");
   const [editingPrivacyPolicy, setEditingPrivacyPolicy] = useState("");
@@ -393,6 +398,8 @@ export default function SellerWorkspacePage() {
           description: editingStoreDescription.trim() || null,
           logoUrl: editingStoreLogoUrl.trim() || null,
           bannerUrl: editingStoreBannerUrl.trim() || null,
+          logoStorageKey: editingStoreLogoStorageKey || null,
+          bannerStorageKey: editingStoreBannerStorageKey || null,
           shippingPolicy: editingShippingPolicy.trim() || null,
           returnsPolicy: editingReturnsPolicy.trim() || null,
           privacyPolicy: editingPrivacyPolicy.trim() || null,
@@ -400,6 +407,7 @@ export default function SellerWorkspacePage() {
         })
       }));
       await reload();
+      setStoreLogoDeleteToken(""); setStoreBannerDeleteToken("");
       setEditingStoreProfile(false);
       setMessage(translate(locale, "Store profile updated and recorded in the audit log.", "تم تحديث ملف المتجر وتسجيل التغيير في سجل التدقيق."));
     } catch (cause) {
@@ -425,7 +433,8 @@ export default function SellerWorkspacePage() {
       const response = await fetch("/api/seller/products/media", { method: "POST", body: form });
       const payload = await response.json() as { success?: boolean; data?: { url?: string }; error?: string };
       if (!response.ok || !payload.success || !payload.data?.url) throw new Error(payload.error || translate(locale, "The image could not be uploaded.", "تعذر رفع الصورة."));
-      if (kind === "logo") setEditingStoreLogoUrl(payload.data.url); else setEditingStoreBannerUrl(payload.data.url);
+      if (kind === "logo") { setEditingStoreLogoUrl(payload.data.url); setEditingStoreLogoStorageKey(payload.data.storageKey ?? ""); setStoreLogoDeleteToken(payload.data.deleteToken ?? ""); }
+      else { setEditingStoreBannerUrl(payload.data.url); setEditingStoreBannerStorageKey(payload.data.storageKey ?? ""); setStoreBannerDeleteToken(payload.data.deleteToken ?? ""); }
       setMessage(translate(locale, "Image uploaded. Save the store profile to publish this change.", "تم رفع الصورة. احفظ ملف المتجر لاعتماد التغيير."));
     } catch (cause) { setError(cause instanceof Error ? cause.message : translate(locale, "The image could not be uploaded.", "تعذر رفع الصورة.")); }
     finally { setStoreMediaUploading(""); }
@@ -825,6 +834,8 @@ export default function SellerWorkspacePage() {
                         setEditingStoreDescription(selectedStore.description ?? "");
                         setEditingStoreLogoUrl(selectedStore.logoUrl ?? "");
                         setEditingStoreBannerUrl(selectedStore.bannerUrl ?? "");
+                        setEditingStoreLogoStorageKey(selectedStore.logoStorageKey ?? ""); setEditingStoreBannerStorageKey(selectedStore.bannerStorageKey ?? "");
+                        setStoreLogoDeleteToken(""); setStoreBannerDeleteToken("");
                         setEditingShippingPolicy(selectedStore.shippingPolicy ?? "");
                         setEditingReturnsPolicy(selectedStore.returnsPolicy ?? "");
                         setEditingPrivacyPolicy(selectedStore.privacyPolicy ?? "");
