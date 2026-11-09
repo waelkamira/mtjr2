@@ -176,7 +176,7 @@ async function findInStockVariantIds(): Promise<string[]> {
     FROM "Inventory" inventory
     JOIN "Warehouse" warehouse ON warehouse.id = inventory."warehouseId"
     WHERE warehouse."isActive" = true
-      AND inventory."quantityOnHand" > inventory."quantityReserved"
+      AND inventory."quantityOnHand" - inventory."quantityReserved" - inventory."quantityQuarantined" > 0
   `);
   return rows.map(({ id }) => id);
 }
