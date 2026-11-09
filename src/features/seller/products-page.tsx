@@ -63,8 +63,8 @@ export default function SellerProductsPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  type VariantDraft = { id: string; sku: string; barcode: string; name: string; optionValues: Record<string, string | number | boolean | string[]> };
-  const [variantRows, setVariantRows] = useState<VariantDraft[]>([{ id: "variant-1", sku: "", barcode: "", name: "", optionValues: {} }]);
+  type VariantDraft = { id: string; sku: string; barcode: string; name: string; optionValues: Record<string, string | number | boolean | string[]>; prices: Record<string, { currencyCode: string; amountMinor: string; compareAtMinor: string }> };
+  const [variantRows, setVariantRows] = useState<VariantDraft[]>([{ id: "variant-1", sku: "", barcode: "", name: "", optionValues: {}, prices: {} }]);
   type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const uploadedImagesRef = useRef<ProductImageDraft[]>([]);
@@ -159,7 +159,9 @@ export default function SellerProductsPage() {
       if (initialStore) {
         setStoreId(initialStore.id);
         const enabled = new Set(initialStore.markets.map((entry) => entry.market.id));
-        setMarketPrices(Object.fromEntries(marketResult.items.filter((market) => enabled.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }])));
+        const initialPrices = Object.fromEntries(marketResult.items.filter((market) => enabled.has(market.id)).map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }]));
+        setMarketPrices(initialPrices);
+        setVariantRows((rows) => rows.map((row) => ({ ...row, prices: initialPrices })));
       }
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load seller catalog.");
@@ -197,6 +199,18 @@ export default function SellerProductsPage() {
   function updateVariantOption(id: string, key: string, value: string | number | boolean | string[]) {
     setVariantRows((rows) => rows.map((row) => row.id === id ? { ...row, optionValues: { ...row.optionValues, [key]: value } } : row));
   }
+  function updateVariantPrice(id: string, marketId: string, patch: Partial<{ currencyCode: string; amountMinor: string; compareAtMinor: string }>) {
+    setVariantRows((rows) => rows.map((row) => row.id === id ? {
+      ...row,
+      prices: { ...row.prices, [marketId]: { ...(row.prices[marketId] ?? marketPrices[marketId] ?? { currencyCode: "", amountMinor: "", compareAtMinor: "" }), ...patch } }
+    } : row));
+  }
+  const variantPricesValid = variantRows.every((variant) => availableMarkets.every((market) => {
+    const price = variant.prices[market.id] ?? marketPrices[market.id];
+    if (!/^(0|[1-9][0-9]{0,17})$/.test(price?.amountMinor ?? "")) return false;
+    if (!price?.compareAtMinor) return true;
+    return /^(0|[1-9][0-9]{0,17})$/.test(price.compareAtMinor) && BigInt(price.compareAtMinor) >= BigInt(price.amountMinor);
+  }));
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset product editor and temporary media when the active store changes.
@@ -412,13 +426,13 @@ export default function SellerProductsPage() {
             ...(variant.barcode.trim() ? { barcode: variant.barcode.trim() } : {}),
             ...(variant.name.trim() ? { name: variant.name.trim() } : {}),
             optionValues: Object.fromEntries(Object.entries(variant.optionValues).filter(([, value]) => value !== "" && (!Array.isArray(value) || value.length > 0))),
-            prices: availableMarkets.map((market) => ({ marketId: market.id, currencyCode: marketPrices[market.id]?.currencyCode ?? market.defaultCurrency.code, amountMinor: marketPrices[market.id]?.amountMinor ?? "", ...(marketPrices[market.id]?.compareAtMinor ? { compareAtMinor: marketPrices[market.id].compareAtMinor } : {}) }))
+            prices: availableMarkets.map((market) => { const price = variant.prices[market.id] ?? marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }; return { marketId: market.id, currencyCode: price.currencyCode, amountMinor: price.amountMinor, ...(price.compareAtMinor ? { compareAtMinor: price.compareAtMinor } : {}) }; })
           }))
         })
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
-      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {} }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
+      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -625,13 +639,28 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
             </div>
             <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
-              <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-extrabold text-[#2d4a60]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Add a separate SKU for every size, color or configuration. Prices are shared across variants for each enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. الأسعار مشتركة بين المتغيرات لكل سوق مفعّل.")}</p></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {} }])} className="rounded-full border border-white bg-white/80 px-3 py-2 text-xs font-bold text-[#35566b] shadow-sm disabled:opacity-40">＋ {translate(locale, "Add variant", "إضافة متغير")}</button></div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-extrabold text-[#2d4a60]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs text-[#718899]">{translate(locale, "Add a separate SKU for every size, color or configuration. Prices are shared across variants for each enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. الأسعار مشتركة بين المتغيرات لكل سوق مفعّل.")}</p></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" }])) }])} className="rounded-full border border-white bg-white/80 px-3 py-2 text-xs font-bold text-[#35566b] shadow-sm disabled:opacity-40">＋ {translate(locale, "Add variant", "إضافة متغير")}</button></div>
               {variantRows.map((variant, index) => <article key={variant.id} className="grid gap-3 rounded-2xl border border-white/90 bg-white/65 p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(43,69,88,.05)]">
                 <div className="flex items-center justify-between"><p className="text-xs font-extrabold text-[#42677b]">{translate(locale, "Variant", "المتغير")} {index + 1}</p>{variantRows.length > 1 && <button type="button" onClick={() => setVariantRows((rows) => rows.filter((row) => row.id !== variant.id))} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-700">{translate(locale, "Remove", "حذف")}</button>}</div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <label className="grid gap-1 text-xs font-semibold">SKU<input required maxLength={100} className={inputClass} value={variant.sku} onChange={(event) => updateVariant(variant.id, { sku: event.target.value })} placeholder={`MAT-00${index + 1}`} /></label>
                   <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Barcode (optional)", "الباركود (اختياري)")}<input maxLength={100} className={inputClass} value={variant.barcode} onChange={(event) => updateVariant(variant.id, { barcode: event.target.value })} placeholder="EAN / UPC" /></label>
                   <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Variant name (optional)", "اسم المتغير (اختياري)")}<input maxLength={180} className={inputClass} value={variant.name} onChange={(event) => updateVariant(variant.id, { name: event.target.value })} placeholder={translate(locale, "e.g. Blue / Large", "مثال: أزرق / كبير")} /></label>
+                </div>
+                <div className="grid gap-3 border-t border-[#d7e4e9] pt-3">
+                  <p className="text-xs font-extrabold text-[#42677b]">{translate(locale, "Market prices for this SKU", "أسعار الأسواق لهذا المتغير")}</p>
+                  {!availableMarkets.length && <p className="text-xs text-amber-800">{translate(locale, "No active markets are enabled for this store.", "لا توجد أسواق مفعّلة لهذا المتجر.")}</p>}
+                  {availableMarkets.map((market) => {
+                    const price = variant.prices[market.id] ?? marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" };
+                    const currencies = market.currencies.map((entry) => entry.currency);
+                    const currency = currencies.find((item) => item.code === price.currencyCode) ?? market.defaultCurrency;
+                    return <div key={market.id} className="grid gap-2 rounded-xl border border-[#d7e4e9] bg-[#f7fbfc] p-3">
+                      <p className="text-xs font-bold">{market.name}</p>
+                      <label className="grid gap-1 text-xs">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={price.currencyCode} onChange={(event) => updateVariantPrice(variant.id, market.id, { currencyCode: event.target.value })}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
+                      <label className="grid gap-1 text-xs">{translate(locale, "Selling price (minor units)", "سعر البيع بالوحدات الصغرى")}<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={price.amountMinor} onChange={(event) => updateVariantPrice(variant.id, market.id, { amountMinor: event.target.value })} placeholder="1299" /><span className="text-[11px] text-[#718899]">{translate(locale, "Integer minor units · precision", "عدد صحيح بالوحدات الصغرى · الدقة")} {currency.minorUnit}</span></label>
+                      <label className="grid gap-1 text-xs">{translate(locale, "Compare-at price (optional)", "السعر قبل الخصم (اختياري)")}<input inputMode="numeric" pattern="[0-9]+" className={inputClass} value={price.compareAtMinor} onChange={(event) => updateVariantPrice(variant.id, market.id, { compareAtMinor: event.target.value })} placeholder={translate(locale, "Original price", "السعر الأصلي")} /></label>
+                    </div>;
+                  })}
                 </div>
                 {categoryAttributes.filter((attribute) => attribute.variantLevel).length > 0 && <div className="grid gap-3 border-t border-[#d7e4e9] pt-3 sm:grid-cols-2">
                   {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
@@ -736,22 +765,7 @@ export default function SellerProductsPage() {
               </div>
             </fieldset>}
             <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
-            <div className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(43,69,88,.06)]">
-              <p className="text-sm font-semibold">{translate(locale, "Prices for every enabled store market", "أسعار كل سوق مفعّل للمتجر")}</p>
-              {!availableMarkets.length && <p className="text-xs text-amber-800">{translate(locale, "This store has no active markets enabled.", "لا توجد أسواق مفعّلة لهذا المتجر.")}</p>}
-              {availableMarkets.map((market) => {
-                const draft = marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amountMinor: "", compareAtMinor: "" };
-                const currencies = market.currencies.map((entry) => entry.currency);
-                const currency = currencies.find((item) => item.code === draft.currencyCode) ?? market.defaultCurrency;
-                return <div key={market.id} className="grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-                  <p className="text-sm font-semibold">{market.name}</p>
-                  <label className="grid gap-1 text-sm">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={draft.currencyCode} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, currencyCode: e.target.value } }))}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
-                  <label className="grid gap-1 text-sm">{translate(locale, "Price in minor units", "السعر بالوحدات الصغرى")}<input required inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.amountMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, amountMinor: e.target.value } }))} placeholder={translate(locale, "e.g. 1299", "مثال: 1299")} /><span className="text-xs text-[var(--muted)]">{translate(locale, "Integer minor units · precision", "عدد صحيح بالوحدات الصغرى · الدقة")} {currency.minorUnit}.</span></label>
-                  <label className="grid gap-1 text-sm">{translate(locale, "Compare-at price (optional, minor units)", "السعر قبل الخصم (اختياري، بالوحدات الصغرى)")}<input inputMode="numeric" pattern="[0-9]+" className={inputClass} value={draft.compareAtMinor} onChange={(e) => setMarketPrices((current) => ({ ...current, [market.id]: { ...draft, compareAtMinor: e.target.value } }))} placeholder={translate(locale, "Original price", "السعر الأصلي")} /><span className="text-xs text-[#718899]">{translate(locale, "Must be equal to or higher than the selling price.", "يجب أن يساوي سعر البيع أو يزيد عليه.")}</span></label>
-                </div>;
-              })}
-            </div>
-            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => { const price = marketPrices[market.id]; if (!/^(0|[1-9][0-9]{0,17})$/.test(price?.amountMinor ?? "")) return true; if (!price?.compareAtMinor) return false; return !/^(0|[1-9][0-9]{0,17})$/.test(price.compareAtMinor) || BigInt(price.compareAtMinor) < BigInt(price.amountMinor); })} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#8174a8,#665b8c)] px-5 py-3 text-sm font-extrabold text-white shadow-[0_9px_20px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || !variantPricesValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length || availableMarkets.some((market) => { const price = marketPrices[market.id]; if (!/^(0|[1-9][0-9]{0,17})$/.test(price?.amountMinor ?? "")) return true; if (!price?.compareAtMinor) return false; return !/^(0|[1-9][0-9]{0,17})$/.test(price.compareAtMinor) || BigInt(price.compareAtMinor) < BigInt(price.amountMinor); })} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#8174a8,#665b8c)] px-5 py-3 text-sm font-extrabold text-white shadow-[0_9px_20px_rgba(39,104,112,.22),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#e9f2f5,#cfdee4)] p-6 shadow-[0_16px_32px_rgba(35,62,81,.14),inset_0_2px_0_white,inset_0_-2px_7px_rgba(48,76,94,.05)] sm:p-7">
