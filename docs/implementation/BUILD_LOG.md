@@ -3115,3 +3115,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Added `tests/marketplace/seller-store-settings.test.ts` covering owner update + audit, active URL lock, exact-store permission denial for non-owners, and duplicate-slug rejection.
 - Test source added but not executed in this session; TypeScript/Vitest results remain unknown.
 - Follow-up E2E coverage also opens and closes the embedded store profile editor without mutating seeded data (`5ea32e292408824d678e4b91e416c7f7ed4a21e4`). The test remains unexecuted in this session.
+
+## Seller inventory ledger — 2026-11-09
+
+- Added a store-scoped backend query and GET /api/seller/inventory/movements, returning the latest 1–200 movement entries with stable newest-first ordering, product/SKU, warehouse, movement type, on-hand delta, quarantine delta, reference and note.
+- Connected the seller inventory workspace to the endpoint and displayed the movement ledger alongside stock and transfer operations.
+- Added focused service tests for store-scoped ledger reads and denial of another seller's store.
+- Runtime CI, PostgreSQL integration and browser verification remain pending; this source-level addition is not marked production-verified.
