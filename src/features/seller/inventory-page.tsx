@@ -24,6 +24,7 @@ type Movement = {
   id: string; type: string; quantityDelta: number; quarantinedDelta: number; referenceType: string | null; referenceId: string | null;
   note: string | null; createdAt: string;
   inventory: { warehouse: Warehouse; variant: { sku: string; product: { name: string } } };
+};
 type StockCountSummary = {
   id: string; status: string; note: string | null; openedAt: string; completedAt: string | null;
   warehouse: Warehouse; _count: { lines: number }; lines: Array<{ countedQuantity: number | null }>;
@@ -37,7 +38,6 @@ type StockCountDetail = {
   warehouse: Warehouse; lines: StockCountLine[];
 };
 
-};
 
 async function readJson<T>(response: Response): Promise<T> {
   const body = await response.json();
