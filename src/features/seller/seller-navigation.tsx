@@ -106,7 +106,7 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="hidden min-h-screen w-[276px] shrink-0 flex-col border-e border-[#263b52] bg-[linear-gradient(180deg,#20364d_0%,#1b3046_52%,#172b40_100%)] text-[#eaf3f7] shadow-[12px_0_32px_rgba(12,28,45,.24)] lg:sticky lg:top-0 lg:flex lg:h-screen">
+      <aside className="relative z-30 hidden h-screen w-[280px] shrink-0 flex-col overflow-hidden border-e border-[#263b52] bg-[#1d3248] text-[#edf4f7] shadow-[8px_0_24px_rgba(12,28,45,.16)] lg:sticky lg:top-0 lg:flex">
         <div className="border-b border-white/10 px-6 py-6">
           <Link href="/seller" className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[var(--color-lavender-100)] text-[var(--color-lavender-800)] shadow-[var(--shadow-clay)]">
@@ -119,14 +119,14 @@ export default function SellerNavigation() {
           </Link>
         </div>
 
-        <div className="mx-4 mt-5 flex items-center gap-3 rounded-[1.6rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-3 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
+        <div className="mx-4 mt-4 flex shrink-0 items-center gap-3 rounded-[1.25rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-3 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
           <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[1.25rem] border border-white/35 bg-[linear-gradient(145deg,#d8edf0,#9fc8d2)] text-xl font-black text-[#29475b] shadow-[0_7px_16px_rgba(9,24,38,.2),inset_0_2px_0_white]">
             {store?.logoUrl ? <img src={store.logoUrl} alt="" className="size-full object-cover" /> : (store?.name ?? "M").trim().slice(0, 1).toLocaleUpperCase()}
           </span>
           <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-white">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block truncate text-[10px] leading-4 text-[#b3c6d2]">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
         </div>
 
-        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-4 py-5">
           {groups.map((group) => (
             <section key={group.title}>
               <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#8fa9ba]">{translate(locale, group.title, group.ar)}</h2>
@@ -153,13 +153,13 @@ export default function SellerNavigation() {
           ))}
         </nav>
 
-        <div className="mx-4 mb-4 rounded-[1.6rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-4 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
+        <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-4 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
           <span className="grid size-10 place-items-center rounded-xl border border-white/20 bg-[#9fd5d4]/20 text-lg text-[#a9dcd8] shadow-[inset_0_1px_0_rgba(255,255,255,.2)]" aria-hidden="true">✦</span>
           <p className="mt-3 text-sm font-extrabold text-white">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
           <p className="mt-1 text-[10px] leading-4 text-[#b3c6d2]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
           <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-white/25 bg-[linear-gradient(135deg,#9fd5d4,#78b8bd)] px-3 py-2 text-[11px] font-extrabold text-[#17374b] shadow-[0_5px_12px_rgba(5,17,31,.22),inset_0_1px_0_white]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
         </div>
-        <div className="border-t border-white/10 p-4">
+        <div className="shrink-0 border-t border-white/10 p-4">
           <Link href="/" className="flex items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-[#eaf3f7] shadow-[6px_7px_16px_rgba(5,17,31,.18),inset_0_1px_0_rgba(255,255,255,.12)] transition hover:shadow-[var(--shadow-clay)]">
             <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
           </Link>
