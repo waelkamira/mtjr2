@@ -26,6 +26,10 @@ const environmentSchema = z.object({
   CONTACT_EMAIL: z.preprocess((value) => value === "" ? undefined : value, z.string().email().optional()),
   STRIPE_SECRET_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().startsWith("sk_").optional()),
   STRIPE_WEBHOOK_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().startsWith("whsec_").optional()),
+  PAYPAL_CLIENT_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  PAYPAL_CLIENT_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  PAYPAL_WEBHOOK_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  PAYPAL_MODE: z.enum(["sandbox", "live"]).default("sandbox"),
   TURNSTILE_SECRET_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
 
@@ -54,6 +58,14 @@ const environmentSchema = z.object({
       code: "custom",
       path: ["STRIPE_WEBHOOK_SECRET"],
       message: "STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be configured together"
+    });
+  }
+  const paypalValues = [value.PAYPAL_CLIENT_ID, value.PAYPAL_CLIENT_SECRET, value.PAYPAL_WEBHOOK_ID];
+  if (paypalValues.some(Boolean) && !paypalValues.every(Boolean)) {
+    context.addIssue({
+      code: "custom",
+      path: ["PAYPAL_WEBHOOK_ID"],
+      message: "PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET and PAYPAL_WEBHOOK_ID must be configured together"
     });
   }
 });
