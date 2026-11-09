@@ -3468,3 +3468,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The seller profile GET response now normalizes optional legacy contact/display fields to empty strings for controlled form inputs. Existing null values no longer produce uncontrolled-input warnings or break the edit form.
 - Commit: `8465153` — `fix(seller): normalize legacy optional profile fields`.
 - Source-level response-shape review only; no tests or builds were run.
+
+## 2026-11-09 — Draft metadata edits when no active market is available
+
+- Draft metadata/media edits are no longer blocked solely because a legacy store currently has no active market or no active SKU rows. In those cases the editor omits the optional price-matrix update rather than submitting an invalid empty matrix.
+- Where active markets and variants exist, every price remains mandatory and fully validated.
+- Commit: `8454af8` — `fix(seller): preserve draft metadata edits without active markets`.
+- Source-level fallback review only; no tests or builds were run.
