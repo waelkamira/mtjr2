@@ -31,41 +31,40 @@ export default function SellerReturnsPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [warehouseByStore, setWarehouseByStore] = useState<Record<string, string>>({});
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isCurrent: () => boolean = () => true) => {
     const response = await fetch("/api/seller/returns", { cache: "no-store" });
     const data = await response.json() as { items?: SellerReturn[]; error?: string };
     if (!response.ok) throw new Error(data.error || translate(locale, "Seller returns could not be loaded.", "تعذر تحميل المرتجعات."));
+    if (!isCurrent()) return;
     const rows = data.items ?? [];
     setItems(rows);
     setWarehouseByStore((current) => {
       const next = { ...current };
-      for (const row of rows) if (!next[row.storeId] && row.warehouses[0]) next[row.storeId] = row.warehouses[0].id;
+      const activeStoreIds = new Set(rows.map((row) => row.storeId));
+      for (const storeId of Object.keys(next)) if (!activeStoreIds.has(storeId)) delete next[storeId];
+      for (const row of rows) {
+        const available = row.warehouses;
+        if (!available.some((warehouse) => warehouse.id === next[row.storeId])) {
+          if (available[0]) next[row.storeId] = available[0].id;
+          else delete next[row.storeId];
+        }
+      }
       return next;
     });
   }, [locale]);
 
   useEffect(() => {
     let active = true;
-    fetch("/api/seller/returns", { cache: "no-store" })
-      .then(async (response) => {
-        const data = await response.json() as { items?: SellerReturn[]; error?: string };
-        if (!response.ok) throw new Error(data.error || translate(locale, "Seller returns could not be loaded.", "تعذر تحميل المرتجعات."));
-        return data.items ?? [];
-      })
-      .then((rows) => { if (active) {
-        setItems(rows);
-        setWarehouseByStore((current) => {
-          const next = { ...current };
-          for (const row of rows) if (!next[row.storeId] && row.warehouses[0]) next[row.storeId] = row.warehouses[0].id;
-          return next;
-        });
-      } })
+    setItems([]);
+    setLoading(true);
+    setError("");
+    load(() => active)
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Seller returns could not be loaded.", "تعذر تحميل المرتجعات."));
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [locale]);
+  }, [load, locale]);
 
   const returnStatusRows = Object.entries(items.reduce((counts, item) => {
     counts[item.status] = (counts[item.status] ?? 0) + 1;
