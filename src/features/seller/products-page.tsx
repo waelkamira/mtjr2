@@ -230,6 +230,25 @@ export default function SellerProductsPage() {
       return false;
     }
   }));
+  const editVariantPricesValid = editVariantRows.length > 0 && availableMarkets.length > 0 && editVariantRows.every((variant) =>
+    availableMarkets.every((market) => {
+      const price = variant.prices[market.id];
+      const currency = market.currencies.find((entry) => entry.currency.code === price?.currencyCode)?.currency;
+      if (!price?.amount.trim() || !currency) return false;
+      try {
+        const amountMinor = BigInt(toMinorUnits(price.amount, currency.minorUnit));
+        return !price.compareAt.trim() || BigInt(toMinorUnits(price.compareAt, currency.minorUnit)) >= amountMinor;
+      } catch {
+        return false;
+      }
+    })
+  );
+  function updateEditVariantPrice(variantId: string, marketId: string, patch: Partial<{ currencyCode: string; amount: string; compareAt: string }>) {
+    setEditVariantRows((rows) => rows.map((row) => row.id === variantId
+      ? { ...row, prices: { ...row.prices, [marketId]: { ...row.prices[marketId], ...patch } } }
+      : row
+    ));
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset product editor and temporary media when the active store changes.
