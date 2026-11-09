@@ -1,3 +1,24 @@
+export class PaymentProviderConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PaymentProviderConfigurationError";
+  }
+}
+
+export class PaymentProviderUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PaymentProviderUnavailableError";
+  }
+}
+
+export class PaymentWebhookSignatureError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PaymentWebhookSignatureError";
+  }
+}
+
 export type PaymentProviderIntentInput = {
   paymentId: string;
   orderNumber: string;
