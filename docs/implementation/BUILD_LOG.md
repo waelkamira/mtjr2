@@ -3607,3 +3607,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The seller inventory workspace now appends older ledger rows without discarding the current page or duplicating entries, and exposes a load-more control.
 - Commits: f572411fc8514e64daea3e53eb920a400d3aaa04, 58e55bad07e11bdf59f72cf777aee5b4f0898832, 27b18b709bfb18d32c0c378af5473e669293cb7d.
 - No tests/build/typecheck/browser verification performed, per the current build-first instruction.
+
+## 2026-11-09 — Seller inventory records pagination
+
+- Removed the silent 500-row ceiling from the seller inventory workspace by adding stable cursor pages (500 rows) ordered by warehouse name, variant SKU, and inventory ID.
+- The store-scoped API returns an explicit `items` collection and `nextCursor`, fetching one look-ahead row; the workspace appends older inventory rows while preserving the active search.
+- Added a load-more control and loading/error feedback. Existing inventory summary calculations continue to use the rows currently loaded; the complete inventory list can now be traversed page by page.
+- Commits: 9bc12e9080d102b54d6df5dbdcc75dc343af2a04, 639c128d6b13fa8621597b7ba55c92307536c0cf, e4e9961b74854f82c305fef6effb4ef688cc8075, 5150c8efe7f89ea4243a6d9d4a77757a4236c402.
+- No tests/build/typecheck/browser verification performed, per the current build-first instruction.
