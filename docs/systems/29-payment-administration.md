@@ -121,3 +121,14 @@
 تمت إضافة مواصفة تنفيذ مركز التحكم في `docs/architecture/PAYMENT_PROVIDER_CONTROL_CENTER.md`. وهي تحدد دورة حياة المزود، الإيقاف دون تعطيل Webhooks للمدفوعات الجارية، الأرشفة بدلاً من الحذف الفعلي، تشفير الأسرار وإصدارات المفاتيح، صلاحية Super Admin وMFA، سجل التدقيق، وإظهار وسائل الدفع حسب السوق والعملة.
 
 هذه مواصفة وخطة تنفيذ وليست ادعاءً بوجود واجهة أو API أو نموذج Prisma جاهز. خط الأساس الحالي: Stripe adapter مربوط بمتغيرات البيئة؛ `Payment` و`PaymentWebhookEvent` موجودان؛ لا يوجد نموذج إعدادات مزودي دفع دائم ولا API لإدارتها. يجب تنفيذ متطلبات التشفير والتفويض قبل حفظ أي بيانات اعتماد في قاعدة البيانات.
+
+
+## 12.1 — PayPal provider adapter added to the canonical payment lifecycle
+
+- The adapter is registered as `paypal` only when all server-only PayPal credentials and the webhook ID are configured.
+- Buyer approval is hosted by PayPal. The server creates the PayPal order from the canonical persisted order total and currency; client-submitted prices, plans, and email addresses are not accepted.
+- PayPal approval returns to a server route that captures the order. The shared payment lifecycle checks provider reference, amount, currency, event ordering and idempotency before confirming the Matjar order.
+- The shared webhook route verifies PayPal's signature using PayPal's verification API before processing capture events.
+- No Prisma schema or migration change was required; the existing `Payment`, `PaymentWebhookEvent` and payment lifecycle service are reused.
+- Current activation is environment-based. The Super Admin provider management UI/configuration model remains a separate incomplete deliverable.
+- Sandbox/live credentials, PayPal merchant-account eligibility, supported currencies/markets and live payment smoke tests remain owner-controlled prerequisites.
