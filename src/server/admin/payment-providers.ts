@@ -290,6 +290,14 @@ function validateCredentials(
   }
 }
 
+function validatePaymentMethods(providerKey: "stripe" | "paypal", methods: string[]) {
+  const supported = providerKey === "stripe" ? new Set(["card"]) : new Set(["paypal"]);
+  const unsupported = methods.filter((method) => !supported.has(method));
+  if (unsupported.length) {
+    throw new Error(`The ${providerKey} adapter does not support these configured payment methods: ${unsupported.join(", ")}.`);
+  }
+}
+
 function fingerprint(credentials: ProviderCredentials) {
   const identifier = credentials.clientId ?? credentials.secretKey ?? "";
   return createHash("sha256").update(identifier).digest("hex").slice(0, 12);
@@ -330,6 +338,7 @@ export async function createPaymentProviderConfig(input: unknown) {
   const actor = await requireProviderManagement();
   const parsed = createSchema.parse(input);
   validateCredentials(parsed.providerKey, parsed.credentials, parsed.environment);
+  validatePaymentMethods(parsed.providerKey, parsed.enabledPaymentMethods);
   const encrypted = encryptCredentials(parsed.credentials);
   const created = await prisma.$transaction(async (tx) => {
     const item = await tx.paymentProviderConfig.create({
@@ -366,6 +375,7 @@ export async function updatePaymentProviderConfig(id: string, input: unknown) {
   const parsed = updateSchema.parse(input);
   const existing = await prisma.paymentProviderConfig.findUnique({ where: { id: configId } });
   if (!existing || existing.status === PaymentProviderConfigStatus.ARCHIVED) throw new Error("Payment provider configuration was not found.");
+  if (parsed.enabledPaymentMethods) validatePaymentMethods(existing.providerKey as "stripe" | "paypal", parsed.enabledPaymentMethods);
 
   let encryptedCredentials: string | undefined;
   let credentialFingerprint = existing.credentialFingerprint;
