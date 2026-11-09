@@ -12,6 +12,7 @@ const links = [
   { href: "/admin/products", label: "Product approvals", ar: "اعتماد المنتجات" },
   { href: "/admin/product-management", label: "Product management", ar: "إدارة المنتجات" },
   { href: "/admin/categories", label: "Categories", ar: "الفئات" },
+  { href: "/admin/brands", label: "Brands", ar: "العلامات التجارية" },
   { href: "/admin/orders", label: "Orders", ar: "الطلبات" },
   { href: "/admin/payments", label: "Payments", ar: "المدفوعات" },
   { href: "/admin/logistics", label: "Shipments", ar: "الشحنات" },
