@@ -3160,3 +3160,4 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Completion requires every line to be counted, rejects inventory changed since the snapshot, and rejects physical quantities below active reservations. All inventory changes and adjustment movements commit in one Serializable transaction; movement idempotency keys prevent duplicate application.
 - Count opening/completion are audit logged. A warehouse cannot be deactivated while a count is in progress. Completed count replay is authorized and does not apply stock twice.
 - API routes: GET/POST /api/seller/inventory/counts, GET /api/seller/inventory/counts/[countId], PATCH /api/seller/inventory/counts/[countId]/lines/[lineId], and POST /api/seller/inventory/counts/[countId]/complete.
+- Added an explicit cancel action for an unfinished count session. Cancellation is audited and never changes inventory; completed sessions cannot be cancelled.
