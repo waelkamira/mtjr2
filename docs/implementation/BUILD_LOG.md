@@ -3678,3 +3678,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Finance system documentation now records the remaining policy decisions: shipping/tax allocation, seller payable trigger, reserves/holds, chargebacks, clearing accounts and negative balances. Do not derive withdrawable balances from commission snapshots.
 - Commits: 7c0d8f1 (Prisma ledger models), f8e77a6 (ledger migration), c0e56bc (posting service), d58d71c (deferred balance/currency constraints), b49745a (exact reversal validation), 69ee7c9 (seller team owner-authorization copy correction), finance docs and model map updated in this turn.
 - No tests, builds, typechecks, browser sessions or deployments were run, as requested.
+
+
+## Seller application feedback — 2026-11-09
+- Updated `getSellerWorkspace` to retrieve only the authenticated seller's latest rejection audit event and expose its reason and review timestamp.
+- Updated the seller application screen to show the reviewer's saved feedback before the resubmission form, so rejected applicants can correct the actual issue instead of guessing.
+- Existing submission/resubmission rules remain unchanged; the rejection reason continues to come from the immutable audit history rather than duplicated mutable seller fields.
+- Commits: `aa2f4bf7b74ea581ce5acc0c1a3fe85be08d3d19`, `19af62ffa077d9b28caf1fa8af864685b8998ed6`.
+- No tests, build, typecheck, browser checks, or deployment were run, per project instruction.
