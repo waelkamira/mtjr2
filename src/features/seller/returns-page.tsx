@@ -55,6 +55,7 @@ export default function SellerReturnsPage() {
 
   useEffect(() => {
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear returns from the previous locale/query before refreshing the list.
     setItems([]);
     setLoading(true);
     setError("");

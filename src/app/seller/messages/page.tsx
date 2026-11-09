@@ -42,6 +42,7 @@ export default function Page() {
   }, [locale]);
   useEffect(() => {
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear the previous store inbox before loading the selected store.
     setRows([]);
     setId("");
     setConversation(null);
@@ -57,6 +58,7 @@ export default function Page() {
   }, [store]);
   useEffect(() => {
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- avoid showing the previous conversation while the selected thread loads.
     setConversation(null);
     if (!store || !id) return () => { active = false; };
     fetch("/api/stores/" + store + "/messages/" + id, { cache: "no-store" }).then(async (response) => {

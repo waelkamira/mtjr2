@@ -136,6 +136,7 @@ export default function SellerOrdersPage() {
 
   useEffect(() => {
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prevent stale orders from a previous search from remaining visible.
     setOrders([]);
     setShipmentDrafts({});
     const timer = window.setTimeout(() => { setLoading(true); setError(""); const params = new URLSearchParams(); if (query.trim()) params.set("q", query.trim());

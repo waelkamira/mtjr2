@@ -138,7 +138,10 @@ export default function SellerWorkspacePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => { setEditingStoreProfile(false); }, [selectedStoreId]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- close the previous store's profile editor on store switch.
+    setEditingStoreProfile(false);
+  }, [selectedStoreId]);
 
   const reload = useCallback(async () => {
     const data = await readJson<Workspace>(await fetch("/api/seller/stores", { cache: "no-store" }));
@@ -181,6 +184,7 @@ export default function SellerWorkspacePage() {
   useEffect(() => {
     if (!selectedStoreId) return;
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear shipping rates belonging to the previously selected store.
     setShippingRates([]);
     fetch(`/api/seller/shipping-rates?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
       .then((r) => readJson<{ rates: ShippingRate[] }>(r))
@@ -250,6 +254,7 @@ export default function SellerWorkspacePage() {
   useEffect(() => {
     let active = true;
     if (!selectedStoreId || !sellerAnalytics?.permissions.orders) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- remove stale recent orders when the selected store has no order permission.
       setRecentOrders([]);
       setRecentOrdersLoading(false);
       setRecentOrdersError("");
@@ -375,6 +380,7 @@ export default function SellerWorkspacePage() {
   const selectedStore = workspace?.stores.find((store) => store.id === selectedStoreId);
   useEffect(() => {
     if (!selectedStore) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the editable dispatch form from the selected store record.
     setShippingContactName(selectedStore.shippingContactName ?? "");
     setShippingPhone(selectedStore.shippingPhone ?? "");
     setShippingAddressLine1(selectedStore.shippingAddressLine1 ?? "");

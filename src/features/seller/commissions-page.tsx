@@ -48,8 +48,13 @@ export default function SellerCommissionsPage() {
   }, [locale]);
 
   useEffect(() => {
-    if (!storeId) { setData(null); return; }
+    if (!storeId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear a previous store's financial statement when no store is selected.
+      setData(null);
+      return;
+    }
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prevent one store's commission statement flashing under another store.
     setData(null);
     setLoading(true);
     setError("");

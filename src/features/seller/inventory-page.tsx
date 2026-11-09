@@ -145,6 +145,7 @@ export default function SellerInventoryPage() {
   useEffect(() => {
     if (!storeId) return;
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear store-scoped inventory before loading the newly selected warehouse context.
     setInventory([]);
     setProducts([]);
     setTransfers([]);

@@ -114,6 +114,7 @@ export default function SellerProductsPage() {
 
   useEffect(() => {
     const initialSearch = new URLSearchParams(window.location.search).get("search")?.slice(0, 120) ?? "";
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the optional initial search query from the URL after mount.
     if (initialSearch) setSearch(initialSearch);
   }, []);
 
@@ -169,6 +170,7 @@ export default function SellerProductsPage() {
   useEffect(() => {
     if (!categoryId) return;
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- show the category-attribute loading state while the dependent schema is fetched.
     setLoadingCategoryAttributes(true);
     fetch(`/api/categories/${encodeURIComponent(categoryId)}/attributes?locale=${encodeURIComponent(locale)}`, { cache: "no-store" })
       .then((response) => json<{ items: CategoryAttribute[] }>(response))
@@ -185,6 +187,7 @@ export default function SellerProductsPage() {
   });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset product editor and temporary media when the active store changes.
     setProducts([]);
     setEditingId("");
     setEditMedia([]);
