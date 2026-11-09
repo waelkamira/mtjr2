@@ -3820,3 +3820,14 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Admin advertising analytics now include each currency's configured minor-unit precision. The dashboard formats spend and open invoice balances as actual currency amounts rather than displaying raw minor-unit integers.
 - Retained main's more complete keyword matching and public search-budget enforcement; no older advertising delivery implementation was copied.
 - No tests, build, typecheck, or browser checks were run.
+
+
+## 2026-11-09 — Continued retained-branch reconciliation
+
+- Re-reviewed the remaining seller API contracts for inventory, orders, shipping rates, staff, and seller applications. Current main retains the stronger server-side ownership checks, warehouse-aware inventory/transfer behavior, order state rules, store-scoped staff invitations, and seller application lifecycle; the older branch route variants were not copied.
+- Re-reviewed the remaining customer/admin APIs for account profile, products, returns, coupons, search synonyms, locale, sponsored delivery, and scheduled jobs. Main's route contracts preserve the newer authorization, validation, rate limits, side-effect boundaries, and pagination/response behavior; no branch-only API behavior justified replacing them.
+- Compared the seller workspace, products, inventory, advertising, staff, and returns pages. Main's versions are materially more complete and use the current clay dashboard design and APIs. The branch's shorter pages were not used as replacements.
+- Compared catalog discovery, taxonomy, checkout quote, inventory stock, money utilities, identity request security, login throttling, AI assistant, environment configuration, and API audit tooling. Main retains stronger or newer behavior in these areas, including support-ticket context in the AI assistant, currency precision handling, current upload-provider configuration, and more comprehensive route-security auditing. The branch-only authenticated-action throttle helper has no corresponding demonstrated caller in the branch snapshot and was not copied as dead code.
+- Removed one duplicate product-not-found guard in the current advertising campaign service while retaining the active-variant market/currency price prerequisite.
+- The branch-only QA reports and old geography/product-listing artifacts remain excluded because they describe obsolete implementation snapshots or contradict current main architecture. No wholesale merge was performed; only changes with a current, demonstrable gap are recovered.
+- No tests, build, typecheck, migration execution, or browser checks were run, per instruction.
