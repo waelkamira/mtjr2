@@ -3,7 +3,6 @@ import { z } from "zod";
 import { getPaymentProviderAdapter } from "@/server/payments/providers/registry";
 import { getPaymentProviderRuntimeSnapshot, getActiveProviderCredentialsForWebhook, getPaymentProviderRuntimeEnvironment } from "@/server/admin/payment-providers";
 import { prisma } from "@/lib/db/prisma";
-import { PaymentProviderEnvironment } from "@prisma/client";
 import { processVerifiedPaymentEvent } from "@/server/payments/payments";
 import { PaymentProviderConfigurationError, PaymentProviderUnavailableError } from "@/server/payments/providers/types";
 
