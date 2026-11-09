@@ -75,6 +75,37 @@ async function readJson<T>(response: Response): Promise<T> {
   return body as T;
 }
 
+async function loadStoreInventory(storeId: string): Promise<InventoryRow[]> {
+  const rows: InventoryRow[] = [];
+  const seenCursors = new Set<string>();
+  let cursor: string | null = null;
+
+  do {
+    if (cursor) {
+      if (seenCursors.has(cursor)) throw new Error("The inventory response contained a repeated cursor.");
+      seenCursors.add(cursor);
+    }
+
+    const params = new URLSearchParams({ storeId });
+    if (cursor) params.set("cursor", cursor);
+    const page = await readJson<unknown>(
+      await fetch(`/api/seller/inventory?${params.toString()}`, { cache: "no-store" })
+    );
+    if (!page || typeof page !== "object") throw new Error("The inventory response was invalid.");
+
+    const result = page as Record<string, unknown>;
+    if (!Array.isArray(result.items) ||
+      !(result.nextCursor === null || typeof result.nextCursor === "string")) {
+      throw new Error("The inventory response was invalid.");
+    }
+
+    rows.push(...result.items as InventoryRow[]);
+    cursor = result.nextCursor;
+  } while (cursor);
+
+  return rows;
+}
+
 export default function SellerWorkspacePage() {
   const { locale } = useLocale();
   const emptyChartLabel = translate(locale, "No store data is available for this chart.", "لا تتوفر بيانات المتجر لهذا المخطط.");
@@ -226,8 +257,7 @@ export default function SellerWorkspacePage() {
       setInventory([]);
       setInventoryLoading(true);
       setInventoryError("");
-      return fetch(`/api/seller/inventory?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
-        .then((r) => readJson<InventoryRow[]>(r))
+      return loadStoreInventory(selectedStoreId)
         .then((rows) => { if (active) setInventory(rows); })
         .catch((cause: unknown) => {
           if (!active) return;

@@ -15,7 +15,8 @@ import {
   PieChart,
   RadarChart,
   type ScatterDatum,
-  ScatterPlot
+  ScatterPlot,
+  chartColor
 } from "@/components/data-charts";
 
 type Dashboard = {
@@ -69,6 +70,8 @@ type Dashboard = {
 };
 
 type Filters = { from: string; to: string; countryCode: string; currencyCode: string; sellerId: string; storeId: string };
+
+const metricCardColors = Array.from({ length: 20 }, (_, index) => chartColor(index));
 
 function defaultFilters(): Filters {
   const to = new Date();
