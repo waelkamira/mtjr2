@@ -495,5 +495,5 @@ export async function updateWarehouse(warehouseIdInput: string, input: unknown, 
       occurredAt: now, metadata: { changedFields: Object.keys(data) }
     }});
     return warehouse;
-  });
+  }, { isolationLevel: "Serializable" });
 }
