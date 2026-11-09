@@ -4298,3 +4298,11 @@ The platform account policy is now explicit: email verification is not required 
 - Webhook verification resolves the payment snapshot before signature verification; provider metadata is also used to find an in-flight payment before its provider reference has been persisted. PayPal return/capture uses the same historical snapshot.
 - Existing payments without a snapshot continue through the legacy environment credentials path. Existing attempts with a snapshot can resume after the provider is disabled; disablement blocks new attempts but does not intentionally strand an already-created payment.
 - No tests, builds, typechecks or browser checks were run, per the instruction to defer testing. Migrations have been committed but have not been applied to the user's database. Provider credentials, merchant eligibility and live transactions have not been verified in the user's environment.
+
+
+## 2026-11-10 — Versioned provider credential key rotation
+
+- Added a backward-compatible versioned AES-256-GCM key ring. Existing `PAYMENT_PROVIDER_ENCRYPTION_KEY` remains version 1; new deployments can configure `PAYMENT_PROVIDER_ENCRYPTION_KEYS` and `PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION` to retain old decryption keys while encrypting new records with the active key.
+- Added an MFA-protected Super Admin re-encryption endpoint and UI. It processes provider configuration credentials and historical Payment snapshots in bounded batches, uses conditional updates, writes an audit event, and reports remaining rows so interrupted runs can be safely repeated.
+- Fixed a duplicate declaration in the PayPal adapter's OAuth token function and removed its duplicate `server-only` import.
+- No migrations were needed for key rotation because both provider configs and payment snapshots already persist key versions. No tests/build/typecheck were run, as requested.
