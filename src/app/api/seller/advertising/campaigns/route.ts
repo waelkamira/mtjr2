@@ -12,9 +12,10 @@ const bodySchema=z.object({
 }).strict();
 
 export async function GET(request:Request):Promise<Response>{
- const storeId=new URL(request.url).searchParams.get("storeId");
+ const params=new URL(request.url).searchParams;
+ const storeId=params.get("storeId"),cursor=params.get("cursor")??undefined;
  if(!storeId)return Response.json({error:"storeId is required."},{status:400});
- try{return Response.json({items:await listSellerAdCampaigns(storeId)},{headers:{"Cache-Control":"private, no-store"}});}
+ try{return Response.json(await listSellerAdCampaigns(storeId,new Date(),{cursor}),{headers:{"Cache-Control":"private, no-store"}});}
  catch(error){if(error instanceof AuthenticationRequiredError)return Response.json({error:"Authentication required."},{status:401});return Response.json({error:error instanceof Error?error.message:"Unable to load campaigns."},{status:403});}
 }
 export async function POST(request:Request):Promise<Response>{
