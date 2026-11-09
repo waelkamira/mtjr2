@@ -49,7 +49,7 @@ function encryptionKeyRing() {
   if (env.PAYMENT_PROVIDER_ENCRYPTION_KEYS) {
     const parsed = JSON.parse(env.PAYMENT_PROVIDER_ENCRYPTION_KEYS) as Record<string, string>;
     for (const [version, value] of Object.entries(parsed)) {
-      if (!/^\\d+$/.test(version) || !/^[a-fA-F0-9]{64}$/.test(value)) {
+      if (!Number.isSafeInteger(Number(version)) || Number(version) < 1 || String(Number(version)) !== version || !/^[a-fA-F0-9]{64}$/.test(value)) {
         throw new Error("Provider credential key ring contains an invalid entry.");
       }
       keys.set(Number(version), Buffer.from(value, "hex"));
