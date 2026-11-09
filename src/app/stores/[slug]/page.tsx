@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const locale = await getPreferredLocale();
   const store = await getDiscoverableStoreBySlug(slug);
-  return store ? { title: store.name, description: translate(locale, `Browse published products from ${store.name} on Mtjr.`, `تصفّح المنتجات المنشورة من ${store.name} على متجري.`), alternates: { canonical: `/stores/${encodeURIComponent(store.slug)}` } } : { title: translate(locale, "Store not found", "المتجر غير موجود"), robots: { index: false, follow: false } };
+  return store ? { title: store.name, description: store.description || translate(locale, `Browse published products from ${store.name} on Mtjr.`, `تصفّح المنتجات المنشورة من ${store.name} على متجري.`), alternates: { canonical: `/stores/${encodeURIComponent(store.slug)}` } } : { title: translate(locale, "Store not found", "المتجر غير موجود"), robots: { index: false, follow: false } };
 }
 export default async function StoreDetailPage({ params, searchParams }: Props) {
   const [{ slug }, search] = await Promise.all([params, searchParams]);
@@ -29,10 +29,24 @@ export default async function StoreDetailPage({ params, searchParams }: Props) {
     : q ? "relevance" : "newest";
   const result = await listDiscoverableProducts({ storeId: store.id, q: q || undefined, page, limit: 24, sort, locale });
   return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
-    <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Verified marketplace seller", "بائع موثّق في السوق")}</p>
-    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{store.name}</h1>
-    {store.sellerDisplayName && <p className="mt-2 text-sm text-[var(--muted)]">{t("Operated by", "يديره")} {store.sellerDisplayName}</p>}
-    <p className="mt-3 text-sm text-[var(--muted)]">{result.pagination.total} {t("published products", "منتج منشور")}</p>
+    <section className="overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_12px_30px_rgba(34,55,72,.09)]">
+      <div className="relative h-36 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] sm:h-52">
+        {store.bannerUrl && <img src={store.bannerUrl} alt="" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" />}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#203449]/35 to-transparent" />
+      </div>
+      <div className="relative flex flex-wrap items-end gap-4 px-5 pb-5 sm:px-7">
+        <div className="-mt-12 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border-4 border-white bg-[linear-gradient(145deg,#e9edf2,#c9d9e2)] text-3xl font-black text-[#35566b] shadow-lg sm:h-28 sm:w-28">
+          {store.logoUrl ? <img src={store.logoUrl} alt={t("Store logo", "شعار المتجر")} referrerPolicy="no-referrer" className="h-full w-full object-cover" /> : store.name.slice(0, 1).toUpperCase()}
+        </div>
+        <div className="min-w-0 flex-1 pb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Verified marketplace seller", "بائع موثّق في السوق")}</p>
+          <h1 className="mt-1 text-2xl font-black tracking-tight text-[var(--color-ink-950)] sm:text-3xl">{store.name}</h1>
+          {store.sellerDisplayName && <p className="mt-1 text-sm text-[var(--muted)]">{t("Operated by", "يديره")} {store.sellerDisplayName}</p>}
+        </div>
+        <p className="pb-2 text-sm font-semibold text-[var(--muted)]">{result.pagination.total} {t("published products", "منتج منشور")}</p>
+      </div>
+      {store.description && <p className="max-w-4xl px-5 pb-6 text-sm leading-7 text-[var(--muted)] sm:px-7">{store.description}</p>}
+    </section>
     <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} locale={locale} />
     <CatalogProductGrid products={result.items} locale={locale} />
     <CatalogListControls action={`/stores/${encodeURIComponent(slug)}`} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} sort={sort} params={{ sort }} locale={locale} />
