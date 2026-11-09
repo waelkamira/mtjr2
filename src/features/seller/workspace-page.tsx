@@ -27,7 +27,7 @@ type Store = {
   warehouses: Array<{ id: string; code: string; name: string; _count: { inventories: number } }>;
 };
 type Workspace = {
-  seller: null | { id: string; status: string; legalName: string | null; displayName: string | null; rejectionReason: string | null; reviewedAt: string | null };
+  seller: null | { id: string; status: string; legalName: string | null; displayName: string | null; contactName: string | null; contactEmail: string | null; phoneNumber: string | null; residence: string | null; businessType: string | null; sellingCategories: string | null; intendedProducts: string | null; description: string | null; facebookUrl: string | null; youtubeUrl: string | null; twitterUrl: string | null; latitude: number | null; longitude: number | null; createdAt: string; rejectionReason: string | null; reviewedAt: string | null };
   stores: Store[];
 };
 type ShippingRate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; currency: { minorUnit: number }; name: string; description: string | null; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean };
@@ -304,7 +304,49 @@ export default function SellerWorkspacePage() {
         if (active) setRecentOrdersError(cause instanceof Error ? cause.message : translate(locale, "Recent orders could not be loaded.", "تعذر تحميل الطلبات الأخيرة."));
       })
       .finally(() => { if (active) setRecentOrdersLoading(false); });
-    return () => { active = false; };
+    if (!loading && workspace?.seller?.status === "PENDING") {
+    const application = workspace.seller;
+    return (
+      <main dir="rtl" className="min-h-screen bg-[var(--background)] px-4 py-10 text-[#46516b] sm:px-6">
+        <section className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#eeeaf8,#e0ebef)] shadow-[0_18px_42px_rgba(35,62,81,.16),inset_0_2px_0_white]">
+          <header className="bg-[linear-gradient(120deg,#263f56,#3f6878)] p-7 text-white sm:p-9">
+            <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale, "SELLER APPLICATION", "طلب فتح متجر")}</p>
+            <h1 className="mt-3 text-3xl font-black">{translate(locale, "Your application is under review", "طلبك قيد المراجعة")}</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">{translate(locale, "Your application has been received. The marketplace team will review your business details before enabling store operations.", "تم استلام طلبك. سيراجع فريق المنصة بيانات نشاطك قبل تفعيل عمليات المتجر.")}</p>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold"><span className="size-2 rounded-full bg-amber-300"/>{translate(locale, "Pending review", "بانتظار المراجعة")}</div>
+          </header>
+          <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-8">
+            <section className="rounded-[1.5rem] border border-white/90 bg-white/55 p-5 shadow-[inset_0_1px_0_white]">
+              <h2 className="text-lg font-black">{translate(locale, "Applicant profile", "ملف مقدم الطلب")}</h2>
+              <dl className="mt-4 grid gap-3 text-sm">
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Full legal name", "الاسم القانوني")}</dt><dd className="mt-1 font-semibold">{application.legalName || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Store / business", "اسم المتجر أو النشاط")}</dt><dd className="mt-1 font-semibold">{application.displayName || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Contact person", "الشخص المسؤول")}</dt><dd className="mt-1">{application.contactName || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Email / phone", "البريد والهاتف")}</dt><dd dir="ltr" className="mt-1 text-left">{application.contactEmail || "—"} · {application.phoneNumber || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Address", "العنوان")}</dt><dd className="mt-1">{application.residence || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Business type", "نوع النشاط")}</dt><dd className="mt-1">{application.businessType || "—"}</dd></div>
+              </dl>
+            </section>
+            <section className="rounded-[1.5rem] border border-white/90 bg-white/55 p-5 shadow-[inset_0_1px_0_white]">
+              <h2 className="text-lg font-black">{translate(locale, "Products and selling plan", "المنتجات وخطة البيع")}</h2>
+              <p className="mt-3 text-sm font-bold text-[#7883a8]">{application.sellingCategories || "—"}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#657487]">{application.intendedProducts || "—"}</p>
+              {application.description && <p className="mt-4 border-t border-white/80 pt-4 text-sm leading-7 text-[#657487]">{application.description}</p>}
+              <div className="mt-4 flex flex-wrap gap-3 text-xs">
+                {application.facebookUrl && <a href={application.facebookUrl} target="_blank" rel="noreferrer" className="underline">Facebook</a>}
+                {application.youtubeUrl && <a href={application.youtubeUrl} target="_blank" rel="noreferrer" className="underline">YouTube</a>}
+                {application.twitterUrl && <a href={application.twitterUrl} target="_blank" rel="noreferrer" className="underline">X</a>}
+              </div>
+              {application.latitude !== null && application.longitude !== null && <p dir="ltr" className="mt-4 text-left text-xs text-[#8790a5]">{application.latitude.toFixed(5)}, {application.longitude.toFixed(5)}</p>}
+            </section>
+            <p className="text-xs text-[#8790a5] sm:col-span-2">{translate(locale, "Submitted", "تاريخ التقديم")}: {new Date(application.createdAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  return () => { active = false; };
   }, [locale, selectedStoreId, sellerAnalytics?.permissions.orders]);
 
   async function uploadSellerIdentityDocument(event: ChangeEvent<HTMLInputElement>) {
