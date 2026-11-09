@@ -131,7 +131,7 @@ export default function SellerNavigation() {
         </nav>
 
         <div className="mx-4 mb-4 rounded-[1.6rem] border border-white/90 bg-[linear-gradient(145deg,#e5f2ed,#d8e9e2)] p-4 shadow-[8px_10px_20px_rgba(63,100,91,.10),inset_0_2px_0_white]">
-          <span className="grid size-10 place-items-center rounded-xl border border-white/20 bg-[#d4e9e9]/20 text-lg text-[#5d9d8c] shadow-[inset_0_1px_0_rgba(255,255,255,.2)]" aria-hidden="true">✦</span>
+          <span className="grid size-10 place-items-center rounded-xl border border-white/20 bg-[#d4e9e9]/55 text-lg text-[#5d9d8c] shadow-[inset_0_1px_0_rgba(255,255,255,.2)]" aria-hidden="true">✦</span>
           <p className="mt-3 text-sm font-extrabold text-[#344d4b]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
           <p className="mt-1 text-[10px] leading-4 text-[#7d879d]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
           <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-white bg-[#c7e7dc] px-3 py-2 text-[11px] font-extrabold text-[#315d53] shadow-[0_5px_12px_rgba(63,100,91,.12),inset_0_1px_0_white]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
@@ -140,7 +140,7 @@ export default function SellerNavigation() {
           <Link href="/" className="flex items-center justify-between rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f5f3fb,#e3e2ef)] px-4 py-3 text-sm font-semibold text-[#46536a] shadow-[6px_7px_16px_rgba(74,75,112,.09),inset_0_2px_0_white] transition hover:shadow-[var(--shadow-clay)]">
             <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
           </Link>
-          <p className="mt-3 px-2 text-[10px] leading-5 text-slate-300/65">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
+          <p className="mt-3 px-2 text-[10px] leading-5 text-[#8790a5]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
         </div>
       </aside>
 
