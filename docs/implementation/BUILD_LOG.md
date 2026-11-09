@@ -4276,3 +4276,14 @@ The platform account policy is now explicit: email verification is not required 
 - Reused existing `Payment`, `PaymentWebhookEvent`, owner-scoped intent creation, idempotency and verified payment transaction logic. No Prisma schema or migration was needed.
 - Added `docs/implementation/PAYPAL_INTEGRATION.md` with source findings, required environment setup, webhook subscriptions and explicit limitations. Updated the payment-provider specification and System 29 documentation.
 - Remaining gates: owner supplies sandbox credentials and configures the webhook; supported markets/currencies and merchant eligibility must be approved. The Super Admin persistent provider-management center remains separate work. No live payment was attempted. No tests, builds, typechecks or browser checks were run, consistent with the deferred-validation instruction.
+
+## 2026-11-10 — Payment provider control center, first implementation tranche
+
+- Added `PaymentProviderConfig`, `PaymentProviderEnvironment` and `PaymentProviderConfigStatus` to Prisma, with a forward-only migration for encrypted credential storage, test/live environment, country/currency/method allowlists, display order, verification metadata and archive lifecycle.
+- Added `PAYMENT_PROVIDER_ENCRYPTION_KEY` validation (exactly 32 bytes represented as 64 hex characters) and documented it as an independent runtime secret that must not be stored in PostgreSQL or source control.
+- Added a server-only provider management service using AES-256-GCM with a fresh nonce and authentication tag per credential write. API serializers never return secrets or ciphertext.
+- Added dedicated `payment.providers.manage` permission and required it together with global Super Admin permission/MFA step-up for provider management operations.
+- Added Super Admin APIs for listing, creating, editing metadata/credentials, non-charge verification, enable/disable status and soft archival. All sensitive mutations write non-secret audit metadata; archival is blocked while provider attempts are in flight or webhook events remain unprocessed.
+- Added the bilingual `/admin/payment-providers` page, navigation and Super Admin control-center shortcut. The interface includes add/edit forms, credential masking, test/live setup, verification, enable/disable and archive actions.
+- Explicit boundary: this is the management/data-storage tranche only. Checkout and webhook adapters still use the existing environment-based registry; database ACTIVE/DISABLED status does not yet alter checkout. The UI warns about this. The next implementation step is the provider runtime/config binding, including immutable payment-to-config/environment association and retained historical webhook verification.
+- No tests, builds, typechecks or browser checks were run, in line with the instruction to defer validation until the build work is complete.
