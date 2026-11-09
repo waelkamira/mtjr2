@@ -586,7 +586,7 @@ export async function recordStockCountLine(sessionIdInput: string, lineIdInput: 
     if (changed.count !== 1) throw new Error("Stock count line not found in this session.");
     return tx.stockCountLine.findUnique({
       where: { id: lineId },
-      include: { inventory: { select: { id: true, variant: { select: { sku: true, name: true, product: { select: { name: true } } } } } } }
+      include: { inventory: { select: { id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true, variant: { select: { sku: true, name: true, product: { select: { name: true } } } } } } }
     });
   }, { isolationLevel: "Serializable" });
 }
@@ -600,7 +600,7 @@ export async function completeStockCount(sessionIdInput: string, now = new Date(
       include: {
         warehouse: { select: { id: true, storeId: true, isActive: true, store: { select: { status: true, seller: { select: { ownerId: true, status: true } } } } } },
         lines: { orderBy: [{ id: "asc" }], include: { inventory: { select: {
-          id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true
+          id: true, quantityOnHand: true, quantityReserved: true, quantityQuarantined: true, updatedAt: true
         } } } }
       }
     });
