@@ -26,6 +26,7 @@ const groups: Array<{
   {
     title: "Finance", ar: "المالية",
     links: [
+      { href: "/seller/finance", label: "Financial overview", ar: "الملخص المالي", icon: "finance", tone: "lavender" },
       { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "finance", tone: "sky" }
     ]
   },
