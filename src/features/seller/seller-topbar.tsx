@@ -27,7 +27,7 @@ export default function SellerTopbar() {
   return (
     <header className="relative z-20 flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-[#d7e0e6] bg-white px-4 py-3 shadow-[0_3px_12px_rgba(22,42,58,.06)] sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
       <div className="min-w-[150px]">
-        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#658394]">MATJAR / SELLER STUDIO</p>
+        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#658394]">{translate(locale, "MATJAR / SELLER STUDIO", "متجر / استوديو البائع")}</p>
         <p className="mt-1 text-base font-black text-[#344d60]">{section}</p>
       </div>
       <form action="/seller/products" method="GET" role="search" className="order-3 flex w-full max-w-none flex-1 items-center gap-3 rounded-full border border-white/95 bg-[linear-gradient(145deg,#eef4f6,#cbdce3)] px-4 py-2.5 text-[#5e7888] shadow-[inset_0_3px_8px_rgba(74,75,112,.10),0_1px_0_white] lg:order-none lg:mx-6 lg:max-w-[440px]">
