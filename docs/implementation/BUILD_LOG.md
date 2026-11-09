@@ -4343,3 +4343,10 @@ The platform account policy is now explicit: email verification is not required 
 - Webhook processing now separates malformed/invalid-signature payloads (4xx) from database, encryption-key and PayPal API outages (503 with Retry-After), allowing providers to retry valid events after transient failures.
 - Preserved legacy PayPal sandbox/live selection from `PAYPAL_MODE` when a historical payment has no encrypted database snapshot; database-managed payments continue to use their stored TEST/LIVE environment.
 - No tests/build/typecheck were run.
+
+
+## 2026-11-10 — Provider disablement race and PayPal idempotency hardening
+
+- New database-managed payment creation now locks the selected provider configuration row and revalidates status, encrypted credential version, market allowlists and method policy inside the same transaction that writes Payment. Concurrent disablement/configuration changes are serialized against new payment creation.
+- PayPal Orders v2 create and capture requests now use deterministic SHA-256-derived 32-character request IDs, so retries reuse the same provider idempotency token and do not depend on arbitrary client key length/characters.
+- No tests/build/typecheck were run.
