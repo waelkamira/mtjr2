@@ -3122,3 +3122,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Connected the seller inventory workspace to the endpoint and displayed the movement ledger alongside stock and transfer operations.
 - Added focused service tests for store-scoped ledger reads and denial of another seller's store.
 - Runtime CI, PostgreSQL integration and browser verification remain pending; this source-level addition is not marked production-verified.
+
+## 2026-11-09 — Seller staff delegation hardening
+
+- Closed a privilege-escalation path: the only currently assignable staff role is the broad `STORE_MANAGER`, so non-owner staff can no longer invite or revoke other staff. Team list/invite/revoke service operations now require the actual store owner; invite acceptance remains self-service for the invited account.
+- The seller team UI no longer requests the protected team list for non-owners and instead explains that only the owner can manage team membership. Existing invitations remain visible and can be accepted by the invited account.
+- Removed `store:staff:manage` from the seeded `STORE_MANAGER` grant and added seed cleanup for that legacy permission link. Least-privilege delegated roles are explicitly deferred rather than silently granting full manager access.
+- Commits: service guard `964d3b455e5db0c3ef345de54d96394b751840ac`; team UI `49947a5a320f334b1cfdb14df828b01d543043e1`, JSX correction `5dfe2ee05c12277a1bf1a74555f94d69dc3dde87`; seed `faca43d6d910645d6515c74f212a30e07cf38cf8`; existing lifecycle tests updated `94ebc3adba864aea2603814f7f13fe83f50eedd2`; inventory/registry/matrix `70a616b6e35ec7c2bf817c13d51abf05b4ce6a67`, `652999d9d1375d0129c68a6297f1d5bb4e06a3a2`, `e17795a2912db17818b2291036c1ec0c440e56b1`.
+- Source-level changes only; run focused staff lifecycle tests and the seller browser journey before marking this slice verified.
