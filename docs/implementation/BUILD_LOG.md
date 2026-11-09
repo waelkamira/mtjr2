@@ -3688,3 +3688,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - No tests, build, typecheck, browser checks, or deployment were run, per project instruction.
 
 - Follow-up trace updates: `44d7faea73e362aad2c423876a1be0943543a72a` (journey matrix) and `833ab080bc61995b64fe86e24ebfde939d1abcbe` (page route registry).
+
+
+## Akaar seller application experience port — 2026-11-09
+- Compared the active Akaar seller application flow (`app/seller/dashboard/dashboard-client.tsx`) with Matjar's seller workspace and confirmed the four core application stages are represented in Matjar: applicant/business details, product plan, map location, and private identity/social links.
+- Ported the missing Akaar-style live seller profile preview and privacy explanation into Matjar's application layout. The preview reflects store name, applicant, legal name, contact email/phone, product categories, and business address as the form is completed.
+- Kept Matjar's stronger domain requirements and integrations: verified-email gate, Matjar-owned private identity upload, Leaflet location selection, seller application API/service, Prisma-backed seller profile, and rejection feedback/resubmission.
+- Changed file: `src/features/seller/workspace-page.tsx` — commit `0d8556487d20e5c7003d109ca0acbbd32bbafbb8`.
+- No tests, build, typecheck, or browser checks were run, as requested.
