@@ -152,15 +152,9 @@ These are roadmap targets, not permission to create duplicates. Existing aliases
 | Payment methods/history | `/account/payments` | No | Payment provider/method workflow is not implemented. | MISSING |
 | Invoices | `/account/invoices` | No | Invoice generation is not implemented. | MISSING |
 | Loyalty/rewards | `/account/loyalty` | No | Loyalty system is not implemented. | MISSING |
-| Seller product creation route | `/seller/products/new` | No | Product creation is in the existing `/seller/products` feature; a separate page would duplicate that flow unless navigation/user testing proves otherwise. | MISSING |
-| Seller product edit route | `/seller/products/[productId]/edit` | No | Product editing is in the existing `/seller/products` feature; a separate route is not required by the current implementation. | MISSING |
-| Seller application status | `/seller/application` | No | Application/status is embedded in `/seller`; dedicated route is not required unless a separate workflow emerges. | INCOMPLETE |
 | Seller store/settings pages | `/seller/store`, `/seller/store/settings` | No | Store setup is embedded in `/seller`; no separate settings route. | INCOMPLETE |
-| Seller warehouse management | `/seller/warehouses` | No | Warehouse management is embedded in `/seller`; API exists. | INCOMPLETE |
-| Seller order detail | `/seller/orders/[orderId]` | No | Only seller order list route exists; detail/fulfillment workflow is not exposed as a page. | MISSING |
 | Seller shipping settings | `/seller/shipping` | Yes | `src/app/seller/shipping/page.tsx` → `src/features/seller/shipping-page.tsx`; seller shipping-rate APIs and `StoreShippingRate`. | NEEDS_TESTING |
 | Seller notification settings | `/seller/notifications` | No | Shared `/notifications` route exists; dedicated seller setting surface absent. | MISSING |
-| Seller analytics | `/seller/analytics` | No | Trustworthy seller analytics page not implemented. | MISSING |
 | Seller finance | `/seller/finance` | No | Seller ledger/balances/statements not implemented. | MISSING |
 | Seller commissions | `/seller/commissions` | No | Admin commission rules/snapshots exist; seller view is not implemented. | MISSING |
 | Seller payouts | `/seller/payouts` | No | Payout methods, eligibility, requests and settlement are not implemented. | MISSING |
