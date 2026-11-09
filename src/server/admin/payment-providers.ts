@@ -95,7 +95,7 @@ export async function getActivePaymentProviderRuntimeConfig(
   if (config.supportedCurrencies.length && !config.supportedCurrencies.includes(currencyCode)) {
     return { managed: true as const, config: null };
   }
-  if (countryCode && config.supportedCountries.length && !config.supportedCountries.includes(countryCode)) {
+  if (config.supportedCountries.length && (!countryCode || !config.supportedCountries.includes(countryCode))) {
     return { managed: true as const, config: null };
   }
   return {
