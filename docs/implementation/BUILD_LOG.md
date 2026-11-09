@@ -3041,3 +3041,17 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 **Verification**
 - Confirmed the route was absent in the current route registry and added the route on `main`.
 - Source-level inspection only. Next.js build and browser navigation have not been run in this GitHub-only session; do not mark the route verified yet.
+
+
+## 2026-11-09 — Admin taxonomy and entry-point closeout slice
+
+**Implemented on `main`**
+- Added `/admin` as the canonical admin entry route, redirecting into `/admin/dashboard` under the existing admin layout permission/MFA gate.
+- Added `/admin/brands` with a real Prisma-backed list and create/edit/archive workflow.
+- Added `GET/POST /api/admin/brands` and `PATCH/DELETE /api/admin/brands/[brandId]`.
+- Reused the canonical `Brand` and `AuditLog` models; no schema or migration change. Brand writes require `catalog:manage`, reads require `catalog:read`, writes are transactional and audited, duplicate slugs conflict safely, and archive preserves product relations.
+- Added Brands to admin navigation. Website URLs are restricted to HTTP(S); logo URLs use the catalog media URL safety policy.
+
+**Verification and limitations**
+- Source-level review only in this GitHub-connected session. No local TypeScript/lint/build, focused service test, disposable PostgreSQL, or browser journey has been run for this slice. Do not mark these routes Verified until those checks pass.
+- Current implementation lists all brands in one response; pagination/search should be added before the brand catalogue becomes large.
