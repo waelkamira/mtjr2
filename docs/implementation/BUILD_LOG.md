@@ -3802,6 +3802,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - A shared-file comparison exposed an important branch-only server change that had not reached main: the admin dashboard UI on main consumes metricSamples and orderStatusCounts, but the main dashboard service did not return either field.
 - Ported the bounded, latest-20-record metric sample queries from the branch into the current main service and restored metricSamples plus orderStatusCounts in its response. Kept main's newer dashboard authorization, filters, aggregate metrics, and smaller recent-orders list; did not replace the current service wholesale.
 - This is a targeted recovery of the dashboard data contract, not a claim that the dashboard has been tested. No tests, build, typecheck, migration execution, or browser checks were run.
+
 ## 2026-11-09 — Reconcile email verification from the retained feature branch
 
 - Restored the password-registration email-verification lifecycle on top of the current main implementation rather than replacing its newer identity controls.
@@ -3811,6 +3812,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Preserved the current main Turnstile validation, trusted-proxy IP handling, registration throttling, consent capture, seller-pending status, unique-email conflict handling, password policy, audit logging, and differentiated login errors.
 - The old branch route/service versions were not copied wholesale because they predate the current hardened registration and login contracts.
 - No tests, build, typecheck, or browser checks were run, per the current build-first instruction.
+
 ## 2026-11-09 — Advertising safeguards and currency-correct analytics
 
 - Restored the seller campaign prerequisite found in the retained branch: the selected approved product must have at least one active variant with a price for the selected market and currency before a campaign can be created.
