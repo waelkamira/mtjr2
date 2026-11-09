@@ -3193,3 +3193,18 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level effect/dependency review only. Exact-head CI is still constrained by the Vercel build-rate limit; no browser test or production build pass is claimed.
+
+
+## 2026-11-09 — Seller catalog isolation on store changes
+
+**Implemented on `main`**
+- Clear the prior store's product list and edit session when the active store changes.
+- Clear unsaved image drafts and revoke their object URLs so previews from one store cannot linger in another store's authoring session.
+- Reset category attribute values and guard the product-list request with an effect-local active flag so a late response from the previous store cannot replace the current store's catalog.
+
+**Commits**
+- `5610b6ec0b8424c1dc77b30a115fd37967db47fc` — `Isolate seller product workspace when switching stores`.
+- `7501031f037d94bac59ade31b798ebfc6ed0ecc6` — `Keep product preview cleanup safe during store changes`.
+
+**Verification**
+- Source-level request lifecycle review only. Exact-head CI and browser verification remain pending; no build/test pass is claimed.
