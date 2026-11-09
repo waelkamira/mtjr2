@@ -3725,7 +3725,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Shifted the seller workspace canvas and topbar to the cool blue-grey reference palette.
 - Dashboard hero now uses the selected store's live banner, logo, name, and public description, with a direct owner action to edit the store.
 - Added store-specific public phone and address fields to the Prisma Store model and migration; seller workspace loading, scoped settings validation, update persistence, and audit metadata include both fields.
-- Added editable public phone and address fields to the existing store profile editor. Existing store logo/banner upload, preview, reusable media library, and save flow remain in place.
+- Added editable public phone and address fields to the existing store profile editor and displayed the saved public contact details on the customer-facing store page. Existing store logo/banner upload, preview, reusable media library, and save flow remain in place.
 
 **Not yet verified**
 - No tests, build, typecheck, or browser checks were run, as requested. The new migration has been committed but not applied to a database. Continue the remaining dashboard layout, chart presentation, and page-by-page seller experience before declaring the seller dashboard complete.
