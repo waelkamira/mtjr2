@@ -129,7 +129,8 @@ export default function SellerInventoryPage() {
       const initialStore = workspace.stores.find((item) => item.id === savedId) ?? workspace.stores[0];
       if (initialStore) {
         setStoreId(initialStore.id);
-        setAdjustWarehouseId(initialStore.warehouses[0]?.id ?? "");
+        setAdjustWarehouseId(initialStore.warehouses.find((warehouse) => warehouse.isActive)?.id ?? "");
+        setCountWarehouseId(initialStore.warehouses.find((warehouse) => warehouse.isActive)?.id ?? "");
         setSourceWarehouseId(initialStore.warehouses[0]?.id ?? "");
         setDestinationWarehouseId(initialStore.warehouses[1]?.id ?? "");
         localStorage.setItem("mtjr.activeStoreId", initialStore.id);
@@ -158,6 +159,7 @@ export default function SellerInventoryPage() {
       setStores((current) => current.map((store) => store.id === storeId ? { ...store, warehouses: [...store.warehouses, warehouse] } : store));
       setWarehouseCode(""); setWarehouseName("");       setNotice(translate(locale, "Warehouse created.", "تم إنشاء المستودع.")); toast.success(translate(locale, "Warehouse created.", "تم إنشاء المستودع."));
       if (!adjustWarehouseId) setAdjustWarehouseId(warehouse.id);
+      if (!countWarehouseId) setCountWarehouseId(warehouse.id);
     } catch (cause) { const message = cause instanceof Error ? cause.message : translate(locale, "Unable to create warehouse.", "تعذر إنشاء المستودع."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
@@ -329,7 +331,7 @@ export default function SellerInventoryPage() {
       {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{notice}</p>}
       {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading inventory…", "جارٍ تحميل المخزون…")}</p> : <div className="mt-8 grid gap-6">
         <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-6 shadow-[0_14px_30px_rgba(35,62,81,.13),inset_0_2px_0_white,inset_0_-2px_6px_rgba(48,76,94,.05)]">
-          <label className="grid max-w-md gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={field} value={storeId} onChange={(e) => { const id = e.target.value; const store = stores.find((item) => item.id === id); setStoreId(id); localStorage.setItem("mtjr.activeStoreId", id); setInventory([]); setProducts([]); setTransfers([]); setMovements([]); setAdjustWarehouseId(store?.warehouses[0]?.id ?? ""); setSourceWarehouseId(store?.warehouses[0]?.id ?? ""); setDestinationWarehouseId(store?.warehouses[1]?.id ?? ""); }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
+          <label className="grid max-w-md gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={field} value={storeId} onChange={(e) => { const id = e.target.value; const store = stores.find((item) => item.id === id); setStoreId(id); localStorage.setItem("mtjr.activeStoreId", id); setInventory([]); setProducts([]); setTransfers([]); setMovements([]); setStockCounts([]); setActiveStockCount(null); setCountDrafts({}); setCountWarehouseId(store?.warehouses.find((warehouse) => warehouse.isActive)?.id ?? ""); setAdjustWarehouseId(store?.warehouses.find((warehouse) => warehouse.isActive)?.id ?? ""); setSourceWarehouseId(store?.warehouses[0]?.id ?? ""); setDestinationWarehouseId(store?.warehouses[1]?.id ?? ""); }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
         </section>
         <section aria-label="Inventory analytics" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <MetricBarChart title="Stock composition" description="Live totals for the selected store and current inventory filter." rows={[
