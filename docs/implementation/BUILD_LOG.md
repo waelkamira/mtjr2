@@ -3696,3 +3696,10 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Kept Matjar's stronger domain requirements and integrations: verified-email gate, Matjar-owned private identity upload, Leaflet location selection, seller application API/service, Prisma-backed seller profile, and rejection feedback/resubmission.
 - Changed file: `src/features/seller/workspace-page.tsx` — commit `0d8556487d20e5c7003d109ca0acbbd32bbafbb8`.
 - No tests, build, typecheck, or browser checks were run, as requested.
+
+
+## Akaar pending application review profile — 2026-11-09
+- Ported Akaar's post-submission review experience: a seller with PENDING status now sees an explicit review state and their submitted application details instead of being routed into the active seller dashboard.
+- Expanded the owner-scoped workspace query to return application fields needed by that view, including business/contact details, product plan, social links, coordinates and submission timestamp. Query remains scoped by the authenticated user's ownerId.
+- Commits: service 195f2c7788401b38f2042e0a45c877b164196a36; UI bbca46ac134eb0b9b3ba6138a8aa892fa63bf648.
+- No tests/build/typecheck/browser checks run, per instruction.
