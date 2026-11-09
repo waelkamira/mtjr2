@@ -3616,3 +3616,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Commits: 9bc12e9080d102b54d6df5dbdcc75dc343af2a04, 639c128d6b13fa8621597b7ba55c92307536c0cf, e4e9961b74854f82c305fef6effb4ef688cc8075, 5150c8efe7f89ea4243a6d9d4a77757a4236c402.
 - No tests/build/typecheck/browser verification performed, per the current build-first instruction.
 - Compatibility follow-up: preserved the existing numeric-limit call contract for `listStoreInventoryMovements` while the seller API uses the new cursor-page contract, so existing service consumers retain array results. Commit: d6954a2cde5f673034f2f4bcee84735e607de1ff.
+
+## 2026-11-09 — Seller shipping service lifecycle controls
+
+- Added an owner/scoped-permission protected deactivation operation for seller shipping rates. It changes the existing rate to inactive rather than deleting it, preserving checkout selections and order history.
+- The operation is transactional, conditional on the active state, idempotent for already-inactive rates, and writes a store-scoped audit event.
+- Added `DELETE /api/seller/shipping-rates/[id]` with identity mutation protection and explicit authorization/conflict handling.
+- Added a confirmation-based “Pause service” action to the seller shipping workspace; successful changes refresh the service list and preserve the existing edit/reactivation path.
+- Commits: d202551f015cd69dc4ca2de7ded1c5cfa94575d0, bd03a74a26459cf57542a8e43c3e075f6df669cc, c89a7b7eaff859c2d5222e7d617f976b2c41e0d6.
+- No tests/build/typecheck/browser verification performed, per the current build-first instruction.
