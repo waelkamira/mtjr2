@@ -90,6 +90,8 @@ export async function updateSellerStoreSettings(storeIdInput: string, input: unk
       name: data.name,
       slug: data.slug,
       ...(data.description !== undefined ? { description: data.description } : {}),
+      ...(data.publicPhone !== undefined ? { publicPhone: data.publicPhone } : {}),
+      ...(data.publicAddress !== undefined ? { publicAddress: data.publicAddress } : {}),
       ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
       ...(data.bannerUrl !== undefined ? { bannerUrl: data.bannerUrl } : {}),
       ...(data.logoStorageKey !== undefined ? { logoStorageKey: data.logoStorageKey } : {}),
