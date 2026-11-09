@@ -3920,3 +3920,16 @@ Re-read both recursive Git trees at the current refs after the prior documentati
 - The six deferred test files are not runtime features to merge. Their old assumptions/contracts must be reconciled against current main before they can be adopted during the validation phase; none were executed or copied as current evidence.
 - No wholesale merge of the historical branch is appropriate: its branch-only runtime files and migrations are superseded, while main already contains the newer implementation for the relevant capabilities. This closeout is a selective reconciliation of retained improvements, not a claim that the two Git refs are identical.
 - No tests, builds, typechecks, migration execution, or browser checks were run, per the requested build-first workflow.
+
+## 2026-11-09 — Revalidated retained seller-control branch against user-confirmed source of changes
+
+The user clarified that their actual workstation changes were pushed to `feat/super-admin-control-panel`; therefore, branch differences must be treated as candidate user work and reviewed for functional intent rather than dismissed based on file age or line count.
+
+- Rechecked the latest branch head `9235f48ff81781a057e759251cf43d8d72654066` against current `main` `f50a2bc059fa3fa10bbf1dc21f162bfb13748b63`.
+- Reconfirmed seller product and workspace pages on `main` are the newer integrated implementations; the branch copies are older and do not replace them.
+- Reconfirmed the branch's legacy `/api/seller/products/images` handler and `src/server/storage/product-images.ts` are superseded by the current canonical seller media API, provider rotation/deletion, temporary upload-delete tokens, and persistent store media library already on `main`. Do not copy the legacy uploader over the current media system.
+- Reconfirmed branch seller-application conflict handling and Turnstile retry UX are already present on `main`.
+- The branch adds a larger local demo fixture (20 stores / 200 listings) compared with the current four-store fixture. This is development seed data, not a missing production workflow; it remains a candidate for a separate schema-aware seed enhancement and is not copied blindly.
+- The branch registration form presents an inline post-registration confirmation and resend flow, while `main` routes to the dedicated verification page, which already provides resend handling. Preserve the current dedicated verification lifecycle unless a specific UX gap is established.
+
+No runtime code was copied in this reconciliation pass because the inspected branch implementations were either already represented by stronger current-main functionality or were optional seed-data expansion. No tests, builds, typechecks, or browser checks were run, per the user's instruction to defer validation until implementation is complete.
