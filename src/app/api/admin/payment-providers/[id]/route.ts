@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { updatePaymentProviderConfig } from "@/server/admin/payment-providers";
+import { archivePaymentProviderConfig, updatePaymentProviderConfig } from "@/server/admin/payment-providers";
 import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/permission-guard";
 import { StepUpRequiredError, MfaEnrollmentRequiredError, MfaVerificationRequiredError } from "@/server/identity/access-errors";
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
@@ -24,5 +24,14 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
   try {
     const { id } = await context.params;
     return Response.json({ item: await updatePaymentProviderConfig(id, body) }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) { return failure(error); }
+}
+
+export async function DELETE(request: Request, context: RouteContext): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
+  try {
+    const { id } = await context.params;
+    return Response.json({ item: await archivePaymentProviderConfig(id) }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return failure(error); }
 }
