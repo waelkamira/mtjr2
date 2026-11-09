@@ -46,9 +46,11 @@
 
 | API | route.ts في baseline |
 |---|---|
-| `/api/seller/staff` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/seller/staff/invitations` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/seller/staff/[id]/permissions` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
+| `GET/POST /api/stores/[storeId]/staff` | `src/app/api/stores/[storeId]/staff/route.ts` — owner-only list/invite |
+| `GET /api/stores/staff-invitations` | `src/app/api/stores/staff-invitations/route.ts` — current-user pending inbox |
+| `POST /api/stores/staff-invitations/[invitationId]/accept` | `src/app/api/stores/staff-invitations/[invitationId]/accept/route.ts` — invitee-only acceptance |
+| `PATCH /api/stores/staff-memberships/[membershipId]` | `src/app/api/stores/staff-memberships/[membershipId]/route.ts` — owner-only role change |
+| `POST /api/stores/staff-memberships/[membershipId]/revoke` | `src/app/api/stores/staff-memberships/[membershipId]/revoke/route.ts` — owner-only revoke |
 - افحص handler → Zod → permission guard → domain service → repository → Prisma → response.
 - استخرج user/seller/store/actor من الجلسة والعضوية server-side؛ لا تثق بمعرفات scope القادمة من العميل.
 - أخطاء مستقرة: 400/401/403/404/409/422/429/500 دون تسريب أسرار أو معلومات موارد خاصة.
