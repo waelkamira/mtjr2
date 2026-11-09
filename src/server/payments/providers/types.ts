@@ -6,6 +6,8 @@ export type PaymentProviderIntentInput = {
   idempotencyKey: string;
   returnUrl: string;
   metadata: Record<string, string>;
+  providerCredentials?: Record<string, string>;
+  providerEnvironment?: "TEST" | "LIVE";
 };
 
 export type PaymentProviderIntentResult = {
@@ -27,5 +29,5 @@ export interface PaymentProviderAdapter {
   key: string;
   displayName: string;
   createIntent(input: PaymentProviderIntentInput): Promise<PaymentProviderIntentResult>;
-  verifyWebhook(request: Request): Promise<VerifiedPaymentEvent>;
+  verifyWebhook(request: Request, credentials?: Record<string, string>, environment?: "TEST" | "LIVE"): Promise<VerifiedPaymentEvent>;
 }
