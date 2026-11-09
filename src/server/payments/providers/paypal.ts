@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { env } from "@/lib/env";
 import { PaymentProviderConfigurationError, PaymentProviderUnavailableError, PaymentWebhookSignatureError } from "./types";
 import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
@@ -77,6 +78,11 @@ async function accessToken(credentials?: Record<string, string>, environment?: "
     throw new PaymentProviderConfigurationError("PayPal rejected the server-side API credentials or environment.");
   }
   return { token: result.access_token, config };
+}
+
+function paypalRequestId(value: string) {
+  // Stable, bounded and header-safe idempotency token derived from the Matjar key.
+  return createHash("sha256").update(value).digest("hex").slice(0, 32);
 }
 
 async function paypalRequest<T>(
@@ -184,7 +190,7 @@ async function createIntent(input: Parameters<PaymentProviderAdapter["createInte
         }
       })
     },
-    input.idempotencyKey,
+    paypalRequestId(input.idempotencyKey),
     input.providerCredentials,
     input.providerEnvironment
   );
@@ -215,7 +221,7 @@ export async function captureApprovedPayPalOrder(orderId: string, paymentId: str
     order = await paypalRequest<PayPalOrder>(
       `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
       { method: "POST", body: "{}" },
-      `${paymentId}-capture`, credentials, environment
+      paypalRequestId(`${paymentId}-capture`), credentials, environment
     );
   } catch {
     // A repeated return may arrive after PayPal has already captured the order.
