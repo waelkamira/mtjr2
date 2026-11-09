@@ -3933,3 +3933,30 @@ The user clarified that their actual workstation changes were pushed to `feat/su
 - The branch registration form presents an inline post-registration confirmation and resend flow, while `main` routes to the dedicated verification page, which already provides resend handling. Preserve the current dedicated verification lifecycle unless a specific UX gap is established.
 
 No runtime code was copied in this reconciliation pass because the inspected branch implementations were either already represented by stronger current-main functionality or were optional seed-data expansion. No tests, builds, typechecks, or browser checks were run, per the user's instruction to defer validation until implementation is complete.
+
+## 2026-11-09 — Ten-file reconciliation batches 1–3
+
+The retained workstation branch `feat/super-admin-control-panel` is being reviewed in fixed batches of ten shared changed files. Each batch is compared against the current canonical `main`; only compatible missing behavior is carried forward.
+
+### Batch 1 — environment, CI, README and architecture inventories
+- Reviewed `.env.example`, the three workflow files, `PAGE_INVENTORY.md`, `README.md`, the AI plan, and the platform page/system/Prisma maps.
+- No branch-only behavior was missing from main. Main retains the stronger current environment/provider configuration, expanded API authorization audit and workflow path coverage, non-cancelling CI concurrency, latest route inventory, and current architecture contracts.
+- No branch content was copied from this batch.
+
+### Batch 2 — implementation plans, journey contracts and seller-system notes
+- Reviewed `BUILD_LOG.md`, demo seed guide, end-to-end journey matrix/standard, route registry, Phase 2/4/5 plans, repository source-of-truth, and seller dashboard system notes.
+- Main documentation is materially newer and more accurate for verified-email registration, saved-address lifecycle, one-store-per-seller enforcement, current seller pages, store policy/media settings, finance boundaries, and the actual merged PR dispositions.
+- The branch's demo catalog expansion was retained as a concrete candidate and carried forward separately in batch 3. Obsolete registration and multi-store statements were not copied.
+
+### Batch 3 — seller finance/marketing/staff docs, package, schema, seed and account address page
+- Reviewed `docs/systems/19-seller-finance-commissions-and-payouts.md`, `20-seller-marketing-and-promotions.md`, `22-seller-staff-and-scoped-permissions.md`, `next-env.d.ts`, `package-lock.json`, `package.json`, `prisma/schema.prisma`, `prisma/seed.cjs`, `scripts/audit-api-routes.cjs`, and `src/app/account/addresses/page.tsx`.
+- Main retains the newer financial/refund/accounting, advertising and store-staff documentation; current lockfile/dependency pins and seed scripts; expanded Prisma models and safeguards; stricter API route audit; and full address lifecycle UI. The branch schema is older and omits current main models and constraints, so it was not copied.
+- **Carried forward:** the branch's compatible demo catalog expansion. The main seed now provisions 20 isolated demo seller/store fixtures and 10 active products per store (200 total), with all eight top-level categories represented in each store. Existing category-based legacy demo listings are demoted to DRAFT/PENDING during the demo seed so the active storefront does not show duplicate legacy listings. The final seed verification checks exactly 20 configured stores and 10 approved/published products covering all eight categories per store.
+- Updated `docs/implementation/DEMO_CATALOG_SEED.md` to match the new fixture counts. The explicit demo-database URL, production prohibition, environment opt-in and database-name marker safeguards were preserved.
+- **Not carried forward:** the optional branch dashboard fixture and `db:seed:demo-dashboard` script. Its long fixture implementation was authored against an older schema and must be separately mapped to current main's models and lifecycle invariants before it can safely create orders, payments, returns or support records. The branch's 10-line address page was superseded by main's full create/edit/default/delete lifecycle.
+
+Commits added to canonical main during these batches:
+- `44042de` — expand the isolated demo seed to 20 stores / 200 products.
+- `2f0822f` — document the expanded demo fixture.
+
+No tests, builds, typechecks, or browser checks were run, per the user's instruction to defer validation until implementation is complete.
