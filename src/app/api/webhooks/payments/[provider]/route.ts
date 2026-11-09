@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getPaymentProviderAdapter } from "@/server/payments/providers/registry";
 import { getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
 import { prisma } from "@/lib/db/prisma";
+import { PaymentProviderEnvironment } from "@prisma/client";
+import { getActiveProviderCredentialsForWebhook } from "@/server/admin/payment-providers";
 import { processVerifiedPaymentEvent } from "@/server/payments/payments";
 
 export const runtime = "nodejs";
@@ -85,14 +87,24 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
       where: { provider_providerReference: { provider: providerKey, providerReference: paymentReference } },
       select: { id: true }
     });
-    if (!payment) throw new Error("Webhook payment reference is unknown.");
-    const snapshot = await getPaymentProviderRuntimeSnapshot(payment.id);
+    const snapshot = payment ? await getPaymentProviderRuntimeSnapshot(payment.id) : null;
+    const environment = process.env.NODE_ENV === "production"
+      ? PaymentProviderEnvironment.LIVE
+      : PaymentProviderEnvironment.TEST;
+    const fallbackCredentials = snapshot?.credentials ?? await getActiveProviderCredentialsForWebhook(
+      providerKey as "stripe" | "paypal",
+      snapshot?.environment ?? environment
+    );
     const verificationRequest = new Request(request.url, {
       method: "POST",
       headers: request.headers,
       body: rawBody
     });
-    rawEvent = await provider.verifyWebhook(verificationRequest, snapshot?.credentials, snapshot?.environment);
+    rawEvent = await provider.verifyWebhook(
+      verificationRequest,
+      fallbackCredentials ?? undefined,
+      snapshot?.environment ?? environment
+    );
   } catch {
     return Response.json({ error: "Payment webhook verification failed or payload exceeded the size limit." }, {
       status: 400,
