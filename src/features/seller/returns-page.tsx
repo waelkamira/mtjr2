@@ -125,9 +125,9 @@ export default function SellerReturnsPage() {
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Store returns", "مرتجعات المتجر")}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Review only the return items belonging to each store you own or are authorized to manage. A decision never changes another store's items.", "راجع عناصر الإرجاع التابعة للمتاجر التي تملكها أو لديك صلاحية إدارتها فقط. لا يؤثر القرار مطلقًا في عناصر المتاجر الأخرى.")}</p>
         <p className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-4 text-sm text-[var(--muted)]">{translate(locale, "Approval or rejection records the seller's decision. Physical receipt is recorded against a warehouse and placed in quarantine; it does not increase sellable stock or issue a refund.", "تسجل الموافقة أو الرفض قرار البائع. يُسجل الاستلام الفعلي في مستودع ويوضع في الحجر؛ ولا يزيد المخزون القابل للبيع أو يصدر استردادًا للمبلغ.")}</p>
-        {!loading && !error && items.length > 0 && <section aria-label="Returns analytics" className="mt-6 grid gap-4 md:grid-cols-2">
-        <MetricBarChart title="Returns by status" rows={returnStatusRows} />
-        <MetricBarChart title="Return reasons" description="Most common reasons in the currently loaded seller returns." rows={returnReasonRows} />
+        {!loading && !error && items.length > 0 && <section aria-label={translate(locale, "Returns analytics", "تحليلات المرتجعات")} className="mt-6 grid gap-4 md:grid-cols-2">
+        <MetricBarChart title={translate(locale, "Returns by status", "المرتجعات حسب الحالة")} rows={returnStatusRows} />
+        <MetricBarChart title={translate(locale, "Return reasons", "أسباب الإرجاع")} description={translate(locale, "Most common reasons in the currently loaded seller returns.", "أكثر أسباب الإرجاع شيوعاً ضمن الطلبات المحمّلة.")} rows={returnReasonRows} />
       </section>}
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-4 text-sm">{notice}</p>}

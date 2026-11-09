@@ -19,6 +19,7 @@ export default function SellerTopbar() {
     : pathname.startsWith("/seller/reviews") ? translate(locale, "Reviews", "التقييمات")
     : pathname.startsWith("/seller/advertising") ? translate(locale, "Advertising", "الإعلانات")
     : pathname.startsWith("/seller/staff") ? translate(locale, "Team & access", "الفريق والصلاحيات")
+    : pathname.startsWith("/seller/commissions") ? translate(locale, "Commission statements", "كشوف العمولات")
     : translate(locale, "Seller studio", "استوديو البائع");
 
   return (

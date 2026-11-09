@@ -348,20 +348,20 @@ export default function SellerInventoryPage() {
           <label className="grid max-w-md gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={field} value={storeId} onChange={(e) => { const id = e.target.value; const store = stores.find((item) => item.id === id); setStoreId(id); try { localStorage.setItem("mtjr.activeStoreId", id); } catch { /* Store selection remains available for this session. */ } setInventory([]); setProducts([]); setTransfers([]); setMovements([]); setStockCounts([]); setActiveStockCount(null); setCountDrafts({}); setCountWarehouseId(store?.warehouses.find((warehouse) => warehouse.isActive)?.id ?? ""); setAdjustWarehouseId(store?.warehouses.find((warehouse) => warehouse.isActive)?.id ?? ""); setSourceWarehouseId(store?.warehouses[0]?.id ?? ""); setDestinationWarehouseId(store?.warehouses[1]?.id ?? ""); }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
         </section>
         <section aria-label="Inventory analytics" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <MetricBarChart title="Stock composition" description="Live totals for the selected store and current inventory filter." rows={[
-            { label: "Sellable on hand", value: inventoryTotals.onHand, color: "bg-sky-500" },
-            { label: "Reserved", value: inventoryTotals.reserved, color: "bg-amber-500" },
-            { label: "Quarantined", value: inventoryTotals.quarantined, color: "bg-rose-500" },
-            { label: "Available", value: inventoryTotals.available, color: "bg-emerald-500" }
+          <MetricBarChart title={translate(locale, "Stock composition", "توزيع المخزون")} description={translate(locale, "Live totals for the selected store and current inventory filter.", "إجماليات مباشرة للمتجر المحدد ومرشح المخزون الحالي.")} rows={[
+            { label: translate(locale, "Sellable on hand", "المخزون القابل للبيع"), value: inventoryTotals.onHand, color: "bg-sky-500" },
+            { label: translate(locale, "Reserved", "محجوز"), value: inventoryTotals.reserved, color: "bg-amber-500" },
+            { label: translate(locale, "Quarantined", "قيد الحجر"), value: inventoryTotals.quarantined, color: "bg-rose-500" },
+            { label: translate(locale, "Available", "متاح"), value: inventoryTotals.available, color: "bg-emerald-500" }
           ]} />
-          <MetricBarChart title="Inventory risk" description="Stock record counts from the currently loaded inventory list." rows={[
-            { label: "Low stock records", value: inventoryTotals.lowStock, color: "bg-rose-500" },
-            { label: "Healthy stock records", value: Math.max(0, inventory.length - inventoryTotals.lowStock), color: "bg-emerald-500" }
+          <MetricBarChart title={translate(locale, "Inventory risk", "مخاطر المخزون")} description={translate(locale, "Stock record counts from the currently loaded inventory list.", "عدد سجلات المخزون المحمّلة حالياً.")} rows={[
+            { label: translate(locale, "Low stock records", "سجلات المخزون المنخفض"), value: inventoryTotals.lowStock, color: "bg-rose-500" },
+            { label: translate(locale, "Healthy stock records", "سجلات المخزون السليم"), value: Math.max(0, inventory.length - inventoryTotals.lowStock), color: "bg-emerald-500" }
           ]} />
-          <MetricBarChart title="Available stock by warehouse" rows={warehouseStock.map((row, index) => ({
+          <MetricBarChart title={translate(locale, "Available stock by warehouse", "المخزون المتاح حسب المستودع")} rows={warehouseStock.map((row, index) => ({
             ...row, color: ["bg-indigo-500", "bg-violet-500", "bg-cyan-500", "bg-teal-500", "bg-orange-500", "bg-fuchsia-500", "bg-blue-500", "bg-lime-500"][index]
           }))} />
-          <MetricBarChart title="Internal transfer pipeline" rows={Object.entries(transferStatuses).map(([status, value], index) => ({
+          <MetricBarChart title={translate(locale, "Internal transfer pipeline", "حركة التحويلات الداخلية")} rows={Object.entries(transferStatuses).map(([status, value], index) => ({
             label: status.replaceAll("_", " ").toLowerCase(), value,
             color: ["bg-sky-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500"][index % 5]
           }))} />

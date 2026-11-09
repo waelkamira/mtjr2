@@ -145,13 +145,13 @@ export default function SellerOrdersPage() {
   return <main className="min-h-screen bg-transparent">
     <div className="mx-auto max-w-[1440px] px-5 py-10"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Seller operations", "عمليات البائع")}</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Seller orders", "طلبات البائع")}</h1><p className="mt-2 text-sm text-[var(--muted)]">{t("Orders are separated by store. Paid orders can move through seller preparation and seller-entered shipment tracking.", "تُعرض الطلبات لكل متجر على حدة. يمكن متابعة الطلبات المدفوعة خلال تجهيز البائع وإدخال بيانات تتبع الشحنة.")}</p>
       {error && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}{actionError && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{actionError}</p>}
-      {!loading && orders.length > 0 && <section aria-label="Seller order analytics" className="mt-6 grid gap-4 md:grid-cols-2">
-        <MetricBarChart title="Orders by fulfillment status" description="Counts from the currently loaded seller order list (up to 100 records)." rows={Object.entries(statusCounts).map(([status, count], index) => ({
-          label: status.replaceAll("_", " ").toLowerCase(),
+      {!loading && orders.length > 0 && <section aria-label={t("Seller order analytics", "تحليلات طلبات البائع")} className="mt-6 grid gap-4 md:grid-cols-2">
+        <MetricBarChart title={t("Orders by fulfillment status", "الطلبات حسب حالة التنفيذ")} description={t("Counts from the currently loaded seller order list (up to 100 records).", "الأعداد من قائمة طلبات البائع المحمّلة حالياً (حتى 100 سجل).")} rows={Object.entries(statusCounts).map(([status, count], index) => ({
+          label: statusLabel(status),
           value: count,
           color: ["bg-sky-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-cyan-500"][index % 6]
         }))} />
-        <MetricBarChart title="Orders by store" description="Counts from the currently loaded seller order list (up to 100 records)." rows={Object.entries(storeCounts).slice(0, 8).map(([store, count], index) => ({
+        <MetricBarChart title={t("Orders by store", "الطلبات حسب المتجر")} description={t("Counts from the currently loaded seller order list (up to 100 records).", "الأعداد من قائمة طلبات البائع المحمّلة حالياً (حتى 100 سجل).")} rows={Object.entries(storeCounts).slice(0, 8).map(([store, count], index) => ({
           label: store,
           value: count,
           color: ["bg-indigo-500", "bg-fuchsia-500", "bg-teal-500", "bg-orange-500"][index % 4]
