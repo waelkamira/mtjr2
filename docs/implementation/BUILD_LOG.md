@@ -3785,3 +3785,13 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Restored the branch's useful bilingual About and Contact pages on main, adapting the contact page to the environment variables that actually exist in the current main schema. Added localized About and Contact links to desktop and mobile navigation.
 - Did not copy the branch's R2 attachment implementation, demo-seed expansion, stale migrations, or legacy seller UI files. These either are not part of the current seller-media decision, would alter development data, or would overwrite newer main functionality. The branch's unused/inactive footer draft was not copied because it contains generic social destinations and service promises that are not configured as platform capabilities.
 - No tests, build, typecheck, migration execution, or browser checks were run, per instruction.
+
+
+## 2026-11-09 — Additional selective recovery from feat/super-admin-control-panel
+
+- Reconciled every path present only in the old branch tree against current main. The three old seller/location migrations are superseded: current main already has the relational Syria geography and neighborhood schema, product location fields, structured real-estate details, and the one-store-per-seller migration. The old branch migrations were not copied because they would duplicate existing columns, indexes, constraints, or enums.
+- The old bundled Syria JSON dataset and geography API are superseded by the current database-backed Syria geography tables, import workflow, paginated endpoints, and source-attribution documentation. The old category field preset module is superseded by the normalized CategoryAttribute/AttributeDefinition data model and Akaar import pipeline.
+- The old branch product image storage module and product-location map are not copied: main has the current seller media API, provider fallback/rotation, durable media records, store-scoped authorization, temporary deletion flow, and current Syria location selector.
+- Recovered the useful storefront footer concept from the branch, but adapted it for current main: localized marketplace/help/information links, current contact email configuration, and no inactive newsletter form, unconfigured social accounts, or unsupported payment/security claims. Mounted it in the root layout.
+- The old seller listing operations note was not copied because it explicitly contradicts current provider rotation and fallback policy. The old QA execution/security reports were not copied as current evidence because they refer to a different code snapshot and could be mistaken for current verification results.
+- No tests, build, typecheck, migration execution, or browser checks were run.
