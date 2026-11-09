@@ -174,6 +174,19 @@ export async function rotateStoredPaymentProviderCredentials() {
   const activeVersion = env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION;
   // Fail before touching data if the active key is absent or malformed.
   encryptionKeyRing().get(activeVersion) ?? (() => { throw new Error("The active provider encryption key is unavailable."); })();
+  const malformedSnapshots = await prisma.payment.count({
+    where: {
+      encryptedProviderCredentials: { not: null },
+      OR: [
+        { providerCredentialsKeyVersion: null },
+        { providerEnvironment: null },
+        { providerConfigId: null }
+      ]
+    }
+  });
+  if (malformedSnapshots) {
+    throw new Error("Some payment credential snapshots are incomplete. Reconcile them before rotating encryption keys.");
+  }
 
   let configCount = 0;
   let paymentCount = 0;
