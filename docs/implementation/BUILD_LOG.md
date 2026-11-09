@@ -3978,3 +3978,14 @@ No tests, builds, typechecks, or browser checks were run, per the user's instruc
 - Contact configuration on main preserves the explicit `CONTACT_EMAIL` preference and null-safe fallback.
 
 No additional runtime files were copied from batches 4–6. No tests, builds, typechecks or browser checks were run, per the user's instruction to defer validation.
+
+## 2026-11-09 — Ten-file reconciliation batch 7
+
+Reviewed `src/app/layout.tsx`, buyer order detail, product detail, seller messages, public store detail/directory, theme tokens, AI assistant, auth journey notice and shared data charts.
+
+- Main retains the latest shared layout, payment-return context on order detail, server-rendered product metadata and sponsored placements, store branding/policy surfaces, and the current theme palette.
+- Main seller messages resolves the store list from the authenticated seller API rather than trusting a client-side localStorage store ID.
+- Main AI assistant extends the branch's product/order/return answers with support-ticket lookup and the current privacy controls; no branch-only feature was missing.
+- Main auth journey reflects the verified-email lifecycle and provides a verification/resend link. The branch's immediate-signed-in notice is obsolete under the current registration policy.
+- Main chart colors match the current pastel dashboard theme; no chart or theme CSS was replaced.
+- No runtime code copied from this batch.
