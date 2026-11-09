@@ -1,7 +1,5 @@
 import "server-only";
 
-import "server-only";
-
 import { env } from "@/lib/env";
 import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
 
@@ -51,11 +49,11 @@ function configuration(credentials?: Record<string, string>, environment?: "TEST
 
 async function accessToken(credentials?: Record<string, string>, environment?: "TEST" | "LIVE") {
   const config = configuration(credentials, environment);
-  const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64");
+  const basicAuth = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64");
   const response = await fetch(`${config.baseUrl}/v1/oauth2/token`, {
     method: "POST",
     headers: {
-      Authorization: `Basic ${credentials}`,
+      Authorization: `Basic ${basicAuth}`,
       "Content-Type": "application/x-www-form-urlencoded"
     },
     body: "grant_type=client_credentials",
