@@ -157,6 +157,25 @@ export default function SellerShippingPage() {
     }
   }
 
+  async function deactivateRate(rate: Rate) {
+    if (!storeId || !rate.isActive || saving) return;
+    if (typeof window !== "undefined" && !window.confirm(translate(locale, "Pause this shipping service? It will no longer appear at checkout, while existing orders remain unchanged.", "إيقاف خدمة الشحن؟ لن تظهر عند الدفع بعد الآن، مع بقاء الطلبات السابقة دون تغيير."))) return;
+    setSaving(true);
+    setError("");
+    try {
+      await readJson(await fetch(`/api/seller/shipping-rates/${encodeURIComponent(rate.id)}`, { method: "DELETE" }));
+      await loadRates(storeId);
+      if (editingId === rate.id) resetForm();
+      toast.success(translate(locale, "Shipping service paused. Existing orders were preserved.", "تم إيقاف خدمة الشحن مع الحفاظ على الطلبات السابقة."));
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : translate(locale, "Unable to pause shipping service.", "تعذر إيقاف خدمة الشحن.");
+      setError(message);
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 bg-transparent px-4 py-6 sm:px-6 lg:px-8">
       <header className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-clay)] sm:p-8">
@@ -178,7 +197,7 @@ export default function SellerShippingPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold text-[var(--color-ink-950)]">{rate.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">{rate.market.name} · {rate.market.code} · {rate.currencyCode}</p></div><strong className="text-lg tabular-nums">{formatMinorUnits(rate.amountMinor, rate.currencyCode, rate.currency.minorUnit, locale)}</strong></div>
                 {rate.description && <p className="mt-2 text-sm text-[var(--color-ink-600)]">{rate.description}</p>}
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--muted)]"><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.destinationRegion || translate(locale, "All destinations", "كل الوجهات")}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "أيام")}</span><span className={`rounded-full px-3 py-1 ${rate.isActive ? "bg-[var(--color-mint-100)] text-[var(--color-mint-800)]" : "bg-[var(--surface-soft)]"}`}>{rate.isActive ? translate(locale, "Active", "نشطة") : translate(locale, "Inactive", "متوقفة")}</span></div>
-                <button type="button" onClick={() => startEdit(rate)} className="mt-4 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-bold hover:bg-[var(--surface-soft)]">{translate(locale, "Edit service", "تعديل الخدمة")}</button>
+                <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => startEdit(rate)} className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-bold hover:bg-[var(--surface-soft)]">{translate(locale, "Edit service", "تعديل الخدمة")}</button>{rate.isActive && <button type="button" onClick={() => void deactivateRate(rate)} disabled={saving} className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 disabled:opacity-50">{translate(locale, "Pause service", "إيقاف الخدمة")}</button>}</div>
               </article>
             )) : <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center text-sm text-[var(--muted)]">{translate(locale, "No shipping services yet. Add your first service.", "لا توجد خدمات شحن بعد. أضف خدمتك الأولى.")}</div>}
           </section>
