@@ -19,12 +19,12 @@ async function requireStoreOwner(tx: Prisma.TransactionClient, storeId: string, 
   });
   if (!store || store.seller.status !== "ACTIVE") throw new Error("Active store not found.");
   if (store.seller.ownerId !== userId) {
-    throw new Error("Only the store owner can invite or revoke team members until delegated staff roles are available.");
+    throw new Error("Only the store owner can manage this store's team.");
   }
   return store;
 }
 
-/** Only the store owner may invite an active account until delegated staff roles exist. */
+/** Only the store owner may invite an active account and select its store-scoped role. */
 export async function inviteStoreStaff(input: z.input<typeof inviteSchema>, now = new Date()) {
   const data = inviteSchema.parse(input);
   const actor = await requireCurrentSession(now);
