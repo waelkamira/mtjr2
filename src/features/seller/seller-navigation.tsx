@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
-type IconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping";
+type IconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping" | "finance";
 type Tone = "lavender" | "mint" | "peach" | "butter" | "blush" | "sky";
 
 const groups: Array<{
@@ -20,6 +20,12 @@ const groups: Array<{
       { href: "/seller/orders", label: "Orders", ar: "الطلبات", icon: "orders", tone: "peach" },
       { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" },
       { href: "/seller/shipping", label: "Shipping", ar: "الشحن", icon: "shipping", tone: "sky" }
+    ]
+  },
+  {
+    title: "Finance", ar: "المالية",
+    links: [
+      { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "finance", tone: "sky" }
     ]
   },
   {
@@ -66,6 +72,7 @@ function SellerIcon({ name }: { name: IconName }) {
       {name === "team" && <><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-1.5a5.5 5.5 0 0 1 11 0V20M16 5.5a3 3 0 0 1 0 5.8M17 15a4.5 4.5 0 0 1 3.5 4.4V20" /></>}
       {name === "notifications" && <><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" /></>}
       {name === "shipping" && <><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z" /><circle cx="7.5" cy="18" r="1.8" /><circle cx="17.5" cy="18" r="1.8" /></>}
+      {name === "finance" && <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h5M8 16h8" /></>}
     </svg>
   );
 }
