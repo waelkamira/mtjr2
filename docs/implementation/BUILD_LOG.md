@@ -4092,3 +4092,16 @@ Reviewed environment, API security E2E, marketplace E2E, auth return, auth route
 - Tests were updated only; no test execution or browser checks were performed.
 
 Test commits: `6d5d3f8`, `7d77d07`, `c48c72c`, `606877c`.
+
+## 2026-11-09 — Final six-file reconciliation batch 18
+
+Reviewed locale, seller application/store creation, store staff, order management, payment lifecycle and shipping tests.
+
+- Main locale tests use the response Set-Cookie header and current same-origin mutation guard; no branch change required.
+- Main seller-application tests cover the expanded application profile, verified account email, one-store-per-seller enforcement, duplicate/replay behavior and concurrent same-slug recovery. Branch store-creation tests target the older reduced seller/store model.
+- Main store-staff tests intentionally enforce owner-only invitations and prohibit delegated managers from escalating roles; branch delegated-manager expectations conflict with the current owner-only policy.
+- Main order tests correctly allow cancellation after all payment attempts are failed/cancelled while blocking active/successful attempts; branch's blanket refusal is overly restrictive.
+- Main payment lifecycle tests additionally preserve partial-refund state against late/replayed success webhooks. Main shipping tests cover current store-scoped CRUD, authorization, currency/market matching and audit events.
+- No branch test or runtime code copied from this batch.
+
+This closes the final six shared changed paths in the current tree inventory. The branch is not merged wholesale; compatible user changes have been selectively reconciled into main, and superseded differences remain intentionally excluded.
