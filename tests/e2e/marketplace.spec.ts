@@ -148,6 +148,25 @@ test.describe("seller journey", () => {
     await page.getByRole("button", { name: /Edit store profile|تعديل ملف المتجر/i }).click();
     await expect(page.getByRole("heading", { name: /Store profile|ملف المتجر/i })).toBeVisible();
     await page.getByRole("button", { name: /Cancel|إلغاء/i }).click();
+
+    const workspaceResponse = await page.request.get("/api/seller/stores");
+    expect(workspaceResponse.status()).toBe(200);
+    const workspacePayload = await workspaceResponse.json() as { stores: Array<{ id: string }> };
+    const storeId = workspacePayload.stores[0]?.id;
+    expect(storeId).toBeTruthy();
+    const shippingContact = `E2E Dispatch ${Date.now()}`;
+    await page.getByLabel(/Shipping contact name|اسم مسؤول الشحن/i).fill(shippingContact);
+    await page.getByLabel(/Shipping phone|هاتف الشحن/i).fill("+33123456789");
+    await page.getByLabel(/Address line 1|العنوان — السطر الأول/i).fill("12 E2E Market Street");
+    await page.getByLabel(/^City|المدينة$/i).fill("Strasbourg");
+    await page.getByLabel(/Country code \(2 letters\)|رمز الدولة \(حرفان\)/i).fill("FR");
+    await page.getByRole("button", { name: /Save shipping details|حفظ بيانات الشحن/i }).click();
+    await expect(page.getByRole("status")).toContainText(/Shipping address and contact details saved|تم حفظ عنوان الشحن وبيانات التواصل/i, { timeout: 15000 });
+    const updatedWorkspaceResponse = await page.request.get("/api/seller/stores");
+    expect(updatedWorkspaceResponse.status()).toBe(200);
+    const updatedWorkspace = await updatedWorkspaceResponse.json() as { stores: Array<{ id: string; shippingContactName: string | null; shippingCity: string | null; shippingCountryCode: string | null }> };
+    expect(updatedWorkspace.stores.find((store) => store.id === storeId)).toMatchObject({ shippingContactName: shippingContact, shippingCity: "Strasbourg", shippingCountryCode: "FR" });
+
     await page.goto("/seller/commissions");
     await expect(page.getByRole("heading", { name: /Commission statements|كشوف العمولات/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
