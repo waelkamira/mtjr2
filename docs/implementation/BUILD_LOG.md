@@ -3686,3 +3686,5 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Existing submission/resubmission rules remain unchanged; the rejection reason continues to come from the immutable audit history rather than duplicated mutable seller fields.
 - Commits: `aa2f4bf7b74ea581ce5acc0c1a3fe85be08d3d19`, `19af62ffa077d9b28caf1fa8af864685b8998ed6`.
 - No tests, build, typecheck, browser checks, or deployment were run, per project instruction.
+
+- Follow-up trace updates: `44d7faea73e362aad2c423876a1be0943543a72a` (journey matrix) and `833ab080bc61995b64fe86e24ebfde939d1abcbe` (page route registry).
