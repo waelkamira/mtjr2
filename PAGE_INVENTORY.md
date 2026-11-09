@@ -159,7 +159,6 @@ These are roadmap targets, not permission to create duplicates. Existing aliases
 | Seller commissions | `/seller/commissions` | No | Admin commission rules/snapshots exist; seller view is not implemented. | MISSING |
 | Seller payouts | `/seller/payouts` | No | Payout methods, eligibility, requests and settlement are not implemented. | MISSING |
 | Seller settings | `/seller/settings` | No | No dedicated settings route found. | MISSING |
-| Seller conversation detail | `/seller/messages/[conversationId]` | No | Seller message list exists; detail-route behavior needs a defined UI before adding a duplicate. | MISSING |
 | Admin root alias | `/admin` | No | `/admin/dashboard` is the canonical dashboard route; no duplicate page required. | MISSING |
 | Seller detail review | `/admin/sellers/[sellerId]` | No | Seller list and approve API exist; no seller detail page. | MISSING |
 | Store directory/management | `/admin/stores` | No | Store detail API exists but no admin store list page. | MISSING |
