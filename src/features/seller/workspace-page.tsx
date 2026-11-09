@@ -735,8 +735,7 @@ export default function SellerWorkspacePage() {
               {recentOrdersLoading ? <p className="rounded-2xl bg-white/45 p-4 text-sm text-[#718899]">{translate(locale, "Loading recent orders…", "جارٍ تحميل الطلبات الأخيرة…")}</p>
                 : recentOrdersError ? <p role="status" className="rounded-2xl bg-white/45 p-4 text-sm text-[#718899]">{translate(locale, "Recent orders are temporarily unavailable.", "الطلبات الأخيرة غير متاحة مؤقتاً.")}</p>
                 : recentOrders.length ? <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{recentOrders.map((order) => {
-                  const amount = Number(order.totalMinor) / (10 ** order.order.currency.minorUnit);
-                  const formattedAmount = new Intl.NumberFormat(locale === "ar" ? "ar" : "en", { style: "currency", currency: order.order.currencyCode, maximumFractionDigits: order.order.currency.minorUnit }).format(amount);
+                  const formattedAmount = formatCurrencyMinor(order.totalMinor, order.order.currencyCode, order.order.currency.minorUnit);
                   return <article key={order.id} className="rounded-2xl border border-white/85 bg-[linear-gradient(145deg,#f5fafb,#dce9ed)] p-4 shadow-[0_6px_14px_rgba(35,62,81,.08),inset_0_1px_0_white]">
                     <div className="flex items-start justify-between gap-2"><p className="font-black text-[#2d4a60]">#{order.order.orderNumber}</p><span className="rounded-full border border-white bg-[#d9e9eb] px-2.5 py-1 text-[10px] font-bold text-[#456a7b]">{sellerStatusLabels[order.status] ?? order.status.replaceAll("_", " ")}</span></div>
                     <p className="mt-3 text-xl font-black tracking-tight text-[#263d50]">{formattedAmount}</p>
