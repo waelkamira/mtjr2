@@ -1,70 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db/prisma";
 
 export const runtime = "nodejs";
 export const revalidate = 3600;
 
-let lastNominatimRequestAt = 0;
-
-type NominatimResult = {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
-  type?: string;
-  class?: string;
-  address?: Record<string, string>;
-};
-
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("q")?.trim() ?? "";
-  const locale = request.nextUrl.searchParams.get("locale") === "ar" ? "ar" : "en";
-
-  if (query.length < 3) {
-    return NextResponse.json({ error: "Enter at least 3 characters to search." }, { status: 400 });
+  if (query.length < 2) {
+    return NextResponse.json({ error: "Enter at least 2 characters to search." }, { status: 400 });
   }
-  if (query.length > 160) {
+  if (query.length > 100) {
     return NextResponse.json({ error: "Search query is too long." }, { status: 400 });
   }
 
-  const now = Date.now();
-  if (now - lastNominatimRequestAt < 1000) {
-    return NextResponse.json({ error: "Please wait a moment before searching again." }, { status: 429, headers: { "Retry-After": "1" } });
-  }
-  lastNominatimRequestAt = now;
-
   try {
-    const url = new URL("https://nominatim.openstreetmap.org/search");
-    url.searchParams.set("q", query);
-    url.searchParams.set("format", "jsonv2");
-    url.searchParams.set("addressdetails", "1");
-    url.searchParams.set("limit", "7");
-    url.searchParams.set("accept-language", locale);
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Matjar Marketplace location picker (https://github.com/waelkamira/mtjr2)",
-        Accept: "application/json",
-      },
-      next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!response.ok) {
-      return NextResponse.json({ error: "The map search service is temporarily unavailable." }, { status: 502 });
-    }
-    const results = await response.json() as NominatimResult[];
-    const items = results.flatMap((item) => {
-      const latitude = Number(item.lat);
-      const longitude = Number(item.lon);
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return [];
-      return [{
-        id: String(item.place_id),
-        label: item.display_name,
-        latitude,
-        longitude,
-        type: item.type ?? item.class ?? "",
-      }];
-    });
-    return NextResponse.json({ items }, { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } });
+    const contains = { contains: query, mode: "insensitive" as const };
+    const nameFilter = { OR: [{ nameAr: contains }, { nameEn: contains }] };
+    const [localities, subdistricts, districts, governorates] = await Promise.all([
+      prisma.syriaLocality.findMany({
+        where: { ...nameFilter, latitude: { not: null }, longitude: { not: null } },
+        orderBy: [{ nameAr: "asc" }, { nameEn: "asc" }],
+        take: 10,
+        select: { id: true, nameAr: true, nameEn: true, kind: true, latitude: true, longitude: true, district: { select: { nameAr: true, nameEn: true } }, governorate: { select: { nameAr: true, nameEn: true } } }
+      }),
+      prisma.syriaSubdistrict.findMany({
+        where: { ...nameFilter, latitude: { not: null }, longitude: { not: null } },
+        orderBy: [{ nameAr: "asc" }, { nameEn: "asc" }],
+        take: 5,
+        select: { id: true, nameAr: true, nameEn: true, latitude: true, longitude: true, district: { select: { nameAr: true, nameEn: true } }, governorate: { select: { nameAr: true, nameEn: true } } }
+      }),
+      prisma.syriaDistrict.findMany({
+        where: { ...nameFilter, latitude: { not: null }, longitude: { not: null } },
+        orderBy: [{ nameAr: "asc" }, { nameEn: "asc" }],
+        take: 5,
+        select: { id: true, nameAr: true, nameEn: true, latitude: true, longitude: true, governorate: { select: { nameAr: true, nameEn: true } } }
+      }),
+      prisma.syriaGovernorate.findMany({
+        where: { ...nameFilter, latitude: { not: null }, longitude: { not: null } },
+        orderBy: [{ nameAr: "asc" }, { nameEn: "asc" }],
+        take: 3,
+        select: { id: true, nameAr: true, nameEn: true, latitude: true, longitude: true }
+      })
+    ]);
+
+    const items = [
+      ...localities.map((item) => ({
+        id: `locality:${item.id}`,
+        label: [item.nameAr || item.nameEn, item.district?.nameAr || item.district?.nameEn, item.governorate.nameAr || item.governorate.nameEn].filter(Boolean).join(" — "),
+        latitude: item.latitude!, longitude: item.longitude!, type: item.kind
+      })),
+      ...subdistricts.map((item) => ({
+        id: `subdistrict:${item.id}`,
+        label: [item.nameAr || item.nameEn, item.district.nameAr || item.district.nameEn, item.governorate.nameAr || item.governorate.nameEn].filter(Boolean).join(" — "),
+        latitude: item.latitude!, longitude: item.longitude!, type: "subdistrict"
+      })),
+      ...districts.map((item) => ({
+        id: `district:${item.id}`,
+        label: [item.nameAr || item.nameEn, item.governorate.nameAr || item.governorate.nameEn].filter(Boolean).join(" — "),
+        latitude: item.latitude!, longitude: item.longitude!, type: "district"
+      })),
+      ...governorates.map((item) => ({
+        id: `governorate:${item.id}`, label: item.nameAr || item.nameEn,
+        latitude: item.latitude!, longitude: item.longitude!, type: "governorate"
+      }))
+    ].slice(0, 10);
+
+    return NextResponse.json({ items }, { headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" } });
   } catch {
-    return NextResponse.json({ error: "The map search service could not be reached. Please try again." }, { status: 503 });
+    return NextResponse.json({ error: "OpenSyria geography search is temporarily unavailable. Ensure the official dataset is imported." }, { status: 503 });
   }
 }
