@@ -181,12 +181,14 @@ export default function SellerWorkspacePage() {
   useEffect(() => {
     if (!selectedStoreId) return;
     let active = true;
+    setShippingRates([]);
     fetch(`/api/seller/shipping-rates?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
       .then((r) => readJson<{ rates: ShippingRate[] }>(r))
       .then((data) => { if (active) setShippingRates(data.rates); })
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Shipping rates could not be loaded.", "تعذر تحميل أسعار الشحن.")); });
     void Promise.resolve().then(() => {
       if (!active) return;
+      setInventory([]);
       setInventoryLoading(true);
       setInventoryError("");
       return fetch(`/api/seller/inventory?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
@@ -214,6 +216,8 @@ export default function SellerWorkspacePage() {
         setAnalyticsError("");
         return;
       }
+      setSellerAnalytics(null);
+      setRecentOrders([]);
       setAnalyticsLoading(true);
       setAnalyticsError("");
       return fetch(`/api/seller/analytics?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
@@ -251,6 +255,7 @@ export default function SellerWorkspacePage() {
       setRecentOrdersError("");
       return () => { active = false; };
     }
+    setRecentOrders([]);
     setRecentOrdersLoading(true);
     setRecentOrdersError("");
     fetch("/api/seller/orders", { cache: "no-store" })
