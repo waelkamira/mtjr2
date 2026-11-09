@@ -3361,3 +3361,15 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 
 **Verification**
 - Source-level route/link review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller dashboard exact money display
+
+**Implemented on `main`**
+- Replaced floating-point conversion of recent seller order totals with the dashboard's BigInt-based minor-unit formatter.
+- Large totals retain their exact stored digits and use the order's persisted currency code and minor-unit precision.
+
+**Commit**
+- `b00dfe9` — `fix(seller): preserve exact precision in dashboard order totals`.
+
+**Verification**
+- Source-level money-path review only. No tests, build, browser, database, CI or deployment commands were run.
