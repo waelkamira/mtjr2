@@ -111,7 +111,7 @@ export async function listStoreInventory(storeId: string, now = new Date(), sear
       variant: { select: { id: true, sku: true, name: true, product: { select: { id: true, name: true, slug: true } } } }
     }
   });
-  return rows.map((row) => ({ ...row, quantityAvailable: row.quantityOnHand - row.quantityReserved, isLowStock: row.quantityOnHand - row.quantityReserved <= row.reorderPoint }));
+  return rows.map((row) => ({ ...row, quantityAvailable: row.quantityOnHand - row.quantityReserved - row.quantityQuarantined, isLowStock: row.quantityOnHand - row.quantityReserved - row.quantityQuarantined <= row.reorderPoint }));
 }
 
 export async function adjustInventory(input: unknown, now = new Date()) {
@@ -143,14 +143,15 @@ export async function adjustInventory(input: unknown, now = new Date()) {
         data: { warehouseId: warehouse.id, variantId: variant.id, quantityOnHand: data.quantityDelta },
       });
     } else {
-      if (data.quantityDelta < 0 && inventory.quantityOnHand - inventory.quantityReserved < Math.abs(data.quantityDelta)) {
+      if (data.quantityDelta < 0 && inventory.quantityOnHand - inventory.quantityReserved - inventory.quantityQuarantined < Math.abs(data.quantityDelta)) {
         throw new Error("Adjustment would reduce available stock below zero.");
       }
       const changed = await tx.inventory.updateMany({
         where: {
           id: inventory.id,
           quantityOnHand: inventory.quantityOnHand,
-          quantityReserved: inventory.quantityReserved
+          quantityReserved: inventory.quantityReserved,
+          quantityQuarantined: inventory.quantityQuarantined
         },
         data: { quantityOnHand: { increment: data.quantityDelta } }
       });
@@ -231,11 +232,11 @@ export async function shipStockTransfer(transferId: string, now = new Date()) {
       const inventory = await tx.inventory.findUnique({
         where: { warehouseId_variantId: { warehouseId: source.id, variantId: item.variantId } }
       });
-      if (!inventory || inventory.quantityOnHand - inventory.quantityReserved < item.quantity) {
+      if (!inventory || inventory.quantityOnHand - inventory.quantityReserved - inventory.quantityQuarantined < item.quantity) {
         throw new Error("Insufficient available stock to ship this transfer.");
       }
       const changed = await tx.inventory.updateMany({
-        where: { id: inventory.id, quantityOnHand: inventory.quantityOnHand, quantityReserved: inventory.quantityReserved },
+        where: { id: inventory.id, quantityOnHand: inventory.quantityOnHand, quantityReserved: inventory.quantityReserved, quantityQuarantined: inventory.quantityQuarantined },
         data: { quantityOnHand: { decrement: item.quantity } }
       });
       if (changed.count !== 1) throw new Error("Inventory changed concurrently; retry the transfer.");
