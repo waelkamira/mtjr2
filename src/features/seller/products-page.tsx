@@ -569,6 +569,7 @@ export default function SellerProductsPage() {
           latitude: editProductLocation.latitude ?? null,
           longitude: editProductLocation.longitude ?? null,
           contactPhone: editContactPhone || null, videoUrl: editVideoUrl || null,
+          categoryIds: editCategoryId ? [editCategoryId] : [],
           ...(editIsRealEstate ? {
             propertyDetails: { propertyType: editPropertyType, listingType: editListingType, bedrooms: editBedrooms === "" ? null : Number(editBedrooms), bathrooms: editBathrooms === "" ? null : Number(editBathrooms), floorArea: editFloorArea }
           } : {}),
