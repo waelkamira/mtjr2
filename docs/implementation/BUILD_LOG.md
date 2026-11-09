@@ -4325,3 +4325,11 @@ The platform account policy is now explicit: email verification is not required 
 - Checkout provider discovery now hides providers that do not match the order's country/currency, and the API uses private no-store caching.
 - PayPal capture validates that the returned order and purchase-unit custom/reference ID belong to the exact Matjar payment before accepting capture results.
 - No tests, builds or typechecks were run.
+
+
+## 2026-11-10 — Legacy PayPal source review
+
+- Located the legacy PayPal flow in `waelkamira/cartoon` and its copy in `waelkamira/cooking-new`; `cartoon_cloudflare_repo12` was not the source. Akaar contains a disabled PayPal provider placeholder rather than a working checkout.
+- Reviewed the legacy flow and rejected copying its client-authoritative subscription activation: the browser captures payment and writes entitlement fields through an unauthenticated email-based user PUT endpoint. The `cooking-new` copy's user PUT handler ignores subscription fields entirely.
+- Found a tracked `.env` file containing PayPal credentials in `cartoon`. No secret values were copied or used. The exposed PayPal REST app secret must be revoked/rotated by the owner, and the tracked file must be removed from the repository/history.
+- Documented the review in `docs/architecture/PAYPAL_SOURCE_REVIEW.md`. Matjar uses its own server-authoritative Orders v2 + webhook flow; cartoon's $1 monthly / $10 yearly subscription pricing was not imported.
