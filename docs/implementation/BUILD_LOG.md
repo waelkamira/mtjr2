@@ -3591,3 +3591,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Product editing now prevents removing the final image unless a replacement has been added first. This aligns the save behavior with the product gallery's existing instruction that every listing needs a recognizable primary image.
 - Commit: 945d8e7d2bdb8aedfd4775cd812161ae1e6ca5a7.
 - No tests/build/typecheck/browser verification performed, per the current build-first instruction.
+
+## 2026-11-09 — Seller order history pagination
+
+- Extended the seller vendor-order list API with an opaque cursor and stable descending ordering by creation time plus ID.
+- The server fetches one look-ahead row, returns at most 100 rows per page, and exposes `nextCursor` only when older records remain. Store authorization and search filters are applied before pagination.
+- Added a seller-facing “Load older orders” action that appends subsequent pages without replacing the current list and avoids duplicate rows.
+- Commits: 045163680f323b9808c0409004aea236822b27b8, 9f88cf5b4efdfe8d4bdf7fc4b80c0cfd0194b0da, 389ae27905eafb4ead14b2e5592b9d3f7da43d58, 3c974f2948610d4c433ce6d5d0bb93e9443c7d4b.
+- No tests/build/typecheck/browser verification performed, per the current build-first instruction.
