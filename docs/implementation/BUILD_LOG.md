@@ -3110,3 +3110,7 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Safety: the public slug can change while the store is DRAFT, but is locked once ACTIVE to protect customer links. Concurrent unique-slug conflicts return 409 rather than an unhandled server error. Policy/localization settings remain out of scope and are documented as remaining gaps.
 - Commits: service `62fed371a4c02d20f0d5dc0c0cf397846fc64e83`; API `e87bda23976abdd6adbe0237142ae3a53bb87a0e`; lock/race/active-slug guard `b5adba5f801d6fa6f5129bfb8fb50c20fb8b588b`, `c0d88a75aaa6e9678c0f7d453bee8750d288116a`, `b408d6140e0db20fc9d8ccf626b49405e8ca79b`; workspace UI `46cd64c664ae79e9a14f56b8e6c0488b95e2f94f`; active URL field lock `ee323698792526701600c666d2c5cc5c0894b8c3`; inventory/registry/matrix `7aef0dc16032d043a138bda81c76f10ddfc7b102`, `7f1b53c54a417b4cf6a4eb425f29d93027b82750`, `5dc79a6d8ec20f02fcbcd50926d9eebd0f6eb65d`.
 - Verification remains source-only; no local typecheck/build, browser run or disposable PostgreSQL transaction test was executed.
+## 2026-11-09 — Seller store profile safety tests
+
+- Added `tests/marketplace/seller-store-settings.test.ts` covering owner update + audit, active URL lock, exact-store permission denial for non-owners, and duplicate-slug rejection.
+- Test source added but not executed in this session; TypeScript/Vitest results remain unknown.
