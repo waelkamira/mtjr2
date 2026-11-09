@@ -114,3 +114,10 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## 12. إدارة مزودي الدفع من لوحة التحكم
+
+تمت إضافة مواصفة تنفيذ مركز التحكم في `docs/architecture/PAYMENT_PROVIDER_CONTROL_CENTER.md`. وهي تحدد دورة حياة المزود، الإيقاف دون تعطيل Webhooks للمدفوعات الجارية، الأرشفة بدلاً من الحذف الفعلي، تشفير الأسرار وإصدارات المفاتيح، صلاحية Super Admin وMFA، سجل التدقيق، وإظهار وسائل الدفع حسب السوق والعملة.
+
+هذه مواصفة وخطة تنفيذ وليست ادعاءً بوجود واجهة أو API أو نموذج Prisma جاهز. خط الأساس الحالي: Stripe adapter مربوط بمتغيرات البيئة؛ `Payment` و`PaymentWebhookEvent` موجودان؛ لا يوجد نموذج إعدادات مزودي دفع دائم ولا API لإدارتها. يجب تنفيذ متطلبات التشفير والتفويض قبل حفظ أي بيانات اعتماد في قاعدة البيانات.
