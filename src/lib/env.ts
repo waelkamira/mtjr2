@@ -71,7 +71,7 @@ const environmentSchema = z.object({
     } catch {
       context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER_ENCRYPTION_KEYS"], message: "Must be a JSON object mapping key versions to 64-character hexadecimal keys and include the active version." });
     }
-  } else if (value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION !== 1 || !value.PAYMENT_PROVIDER_ENCRYPTION_KEY) {
+  } else if (value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION !== 1) {
     context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION"], message: "Version 1 requires PAYMENT_PROVIDER_ENCRYPTION_KEY; versions above 1 require PAYMENT_PROVIDER_ENCRYPTION_KEYS." });
   }
   const paypalValues = [value.PAYPAL_CLIENT_ID, value.PAYPAL_CLIENT_SECRET, value.PAYPAL_WEBHOOK_ID];
