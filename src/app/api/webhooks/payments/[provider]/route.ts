@@ -5,6 +5,7 @@ import { getPaymentProviderRuntimeSnapshot, getActiveProviderCredentialsForWebho
 import { prisma } from "@/lib/db/prisma";
 import { PaymentProviderEnvironment } from "@prisma/client";
 import { processVerifiedPaymentEvent } from "@/server/payments/payments";
+import { PaymentProviderConfigurationError, PaymentProviderUnavailableError } from "@/server/payments/providers/types";
 
 export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ provider: string }> };
@@ -61,31 +62,46 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
   const provider = getPaymentProviderAdapter(providerKey);
   if (!provider) return Response.json({ error: "Payment provider is not configured." }, { status: 404 });
 
-  // Invalid signatures and malformed provider events are permanent client errors.
-  // Keep these separate from database/transaction failures, which providers must retry.
+  // Invalid payload/signature failures are permanent; database/provider outages must be retried.
   let rawBody: Uint8Array;
-  let rawEvent: unknown;
   try {
     rawBody = await readBoundedWebhookBody(request);
-    // Pass a fresh request containing the already bounded raw bytes so provider
-    // signature verification sees the exact payload without buffering it twice.
-    let paymentReference: string | undefined;
-    let paymentId: string | undefined;
-    try {
-      const payload = JSON.parse(new TextDecoder().decode(rawBody)) as {
-        data?: { object?: { id?: string; metadata?: { paymentId?: string } } };
-        resource?: { custom_id?: string; supplementary_data?: { related_ids?: { order_id?: string } } };
-      };
-      paymentReference = providerKey === "stripe"
-        ? payload.data?.object?.id
-        : payload.resource?.supplementary_data?.related_ids?.order_id;
-      paymentId = providerKey === "stripe"
-        ? payload.data?.object?.metadata?.paymentId
-        : payload.resource?.custom_id;
-    } catch {
-      throw new Error("Webhook payload is not valid JSON.");
-    }
-    if (!paymentReference) throw new Error("Webhook payment reference is missing.");
+  } catch {
+    return Response.json({ error: "Webhook body is invalid or exceeds the size limit." }, {
+      status: 400,
+      headers: { "Cache-Control": "no-store" }
+    });
+  }
+
+  let payload: {
+    data?: { object?: { id?: string; metadata?: { paymentId?: string } } };
+    resource?: { custom_id?: string; supplementary_data?: { related_ids?: { order_id?: string } } };
+  };
+  try {
+    payload = JSON.parse(new TextDecoder().decode(rawBody));
+  } catch {
+    return Response.json({ error: "Webhook payload is not valid JSON." }, {
+      status: 400,
+      headers: { "Cache-Control": "no-store" }
+    });
+  }
+
+  const paymentReference = providerKey === "stripe"
+    ? payload.data?.object?.id
+    : payload.resource?.supplementary_data?.related_ids?.order_id;
+  const paymentId = providerKey === "stripe"
+    ? payload.data?.object?.metadata?.paymentId
+    : payload.resource?.custom_id;
+  if (!paymentReference) {
+    return Response.json({ error: "Webhook payment reference is missing." }, {
+      status: 400,
+      headers: { "Cache-Control": "no-store" }
+    });
+  }
+
+  let snapshot: Awaited<ReturnType<typeof getPaymentProviderRuntimeSnapshot>> = null;
+  let managedFallbackCredentials: Record<string, string> | null = null;
+  try {
     const payment = await prisma.payment.findFirst({
       where: {
         provider: providerKey,
@@ -96,29 +112,42 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
       },
       select: { id: true }
     });
-    const snapshot = payment ? await getPaymentProviderRuntimeSnapshot(payment.id) : null;
+    snapshot = payment ? await getPaymentProviderRuntimeSnapshot(payment.id) : null;
     const environment = process.env.NODE_ENV === "production"
       ? PaymentProviderEnvironment.LIVE
       : PaymentProviderEnvironment.TEST;
-    const managedFallbackCredentials = !payment
+    managedFallbackCredentials = !payment
       ? await getActiveProviderCredentialsForWebhook(providerKey as "stripe" | "paypal", environment)
       : null;
-    const fallbackCredentials = snapshot?.credentials ?? managedFallbackCredentials ?? undefined;
-    // Existing legacy payments must keep using PAYPAL_MODE from their environment
-    // rather than having NODE_ENV silently override their original sandbox/live mode.
-    const verificationEnvironment = snapshot?.environment ?? (managedFallbackCredentials ? environment : undefined);
-    const verificationRequest = new Request(request.url, {
-      method: "POST",
-      headers: request.headers,
-      body: rawBody
-    });
-    rawEvent = await provider.verifyWebhook(
-      verificationRequest,
-      fallbackCredentials,
-      verificationEnvironment
-    );
   } catch {
-    return Response.json({ error: "Payment webhook verification failed or payload exceeded the size limit." }, {
+    return Response.json({ error: "Payment webhook verification is temporarily unavailable." }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store", "Retry-After": "60" }
+    });
+  }
+
+  const environment = process.env.NODE_ENV === "production"
+    ? PaymentProviderEnvironment.LIVE
+    : PaymentProviderEnvironment.TEST;
+  const fallbackCredentials = snapshot?.credentials ?? managedFallbackCredentials ?? undefined;
+  // Legacy payments without snapshots retain the legacy provider environment configuration.
+  const verificationEnvironment = snapshot?.environment ?? (managedFallbackCredentials ? environment : undefined);
+  const verificationRequest = new Request(request.url, {
+    method: "POST",
+    headers: request.headers,
+    body: rawBody
+  });
+  let rawEvent: unknown;
+  try {
+    rawEvent = await provider.verifyWebhook(verificationRequest, fallbackCredentials, verificationEnvironment);
+  } catch (error) {
+    if (error instanceof PaymentProviderUnavailableError || error instanceof PaymentProviderConfigurationError) {
+      return Response.json({ error: "Payment provider verification is temporarily unavailable." }, {
+        status: 503,
+        headers: { "Cache-Control": "no-store", "Retry-After": "60" }
+      });
+    }
+    return Response.json({ error: "Payment webhook signature or payload verification failed." }, {
       status: 400,
       headers: { "Cache-Control": "no-store" }
     });
