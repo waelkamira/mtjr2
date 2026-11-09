@@ -129,6 +129,14 @@ describe("guest and customer cart", () => {
     expect(mocks.cartItemCreate).not.toHaveBeenCalled();
   });
 
+  it("rejects cart additions when remaining stock is quarantined", async () => {
+    mocks.inventoryFindMany.mockResolvedValue([{ quantityOnHand: 5, quantityReserved: 1, quantityQuarantined: 3 }]);
+    await expect(addCartItem("opaque-guest-token", {
+      marketId: "market-1", currencyCode: "EUR", variantId: "variant-1", quantity: 2
+    })).rejects.toThrow("not enough available stock");
+    expect(mocks.cartItemCreate).not.toHaveBeenCalled();
+  });
+
   it("reorders all still-purchasable variants into the active cart in one transaction", async () => {
     const result = await addCartItems("opaque-guest-token", {
       marketId: "market-1", currencyCode: "EUR",
