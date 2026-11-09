@@ -15,21 +15,23 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
   stockTransferFindUnique: vi.fn(),
   stockTransferCreate: vi.fn(),
-  stockTransferUpdateMany: vi.fn()
+  stockTransferUpdateMany: vi.fn(),
+  storeFindUnique: vi.fn(),
+  inventoryMovementFindMany: vi.fn()
 }));
 
 const tx = {
   warehouse: { findUnique: mocks.warehouseFindUnique },
   productVariant: { findFirst: mocks.productVariantFindFirst, findMany: mocks.productVariantFindMany },
   inventory: { findUnique: mocks.inventoryFindUnique, create: mocks.inventoryCreate, updateMany: mocks.inventoryUpdateMany },
-  inventoryMovement: { findUnique: mocks.inventoryMovementFindUnique, create: mocks.inventoryMovementCreate },
+  inventoryMovement: { findUnique: mocks.inventoryMovementFindUnique, create: mocks.inventoryMovementCreate, findMany: mocks.inventoryMovementFindMany },
   auditLog: { create: mocks.auditCreate },
   stockTransfer: { findUnique: mocks.stockTransferFindUnique, create: mocks.stockTransferCreate, updateMany: mocks.stockTransferUpdateMany }
 };
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { $transaction: vi.fn(async (callback: (value: typeof tx) => unknown) => callback(tx)) }
+  prisma: { $transaction: vi.fn(async (callback: (value: typeof tx) => unknown) => callback(tx)), store: { findUnique: mocks.storeFindUnique }, inventoryMovement: { findMany: mocks.inventoryMovementFindMany } }
 }));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
 vi.mock("@/server/identity/permission-repository", () => ({
@@ -37,7 +39,7 @@ vi.mock("@/server/identity/permission-repository", () => ({
   userHasPermission: mocks.userHasPermission
 }));
 
-import { adjustInventory, createStockTransfer, shipStockTransfer } from "@/server/inventory/stock";
+import { adjustInventory, createStockTransfer, shipStockTransfer, listStoreInventoryMovements } from "@/server/inventory/stock";
 
 describe("seller inventory operations", () => {
   beforeEach(() => {
@@ -56,6 +58,25 @@ describe("seller inventory operations", () => {
     mocks.inventoryCreate.mockResolvedValue({ id: "inventory-1", quantityOnHand: 10, quantityReserved: 0, quantityQuarantined: 0 });
     mocks.inventoryUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
+    mocks.storeFindUnique.mockResolvedValue({ id: "store-1", seller: { ownerId: "owner-1", status: "ACTIVE" } });
+    mocks.inventoryMovementFindMany.mockResolvedValue([]);
+  });
+
+  it("lists only the requested store's latest ledger movements", async () => {
+    const entries = [{ id: "movement-1", quantityDelta: -2 }];
+    mocks.inventoryMovementFindMany.mockResolvedValue(entries);
+    await expect(listStoreInventoryMovements("store-1", new Date("2026-11-09T00:00:00Z"), 50)).resolves.toEqual(entries);
+    expect(mocks.inventoryMovementFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { inventory: { warehouse: { storeId: "store-1" } } },
+      take: 50,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+    }));
+  });
+
+  it("rejects movement history access outside the seller's store scope", async () => {
+    mocks.storeFindUnique.mockResolvedValue({ id: "store-other", seller: { ownerId: "another-owner", status: "ACTIVE" } });
+    await expect(listStoreInventoryMovements("store-other")).rejects.toThrow("inventory access");
+    expect(mocks.inventoryMovementFindMany).not.toHaveBeenCalled();
   });
 
   it("rejects a negative adjustment that would consume reserved stock", async () => {
