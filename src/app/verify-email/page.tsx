@@ -6,7 +6,6 @@ export const metadata = {
   robots: { index: false, follow: false }
 };
 
-export default async function VerifyEmailRoute({ searchParams }: { searchParams: Promise<{ token?: string; email?: string }> }) {
-  const params = await searchParams;
-  return <VerifyEmailPage initialToken={params.token ?? ""} initialEmail={params.email ?? ""} />;
+export default function VerifyEmailRoute() {
+  return <VerifyEmailPage />;
 }
