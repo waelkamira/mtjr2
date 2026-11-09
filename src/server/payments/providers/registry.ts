@@ -3,11 +3,16 @@ import "server-only";
 import type { PaymentProviderAdapter } from "./types";
 import { env } from "@/lib/env";
 import { stripePaymentProvider } from "./stripe";
+import { paypalPaymentProvider } from "./paypal";
 
 const providers = new Map<string, PaymentProviderAdapter>();
 
 if (env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET) {
   providers.set(stripePaymentProvider.key, stripePaymentProvider);
+}
+
+if (env.PAYPAL_CLIENT_ID && env.PAYPAL_CLIENT_SECRET && env.PAYPAL_WEBHOOK_ID) {
+  providers.set(paypalPaymentProvider.key, paypalPaymentProvider);
 }
 
 export function registerPaymentProvider(adapter: PaymentProviderAdapter) {
