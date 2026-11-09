@@ -595,6 +595,10 @@ export default function SellerProductsPage() {
   async function saveProductEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingId) return;
+    if (!editVariantPricesValid) {
+      setError(translate(locale, "Enter a valid price for every SKU and enabled market.", "أدخل سعراً صالحاً لكل متغير وسوق مفعّل."));
+      return;
+    }
     setBusy(true); setError(""); setMessage("");
     try {
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
