@@ -3559,3 +3559,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Exposed the policies to the seller workspace editor and public store detail serializer/page. Private dispatch-origin fields remain excluded from public output.
 - Policy content is plain text with line breaks; localization/versioning and legal review workflows are not yet implemented. Sellers must not treat these free-text fields as legal approval.
 - No tests, build, typecheck, browser session or deployment was run, per instruction to finish implementation before testing.
+
+
+## 2026-11-09 — Seller store image lifecycle safeguards
+
+- Store now persists provider storage keys alongside logo/banner URLs so temporary deletion can distinguish saved branding assets from unattached uploads.
+- The shared temporary media DELETE route refuses deletion when the storage key is referenced by a store logo/banner or ProductMedia record.
+- Seller workspace retains temporary delete tokens while the profile editor is open, supports removing logo/banner from the profile, cleans replaced staged uploads after save, and attempts cleanup on cancel. Saved branding references are retained; removal of a previously saved provider asset is still a separate lifecycle task.
+- The existing provider rotation and upload endpoint remain in use. A full reusable media library and safe deletion of detached, persisted assets are not yet implemented.
+- No tests, build, typecheck or browser run was performed.
