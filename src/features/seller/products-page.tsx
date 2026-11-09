@@ -129,11 +129,6 @@ export default function SellerProductsPage() {
     if (initialSearch) setSearch(initialSearch);
   }, []);
 
-  useEffect(() => {
-    const initialSearch = new URLSearchParams(window.location.search).get("search")?.trim();
-    if (initialSearch) setSearch(initialSearch.slice(0, 120));
-  }, []);
-
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
   const isRealEstate = (() => { const selected = categoryOptions.find((category) => category.id === categoryId); return selected?.slug === "real-estate" || selected?.ancestors.includes("real-estate") === true; })();
   const editIsRealEstate = (() => { const selected = categoryOptions.find((category) => category.id === editCategoryId); return selected?.slug === "real-estate" || selected?.ancestors.includes("real-estate") === true; })();
