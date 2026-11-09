@@ -652,7 +652,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
       status: true, approvalStatus: true,
       rejectionReason: true, updatedAt: true,
       media: { where: { type: "IMAGE" }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 10, select: { id: true, url: true, storageKey: true, mimeType: true, width: true, height: true, altText: true, sortOrder: true, isPrimary: true } },
-      variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
+      variants: { where: { isActive: true }, select: { id: true, sku: true, name: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true, compareAtMinor: true, currency: { select: { minorUnit: true } } } } } }
     }
   });
   return products.map((product) => ({
@@ -661,7 +661,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     propertyDetails: product.propertyDetails ? { ...product.propertyDetails, floorArea: product.propertyDetails.floorArea.toString() } : null,
     variants: product.variants.map((variant) => ({
       ...variant,
-      prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString() }))
+      prices: variant.prices.map((price) => ({ ...price, amountMinor: price.amountMinor.toString(), compareAtMinor: price.compareAtMinor?.toString() ?? null }))
     }))
   }));
 }
