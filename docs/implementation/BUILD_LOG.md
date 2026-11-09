@@ -3878,3 +3878,16 @@ No tests, builds, typechecks, or browser checks were run, in line with the reque
 - Kept the main demo catalog seed documentation. The branch describes a larger multi-store fixture, but it is not safe to restore its assumptions without reconciling the current seed implementation and schema; the synthetic demo-dashboard seed remains deferred.
 - This batch corrected documentation only; it did not change runtime behavior.
 
+## 2026-11-09 — Final retained documentation, storefront, and workflow sweep
+
+- Reconciled the remaining README, page inventory, AI assistant plan, seller system specifications, admin layout, AI assistant UI, storefront grid/home/review components, and CI workflow differences.
+- Kept the canonical README and page inventory on main; their scope/status references reflect later implementation work than the branch snapshot.
+- Kept the main AI assistant plan and UI, which document and integrate the current server assistant context and security constraints. The branch plan still describes the earlier feature-branch rollout state.
+- Kept the main seller system specifications, which have expanded scope/status and clearer boundaries for finance/payouts, promotions, analytics, and scoped staff permissions.
+- Kept main's admin layout and storefront components. Their current versions retain the canonical permission/session guards, sponsored placement integration, currency-aware price formatting, and current customer purchase/review eligibility contract.
+- Kept main CI workflow enhancements: API authorization-boundary and UI mutation-feedback inventories are generated and uploaded alongside route-security evidence. The branch workflow omits these audit artifacts. Existing workflow concurrency and test execution definitions were not changed.
+- Confirmed that the three branch-only geography/listing migrations and legacy geography, map, category-field-preset, and product-image storage files are superseded by the current main schema/services and media/geography architecture. They must not be copied as standalone artifacts.
+- Classified branch-only QA reports and execution logs as historical evidence for an earlier code snapshot, not current verification. Branch-only test files are deferred because the requested validation phase has not started. The old seller-listings operations guide conflicts with the current media-provider fallback and listing contracts. The branch-only `vercel.json` is intentionally not adopted.
+- The branch-only demo-dashboard seeder remains deferred; it needs a new isolated fixture design against the canonical schema and must not be restored as a production-capable seed command.
+- No runtime source changes were warranted by this sweep. No tests, builds, typechecks, or browser checks were run, in line with the requested build-first workflow.
+
