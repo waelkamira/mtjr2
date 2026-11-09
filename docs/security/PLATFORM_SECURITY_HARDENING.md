@@ -19,6 +19,8 @@ Absolute prevention cannot be guaranteed. The target is defense in depth, least 
 - Shared JSON and multipart mutation guards now reject malformed or oversized declared `Content-Length` values (1 MiB for JSON mutations; 10 MiB plus multipart overhead for uploads) before handlers parse request bodies. These header checks do not cap chunked bodies; ingress/runtime body limits remain mandatory.
 - Temporary seller image deletion now uses its own persistent per-user action budget and rejects oversized JSON requests before parsing.
 - Payment webhooks now read the request stream with a strict 1 MiB maximum, reject oversized declared lengths, and pass the bounded raw bytes to the provider signature verifier. This prevents unbounded webhook-body buffering and avoids reading the same body twice.
+- Guest order-detail reads now enforce the same guest-session expiry and conversion checks as payment, cancellation and reorder operations.
+- Customer cart API responses now explicitly use `private, no-store` and vary by cookie, preventing browser/shared-cache reuse of personal cart contents.
 - These are targeted application-layer controls; they do not replace ingress limits, malware scanning, or full route-by-route authorization review.
 
 ## Mandatory security layers and completion gates
