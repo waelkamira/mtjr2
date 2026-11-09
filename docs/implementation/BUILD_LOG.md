@@ -3498,3 +3498,12 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - The table now reports the number of rows actually loaded rather than implying that the first 100 rows are the complete history.
 - Commits: `fffdfe5` (service cursor), `2e39f91` (API query), `c62294a` (load older UI), `90d4025` (loaded-row label).
 - Source-level query/UI contract review only. No tests, build, browser, database, CI or deployment commands were run.
+
+## 2026-11-09 — Seller finance: completed refund attribution
+
+- Added store-scoped visibility of completed refund-item allocations. Each refund detail is attributed through RefundItem → ReturnItem → OrderItem → VendorOrder, so a multi-store customer refund is not incorrectly charged in full to every seller.
+- Added per-currency all-time refund aggregates using a database-side grouped SQL query; the detail list is capped at the latest 100 completed allocations and clearly labeled.
+- Added the refund details and all-time refund totals to the existing CSV export.
+- Refunds are displayed separately from commission snapshots. They are not netted against seller earnings and do not imply a withdrawable balance or payout.
+- Commits: `c7391ff` (store refund attribution), `686543b` (seller UI and CSV), `bc7fb08` and `521bce5` (full database-side totals and response correction).
+- Source-level relation/scope review only; no tests, build, browser, database, CI or deployment commands were run.
