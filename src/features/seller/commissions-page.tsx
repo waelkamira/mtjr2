@@ -13,6 +13,34 @@ type CommissionTransaction = {
 };
 type CommissionResponse = { store: { id: string; name: string }; limit: number; totals: CommissionTotal[]; transactions: CommissionTransaction[] };
 
+function csvCell(value: string | number) {
+  const raw = String(value);
+  const safe = /^[=+@\\-\\t\\r]/.test(raw) ? "'" + raw : raw;
+  return '"' + safe.replace(/"/g, '""') + '"';
+}
+
+function downloadCommissionCsv(data: CommissionResponse) {
+  const rows: Array<Array<string | number>> = [
+    ["SECTION", "CURRENCY", "BASE_AMOUNT_MINOR", "COMMISSION_MINOR", "TRANSACTION_COUNT"],
+    ...data.totals.map((total) => ["ALL_TIME_TOTAL", total.currencyCode, total.baseAmountMinor, total.commissionMinor, total.transactionCount]),
+    [],
+    ["SECTION", "DATE", "ORDER", "PRODUCT", "SKU", "CATEGORY", "QUANTITY", "RATE_BPS", "BASE_AMOUNT_MINOR", "COMMISSION_MINOR", "CURRENCY", "ORDER_STATUS"],
+    ...data.transactions.map((item) => [
+      "LATEST_100_DETAIL", item.createdAt, item.orderNumber, item.productName, item.sku,
+      item.categoryName ?? "", item.quantity, item.rateBasisPoints, item.baseAmountMinor,
+      item.commissionMinor, item.currencyCode, item.orderStatus
+    ])
+  ];
+  const csv = "\\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\\r\\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "seller-commission-statements.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function formatMinor(value: string, currency: string, minorUnit: number, locale: string) {
   const amount = BigInt(value);
   const scale = 10n ** BigInt(minorUnit);
@@ -104,7 +132,10 @@ export default function SellerCommissionsPage() {
         {data && !loading && <>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
             <div><h2 className="text-lg font-extrabold text-[#263d50]">{data.store.name}</h2><p className="mt-1 text-xs text-[#718899]">{t("Latest", "أحدث")} {data.limit} {t("commission snapshots", "لقطة عمولة")}</p></div>
-            <span className="rounded-full border border-white bg-white/70 px-3 py-1.5 text-xs font-bold text-[#42677b]">{data.transactions.length} {t("records", "سجل")}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white bg-white/70 px-3 py-1.5 text-xs font-bold text-[#42677b]">{data.transactions.length} {t("detail rows", "تفصيل")}</span>
+              <button type="button" onClick={() => downloadCommissionCsv(data)} className="rounded-xl border border-white bg-white/75 px-4 py-2 text-xs font-extrabold text-[#35566b] shadow-[0_3px_8px_rgba(38,66,84,.08)] transition hover:bg-white">{t("Export CSV", "تصدير CSV")}</button>
+            </div>
           </div>
 
           {data.totals.length > 0 && <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
