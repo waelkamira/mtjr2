@@ -126,7 +126,14 @@ export default function SellerWorkspacePage() {
   const reload = useCallback(async () => {
     const data = await readJson<Workspace>(await fetch("/api/seller/stores", { cache: "no-store" }));
     setWorkspace(data);
-    if (!selectedStoreId && data.stores[0]) { setSelectedStoreId(data.stores[0].id); localStorage.setItem("mtjr.activeStoreId", data.stores[0].id); }
+    if (!selectedStoreId && data.stores[0]) {
+      setSelectedStoreId(data.stores[0].id);
+      try {
+        localStorage.setItem("mtjr.activeStoreId", data.stores[0].id);
+      } catch {
+        // The workspace must remain usable when browser storage is unavailable.
+      }
+    }
   }, [selectedStoreId]);
 
   useEffect(() => {
