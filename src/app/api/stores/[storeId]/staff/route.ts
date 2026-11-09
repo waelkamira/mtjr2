@@ -4,7 +4,10 @@ import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { inviteStoreStaff, listStoreStaff } from "@/server/marketplace/store-staff";
 
 export const runtime = "nodejs";
-const bodySchema = z.object({ userId: z.string().trim().min(1).max(128) }).strict();
+const bodySchema = z.object({
+  userId: z.string().trim().min(1).max(128).optional(),
+  email: z.string().trim().email().max(254).optional()
+}).strict().refine((value) => Boolean(value.userId) !== Boolean(value.email));
 
 export async function GET(_request: Request, context: { params: Promise<{ storeId: string }> }): Promise<Response> {
   try {
@@ -25,7 +28,7 @@ export async function POST(request: Request, context: { params: Promise<{ storeI
   if (!parsed.success) return Response.json({ error: "Invalid staff invitation." }, { status: 400 });
   try {
     const { storeId } = await context.params;
-    const result = await inviteStoreStaff({ storeId, userId: parsed.data.userId });
+    const result = await inviteStoreStaff({ storeId, ...parsed.data });
     return Response.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
