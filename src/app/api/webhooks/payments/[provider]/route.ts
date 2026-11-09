@@ -15,7 +15,7 @@ const MAX_WEBHOOK_BODY_BYTES = 1024 * 1024;
 async function readBoundedWebhookBody(request: Request): Promise<Uint8Array> {
   const declaredLength = request.headers.get("content-length");
   if (declaredLength !== null) {
-    if (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > MAX_WEBHOOK_BODY_BYTES) {
+    if (!/^\d+$/.test(declaredLength) || Number(declaredLength) > MAX_WEBHOOK_BODY_BYTES) {
       throw new Error("Webhook body exceeds the configured size limit.");
     }
   }
