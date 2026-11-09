@@ -152,13 +152,13 @@ These are roadmap targets, not permission to create duplicates. Existing aliases
 | Payment methods/history | `/account/payments` | No | Payment provider/method workflow is not implemented. | MISSING |
 | Invoices | `/account/invoices` | No | Invoice generation is not implemented. | MISSING |
 | Loyalty/rewards | `/account/loyalty` | No | Loyalty system is not implemented. | MISSING |
-| Seller store/settings pages | `/seller/store`, `/seller/store/settings` | No | Store setup is embedded in `/seller`; no separate settings route. | INCOMPLETE |
+| Seller store/settings pages | `/seller` (embedded) | Yes | `PATCH /api/seller/stores/[storeId]` updates the store name and draft URL slug with store-scoped authorization and audit logging; active-store URL is locked. | PARTIAL | Dedicated policy, localization and richer profile settings remain future work. |
 | Seller shipping settings | `/seller/shipping` | Yes | `src/app/seller/shipping/page.tsx` → `src/features/seller/shipping-page.tsx`; seller shipping-rate APIs and `StoreShippingRate`. | NEEDS_TESTING |
 | Seller notification settings | `/seller/notifications` | No | Shared `/notifications` route exists; dedicated seller setting surface absent. | MISSING |
 | Seller finance | `/seller/finance` | No | Seller ledger/balances/statements not implemented. | MISSING |
 | Seller commissions | `/seller/commissions` | No | Admin commission rules/snapshots exist; seller view is not implemented. | MISSING |
 | Seller payouts | `/seller/payouts` | No | Payout methods, eligibility, requests and settlement are not implemented. | MISSING |
-| Seller settings | `/seller/settings` | No | No dedicated settings route found. | MISSING |
+| Seller settings | `/seller/settings` | No | Basic store name/URL editing is embedded in `/seller`; dedicated policy, localization and notification settings are not implemented. | PARTIAL |
 | Admin root alias | `/admin` | No | `/admin/dashboard` is the canonical dashboard route; no duplicate page required. | MISSING |
 | Seller detail review | `/admin/sellers/[sellerId]` | No | Seller list and approve API exist; no seller detail page. | MISSING |
 | Store directory/management | `/admin/stores` | No | Store detail API exists but no admin store list page. | MISSING |
