@@ -113,7 +113,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       setBusy(true);
       setError("");
       try {
-        const response = await fetch(`/api/geography/localities/${encodeURIComponent(localityId)}`, { cache: "force-cache" });
+        const response = await fetch(`/api/geography/localities/${encodeURIComponent(localityId)}`, { cache: "no-store" });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error ?? "Unable to load the selected locality.");
         const locality = payload.item as GeoItem & {
@@ -190,9 +190,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     if (!id) return;
     setBusy(true);
     try {
-      const [districtResult, localityResult] = await Promise.all([
-        loadAllLevel("districts", { governorateId: id })
-      ]);
+      const districtResult = await loadAllLevel("districts", { governorateId: id });
       if (request === selectionRequest.current) {
         setDistricts(districtResult.items);
       }
