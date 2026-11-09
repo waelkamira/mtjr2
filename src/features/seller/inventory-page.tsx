@@ -46,9 +46,6 @@ export default function SellerInventoryPage() {
   const [editingWarehouseId, setEditingWarehouseId] = useState("");
   const [editingWarehouseCode, setEditingWarehouseCode] = useState("");
   const [editingWarehouseName, setEditingWarehouseName] = useState("");
-  const [editingWarehouseId, setEditingWarehouseId] = useState("");
-  const [editingWarehouseCode, setEditingWarehouseCode] = useState("");
-  const [editingWarehouseName, setEditingWarehouseName] = useState("");
   const [adjustWarehouseId, setAdjustWarehouseId] = useState("");
   const [adjustVariantId, setAdjustVariantId] = useState("");
   const [quantityDelta, setQuantityDelta] = useState("1");
