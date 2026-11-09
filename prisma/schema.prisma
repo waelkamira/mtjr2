@@ -624,6 +624,9 @@ model Store {
   sellerId                   String
   slug                       String                      @unique @db.VarChar(160)
   name                       String
+  description                String?                     @db.VarChar(2000)
+  logoUrl                    String?                     @db.VarChar(2048)
+  bannerUrl                  String?                     @db.VarChar(2048)
   status                     StoreStatus                 @default(DRAFT)
   shippingContactName        String?                     @db.VarChar(120)
   shippingPhone              String?                     @db.VarChar(25)
