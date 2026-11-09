@@ -117,10 +117,10 @@ export default function SellerSettingsPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 bg-transparent px-4 py-6 sm:px-6 lg:px-8">
-      <header className="overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(135deg,#304b63_0%,#203449_100%)] p-7 text-white shadow-[0_16px_34px_rgba(25,44,63,.2),inset_0_1px_0_rgba(255,255,255,.18)] sm:p-9">
-        <p className="text-xs font-extrabold uppercase tracking-[.2em] text-[#b8d8df]">{translate(locale, "SELLER WORKSPACE", "مساحة عمل البائع")}</p>
+      <header className="overflow-hidden rounded-[30px] border border-white/95 bg-[linear-gradient(125deg,#e4def6_0%,#d7e8e3_52%,#f5e4df_100%)] p-7 text-[#34445a] shadow-[12px_14px_28px_rgba(74,75,112,.12),inset_0_2px_0_white] sm:p-9">
+        <p className="text-xs font-extrabold uppercase tracking-[.2em] text-[#817aa4]">{translate(locale, "SELLER WORKSPACE", "مساحة عمل البائع")}</p>
         <h1 className="mt-3 text-3xl font-black tracking-tight">{translate(locale, "Store settings", "إعدادات المتجر")}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-200/85">{translate(locale, "A single place to reach the settings already connected to your store, delivery operations, notifications, team and account security.", "مكان واحد للوصول إلى الإعدادات المرتبطة فعلياً بمتجرك وعمليات التوصيل والإشعارات والفريق وأمان الحساب.")}</p>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#68758a]">{translate(locale, "A single place to reach the settings already connected to your store, delivery operations, notifications, team and account security.", "مكان واحد للوصول إلى الإعدادات المرتبطة فعلياً بمتجرك وعمليات التوصيل والإشعارات والفريق وأمان الحساب.")}</p>
       </header>
       <section className="rounded-[28px] border border-white/90 bg-[linear-gradient(145deg,#edf3f5,#d5e1e7)] p-6 shadow-[8px_10px_22px_rgba(38,66,84,.1),inset_0_2px_0_white] sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-3">
