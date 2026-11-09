@@ -4058,3 +4058,13 @@ Reviewed AI assistant, cart, catalog discovery/product/taxonomy, checkout quote,
 - Carried forward: the branch authenticated upload abuse limit. Added consumeAuthenticatedActionAttempt to the current persistent throttle service and applied a limit of 20 seller product image uploads per user per 15-minute window to the canonical /api/seller/products/media route. The route returns 429 with Retry-After: 900; throttle-store failure fails closed with 503. The legacy image endpoint remains a delegate to this canonical route.
 
 Commits: d61b568 (authenticated action rate-limit helper), f8bc131 (seller image-upload rate limit).
+
+## 2026-11-09 — Ten-file reconciliation batch 15
+
+Reviewed request security, inventory stock, public stores, seller application, store staff, buyer/seller orders, payment processing/provider registry and returns.
+
+- Main inventory uses cursor pagination and quarantine-aware sellable quantities. Main public store serializers expose current branding and seller-managed public policies while keeping private dispatch data out of public responses.
+- Main seller application captures the complete applicant/business profile and private identity-document reference; branch application service is a reduced legacy contract. Main store staff uses owner-only invitations with selected least-privilege roles, expiry and renewal; the branch's delegated manager pathway relies on a permission/role grant not present in the current canonical role set and was not copied.
+- Main order services include store-scoped cursor pagination, delivery address privacy and safe cancellation when payment attempts are only failed/cancelled. Main payment webhook processing prevents late success events from overwriting refund/dispute states; the branch does not preserve that boundary. Main provider registry also wires the configured Stripe adapter.
+- Main returns service includes refund state/amount summaries; branch omits this current buyer-facing data.
+- No additional runtime code copied from this batch.
