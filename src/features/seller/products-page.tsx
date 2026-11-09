@@ -774,13 +774,13 @@ export default function SellerProductsPage() {
       </div>}
     </div>
     {imagePreview && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#201d31]/80 p-4 backdrop-blur-md" onClick={() => setImagePreview(null)}>
-      <section role="dialog" aria-modal="true" aria-label={translate(locale, "Image preview", "معاينة الصورة")} onClick={(event) => event.stopPropagation()} className="relative flex max-h-[94vh] w-full max-w-5xl flex-col items-center gap-3 rounded-[2rem] border border-white/30 bg-[linear-gradient(145deg,#f4f0fb,#e4edf0)] p-3 shadow-[0_24px_70px_rgba(12,10,24,.42),inset_0_2px_0_rgba(255,255,255,.9)] sm:p-5">
+      <section role="dialog" aria-modal="true" aria-label={translate(locale, "Image preview", "معاينة الصورة")} onClick={(event) => event.stopPropagation()} className="relative flex max-h-[94vh] w-full max-w-5xl flex-col items-center gap-3 rounded-[2rem] border border-white/30 bg-[linear-gradient(145deg,#edf5f7,#d5e4e9)] p-3 shadow-[0_24px_70px_rgba(12,10,24,.42),inset_0_2px_0_rgba(255,255,255,.9)] sm:p-5">
         <div className="flex w-full items-center justify-between gap-3 px-1">
-          <p className="min-w-0 truncate text-sm font-extrabold text-[#49445f]">{imagePreview.alt}</p>
-          <button type="button" autoFocus onClick={() => setImagePreview(null)} className="grid size-10 shrink-0 place-items-center rounded-full border border-white bg-white/80 text-xl font-bold text-[#625c79] shadow-[0_4px_10px_rgba(65,59,86,.12)]" aria-label={translate(locale, "Close preview", "إغلاق المعاينة")}>×</button>
+          <p className="min-w-0 truncate text-sm font-extrabold text-[#2d4a60]">{imagePreview.alt}</p>
+          <button type="button" autoFocus onClick={() => setImagePreview(null)} className="grid size-10 shrink-0 place-items-center rounded-full border border-white bg-white/80 text-xl font-bold text-[#42677b] shadow-[0_4px_10px_rgba(65,59,86,.12)]" aria-label={translate(locale, "Close preview", "إغلاق المعاينة")}>×</button>
         </div>
         <img src={imagePreview.url} alt={imagePreview.alt} className="max-h-[calc(94vh-90px)] max-w-full rounded-2xl object-contain shadow-[0_12px_30px_rgba(36,31,54,.18)]" />
-        <p className="text-[11px] font-medium text-[#77738b]">{translate(locale, "Click outside the image or press Escape to close.", "انقر خارج الصورة أو اضغط Escape للإغلاق.")}</p>
+        <p className="text-[11px] font-medium text-[#718899]">{translate(locale, "Click outside the image or press Escape to close.", "انقر خارج الصورة أو اضغط Escape للإغلاق.")}</p>
       </section>
     </div>}
   </main>
