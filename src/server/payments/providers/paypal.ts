@@ -1,6 +1,7 @@
 import "server-only";
 
 import { env } from "@/lib/env";
+import { PaymentProviderConfigurationError, PaymentProviderUnavailableError, PaymentWebhookSignatureError } from "./types";
 import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
 
 type PayPalLinks = { rel?: string; href?: string };
@@ -40,7 +41,7 @@ function configuration(credentials?: Record<string, string>, environment?: "TEST
   const webhookId = (credentials?.webhookId ?? env.PAYPAL_WEBHOOK_ID)?.trim();
   const mode = environment ? (environment === "LIVE" ? "live" : "sandbox") : env.PAYPAL_MODE;
   if (!clientId || !clientSecret || !webhookId) {
-    throw new Error("PayPal is not fully configured. Set PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET and PAYPAL_WEBHOOK_ID.");
+    throw new PaymentProviderConfigurationError("PayPal is not fully configured. Set server-side PayPal credentials and webhook ID.");
   }
   return {
     clientId,
@@ -53,19 +54,27 @@ function configuration(credentials?: Record<string, string>, environment?: "TEST
 async function accessToken(credentials?: Record<string, string>, environment?: "TEST" | "LIVE") {
   const config = configuration(credentials, environment);
   const basicAuth = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64");
-  const response = await fetch(`${config.baseUrl}/v1/oauth2/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${basicAuth}`,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: "grant_type=client_credentials",
-    cache: "no-store",
-    signal: AbortSignal.timeout(15_000)
-  });
-  const result = await response.json() as { access_token?: string };
-  if (!response.ok || !result.access_token) {
-    throw new Error("PayPal authentication failed. Check the server-side API credentials and mode.");
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}/v1/oauth2/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basicAuth}`,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "grant_type=client_credentials",
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000)
+    });
+  } catch {
+    throw new PaymentProviderUnavailableError("PayPal authentication service is temporarily unavailable.");
+  }
+  const result = await response.json().catch(() => null) as { access_token?: string } | null;
+  if (!response.ok || !result?.access_token) {
+    if (response.status === 429 || response.status >= 500) {
+      throw new PaymentProviderUnavailableError("PayPal authentication service is temporarily unavailable.");
+    }
+    throw new PaymentProviderConfigurationError("PayPal rejected the server-side API credentials or environment.");
   }
   return { token: result.access_token, config };
 }
@@ -82,15 +91,20 @@ async function paypalRequest<T>(
   headers.set("Authorization", `Bearer ${token}`);
   headers.set("Content-Type", "application/json");
   if (requestId) headers.set("PayPal-Request-Id", requestId);
-  const response = await fetch(`${config.baseUrl}${path}`, {
-    ...init,
-    headers,
-    cache: "no-store",
-    signal: AbortSignal.timeout(20_000)
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${path}`, {
+      ...init,
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(20_000)
+    });
+  } catch {
+    throw new PaymentProviderUnavailableError("PayPal API is temporarily unavailable.");
+  }
   const result = await response.json().catch(() => null) as (T & { name?: string }) | null;
   if (!response.ok || !result) {
-    throw new Error(`PayPal request failed (${response.status}). Check the provider configuration and transaction status.`);
+    throw new PaymentProviderUnavailableError(`PayPal API request could not be completed (HTTP ${response.status}).`);
   }
   return result;
 }
@@ -261,7 +275,7 @@ async function verifyWebhook(request: Request, credentials?: Record<string, stri
     }, undefined, credentials, environment
   );
   if (verification.verification_status !== "SUCCESS") {
-    throw new Error("PayPal webhook signature verification failed.");
+    throw new PaymentWebhookSignatureError("PayPal webhook signature verification failed.");
   }
 
   const resource = event.resource;
