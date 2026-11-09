@@ -1,4 +1,5 @@
 import { safeReturnPath } from "@/lib/safe-return-path";
+import { getAuthReturnPath } from "@/lib/auth-return";
 
 type CurrentLocation = {
   pathname: string;
@@ -39,6 +40,7 @@ export function getCurrentReturnPath(location: CurrentLocation): string {
 
 export function currentReturnPath(): string {
   if (typeof window === "undefined") return "/";
+  if (authPaths.has(window.location.pathname)) return getAuthReturnPath("/");
   return getCurrentReturnPath({
     pathname: window.location.pathname,
     search: window.location.search,
