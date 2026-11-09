@@ -80,6 +80,11 @@ describe("parseEnvironment", () => {
     expect(() => parseEnvironment({ ...validEnvironment, PUBLIC_REGISTRATION_ENABLED: "yes" })).toThrow(/PUBLIC_REGISTRATION_ENABLED/);
   });
 
+
+  it("accepts an optional contact email and rejects an invalid one", () => {
+    expect(parseEnvironment({ ...validEnvironment, CONTACT_EMAIL: "help@example.com" }).CONTACT_EMAIL).toBe("help@example.com");
+    expect(() => parseEnvironment({ ...validEnvironment, CONTACT_EMAIL: "not-an-email" })).toThrow(/CONTACT_EMAIL/);
+  });
   it("keeps the AI assistant disabled by default and accepts a server-only Groq key", () => {
     expect(parseEnvironment(validEnvironment).AI_ASSISTANT_ENABLED).toBe("false");
     expect(parseEnvironment({ ...validEnvironment, GROQ_API_KEY: "test-secret" })).toMatchObject({
