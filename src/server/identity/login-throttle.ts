@@ -270,3 +270,19 @@ export async function consumeSearchAttempt(
     blocked: await consumeBucket(tx, key, 300, now)
   }));
 }
+
+/** Persistent per-user budget for authenticated, resource-intensive actions. */
+export async function consumeAuthenticatedActionAttempt(
+  userIdInput: string,
+  scopeInput: string,
+  limit: number,
+  now = new Date()
+): Promise<boolean> {
+  const userId = userIdInput.trim();
+  const scope = scopeInput.trim();
+  if (!userId || !scope || !Number.isInteger(limit) || limit < 1) {
+    throw new Error("A user, rate-limit scope, and positive limit are required.");
+  }
+  const keyHash = digestSubject("authenticated-action", JSON.stringify([scope, userId]));
+  return prisma.$transaction((tx) => consumeBucket(tx, keyHash, limit, now));
+}
