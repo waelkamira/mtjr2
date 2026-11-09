@@ -648,6 +648,7 @@ model Store {
   seller                     Seller                      @relation(fields: [sellerId], references: [id], onDelete: Restrict)
   markets                    StoreMarket[]
   staff                      SellerStaff[]
+  mediaAssets                StoreMediaAsset[]
   products                   Product[]
   reviews                    StoreReview[]
   warehouses                 Warehouse[]
@@ -666,6 +667,21 @@ model Store {
   @@unique([sellerId])
   @@index([sellerId, status])
   @@index([status, createdAt])
+}
+
+
+model StoreMediaAsset {
+  id         String   @id @default(cuid())
+  storeId    String
+  url        String   @db.VarChar(2048)
+  storageKey String?  @unique @db.VarChar(512)
+  mimeType   String?  @db.VarChar(100)
+  width      Int?
+  height     Int?
+  createdAt  DateTime @default(now())
+  store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, createdAt])
 }
 
 model StoreMarket {
