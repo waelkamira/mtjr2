@@ -42,7 +42,6 @@ const createSchema = z.object({
     value: z.unknown()
   }).strict()).max(100).default([]),
   localityId: z.string().trim().min(1).optional(),
-  neighborhoodId: z.string().trim().min(1).optional(),
   neighborhood: z.string().trim().max(120).optional(),
   latitude: z.number().finite().min(-90).max(90).optional(),
   longitude: z.number().finite().min(-180).max(180).optional(),
@@ -152,16 +151,6 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       ? await tx.syriaLocality.findUnique({ where: { id: data.localityId }, select: { id: true, governorateId: true } })
       : null;
     if (data.localityId && !selectedLocality) throw new Error("The selected Syrian locality is unavailable.");
-    if (data.neighborhoodId) {
-      if (!selectedLocality) throw new Error("Choose the city or locality before selecting a neighbourhood.");
-      const selectedNeighborhood = await tx.syriaNeighborhood.findUnique({
-        where: { id: data.neighborhoodId },
-        select: { id: true, governorateId: true }
-      });
-      if (!selectedNeighborhood || selectedNeighborhood.governorateId !== selectedLocality.governorateId) {
-        throw new Error("The selected neighbourhood does not belong to the selected governorate.");
-      }
-    }
     const categoryAttributeRows = categoryIds.length
       ? await tx.categoryAttribute.findMany({
           where: { categoryId: { in: categoryIds } },
@@ -233,7 +222,6 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         status: CatalogEntityStatus.DRAFT,
         approvalStatus: ProductApprovalStatus.PENDING,
         localityId: data.localityId,
-        neighborhoodId: data.neighborhoodId,
         neighborhood: data.neighborhood,
         latitude: data.latitude,
         longitude: data.longitude,
@@ -364,7 +352,6 @@ const updateProductSchema = z.object({
   city: z.string().trim().min(1).max(120).nullable().optional(),
   district: z.string().trim().max(120).nullable().optional(),
   localityId: z.string().trim().min(1).nullable().optional(),
-  neighborhoodId: z.string().trim().min(1).nullable().optional(),
   neighborhood: z.string().trim().max(120).nullable().optional(),
   contactPhone: z.string().trim().min(6).max(40).nullable().optional(),
   videoUrl: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "Video links must use HTTPS.").nullable().optional(),
@@ -409,7 +396,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhoodId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, variants: { where: { isActive: true }, select: { id: true } }, store: { select: { status: true, seller: { select: { ownerId: true, status: true } }, markets: { where: { isEnabled: true, market: { status: "ACTIVE", country: { isActive: true } } }, select: { marketId: true } } } } }
+      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, variants: { where: { isActive: true }, select: { id: true } }, store: { select: { status: true, seller: { select: { ownerId: true, status: true } }, markets: { where: { isEnabled: true, market: { status: "ACTIVE", country: { isActive: true } } }, select: { marketId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (current.store.seller.status !== "ACTIVE" || current.store.status === "SUSPENDED" || current.store.status === "CLOSED") {
@@ -453,25 +440,10 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       }
     }
     const nextLocalityId = data.localityId === undefined ? current.localityId : data.localityId;
-    const localityChanged = data.localityId !== undefined && data.localityId !== current.localityId;
-    const neighborhoodNameChanged = data.neighborhood !== undefined && data.neighborhood !== current.neighborhood;
-    const nextNeighborhoodId = data.neighborhoodId === undefined
-      ? localityChanged || neighborhoodNameChanged ? null : current.neighborhoodId
-      : data.neighborhoodId;
     const selectedLocality = nextLocalityId
       ? await tx.syriaLocality.findUnique({ where: { id: nextLocalityId }, select: { id: true, governorateId: true } })
       : null;
     if (nextLocalityId && !selectedLocality) throw new Error("The selected Syrian locality is unavailable.");
-    if (nextNeighborhoodId) {
-      if (!selectedLocality) throw new Error("Choose the city or locality before selecting a neighbourhood.");
-      const selectedNeighborhood = await tx.syriaNeighborhood.findUnique({
-        where: { id: nextNeighborhoodId },
-        select: { id: true, governorateId: true }
-      });
-      if (!selectedNeighborhood || selectedNeighborhood.governorateId !== selectedLocality.governorateId) {
-        throw new Error("The selected neighbourhood does not belong to the selected governorate.");
-      }
-    }
     if (data.brandId) {
       const brand = await tx.brand.findFirst({ where: { id: data.brandId, status: CatalogEntityStatus.ACTIVE }, select: { id: true } });
       if (!brand) throw new Error("The selected brand is not active.");
@@ -481,7 +453,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       const count = await tx.category.count({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE } });
       if (count !== categoryIds.length) throw new Error("Every selected category must be active.");
     }
-    if (data.propertyDetails !== undefined || data.latitude !== undefined || data.longitude !== undefined || data.localityId !== undefined || data.neighborhoodId !== undefined || categoryIds !== undefined) {
+    if (data.propertyDetails !== undefined || data.latitude !== undefined || data.longitude !== undefined || data.localityId !== undefined || categoryIds !== undefined) {
       const selectedCategories = categoryIds === undefined
         ? current.categories.map((entry) => entry.category)
         : await tx.category.findMany({ where: { id: { in: categoryIds }, status: CatalogEntityStatus.ACTIVE }, select: { id: true, slug: true, parentId: true } });
@@ -507,7 +479,6 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
         ...(data.city !== undefined ? { city: data.city } : {}),
         ...(data.district !== undefined ? { district: data.district } : {}),
         ...(data.localityId !== undefined ? { localityId: data.localityId } : {}),
-        ...(data.neighborhoodId !== undefined ? { neighborhoodId: data.neighborhoodId } : {}),
         ...(data.neighborhood !== undefined ? { neighborhood: data.neighborhood } : {}),
         ...(data.contactPhone !== undefined ? { contactPhone: data.contactPhone } : {}),
         ...(data.videoUrl !== undefined ? { videoUrl: data.videoUrl } : {}),
@@ -655,7 +626,7 @@ export async function listSellerStoreProducts(storeIdInput: string, now = new Da
     select: {
       id: true, productNumber: true, name: true, slug: true, description: true,
       city: true, district: true, contactPhone: true, videoUrl: true,
-      localityId: true, neighborhoodId: true, neighborhood: true, latitude: true, longitude: true,
+      localityId: true, neighborhood: true, latitude: true, longitude: true,
       propertyDetails: { select: { propertyType: true, listingType: true, bedrooms: true, bathrooms: true, floorArea: true } },
       brand: { select: { id: true, name: true } },
       categories: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], select: { category: { select: { id: true, name: true, slug: true } } } },
