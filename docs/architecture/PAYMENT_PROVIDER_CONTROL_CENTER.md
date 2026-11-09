@@ -128,7 +128,7 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 - Added server-side create, metadata/credential update, non-charge connection verification, enable/disable state changes and soft-archive operations. All changes create AuditLog entries without secret values. Archive blocks while the provider has in-flight payment attempts or unprocessed webhook events.
 - Added the Super Admin page at `/admin/payment-providers`, bilingual controls, navigation entry, add/edit forms, masked credential display, verification, enable/disable and archive actions.
 - Runtime binding is now implemented in the second tranche: active database configurations drive new checkout selection; Payment records retain encrypted provider credential snapshots and historical webhook/PayPal return handlers resolve those snapshots. Legacy payments without snapshots retain the environment fallback.
-- Encryption master-key rotation with multiple simultaneously readable key versions remains outstanding. The current snapshot format is versioned but the runtime currently supports key version 1 only; do not rotate PAYMENT_PROVIDER_ENCRYPTION_KEY until a key-rotation migration is implemented. Payment-to-config snapshots, country/currency filtering and historical webhook routing are implemented for new payments.
+- At the time of the initial runtime tranche, master-key rotation was outstanding; it is now implemented as a multi-version key ring with an audited batch re-encryption action. Payment-to-config snapshots, country/currency filtering and historical webhook routing are implemented for new payments.
 
 
 ## Provider runtime binding — implementation tranche 2
@@ -138,7 +138,7 @@ The UI must have loading, empty, validation, permission-denied, conflict, provid
 - New checkout selection enforces the configured currency allowlist and country allowlist. If a country allowlist is present but the order has no known country, the provider is rejected.
 - The generic webhook route finds the payment by provider reference or provider metadata, then verifies with that payment's snapshot. The PayPal return/capture route also uses the snapshot. Legacy payments without snapshots continue to use the legacy environment configuration.
 - Disabling a provider blocks new attempts while an existing attempt with a stored snapshot can still resume and its webhook can still be verified. Public provider discovery is no-store to avoid stale enabled-provider lists.
-- Remaining: multi-key encryption master-key rotation (only key version 1 is currently supported), payment-method-level enforcement beyond provider/country/currency selection, database migration application, and owner-side sandbox/live journey verification. No tests or builds were run in this tranche.
+- Remaining: database migration application and owner-side sandbox/live journey verification. No tests or builds were run in this tranche.
 
 
 ## Versioned credential encryption and rotation
