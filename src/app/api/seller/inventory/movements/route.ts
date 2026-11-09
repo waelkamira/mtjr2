@@ -8,9 +8,10 @@ export async function GET(request: Request): Promise<Response> {
   const params = new URL(request.url).searchParams;
   const storeId = params.get("storeId");
   const limit = Number(params.get("limit") ?? "100");
+  const cursor = params.get("cursor") ?? undefined;
   if (!storeId) return Response.json({ error: "storeId is required." }, { status: 400 });
   try {
-    return Response.json({ items: await listStoreInventoryMovements(storeId, new Date(), limit) }, {
+    return Response.json(await listStoreInventoryMovements(storeId, new Date(), { limit, cursor }), {
       headers: { "Cache-Control": "private, no-store" }
     });
   } catch (error) {
