@@ -2163,6 +2163,7 @@ model PaymentProviderConfig {
   createdAt               DateTime                     @default(now())
   updatedAt               DateTime                     @updatedAt
   archivedAt              DateTime?
+  payments                Payment[]
 
   @@unique([providerKey, environment])
   @@index([status, sortOrder])
@@ -2173,6 +2174,11 @@ model Payment {
   id                  String                @id @default(cuid())
   orderId             String
   provider            String                @db.VarChar(64)
+  providerConfigId    String?
+  providerEnvironment PaymentProviderEnvironment?
+  encryptedProviderCredentials String?      @db.Text
+  providerCredentialsKeyVersion Int?
+  providerConfig      PaymentProviderConfig? @relation(fields: [providerConfigId], references: [id], onDelete: Restrict)
   status              PaymentStatus         @default(INITIATING)
   amountMinor         BigInt
   currencyCode        String                @db.Char(3)
@@ -2194,6 +2200,7 @@ model Payment {
   @@unique([provider, providerReference])
   @@index([orderId, createdAt])
   @@index([status, createdAt])
+  @@index([providerConfigId, createdAt])
 }
 
 model LedgerAccount {
