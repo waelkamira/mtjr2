@@ -3475,3 +3475,11 @@ Escaped the apostrophe in `src/features/checkout/checkout-shipping-options.tsx` 
 - Where active markets and variants exist, every price remains mandatory and fully validated.
 - Commit: `8454af8` — `fix(seller): preserve draft metadata edits without active markets`.
 - Source-level fallback review only; no tests or builds were run.
+
+## 2026-11-09 — Seller commission statement accuracy
+
+- Commission summary totals now aggregate every recorded commission snapshot for the selected store, grouped independently by currency. The transaction table remains intentionally capped at the latest 100 detail rows.
+- Commission amount rendering now splits integer minor units with BigInt and formats localized currency parts without converting monetary values to floating-point numbers.
+- The UI explicitly labels totals as all-time recorded snapshots and repeats that these are not seller net balances or withdrawable funds; refunds, adjustments, holds and payouts still require a real seller accounting ledger.
+- Commits: `a2b4e41` (precision-safe currency formatting), `3e25c8e` (all-time grouped totals), `3d977a0` (truthful finance labels).
+- Source-level review only. No tests, build, browser, database, CI or deployment commands were run.
