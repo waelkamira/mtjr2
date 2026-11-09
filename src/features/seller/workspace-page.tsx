@@ -697,7 +697,7 @@ export default function SellerWorkspacePage() {
                 </form>
               )}
             </section>
-            <section className="rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_12px_28px_rgba(40,65,84,.11),inset_0_1px_0_white]">
+            <section id="store-management" className="scroll-mt-28 rounded-[1.75rem] border border-white/80 bg-[linear-gradient(145deg,#f7fbfc,#e4edf1)] p-6 shadow-[0_12px_28px_rgba(40,65,84,.11),inset_0_1px_0_white]">
               <h2 className="text-lg font-extrabold tracking-tight text-[#2d4a60]">{translate(locale, "Your stores", "متاجرك")}</h2>
               {!workspace.stores.length ? <p className="mt-4 rounded-xl bg-[var(--color-ivory-100)] p-5 text-sm text-[var(--muted)]">{translate(locale, "No stores have been created yet.", "لم يتم إنشاء أي متاجر بعد.")}</p> : (
                 <>
