@@ -4399,3 +4399,11 @@ The platform account policy is now explicit: email verification is not required 
 - Added `Refund.providerAttempt` with migration `20261110150000_provider_refund_attempts` and a positive-value database check.
 - A provider GET that confirms FAILED clears the old provider refund reference, resets the attempt timestamp and increments the attempt counter; a new idempotency key is used only after that confirmed failure.
 - Ambiguous network failures do not increment the counter and can only retry with the same key inside the documented retention window.
+
+## 2026-11-10 — Platform-wide responsive layout remediation (source-level)
+- Audited shared public, seller and admin shells plus the route inventory and searched for common fixed-width, grid, table and overflow patterns.
+- Updated admin mobile navigation to wrap destinations in a bounded vertical scroller instead of a single long horizontal strip.
+- Updated seller mobile navigation to wrap destinations and scroll vertically; removed the seller topbar's rigid title minimum width.
+- Added global viewport/content containment, responsive form-control sizing, bounded data-table scrolling, phone-width seller/admin grid collapse, and viewport-constrained dialogs.
+- Added docs/design/RESPONSIVE_AUDIT.md with the route groups, viewport/RTL/LTR acceptance matrix, remaining checks and explicit verification boundary.
+- Browser screenshot sweep, all-route interaction verification, 200% zoom review, typecheck, tests and build have not been run. Do not mark the full responsive audit complete until those checks are recorded.
