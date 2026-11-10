@@ -4393,3 +4393,9 @@ The platform account policy is now explicit: email verification is not required 
 - Added `Refund.providerSubmittedAt` and migration `20261110140000_provider_refund_retry_window` to persist the first provider submission time.
 - Automatic retries stop before provider idempotency records may expire: 23 hours for Stripe (documented pruning after at least 24 hours) and 44 days for PayPal (refund request ID stored up to 45 days). After the window, the operator must reconcile the provider dashboard and use the external-confirmation path; no new automatic request is sent.
 - Provider-failed records with a returned provider refund ID are reconciled through provider GET status instead of issuing a second refund.
+
+
+## 2026-11-10 — Confirmed provider failure and retry attempts
+- Added `Refund.providerAttempt` with migration `20261110150000_provider_refund_attempts` and a positive-value database check.
+- A provider GET that confirms FAILED clears the old provider refund reference, resets the attempt timestamp and increments the attempt counter; a new idempotency key is used only after that confirmed failure.
+- Ambiguous network failures do not increment the counter and can only retry with the same key inside the documented retention window.
