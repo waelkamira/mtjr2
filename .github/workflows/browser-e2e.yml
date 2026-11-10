@@ -35,6 +35,8 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_e2e_ci?schema=public
       DEMO_DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_e2e_ci?schema=public
       AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
+      PAYMENT_PROVIDER_ENCRYPTION_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION: "1"
       APP_URL: http://127.0.0.1:3000
       NODE_ENV: development
       TRUSTED_PROXY_IP_HEADER: cf-connecting-ip
