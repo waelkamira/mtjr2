@@ -37,13 +37,13 @@ describe("seller store Excel export", () => {
       analytics: {
         range: { from: "2026-11-01", to: "2026-11-10", days: 10 },
         metrics: {
-          totalOrders: 0, grossSalesByCurrency: [], activeProducts: 0, pendingProducts: 0,
+          totalOrders: 0, grossSalesByCurrency: [{ currencyCode: "EUR", amountMinor: "12345", orderCount: 1, minorUnit: 2, currencyName: "Euro" }], activeProducts: 0, pendingProducts: 0,
           averageRating: null, reviewCount: 0, requestedReturns: 0
         },
-        orderStatuses: [], dailySales: [], topProducts: []
+        orderStatuses: [], dailySales: [{ day: "2026-11-10", currencyCode: "EUR", amountMinor: "12345", orderCount: 1 }], topProducts: []
       },
       inventory: [],
-      orders: []
+      orders: [{ status: "DELIVERED", store: { name: "A&B <Market>" }, order: { orderNumber: "M-1", placedAt: "2026-11-10T10:00:00.000Z", currencyCode: "EUR", currency: { minorUnit: 2 } }, totalMinor: "2500" }]
     });
 
     expect(anchor.click).toHaveBeenCalledOnce();
@@ -59,6 +59,8 @@ describe("seller store Excel export", () => {
     expect(xml).toContain('ss:Name="Inventory"');
     expect(xml).toContain('ss:Name="Recent orders"');
     expect(xml).toContain("A&amp;B &lt;Market&gt;");
+    expect(xml).toContain("123.45");
+    expect(xml).toContain("25.00");
     expect(xml).not.toContain(String.fromCharCode(1));
   });
 });
