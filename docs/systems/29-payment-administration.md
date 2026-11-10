@@ -221,3 +221,5 @@ The earlier manual-only boundary above is historical. The current source now sup
 - Provider retry retention: the first submission timestamp is stored. Automatic retry is blocked after a conservative 23-hour Stripe window and 44-day PayPal window; after expiry finance must reconcile the provider dashboard manually. This prevents replaying a deterministic key after the provider may have pruned it.
 
 - Retry attempts: Refund.providerAttempt increments only after the provider's canonical refund resource confirms a failed attempt; ambiguous requests retry only with the same idempotency key and within the persisted retention window. A returned provider reference is always refreshed before a new attempt is permitted.
+
+- Retry-attempt state: `Refund.providerAttempt` is incremented only after a provider GET confirms the previous refund failed; the next attempt gets a new idempotency key. Network-ambiguous attempts retain the original key and timestamp. Migration `20261110150000_provider_refund_attempts` adds the counter and positive-value database constraint.
