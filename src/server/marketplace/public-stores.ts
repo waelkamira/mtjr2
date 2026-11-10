@@ -1,0 +1,64 @@
+import "server-only";
+
+import { CatalogEntityStatus, ProductApprovalStatus, StoreStatus, SellerStatus } from "@prisma/client";
+import { z } from "zod";
+import { prisma } from "@/lib/db/prisma";
+
+export async function listDiscoverableStores(input: unknown = {}) {
+  const query = z.object({
+    page: z.coerce.number().int().min(1).max(1000).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(24),
+    q: z.string().trim().max(120).optional()
+  }).strict().parse(input);
+  const where = {
+    status: StoreStatus.ACTIVE,
+    seller: { status: SellerStatus.ACTIVE },
+    products: { some: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } },
+    ...(query.q ? { OR: [
+      { name: { contains: query.q, mode: "insensitive" as const } },
+      { slug: { contains: query.q, mode: "insensitive" as const } },
+      { seller: { displayName: { contains: query.q, mode: "insensitive" as const } } }
+
+    ] } : {})
+  };
+  const [items, total] = await Promise.all([
+    prisma.store.findMany({
+      where, orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+      skip: (query.page - 1) * query.limit, take: query.limit,
+      select: {
+        id: true, slug: true, name: true, description: true, logoUrl: true, bannerUrl: true,
+        seller: { select: { displayName: true } },
+        _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } } } }
+      }
+
+    }),
+    prisma.store.count({ where })
+  ]);
+  return {
+    items: items.map(({ _count, seller, ...store }) => ({
+      ...store, sellerDisplayName: seller.displayName, productCount: _count.products
+    })),
+
+    pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) }
+  };
+}
+
+export async function getDiscoverableStoreBySlug(slug: string) {
+  const key = z.string().trim().min(1).max(160).parse(slug);
+  const store = await prisma.store.findFirst({
+    where: { slug: key, status: StoreStatus.ACTIVE, seller: { status: SellerStatus.ACTIVE } },
+    select: {
+      id: true, slug: true, name: true, description: true, publicPhone: true, publicAddress: true, logoUrl: true, bannerUrl: true, shippingPolicy: true, returnsPolicy: true, privacyPolicy: true, termsOfSale: true, createdAt: true,
+      seller: { select: { displayName: true } },
+      _count: { select: { products: { where: { status: CatalogEntityStatus.ACTIVE, approvalStatus: ProductApprovalStatus.APPROVED } } } }
+    }
+  });
+  return store ? {
+    id: store.id, slug: store.slug, name: store.name,
+    description: store.description, publicPhone: store.publicPhone, publicAddress: store.publicAddress, logoUrl: store.logoUrl, bannerUrl: store.bannerUrl,
+    shippingPolicy: store.shippingPolicy, returnsPolicy: store.returnsPolicy, privacyPolicy: store.privacyPolicy, termsOfSale: store.termsOfSale,
+    sellerDisplayName: store.seller.displayName,
+    productCount: store._count.products, createdAt: store.createdAt
+  } : null;
+
+}

@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "fix/**", "feat/**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: mtjr2_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d mtjr2_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_ci?schema=public
+      AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
+      APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx prisma validate
+      - run: npx prisma migrate deploy
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Generate API route security inventory
+        if: always()
+        run: node scripts/audit-api-routes.cjs
+      - name: Generate API authorization boundary inventory
+        if: always()
+        run: node scripts/audit-api-authorization.cjs
+      - name: Generate UI mutation feedback inventory
+        if: always()
+        run: node scripts/audit-ui-mutations.cjs
+      - name: Upload route and mutation audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-and-ui-audit-reports
+          path: |
+            api-route-security-report.md
+            api-authorization-boundary-report.md
+            ui-mutation-toast-report.md

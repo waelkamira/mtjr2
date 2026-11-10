@@ -1,0 +1,50 @@
+{
+  "name": "mtjr2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.cjs",
+    "db:studio": "prisma studio",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:watch": "vitest",
+    "db:bootstrap-super-admin": "node scripts/bootstrap-super-admin.cjs",
+    "db:sync-syria-geography": "node scripts/sync-syria-geography.mjs",
+    "db:seed-akaar-attributes": "node scripts/seed-akaar-category-attributes.mjs",
+    "prebuild": "prisma generate",
+    "db:seed:all": "npm run db:seed && npm run db:sync-syria-geography"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.0",
+    "next": "16.4.2",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "sonner": "^2.0.8",
+    "zod": "^4.1.0",
+    "leaflet": "1.9.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.25.0",
+    "eslint-config-next": "16.4.2",
+    "prisma": "6.19.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

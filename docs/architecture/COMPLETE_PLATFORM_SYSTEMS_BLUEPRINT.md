@@ -1,0 +1,690 @@
+# Complete Platform Systems Blueprint
+
+**Project:** Mtjr2 — Global Multi-Vendor Marketplace  
+**Status:** Functional target specification for the greenfield implementation  
+**Canonical schema target:** `prisma/schema.prisma` (new implementation; schema is being designed)  
+**Companion audit:** `docs/PROJECT_AUDIT.md`
+**Companion page inventory:** `docs/architecture/PLATFORM_PAGE_INVENTORY.md` (required user-facing and operational routes; route presence is not proof of workflow completion)  
+**Page-to-system placement map:** `docs/architecture/PLATFORM_PAGE_SYSTEM_MAP.md` (canonical audience, page ownership, navigation and delivery-order map)  
+**Model map:** `docs/architecture/PRISMA_MODEL_USAGE_MAP.md`  
+**End-to-end delivery standard:** `docs/implementation/END_TO_END_JOURNEY_STANDARD.md`  
+**Imported as baseline:** 2026-11-03
+
+> This document is the functional blueprint for the 49 platform systems. It defines what each system must do, the expected screens, the canonical data models, the API surface, and the implementation state evidenced by the current repository audit. It is not a claim that every listed feature already works.
+
+**Global completeness extension:** [`GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md`](GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md) identifies additional mandatory global capabilities (KYB, product compliance, customs/landed cost, tax determination, payment orchestration, settlement, privacy, fraud, communications and reliability) and defines page-level acceptance and launch gates. The 49-system inventory remains the canonical numbered capability list; do not interpret the count as proof that these global concerns are fully implemented.
+
+## 1. Rules for using this blueprint
+
+
+### Mandatory end-to-end acceptance for every system and control
+
+The action-level completion rule applies to **all 49 systems** and every visible button, link, form, filter, menu action, bulk action, page transition, API mutation, scheduled/background operation, and admin action. The canonical artifacts are:
+
+- `docs/implementation/END_TO_END_JOURNEY_STANDARD.md` — required implementation and verification contract.
+- `docs/implementation/END_TO_END_JOURNEY_MATRIX.md` — one audit ledger row per system plus action-trace evidence requirements.
+- `docs/implementation/PAGE_ROUTE_REGISTRY.md` — actual routes and route-level evidence.
+- `docs/architecture/PRISMA_MODEL_USAGE_MAP.md` — schema ownership and impact analysis.
+
+No system may be called complete because its UI, API, Prisma model, or migration exists. Each exposed action must be traced from user interaction through client handler, API validation, session/permission/scope checks, domain service, transaction and persistence (or a documented no-schema-change decision), audit/event/provider/job behavior, and server-confirmed final UI state. Test meaningful failure, retry, duplicate, stale/concurrent, and cross-user/scope cases. Every claim must cite evidence from the exact commit being reviewed.
+
+**No dead controls:** a visible action must work end to end or be removed/disabled and clearly labelled unavailable. Never show fake success, fake live data, or provider/payment/refund/payout completion that did not occur. A system remains incomplete while an active user-facing action is known to be nonfunctional. Provider/policy/market decisions must block the dependent action safely, not be bypassed with mocks.
+
+The 49-system matrix starts with all systems **Not audited** until each has been individually traced and supported by evidence. This is deliberate: the blueprint is a target scope, not a completion report.
+
+1. **Deliver vertical user journeys, not isolated pages.** Every visible button, link, form, menu action and service-triggered operation must map to an explicit outcome and be traced from the user's click through frontend, API, validation/auth, domain service, repository, Prisma/database, response and persisted UI state.
+2. **Do not add a Prisma model/table just to create a page.** First identify the business capability, user journey, owning domain, API/service, and existing model/relation that will use it.
+3. Treat `prisma/schema.prisma` as the canonical database contract. Do not add legacy compatibility fields merely to silence old queries.
+4. Before proposing a schema change, inspect `docs/architecture/PRISMA_MODEL_USAGE_MAP.md` and answer: what exact business fact/state/relation is missing, why existing models/relations cannot support it, which service/API will write and read it, who owns it, and what migration/test proves it. Document the schema decision; prefer additive, forward-safe migrations.
+5. A page, route, model, migration, button, mock response, or passing unit test alone is not proof of a working feature. A system is **Complete** only after its agreed end-to-end journey, authorization, persistence, validation, relevant failure states, and focused verification pass.
+6. Implement in dependency order. Preserve user changes and existing customer-facing layout unless a scoped redesign is explicitly approved.
+7. Keep the real-estate/property and booking domain separate from product commerce while allowing shared identity and platform services.
+8. Financial, stock, order, refund, payout, and webhook operations require database transactions, idempotency, auditability, and concurrency-safe state transitions.
+9. Keep business logic out of UI components. Target flow: UI → page/component action → API route → authentication + validation → domain service/use case → repository → Prisma → PostgreSQL → safe response and refreshed UI.
+10. Every interactive action must implement relevant loading, disabled/double-submit, validation, success, empty, forbidden, not-found, stale/conflict, network and server-error behavior. Test relevant states and security boundaries, not every trivial helper branch.
+11. Resolve identity, ownership and delegated permission on the server. Never trust a client-supplied user/store/tenant ID as proof of ownership; enforce exact resource scope and reject cross-user/store/tenant access.
+12. Use pagination, filtering, stable sorting, and bounded inputs for all management lists.
+13. For each slice, reconcile actual routes and actions against `docs/implementation/PAGE_ROUTE_REGISTRY.md`; record commit, endpoint/service, Prisma entities/migration decision, and exact verification evidence in `docs/implementation/BUILD_LOG.md` and `docs/PROJECT_AUDIT.md` or the relevant phase plan.
+14. Use `docs/implementation/END_TO_END_JOURNEY_STANDARD.md` as the required implementation and review checklist. Mark a journey **Verified** only against evidence for the exact commit/branch; cancelled, pending, stale or unrelated CI is not evidence.
+15. Use only isolated/local/CI PostgreSQL for development verification. Do not connect to or migrate the owner's database, production database, or production configuration without explicit approval.
+
+## 2. Status definitions
+
+| Status | Meaning |
+|---|---|
+| **Partial** | A screen, route, helper, or limited workflow exists, but important parts or canonical-schema integration are missing. |
+| **Legacy / incompatible** | Functionality exists but still relies on old data fields/contracts and must not be treated as compatible with the canonical schema. |
+| **Schema-only** | Models exist, but a complete application workflow has not been demonstrated. |
+| **Not implemented** | No reliable end-to-end implementation was identified in the audit. |
+| **Needs verification** | The audit found a surface, but permissions, persistence, runtime behavior, or test coverage has not been proven. |
+| **Complete** | Reserved for a fully tested end-to-end capability. No system is promoted to this status by inference. |
+
+**Implementation snapshot (branch `feat/returns-workflow`, audited 2026-11-04):** The canonical schema now contains identity/access, market reference data, seller/store/staff, catalog/discovery, inventory/warehouse, cart/checkout/address/shipping/tax, order/vendor-order, returns, reviews/Q&A, favorites, notifications, support, and store messaging models. Corresponding services, APIs, and selected UI routes exist in the repository, but model/route presence is not proof of a verified end-to-end workflow. Phase 3 remains subject to seller/catalog acceptance evidence and owner-approved reference data; Phase 4 Buying Core is active with payment-provider integration still blocked on launch-market/provider decisions. Use `docs/implementation/PHASE_03_MARKETPLACE_PLAN.md` for its remaining exit gaps and `docs/implementation/PHASE_04_BUYING_PLAN.md` for the active handoff.
+
+## 3. System inventory — 49 systems
+
+For every system below, the **Pages** and **API** entries describe the required target surface, not a guarantee that every route already exists. Model names are drawn from the canonical schema inventory where available. Shared models may legitimately serve multiple systems; do not duplicate them.
+
+### A. Customer and shopping experience
+
+#### 01. Identity, authentication and customer account
+- **Purpose:** Registration, sign-in/out, OAuth, password recovery, optional 2FA, sessions, consent, profile and account security.
+- **Pages:** `/(auth)/login`, `/register`, `/forgot-password`, `/reset-password`, `/account/profile`, `/account/security`, `/account/addresses`, `/account/sessions`.
+- **Models:** `User`, `UserSession`, `OAuthAccount`, `TwoFactorAuthentication`, `PasswordResetToken`, `VerificationToken`, `UserConsent`, `LoginAttempt`, `UserRoleAssignment`, `Role`, `Permission`, `RolePermission`, `UserAddress`.
+- **API:** `/api/auth/*`, `/api/register`, `/api/account/profile`, `/api/account/addresses`, `/api/account/sessions`, `/api/account/security`.
+- **Must include:** secure password hashing, verified email, session revocation, rate limits, account status checks, consent history, role resolution and recovery-token single use.
+- **Current state:** **Partial / legacy-incompatible.** Auth surfaces exist; audit AUD-001 records mismatches between legacy user fields and canonical user/role relations.
+
+#### 02. Product catalog and discovery
+- **Purpose:** Browse products, categories, brands, product details, media, attributes, variants and localized descriptions.
+- **Pages:** `/products`, `/products/[id]`, `/categories/[slug]`, `/brands/[slug]`.
+- **Models:** `Product`, `ProductCategory`, `Category`, `CategoryTranslation`, `Brand`, `BrandTranslation`, `ProductTranslation`, `ProductMedia`, `AttributeDefinition`, `AttributeTranslation`, `ProductAttribute`, `ProductAttributeValue`, `ProductVariant`, `VariantAttribute`, `ProductIdentifier`, `ProductPrice`.
+- **API:** `/api/products`, `/api/products/[id]`, `/api/categories`, `/api/brands`.
+- **Must include:** active/approved visibility, canonical store ownership, variant selection, price per currency, media safety, structured attributes, SEO metadata and pagination.
+- **Current state:** **Partial.** Canonical `/products` and detail pages, variant/market pricing, product media, and cart entry are connected. The `feat/storefront-demo-experience` branch adds an opt-in demo catalog fixture (market/store/categories/brands/eight published products/prices/media/stock) and an image-led category grid plus visible buyer/seller navigation. The fixture has not been run against a database and is not on `main`; legacy catalog endpoints still need migration. Phase Three is not complete.
+
+#### 03. Search, filtering and sorting
+- **Purpose:** Search products and stores with useful relevance, facets, typo tolerance and URL-shareable filters.
+- **Pages:** `/search`, search results and filter panels; admin search synonym management.
+- **Models:** `Product`, `ProductVariant`, `ProductPrice`, `Category`, `Brand`, `SearchSynonym`; PostgreSQL trigram/search indexes where appropriate.
+- **API:** `/api/search`, `/api/search/suggestions`, `/api/admin/search-synonyms`.
+- **Must include:** query validation, autocomplete, synonyms, category/brand/price/availability filters, stable pagination, relevance sorting and abuse protection.
+- **Current state:** **Implemented at source level; not release-verified.** `/search` and `/products` use Prisma-backed discovery with active/approved visibility, localized synonym expansion, PostgreSQL trigram-ranked relevance, stable ranking tie-breaks, market/currency-aware price and stock filters, category/brand facets, bounded pagination, and URL-synchronized filters. `/api/search` and `/api/products` expose validated, rate-limited search; `/api/search/suggestions` provides debounced product/store autocomplete; `/admin/search-synonyms` provides audited, permission-protected synonym management. Migration `20261104231000_search_trigram_indexes` adds `pg_trgm` and supporting indexes. Exact-head PostgreSQL migration/runtime, browser/accessibility, and scale verification remain pending; do not mark this system release-complete.
+
+#### 04. Cart and checkout
+- **Purpose:** Persistent guest/customer cart and safe conversion into a marketplace order.
+- **Pages:** `/cart`, `/checkout`, address, delivery, payment and order-confirmation steps.
+- **Models:** `GuestSession`, `Cart`, `CartItem`, `Product`, `ProductVariant`, `ProductPrice`, `Inventory`, `InventoryReservation`, `UserAddress`, `Order`, `OrderItem`, `OrderAddress`, `Coupon`, `CouponRedemption`, `TaxLine`, `Shipment`, `Payment`.
+- **API:** `/api/cart`, `/api/cart/items`, `/api/checkout/quote`, `/api/checkout`, `/api/orders`, `/api/admin/coupons`.
+- **Must include:** guest-to-user merge, variant-based items, server-calculated totals, live stock validation, reservations, shipping/tax/coupon calculation, idempotency and transactional order creation.
+- **Current state (2026-11-04):** **Core cart and checkout flows are implemented at source level; exact-head PostgreSQL/browser verification remains pending.** Guest/customer carts merge idempotently; cart items use purchasable variants, current prices and stock; checkout uses server-generated quotes, expiring inventory reservations, delivery-address snapshots, per-store shipping, configured market/region tax, and serializable quote-to-order conversion with stock consumption and SALE ledger entries. Marketplace-wide percentage and currency-specific fixed coupons are validated against schedule, currency and redemption caps; discounts are snapshotted, applied before tax, allocated to seller orders, and redeemed atomically during order creation. Admins with `users:manage` can manage coupon codes through `/api/admin/coupons`. Orders remain PENDING_PAYMENT until a configured provider confirms payment; payment setup, fulfillment, shipment tracking, and broader tax/legal rules remain operational or future scope. Migration `20261104235500_checkout_coupons` has not yet been applied to a database.
+
+#### 05. Orders and order tracking
+- **Purpose:** Customer order history, order details, status timeline, invoices, cancellation and reorder.
+- **Pages:** `/account/orders`, `/orders/[orderId]`, seller `/seller/orders`; tracking and invoice views remain future slices.
+- **Models:** canonical `Order`, `OrderAddress`, `OrderItem`, `OrderStatusHistory`, `VendorOrder`, `VendorOrderStatusHistory`, `Shipment`, `ShipmentTrackingEvent`; `Invoice` and `InvoiceItem` remain future work.
+- **API:** `GET /api/orders`, `GET /api/orders/[orderId]`, `POST /api/orders/[orderId]/cancel`, `POST /api/orders/[orderId]/reorder`, `POST /api/checkout/quote/[quoteId]/place-order`, `GET /api/seller/orders`, `PATCH /api/seller/orders/[vendorOrderId]/status`, `POST /api/seller/orders/[vendorOrderId]/shipment`, `POST /api/seller/orders/[vendorOrderId]/tracking-events`.
+- **Must include:** customer ownership, split vendor orders, immutable purchase snapshots, valid state transitions, cancellation rules and tracking history.
+- **Current state (2026-11-05):** **Order history, detail timelines, safe pre-payment cancellation, reorder, and seller-entered shipment tracking are implemented at source level.** Migration `20261105003800_order_tracking_cancellation` was applied with user approval to local `mtjr2_demo`; Prisma reports the schema is current and PostgreSQL confirms the shipment tables and cancellation movement enum. Full order lifecycle and browser verification remain pending. Checkout quote conversion creates one parent order and one vendor order per store in a serializable transaction, consumes stock reservations and records SALE movements, snapshots delivery and money values, and returns idempotently by quote. Order and vendor-order history is exposed on buyer detail pages. A buyer may cancel only while the order is PENDING_PAYMENT and before any payment attempt exists; cancellation takes the same per-order advisory lock as payment creation, restores stock through an auditable idempotent inventory movement, closes related vendor orders, and releases a coupon redemption atomically. Reorder adds every still-active, correctly priced and in-stock variant to the current cart atomically or adds none. Sellers with store ownership or exact `orders:manage` scope may record one manual shipment per vendor order and advance tracking events; customer and seller timelines display the history. No carrier API is integrated. Tax-compliant invoices and paid-order cancellation/refunds remain deferred; orders still require verified payment before fulfillment.
+
+#### 06. Product and store reviews
+- **Purpose:** Verified-purchase product reviews and store reputation with moderation.
+- **Pages:** product and store review sections, `/account/reviews`, `/admin/reviews`, `/admin/store-reviews`, seller review center.
+- **Models:** `ProductReview`, `ReviewMedia`, `StoreReview`, `ReviewReport`, `ReviewAppeal`, `OrderItem`, `Product`, `Store`, `Seller`, `AuditLog`.
+- **API:** `/api/products/[productId]/reviews*`, `/api/stores/[storeId]/reviews*`, `/api/account/reviews*`, `/api/admin/reviews/*`, `/api/admin/store-reviews/*`, `/api/seller/reviews/*`.
+- **Must include:** verified purchase, one-review policy, rating aggregates, media validation, report/appeal, moderation queue and seller response.
+- **Current state (2026-11-05):** **Review lifecycle, reporting, appeals, and seller responses are implemented at source level; journey verification remains pending.** Product and store reviews remain restricted to delivered purchases, unique per customer/product and per customer/store, and pending moderation. Public lists/aggregates expose published reviews only. Review images accept up to five unique, public-looking HTTPS URLs with supported image extensions; files are not uploaded and remote content types are not fetched or verified. Authenticated users may report a published review once; the review author may appeal a rejected/hidden review once. Admins can dismiss reports, hide reported reviews, uphold appeals, or restore reviews; decisions and submissions are audited. Sellers and active, exact-store-scoped `reviews:manage` staff may respond to published store reviews. Migration `20261105014200_review_media_reports_appeals` is added but has not been applied to a database. No browser journey or PostgreSQL migration replay is claimed.
+
+#### 07. Wishlist, favorites and recommendations
+- **Purpose:** Save products, organize wishlists and show relevant recommendations.
+- **Pages:** `/account/wishlist`, product favorite control, recommendation sections.
+- **Models:** `Favorite`, `Recommendation`, `Product`, `ProductVariant`, `Store`, `User`.
+- **API:** `/api/favorites`, `/api/favorites/[productId]`, `/api/recommendations`.
+- **Must include:** server-side ownership, guest merge, deduplication, cache reconciliation and privacy-safe recommendation logic.
+- **Current state (2026-11-04):** **Core wishlist and recommendation slice implemented on `feat/wishlist-guest-recommendations`; exact-head CI and PostgreSQL migration verification pending.** Retains canonical `Favorite` persistence and adds `Recommendation` curated product-to-product relations with migration `20261104100000_product_recommendations`. Authenticated list/status/add/remove and `/account/wishlist` remain owner-scoped; product detail now supports a bounded guest wishlist in browser storage, and `/api/favorites/merge` validates and merges only active, approved products into the signed-in owner's favorites using unique constraints and `skipDuplicates`. The wishlist page reconciles guest cache only after server-confirmed merge, then reloads with private no-store responses. `/api/recommendations` uses only the signed-in user's own saved products, preferring active curated recommendations and falling back to products in shared active categories; hidden, draft, unapproved, suspended-store products and already-saved products are excluded. Named user-created lists, browser-level multi-tab cache synchronization, and live browser journey verification remain outstanding; do not mark the full system Complete until exact-head CI and the PostgreSQL/browser journeys pass.
+
+#### 08. Product questions and answers
+- **Purpose:** Pre-purchase questions answered by sellers or authorized staff.
+- **Pages:** product Q&A, `/account/questions`, seller Q&A inbox, admin moderation.
+- **Models:** `ProductQuestion`, `ProductAnswer`, `Product`, `Store`, `User`, `AuditLog`.
+- **API:** `/api/products/[id]/questions`, `/api/questions/[id]/answers`, `/api/seller/questions`, `/api/admin/questions`.
+- **Must include:** public/private moderation states, seller ownership, notifications, abuse reporting and answer history.
+- **Current state (2026-11-03):** **Initial moderated product Q&A slice implemented on `feat/product-qa`.** Added `ProductQuestion` and `ProductAnswer` persistence with separate moderation states and migration `20261104003000_product_questions_answers`. Authenticated customers can submit questions; only published questions and answers appear publicly. Active store owners can answer published questions; admin moderation is audited and publishing notifies the seller or question author through in-app notifications. Connected product detail Q&A, customer question history, seller inbox/answer form, and admin moderation queue. Staff-scoped answering, abuse reports, attachments, and richer answer editing/history controls remain incomplete.
+
+#### 09. Customer messaging and support
+- **Purpose:** Customer-to-store conversations and platform support tickets.
+- **Pages:** `/account/messages`, conversation detail, `/account/support`, ticket detail.
+- **Models:** `StoreConversation`, `StoreMessage`, `SupportTicket`, `SupportMessage`, `Notification`, `User`, `Store`.
+- **API:** `/api/messages`, `/api/messages/[id]`, `/api/support/tickets`, `/api/support/tickets/[id]`.
+- **Must include:** participant authorization, read receipts, attachments, ticket priority/status, assignment, SLA and notifications.
+- **Current state (2026-11-04):** **Core ticketing and store messaging workflows implemented as an initial vertical slice on `feat/customer-support-tickets` (Draft PR #11).** Added `SupportTicket`/`SupportMessage` and `StoreConversation`/`StoreMessage` Prisma models and migrations. Customer ticket creation/list/detail/replies are connected to `/account/support`; the admin queue at `/admin/support` supports status, priority, self-assignment, internal notes and public replies, with `support:manage` authorization, audit events, first-response timestamps, read receipts, and in-app reply notifications. Customer-to-store messaging is connected through `/api/messages`, `/api/messages/[conversationId]`, store-scoped seller APIs, `/account/messages`, `/account/messages/[conversationId]`, `/seller/messages`, and a product-detail “Message this store” action. Conversation participants are checked server-side, seller access requires owner or active staff with store-scoped `messages:manage`, and message reads update participant read timestamps. **Remaining before System 09 can be called complete:** message attachment upload/storage and malware scanning (requires configuring an S3-compatible object-storage provider and scanner), outbound email delivery with a verified sender, and final browser-level attachment journey verification. SLA targets and scheduled escalation are implemented with priority-based 24/7 targets, persisted deadlines/breach timestamps, audit records, assigned-agent notifications, and a protected worker triggered every 15 minutes by GitHub Actions when `APP_URL` and `CRON_SECRET` are configured. Store-message notifications now route to the store owner and active staff members only when they hold exact store-scoped `messages:manage`; staff without that grant receive neither inbox access nor message notifications. These remaining external/operational dependencies are not represented as completed.
+
+#### 10. Customer notifications
+- **Purpose:** In-app and email notifications for order, payment, delivery, messages and account events.
+- **Pages:** `/notifications`, notification preferences.
+- **Models:** `Notification`, `NotificationPreference`, `NotificationDelivery`, `User`, `Order`, `Payment`, `VendorOrder`, `StoreMessage`, `UserConsent`. A dedicated `Shipment` model/carrier-tracking workflow is not present yet.
+- **API:** `GET /api/notifications`, `POST /api/notifications/[notificationId]/read`, `GET/PUT /api/account/notification-preferences`, protected `POST /api/cron/notification-delivery`.
+- **Must include:** user-scoped reads, per-event in-app/email preferences, recorded email consent, delivery status, deduplication, retries and event-triggered creation.
+- **Current state (2026-11-05):** **Core in-app notifications plus preference-aware transactional email outbox implemented; external email delivery is configuration-dependent.** The existing PR #14 foundation remains. Migration `20261105120000_customer_notification_delivery` adds `NotificationDelivery`, delivery states, and email-channel preferences. Saving preferences records `UserConsent.NOTIFICATION_EMAIL`; email defaults off and queued messages are cancelled if consent or the event preference is withdrawn before delivery. The Resend adapter sends verified-user transactional email with a stable provider idempotency key. The worker claims due rows, records attempts/provider IDs, retries with bounded exponential backoff, and moves exhausted deliveries to FAILED. The notifications page shows channel preferences and user-scoped email delivery history. Existing order placement, seller order receipt, store message, support reply/SLA events now flow through the shared preference-aware creation helper; payment success/failure and password change/reset events were connected in this slice.
+- **Remaining gates:** configure a verified Resend sender and repository `APP_URL`/`CRON_SECRET`, then verify a real provider delivery. Shipment notifications remain preference-ready only: current schema has vendor-order preparation states but no Shipment/carrier tracking lifecycle or SHIPPED/DELIVERED mutation journey. Add shipment event producers only with that domain workflow; do not fabricate tracking updates. Browser journey and provider-webhook delivery reconciliation remain to be verified.
+
+#### 11. Returns and refunds (customer journey)
+- **Purpose:** Request a return for delivered goods, review the request and track the physical return state before any financial refund is considered.
+- **Pages:** `/account/returns` (customer request/history), `/admin/returns` (authorized review queue); order detail links delivered orders to returns.
+- **Models:** `ReturnRequest`, `ReturnItem`, `Order`, `VendorOrder`, `OrderItem`, `User`, `AuditLog`. Refund/payment models are deliberately not introduced by this slice.
+- **API:** `GET/POST /api/returns`, `GET /api/returns/[returnId]`, `GET /api/admin/returns`, `PATCH /api/admin/returns/[returnId]`.
+- **Implemented safeguards:** customer ownership is resolved from the authenticated session; only items in a DELIVERED vendor order can be requested; quantities are bounded by ordered quantity less all non-rejected/non-cancelled prior return quantities; the write runs at SERIALIZABLE isolation; return status transitions use compare-and-set updates and are audited. Admin actions require the global `returns:manage` permission.
+- **Current state:** **Partial — initial canonical workflow implemented on `feat/returns-workflow`.** Customers can request a return for one delivered order item at a time, select a reason and optional details, and view status/review notes. Authorized support/admin operators can approve/reject requests and mark approved items received. The migration adds `ReturnRequest`/`ReturnItem`; it has not been applied to any owner database.
+- **Explicit gaps / safety boundary:** no jurisdiction-specific return window has been approved, so this slice enforces delivered-order eligibility but does not invent a time limit; evidence upload/storage, return-label/shipping instructions, seller portal actions, notifications, partial refund calculation, payment-provider refund execution and ledger postings remain future work. Approving or marking goods received never charges, credits, or refunds money.
+
+### B. Seller systems
+
+#### 12. Seller onboarding, verification and KYC
+- **Purpose:** Seller application, identity/business verification, tax documents and approval lifecycle.
+- **Pages:** `/seller/apply`, `/seller/onboarding`, `/seller/verification`, `/admin/sellers/[id]/verification`.
+- **Models:** `Seller`, `SellerVerification`, `SellerDocument`, `SellerTaxRegistration`, `Store`, `User`, `AuditLog`.
+- **API:** `/api/seller/application`, `/api/seller/verification`, `/api/seller/documents`, `/api/admin/sellers/[id]/approval`.
+- **Must include:** document review, expiry, rejection reasons, resubmission, jurisdiction-specific requirements and restricted seller capabilities until approval.
+- **Current state:** **Partial.** Seller application/approval surfaces exist; complete KYC lifecycle needs verification.
+
+#### 13. Seller dashboard and analytics
+- **Purpose:** Seller command center for sales, orders, products, inventory, reputation and financial position.
+- **Pages:** `/seller/dashboard`, analytics, performance and action center.
+- **Models:** `Seller`, `Store`, `Order`, `VendorOrder`, `OrderItem`, `Product`, `Inventory`, `StoreReview`, `Payout`, `SellerLedgerEntry`, `DailySiteVisit`.
+- **API:** `/api/seller/dashboard`, `/api/seller/analytics`, `/api/seller/performance`.
+- **Must include:** gross/net sales, pending/available balance, order funnel, low stock, returns, cancellation/delivery rate, rating trends, date filters and drill-down.
+- **Current state:** **Partial.** Seller dashboard exists; KPI correctness and canonical financial/inventory integration are not established.
+
+#### 14. Seller product management
+- **Purpose:** Create and maintain products, variants, SKUs, translations, media, attributes and prices.
+- **Pages:** `/seller/products`, `/seller/products/new`, `/seller/products/[id]`, variant/media/price editors.
+- **Models:** `Product`, `ProductCategory`, `ProductTranslation`, `ProductMedia`, `ProductVariant`, `VariantAttribute`, `ProductPrice`, `ProductIdentifier`, `Brand`, `Category`, `Store`, `Seller`.
+- **API:** `/api/seller/products`, `/api/seller/products/[id]`, `/api/seller/products/[id]/variants`, `/api/seller/products/[id]/media`.
+- **Must include:** store-scoped ownership, drafts, approval, validation, SKU uniqueness, variant inventory linkage, safe uploads and audit history.
+- **Current state:** **Partial / legacy-incompatible.** Seller product routes exist but old product field assumptions remain.
+
+#### 15. Seller order management
+- **Purpose:** Process vendor-specific order portions, fulfill items, communicate status and handle cancellations.
+- **Pages:** `/seller/orders`, `/seller/orders/[id]`, fulfillment queue.
+- **Models:** `VendorOrder`, `Order`, `OrderItem`, `OrderStatusHistory`, `Shipment`, `ShipmentItem`, `InventoryReservation`.
+- **API:** `/api/seller/orders`, `/api/seller/orders/[id]`, `/api/seller/orders/[id]/fulfill`.
+- **Must include:** vendor isolation, allowed transitions, packing/dispatch, partial fulfillment, stock release and customer notification.
+- **Current state:** **Legacy / incompatible.** Routes exist but use legacy order fields and lifecycle assumptions.
+
+#### 16. Seller inventory and warehouse management
+- **Purpose:** Manage warehouses, stock, reservations, movements, transfers and stock alerts.
+- **Pages:** `/seller/inventory`, `/seller/warehouses`, `/seller/inventory/movements`, transfer and adjustment screens.
+- **Models:** `Warehouse`, `Inventory`, `InventoryMovement`, `InventoryReservation`, `StockTransfer`, `StockTransferItem`, `ProductVariant`.
+- **API:** `/api/seller/warehouses`, `/api/seller/inventory`, `/api/seller/inventory/adjustments`, `/api/seller/inventory/transfers`.
+- **Must include:** non-negative stock, reservation expiry, atomic decrement, transfer receive/ship, reconciliation, barcode support and audit.
+- **Current state (rechecked 2026-11-03):** Initial Warehouse/Inventory/Movement/Reservation/Transfer schema and seller warehouse, stock-adjustment, and transfer APIs/services are committed. Consolidated CI and PostgreSQL verification are pending; reservation lifecycle, expiry worker, reconciliation, and stock-count workflow remain incomplete.
+
+#### 17. Supplier and procurement management
+- **Purpose:** Supplier directory, purchase orders, receiving and supplier invoice reconciliation.
+- **Pages:** `/seller/suppliers`, `/seller/purchase-orders`, purchase order detail, goods receipt.
+- **Models:** `Supplier`, `SupplierProduct`, `PurchaseOrder`, `PurchaseOrderItem`, `GoodsReceipt`, `GoodsReceiptItem`, `Warehouse`, `InventoryMovement`.
+- **API:** `/api/seller/suppliers`, `/api/seller/purchase-orders`, `/api/seller/goods-receipts`.
+- **Must include:** supplier terms, cost history, purchase approval, partial receiving, discrepancy handling and inventory posting.
+- **Current state:** **Schema-only / partial admin surface.** Supplier admin pages were found; seller procurement workflow is not demonstrated.
+
+#### 18. Shipping and fulfillment (seller)
+- **Purpose:** Configure fulfillment preferences, shipping services, packages, labels and tracking.
+- **Pages:** `/seller/shipping`, `/seller/shipments`, shipment detail and package builder.
+- **Models:** `ShippingCarrier`, `ShippingService`, `ShippingZone`, `ShippingRate`, `Shipment`, `Package`, `PackageItem`, `ShipmentItem`, `ShipmentTrackingEvent`, `OrderAddress`.
+- **API:** `/api/seller/shipping`, `/api/seller/shipments`, `/api/seller/shipments/[id]/label`, `/api/seller/shipments/[id]/tracking`.
+- **Must include:** carrier/service selection, package dimensions/weight, label generation, tracking webhooks, split shipment and customs data.
+- **Current state:** **Partial.** Seller-entered shipment and tracking-event records exist and are visible to administrators in the read-only logistics workspace. Carrier selection, label generation, split shipment and fulfillment integrations are not available.
+
+#### 19. Seller finance, commissions and payouts
+- **Purpose:** Transparent seller balance, fees, commissions, settlement statements and payout requests.
+- **Pages:** `/seller/finance`, `/seller/transactions`, `/seller/payouts`, payout method and statement detail.
+- **Models:** `SellerLedgerEntry`, `LedgerAccount`, `JournalEntry`, `JournalLine`, `CommissionRule`, `CommissionTransaction`, `PayoutMethod`, `Payout`, `Payment`, `Refund`, `Currency`.
+- **API:** `/api/seller/finance/summary`, `/api/seller/transactions`, `/api/seller/payouts`, `/api/seller/payout-methods`.
+- **Must include:** immutable ledger, double-entry postings, fees/taxes/refunds, holds, available vs pending balance, payout eligibility and reconciliation.
+- **Current state (2026-11-05):** **Missing.** Current Prisma schema has no seller ledger, double-entry journal, commission, payout-method or payout models; no seller finance APIs or complete finance workflow were found.
+
+#### 20. Seller marketing and promotions
+- **Purpose:** Create store-scoped discounts and promotions within platform policy.
+- **Pages:** `/seller/marketing`, `/seller/coupons`, promotion editor and performance.
+- **Models:** `Promotion`, `Coupon`, `CouponRedemption`, `PromotionProduct`, `PromotionCategory`, `PromotionSeller`, `Store`, `Product`.
+- **API:** `/api/seller/promotions`, `/api/seller/coupons`, `/api/seller/promotions/[id]`.
+- **Must include:** eligibility, date windows, usage limits, stacking rules, budget caps and abuse prevention.
+- **Current state:** **Partial / schema-only.** Admin discounts surface exists; complete seller promotion lifecycle is not proven.
+
+#### 21. Seller reviews and reputation
+- **Purpose:** Monitor store/product feedback and respond appropriately.
+- **Pages:** `/seller/reviews`, review detail, response composer and reputation analytics.
+- **Models:** `StoreReview`, `Review`, `ReviewMedia`, `Store`, `Product`, `OrderItem`, `AuditLog`.
+- **API:** `/api/seller/reviews`, `/api/seller/reviews/[id]/response`.
+- **Must include:** verified purchase context, response limits, report/escalation, rating trend and no ability to edit customer reviews.
+- **Current state:** **Partial / needs verification.** Review surfaces exist; complete seller response and moderation integration is not proven.
+
+#### 22. Seller staff and scoped permissions
+- **Purpose:** Invite staff and grant least-privilege store-scoped access.
+- **Pages:** `/seller/team`, invite, role/permission editor and access history.
+- **Models:** `SellerStaff`, `Seller`, `Store`, `User`, `Role`, `Permission`, `RolePermission`, `UserRoleAssignment`, `AuditLog`.
+- **API:** `/api/seller/staff`, `/api/seller/staff/invitations`, `/api/seller/staff/[id]/permissions`.
+- **Must include:** owner protection, scoped permissions, invite expiry, revocation, session invalidation and audit log.
+- **Current state:** **Schema-only / needs verification.** Role administration exists, but store-scoped staff enforcement is not demonstrated.
+
+#### 23. Store management and settings
+- **Purpose:** Manage storefront identity, contact details, policies, localization and public presentation.
+- **Pages:** `/seller/store`, `/seller/store/profile`, `/seller/store/policies`, `/seller/store/localization`.
+- **Models:** `Store`, `StoreTranslation`, `Seller`, `SellerTaxRegistration`, `Currency`, `Country`.
+- **API:** `/api/seller/store`, `/api/seller/store/translations`, `/api/seller/store/policies`.
+- **Must include:** verified ownership, public preview, localized content, store status, policy versions and audit.
+- **Current state:** **Partial.** Store/admin surfaces exist; audit notes that several store relations and translations are not integrated.
+
+### C. Central administration
+
+#### 24. Platform admin dashboard / command center
+- **Purpose:** Platform-wide operational overview and prioritized exception queue.
+- **Pages:** `/admin/dashboard`, `/admin/control-panel`, reports and alerts.
+- **Models:** Current dashboard reads use `User`, `Seller`, `Store`, `Product`, `Order`, `VendorOrder`, `Payment`, `ProductReview`, `StoreReview`, `ReturnRequest`, and `SupportTicket`. Refund, dispute, payout, daily-visit, and posted accounting-ledger models/workflows are not available for dashboard metrics.
+- **API:** `/api/admin/dashboard`; analytics and alert APIs remain future work.
+- **Must include:** GMV vs net revenue, commission, orders, sellers, approval queue, failed payments, disputes, payout exposure and drill-through.
+- **Current state (2026-11-05):** **Phase 1 foundation and database-backed overview implemented; remaining modules are not complete.** `/admin/dashboard` and `/admin/control-panel` use a shared admin navigation shell. `GET /api/admin/dashboard` requires `users:manage`, validates date/country/currency/seller/store filters, and returns real account, seller/store, catalog, order, payment, moderation, return, and support counts; order totals and successful payment amounts remain separated by currency. The dashboard shows recent orders, a daily order-count chart, and links only to existing moderation/returns/support pages. Marketplace net revenue, commission, seller payable balances, refunds/disputes, and operational health are explicitly reported unavailable rather than estimated. Seller/product/order detail drill-through, top performers, and richer sales analytics are not implemented. Prisma schema unchanged. Unit tests, typecheck, and targeted lint pass; PostgreSQL-backed and browser verification remain pending.
+
+#### 25. User administration
+- **Purpose:** Search and manage customer accounts, status, roles, sessions and account-risk events.
+- **Pages:** `/admin/users`, `/admin/users/[id]`, role and security history.
+- **Models:** `User`, `UserSession`, `UserRoleAssignment`, `Role`, `Permission`, `LoginAttempt`, `UserConsent`, `AuditLog`.
+- **API:** `/api/admin/users`, `/api/admin/users/[id]`, `/api/admin/users/[id]/status`, `/api/admin/users/[id]/roles`.
+- **Must include:** least privilege, protected admin accounts, reasoned status changes, session revocation and audit.
+- **Current state (2026-11-05):** **Phase 2 partial.** `/admin/users` and `/admin/users/[userId]` provide permission-protected search/detail for account status, role assignments, sessions, consent history, login attempts, and account audit events. Reason-required status changes use a conditional update and audit record; suspending/disabling revokes active sessions, self-modification is denied, and SUPER_ADMIN accounts are protected. Role changes, verification controls, advanced risk tooling, and end-to-end account-administration verification remain incomplete.
+
+#### 26. Seller administration and KYC review
+- **Purpose:** Review seller applications, documents, tax registrations, risk and store status.
+- **Pages:** `/admin/sellers`, seller detail, verification queue and document review.
+- **Models:** `Seller`, `SellerVerification`, `SellerDocument`, `SellerTaxRegistration`, `Store`, `SellerStaff`, `AuditLog`.
+- **API:** `/api/admin/sellers`, `/api/admin/sellers/[id]`, `/api/admin/sellers/[id]/approval`, `/api/admin/sellers/[id]/documents`.
+- **Must include:** review checklist, approve/reject/suspend, evidence, expiry alerts, reason codes and audit.
+- **Current state (2026-11-05):** **Phase 2 partial.** `/admin/sellers` uses the existing seller-application review API and adds paginated seller search, owner/account context, and audited store suspend/reactivate operations with reason and state checks. `/api/admin/stores/[storeId]` only changes ACTIVE/SUSPENDED stores; draft/closed stores and reactivation under an inactive seller are rejected. Seller detail, KYC/document/tax review, risk tooling, and full application/store journey verification remain incomplete.
+
+#### 27. Catalog administration
+- **Purpose:** Govern categories, brands, attributes, products, content quality and approval.
+- **Pages:** `/admin/catalog`, `/admin/categories`, `/admin/brands`, `/admin/products`, attribute and translation management.
+- **Models:** `Category`, `CategoryTranslation`, `Brand`, `BrandTranslation`, `Product`, `ProductCategory`, `ProductTranslation`, `ProductMedia`, `ProductVariant`, `AttributeDefinition`, `ProductAttribute`, `ProductAttributeValue`.
+- **API:** `/api/admin/catalog/*`, `/api/admin/categories/*`, `/api/admin/products/*`, `/api/admin/brands/*`.
+- **Must include:** moderation, bulk operations, taxonomy integrity, duplicate detection, media review and change history.
+- **Current state (2026-11-05):** **Phase 2 partial.** `/admin/products` presents the existing pending-product moderation queue and approve/reject APIs; approval is explicitly not publication, and rejection requires a reason. The queue is bounded to 100 and current search is client-side. Category/brand/attribute administration, bulk operations, change history, expanded moderation filters, and end-to-end catalog verification remain incomplete.
+
+#### 28. Central order operations
+- **Purpose:** Platform-wide order search, exception resolution and controlled intervention.
+- **Pages:** `/admin/orders`, order detail, vendor split, timeline and exception queue.
+- **Models:** `Order`, `VendorOrder`, `OrderItem`, `OrderAddress`, `OrderStatusHistory`, `Shipment`, `InventoryReservation`, `AuditLog`.
+- **API:** `/api/admin/orders`, `/api/admin/orders/[id]`, `/api/admin/orders/[id]/actions`.
+- **Must include:** immutable history, vendor isolation, controlled overrides, cancellation/refund coordination and audit.
+- **Current state (2026-11-05):** **Phase 2 partial.** `/admin/orders` and `/admin/orders/[orderId]` provide permission-protected search, stable bounded pagination, status filtering, customer/order snapshots, vendor splits, payment-attempt status, and shipment/timeline inspection. The UI is intentionally read-only: payment, refund, dispute, cancellation overrides, and fulfillment state transitions are not exposed. PostgreSQL-backed and browser verification remain pending.
+
+#### 29. Payment administration
+- **Purpose:** Monitor provider transactions, attempts, refunds, reconciliation and payment failures.
+- **Pages:** `/admin/payments`, payment detail, provider health and reconciliation queue.
+- **Models:** `Payment`, `PaymentWebhookEvent`, plus future `Refund`, `Dispute`, `PaymentAttempt`, `PaymentReconciliation`, and `AuditLog`.
+- **API:** `/api/admin/payments`, `/api/admin/payments/[id]`, `/api/admin/payment-reconciliation`.
+- **Must include:** verified provider events, idempotent updates, attempt history, refund controls and settlement matching.
+- **Current state (2026-11-05):** **Phase 3 partial.** `/admin/payments` and `/admin/payments/[paymentId]` provide `payments:read`-protected, paginated transaction inspection, per-status/per-currency payment attempt totals, failure information, and persisted verified-webhook processing history. Provider references, checkout URLs and event payloads are not exposed. Canonical `Payment` / `PaymentWebhookEvent`, owner-scoped idempotent intent creation, and webhook verification/deduplication exist, but no provider is registered by default and no live charge is enabled. Refunds, disputes, reconciliation, settlement and concrete provider integration remain unavailable.
+
+#### 30. Commission management
+- **Purpose:** Configure category/store/seller commission rules and calculate immutable transaction-level fees.
+- **Pages:** `/admin/commissions`, rule editor, commission ledger and preview calculator.
+- **Models:** `CommissionRule`, `CommissionTransaction`, `VendorOrder`, `OrderItem`, `SellerLedgerEntry`, `Currency`, `AuditLog`.
+- **API:** `/api/admin/commission-rules`, `/api/admin/commissions`, `/api/admin/commissions/preview`.
+- **Must include:** effective dates, precedence, minimums/caps, currency precision, versioning and recalculation policy.
+- **Current state (2026-11-05):** **Missing.** No CommissionRule or CommissionTransaction models, admin pages, or commission workflow were found in the current Prisma schema and route tree.
+
+#### 31. Accounting and general ledger
+- **Purpose:** Double-entry accounting for sales, fees, taxes, refunds, chargebacks and payouts.
+- **Pages:** `/admin/finance/ledger`, accounts, journals, trial balance and reconciliation.
+- **Models:** `LedgerAccount`, `JournalEntry`, `JournalLine`, `SellerLedgerEntry`, `CommissionTransaction`, `Payment`, `Refund`, `Payout`.
+- **API:** `/api/admin/finance/accounts`, `/api/admin/finance/journals`, `/api/admin/finance/reports`.
+- **Must include:** balanced journal entries, immutable posted records, reversals instead of destructive edits, period close and audit.
+- **Current state (2026-11-05):** **Missing.** No LedgerAccount, JournalEntry, JournalLine, or posted accounting workflow was found in the current Prisma schema and route tree.
+
+#### 32. Payout administration
+- **Purpose:** Review and execute seller settlements with holds, approvals and reconciliation.
+- **Pages:** `/admin/payouts`, payout detail, batch processing and failed payout queue.
+- **Models:** `Payout`, `PayoutMethod`, `SellerLedgerEntry`, `JournalEntry`, `JournalLine`, `Seller`, `Currency`.
+- **API:** `/api/admin/payouts`, `/api/admin/payouts/[id]`, `/api/admin/payouts/[id]/approve`, `/api/admin/payouts/[id]/retry`.
+- **Must include:** eligibility, reserve/hold rules, dual control, provider result, idempotency and ledger reconciliation.
+- **Current state (2026-11-05):** **Missing.** No payout or seller-settlement models, pages, or API workflow were found in the current Prisma schema and route tree.
+
+#### 33. Returns, refunds and disputes administration
+- **Purpose:** Resolve returns, refund requests, chargebacks and evidence deadlines.
+- **Pages:** `/admin/returns`, `/admin/refunds`, `/admin/disputes`, case detail.
+- **Models:** `ReturnRequest`, `ReturnItem`, `Refund`, `Dispute`, `DisputeEvidence`, `Payment`, `Order`, `AuditLog`.
+- **API:** `/api/admin/returns`, `/api/admin/refunds`, `/api/admin/disputes`, `/api/admin/disputes/[id]/evidence`.
+- **Must include:** policy rules, partial refunds, evidence retention, deadlines, provider synchronization and immutable decisions.
+- **Current state (2026-11-05):** **Partial.** Admin return queue/review workflows exist for `ReturnRequest`; refund and dispute models, APIs, and funds-movement workflows were not found. Return administration must not be presented as refund execution.
+
+#### 34. Shipping administration
+- **Purpose:** Configure carriers, services, zones, rates and fulfillment integrations.
+- **Pages:** `/admin/shipping`, carriers, services, zones, rate tables and shipment exceptions.
+- **Models:** `ShippingCarrier`, `ShippingService`, `ShippingZone`, `ShippingRate`, `Shipment`, `Package`, `ShipmentTrackingEvent`, `CustomsDeclaration`.
+- **API:** `/api/admin/shipping/carriers`, `/api/admin/shipping/services`, `/api/admin/shipping/zones`, `/api/admin/shipping/rates`.
+- **Must include:** country/region coverage, rate calculation, carrier credentials, webhook verification, label errors and fallback rules.
+- **Current state (2026-11-05):** **Phase 3 partial.** `/admin/logistics` and `/admin/logistics/[shipmentId]` provide `users:manage`-protected read-only search and inspection of persisted shipments and tracking events; stored external tracking links are restricted to credential-free HTTPS URLs before display. Store-scoped shipping rates and seller-entered shipment/tracking records exist. Carrier management, labels, automated tracking, delay/loss detection and exception workflows remain unavailable.
+
+#### 35. Tax and regulatory compliance
+- **Purpose:** Configure tax jurisdictions/rates, seller registrations and customs declarations.
+- **Pages:** `/admin/tax/regions`, rates, registrations, customs and compliance reports.
+- **Models:** `TaxRegion`, `TaxRate`, `TaxLine`, `SellerTaxRegistration`, `CustomsDeclaration`, `CustomsDeclarationItem`, `Country`, `Currency`.
+- **API:** `/api/admin/tax/regions`, `/api/admin/tax/rates`, `/api/admin/customs`.
+- **Must include:** effective dates, tax-inclusive/exclusive rules, exemptions, rounding, invoice linkage and jurisdiction-specific compliance.
+- **Current state (2026-11-05):** **Partial.** `MarketTaxRate`, checkout tax snapshots, and `/admin/tax-rates` configuration exist. Jurisdiction, seller registration, customs, reporting, and regulatory filing workflows were not found.
+
+#### 36. Promotions, coupons, loyalty and gift cards
+- **Purpose:** Central campaign management, coupon validation, loyalty accounting and gift-card issuance/redemption.
+- **Pages:** `/admin/marketing/promotions`, coupons, loyalty programs, gift cards and campaign analytics.
+- **Models:** `Promotion`, `Coupon`, `CouponRedemption`, `PromotionProduct`, `PromotionCategory`, `PromotionSeller`, `LoyaltyProgram`, `LoyaltyTransaction`, `GiftCard`, `GiftCardTransaction`.
+- **API:** `/api/admin/promotions`, `/api/admin/coupons`, `/api/admin/loyalty`, `/api/admin/gift-cards`.
+- **Must include:** rule evaluation, limits, anti-abuse, balances, expiry, refund reversal and ledger consistency.
+- **Current state (2026-11-05):** **Partial.** Coupon persistence and `/api/admin/coupons` CRUD exist, but no admin coupon page, promotion campaign UI, loyalty, or gift-card models/workflows were found.
+
+#### 37. Review moderation
+- **Purpose:** Platform governance for reported, abusive, fraudulent or policy-violating reviews.
+- **Pages:** `/admin/reviews`, moderation queue, report detail and appeals.
+- **Models:** `Review`, `ReviewMedia`, `StoreReview`, `AuditLog`, `User`, `OrderItem`.
+- **API:** `/api/admin/reviews`, `/api/admin/reviews/[id]/moderation`, `/api/admin/reviews/[id]/appeals`.
+- **Must include:** moderation reasons, evidence, status history, reviewer notification and tamper-evident audit.
+- **Current state (2026-11-05):** **Partial; source lifecycle implemented, journey verification pending.** Product/store moderation, report/appeal queues and audited decisions exist at `/admin/reviews` and `/admin/store-reviews`; media URL references and author responses are wired. Migration `20261105014200_review_media_reports_appeals` is not applied; PostgreSQL and browser journeys remain unverified.
+
+#### 38. Central customer support
+- **Purpose:** Unified support queue for customer and seller cases.
+- **Pages:** `/admin/support`, ticket detail, assignment, SLA and escalation dashboards.
+- **Models:** `SupportTicket`, `SupportMessage`, `User`, `Seller`, `Order`, `Payment`, `AuditLog`, `Notification`.
+- **API:** `/api/admin/support/tickets`, `/api/admin/support/tickets/[id]`, `/api/admin/support/assignments`.
+- **Must include:** role-based assignment, internal notes, attachments, macros, SLA timers and customer-visible status.
+- **Current state (2026-11-05):** **Initial support administration implemented; journey remains unverified.** `/admin/support` and ticket APIs support queue/detail, priority/status changes, self-assignment, internal notes, public replies, `support:manage`, audit events, read receipts, and first-response timestamps. Attachments, agreed SLA/escalation, team routing, workload analytics, email delivery, and operational runbooks remain incomplete.
+
+#### 39. CMS and content administration
+- **Purpose:** Manage static pages, translations, banners, navigation and publish scheduling.
+- **Pages:** `/admin/content/pages`, page editor, translations, banners and navigation.
+- **Models:** `SitePage`, `SitePageTranslation`, `MarketplaceSetting`, `FeatureFlag`.
+- **API:** `/api/admin/control-panel/site-pages`, `/api/admin/control-panel/site-pages/[slug]`, `/api/site-pages/[slug]`.
+- **Must include:** draft/publish, revision history, preview, localization, sanitization and SEO metadata.
+- **Current state (2026-11-05):** **Missing.** No site-page/content models, admin content routes, or connected content-management API were found. Public terms/privacy pages are static; publishing, preview, localization, and scheduling are not implemented.
+
+#### 40. Platform settings and governance
+- **Purpose:** Configure marketplace behavior, feature availability, legal policies and operational parameters.
+- **Pages:** `/admin/settings`, marketplace settings, feature flags and audit history.
+- **Models:** `MarketplaceSetting`, `FeatureFlag`, `AuditLog`, `User`, `Role`, `Permission`.
+- **API:** `/api/admin/settings`, `/api/admin/feature-flags`.
+- **Must include:** typed settings, validation, secrets outside database, change approval, audit and safe rollout.
+- **Current state (2026-11-05):** **Partial foundation only.** Role/permission resolution and AuditLog persistence exist, but no platform settings or feature-flag models/pages/APIs, unified governance workflow, or audit-log administration page was found.
+
+### D. Global, financial and operational platform systems
+
+#### 41. Global markets, currency, FX and localization
+- **Purpose:** Support countries, regions, languages, currencies, exchange rates and market-specific availability.
+- **Pages:** market/currency/language selectors; admin country, currency, FX and localization settings.
+- **Models:** `Currency`, `ExchangeRate`, `Country`, `StateProvince`, `City`, `UserAddress`, `StoreTranslation`, `ProductTranslation`, `CategoryTranslation`.
+- **API:** `/api/markets`, `/api/currencies`, `/api/exchange-rates`, `/api/admin/markets/*`.
+- **Must include:** canonical currency storage, rate source/time, rounding, market restrictions, locale formatting and address validation.
+- **Current state (2026-11-05):** **Partial.** Country, Currency, Market, and MarketCurrency models plus public market/country/currency APIs exist. No exchange-rate model/workflow or centralized admin market/localization pages were found.
+
+#### 42. Invoicing and credit notes
+- **Purpose:** Issue customer/vendor invoices and legally traceable credit notes.
+- **Pages:** customer invoice view/download, seller invoice center, admin invoice search.
+- **Models:** `Invoice`, `InvoiceItem`, `CreditNote`, `Order`, `OrderItem`, `TaxLine`, `Currency`, `SellerTaxRegistration`.
+- **API:** `/api/invoices/[id]`, `/api/orders/[id]/invoice`, `/api/admin/invoices`, `/api/admin/credit-notes`.
+- **Must include:** immutable snapshots, numbering rules, tax details, currency, PDF generation, credit-note linkage and access control.
+- **Current state (2026-11-05):** **Missing.** No invoice/credit-note models or issuance workflow were found; order snapshots are not legal invoices.
+
+#### 43. Analytics and reporting
+- **Purpose:** Reliable operational, sales, seller, customer and financial reporting.
+- **Pages:** `/admin/analytics`, `/admin/reports`, seller analytics and export center.
+- **Models:** `Report`, `DailySiteVisit`, `Order`, `VendorOrder`, `Payment`, `Refund`, `Payout`, `Product`, `Seller`.
+- **API:** `/api/analytics/*`, `/api/admin/reports`, `/api/seller/analytics`.
+- **Must include:** explicit metric definitions, date/timezone boundaries, permission-scoped data, export limits and reconciliation with ledger/order sources.
+- **Current state (2026-11-05):** **Partial.** The new dashboard includes filtered order/payment counts and daily order counts. No dedicated analytics service, reports API/UI, exports, conversion/customer-growth charts, or finance-backed revenue reports were found.
+
+#### 44. External integrations and provider adapters
+- **Purpose:** Manage payment, shipping, tax, identity, email and storage providers through controlled adapters.
+- **Pages:** `/admin/integrations`, provider configuration and health/status.
+- **Models:** `Integration`, `PaymentProvider`, `ShippingCarrier`, `Webhook`, `MarketplaceSetting`, `AuditLog`.
+- **API:** `/api/admin/integrations`, provider-specific server endpoints and verified callback routes.
+- **Must include:** encrypted credentials in secret storage, least privilege, health checks, timeouts, retries and provider-independent domain services.
+- **Current state:** **Partial / schema-only.** Some provider paths exist (e.g. Stripe/Resend); unified integration management is not demonstrated.
+
+#### 45. Background jobs, event processing and outbox
+- **Purpose:** Reliable asynchronous work for email, webhook delivery, inventory expiry, payouts, reports and retries.
+- **Pages:** `/admin/operations/jobs`, failed jobs, outbox and retry inspection.
+- **Models:** `OutboxEvent`, `BackgroundJob`, `Webhook`, `WebhookDelivery`, `Notification`, `AuditLog`.
+- **API:** `/api/admin/operations/jobs`, `/api/admin/operations/jobs/[id]/retry`; internal worker handlers.
+- **Must include:** transactional outbox writes, leases, retry/backoff, dead-letter handling, deduplication, observability and replay safety.
+- **Current state:** **Schema-only.** No direct delegates or complete worker lifecycle identified.
+
+#### 46. Security, audit and platform risk controls
+- **Purpose:** Enforce authorization, record sensitive actions, rate-limit abuse and investigate security events.
+- **Pages:** `/admin/security/audit-logs`, access review, risk and incident views.
+- **Models:** `AuditLog`, `UserSession`, `LoginAttempt`, `UserConsent`, `Role`, `Permission`, `UserRoleAssignment`, `SellerStaff`.
+- **API:** `/api/admin/audit-logs`, `/api/admin/security/*`; shared auth/authorization middleware.
+- **Must include:** deny-by-default authorization, tenant/store scoping, immutable audit, secret handling, CSRF/XSS/SSRF protections, rate limits and security tests.
+- **Current state:** **Partial / P0 prerequisite.** Auth helpers and rate limiting exist, but canonical role/permission mapping is unresolved (AUD-001).
+
+#### 47. SEO and public discovery
+- **Purpose:** Ensure indexable product/category/store/content pages and correct canonical metadata.
+- **Pages:** metadata on `/products/[id]`, category/store pages, sitemap, robots and social previews.
+- **Models:** `Product`, `Category`, `Brand`, `Store`, `SitePage`, translation models.
+- **API:** `/api/sitemap` or generated sitemap route; public canonical metadata endpoints only where needed.
+- **Must include:** canonical URLs, localized metadata, structured data, pagination rules, noindex for private pages and valid redirects.
+- **Current state:** **Partial.** Sitemap and metadata surfaces exist; full structured-data and localization coverage need verification.
+
+#### 48. Newsletter and lifecycle email
+- **Purpose:** Consent-based subscriptions, confirmation, preferences and unsubscribe.
+- **Pages:** newsletter signup, confirmation, preference center and admin subscriber list.
+- **Models:** `NewsletterSubscriber`, `UserConsent`, `OutboxEvent` (for reliable delivery where adopted).
+- **API:** `/api/newsletter`, `/api/newsletter/confirm`, `/api/newsletter/unsubscribe`, `/api/admin/control-panel/subscribers`.
+- **Must include:** double opt-in, token hashing/expiry/single-use, consent evidence, unsubscribe suppression and delivery retries.
+- **Current state:** **Partial, tested vertical slice.** Newsletter route/service/repository/token/email layers and focused tests exist; broader lifecycle automation remains.
+
+#### 49. Property listings and booking domain (separate bounded context)
+- **Purpose:** Preserve Mtjr2's real-estate listing and booking-request capabilities without coupling them to product checkout.
+- **Pages:** `/properties`, `/properties/[id]`, seller property creation, `/properties/[id]/book`, account wishlist, admin property moderation.
+- **Models:** `Property`, `PropertyMedia`, `PropertyTranslation`, `PropertyWishlist`, `BookingRequest`, shared `User`, `Seller`, `Store`.
+- **API:** `/api/properties`, `/api/properties/[id]`, `/api/properties/[id]/wishlist`, `/api/properties/wishlist`, `/api/bookings`, `/api/admin/properties/*`.
+- **Must include:** listing lifecycle, media/localization, ownership, moderation, booking request status and notifications. Do not reuse product `Order` or `Cart` semantics unless a separately designed requirement justifies it.
+- **Current state:** **Partial.** Property pages/APIs exist; media/translations/booking integration require further verification.
+
+## 4. Required dashboard navigation
+
+These are target information architectures. Existing route names may be retained or migrated incrementally; do not create duplicate pages merely to match labels.
+
+### Customer account
+- Overview
+- Profile and security
+- Addresses
+- Orders and tracking
+- Returns and refunds
+- Wishlist
+- Reviews and questions
+- Messages and support
+- Notifications and preferences
+- Invoices
+
+### Seller center
+- Overview
+- Products and variants
+- Orders and fulfillment
+- Inventory and warehouses
+- Suppliers and purchase orders
+- Shipping
+- Reviews and reputation
+- Marketing and coupons
+- Finance, transactions and payouts
+- Team and permissions
+- Store profile, policies and localization
+- Reports and settings
+
+### Platform administration
+- Command center
+- Users and access control
+- Sellers, KYC and stores
+- Catalog and moderation
+- Orders and exceptions
+- Payments, refunds and disputes
+- Commissions, ledger and payouts
+- Shipping and logistics
+- Tax and customs
+- Promotions, loyalty and gift cards
+- Reviews and support
+- CMS and SEO
+- Markets, currencies and localization
+- Analytics and reports
+- Integrations, webhooks and jobs
+- Security, audit and settings
+- Property listings and bookings
+
+## 5. Canonical model ownership and schema-change gate
+
+The model names below are the canonical domain inventory to reuse. The model map is the authority for current callsites and relationships. A model appearing here does not authorize creating another similarly named table.
+
+| Domain | Target canonical models (add incrementally; verify actual presence in schema) | Primary owner |
+|---|---|---|
+| Identity/access | User, UserSession, OAuthAccount, Role, Permission, RolePermission, UserRoleAssignment, TwoFactorAuthentication, PasswordResetToken, VerificationToken, UserConsent, LoginAttempt, UserAddress | Identity |
+| Global markets | Currency, ExchangeRate, Country, StateProvince, City | Platform markets |
+| Seller/store | Seller, SellerVerification, SellerDocument, SellerTaxRegistration, Store, StoreTranslation, SellerStaff | Seller |
+| Catalog | Category, CategoryTranslation, Brand, BrandTranslation, Product, ProductCategory, ProductTranslation, ProductMedia, AttributeDefinition, ProductAttribute, ProductAttributeValue, ProductVariant, VariantAttribute, ProductIdentifier, ProductPrice | Catalog |
+| Inventory/procurement | Warehouse, Inventory, InventoryMovement, InventoryReservation, StockTransfer, StockTransferItem, Supplier, SupplierProduct, PurchaseOrder, PurchaseOrderItem, GoodsReceipt, GoodsReceiptItem | Inventory/procurement |
+| Cart/orders | GuestSession, Cart, CartItem, Order, OrderAddress, VendorOrder, OrderItem, OrderStatusHistory | Commerce |
+| Payments/finance | PaymentProvider, Payment, PaymentAttempt, Refund, PaymentReconciliation, Dispute, DisputeEvidence, LedgerAccount, JournalEntry, JournalLine, SellerLedgerEntry, CommissionRule, CommissionTransaction, PayoutMethod, Payout | Payments/finance |
+| Tax/logistics/returns | TaxRegion, TaxRate, TaxLine, CustomsDeclaration, CustomsDeclarationItem, ShippingCarrier, ShippingService, ShippingZone, ShippingRate, Shipment, Package, PackageItem, ShipmentItem, ShipmentTrackingEvent, ReturnRequest, ReturnItem | Tax/fulfillment |
+| Growth/trust/support | Promotion, Coupon, CouponRedemption, PromotionProduct, PromotionCategory, PromotionSeller, LoyaltyProgram, LoyaltyTransaction, GiftCard, GiftCardTransaction, Review, ReviewMedia, StoreReview, Favorite, Recommendation, ProductQuestion, ProductAnswer, SupportTicket, SupportMessage, StoreConversation, StoreMessage | Growth/trust/support |
+| Documents/property | Invoice, InvoiceItem, CreditNote, Property, PropertyMedia, PropertyTranslation, PropertyWishlist, BookingRequest | Documents / Property |
+| Platform operations | Notification, AuditLog, SitePage, SitePageTranslation, MarketplaceSetting, FeatureFlag, Webhook, WebhookDelivery, Integration, OutboxEvent, BackgroundJob, Report, DailySiteVisit, SearchSynonym, NewsletterSubscriber | Platform operations |
+
+### Mandatory schema proposal template
+
+Any proposed new model or field must be accompanied by all of the following in the same change proposal:
+
+- **Business capability:** the exact user/business problem.
+- **Workflow:** the screen/action that creates or changes the data, and the screen/API that consumes it.
+- **Owner:** the bounded context responsible for the data.
+- **Existing-model review:** why current models, relations, enums, JSON fields or event records cannot support the requirement.
+- **Data contract:** fields, types, uniqueness, indexes, foreign keys, deletion policy and lifecycle.
+- **API/service:** exact endpoint/service/repository that will use it.
+- **Authorization:** who may read/write it and how scope is enforced.
+- **Migration:** forward/backward and data-preservation plan.
+- **Tests:** unit, integration, concurrency/idempotency and end-to-end evidence as relevant.
+
+If any item is missing, defer the schema change.
+
+## 6. Implementation order and gates
+
+| Order | Workstream | Exit gate |
+|---:|---|---|
+| 0 | Preserve repository state and reconcile documentation | Confirm branch/commit and working changes; no overwrites. |
+| 1 | Canonical schema, migrations and model map | Validate schema, generate client, replay active migrations on isolated DB, explain drift, refresh model-to-callsite map. |
+| 2 | Architecture, identity and authorization | Repository/service/validation boundaries; canonical role and store-scope tests; no unauthorized access. |
+| 3 | Catalog and product domain | Category/product/variant/media/price/stock reads and writes use canonical schema. |
+| 4 | Search and discovery | Search, filters, pagination, synonyms and URL state use canonical catalog. |
+| 5 | Cart and checkout | Guest/customer cart, variant stock, server totals, reservations, tax/shipping quote, idempotent order creation. |
+| 6 | Orders, payments and fulfillment | Valid order lifecycle, provider-verified idempotent payments, vendor orders, shipments and stock movement. |
+| 7 | Seller operations | Seller onboarding, store isolation, product/order/inventory workflows and scoped staff. |
+| 8 | Finance and platform administration | Commission, ledger, refunds, payouts, reconciliation, tax and audited admin actions. |
+| 9 | Reviews, support, messaging and notifications | Complete customer/seller/admin workflows and abuse controls. |
+| 10 | Global markets, CMS, SEO and growth | Localization, market rules, content, promotions and lifecycle communication. |
+| 11 | Property bounded context | Independently tested listing and booking workflows. |
+| 12 | Reliability, security and performance | Threat model, job retries, observability, load/query checks and recovery tests. |
+| 13 | UX and visual QA | Responsive, accessible and consistent customer/seller/admin experiences; no broken controls. |
+| 14 | Release readiness | CI green, migration rehearsal, staging smoke tests, rollback and deployment documentation. |
+
+**Do not skip dependencies.** In particular, do not build full checkout before canonical catalog, inventory, identity and payment contracts are integrated.
+
+## 7. Cross-system acceptance checklist
+
+A system may be marked **Complete** only when applicable checks pass:
+
+- [ ] Every page is linked from the correct role-specific navigation.
+- [ ] Every visible button has a real, permission-checked action and useful loading/error/success states.
+- [ ] API inputs are validated and bounded; output DTOs do not leak private fields.
+- [ ] All reads/writes go through the domain service/repository boundary.
+- [ ] Tenant, seller, store and customer ownership are enforced server-side.
+- [ ] Database constraints and transactions protect invariants.
+- [ ] Retry-sensitive operations are idempotent.
+- [ ] Audit events exist for sensitive administrative and financial changes.
+- [ ] Empty, loading, error, permission-denied and success states are designed.
+- [ ] Unit and integration tests cover normal, invalid, unauthorized and failure cases.
+- [ ] End-to-end tests cover the complete user journey against an isolated PostgreSQL database.
+- [ ] Responsive and accessibility checks pass.
+- [ ] Documentation records exact commands, results, known gaps and commit reference.
+
+## 8. Reference UI images and design direction
+
+The following are **external inspiration references**, not screenshots of Mtjr2 and not requirements to copy. Use them to guide information hierarchy, density, tables, filters, charts and operational workflows. Before implementation, create Mtjr2-specific screens consistent with its brand and existing design system.
+
+| System / visual reference | Reference |
+|---|---|
+| Multi-vendor admin command center | [Marketplace admin dashboard example](https://badavyapar.com/uploads/20260703144856-c615c5f7fe35.png) |
+| Seller center and seller performance | [ABOUT YOU SellerCenter dashboard preview](https://partner.aboutyou.com/static/images/landingpage/stage/sellercenter-dashboard-preview.a5a182b8104f.png) |
+| Review moderation | [Stamped moderation dashboard example](https://images.g2crowd.com/uploads/attachment/file/197189/CNrThb2E0fQCEAE_.png) |
+| Warehouse / procurement operations | [Warehouse procurement dashboard example](https://apps.shopify.com/) |
+| Warehouse receiving, putaway and transfers | [Warehouse management workflow reference](https://apps.shopify.com/) |
+| Customer order account | [Shopify customer order account examples](https://apps.shopify.com/) |
+| General dashboard patterns | [Adobe Commerce admin dashboard guidance](https://experienceleague.adobe.com/docs/commerce-admin/start/admin/tools/admin.html) |
+
+### Visual standards for Mtjr2
+- **Admin:** dense but readable command center, persistent navigation, saved filters, bulk actions, status chips, audit trail and drill-down.
+- **Seller:** revenue and fulfillment first; quick actions, inventory alerts, clear pending-vs-available balances and store-scoped navigation.
+- **Customer:** simple shopping and account journeys, clear delivery/return status and transparent totals.
+- **Tables:** server pagination, column sorting, search, filters, empty states, responsive overflow and explicit row actions.
+- **Charts:** label units and date ranges; show definitions and distinguish gross sales from net revenue.
+- **Accessibility:** keyboard navigation, focus visibility, semantic labels, contrast and non-color status indicators.
+- Do not alter the existing homepage section order/category-grid distribution as a side effect of building dashboards. Treat homepage redesign as a separate approved task.
+
+## 9. Current known blockers — read before coding
+
+1. **P0 — Identity contract:** legacy auth code assumes fields such as `User.password`, `userImage`, `googleId` and scalar `role`; canonical schema uses different fields and role relations. Resolve the mapping before protected writes.
+2. **P0 — Catalog contract:** legacy code assumes `Product.userId`, `sellerId`, `images`, `basePrice`, `stockQuantity`, numeric `categoryId` and `approvalStatus`; canonical product ownership, variants, prices, media and inventory are relational.
+3. **P0 — Checkout/order/payment contract:** current handlers use legacy order/payment fields and lifecycle values. Rebuild against canonical order/vendor-order/payment models, provider verification and idempotency.
+4. **P1 — Cart persistence:** current cart is client-local and not a canonical server cart keyed by variant.
+5. **P1 — Inventory:** canonical warehouse/inventory models exist but a tested reservation/decrement/transfer workflow is not demonstrated.
+6. **P1 — Financial operations:** ledger, commissions and payouts are modeled but do not have proven application workflows.
+7. **P1 — Shipping, tax and returns:** models and some admin surfaces exist; end-to-end integration remains incomplete.
+8. **Phase Three:** canonical catalog pages are a bounded milestone only; visual/browser QA and full product-to-checkout journey remain outstanding.
+9. **Type/build debt:** consult the latest `docs/PROJECT_AUDIT.md` checkpoint before relying on old test counts; the audit recorded remaining generated-client contract errors at its latest checkpoint.
+
+Do not attempt to solve these blockers by adding duplicate tables or copying legacy columns into the canonical schema.
+
+## 10. How to maintain this document
+
+For each system, update its status only with evidence:
+- **Implementation:** commit SHA and exact pages/API/service/repository paths.
+- **Schema:** model names used; link to the model map. Record schema changes and migration IDs.
+- **Tests:** exact command, database target type (isolated test DB only), pass/fail counts and skipped tests.
+- **UX:** screenshots or review artifact, viewport sizes and accessibility notes.
+- **Known gaps:** explicit remaining work and owner/next dependency.
+
+When the model map or schema changes, regenerate/review `docs/architecture/prisma-model-usage-map.md` and update this blueprint in the same workstream. Keep `docs/PROJECT_AUDIT.md` as the chronological execution log; this file is the target-state functional map, not a replacement for the audit log.
+
+---
+
+**Copilot instruction:** Before implementing a system, read this blueprint, `docs/PROJECT_AUDIT.md`, `docs/architecture/prisma-model-usage-map.md`, and `prisma/schema.prisma`. Trace the existing route → service → repository → model path first. Reuse the canonical schema. Do not invent tables, routes, or completed functionality. Implement one dependency-ready vertical slice, test it, and document the result before moving on.
+
+## 11. Integrity re-check — 2026-11-03 (supersedes the earlier static warning)
+
+A fresh static inspection of `prisma/schema.prisma` on the current `main` branch after the market and seller/store schema commits found:
+
+| Check | Current result |
+|---|---|
+| Prisma model declarations | 21 |
+| Duplicate model names | None found |
+| Unresolved Git conflict markers in Prisma schema | None found |
+| Seller/store ownership and market relations | Present at schema level |
+| Prisma validation / client generation after latest changes | Pending CI evidence |
+| Migration replay against clean isolated PostgreSQL | Pending |
+
+The earlier SNAP-01 through SNAP-05 findings described a prior repository snapshot and must not be treated as current defects without rechecking the exact file revision. The current schema scan does not reproduce the conflict-marker or duplicate-model findings. The earlier referenced companion paths `docs/PROJECT_AUDIT.md` and `docs/architecture/prisma-model-usage-map.md` were not found at those exact paths during this recheck; verify their current locations before relying on them or generating a replacement.
+
+### Current schema gate
+
+Until CI validates the latest schema and both committed migrations are replayed against a clean isolated PostgreSQL database:
+- Do not connect to or migrate the owner's production database.
+- Do not mark market or seller/store workflows Complete; only their schema foundations are committed.
+- Do not create additional marketplace models without the business capability, workflow, owner, API/service, authorization, migration, and test evidence required by Section 5.
+
+After the current schema is validated:
+1. Complete the market seed/repository/service slice and its focused PostgreSQL integration gate.
+2. Implement seller onboarding and store-scoped authorization using existing identity and scoped role-assignment models.
+3. Continue with category/brand taxonomy, then product/variant/media/pricing according to the Phase 3 plan.
+4. Refresh the model-to-callsite map when its canonical location is confirmed.
+
+**Scope note:** this is a remote static inspection only. No local runtime validation, Prisma generation, database migration replay, or production database access was performed as part of this documentation update.
+
+
+## Buying Core implementation update — 2026-11-03
+
+The current implementation status is tracked in `docs/implementation/PHASE_04_BUYING_PLAN.md`. Cart, checkout quote/reservation, and delivery-address capture have passed their focused CI and disposable PostgreSQL gates. Configurable store shipping rates and per-store quote selections have been implemented on the stacked shipping branch, including Prisma persistence, migration, seller configuration UI, buyer checkout UI, and APIs; their verification is pending. Tax, discount, final order totals, order creation, payment, and shipment execution are not yet complete. Do not mark the buying system complete until its remaining workflows and verification gates pass.
+
+
+## Buying Core update — shipping and tax implementation (2026-11-03)
+
+- Store-level shipping rates and quote-owned per-store shipping selections are implemented on the stacked shipping branch; final General CI was cancelled and the shipping slice remains pending final verification.
+- Market tax configuration is now implemented on the next stacked branch with `MarketTaxRate` and `CheckoutTaxSnapshot`, admin configuration API/UI, and buyer quote tax calculation API/UI.
+- The current tax slice supports explicit market-wide or exact-region rules, inclusive/exclusive basis-point calculation, optional shipping taxation, and quote snapshots. It intentionally does not infer statutory rates or claim complete jurisdictional compliance.
+- The next buying milestone is server-side final quote validation and order/vendor-order creation. Discounts and payment remain incomplete.
+
+## Unified page registry requirement
+
+The 49-system inventory is a business-capability plan, not a substitute for the full page/route checklist. The canonical page-by-page inventory and audit template now lives at [`docs/implementation/PAGE_ROUTE_REGISTRY.md`](../implementation/PAGE_ROUTE_REGISTRY.md). Before marking any system complete, reconcile this registry against the actual App Router tree, record audience/role, owning system, page component, API/domain service, Prisma entities, status and verification evidence. The registry intentionally distinguishes target routes from verified existing routes; its initial statuses must be updated only after inspecting the active branch. Do not add duplicate systems or Prisma models solely to satisfy the page inventory.

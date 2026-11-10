@@ -1,0 +1,43 @@
+import { beforeEach,describe,expect,it,vi } from "vitest";
+import { AdCampaignStatus } from "@prisma/client";
+const m=vi.hoisted(()=>({session:vi.fn(),permission:vi.fn(),scoped:vi.fn(),storeFind:vi.fn(),productFind:vi.fn(),marketFind:vi.fn(),storeMarketFind:vi.fn(),campaignFind:vi.fn(),campaignCreate:vi.fn(),campaignUpdate:vi.fn(),campaignFindOrThrow:vi.fn(),audit:vi.fn(),transaction:vi.fn()}));
+vi.mock("server-only",()=>({}));
+vi.mock("@/server/identity/current-session",()=>({requireCurrentSession:m.session}));
+vi.mock("@/server/identity/permission-guard",()=>({requirePermission:m.permission}));
+vi.mock("@/server/identity/permission-repository",()=>({userHasScopedPermission:m.scoped}));
+vi.mock("@/lib/db/prisma",()=>({prisma:{store:{findUnique:m.storeFind},product:{findFirst:m.productFind},market:{findFirst:m.marketFind},storeMarket:{findUnique:m.storeMarketFind},adCampaign:{findUnique:m.campaignFind},$transaction:m.transaction}}));
+import {changeSellerAdCampaignStatus,createSellerAdCampaign,submitSellerAdCampaign,moderateAdCampaign} from "@/server/advertising/campaigns";
+const tx={adCampaign:{create:m.campaignCreate,updateMany:m.campaignUpdate,findUniqueOrThrow:m.campaignFindOrThrow},auditLog:{create:m.audit}};
+const campaign={id:"campaign-1",storeId:"store-1",productId:"product-1",budgetMinor:BigInt(10000),dailyBudgetMinor:BigInt(2000),cpcBidMinor:BigInt(100),spentMinor:BigInt(0),impressionCount:BigInt(0),clickCount:BigInt(0),title:"Promote my product",message:null,status:AdCampaignStatus.DRAFT,startsAt:new Date("2027-01-01T00:00:00Z"),endsAt:new Date("2027-01-02T00:00:00Z")};
+describe("seller advertising campaigns",()=>{
+ beforeEach(()=>{vi.clearAllMocks();m.session.mockResolvedValue({userId:"seller-1"});m.permission.mockResolvedValue({userId:"admin-1"});m.scoped.mockResolvedValue(false);m.storeFind.mockResolvedValue({id:"store-1",status:"ACTIVE",seller:{ownerId:"seller-1",status:"ACTIVE"}});m.productFind.mockResolvedValue({id:"product-1",brandId:null,categories:[],variants:[{prices:[{id:"price-1"}]}]});m.marketFind.mockResolvedValue({id:"market-1",defaultCurrencyCode:"EUR"});m.storeMarketFind.mockResolvedValue({isEnabled:true});m.campaignCreate.mockResolvedValue(campaign);m.campaignFind.mockResolvedValue({id:"campaign-1",storeId:"store-1",status:AdCampaignStatus.DRAFT});m.campaignUpdate.mockResolvedValue({count:1});m.campaignFindOrThrow.mockResolvedValue({...campaign,status:AdCampaignStatus.SUBMITTED});m.audit.mockResolvedValue({});m.transaction.mockImplementation(async(callback:(transaction:unknown)=>unknown)=>callback(tx));});
+ it("creates an audited draft for a published product in the seller's active store",async()=>{const result=await createSellerAdCampaign({storeId:"store-1",productId:"product-1",marketId:"market-1",currencyCode:"EUR",budgetMinor:"10000",dailyBudgetMinor:"2000",cpcBidMinor:"100",title:"Promote my product",startsAt:"2027-01-01T00:00:00.000Z",endsAt:"2027-01-02T00:00:00.000Z"});expect(result.status).toBe(AdCampaignStatus.DRAFT);expect(m.productFind).toHaveBeenCalledWith(expect.objectContaining({where:{id:"product-1",storeId:"store-1",status:"ACTIVE",approvalStatus:"APPROVED"}}));expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({action:"advertising.campaign.created",scopeId:"store-1"})}));});
+ it("denies another seller's store without exact store-scoped permission",async()=>{m.storeFind.mockResolvedValue({id:"store-1",status:"ACTIVE",seller:{ownerId:"seller-2",status:"ACTIVE"}});await expect(createSellerAdCampaign({storeId:"store-1",productId:"product-1",marketId:"market-1",currencyCode:"EUR",budgetMinor:"10000",dailyBudgetMinor:"2000",cpcBidMinor:"100",title:"Promote my product",startsAt:"2027-01-01T00:00:00.000Z",endsAt:"2027-01-02T00:00:00.000Z"})).rejects.toThrow(/advertising access/i);expect(m.productFind).not.toHaveBeenCalled();expect(m.scoped).toHaveBeenCalledWith("seller-1",expect.objectContaining({permissionKey:"ads:manage",scope:{type:"STORE",id:"store-1"}}));});
+ it("rejects a foreign or unapproved product",async()=>{m.productFind.mockResolvedValue(null);await expect(createSellerAdCampaign({...{storeId:"store-1",productId:"product-1",marketId:"market-1",currencyCode:"EUR",budgetMinor:"10000",dailyBudgetMinor:"2000",cpcBidMinor:"100",title:"Promote my product",startsAt:"2027-01-01T00:00:00.000Z",endsAt:"2027-01-02T00:00:00.000Z"},productId:"foreign-product"})).rejects.toThrow(/approved, published product/i);expect(m.campaignCreate).not.toHaveBeenCalled();});
+
+ it("rejects a product without an active price in the selected market currency",async()=>{
+  m.productFind.mockResolvedValue({id:"product-1",brandId:null,categories:[],variants:[{prices:[]}]});
+  await expect(createSellerAdCampaign({storeId:"store-1",productId:"product-1",marketId:"market-1",currencyCode:"EUR",budgetMinor:"10000",dailyBudgetMinor:"2000",cpcBidMinor:"100",title:"Promote my product",startsAt:"2027-01-01T00:00:00.000Z",endsAt:"2027-01-02T00:00:00.000Z"})).rejects.toThrow(/active price/i);
+  expect(m.campaignCreate).not.toHaveBeenCalled();
+ });
+ it("validates category and brand targets against the advertised product",async()=>{
+  m.productFind.mockResolvedValue({id:"product-1",brandId:"brand-1",categories:[{categoryId:"category-1"}],variants:[{prices:[{id:"price-1"}]}]});
+  const base={storeId:"store-1",productId:"product-1",marketId:"market-1",currencyCode:"EUR",budgetMinor:"10000",dailyBudgetMinor:"2000",cpcBidMinor:"100",title:"Promote my product",startsAt:"2027-01-01T00:00:00.000Z",endsAt:"2027-01-02T00:00:00.000Z"};
+  await expect(createSellerAdCampaign({...base,targetCategoryId:"category-2"})).rejects.toThrow(/category does not match/i);
+  await expect(createSellerAdCampaign({...base,targetBrandId:"brand-2"})).rejects.toThrow(/brand does not match/i);
+  expect(m.campaignCreate).not.toHaveBeenCalled();
+  await createSellerAdCampaign({...base,targetCategoryId:"category-1",targetBrandId:"brand-1"});
+  expect(m.campaignCreate).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({targetCategoryId:"category-1",targetBrandId:"brand-1"})}));
+ });
+ it("submits only a draft with conditional state update and audit",async()=>{await submitSellerAdCampaign("campaign-1");expect(m.campaignUpdate).toHaveBeenCalledWith({where:{id:"campaign-1",status:AdCampaignStatus.DRAFT},data:expect.objectContaining({status:AdCampaignStatus.SUBMITTED})});expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({action:"advertising.campaign.submitted"})}));});
+ it("allows an approved campaign to be activated before its future start time",async()=>{
+  const now=new Date("2026-11-08T12:00:00.000Z");
+  m.campaignFind.mockResolvedValueOnce({id:"campaign-1",storeId:"store-1",status:AdCampaignStatus.APPROVED,startsAt:new Date("2026-12-01T00:00:00.000Z"),endsAt:new Date("2026-12-31T00:00:00.000Z")});
+  m.campaignFind.mockResolvedValueOnce({budgetMinor:BigInt(10000),dailyBudgetMinor:BigInt(2000),cpcBidMinor:BigInt(100),spentMinor:BigInt(0),marketId:"market-1",currencyCode:"EUR"});
+  m.campaignFindOrThrow.mockResolvedValue({...campaign,status:AdCampaignStatus.ACTIVE});
+  const result=await changeSellerAdCampaignStatus("campaign-1","ACTIVATE",now);
+  expect(result.status).toBe(AdCampaignStatus.ACTIVE);
+  expect(m.campaignUpdate).toHaveBeenCalledWith({where:{id:"campaign-1",status:AdCampaignStatus.APPROVED},data:{status:AdCampaignStatus.ACTIVE}});
+ });
+ it("requires moderation permission and a rejection reason",async()=>{await expect(moderateAdCampaign("campaign-1","REJECT",undefined)).rejects.toThrow(/reason/i);expect(m.permission).toHaveBeenCalledWith(expect.objectContaining({permissionKey:"ads:moderate"}));expect(m.campaignUpdate).not.toHaveBeenCalled();});
+});

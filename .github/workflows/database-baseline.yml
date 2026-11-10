@@ -1,0 +1,58 @@
+name: Database Baseline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "prisma/schema.prisma"
+      - "prisma/migrations/**"
+      - "prisma/seed.cjs"
+      - ".github/workflows/database-baseline.yml"
+
+concurrency:
+  group: database-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clean-postgres-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: mtjr2_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d mtjr2_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/mtjr2_ci?schema=public
+      AUTH_SECRET: ci-only-secret-that-is-long-enough-for-validation
+      APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx prisma validate
+      - run: npx prisma generate
+      - name: Verify committed baseline migration exists
+        shell: bash
+        run: |
+          test -s prisma/migrations/migration_lock.toml
+          test -s prisma/migrations/20261103000000_identity_baseline/migration.sql
+      - name: Deploy committed migrations to clean PostgreSQL
+        run: npx prisma migrate deploy
+      - name: Verify migration state
+        run: npx prisma migrate status
+      - name: Apply baseline roles and permissions twice
+        run: |
+          npm run db:seed
+          npm run db:seed
