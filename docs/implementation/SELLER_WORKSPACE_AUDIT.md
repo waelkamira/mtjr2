@@ -49,6 +49,11 @@ This is not a UI-only omission. The accounting journal foundation exists, but it
 - Synchronized the sidebar's selected-store identity with active-store changes.
 - Synchronized the seller finance page with the same active-store preference; selecting a store in finance updates the shared workspace selection, and changing the store elsewhere updates finance.
 - Added 7/30/90-day range controls to seller performance charts using the existing server-validated analytics date range (maximum 90 days); no schema change was required.
+- Aligned the seller sidebar's invalid/missing active-store fallback with the finance overview: saved active store, then owned store, then first available store.
+- Made the overlapping structured-property migration idempotent after PostgreSQL CI exposed duplicate `Product.city` and property-object creation against earlier migrations.
+- Added origin/CSRF request validation to all seller payout-method mutations (create, set default and disable).
+- Fixed the Excel workbook download's browser document reference and added a Vitest regression test covering download invocation, all five worksheets and XML escaping.
+
 - Hardened seller inbox sending/loading/error states.
 - Reworked seller Q&A and localized Q&A/review/product/order/status presentation.
 - Preserved the existing one-store-per-seller server-side lock and validation.
