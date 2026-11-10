@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   userHasScopedPermission: vi.fn(),
   userHasPermission: vi.fn(),
   storeFindUnique: vi.fn(),
+  storeFindFirst: vi.fn(),
+  storeMediaAssetDeleteMany: vi.fn(),
   brandFindFirst: vi.fn(),
   categoryCount: vi.fn(),
   categoryFindMany: vi.fn(),
@@ -38,7 +40,7 @@ vi.mock("@/server/identity/current-session", () => ({
 }));
 vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission: mocks.userHasScopedPermission, userHasPermission: mocks.userHasPermission }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { product: { findUnique: mocks.productFindUnique }, $transaction: mocks.transaction }
+  prisma: { product: { findUnique: mocks.productFindUnique }, store: { findFirst: mocks.storeFindFirst }, storeMediaAsset: { deleteMany: mocks.storeMediaAssetDeleteMany }, $transaction: mocks.transaction }
 }));
 
 import { createDraftProduct, publishProduct, rejectProduct, updateDraftProduct } from "@/server/catalog/products";
@@ -50,6 +52,8 @@ describe("product lifecycle", () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "seller-1" });
     mocks.userHasScopedPermission.mockResolvedValue(false);
     mocks.userHasPermission.mockResolvedValue(false);
+    mocks.storeFindFirst.mockResolvedValue(null);
+    mocks.storeMediaAssetDeleteMany.mockResolvedValue({ count: 1 });
     mocks.storeFindUnique.mockResolvedValue({
       id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" },
       markets: [{ marketId: "market-1" }]
