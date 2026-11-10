@@ -23,7 +23,7 @@ export class SellerPayoutMethodNotFoundError extends Error {
 }
 
 function validIban(value: string) {
-  const iban = value.replace(/\\s+/g, "").toUpperCase();
+  const iban = value.replace(/\s+/g, "").toUpperCase();
   if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
   const rearranged = iban.slice(4) + iban.slice(0, 4);
   let remainder = 0;
@@ -62,7 +62,7 @@ export async function listSellerPayoutMethods() {
 export async function createSellerPayoutMethod(input: unknown) {
   const data = inputSchema.parse(input);
   const { actor, seller } = await requireSellerOwner();
-  const accountIdentifier = data.accountIdentifier.replace(/\\s+/g, "").toUpperCase();
+  const accountIdentifier = data.accountIdentifier.replace(/\s+/g, "").toUpperCase();
   if (data.type === SellerPayoutMethodType.IBAN && !validIban(accountIdentifier)) {
     throw new Error("Enter a valid IBAN. The checksum did not pass validation.");
   }
