@@ -914,6 +914,21 @@ export default function SellerWorkspacePage() {
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#665b35]">{translate(locale, "Shipping settings", "إعدادات الشحن")}</strong><span className="mt-1 block text-xs text-[#897b4b]">{translate(locale, "Maintain delivery services, rates and destinations.", "حدّث خدمات التوصيل والأسعار والوجهات.")}</span></span>
                   <span className="ms-auto text-lg text-[#897b4b] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
                 </Link>
+                <Link href="/seller/advertising" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f8e8d8,#efd2bd)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📣</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#79583f]">{translate(locale, "Advertising campaigns", "الحملات الإعلانية")}</strong><span className="mt-1 block text-xs text-[#92745f]">{translate(locale, "Manage campaign drafts, budgets and invoices.", "أدر مسودات الحملات والميزانيات والفواتير.")}</span></span>
+                  <span className="ms-auto text-lg text-[#92745f]" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/settings" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#eeeaf6,#dcd6ed)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">⚙️</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#554d78]">{translate(locale, "Store settings", "إعدادات المتجر")}</strong><span className="mt-1 block text-xs text-[#817aa4]">{translate(locale, "Update your business profile and account preferences.", "حدّث ملف نشاطك التجاري وتفضيلات الحساب.")}</span></span>
+                  <span className="ms-auto text-lg text-[#817aa4]" aria-hidden="true">↗</span>
+                </Link>
+                {selectedStore.isOwner && <Link href="/seller/staff" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e2f1e9,#cfe7dc)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">👥</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#426b59]">{translate(locale, "Manage store team", "إدارة فريق المتجر")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Invite staff and assign least-privilege store roles.", "ادعُ الموظفين وامنحهم أقل الصلاحيات اللازمة.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668d7f]" aria-hidden="true">↗</span>
+                </Link>}
                 {selectedStore.isOwner && <a href={`/api/seller/stores/${encodeURIComponent(selectedStore.id)}/export`} className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#d9eeea,#b9ded9)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
                   <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📥</span>
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#365b50]">{translate(locale, "Export store to Excel", "تصدير بيانات المتجر إلى Excel")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Download your store profile, catalog, prices and inventory.", "نزّل ملف المتجر والمنتجات والأسعار والمخزون.")}</span></span>
