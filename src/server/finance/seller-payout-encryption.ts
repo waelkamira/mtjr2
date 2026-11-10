@@ -17,13 +17,14 @@ function keyRing() {
   }
   const version = env.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION;
   const master = keys.get(version);
-  if (!master) throw new Error("Seller bank-account encryption is not configured. Set the active payment encryption key ring.");
+  const fingerprintMaster = keys.get(1);
+  if (!master || !fingerprintMaster) throw new Error("Seller bank-account encryption is not configured. Set the active payment encryption key ring and retain key version 1 for stable account fingerprints.");
   // Derive independent keys for payout data and account fingerprints.
   const derive = (key: Buffer) => ({
     encryptionKey: createHmac("sha256", key).update("matjar:seller-payout:encryption:v1").digest(),
     fingerprintKey: createHmac("sha256", key).update("matjar:seller-payout:fingerprint:v1").digest()
   });
-  return { version, active: derive(master), versions: new Map([...keys.entries()].map(([keyVersion, key]) => [keyVersion, derive(key)])) };
+  return { version, active: derive(master), fingerprintKey: derive(fingerprintMaster).fingerprintKey, versions: new Map([...keys.entries()].map(([keyVersion, key]) => [keyVersion, derive(key)])) };
 }
 
 export function encryptSellerPayoutDetails(details: { accountIdentifier: string; routingCode?: string }) {
@@ -39,7 +40,7 @@ export function encryptSellerPayoutDetails(details: { accountIdentifier: string;
 
 export function fingerprintSellerPayoutAccount(countryCode: string, accountIdentifier: string) {
   const keys = keyRing();
-  return createHmac("sha256", keys.active.fingerprintKey)
+  return createHmac("sha256", keys.fingerprintKey)
     .update(countryCode.toUpperCase())
     .update(":")
     .update(accountIdentifier.replace(/\s+/g, "").toUpperCase())
