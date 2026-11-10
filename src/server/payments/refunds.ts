@@ -322,11 +322,11 @@ async function finalizeProviderRefund(refundId: string, providerRefundReference:
     if (refund.status === RefundStatus.COMPLETED) return { id: refund.id, status: refund.status, alreadyApplied: true };
     if (refund.status !== RefundStatus.PROCESSING_PROVIDER) throw new Error("The provider refund is no longer in a processing state.");
 
-    const completedBefore = await tx.refund.aggregate({
-      where: { paymentId: refund.paymentId, status: RefundStatus.COMPLETED },
+    const committedBefore = await tx.refund.aggregate({
+      where: { paymentId: refund.paymentId, status: { in: committedRefundStatuses }, id: { not: refund.id } },
       _sum: { amountMinor: true }
     });
-    const totalAfter = (completedBefore._sum.amountMinor ?? 0n) + refund.amountMinor;
+    const totalAfter = (committedBefore._sum.amountMinor ?? 0n) + refund.amountMinor;
     if (totalAfter > refund.payment.amountMinor) throw new Error("Completed provider refunds would exceed the captured payment.");
 
     const changed = await tx.refund.updateMany({
@@ -428,6 +428,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
       currencyCode: claim.currencyCode,
       idempotencyKey: `matjar-refund-${claim.id}`,
       refundId: claim.id,
+      paymentId: claim.paymentId,
       providerCredentials: snapshot?.credentials,
       providerEnvironment: snapshot?.environment
     });
