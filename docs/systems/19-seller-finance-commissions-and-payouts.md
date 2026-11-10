@@ -157,3 +157,11 @@
 - `listLedgerAccountEntries` provides cursor-paginated immutable account activity. This is a low-level internal primitive only; no seller balance, payout, withdrawal, or API is exposed yet.
 - **Intentionally not connected to commission/payment/refund flows:** seller payable recognition timing, shipment/delivery/return-window policy, tax/shipping ownership, chargebacks, clearing accounts and negative-balance handling are not approved. No financial balance is calculated from the new tables until those policies and account mappings are agreed and implemented.
 - Required next: define chart-of-accounts codes and currency bootstrap; approve the marketplace accounting policy; then add source-specific journal posting for captured payment, seller payable release, refunds and chargebacks with idempotent source keys and immutable reversals. Only after that build seller statements and payout methods/requests.
+
+
+## 2026-11-10 — Seller bank destination management (feature branch; transfer workflow incomplete)
+- Added `SellerPayoutMethod` and its migration. The seller owner can save an IBAN or local bank account, bank/holder/country/currency metadata, select a default destination, and disable a saved destination.
+- Account identifier and optional routing/SWIFT code are encrypted at rest with AES-256-GCM. Encryption and HMAC fingerprint keys are domain-separated from the configured versioned payment encryption key ring; the API returns only the last four characters and non-secret metadata. Account fingerprints prevent duplicate active destinations for one seller. Writes are audited without recording raw bank details.
+- New destinations start in `PENDING_VERIFICATION`. The UI explicitly warns that saving a destination does not make funds withdrawable or initiate a transfer. Card PAN, expiry date and CVV are not collected.
+- **Still not implemented:** verification evidence/provider confirmation, accounting policy and source journal postings, seller payable/available balance, holds/reserves, payout requests, finance approval/dual control, actual bank/provider transfer, failure/reversal and settlement reconciliation. Do not present this as a completed payout system.
+- Runtime migration, typecheck, security and browser verification remain pending on the feature PR.
