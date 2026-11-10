@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <main className="min-h-screen px-5 py-8 lg:px-8">
+    <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Identity administration", "إدارة الهوية")}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
