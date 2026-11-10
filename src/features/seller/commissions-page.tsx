@@ -149,14 +149,14 @@ export default function SellerCommissionsPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(145deg,#dbe6eb_0%,#cbd9e0_48%,#e5edf0_100%)] px-4 py-7 text-[#1d3448] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <header className="rounded-[28px] border border-white/90 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] p-5 shadow-[12px_14px_28px_rgba(38,66,84,.13),inset_0_2px_0_white,inset_0_-3px_8px_rgba(57,86,105,.06)] sm:p-7">
+        <header className="rounded-[28px] border border-white/90 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] p-4 sm:p-5 shadow-[12px_14px_28px_rgba(38,66,84,.13),inset_0_2px_0_white,inset_0_-3px_8px_rgba(57,86,105,.06)] sm:p-7">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#628493]">{t("SELLER FINANCE", "مالية البائع")}</p>
               <h1 className="mt-2 text-2xl font-black tracking-tight text-[#46516b] sm:text-3xl">{t("Commission statements", "كشوف العمولات")}</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5d788a]">{t("A read-only breakdown of commission snapshots recorded against paid order items. It explains the platform fee; it is not a withdrawable balance or payout statement.", "تفصيل للقراءة فقط للعمولات المسجلة على عناصر الطلبات المدفوعة. يوضح رسوم المنصة، ولا يمثل رصيدًا قابلاً للسحب أو كشف دفعات.")}</p>
             </div>
-            {stores.length > 1 && <label className="grid min-w-[220px] gap-1 text-xs font-bold text-[#42677b]">{t("Store", "المتجر")}<select value={storeId} onChange={(event) => setStoreId(event.target.value)} className="rounded-xl border border-white bg-[linear-gradient(145deg,#f5f2fb,#e8e5f2)] px-3 py-2.5 text-sm text-[#46516b] shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]">{storeOptions.map((store) => <option key={store.value} value={store.value}>{store.label}</option>)}</select></label>}
+            {stores.length > 1 && <label className="grid min-w-0 w-full gap-1 sm:min-w-[220px] text-xs font-bold text-[#42677b]">{t("Store", "المتجر")}<select value={storeId} onChange={(event) => setStoreId(event.target.value)} className="rounded-xl border border-white bg-[linear-gradient(145deg,#f5f2fb,#e8e5f2)] px-3 py-2.5 text-sm text-[#46516b] shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]">{storeOptions.map((store) => <option key={store.value} value={store.value}>{store.label}</option>)}</select></label>}
           </div>
         </header>
 
