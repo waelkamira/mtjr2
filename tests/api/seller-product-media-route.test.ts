@@ -12,7 +12,10 @@ const mocks = vi.hoisted(() => ({
   deleteProductImage: vi.fn(),
   verifyDeleteToken: vi.fn(),
   createDeleteToken: vi.fn(),
-  getNextImgurClientId: vi.fn()
+  getNextImgurClientId: vi.fn(),
+  consumeAuthenticatedActionAttempt: vi.fn(),
+  storeFindFirst: vi.fn(),
+  storeMediaAssetDeleteMany: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
@@ -20,6 +23,7 @@ vi.mock("@/server/identity/current-session", () => ({
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {},
   requireCurrentSession: mocks.requireCurrentSession
 }));
+vi.mock("@/server/identity/login-throttle", () => ({ consumeAuthenticatedActionAttempt: mocks.consumeAuthenticatedActionAttempt }));
 vi.mock("@/server/identity/request-security", () => ({
   validateIdentityMutationOrigin: mocks.validateIdentityMutationOrigin,
   validateIdentityMutationRequest: mocks.validateIdentityMutationRequest,
@@ -31,7 +35,8 @@ vi.mock("@/server/identity/permission-repository", () => ({
 }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    store: { findUnique: mocks.storeFindUnique },
+    store: { findUnique: mocks.storeFindUnique, findFirst: mocks.storeFindFirst },
+    storeMediaAsset: { deleteMany: mocks.storeMediaAssetDeleteMany },
     productMedia: { findFirst: mocks.productMediaFindFirst }
   }
 }));
@@ -56,6 +61,9 @@ describe("seller temporary product image deletion API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireCurrentSession.mockResolvedValue({ userId: "seller-1" });
+    mocks.consumeAuthenticatedActionAttempt.mockResolvedValue(false);
+    mocks.storeFindFirst.mockResolvedValue(null);
+    mocks.storeMediaAssetDeleteMany.mockResolvedValue({ count: 1 });
     mocks.storeFindUnique.mockResolvedValue({
       id: "store-1", status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }
     });

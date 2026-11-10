@@ -232,7 +232,7 @@ test.describe("seller catalog authoring", () => {
     await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
     await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
 
-    const priceInputs = page.locator('input[pattern="[0-9]+"]');
+    const priceInputs = page.getByLabel(/Selling price|سعر البيع/i);
     await expect(priceInputs.first()).toBeVisible();
     for (let index = 0; index < await priceInputs.count(); index += 1) {
       await priceInputs.nth(index).fill("1299");

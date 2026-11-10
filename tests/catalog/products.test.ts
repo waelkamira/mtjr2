@@ -61,7 +61,7 @@ describe("product lifecycle", () => {
     mocks.localityFindUnique.mockResolvedValue(null);
     mocks.marketFindMany.mockResolvedValue([{ id: "market-1", currencies: [{ currencyCode: "EUR" }] }]);
     mocks.productCreate.mockResolvedValue({ id: "product-1", productNumber: BigInt("101"), storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING" });
-    mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { seller: { ownerId: "seller-1" } } });
+    mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] } });
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", latitude: null, longitude: null, categories: [{ category: { slug: "general" } }], store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
     mocks.productMediaFindMany.mockResolvedValue([]);
@@ -185,7 +185,7 @@ describe("product lifecycle", () => {
     mocks.productFindUniqueTx.mockResolvedValue({
       id: "product-1", storeId: "store-1", status: "DRAFT", latitude: 33.5, longitude: 36.2,
       categories: [{ category: { slug: "real-estate" } }],
-      store: { seller: { ownerId: "seller-1" } }
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }
     });
     await updateDraftProduct("product-1", {
       propertyDetails: { propertyType: "HOUSE", listingType: "RENT", bedrooms: 3, bathrooms: 2, floorArea: "120" },
@@ -399,7 +399,7 @@ describe("product lifecycle", () => {
   });
 
   it("updates draft metadata and resets review status for a fresh review", async () => {
-    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { seller: { ownerId: "seller-1" } } });
+    mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] } });
     const result = await updateDraftProduct("product-1", { name: "Updated mug", categoryIds: ["category-1"] });
     expect(result.approvalStatus).toBe("PENDING");
     expect(mocks.productUpdateMany).toHaveBeenCalledOnce();
@@ -412,7 +412,7 @@ describe("product lifecycle", () => {
     mocks.productFindUniqueTx.mockResolvedValue({
       id: "product-1", storeId: "store-1", status: "DRAFT",
       neighborhood: "الحي القديم", categories: [{ category: { id: "category-1", slug: "phones-electronics", parentId: null } }],
-      store: { seller: { ownerId: "seller-1" } }
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }
     });
     mocks.localityFindUnique.mockResolvedValue({ id: "new-locality", governorateId: "sy-damascus" });
 
@@ -430,7 +430,7 @@ describe("product lifecycle", () => {
   it("replaces draft product images and deletes removed provider assets after commit", async () => {
     mocks.productFindUniqueTx.mockResolvedValue({
       id: "product-1", storeId: "store-1", status: "DRAFT",
-      store: { seller: { ownerId: "seller-1" } }
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }
     });
     mocks.productMediaFindMany.mockResolvedValue([
       { storageKey: "imgur:old-delete-hash" },
@@ -458,7 +458,7 @@ describe("product lifecycle", () => {
   it("does not delete provider images when the product update transaction fails", async () => {
     mocks.productFindUniqueTx.mockResolvedValue({
       id: "product-1", storeId: "store-1", status: "DRAFT",
-      store: { seller: { ownerId: "seller-1" } }
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }
     });
     mocks.productMediaFindMany.mockResolvedValue([{ storageKey: "imgur:old-delete-hash" }]);
     mocks.transaction.mockRejectedValueOnce(new Error("database transaction failed"));
