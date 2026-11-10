@@ -19,6 +19,10 @@ const inputSchema = z.object({
   isDefault: z.boolean().default(false)
 }).strict();
 
+export class SellerPayoutValidationError extends Error {
+  constructor(message: string) { super(message); this.name = "SellerPayoutValidationError"; }
+}
+
 export class SellerPayoutMethodNotFoundError extends Error {
   constructor() { super("Seller payout method not found."); this.name = "SellerPayoutMethodNotFoundError"; }
 }
@@ -47,10 +51,15 @@ export async function listSellerPayoutMethods() {
     orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
     select: { ...safeSelect, encryptedDetails: true, encryptionKeyVersion: true }
   });
-  return methods.map(({ encryptedDetails, encryptionKeyVersion, ...method }) => ({
-    ...method,
-    accountHolderName: decryptSellerPayoutDetails(encryptedDetails, encryptionKeyVersion).accountHolderName
-  }));
+  return methods.map(({ encryptedDetails, encryptionKeyVersion, ...method }) => {
+    let accountHolderName = "Protected account holder";
+    try {
+      accountHolderName = decryptSellerPayoutDetails(encryptedDetails, encryptionKeyVersion).accountHolderName;
+    } catch {
+      console.error("Unable to decrypt seller payout method", { id: method.id });
+    }
+    return { ...method, accountHolderName };
+  });
 }
 
 /** Validates, fingerprints, encrypts and audit-logs a new seller bank destination. */
@@ -59,23 +68,23 @@ export async function createSellerPayoutMethod(input: unknown) {
   const { actor, seller } = await requireSellerOwner();
   const accountIdentifier = data.accountIdentifier.replace(/\s+/g, "").toUpperCase();
   if (data.type === SellerPayoutMethodType.LOCAL_BANK_ACCOUNT) {
-    throw new Error("Local bank account formats are not enabled until country-specific account and routing validation is implemented. Use an IBAN account for now.");
+    throw new SellerPayoutValidationError("Local bank account formats are not enabled until country-specific account and routing validation is implemented. Use an IBAN account for now.");
   }
   if (data.type === SellerPayoutMethodType.IBAN && !isValidSellerIban(accountIdentifier)) {
-    throw new Error("Enter a valid IBAN. The checksum did not pass validation.");
+    throw new SellerPayoutValidationError("Enter a valid IBAN. The checksum did not pass validation.");
   }
   if (data.type === SellerPayoutMethodType.IBAN && accountIdentifier.slice(0, 2) !== data.countryCode) {
-    throw new Error("The IBAN country prefix must match the selected bank country.");
+    throw new SellerPayoutValidationError("The IBAN country prefix must match the selected bank country.");
   }
   if (data.routingCode && !/^[A-Za-z0-9-]{3,34}$/.test(data.routingCode.trim())) {
-    throw new Error("Enter a valid bank routing or SWIFT/BIC code.");
+    throw new SellerPayoutValidationError("Enter a valid bank routing or SWIFT/BIC code.");
   }
   const [country, currency] = await Promise.all([
     prisma.country.findUnique({ where: { iso2: data.countryCode }, select: { isActive: true } }),
     prisma.currency.findUnique({ where: { code: data.currencyCode }, select: { code: true, isActive: true } })
   ]);
-  if (!country?.isActive) throw new Error("Choose a valid active bank country.");
-  if (!currency?.isActive) throw new Error("Choose an active payout currency.");
+  if (!country?.isActive) throw new SellerPayoutValidationError("Choose a valid active bank country.");
+  if (!currency?.isActive) throw new SellerPayoutValidationError("Choose an active payout currency.");
   const fingerprint = fingerprintSellerPayoutAccount(seller.id, data.countryCode, accountIdentifier);
   const encrypted = encryptSellerPayoutDetails({
     accountIdentifier,
@@ -89,7 +98,7 @@ export async function createSellerPayoutMethod(input: unknown) {
       select: { id: true, status: true }
     });
     if (duplicate && duplicate.status !== SellerPayoutMethodStatus.DISABLED) {
-      throw new Error("This bank account is already saved for your seller account.");
+      throw new SellerPayoutValidationError("This bank account is already saved for your seller account.");
     }
     const existingCount = await tx.sellerPayoutMethod.count({
       where: { sellerId: seller.id, currencyCode: data.currencyCode, status: { not: SellerPayoutMethodStatus.DISABLED } }
