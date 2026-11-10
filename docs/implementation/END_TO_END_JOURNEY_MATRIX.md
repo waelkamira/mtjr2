@@ -375,3 +375,15 @@ Policy localization/versioning, market/currency controls, seller-specific notifi
 
 
 | Seller application pending review | Seller workspace /seller → authenticated owner profile | GET /api/seller/stores → getSellerWorkspace → Seller | The workspace now returns the authenticated owner's complete submitted application profile (business/contact details, selling plan, social links, map coordinates and submitted timestamp). A dedicated pending-review state displays the submitted record and status instead of dropping the seller into the operational dashboard. | Implemented on main; runtime/browser verification intentionally deferred. |
+
+
+## Seller finance and payout-method journeys — 2026-11-10
+
+| Journey | UI → API → persistence | Authorization and safety boundary | Current result |
+|---|---|---|---|
+| Owner exports store workbook | `/seller/finance` → `GET /api/seller/stores/[storeId]/export` → Store/Product/ProductVariant/ProductPrice/Inventory/Warehouse | Current session; server checks `Store.seller.ownerId`; bounded DB queries; inventory is constrained by both warehouse and product store; private/no-store; audit counts/truncation; buyer PII excluded | Merged to main in PR #87; Browser E2E and CodeQL passed |
+| Owner saves IBAN beneficiary | `/seller/payouts` → `POST /api/seller/payout-methods` → SellerPayoutMethod | Current session + seller-owner check; country-specific IBAN length, MOD-97 checksum and country-prefix validation; AES-256-GCM encryption; fingerprint dedupe; no plaintext bank identifier in DB/audit/API | Merged to main in PR #88; PostgreSQL integration, CodeQL and Browser E2E passed |
+| Owner lists, changes default or disables beneficiary | `/seller/payouts` → `GET/PATCH/DELETE /api/seller/payout-methods/[methodId]` → SellerPayoutMethod + AuditLog | Every operation is seller-owner scoped; list exposes masked identifier only; default is per currency; disabled record clears encrypted details; MFA errors are explicit | Implemented; no ownership verification or payout transfer |
+| Seller receives funds / withdraws | Not yet implemented | Must require approved finance policy, source-event journal posting, available/held balance, verified beneficiary, atomic reservation, approval, provider/bank confirmation and reconciliation | BLOCKED; no withdrawable balance or withdrawal control may be shown |
+
+**Important:** A saved default IBAN is not a verified bank account. `PENDING_VERIFICATION` is the only creation state; local bank-account formats remain disabled. Existing commission snapshots and refund allocations are informational and are not a seller payable ledger.
