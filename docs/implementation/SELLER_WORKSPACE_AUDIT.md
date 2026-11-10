@@ -10,7 +10,7 @@ The review covered every seller route currently present in `src/app/seller`, the
 
 | Route | Page / responsibility | Current integration and review notes |
 |---|---|---|
-| `/seller` | Seller onboarding, workspace overview, store identity, warehouses and delivery setup | Uses seller workspace/store APIs; one-store-per-seller is enforced in the server transaction with an advisory lock and existing-store check. Store details, public phone/address, logo/banner, warehouse and shipping data are editable from the workspace. |
+| `/seller` | Seller onboarding, workspace overview, store identity, warehouses and delivery setup | Uses seller workspace/store APIs; one-store-per-seller is enforced in the server transaction with an advisory lock and existing-store check. Store details, public phone/address, logo/banner, warehouse and shipping data are editable from the workspace. Dashboard sales/order charts now support 7-, 30- and 90-day ranges through the existing date-filtered analytics API. |
 | `/seller/products` | Product drafts, media, categories, attributes, variants, prices, real-estate fields and location | Connected to product APIs, category attributes, markets and media upload. Topbar search query is hydrated into the catalog filter. Location hierarchy and map place search use imported OpenSyria records only. Exact street address is now a separate seller-entered field. |
 | `/seller/orders` | Vendor orders, fulfillment status, dispatch and tracking events | Connected to seller order/status/shipment/tracking APIs. Currency formatting follows the active locale. |
 | `/seller/inventory` | Warehouses, stock ledger, adjustments, counts, quarantine and transfers | Connected to warehouse, inventory, stock-count, adjustment, quarantine and transfer APIs. Quantity actions are guarded by required selections and busy states. |
@@ -48,6 +48,7 @@ This is not a UI-only omission. The accounting journal foundation exists, but it
 - Confirmed the existing topbar query hydration and removed a duplicate initial-search effect.
 - Synchronized the sidebar's selected-store identity with active-store changes.
 - Synchronized the seller finance page with the same active-store preference; selecting a store in finance updates the shared workspace selection, and changing the store elsewhere updates finance.
+- Added 7/30/90-day range controls to seller performance charts using the existing server-validated analytics date range (maximum 90 days); no schema change was required.
 - Hardened seller inbox sending/loading/error states.
 - Reworked seller Q&A and localized Q&A/review/product/order/status presentation.
 - Preserved the existing one-store-per-seller server-side lock and validation.
