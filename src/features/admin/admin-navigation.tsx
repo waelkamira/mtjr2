@@ -43,7 +43,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
         </Link>
         <span className="text-xs text-white/60">{translate(locale, "Administration", "الإدارة")}</span>
       </div>
-      <nav aria-label={translate(locale, "Administration", "الإدارة")} className="flex gap-1 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:px-3">
+      <nav aria-label={translate(locale, "Administration", "الإدارة")} className="flex max-h-32 flex-wrap gap-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-3 lg:max-h-none lg:block lg:space-y-1 lg:overflow-visible lg:px-3">
         {links.filter((link) => !("platformOnly" in link) || !link.platformOnly || canManagePlatform).map((link) => {
           const active = link.href === "/admin/dashboard"
             ? pathname === link.href || pathname === "/admin/control-panel"
@@ -53,7 +53,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
               key={link.href}
               href={link.href}
               aria-current={active ? "page" : undefined}
-              className={`shrink-0 rounded-lg px-3 py-2 text-sm transition-colors lg:block ${
+              className={`min-w-0 shrink-0 rounded-lg px-3 py-2 text-sm transition-colors lg:block ${
                 active ? "bg-white/15 font-semibold text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
               }`}
             >
