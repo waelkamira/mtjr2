@@ -221,6 +221,23 @@ export default function PaymentProvidersPage() {
           {t("Active database configurations now drive new checkout sessions for their selected TEST/LIVE environment, supported countries and currencies. Each payment retains an encrypted credential snapshot so later credential rotation or provider disablement does not break verification of its existing webhook events.", "تتحكم الإعدادات النشطة المخزنة في قاعدة البيانات الآن بعمليات الدفع الجديدة وفق بيئة TEST/LIVE والدول والعملات المدعومة. يحتفظ كل دفع بنسخة مشفرة من بيانات الاعتماد حتى لا يؤدي تدوير المفاتيح أو تعطيل المزود إلى تعطيل التحقق من إشعارات المدفوعات القائمة.")}
         </div>
 
+        <section aria-labelledby="sham-cash-readiness" className="mt-5 rounded-2xl border border-dashed border-[var(--color-copper-600)]/50 bg-[var(--color-ivory-100)] p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[.16em] text-[var(--color-copper-600)]">{t("Planned payment provider", "مزود دفع قيد التجهيز")}</p>
+              <h2 id="sham-cash-readiness" className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">Sham Cash · شام كاش</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{t("Integration is pending official API approval and technical documentation. Sham Cash is not available at checkout and cannot be activated from this screen yet.", "الربط بانتظار الموافقة الرسمية ووثائق API التقنية. شام كاش غير متاح حالياً عند الدفع ولا يمكن تفعيله من هذه الصفحة بعد.")}</p>
+            </div>
+            <span className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">{t("Awaiting API access", "بانتظار الوصول إلى API")}</span>
+          </div>
+          <ol className="mt-4 grid gap-2 text-sm text-[var(--foreground)] sm:grid-cols-2">
+            <li>{t("1. Obtain written merchant/API approval from Sham Cash.", "1. الحصول على موافقة خطية للتاجر وواجهة API من شام كاش.")}</li>
+            <li>{t("2. Receive official API, webhook and settlement documentation.", "2. استلام وثائق API وWebhook والتسوية الرسمية.")}</li>
+            <li>{t("3. Implement signed server-side payment verification and reconciliation.", "3. تنفيذ التحقق من الدفع والتسوية من الخادم مع التوقيعات.")}</li>
+            <li>{t("4. Complete sandbox and controlled live verification before checkout activation.", "4. إكمال اختبار Sandbox والتحقق الفعلي المحدود قبل إظهاره عند الدفع.")}</li>
+          </ol>
+        </section>
+
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
 
         {showForm && <section className="mt-6 rounded-2xl border border-[var(--border)] bg-white p-5 lg:p-6">
