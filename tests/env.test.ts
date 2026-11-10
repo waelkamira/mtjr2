@@ -28,3 +28,26 @@ describe("deployment URL environment resolution", () => {
     expect(parsed.APP_URL).toBe("https://shop.example.com");
   });
 });
+
+
+describe("seller payout encryption key rotation", () => {
+  it("requires the stable version-one fingerprint key when the active encryption key rotates", () => {
+    expect(() => parseEnvironment({
+      ...base,
+      APP_URL: "https://shop.example.com",
+      PAYMENT_PROVIDER_ENCRYPTION_KEYS: JSON.stringify({ "2": "b".repeat(64) }),
+      PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION: "2"
+    })).toThrow(/retain version 1 for stable seller bank-account fingerprints/);
+  });
+
+  it("accepts a rotated active key while retaining version one", () => {
+    const parsed = parseEnvironment({
+      ...base,
+      APP_URL: "https://shop.example.com",
+      PAYMENT_PROVIDER_ENCRYPTION_KEY: "a".repeat(64),
+      PAYMENT_PROVIDER_ENCRYPTION_KEYS: JSON.stringify({ "2": "b".repeat(64) }),
+      PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION: "2"
+    });
+    expect(parsed.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION).toBe(2);
+  });
+});
