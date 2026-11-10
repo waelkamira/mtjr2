@@ -665,7 +665,7 @@ model SellerPayoutMethod {
   seller               Seller                   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
   currency             Currency                 @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
 
-  @@unique([sellerId, currencyCode, fingerprint])
+  @@unique([sellerId, fingerprint])
   @@index([sellerId, currencyCode, status, isDefault])
 }
 
