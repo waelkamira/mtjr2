@@ -28,7 +28,7 @@ function keyRing() {
 }
 
 /** Encrypts seller bank routing details using AES-256-GCM and the active key version. */
-export function encryptSellerPayoutDetails(details: { accountIdentifier: string; routingCode?: string }) {
+export function encryptSellerPayoutDetails(details: { accountIdentifier: string; accountHolderName: string; routingCode?: string }) {
   const keys = keyRing();
   const nonce = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", keys.active.encryptionKey, nonce);
@@ -65,5 +65,5 @@ export function decryptSellerPayoutDetails(envelope: string, version: number) {
   const plaintext = Buffer.concat([decipher.update(Buffer.from(ciphertextPart, "base64url")), decipher.final()]).toString("utf8");
   const parsed = JSON.parse(plaintext) as unknown;
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Stored seller bank-account details are invalid.");
-  return parsed as { accountIdentifier: string; routingCode?: string };
+  return parsed as { accountIdentifier: string; accountHolderName: string; routingCode?: string };
 }
