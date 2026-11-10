@@ -4413,3 +4413,9 @@ The platform account policy is now explicit: email verification is not required 
 - Reduced checkout horizontal padding on phones and allowed its header and long quote references to wrap.
 - Corrected an over-broad responsive CSS rule that forced every admin/seller grid into one column, which also collapsed intentional two-column image galleries and KPI tiles. Responsive Tailwind breakpoints now determine each grid's intended layout.
 - Updated the responsive audit to reflect this correction. Browser visual verification remains outstanding.
+## 2026-11-10 — Responsive refinement across admin, customer and storefront routes
+- Applied compact-screen page gutters across 20 admin page shells and multiple customer/storefront routes, including account overview, cart, wishlist, returns, support-ticket detail, store/brand/category details and home discovery.
+- Refined inventory, seller commission, catalog discovery and checkout layouts for narrow widths; preserved isolated horizontal scrolling for wide data tables.
+- Updated product image preview to use dynamic viewport units and anchored the floating AI assistant within mobile safe areas.
+- Expanded docs/design/RESPONSIVE_AUDIT.md with the specific routes and components touched.
+- Still not browser-verified: no screenshots, interaction sweep, RTL/LTR viewport matrix, typecheck, build or automated tests have been run.
