@@ -4506,3 +4506,10 @@ The platform account policy is now explicit: email verification is not required 
 - Latest CI run passed Prisma validation/migrations, TypeScript and lint, but its existing test fixtures were stale; the fixtures/expectations have now been aligned and a fresh run is required.
 - PostgreSQL integration and CodeQL passed on the preceding source revision; browser E2E was still running at that point.
 - PR remains draft until fresh required checks pass.
+
+
+## 2026-11-10 — Seller identity boundary retained
+
+- Restored the seller-application email-verification prerequisite because the existing seller identity policy and lifecycle contract explicitly require a verified account email before seller onboarding.
+- Regular customer registration remains session-free; this seller-specific check does not change customer signup behavior.
+- Updated webhook route test requests to include the provider payment reference required by the current route, and aligned the registration fallback assertion with the current response contract.
