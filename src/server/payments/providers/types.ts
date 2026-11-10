@@ -46,7 +46,7 @@ export type VerifiedPaymentEvent = {
   occurredAt: Date;
 };
 
-export interface PaymentProviderAdapter {
+export interface PaymentProviderAdapter extends PaymentRefundProvider {
   key: string;
   displayName: string;
   createIntent(input: PaymentProviderIntentInput): Promise<PaymentProviderIntentResult>;
