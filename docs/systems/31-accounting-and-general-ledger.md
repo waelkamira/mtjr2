@@ -115,3 +115,9 @@
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
+
+
+## 2026-11-10 — Provider refund boundary update
+- Stripe and PayPal provider refund execution is now present in System 29 and the `/admin/refunds` route. It is not yet connected to the general ledger.
+- The existing immutable double-entry journal is a posting primitive, not an approved marketplace chart of accounts. No payment-capture journal exists, and account ownership for seller payable, processor clearing, tax, shipping, reserves/holds, and return/refund allocation is not approved.
+- Do not invent debit/credit account mappings or label refunds as financially reconciled. Ledger posting remains blocked until finance policy and per-currency account mappings are approved; after approval, refund postings must be idempotent and use immutable reversals.
