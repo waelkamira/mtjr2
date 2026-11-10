@@ -67,9 +67,6 @@ export async function createSellerPayoutMethod(input: unknown) {
   if (data.type === SellerPayoutMethodType.IBAN && accountIdentifier.slice(0, 2) !== data.countryCode) {
     throw new Error("The IBAN country prefix must match the selected bank country.");
   }
-  if (data.type === SellerPayoutMethodType.LOCAL_BANK_ACCOUNT && !/^[A-Z0-9-]{6,34}$/.test(accountIdentifier)) {
-    throw new Error("Enter a valid local bank account number.");
-  }
   if (data.routingCode && !/^[A-Za-z0-9-]{3,34}$/.test(data.routingCode.trim())) {
     throw new Error("Enter a valid bank routing or SWIFT/BIC code.");
   }
