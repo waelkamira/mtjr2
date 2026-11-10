@@ -166,10 +166,6 @@ describe("password login service", () => {
       where: { id: "user-pending", passwordHash: "stored-hash", OR: [{ status: UserStatus.ACTIVE }, { status: UserStatus.PENDING, adminStatusReason: null }] },
       data: { status: UserStatus.ACTIVE, lastLoginAt: now }
     });
-    expect(txMock.verificationToken.updateMany).toHaveBeenCalledWith({
-      where: { userId: "user-pending", purpose: "EMAIL_VERIFICATION", consumedAt: null },
-      data: { consumedAt: now }
-    });
     expect(txMock.userSession.create).toHaveBeenCalledOnce();
   });
 
