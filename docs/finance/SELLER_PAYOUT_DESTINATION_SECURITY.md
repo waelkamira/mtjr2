@@ -19,7 +19,7 @@ New records are always created as `PENDING_VERIFICATION`. No seller-facing or pu
 
 Every read or mutation resolves the authenticated seller from the session and verifies an active seller account. A seller cannot address another seller's payout destination by ID.
 
-A seller may keep one default destination per settlement currency. Database partial unique indexes enforce that invariant even under concurrent requests. Disabling a destination clears its encrypted payload and removes its default status.
+A seller may register the same bank destination for more than one settlement currency, and may keep one default destination per currency. Database unique and partial unique indexes enforce these invariants even under concurrent requests. Disabling a destination clears its encrypted payload and removes its default status.
 
 ## Validation and verification
 
