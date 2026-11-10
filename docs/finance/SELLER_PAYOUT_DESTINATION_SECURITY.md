@@ -8,7 +8,8 @@ New records are always created as `PENDING_VERIFICATION`. No seller-facing or pu
 
 ## Data protection
 
-- Account identifiers and optional routing codes are encrypted with AES-256-GCM.
+- Account identifiers, account-holder names, and optional routing codes are encrypted together with AES-256-GCM.
+- The database stores a fixed placeholder instead of the account-holder name in plaintext; the authenticated seller API decrypts it only for that seller.
 - The browser receives only the account type and last four characters, plus non-secret bank metadata.
 - A seller-scoped HMAC fingerprint prevents duplicate registration for the same seller and settlement currency without storing a searchable plaintext account identifier.
 - Fingerprint derivation is pinned to key version 1. Keep that key available for as long as any payout destination exists, including after active encryption-key rotation.
@@ -23,10 +24,10 @@ A seller may register the same bank destination for more than one settlement cur
 
 ## Validation and verification
 
-IBANs are checked for supported country-specific length, country prefix, and MOD-97 checksum. Local bank account formats vary by jurisdiction; the current generic syntax check is only an input-quality check, not proof of account ownership.
+IBANs are checked for supported country-specific length, country prefix, and MOD-97 checksum. Local bank account entry is deliberately disabled until country-specific account and routing rules are implemented. Format validation is not proof of account ownership.
 
 Before transfers are enabled, implement and audit:
-1. Country- and rail-specific bank-detail validation.
+1. Country- and rail-specific bank-detail validation for local account formats before enabling them.
 2. Ownership verification (for example, provider verification or an approved micro-deposit flow).
 3. A privileged verification/rejection workflow with actor, evidence reference, timestamps, and audit trail.
 4. Seller payable ledger postings, holds, settlement schedule, payout approval, idempotent transfer submission, webhook verification, and reconciliation.
