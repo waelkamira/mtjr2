@@ -2327,6 +2327,7 @@ model Refund {
   completedById     String?
   requestedAt       DateTime     @default(now())
   completedAt       DateTime?
+  providerSubmittedAt DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   order             Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
