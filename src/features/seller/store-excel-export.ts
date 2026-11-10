@@ -42,7 +42,7 @@ function xml(value: Cell): string {
   return String(value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 function formatMinorUnits(value: string, minorUnit: number): string {
-  if (!/^-?\\d+$/.test(value) || !Number.isInteger(minorUnit) || minorUnit < 0 || minorUnit > 6) return value;
+  if (!/^-?\d+$/.test(value) || !Number.isInteger(minorUnit) || minorUnit < 0 || minorUnit > 6) return value;
   const amount = BigInt(value);
   const negative = amount < 0n;
   const absolute = negative ? -amount : amount;
@@ -91,8 +91,8 @@ export function downloadSellerStoreWorkbook(input: {
       ["Gross sales", "", "", ""],
       ...analytics.metrics.grossSalesByCurrency.map((item) => ["Gross sales", formatMinorUnits(item.amountMinor, item.minorUnit), item.currencyCode, item.orderCount + " orders"]),
       ["Order status", "Count"], ...analytics.orderStatuses.map((item) => [item.status, item.count]),
-      ["Daily sales", "Amount minor", "Currency", "Orders"],
-      ...analytics.dailySales.map((item) => [item.day, item.amountMinor, item.currencyCode, item.orderCount])
+      ["Daily sales", "Amount", "Currency", "Orders"],
+      ...analytics.dailySales.map((item) => [item.day, formatMinorUnits(item.amountMinor, analytics.metrics.grossSalesByCurrency.find((currency) => currency.currencyCode === item.currencyCode)?.minorUnit ?? 2), item.currencyCode, item.orderCount])
     ]},
     { name: "Top products", rows: [
       ["Product", "Product ID", "Units sold"],
