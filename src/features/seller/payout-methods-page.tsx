@@ -40,7 +40,10 @@ export default function SellerPayoutMethodsPage() {
     } finally { setLoading(false); }
   }, [t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const task = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(task);
+  }, [load]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
