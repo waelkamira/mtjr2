@@ -68,3 +68,7 @@ The changes above are source-level corrections only. No claim is made that all 7
 - Product image preview uses the dynamic viewport height; floating AI assistant now respects device safe-area insets.
 
 These changes are code-level corrections only. No route has been marked visually PASS until inspected in an actual browser at the acceptance widths and in both RTL and LTR.
+- Seller inbox: the active-store selector is fluid on phones and the conversation list is bounded/scrollable below desktop widths.
+- Notifications: preference rows and their channel toggles wrap on compact screens.
+- Catalog list controls: search/sort/submit controls are allowed to wrap instead of forcing a single horizontal row.
+- Remaining wide admin/seller data tables were checked at source level and are contained in dedicated horizontal scroll wrappers.
