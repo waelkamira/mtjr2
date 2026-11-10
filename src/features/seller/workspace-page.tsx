@@ -338,6 +338,9 @@ export default function SellerWorkspacePage() {
         if (active) setRecentOrdersError(cause instanceof Error ? cause.message : translate(locale, "Recent orders could not be loaded.", "تعذر تحميل الطلبات الأخيرة."));
       })
       .finally(() => { if (active) setRecentOrdersLoading(false); });
+    return () => { active = false; };
+  }, [locale, selectedStoreId, sellerAnalytics?.permissions.orders]);
+
     if (!loading && workspace?.seller?.status === "PENDING") {
     const application = workspace.seller;
     return (
@@ -380,8 +383,7 @@ export default function SellerWorkspacePage() {
     );
   }
 
-  return () => { active = false; };
-  }, [locale, selectedStoreId, sellerAnalytics?.permissions.orders]);
+
 
   async function uploadSellerIdentityDocument(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -1058,7 +1060,7 @@ export default function SellerWorkspacePage() {
                             body: JSON.stringify({
                               storeId: selectedStore.id, marketId: market.market.id, currencyCode: shippingCurrencyCode || market.market.defaultCurrencyCode,
                               name: shippingName, description: shippingDescription || null,
-                              amountMinor: toMinorUnits(shippingAmount, markets.find((item) => item.id === market.market.id)?.currencies.find((entry) => entry.currency.code === (shippingCurrencyCode || market.market.defaultCurrencyCode))?.currency.minorUnit ?? market.market.defaultCurrency.minorUnit),
+                              amountMinor: toMinorUnits(shippingAmount, markets.find((item) => item.id === market.market.id)?.currencies.find((entry) => entry.currency.code === (shippingCurrencyCode || market.market.defaultCurrencyCode))?.currency.minorUnit ?? 2),
                               destinationRegion: shippingRegion || null,
                               minDeliveryDays: shippingMinDays ? Number(shippingMinDays) : null,
                               maxDeliveryDays: shippingMaxDays ? Number(shippingMaxDays) : null

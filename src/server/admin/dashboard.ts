@@ -316,7 +316,6 @@ export async function getAdminDashboard(input: unknown, now = new Date()) {
       ["openSupportTickets", metricSampleRows[19].map((row) => ({ label: formatDay(row.createdAt), value: 1 }))]
     ]),
     orderStatusCounts: [...counts.entries()].map(([status, count]) => ({ status, count })),
-    orderStatusCounts: [...counts.entries()].map(([status, count]) => ({ status, count })),
     dailyOrders,
     recentOrders: recentOrders.map((order) => ({
       ...order,

@@ -26,7 +26,7 @@ export default function ProductLocationMap({ value, locale = "ar" }: { value: Co
     let active = true;
     let map: MapInstance | null = null;
     let resizeObserver: ResizeObserver | null = null;
-    let resizeTimer: ReturnType<typeof window.setTimeout> | null = null;
+    let resizeTimer: number | null = null;
 
     void import("leaflet").then((module) => {
       if (!active || !elementRef.current) return;

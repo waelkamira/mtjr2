@@ -121,7 +121,7 @@ function currencyDigits(currencyCode: string) {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currencyCode
-    }).resolvedOptions().maximumFractionDigits;
+    }).resolvedOptions().maximumFractionDigits ?? 2;
   } catch {
     throw new Error("PayPal currency code is not supported by the runtime.");
   }
@@ -148,8 +148,8 @@ function majorToMinor(value: string, currencyCode: string) {
   return (BigInt(whole) * (10n ** BigInt(digits)) + BigInt((fraction + "0".repeat(digits)).slice(0, digits) || "0")).toString();
 }
 
-function captureFromOrder(order: PayPalOrder): PayPalCapture {
-  const captures = order.purchase_units?.filter((unit) => (unit.custom_id ?? unit.reference_id) === input.paymentId).flatMap((unit) => unit.payments?.captures ?? []) ?? [];
+function captureFromOrder(order: PayPalOrder, paymentId: string): PayPalCapture {
+  const captures = order.purchase_units?.filter((unit) => (unit.custom_id ?? unit.reference_id) === paymentId).flatMap((unit) => unit.payments?.captures ?? []) ?? [];
   if (captures.length !== 1 || !captures[0].id || !captures[0].amount?.currency_code || !captures[0].amount.value) {
     throw new Error("PayPal did not return exactly one complete capture for this order.");
   }
@@ -230,7 +230,7 @@ export async function captureApprovedPayPalOrder(orderId: string, paymentId: str
   }
 
   if (order.id !== orderId) throw new Error("PayPal returned a different order reference.");
-  const capture = captureFromOrder(order);
+  const capture = captureFromOrder(order, paymentId);
   const currencyCode = capture.amount!.currency_code!.toUpperCase();
   const status = capture.status?.toUpperCase();
   const eventType: VerifiedPaymentEvent["eventType"] =

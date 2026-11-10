@@ -412,7 +412,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
       }
     });
     return {
-      done: false as const, processing: false as const, id: refund.id,
+      done: false as const, processing: false as const, id: refund.id, providerAttempt: refund.providerAttempt,
       provider: refund.payment.provider, paymentId: refund.paymentId, providerReference: refund.payment.providerReference,
       amountMinor: refund.amountMinor.toString(), currencyCode: refund.currencyCode,
       providerConfigId: refund.payment.providerConfigId,

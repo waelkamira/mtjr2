@@ -109,7 +109,7 @@ export async function changeStoreStaffRole(membershipIdInput: string, roleKeyInp
     const membership = await tx.sellerStaff.findUnique({
       where: { id }, select: { id: true, userId: true, storeId: true, status: true, roleId: true }
     });
-    if (!membership || ![SellerStaffStatus.INVITED, SellerStaffStatus.ACTIVE].includes(membership.status)) {
+    if (!membership || (membership.status !== SellerStaffStatus.INVITED && membership.status !== SellerStaffStatus.ACTIVE)) {
       throw new Error("An active or pending staff membership is required.");
     }
     await requireStoreOwner(tx, membership.storeId, actor.userId);

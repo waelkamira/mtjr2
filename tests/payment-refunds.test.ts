@@ -20,7 +20,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
 vi.mock("@/server/identity/permission-guard", () => ({ requirePermission: mocks.requirePermission }));
 
-import { completeManualRefund, createManualRefundForReturn } from "@/server/payments/refunds";
+import { completeManualRefund, createRefundForReturn } from "@/server/payments/refunds";
 
 describe("manual return refund lifecycle", () => {
   beforeEach(() => {
@@ -59,7 +59,7 @@ describe("manual return refund lifecycle", () => {
     };
     transactionWith(tx);
 
-    const result = await createManualRefundForReturn({ returnRequestId: "return-1" });
+    const result = await createRefundForReturn({ returnRequestId: "return-1" });
 
     expect(result).toMatchObject({ id: "refund-1", status: "PENDING_MANUAL", amountMinor: "1500", alreadyApplied: false });
     expect(mocks.refundCreate).toHaveBeenCalledWith(expect.objectContaining({
@@ -82,7 +82,7 @@ describe("manual return refund lifecycle", () => {
       auditLog: { create: mocks.auditCreate },
       $queryRaw: mocks.queryRaw
     });
-    await expect(createManualRefundForReturn({ returnRequestId: "return-1" }))
+    await expect(createRefundForReturn({ returnRequestId: "return-1" }))
       .rejects.toThrow("Only physically received return items");
     expect(mocks.refundCreate).not.toHaveBeenCalled();
   });
@@ -99,7 +99,7 @@ describe("manual return refund lifecycle", () => {
       auditLog: { create: mocks.auditCreate },
       $queryRaw: mocks.queryRaw
     });
-    const result = await createManualRefundForReturn({ returnRequestId: "return-1" });
+    const result = await createRefundForReturn({ returnRequestId: "return-1" });
     expect(result).toMatchObject({ id: "refund-existing", alreadyApplied: true });
     expect(mocks.refundCreate).not.toHaveBeenCalled();
   });
@@ -114,7 +114,7 @@ describe("manual return refund lifecycle", () => {
       auditLog: { create: mocks.auditCreate },
       $queryRaw: mocks.queryRaw
     });
-    await expect(createManualRefundForReturn({ returnRequestId: "return-1" }))
+    await expect(createRefundForReturn({ returnRequestId: "return-1" }))
       .rejects.toThrow("exceed the captured payment balance");
     expect(mocks.refundCreate).not.toHaveBeenCalled();
   });

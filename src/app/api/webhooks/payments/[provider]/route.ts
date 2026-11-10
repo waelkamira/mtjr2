@@ -130,7 +130,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
   const verificationRequest = new Request(request.url, {
     method: "POST",
     headers: request.headers,
-    body: rawBody
+    body: Buffer.from(rawBody)
   });
   let rawEvent: unknown;
   try {
