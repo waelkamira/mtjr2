@@ -101,22 +101,23 @@ export async function createSellerPayoutMethod(input: unknown) {
         data: { isDefault: false }
       });
     }
-    const method = await tx.sellerPayoutMethod.create({
-      data: {
-        sellerId: seller.id,
-        type: data.type,
-        accountHolderName: data.accountHolderName,
-        bankName: data.bankName,
-        countryCode: data.countryCode,
-        currencyCode: data.currencyCode,
-        encryptedDetails: encrypted.encryptedDetails,
-        encryptionKeyVersion: encrypted.keyVersion,
-        accountLast4: accountIdentifier.slice(-4),
-        fingerprint,
-        isDefault: makeDefault
-      },
-      select: safeSelect
-    });
+    const methodData = {
+      type: data.type,
+      accountHolderName: data.accountHolderName,
+      bankName: data.bankName,
+      countryCode: data.countryCode,
+      currencyCode: data.currencyCode,
+      encryptedDetails: encrypted.encryptedDetails,
+      encryptionKeyVersion: encrypted.keyVersion,
+      accountLast4: accountIdentifier.slice(-4),
+      fingerprint,
+      status: SellerPayoutMethodStatus.PENDING_VERIFICATION,
+      verifiedAt: null,
+      isDefault: makeDefault
+    };
+    const method = duplicate
+      ? await tx.sellerPayoutMethod.update({ where: { id: duplicate.id }, data: methodData, select: safeSelect })
+      : await tx.sellerPayoutMethod.create({ data: { sellerId: seller.id, ...methodData }, select: safeSelect });
     await tx.auditLog.create({
       data: {
         actorType: AuditActorType.USER,
