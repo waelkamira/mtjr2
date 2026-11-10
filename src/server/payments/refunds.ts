@@ -367,7 +367,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
       where: { id: refundId },
       select: {
         id: true, orderId: true, paymentId: true, amountMinor: true, currencyCode: true,
-        status: true, externalReference: true, providerSubmittedAt: true, requestedById: true, payment: {
+        status: true, externalReference: true, providerSubmittedAt: true, providerAttempt: true, requestedById: true, payment: {
           select: {
             provider: true, providerReference: true, providerConfigId: true,
             providerEnvironment: true, amountMinor: true, status: true
@@ -433,7 +433,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
       providerReference: claim.providerReference,
       amountMinor: claim.amountMinor,
       currencyCode: claim.currencyCode,
-      idempotencyKey: `matjar-refund-${claim.id}`,
+      idempotencyKey: `matjar-refund-${claim.id}-${claim.providerAttempt}`,
       refundId: claim.id,
       paymentId: claim.paymentId,
       providerCredentials: snapshot?.credentials,
@@ -488,7 +488,9 @@ export async function refreshProviderRefundStatus(refundIdInput: string, now = n
   if (status === "FAILED" || status === "PROCESSING") {
     await prisma.refund.updateMany({
       where: { id: refund.id, status: { in: [RefundStatus.PROCESSING_PROVIDER, RefundStatus.PROVIDER_FAILED] } },
-      data: { status: status === "FAILED" ? RefundStatus.PROVIDER_FAILED : RefundStatus.PROCESSING_PROVIDER }
+      data: status === "FAILED"
+        ? { status: RefundStatus.PROVIDER_FAILED, externalReference: null, providerSubmittedAt: null, providerAttempt: { increment: 1 } }
+        : { status: RefundStatus.PROCESSING_PROVIDER }
     });
   }
   await prisma.auditLog.create({
