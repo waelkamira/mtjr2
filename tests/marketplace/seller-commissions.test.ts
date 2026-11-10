@@ -1,17 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireCurrentSession, userHasScopedPermission, storeFindUnique, commissionFindMany } = vi.hoisted(() => ({
+const { requireCurrentSession, userHasScopedPermission, storeFindUnique, commissionFindMany, commissionGroupBy, refundFindMany, queryRaw, currencyFindMany } = vi.hoisted(() => ({
   requireCurrentSession: vi.fn(),
   userHasScopedPermission: vi.fn(),
   storeFindUnique: vi.fn(),
-  commissionFindMany: vi.fn()
+  commissionFindMany: vi.fn(),
+  commissionGroupBy: vi.fn(),
+  refundFindMany: vi.fn(),
+  queryRaw: vi.fn(),
+  currencyFindMany: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession }));
 vi.mock("@/server/identity/permission-repository", () => ({ userHasScopedPermission }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { store: { findUnique: storeFindUnique }, commissionTransaction: { findMany: commissionFindMany } }
+  prisma: { store: { findUnique: storeFindUnique }, commissionTransaction: { findMany: commissionFindMany, groupBy: commissionGroupBy }, refundItem: { findMany: refundFindMany }, $queryRaw: queryRaw, currency: { findMany: currencyFindMany } }
 }));
 
 import { PermissionDeniedError } from "@/server/identity/permission-guard";
@@ -22,6 +26,12 @@ describe("seller commission snapshots", () => {
     vi.clearAllMocks();
     requireCurrentSession.mockResolvedValue({ userId: "owner-1" });
     storeFindUnique.mockResolvedValue({ id: "store-1", name: "Shop", sellerId: "seller-1", seller: { ownerId: "owner-1" } });
+    commissionGroupBy.mockResolvedValue([{
+      currencyCode: "USD", _sum: { baseAmountMinor: BigInt(10000), commissionMinor: BigInt(750) }, _count: { _all: 1 }
+    }]);
+    refundFindMany.mockResolvedValue([]);
+    queryRaw.mockResolvedValue([]);
+    currencyFindMany.mockResolvedValue([{ code: "USD", minorUnit: 2 }]);
     commissionFindMany.mockResolvedValue([{
       id: "commission-1", orderId: "order-1", vendorOrderId: "vendor-1", categoryName: "Home",
       rateBasisPoints: 750, baseAmountMinor: BigInt(10000), commissionMinor: BigInt(750), currencyCode: "USD",
