@@ -4430,3 +4430,5 @@ The platform account policy is now explicit: email verification is not required 
 - Added a direct bank-account management action to the seller financial overview so the finance and payout workflows are connected from the same workspace.
 - Reused existing authenticated routes and the existing owner-scoped, audited Excel export endpoint; no duplicate APIs, Prisma models or migrations were introduced.
 - Automated tests intentionally deferred per the current development priority. Build/runtime verification remains pending and this slice is not marked launch-ready.
+- Added 7/30/90-day analytics controls to the seller dashboard using the existing date-bounded, store-scoped analytics API (maximum 90 days); gross sales remain grouped by currency without FX conversion.
+- Updated the shared seller topbar to identify the bank-account route correctly.
