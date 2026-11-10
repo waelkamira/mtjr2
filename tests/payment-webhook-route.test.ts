@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getPaymentProvider: vi.fn(),
+  getPaymentProviderAdapter: vi.fn(),
   processVerifiedPaymentEvent: vi.fn(),
   verifyWebhook: vi.fn()
 }));
 
-vi.mock("@/server/payments/providers/registry", () => ({ getPaymentProvider: mocks.getPaymentProvider }));
+vi.mock("@/server/payments/providers/registry", () => ({ getPaymentProvider: mocks.getPaymentProvider, getPaymentProviderAdapter: mocks.getPaymentProviderAdapter }));
 vi.mock("@/server/payments/payments", () => ({ processVerifiedPaymentEvent: mocks.processVerifiedPaymentEvent }));
 
 import { POST } from "@/app/api/webhooks/payments/[provider]/route";
@@ -24,10 +25,12 @@ describe("payment webhook route retry behavior", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.verifyWebhook.mockResolvedValue(validEvent);
-    mocks.getPaymentProvider.mockReturnValue({
+    const provider = {
       key: "test_provider", displayName: "Test provider",
       createIntent: vi.fn(), verifyWebhook: mocks.verifyWebhook
-    });
+    };
+    mocks.getPaymentProvider.mockReturnValue(provider);
+    mocks.getPaymentProviderAdapter.mockReturnValue(provider);
     mocks.processVerifiedPaymentEvent.mockResolvedValue({ accepted: true, duplicate: false });
   });
 
