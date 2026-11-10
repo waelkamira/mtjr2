@@ -80,7 +80,7 @@ export async function createSellerPayoutMethod(input: unknown) {
     select: { code: true, isActive: true }
   });
   if (!currency?.isActive) throw new Error("Choose an active payout currency.");
-  const fingerprint = fingerprintSellerPayoutAccount(data.countryCode, accountIdentifier);
+  const fingerprint = fingerprintSellerPayoutAccount(seller.id, data.countryCode, accountIdentifier);
   const encrypted = encryptSellerPayoutDetails({
     accountIdentifier,
     ...(data.routingCode ? { routingCode: data.routingCode.trim().toUpperCase() } : {})
