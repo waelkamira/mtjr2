@@ -2327,7 +2327,7 @@ model Refund {
   completedById     String?
   requestedAt       DateTime     @default(now())
   completedAt       DateTime?
-  providerSubmittedAt DateTime?    
+  providerSubmittedAt DateTime?  
   providerAttempt     Int          @default(1)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
