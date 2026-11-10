@@ -4387,3 +4387,9 @@ The platform account policy is now explicit: email verification is not required 
 ## 2026-11-10 — Refund dual control
 - Enforced independent-operator confirmation for provider and manual refunds using the existing Refund.requestedById/completedById lifecycle: the requester cannot execute or manually confirm their own refund.
 - Documented the control in System 29, the route registry and Phase 6. MFA step-up and configurable amount limits remain separate launch requirements.
+
+
+## 2026-11-10 — Provider idempotency retention safeguard
+- Added `Refund.providerSubmittedAt` and migration `20261110140000_provider_refund_retry_window` to persist the first provider submission time.
+- Automatic retries stop before provider idempotency records may expire: 23 hours for Stripe (documented pruning after at least 24 hours) and 44 days for PayPal (refund request ID stored up to 45 days). After the window, the operator must reconcile the provider dashboard and use the external-confirmation path; no new automatic request is sent.
+- Provider-failed records with a returned provider refund ID are reconciled through provider GET status instead of issuing a second refund.
