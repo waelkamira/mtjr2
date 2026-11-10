@@ -149,7 +149,7 @@ function majorToMinor(value: string, currencyCode: string) {
 }
 
 function captureFromOrder(order: PayPalOrder): PayPalCapture {
-  const captures = order.purchase_units?.flatMap((unit) => unit.payments?.captures ?? []) ?? [];
+  const captures = order.purchase_units?.filter((unit) => (unit.custom_id ?? unit.reference_id) === input.paymentId).flatMap((unit) => unit.payments?.captures ?? []) ?? [];
   if (captures.length !== 1 || !captures[0].id || !captures[0].amount?.currency_code || !captures[0].amount.value) {
     throw new Error("PayPal did not return exactly one complete capture for this order.");
   }
