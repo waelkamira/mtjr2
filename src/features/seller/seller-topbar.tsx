@@ -22,6 +22,7 @@ export default function SellerTopbar() {
     : pathname.startsWith("/seller/settings") ? translate(locale, "Store settings", "إعدادات المتجر")
     : pathname.startsWith("/seller/finance") ? translate(locale, "Financial overview", "الملخص المالي")
     : pathname.startsWith("/seller/commissions") ? translate(locale, "Commission statements", "كشوف العمولات")
+    : pathname.startsWith("/seller/payouts") ? translate(locale, "Bank accounts", "الحسابات البنكية")
     : translate(locale, "Seller studio", "استوديو البائع");
 
   return (

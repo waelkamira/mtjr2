@@ -42,7 +42,10 @@ export default function SellerFinanceOverviewPage() {
         if (!active) return;
         const available = result.stores ?? [];
         setStores(available);
-        setStoreId(available.find((store) => store.isOwner)?.id ?? available[0]?.id ?? "");
+        let preferredStoreId = "";
+        try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
+        const activeStore = available.find((store) => store.id === preferredStoreId);
+        setStoreId(activeStore?.id ?? available.find((store) => store.isOwner)?.id ?? available[0]?.id ?? "");
         if (!available.length) setError(t("No seller stores are available.", "لا توجد متاجر بائع متاحة."));
       })
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : t("Unable to load stores.", "تعذر تحميل المتاجر.")); })
@@ -67,6 +70,23 @@ export default function SellerFinanceOverviewPage() {
     return () => { active = false; };
   }, [storeId, locale, t]);
 
+  useEffect(() => {
+    const syncActiveStore = () => {
+      let preferredStoreId = "";
+      try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
+      if (preferredStoreId && stores.some((store) => store.id === preferredStoreId)) {
+        setStoreId(preferredStoreId);
+      }
+    };
+    window.addEventListener("mtjr:active-store-changed", syncActiveStore);
+    window.addEventListener("storage", syncActiveStore);
+    syncActiveStore();
+    return () => {
+      window.removeEventListener("mtjr:active-store-changed", syncActiveStore);
+      window.removeEventListener("storage", syncActiveStore);
+    };
+  }, [stores]);
+
   const storeOptions = useMemo(() => stores.map((store) => ({ id: store.id, name: store.name })), [stores]);
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -79,7 +99,14 @@ export default function SellerFinanceOverviewPage() {
       </header>
       <section className="rounded-[26px] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[8px_10px_22px_rgba(74,75,112,.09),inset_0_2px_0_white]">
         <label className="grid max-w-md gap-2 text-sm font-bold text-[#526078]">{t("Store", "المتجر")}
-          <select value={storeId} onChange={(event) => setStoreId(event.target.value)} disabled={!storeOptions.length} className="rounded-xl border border-white bg-white/85 px-3 py-3 text-sm text-[#344d60] shadow-[inset_0_2px_5px_rgba(74,75,112,.06)]">
+          <select value={storeId} onChange={(event) => {
+            const nextStoreId = event.target.value;
+            setStoreId(nextStoreId);
+            try {
+              localStorage.setItem("mtjr.activeStoreId", nextStoreId);
+              window.dispatchEvent(new Event("mtjr:active-store-changed"));
+            } catch { /* The financial page remains usable when storage is unavailable. */ }
+          }} disabled={!storeOptions.length} className="rounded-xl border border-white bg-white/85 px-3 py-3 text-sm text-[#344d60] shadow-[inset_0_2px_5px_rgba(74,75,112,.06)]">
             {storeOptions.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}
           </select>
         </label>

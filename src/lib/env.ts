@@ -68,9 +68,11 @@ const environmentSchema = z.object({
     try {
       const parsed = JSON.parse(value.PAYMENT_PROVIDER_ENCRYPTION_KEYS) as Record<string, unknown>;
       const valid = parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.entries(parsed).every(([version, key]) => Number.isSafeInteger(Number(version)) && Number(version) >= 1 && String(Number(version)) === version && typeof key === "string" && /^[a-fA-F0-9]{64}$/.test(key));
-      if (!valid || (!parsed[String(value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION)] && !(value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION === 1 && value.PAYMENT_PROVIDER_ENCRYPTION_KEY))) throw new Error("invalid key ring");
+      const hasActiveKey = Boolean(parsed?.[String(value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION)] || (value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION === 1 && value.PAYMENT_PROVIDER_ENCRYPTION_KEY));
+      const hasStableFingerprintKey = Boolean(parsed?.["1"] || value.PAYMENT_PROVIDER_ENCRYPTION_KEY);
+      if (!valid || !hasActiveKey || !hasStableFingerprintKey) throw new Error("invalid key ring");
     } catch {
-      context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER_ENCRYPTION_KEYS"], message: "Must be a JSON object mapping key versions to 64-character hexadecimal keys and include the active version." });
+      context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER_ENCRYPTION_KEYS"], message: "Must be a JSON object with valid 64-character hexadecimal keys, include the active version, and retain version 1 for stable seller bank-account fingerprints." });
     }
   } else if (value.PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION !== 1) {
     context.addIssue({ code: "custom", path: ["PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION"], message: "Version 1 requires PAYMENT_PROVIDER_ENCRYPTION_KEY; versions above 1 require PAYMENT_PROVIDER_ENCRYPTION_KEYS." });

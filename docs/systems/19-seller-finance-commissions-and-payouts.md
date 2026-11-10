@@ -137,7 +137,7 @@
 - Added `/seller/finance` as a read-only, per-store financial overview using the existing `GET /api/seller/stores` and `GET /api/seller/commissions` contracts.
 - Shows commission-covered sales, recorded platform commissions, and completed refunds separately, grouped by currency with BigInt-safe formatting.
 - Latest commission activity links through to the full statement. The UI explicitly states that these figures are not a payable balance and does not calculate an available-to-withdraw amount.
-- No new Prisma model or migration was introduced. The accounting ledger, holds, settlement/reconciliation, payout methods and withdrawal workflow remain unimplemented.
+- No new Prisma model or migration was introduced. The accounting ledger, holds, settlement/reconciliation and withdrawal workflow remain unimplemented. Seller bank-destination capture is now implemented on the feature branch, but destinations remain pending verification and cannot be used for transfers.
 - Added the route to seller navigation, updated the seller route registry and page inventory, and refreshed the seller shell to the pastel clay palette.
 - Runtime, build and browser verification are intentionally deferred until the seller portal build is complete, per the current work instruction.
 
@@ -156,4 +156,12 @@
 - Journal entries and lines are database append-only. Corrections must use a separate reversal entry. `postJournalEntry` validates balanced integer minor units, active same-currency accounts, idempotency-key reuse, and exact inverse lines for reversals; it posts all lines in a serializable transaction.
 - `listLedgerAccountEntries` provides cursor-paginated immutable account activity. This is a low-level internal primitive only; no seller balance, payout, withdrawal, or API is exposed yet.
 - **Intentionally not connected to commission/payment/refund flows:** seller payable recognition timing, shipment/delivery/return-window policy, tax/shipping ownership, chargebacks, clearing accounts and negative-balance handling are not approved. No financial balance is calculated from the new tables until those policies and account mappings are agreed and implemented.
-- Required next: define chart-of-accounts codes and currency bootstrap; approve the marketplace accounting policy; then add source-specific journal posting for captured payment, seller payable release, refunds and chargebacks with idempotent source keys and immutable reversals. Only after that build seller statements and payout methods/requests.
+- Required next: define chart-of-accounts codes and currency bootstrap; approve the marketplace accounting policy; then add source-specific journal posting for captured payment, seller payable release, refunds and chargebacks with idempotent source keys and immutable reversals. Seller bank-destination capture now exists as a separate, pending-verification feature; only after that policy and source journal work may seller payable statements, payout requests, finance approvals, provider transfers and settlement reconciliation be built.
+
+
+## 2026-11-10 — Seller bank destination management (feature branch; transfer workflow incomplete)
+- Added `SellerPayoutMethod` and its migration. The seller owner can save an IBAN or local bank account, bank/holder/country/currency metadata, select a default destination, and disable a saved destination.
+- Account identifier and optional routing/SWIFT code are encrypted at rest with AES-256-GCM. Encryption and HMAC fingerprint keys are domain-separated from the configured versioned payment encryption key ring; the API returns only the last four characters and non-secret metadata. Account fingerprints prevent duplicate active destinations for one seller. Writes are audited without recording raw bank details.
+- New destinations start in `PENDING_VERIFICATION`. The UI explicitly warns that saving a destination does not make funds withdrawable or initiate a transfer. Card PAN, expiry date and CVV are not collected.
+- **Still not implemented:** verification evidence/provider confirmation, accounting policy and source journal postings, seller payable/available balance, holds/reserves, payout requests, finance approval/dual control, actual bank/provider transfer, failure/reversal and settlement reconciliation. Do not present this as a completed payout system.
+- Runtime migration, typecheck, security and browser verification remain pending on the feature PR.
