@@ -52,7 +52,7 @@ export default function ProductQaReportsPage() {
       <Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link>
       <Link href="/admin/questions" className="text-sm">{translate(locale, "Q&A moderation", "الإشراف على الأسئلة والأجوبة")}</Link>
     </div></header>
-    <div className="mx-auto max-w-5xl px-5 py-10"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{translate(locale, "Trust & safety", "الثقة والسلامة")}</p>
+    <div className="mx-auto max-w-5xl px-3 py-6 sm:px-5 sm:py-10"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{translate(locale, "Trust & safety", "الثقة والسلامة")}</p>
       <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Product Q&A reports", "بلاغات أسئلة وأجوبة المنتجات")}</h1>
       {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
       {loading ? <div className="mt-6 h-32 animate-pulse rounded-3xl bg-[var(--surface-soft)]" /> :
