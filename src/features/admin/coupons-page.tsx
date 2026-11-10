@@ -106,7 +106,7 @@ export default function AdminCouponsPage() {
     }
   }
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Marketing operations", "عمليات التسويق")}</p>
     <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Global discount codes", "رموز الخصم العامة")}</h1>
     <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Coupons currently apply platform-wide. The current model does not record whether the platform or a seller funds a discount, so funding allocation and per-store restrictions are not represented.", "تُطبّق القسائم حاليًا على المنصة بأكملها. لا يسجل النموذج الحالي ما إذا كانت المنصة أو البائع يمول الخصم، لذلك لا يتم تمثيل توزيع التمويل أو القيود لكل متجر.")}</p>
