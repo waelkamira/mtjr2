@@ -19,8 +19,9 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     return Response.json({ method }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
-    if (error instanceof PermissionDeniedError) return Response.json({ error: "Platform management permission required." }, { status: 403 });
+    // MFA errors inherit from PermissionDeniedError, so handle them first.
     if (error instanceof MfaEnrollmentRequiredError || error instanceof MfaVerificationRequiredError || error instanceof StepUpRequiredError) return Response.json({ error: "Complete the required MFA step-up verification before reviewing bank ownership." }, { status: 428 });
+    if (error instanceof PermissionDeniedError) return Response.json({ error: "Platform management permission required." }, { status: 403 });
     if (error instanceof SellerPayoutMethodNotFoundError) return Response.json({ error: "Bank destination not found." }, { status: 404 });
     if (error instanceof SellerPayoutSelfVerificationError) return Response.json({ error: "You cannot verify your own seller bank destination." }, { status: 403 });
     if (error instanceof SellerPayoutVerificationConflictError) return Response.json({ error: "This bank destination has already been reviewed." }, { status: 409 });
