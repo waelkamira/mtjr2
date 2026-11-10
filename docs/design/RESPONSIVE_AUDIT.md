@@ -27,7 +27,7 @@ Also verify browser zoom at 200%, keyboard-only navigation, long Arabic labels, 
 2. **Seller navigation on phones:** the seller workspace had a horizontal strip containing every destination. It now wraps and uses bounded vertical scrolling so destinations are discoverable without forcing a page-wide horizontal scroll.
 3. **Seller top bar:** its fixed 150px title block could compete with controls on narrow screens. It now yields available width and allows long localized section names to wrap.
 4. **Global overflow containment:** the shared stylesheet now constrains root/page width, media, form controls and nested layout regions; wide seller/admin tables scroll within their own region rather than widening the viewport.
-5. **Seller and admin grids:** data-heavy workspace grids collapse to one column on phone widths; dialogs are constrained to the available viewport height and width.
+5. **Seller and admin grids:** breakpoint-based grids retain their intended phone/tablet column counts; broad CSS overrides that had collapsed every grid (including image galleries and KPI tiles) were removed. Dialogs are constrained to the available viewport height and width.
 6. **RTL/LTR and zoom:** existing document direction and focus styling are preserved; final browser verification at both directions and 200% zoom is still required.
 
 ## Route coverage to review
@@ -49,6 +49,7 @@ For each route, inspect the page shell, title/action row, filters, forms, cards,
 - Confirm each table has an intentional small-screen presentation: card/list conversion where appropriate, or a clearly bounded horizontal table scroller when tabular comparison is essential.
 - Confirm every modal has an internal scroll region and does not hide its submit/cancel actions behind mobile browser chrome.
 - Confirm chart labels, legends and tooltips remain understandable at narrow widths.
+- Confirm intentional two-column phone layouts (product image galleries, KPI tiles and application steps) retain enough width and do not clip.
 - Confirm maps and location pickers retain usable map controls and do not cover their form actions.
 - Confirm all interactive targets are comfortably tappable and focus remains visible.
 - Confirm long localized text does not overlap adjacent controls.
