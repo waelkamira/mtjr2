@@ -51,11 +51,8 @@ export default function SellerFinanceOverviewPage() {
   }, [locale, t]);
 
   useEffect(() => {
-    if (!storeId) { setData(null); return; }
+    if (!storeId) return;
     let active = true;
-    setData(null);
-    setLoading(true);
-    setError("");
     fetch(`/api/seller/commissions?storeId=${encodeURIComponent(storeId)}`, { cache: "no-store" })
       .then(async (response) => {
         const result = await response.json() as FinanceData & { error?: string };
