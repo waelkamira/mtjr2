@@ -74,11 +74,11 @@ export default function AdminRefundsPage() {
         body: JSON.stringify({ returnRequestId: candidate.returnRequestId })
       });
       const data = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(data.error || "Manual refund request could not be created.");
-      setNotice("Manual refund queued for " + candidate.returnNumber + ". Process it in the payment provider's dashboard, then record its external reference below.");
+      if (!response.ok) throw new Error(data.error || "Refund request could not be created.");
+      setNotice("Refund request created for " + candidate.returnNumber + ". A different finance operator must submit it to the original provider or reconcile it manually.");
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Manual refund request could not be created.");
+      setError(cause instanceof Error ? cause.message : "Refund request could not be created.");
     } finally { setBusy(""); }
   }
 
