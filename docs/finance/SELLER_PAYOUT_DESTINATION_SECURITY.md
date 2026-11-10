@@ -48,3 +48,11 @@ A privileged manual review command is now implemented at `POST /api/admin/seller
 - A rejection clears the default flag. A successful manual review records `verifiedAt`.
 
 This endpoint records an administrator's attestation after an out-of-band check with the bank or an approved verification provider. It does **not** contact a bank, validate account ownership automatically, initiate a payout, or make a seller balance withdrawable. There is not yet a dedicated admin review UI. Do not review a destination as verified without independently confirming ownership through an approved channel.
+
+
+## Administrator review workspace
+
+- The platform-management review workspace is available at `/admin/seller-payout-methods` and is protected by the global platform-management permission and MFA/step-up policy.
+- Its listing endpoint returns only seller context, bank name, country/currency, account type, status, default flag, creation time, and the last four account characters. It never selects or returns encrypted account details.
+- Administrators can record `VERIFIED` or `REJECTED` only for pending records. Both decisions require an external evidence reference and a reason; the service rejects self-review and writes the decision plus audit event atomically.
+- A `VERIFIED` decision is an administrator attestation after an independent out-of-band bank/provider check. It is not automated bank verification. No payout or withdrawal execution is enabled by this workflow.
