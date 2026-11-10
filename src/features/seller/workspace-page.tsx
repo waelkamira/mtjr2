@@ -992,7 +992,7 @@ export default function SellerWorkspacePage() {
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#817aa4]">{translate(locale, "DAILY OPERATIONS", "العمليات اليومية")}</p>
                   <h2 className="mt-1 text-lg font-black text-[#34445a]">{translate(locale, "Needs your attention", "يحتاج إلى متابعتك")}</h2>
-                  <p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Live counts from this store’s order, catalog, returns and inventory records.", "أعداد مباشرة من سجلات الطلبات والكتالوج والمرتجعات والمخزون لهذا المتجر.")}</p>
+                  <p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Order counts follow the selected analytics period; inventory and review queues reflect current store records.", "تتبع أعداد الطلبات فترة التحليلات المختارة؛ أما المخزون وقوائم المراجعة فتعكس سجلات المتجر الحالية.")}</p>
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
