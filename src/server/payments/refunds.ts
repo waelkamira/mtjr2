@@ -269,11 +269,11 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
       throw new Error("The payment is not in a refundable state; reconcile it before completion.");
     }
 
-    const completedBefore = await tx.refund.aggregate({
-      where: { paymentId: refund.paymentId, status: RefundStatus.COMPLETED },
+    const committedBefore = await tx.refund.aggregate({
+      where: { paymentId: refund.paymentId, status: { in: committedRefundStatuses }, id: { not: refund.id } },
       _sum: { amountMinor: true }
     });
-    const totalAfter = (completedBefore._sum.amountMinor ?? BigInt(0)) + refund.amountMinor;
+    const totalAfter = (committedBefore._sum.amountMinor ?? BigInt(0)) + refund.amountMinor;
     if (totalAfter > refund.payment.amountMinor) throw new Error("Completed refunds would exceed the captured payment.");
 
     const changed = await tx.refund.updateMany({
