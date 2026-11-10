@@ -14,4 +14,4 @@ BEGIN
 END $$;
 
 DROP INDEX IF EXISTS "Store_sellerId_status_idx";
-CREATE UNIQUE INDEX "Store_sellerId_key" ON "Store"("sellerId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Store_sellerId_key" ON "Store"("sellerId");
