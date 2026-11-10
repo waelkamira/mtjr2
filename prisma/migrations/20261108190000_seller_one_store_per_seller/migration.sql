@@ -14,6 +14,4 @@ BEGIN
 END $$;
 
 DROP INDEX IF EXISTS "Store_sellerId_status_idx";
-
--- The earlier seller-store limit migration may already have created this exact unique index.
 CREATE UNIQUE INDEX IF NOT EXISTS "Store_sellerId_key" ON "Store"("sellerId");

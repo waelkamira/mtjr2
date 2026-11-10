@@ -1,5 +1,5 @@
 -- Structured listing metadata for seller-created products.
--- Earlier location/property migrations may already have introduced these columns and objects.
+-- Earlier listing migrations may already have introduced some of these objects.
 ALTER TABLE "Product"
   ADD COLUMN IF NOT EXISTS "city" VARCHAR(120),
   ADD COLUMN IF NOT EXISTS "district" VARCHAR(120),
@@ -32,3 +32,13 @@ CREATE TABLE IF NOT EXISTS "ProductPropertyDetails" (
   CONSTRAINT "ProductPropertyDetails_bedrooms_check" CHECK ("bedrooms" IS NULL OR "bedrooms" >= 0),
   CONSTRAINT "ProductPropertyDetails_bathrooms_check" CHECK ("bathrooms" IS NULL OR "bathrooms" >= 0)
 );
+
+INSERT INTO "Category" ("id", "slug", "name", "description", "status", "sortOrder", "createdAt", "updatedAt")
+VALUES ('builtin-real-estate', 'real-estate', 'Real Estate', 'Properties for sale or rent.', 'ACTIVE', 90, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT ("slug") DO NOTHING;
+
+INSERT INTO "CategoryTranslation" ("id", "categoryId", "locale", "name", "description", "createdAt", "updatedAt")
+SELECT 'builtin-real-estate-ar', "id", 'ar', 'العقارات', 'عقارات للبيع أو الإيجار.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM "Category"
+WHERE "slug" = 'real-estate'
+ON CONFLICT ("categoryId", "locale") DO NOTHING;
