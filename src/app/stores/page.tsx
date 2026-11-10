@@ -22,7 +22,7 @@ export default async function StoresPage({ searchParams }: Props) {
   const page = Math.max(1, Math.min(1000, Number(search.page) || 1));
   const q = (search.q ?? "").trim().slice(0, 120);
   const result = await listDiscoverableStores({ page, limit: 24, q: q || undefined });
-  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
+  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-3 py-6 sm:px-5 sm:py-10 lg:px-10 lg:py-14">
     <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Independent commerce", "تجارة مستقلة")}</p>
     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{t("Discover stores", "اكتشف المتاجر")}</h1>
     <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">{t("Explore active stores operated by approved sellers across the marketplace.", "استكشف المتاجر النشطة التي يديرها بائعون معتمدون في السوق.")}</p>
