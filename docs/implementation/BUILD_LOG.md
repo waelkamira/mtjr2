@@ -4433,3 +4433,16 @@ The platform account policy is now explicit: email verification is not required 
 - Added 7/30/90-day analytics controls to the seller dashboard using the existing date-bounded, store-scoped analytics API (maximum 90 days); gross sales remain grouped by currency without FX conversion.
 - Updated the shared seller topbar to identify the bank-account route correctly.
 - Added a seller daily-operations action center with store-scoped live counts for fulfillment-stage orders, low-stock inventory records, requested returns and products awaiting approval. Each tile links to the existing seller workflow; order counts explicitly follow the selected analytics period, while inventory and review queues reflect current records. No new API, schema or migration was added.
+
+
+## 2026-11-10 — Seller customer relationship hub
+
+**Implemented**
+- Added a customer relationship section to the seller dashboard linking directly to the existing customer inbox, product questions, reviews, and store staff workspaces.
+- Displayed the average rating and review count only from the existing seller analytics response; unavailable/loading/error states remain explicit rather than showing fabricated counts.
+- Kept message/question/staff counts out of the dashboard because the existing dashboard analytics contract does not provide those values. The destination pages remain the source of their operational records.
+- Reused existing routes and APIs; no schema, migration, or duplicate endpoint was introduced.
+
+**Verification**
+- Source changes committed to `feat/seller-dashboard-command-center`.
+- Build, browser journeys, and database-backed verification have not been run in this session.
