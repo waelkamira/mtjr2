@@ -79,7 +79,7 @@ export async function createSellerPayoutMethod(input: unknown) {
 
   return prisma.$transaction(async (tx) => {
     const duplicate = await tx.sellerPayoutMethod.findUnique({
-      where: { sellerId_fingerprint: { sellerId: seller.id, fingerprint } },
+      where: { sellerId_currencyCode_fingerprint: { sellerId: seller.id, currencyCode: data.currencyCode, fingerprint } },
       select: { id: true, status: true }
     });
     if (duplicate && duplicate.status !== SellerPayoutMethodStatus.DISABLED) {
