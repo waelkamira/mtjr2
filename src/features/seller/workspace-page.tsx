@@ -900,7 +900,27 @@ export default function SellerWorkspacePage() {
                     disabled={!selectedStore || !sellerAnalytics || analyticsLoading || Boolean(analyticsError)}
                     onClick={() => {
                       if (!selectedStore || !sellerAnalytics) return;
-                      downloadSellerStoreWorkbook({ store: selectedStore, analytics: sellerAnalytics, inventory, orders: recentOrders });
+                      const canReadStoreDetails = sellerAnalytics.permissions.store;
+                      const exportStore = {
+                        ...selectedStore,
+                        shippingContactName: canReadStoreDetails ? selectedStore.shippingContactName : null,
+                        shippingPhone: canReadStoreDetails ? selectedStore.shippingPhone : null,
+                        shippingAddressLine1: canReadStoreDetails ? selectedStore.shippingAddressLine1 : null,
+                        shippingAddressLine2: canReadStoreDetails ? selectedStore.shippingAddressLine2 : null,
+                        shippingCity: canReadStoreDetails ? selectedStore.shippingCity : null,
+                        shippingRegion: canReadStoreDetails ? selectedStore.shippingRegion : null,
+                        shippingPostalCode: canReadStoreDetails ? selectedStore.shippingPostalCode : null,
+                        shippingCountryCode: canReadStoreDetails ? selectedStore.shippingCountryCode : null,
+                        shippingInstructions: canReadStoreDetails ? selectedStore.shippingInstructions : null,
+                        markets: canReadStoreDetails ? selectedStore.markets : [],
+                        warehouses: sellerAnalytics.permissions.inventory ? selectedStore.warehouses : []
+                      };
+                      downloadSellerStoreWorkbook({
+                        store: exportStore,
+                        analytics: sellerAnalytics,
+                        inventory: sellerAnalytics.permissions.inventory ? inventory : [],
+                        orders: sellerAnalytics.permissions.orders ? recentOrders : []
+                      });
                     }}
                     className="rounded-full border border-white/90 bg-white/75 px-4 py-2 text-xs font-extrabold text-[#526078] shadow-[0_4px_10px_rgba(74,75,112,.10),inset_0_1px_0_white] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45"
                   >
