@@ -52,3 +52,28 @@ export interface PaymentProviderAdapter {
   createIntent(input: PaymentProviderIntentInput): Promise<PaymentProviderIntentResult>;
   verifyWebhook(request: Request, credentials?: Record<string, string>, environment?: "TEST" | "LIVE"): Promise<VerifiedPaymentEvent>;
 }
+
+
+export type ProviderRefundInput = {
+  providerReference: string;
+  amountMinor: string;
+  currencyCode: string;
+  idempotencyKey: string;
+  refundId: string;
+  providerCredentials?: Record<string, string>;
+  providerEnvironment?: "TEST" | "LIVE";
+};
+
+export type ProviderRefundResult = {
+  providerRefundReference: string;
+  status: "COMPLETED" | "PROCESSING" | "FAILED";
+};
+
+export interface PaymentRefundProvider {
+  createRefund(input: ProviderRefundInput): Promise<ProviderRefundResult>;
+  getRefundStatus(
+    refundReference: string,
+    credentials?: Record<string, string>,
+    environment?: "TEST" | "LIVE"
+  ): Promise<ProviderRefundResult["status"]>;
+}
