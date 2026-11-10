@@ -4382,3 +4382,8 @@ The platform account policy is now explicit: email verification is not required 
 - Updated the Prisma model usage map and platform system map: Return/Refund/RefundItem now drive physical-return-gated Stripe/PayPal refund execution; provider-confirmed completion updates Refund and Payment with AuditLog evidence.
 - The general ledger remains deliberately unconnected. Existing journal posting is append-only but there is no approved chart-of-accounts mapping or payment-capture journal, so no seller payable/clearing/tax/shipping allocation was invented.
 - Remaining before launch: deploy additive migrations; run the complete TEST/Sandbox payment and refund journey; confirm retry/duplicate/pending behavior in PostgreSQL; approve high-risk refund dual control and accounting mappings; then implement balanced, idempotent journal postings and seller payable reversals.
+
+
+## 2026-11-10 — Refund dual control
+- Enforced independent-operator confirmation for provider and manual refunds using the existing Refund.requestedById/completedById lifecycle: the requester cannot execute or manually confirm their own refund.
+- Documented the control in System 29, the route registry and Phase 6. MFA step-up and configurable amount limits remain separate launch requirements.
