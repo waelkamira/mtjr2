@@ -570,6 +570,7 @@ model Currency {
   adSpendLedgerEntries AdSpendLedgerEntry[]
   ledgerAccounts LedgerAccount[]
   journalEntries JournalEntry[]
+  sellerPayoutMethods SellerPayoutMethod[]
 
   shippingRates StoreShippingRate[]
 
@@ -639,6 +640,7 @@ model Seller {
   store       Store?
   commissionRules CommissionRule[]
   commissionTransactions CommissionTransaction[]
+  payoutMethods SellerPayoutMethod[]
 
   @@index([status, createdAt])
 }
