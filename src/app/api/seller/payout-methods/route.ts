@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/access-errors";
 import { createSellerPayoutMethod, listSellerPayoutMethods } from "@/server/marketplace/seller-payout-methods";
@@ -24,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     if (error instanceof PermissionDeniedError) return Response.json({ error: "An active seller owner account is required." }, { status: 403 });
     const message = error instanceof Error ? error.message : "Unable to save bank account.";
-    const status = /valid|choose|already saved|checksum|account number|routing|currency/i.test(message) ? 400 : 500;
+    const status = error instanceof z.ZodError || /valid|choose|already saved|checksum|account number|routing|currency/i.test(message) ? 400 : 500;
     return Response.json({ error: status === 400 ? message : "Unable to save bank account." }, { status });
   }
 }
