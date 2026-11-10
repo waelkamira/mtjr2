@@ -108,7 +108,7 @@ export default function AdminSellersPage() {
     finally { setBusy(""); }
   }
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Seller operations", "عمليات البائعين")}</p>
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Sellers and stores", "البائعون والمتاجر")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Review seller applications and administer active store availability.", "راجع طلبات البائعين وأدِر إتاحة المتاجر النشطة.")}</p></div><p className="text-sm text-[var(--muted)]">{data?.total ?? 0} {translate(locale, "sellers", "بائع")}</p></div>
     <form onSubmit={search} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 sm:grid-cols-[1fr_220px_auto]">
