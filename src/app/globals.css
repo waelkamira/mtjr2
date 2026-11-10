@@ -780,3 +780,108 @@ html body [data-sonner-toaster].clay-toaster[data-sonner-theme="light"] {
   outline: 3px solid rgb(105 181 176 / 65%);
   outline-offset: 2px;
 }
+
+
+/* Responsive platform safeguards: prevent nested content from widening the viewport. */
+html,
+body {
+  width: 100%;
+  min-width: 320px;
+  overflow-x: clip;
+}
+
+body,
+main,
+[role="main"] {
+  min-width: 0;
+}
+
+img,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where(main, section, article, form, header, footer, aside) {
+  min-width: 0;
+}
+
+:where(pre, code, p, h1, h2, h3, label, a, button) {
+  overflow-wrap: anywhere;
+}
+
+.seller-dashboard,
+.seller-dashboard > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.seller-dashboard .overflow-x-auto,
+.seller-dashboard [class*="overflow-x-auto"] {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.seller-dashboard table {
+  max-width: 100%;
+}
+
+@media (max-width: 48rem) {
+  .seller-dashboard {
+    width: 100%;
+    overflow-x: clip;
+  }
+
+  .seller-dashboard main,
+  .seller-dashboard section,
+  .seller-dashboard article,
+  .seller-dashboard form,
+  .seller-dashboard header,
+  .seller-dashboard > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .seller-dashboard :where(input, select, textarea) {
+    width: 100%;
+  }
+
+  .seller-dashboard :where(button, a) {
+    max-width: 100%;
+  }
+
+  .seller-dashboard table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .seller-dashboard [class*="grid-cols-"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .seller-dashboard h1 {
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 30rem) {
+  .seller-dashboard {
+    font-size: 0.9375rem;
+  }
+
+  .seller-dashboard :where(.rounded-2xl, .rounded-3xl) {
+    border-radius: 1rem;
+  }
+}
