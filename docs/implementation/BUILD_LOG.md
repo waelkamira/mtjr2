@@ -4492,3 +4492,17 @@ The platform account policy is now explicit: email verification is not required 
 **Verification**
 - Prisma validation, migrations, TypeScript, lint, PostgreSQL integration and CodeQL passed on the preceding run. The payment lifecycle preflight regression is no longer among the failing tests; unrelated stale test fixtures/expectations remain to be reconciled before merge.
 - PR remains draft and is not merged until required checks complete.
+
+
+## 2026-11-10 — CI compatibility and seller onboarding correction
+
+**Implemented**
+- Kept seller application submission consistent with the current registration contract; did not introduce an email-verification prerequisite that would block active accounts.
+- Corrected existing test fixtures and expectations for the payment-provider adapter registry, multi-currency seller commission aggregates/refund reads, owner-only staff management, session-free registration, and conditional ACTIVE/PENDING login updates.
+- Preserved the payment-provider preflight guard that rejects unsupported providers before checkout owner/order reads.
+- No database schema or migration changes.
+
+**Verification**
+- Latest CI run passed Prisma validation/migrations, TypeScript and lint, but its existing test fixtures were stale; the fixtures/expectations have now been aligned and a fresh run is required.
+- PostgreSQL integration and CodeQL passed on the preceding source revision; browser E2E was still running at that point.
+- PR remains draft until fresh required checks pass.
