@@ -4366,3 +4366,13 @@ The platform account policy is now explicit: email verification is not required 
 - Migration 20261110120000_payment_provider_control_center is present in the repository. Applying it to the owner's active database and completing a PayPal Sandbox journey are still unverified and cannot be inferred from source inspection.
 - No database migration was applied, no credentials were read or changed, and no tests/build/typecheck or live/Sandbox payment were executed in this documentation-only reconciliation.
 - Documentation commit: 27115d092146d99f4459f4e5cf8711603371aeeb; route-registry correction follows in this commit.
+
+
+## 2026-11-10 — Stripe and PayPal provider refund execution
+- Added provider refund contracts and server-side adapter operations for Stripe and PayPal.
+- Stripe refunds resolve the captured Checkout Session to its paid PaymentIntent; PayPal refunds resolve the Matjar Orders v2 order to its completed capture. Both validate currency/amount and use deterministic provider idempotency keys.
+- Added RefundStatus states PROCESSING_PROVIDER and PROVIDER_FAILED, plus additive migration 20261110130000_provider_refund_execution.
+- Added finance API actions to execute and refresh provider refunds. Provider pending responses retain the provider refund reference; only a provider-confirmed completed result marks the Refund complete and updates Payment status. Manual external-reference completion remains available for reconciled exceptions.
+- Added provider refund controls, asynchronous status refresh and Arabic labels to /admin/refunds.
+- Provider calls are outside DB transactions; refund reservations and finalization are serialized by order lock, payment-balance limits, idempotency, and AuditLog.
+- Not run: Prisma migration application, typecheck, tests, build, Sandbox calls or any live financial operation. Sandbox verification remains required before enabling live refund workflows.
