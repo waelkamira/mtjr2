@@ -485,12 +485,16 @@ export async function refreshProviderRefundStatus(refundIdInput: string, now = n
   const status = await adapter.getRefundStatus(refund.externalReference, snapshot?.credentials, snapshot?.environment);
   if (status === "COMPLETED") return finalizeProviderRefund(refund.id, refund.externalReference, actor.userId, now);
   if (status === "FAILED" || status === "PROCESSING") {
-    await prisma.refund.updateMany({
-      where: { id: refund.id, status: { in: [RefundStatus.PROCESSING_PROVIDER, RefundStatus.PROVIDER_FAILED] } },
+    const changed = await prisma.refund.updateMany({
+      where: { id: refund.id, status: refund.status, externalReference: refund.externalReference },
       data: status === "FAILED"
         ? { status: RefundStatus.PROVIDER_FAILED, externalReference: null, providerSubmittedAt: null, providerAttempt: { increment: 1 } }
         : { status: RefundStatus.PROCESSING_PROVIDER }
     });
+    if (changed.count === 0) {
+      const current = await prisma.refund.findUnique({ where: { id: refund.id }, select: { status: true } });
+      return { id: refund.id, status: current?.status ?? refund.status, alreadyApplied: true };
+    }
   }
   await prisma.auditLog.create({
     data: {
