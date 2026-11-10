@@ -34,3 +34,17 @@ Before transfers are enabled, implement and audit:
 5. A rule that only a verified destination may receive a payout.
 
 Until those controls exist, no withdrawal or transfer API should be exposed.
+
+## Privileged manual review endpoint
+
+A privileged manual review command is now implemented at `POST /api/admin/seller-payout-methods/[methodId]/review`.
+
+- Requires the global `platform:manage` permission and the platform step-up/MFA policy.
+- Accepts only `VERIFIED` or `REJECTED`, a non-empty external evidence reference, and a reason.
+- Rejects self-review when the platform actor is also the seller owner.
+- Reviews only `PENDING_VERIFICATION` records; repeat or conflicting reviews return a conflict.
+- Updates the destination status and audit record in one serializable transaction.
+- Stores the evidence reference and reason in the audit metadata, never the account identifier or encrypted payload.
+- A rejection clears the default flag. A successful manual review records `verifiedAt`.
+
+This endpoint records an administrator's attestation after an out-of-band check with the bank or an approved verification provider. It does **not** contact a bank, validate account ownership automatically, initiate a payout, or make a seller balance withdrawable. There is not yet a dedicated admin review UI. Do not review a destination as verified without independently confirming ownership through an approved channel.
