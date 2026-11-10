@@ -25,8 +25,8 @@ CREATE TABLE "SellerPayoutMethod" (
     FOREIGN KEY ("currencyCode") REFERENCES "Currency"("code") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
-CREATE UNIQUE INDEX "SellerPayoutMethod_sellerId_fingerprint_key"
-  ON "SellerPayoutMethod"("sellerId", "fingerprint");
+CREATE UNIQUE INDEX "SellerPayoutMethod_sellerId_currencyCode_fingerprint_key"
+  ON "SellerPayoutMethod"("sellerId", "currencyCode", "fingerprint");
 CREATE INDEX "SellerPayoutMethod_sellerId_currencyCode_status_isDefault_idx"
   ON "SellerPayoutMethod"("sellerId", "currencyCode", "status", "isDefault");
 CREATE UNIQUE INDEX "SellerPayoutMethod_one_default_per_seller_currency_key"
