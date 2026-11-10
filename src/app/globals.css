@@ -885,3 +885,53 @@ textarea {
     border-radius: 1rem;
   }
 }
+
+
+/* Admin and data-heavy routes need their own constrained scroll regions. */
+.admin-dashboard,
+.admin-dashboard > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 48rem) {
+  main table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard main,
+  .admin-dashboard section,
+  .admin-dashboard article,
+  .admin-dashboard form,
+  .admin-dashboard header,
+  .admin-dashboard > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-dashboard [class*="grid-cols-"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .admin-dashboard :where(input, select, textarea) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-dashboard [class*="overflow-x-auto"] {
+    max-width: 100%;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :where([role="dialog"], dialog) {
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+    overflow: auto;
+  }
+}
