@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AuditActorType, SellerPayoutMethodStatus, SellerPayoutMethodType } from "@prisma/client";
+import { AuditActorType, Prisma, SellerPayoutMethodStatus, SellerPayoutMethodType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
@@ -134,7 +134,7 @@ export async function createSellerPayoutMethod(input: unknown) {
       }
     });
     return method;
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
 export async function setSellerPayoutMethodDefault(methodIdInput: string) {
@@ -157,7 +157,7 @@ export async function setSellerPayoutMethodDefault(methodIdInput: string) {
       }
     });
     return updated;
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
 export async function disableSellerPayoutMethod(methodIdInput: string) {
@@ -191,5 +191,5 @@ export async function disableSellerPayoutMethod(methodIdInput: string) {
       }
     });
     return updated;
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
