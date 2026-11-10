@@ -42,7 +42,7 @@ export function fingerprintSellerPayoutAccount(countryCode: string, accountIdent
   return createHmac("sha256", keys.active.fingerprintKey)
     .update(countryCode.toUpperCase())
     .update(":")
-    .update(accountIdentifier.replace(/\\s+/g, "").toUpperCase())
+    .update(accountIdentifier.replace(/\s+/g, "").toUpperCase())
     .digest("hex");
 }
 
