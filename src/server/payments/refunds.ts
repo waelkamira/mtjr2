@@ -253,7 +253,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
   return prisma.$transaction(async (tx) => {
     const refund = await tx.refund.findUnique({
       where: { id: refundId },
-      select: { id: true, orderId: true, paymentId: true, amountMinor: true, status: true, externalReference: true, requestedById: true, payment: { select: { amountMinor: true, status: true } } }
+      select: { id: true, orderId: true, paymentId: true, amountMinor: true, status: true, externalReference: true, providerSubmittedAt: true, requestedById: true, payment: { select: { amountMinor: true, status: true } } }
     });
     if (!refund) throw new Error("Refund not found.");
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
@@ -321,7 +321,7 @@ async function finalizeProviderRefund(refundId: string, providerRefundReference:
     if (!refund) throw new Error("Refund not found.");
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
     if (refund.status === RefundStatus.COMPLETED) return { id: refund.id, status: refund.status, alreadyApplied: true };
-    if (refund.status !== RefundStatus.PROCESSING_PROVIDER) throw new Error("The provider refund is no longer in a processing state.");
+    if (refund.status !== RefundStatus.PROCESSING_PROVIDER && refund.status !== RefundStatus.PROVIDER_FAILED) throw new Error("The provider refund is no longer in a reconcilable state.");
 
     const committedBefore = await tx.refund.aggregate({
       where: { paymentId: refund.paymentId, status: { in: committedRefundStatuses }, id: { not: refund.id } },
@@ -380,8 +380,13 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
     if (refund.status === RefundStatus.COMPLETED) return { done: true as const, id: refund.id };
     if (refund.requestedById === actor.userId) throw new Error("A different finance operator must execute a refund requested by this account.");
     if (refund.status === RefundStatus.PROCESSING_PROVIDER && refund.externalReference) return { processing: true as const, id: refund.id, reference: refund.externalReference };
+    if (refund.status === RefundStatus.PROVIDER_FAILED && refund.externalReference) throw new Error("A provider refund reference already exists. Refresh its status or reconcile it manually instead of submitting another refund.");
     if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED && refund.status !== RefundStatus.PROCESSING_PROVIDER) {
       throw new Error("Only pending or retryable provider-failed refunds can be submitted.");
+    }
+    if (refund.providerSubmittedAt) {
+      const retentionMs = refund.payment.provider === "paypal" ? 44 * 24 * 60 * 60 * 1000 : 23 * 60 * 60 * 1000;
+      if (now.getTime() - refund.providerSubmittedAt.getTime() > retentionMs) throw new Error("The provider idempotency retention window has expired. Reconcile the provider dashboard and record the confirmed outcome manually; automatic retry is blocked to prevent a duplicate refund.");
     }
     if (!refund.payment.providerReference) throw new Error("The original payment has no provider transaction reference.");
     if (refund.payment.status !== PaymentStatus.SUCCEEDED && refund.payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
@@ -396,7 +401,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
     }
     const changed = await tx.refund.updateMany({
       where: { id: refund.id, status: refund.status },
-      data: { status: RefundStatus.PROCESSING_PROVIDER }
+      data: { status: RefundStatus.PROCESSING_PROVIDER, providerSubmittedAt: refund.providerSubmittedAt ?? now }
     });
     if (changed.count !== 1) throw new Error("The refund changed. Refresh and try again.");
     await tx.auditLog.create({
@@ -472,7 +477,7 @@ export async function refreshProviderRefundStatus(refundIdInput: string, now = n
   });
   if (!refund) throw new Error("Refund not found.");
   if (refund.status === RefundStatus.COMPLETED) return { id: refund.id, status: refund.status, alreadyApplied: true };
-  if (refund.status !== RefundStatus.PROCESSING_PROVIDER || !refund.externalReference) {
+  if ((refund.status !== RefundStatus.PROCESSING_PROVIDER && refund.status !== RefundStatus.PROVIDER_FAILED) || !refund.externalReference) {
     throw new Error("Only provider refunds with a returned reference can be refreshed.");
   }
   const snapshot = await getPaymentProviderRuntimeSnapshot(refund.payment.id);
@@ -480,10 +485,10 @@ export async function refreshProviderRefundStatus(refundIdInput: string, now = n
   const adapter = refundAdapter(refund.payment.provider);
   const status = await adapter.getRefundStatus(refund.externalReference, snapshot?.credentials, snapshot?.environment);
   if (status === "COMPLETED") return finalizeProviderRefund(refund.id, refund.externalReference, actor.userId, now);
-  if (status === "FAILED") {
+  if (status === "FAILED" || status === "PROCESSING") {
     await prisma.refund.updateMany({
-      where: { id: refund.id, status: RefundStatus.PROCESSING_PROVIDER },
-      data: { status: RefundStatus.PROVIDER_FAILED }
+      where: { id: refund.id, status: { in: [RefundStatus.PROCESSING_PROVIDER, RefundStatus.PROVIDER_FAILED] } },
+      data: { status: status === "FAILED" ? RefundStatus.PROVIDER_FAILED : RefundStatus.PROCESSING_PROVIDER }
     });
   }
   await prisma.auditLog.create({
