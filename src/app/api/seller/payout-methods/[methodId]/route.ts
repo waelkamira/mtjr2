@@ -1,6 +1,6 @@
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/access-errors";
-import { validateIdentityMutationRequest } from "@/server/identity/request-security";
+import { validateIdentityMutationOrigin } from "@/server/identity/request-security";
 import {
   disableSellerPayoutMethod,
   SellerPayoutMethodNotFoundError,
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 type RouteContext = { params: Promise<{ methodId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext): Promise<Response> {
-  const rejected = validateIdentityMutationRequest(request);
+  const rejected = validateIdentityMutationOrigin(request);
   if (rejected) return rejected;
   try {
     const { methodId } = await context.params;
