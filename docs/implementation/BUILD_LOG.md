@@ -4424,3 +4424,9 @@ The platform account policy is now explicit: email verification is not required 
 - Notifications: preference labels and channel toggles wrap safely; card padding and page gutters adapt to phone widths.
 - Catalog list controls: search, sort and submit controls can wrap instead of competing for a single narrow row.
 - Re-reviewed the remaining fixed-minimum-width data tables: each is placed inside an explicit horizontal scroll container, so the page itself is not intended to scroll sideways.
+
+## 2026-11-10 — Seller dashboard command-center shortcuts
+- Added a seller dashboard quick-action section linking the selected store's daily workflows: orders, catalog, financial overview, payout destinations, shipping settings and owner-only store export.
+- Added a direct bank-account management action to the seller financial overview so the finance and payout workflows are connected from the same workspace.
+- Reused existing authenticated routes and the existing owner-scoped, audited Excel export endpoint; no duplicate APIs, Prisma models or migrations were introduced.
+- Automated tests intentionally deferred per the current development priority. Build/runtime verification remains pending and this slice is not marked launch-ready.
