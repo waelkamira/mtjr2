@@ -3,7 +3,7 @@ import "server-only";
 import { AuditActorType, PaymentStatus, Prisma, RefundStatus, ReturnItemStatus, ReturnRequestStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { requirePermission } from "@/server/identity/permission-guard";
+import { PermissionDeniedError, requirePermission } from "@/server/identity/permission-guard";
 import { getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
 import { paypalPaymentProvider } from "@/server/payments/providers/paypal";
 import { stripePaymentProvider } from "@/server/payments/providers/stripe";
@@ -265,7 +265,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
       throw new Error("This refund was already completed with a different external reference.");
     }
     if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED) throw new Error("Only pending or provider-failed refunds can be manually completed after external reconciliation.");
-    if (refund.requestedById === actor.userId) throw new Error("A different finance operator must confirm a refund requested by this account.");
+    if (refund.requestedById === actor.userId) throw new PermissionDeniedError("A different finance operator must confirm a refund requested by this account.");
     if (refund.payment.status !== PaymentStatus.SUCCEEDED && refund.payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
       throw new Error("The payment is not in a refundable state; reconcile it before completion.");
     }
@@ -331,7 +331,7 @@ async function finalizeProviderRefund(refundId: string, providerRefundReference:
     if (totalAfter > refund.payment.amountMinor) throw new Error("Completed provider refunds would exceed the captured payment.");
 
     const changed = await tx.refund.updateMany({
-      where: { id: refund.id, status: RefundStatus.PROCESSING_PROVIDER },
+      where: { id: refund.id, status: { in: [RefundStatus.PROCESSING_PROVIDER, RefundStatus.PROVIDER_FAILED] } },
       data: {
         status: RefundStatus.COMPLETED,
         externalReference: providerRefundReference,
@@ -378,7 +378,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
     if (!refund) throw new Error("Refund not found.");
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
     if (refund.status === RefundStatus.COMPLETED) return { done: true as const, id: refund.id };
-    if (refund.requestedById === actor.userId) throw new Error("A different finance operator must execute a refund requested by this account.");
+    if (refund.requestedById === actor.userId) throw new PermissionDeniedError("A different finance operator must execute a refund requested by this account.");
     if (refund.status === RefundStatus.PROCESSING_PROVIDER && refund.externalReference) return { processing: true as const, id: refund.id, reference: refund.externalReference };
     if (refund.status === RefundStatus.PROVIDER_FAILED && refund.externalReference) throw new Error("A provider refund reference already exists. Refresh its status or reconcile it manually instead of submitting another refund.");
     if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED && refund.status !== RefundStatus.PROCESSING_PROVIDER) {
