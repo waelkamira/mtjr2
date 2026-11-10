@@ -92,7 +92,7 @@ export default function AdminCatalogProductsManagementPage() {
     current.includes(id) ? current.filter((value) => value !== id) : [...current, id]
   );
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Catalog operations", "عمليات الكتالوج")}</p>
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Product management", "إدارة المنتجات")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Archive selected products or scope the action to one store or store owner. Historical order items are preserved.", "أرشف المنتجات المحددة أو احصر الإجراء في متجر واحد أو مالك متجر. يتم الاحتفاظ بعناصر الطلبات السابقة.")}</p></div><p className="text-sm text-[var(--muted)]">{items.length} {translate(locale, "shown · up to 100", "معروض · بحد أقصى 100")}</p></div>
     <section className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 md:grid-cols-4">
