@@ -21,7 +21,7 @@ The review covered every seller route currently present in `src/app/seller`, the
 | `/seller/reviews` | Customer reviews, media and public seller responses | Connected to seller review/response APIs. Localized chart labels/dates/statuses, required a non-empty response, and normalized the card surface. |
 | `/seller/advertising` | Campaign creation, targeting, budgets, lifecycle and invoices | Connected to campaign and invoice APIs. Campaign budget/click-cost fields use currency minor-unit conversion; campaign lifecycle actions refresh server data. |
 | `/seller/finance` | Read-only store financial overview | Reuses recorded commission and completed-refund data. It explicitly does not represent those figures as a payable or withdrawable balance. The selected store follows the shared active-store preference and broadcasts changes to the seller workspace/sidebar. |
-| `/seller/commissions` | Commission snapshots, refund allocations and CSV | Read-only statements based on immutable commission snapshots and completed refund item allocations. Refunds remain separately displayed. |
+| `/seller/commissions` | Commission snapshots, refund allocations and CSV | Read-only statements based on immutable commission snapshots and completed refund item allocations. Refunds remain separately displayed. |\n| `/seller/payouts` | Bank destination management | Owner-only IBAN/local bank account entry, masked listing, default selection and soft disable; AES-256-GCM encryption, keyed duplicate fingerprint and audit events. New destinations remain pending verification; transfers are not implemented. |
 | `/seller/staff` | Store team and invitations | Connected to store staff/invitation APIs; active-store selection is synchronized with the shared sidebar. |
 | `/seller/settings` | Seller profile and shortcuts to store operations/settings | Connected to seller profile API; store-specific operational settings remain linked to their existing workspace/shipping flows. |
 | Shared shell | Desktop sidebar, mobile navigation, topbar, loading/error states | All current seller routes are represented in navigation. Sidebar store identity now refreshes when the active store changes in the same tab or another tab. Topbar product search is connected to the product filter. |
@@ -36,7 +36,7 @@ The review covered every seller route currently present in `src/app/seller`, the
 
 ## Outstanding seller-finance scope
 
-There is no seller payout/withdrawal page or payout-method workflow yet: no `/seller/payouts`, `/seller/transactions`, `/api/seller/payouts`, `/api/seller/payout-methods`, `Payout` or `PayoutMethod` model is present.
+A seller bank-destination management page and API now exist on this feature branch (`/seller/payouts`, `/api/seller/payout-methods`, `SellerPayoutMethod`). There is still no payout request/withdrawal API, `Payout` model, verification workflow, seller payable ledger balance or transfer/reconciliation pipeline.
 
 This is not a UI-only omission. The accounting journal foundation exists, but it is not connected to captured payments/refunds to calculate seller payables. Settlement timing, reserves/holds, shipping/tax ownership, chargebacks, negative balances and reconciliation policy are not approved. Until those policies are implemented, the UI must not invent an available balance or allow withdrawal requests. The existing finance and commission pages correctly remain read-only and separate recorded figures.
 
