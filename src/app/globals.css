@@ -851,7 +851,7 @@ textarea {
     max-width: 100%;
   }
 
-  .seller-dashboard :where(input, select, textarea) {
+  .seller-dashboard :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), select, textarea) {
     width: 100%;
   }
 
@@ -933,5 +933,15 @@ textarea {
     max-width: calc(100vw - 1rem);
     max-height: calc(100dvh - 1rem);
     overflow: auto;
+  }
+}
+
+
+@media (pointer: coarse) {
+  .seller-dashboard button,
+  .admin-dashboard button,
+  .seller-dashboard nav a,
+  .admin-dashboard nav a {
+    min-height: 44px;
   }
 }
