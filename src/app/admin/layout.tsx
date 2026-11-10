@@ -66,7 +66,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] lg:flex">
+    <div className="admin-dashboard min-h-screen min-w-0 bg-[var(--background)] lg:flex">
       <AdminNavigation canManagePlatform={canManagePlatform} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
