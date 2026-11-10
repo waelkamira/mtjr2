@@ -564,7 +564,6 @@ model Currency {
   payments       Payment[]
   refunds        Refund[]
   commissionTransactions CommissionTransaction[]
-  payoutMethods SellerPayoutMethod[]
   coupons        Coupon[]         @relation("CouponCurrency")
   adCampaigns    AdCampaign[]
   adInvoices     AdInvoice[]
