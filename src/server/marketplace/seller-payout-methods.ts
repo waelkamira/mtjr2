@@ -7,6 +7,7 @@ import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/access-errors";
 import { decryptSellerPayoutDetails, encryptSellerPayoutDetails, fingerprintSellerPayoutAccount } from "@/server/finance/seller-payout-encryption";
 import { isValidSellerIban } from "@/server/finance/iban-validation";
+import { requirePlatformManagement } from "@/server/identity/permission-guard";
 
 const inputSchema = z.object({
   type: z.nativeEnum(SellerPayoutMethodType),
@@ -196,6 +197,72 @@ export async function disableSellerPayoutMethod(methodIdInput: string) {
         action: "SELLER_PAYOUT_METHOD_DISABLED", resource: "SellerPayoutMethod",
         resourceId: method.id, scopeType: "SELLER", scopeId: seller.id,
         metadata: { accountLast4: method.accountLast4 }
+      }
+    });
+    return updated;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+
+const payoutVerificationSchema = z.object({
+  decision: z.enum(["VERIFIED", "REJECTED"]),
+  evidenceReference: z.string().trim().min(6).max(180),
+  reason: z.string().trim().min(10).max(500)
+}).strict();
+
+export class SellerPayoutVerificationConflictError extends Error {
+  constructor() { super("Only pending bank destinations can be reviewed."); this.name = "SellerPayoutVerificationConflictError"; }
+}
+
+export class SellerPayoutSelfVerificationError extends Error {
+  constructor() { super("A seller cannot verify their own bank destination."); this.name = "SellerPayoutSelfVerificationError"; }
+}
+
+/**
+ * Records an out-of-band bank ownership review. This does not initiate or authorize a payout.
+ * Platform-management permission includes the platform step-up/MFA policy.
+ */
+export async function reviewSellerPayoutMethod(methodIdInput: string, input: unknown) {
+  const methodId = z.string().trim().min(1).max(128).parse(methodIdInput);
+  const decision = payoutVerificationSchema.parse(input);
+  const actor = await requirePlatformManagement();
+  return prisma.$transaction(async (tx) => {
+    const method = await tx.sellerPayoutMethod.findUnique({
+      where: { id: methodId },
+      select: {
+        id: true, sellerId: true, accountLast4: true, currencyCode: true,
+        status: true, isDefault: true, seller: { select: { ownerId: true } }
+      }
+    });
+    if (!method || method.status === SellerPayoutMethodStatus.DISABLED) throw new SellerPayoutMethodNotFoundError();
+    if (method.seller.ownerId === actor.userId) throw new SellerPayoutSelfVerificationError();
+    if (method.status !== SellerPayoutMethodStatus.PENDING_VERIFICATION) throw new SellerPayoutVerificationConflictError();
+
+    const updated = await tx.sellerPayoutMethod.update({
+      where: { id: method.id },
+      data: {
+        status: decision.decision,
+        verifiedAt: decision.decision === "VERIFIED" ? new Date() : null,
+        ...(decision.decision === "REJECTED" ? { isDefault: false } : {})
+      },
+      select: safeSelect
+    });
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER,
+        actorId: actor.userId,
+        action: decision.decision === "VERIFIED" ? "SELLER_PAYOUT_METHOD_VERIFIED" : "SELLER_PAYOUT_METHOD_REJECTED",
+        resource: "SellerPayoutMethod",
+        resourceId: method.id,
+        scopeType: "SELLER",
+        scopeId: method.sellerId,
+        metadata: {
+          decision: decision.decision,
+          evidenceReference: decision.evidenceReference,
+          reason: decision.reason,
+          accountLast4: method.accountLast4,
+          currencyCode: method.currencyCode
+        }
       }
     });
     return updated;
