@@ -432,6 +432,8 @@ enum PaymentStatus {
 
 enum RefundStatus {
   PENDING_MANUAL
+  PROCESSING_PROVIDER
+  PROVIDER_FAILED
   COMPLETED
 }
 
