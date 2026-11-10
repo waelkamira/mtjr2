@@ -32,7 +32,7 @@ vi.mock("@/server/finance/seller-payout-encryption", () => ({
 }));
 
 import { PermissionDeniedError } from "@/server/identity/access-errors";
-import { createSellerPayoutMethod } from "@/server/marketplace/seller-payout-methods";
+import { createSellerPayoutMethod, SellerPayoutValidationError } from "@/server/marketplace/seller-payout-methods";
 
 const createdMethod = {
   id: "payout-1", type: "IBAN", accountHolderName: "Example Owner", bankName: "Example Bank",
@@ -105,6 +105,19 @@ describe("seller payout destination security", () => {
     expect(JSON.stringify(auditData)).not.toContain("ABCDEF12");
     expect(result).not.toHaveProperty("encryptedDetails");
     expect(result).not.toHaveProperty("accountIdentifier");
+  });
+
+  it("rejects an IBAN whose country prefix does not match the selected bank country", async () => {
+    await expect(createSellerPayoutMethod({
+      type: "IBAN",
+      accountHolderName: "Example Owner",
+      bankName: "Example Bank",
+      countryCode: "FR",
+      currencyCode: "EUR",
+      accountIdentifier: "DE89370400440532013000"
+    })).rejects.toBeInstanceOf(SellerPayoutValidationError);
+
+    expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
   it("rejects a user without an active seller account before reading or writing payout methods", async () => {
