@@ -866,14 +866,6 @@ textarea {
     overscroll-behavior-inline: contain;
   }
 
-  .seller-dashboard [class*="grid-cols-"] {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .seller-dashboard [class*="grid-cols-"] > [class*="col-span-"] {
-    grid-column: auto / span 1 !important;
-  }
-
   .seller-dashboard h1 {
     font-size: clamp(1.35rem, 5vw, 2rem);
     line-height: 1.2;
@@ -916,14 +908,6 @@ textarea {
   .admin-dashboard > div {
     min-width: 0;
     max-width: 100%;
-  }
-
-  .admin-dashboard [class*="grid-cols-"] {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .admin-dashboard [class*="grid-cols-"] > [class*="col-span-"] {
-    grid-column: auto / span 1 !important;
   }
 
   .admin-dashboard :where(input, select, textarea) {
