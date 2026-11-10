@@ -176,3 +176,21 @@ Refunds remain finance-confirmed/manual. The platform records a pending refund r
 ## Runtime environment selection
 
 The runtime defaults to TEST outside production and LIVE in production. Set `PAYMENT_PROVIDER_RUNTIME_ENVIRONMENT=TEST` or `LIVE` to override this explicitly. This allows a production deployment to run a sandbox checkout verification phase without switching application `NODE_ENV`; unset the override before enabling real-money LIVE checkout. Webhook verification uses the same resolver, while each existing payment still takes precedence through its stored environment snapshot.
+
+## Sham Cash readiness — 2026-11-10
+
+Sham Cash is a planned provider, not a compiled payment adapter yet. Merchant API approval and official technical documentation have not been obtained. The Super Admin page now displays its readiness state and required onboarding steps, but it is intentionally excluded from provider creation, checkout discovery, adapter registration, refunds and webhook processing.
+
+Do not add `sham_cash` to the provider allowlist or permit an ACTIVE configuration until the official integration contract is reviewed. Once approved, implement a dedicated server-only adapter using the documented authentication, invoice/checkout creation, signed callback or webhook verification, status lookup, idempotency, refund support (only if officially supported), and settlement/reconciliation semantics. Validate exact Matjar payment reference, amount, currency and final provider status before passing an event to `processVerifiedPaymentEvent`. Never treat screenshots, user-submitted transfer references, or browser redirects as proof of payment.
+
+Required onboarding inputs:
+- Written merchant/API approval and production eligibility.
+- Official API base URLs and authentication/token lifecycle.
+- Checkout/invoice creation and status-query endpoints.
+- Webhook/callback signature algorithm, key rotation and retry behavior.
+- Supported currencies, precision, countries, fees and settlement schedule.
+- Refund/reversal and dispute semantics, if available.
+- Sandbox credentials/test vectors and production activation procedure.
+
+Release gates: sandbox contract tests; signature/replay/idempotency tests; amount/currency/reference mismatch tests; duplicate and out-of-order event tests; database-backed checkout journey; and a controlled live verification approved by the platform owner. Until then the provider remains visibly marked as awaiting API access and unavailable at checkout.
+
