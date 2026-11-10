@@ -4479,3 +4479,15 @@ The platform account policy is now explicit: email verification is not required 
 
 **Verification**
 - Source-level wording correction committed; no financial transaction behavior or schema was changed.
+
+
+## 2026-11-10 — Payment provider preflight and seller identity gate
+
+**Implemented**
+- Reject unknown legacy payment-provider keys before resolving a checkout owner or querying an order. Stripe and PayPal continue through the managed provider-configuration path.
+- Require a verified account email before accepting a seller application; the guard runs before private identity-document verification or seller-record mutation.
+- No schema or migration changes.
+
+**Verification**
+- Previous CI run exposed stale/failed identity and payment lifecycle expectations. The source fixes are committed; CI, PostgreSQL integration, browser E2E and CodeQL are running against the updated head.
+- PR remains draft and is not merged until required checks complete.
