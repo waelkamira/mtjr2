@@ -61,7 +61,7 @@ export default function PlatformAuditLogPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-5 py-8 lg:px-8">
+    <main className="min-h-screen bg-[var(--background)] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <Link href="/admin/control-panel" className="text-sm font-medium text-[var(--color-copper-600)] hover:underline">← {translate(locale, "Platform control panel", "لوحة تحكم المنصة")}</Link>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
