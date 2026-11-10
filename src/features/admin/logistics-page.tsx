@@ -53,7 +53,7 @@ export default function AdminLogisticsPage() {
     setQuery(q);
   }
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Shipping operations", "عمليات الشحن")}</p>
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Shipments", "الشحنات")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Browse recorded shipments and carrier events. No shipping records or tracking events are generated here.", "استعرض الشحنات المسجلة وأحداث شركات النقل. لا يتم إنشاء سجلات شحن أو تتبع هنا.")}</p></div><p className="text-sm text-[var(--muted)]">{data?.total ?? 0} {translate(locale, "recorded shipments", "شحنة مسجلة")}</p></div>
     <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{translate(locale, "Carrier integrations, shipping-zone administration, delivery-delay automation, and loss/damage workflows are not configured. This page displays only persisted marketplace shipment records.", "لم يتم إعداد تكامل شركات النقل أو إدارة مناطق الشحن أو أتمتة تأخير التسليم أو إجراءات الفقد والتلف. تعرض هذه الصفحة سجلات الشحن المحفوظة في السوق فقط.")}</p>
