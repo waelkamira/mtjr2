@@ -109,7 +109,7 @@ export default function AdminSearchSynonymsPage() {
           <nav className="flex gap-4 text-sm"><Link href="/admin/review">{t("Admin", "الإدارة")}</Link><Link href="/admin/tax-rates">{t("Tax rules", "قواعد الضرائب")}</Link></nav>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-5 py-10">
+      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-5 sm:py-10">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Platform administration", "إدارة المنصة")}</p>
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{t("Search synonyms", "مرادفات البحث")}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{t("Manage locale-specific equivalent search terms. Active mappings expand public product searches and autocomplete; terms are matched case-insensitively.", "أدر مصطلحات البحث المكافئة لكل لغة. توسّع المطابقات النشطة نتائج البحث العام واقتراحات الإكمال التلقائي، وتتم مطابقة المصطلحات دون تمييز حالة الأحرف.")}</p>
