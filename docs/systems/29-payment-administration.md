@@ -215,3 +215,5 @@ The earlier manual-only boundary above is historical. The current source now sup
 - API: POST /api/admin/refunds/[refundId] with action=execute or action=refresh; existing PATCH remains for externally completed manual refunds.
 - Migration: 20261110130000_provider_refund_execution adds the provider processing/failure states to RefundStatus.
 - Remaining external verification: apply migrations, run Stripe/PayPal Sandbox refunds including duplicate/retry/pending cases, and verify the resulting PostgreSQL state. No live refund or production credential was used in this implementation session.
+
+- Dual control: the finance operator who creates the refund request cannot execute the provider refund or confirm the external refund. A different account with `payments:refund` must perform the money-moving confirmation. This implements independent-operator approval; MFA step-up, configurable amount limits and policy-based escalation remain separate launch controls.
