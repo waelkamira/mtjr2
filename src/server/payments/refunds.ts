@@ -24,7 +24,7 @@ function displayAmount(amountMinor: bigint, currencyCode: string, minorUnit: num
   return `${currencyCode} ${new Intl.NumberFormat("en").format(whole)}${minorUnit ? "." + fraction : ""}`;
 }
 
-/** Lists received return candidates and manual refunds for finance operators. */
+/** Lists received return candidates and refund operations for finance operators. */
 export async function listRefundOperations(now = new Date()) {
   await requirePermission({ permissionKey: "payments:refund", now });
   const [requests, refunds] = await Promise.all([
@@ -134,11 +134,10 @@ export async function listRefundOperations(now = new Date()) {
 }
 
 /**
- * Creates a pending manual refund only for physically received return lines.
- * No provider is called and Payment.status remains unchanged until finance
- * records an external refund confirmation.
+ * Creates a pending refund request only for physically received return lines.
+ * No provider is called here; a second finance operator explicitly executes it.
  */
-export async function createManualRefundForReturn(input: unknown, now = new Date()) {
+export async function createRefundForReturn(input: unknown, now = new Date()) {
   const data = createSchema.parse(input);
   const actor = await requirePermission({ permissionKey: "payments:refund", now });
 
@@ -225,7 +224,7 @@ export async function createManualRefundForReturn(input: unknown, now = new Date
         amountMinor,
         idempotencyKey: `return-refund:${request.id}`,
         requestedById: actor.userId,
-        note: "Manual merchandise refund requested after physical return receipt.",
+        note: "Merchandise refund requested after physical return receipt.",
         items: { create: refundLines }
       },
       select: { id: true, status: true, amountMinor: true }
@@ -234,7 +233,7 @@ export async function createManualRefundForReturn(input: unknown, now = new Date
     await tx.auditLog.create({
       data: {
         actorType: AuditActorType.USER, actorId: actor.userId,
-        action: "refund.manual_requested", resource: "refund", resourceId: refund.id,
+        action: "refund.requested", resource: "refund", resourceId: refund.id,
         scopeType: "ORDER", scopeId: request.orderId, occurredAt: now,
         metadata: { returnRequestId: request.id, amountMinor: amountMinor.toString(), currencyCode: payment.currencyCode, itemCount: refundLines.length, providerAction: "NONE_MANUAL_PROCESSING_REQUIRED" }
       }
