@@ -86,6 +86,7 @@ describe("seller payout destination security", () => {
     });
     expect(mocks.encrypt).toHaveBeenCalledWith({
       accountIdentifier: "DE89370400440532013000",
+      accountHolderName: "Example Owner",
       routingCode: "ABCDEF12"
     });
     expect(mocks.payoutCreate).toHaveBeenCalledWith(expect.objectContaining({
