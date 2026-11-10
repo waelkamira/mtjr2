@@ -4468,3 +4468,14 @@ The platform account policy is now explicit: email verification is not required 
 **Verification**
 - Source and documentation committed to `feat/seller-dashboard-command-center`.
 - Automated checks and live browser journeys remain deferred as requested; latest code has not been build-verified in this session.
+
+
+## 2026-11-10 — Finance readiness wording aligned with payout-method implementation
+
+**Implemented**
+- Corrected the seller finance disclaimer to acknowledge that encrypted payout destinations can be saved.
+- Explicitly distinguished saved beneficiary details from beneficiary ownership verification, seller ledger recognition, holds, settlement, and actual withdrawal execution.
+- Kept the financial overview from presenting commission snapshots as withdrawable funds.
+
+**Verification**
+- Source-level wording correction committed; no financial transaction behavior or schema was changed.
