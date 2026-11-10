@@ -66,10 +66,11 @@ export async function createSellerPayoutMethod(input: unknown) {
   if (data.routingCode && !/^[A-Za-z0-9-]{3,34}$/.test(data.routingCode.trim())) {
     throw new Error("Enter a valid bank routing or SWIFT/BIC code.");
   }
-  const currency = await prisma.currency.findUnique({
-    where: { code: data.currencyCode },
-    select: { code: true, isActive: true }
-  });
+  const [country, currency] = await Promise.all([
+    prisma.country.findUnique({ where: { iso2: data.countryCode }, select: { isActive: true } }),
+    prisma.currency.findUnique({ where: { code: data.currencyCode }, select: { code: true, isActive: true } })
+  ]);
+  if (!country?.isActive) throw new Error("Choose a valid active bank country.");
   if (!currency?.isActive) throw new Error("Choose an active payout currency.");
   const fingerprint = fingerprintSellerPayoutAccount(seller.id, data.countryCode, accountIdentifier);
   const encrypted = encryptSellerPayoutDetails({
