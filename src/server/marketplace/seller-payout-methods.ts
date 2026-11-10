@@ -86,7 +86,7 @@ export async function createSellerPayoutMethod(input: unknown) {
       throw new Error("This bank account is already saved for your seller account.");
     }
     const existingCount = await tx.sellerPayoutMethod.count({
-      where: { sellerId: seller.id, status: { not: SellerPayoutMethodStatus.DISABLED } }
+      where: { sellerId: seller.id, currencyCode: data.currencyCode, status: { not: SellerPayoutMethodStatus.DISABLED } }
     });
     const makeDefault = data.isDefault || existingCount === 0;
     if (makeDefault) {
