@@ -74,6 +74,7 @@ export default function SellerFinanceOverviewPage() {
           <div className="flex flex-wrap gap-2">
             {stores.find((store) => store.id === storeId)?.isOwner && <a href={`/api/seller/stores/${encodeURIComponent(storeId)}/export`} className="rounded-2xl border border-white bg-[#d9eeea] px-4 py-3 text-sm font-bold text-[#365b50] shadow-[0_5px_12px_rgba(63,100,91,.10),inset_0_1px_0_white]">{t("Export store to Excel", "تصدير المتجر إلى Excel")} ↓</a>}
             <Link href="/seller/commissions" className="rounded-2xl border border-white bg-white/75 px-4 py-3 text-sm font-bold text-[#4d5570] shadow-[0_5px_12px_rgba(74,75,112,.10),inset_0_1px_0_white]">{t("Open commission statements", "فتح كشوف العمولات")} ↗</Link>
+            <Link href="/seller/payouts" className="rounded-2xl border border-white bg-[linear-gradient(135deg,#e4f0f5,#c4dfe8)] px-4 py-3 text-sm font-bold text-[#3e6071] shadow-[0_5px_12px_rgba(63,100,115,.10),inset_0_1px_0_white]">{t("Manage bank accounts", "إدارة الحسابات البنكية")} ↗</Link>
           </div>
         </div>
       </header>
