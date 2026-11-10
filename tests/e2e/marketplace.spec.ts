@@ -167,6 +167,31 @@ test.describe("seller journey", () => {
     const updatedWorkspace = await updatedWorkspaceResponse.json() as { stores: Array<{ id: string; shippingContactName: string | null; shippingCity: string | null; shippingCountryCode: string | null }> };
     expect(updatedWorkspace.stores.find((store) => store.id === storeId)).toMatchObject({ shippingContactName: shippingContact, shippingCity: "Strasbourg", shippingCountryCode: "FR" });
 
+    await page.goto("/seller/payouts");
+    await expect(page.getByRole("heading", { name: /Bank accounts|الحسابات البنكية/i })).toBeVisible();
+    await page.getByLabel(/Account holder name|اسم صاحب الحساب/i).fill("E2E Seller Owner");
+    await page.getByLabel(/Bank name|اسم البنك/i).fill("E2E Test Bank");
+    await page.getByLabel(/Country code \(ISO\)|رمز الدولة \(ISO\)/i).fill("DE");
+    await page.getByLabel(/Settlement currency|عملة التسوية/i).fill("USD");
+    const testBban = Array.from({ length: 18 }, (_, index) => String((index + 1) % 10)).join("");
+    let ibanRemainder = 0;
+    for (const character of testBban + "DE00") {
+      const digits = character >= "A" && character <= "Z" ? String(character.charCodeAt(0) - 55) : character;
+      for (const digit of digits) ibanRemainder = (ibanRemainder * 10 + Number(digit)) % 97;
+    }
+    const testIban = "DE" + String(98 - ibanRemainder).padStart(2, "0") + testBban;
+    await page.getByLabel(/^IBAN$/i).fill(testIban);
+    await page.getByRole("button", { name: /Save bank account|حفظ الحساب البنكي/i }).click();
+    await expect(page.getByRole("status")).toContainText(/awaiting verification|بانتظار التحقق/i, { timeout: 15000 });
+    const payoutMethodsResponse = await page.request.get("/api/seller/payout-methods", { headers: { "Cache-Control": "no-store" } });
+    expect(payoutMethodsResponse.status()).toBe(200);
+    const payoutMethods = await payoutMethodsResponse.json() as { methods: Array<{ id: string; accountLast4: string; status: string; isDefault: boolean }> };
+    expect(payoutMethods.methods).toHaveLength(1);
+    expect(payoutMethods.methods[0]).toMatchObject({ accountLast4: testIban.slice(-4), status: "PENDING_VERIFICATION", isDefault: true });
+    expect(JSON.stringify(payoutMethods)).not.toContain(testIban);
+    expect(JSON.stringify(payoutMethods)).not.toContain("encryptedDetails");
+    await expect(page.getByText(/Transfers are not enabled yet|التحويلات غير مفعّلة بعد/i)).toBeVisible();
+
     await page.goto("/seller/commissions");
     await expect(page.getByRole("heading", { name: /Commission statements|كشوف العمولات/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
