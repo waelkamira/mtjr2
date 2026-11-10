@@ -103,18 +103,23 @@ export async function GET(_request: Request, context: { params: Promise<{ storeI
       "Product", "Variant ID", "SKU", "Barcode", "Variant name", "Active", "Weight grams",
       "Market code", "Market", "Currency", "Amount minor", "Compare-at minor", "Currency minor unit"
     ]];
+    let variantRowsTruncated = false;
     for (const product of products.slice(0, 5000)) {
       for (const variant of product.variants) {
+        if (variantRows.length >= 25001) { variantRowsTruncated = true; break; }
         if (!variant.prices.length) {
           variantRows.push([product.name, variant.id, variant.sku, variant.barcode, variant.name, variant.isActive ? "Yes" : "No", variant.weightGrams, "", "", "", "", "", ""]);
         }
         for (const price of variant.prices) {
+          if (variantRows.length >= 25001) { variantRowsTruncated = true; break; }
           variantRows.push([product.name, variant.id, variant.sku, variant.barcode, variant.name,
             variant.isActive ? "Yes" : "No", variant.weightGrams, price.market.code, price.market.name,
             price.currencyCode, price.amountMinor.toString(), price.compareAtMinor?.toString() ?? "",
             price.currency.minorUnit]);
         }
+        if (variantRowsTruncated) break;
       }
+      if (variantRowsTruncated) break;
     }
 
     const inventoryRows: Cell[][] = [[
@@ -141,14 +146,16 @@ export async function GET(_request: Request, context: { params: Promise<{ storeI
       ["Dispatch country code", store.shippingCountryCode], ["Dispatch instructions", store.shippingInstructions],
       ["Created at", store.createdAt], ["Updated at", store.updatedAt],
       ["Export note", "Owner-only export. Buyer personal data, payment credentials and identity documents are intentionally excluded."],
-      ["Row limit", "Up to 5,000 products and 5,000 inventory records; inspect the workbook note if the source count reaches the limit."]
+      ["Product row limit", "Up to 5,000 products; the export is marked in the audit log if truncated."],
+      ["Inventory row limit", "Up to 5,000 inventory records; the export is marked in the audit log if truncated."],
+      ["Variant and price row limit", "Up to 25,000 variant/price rows; this sheet is truncated if that limit is reached."]
     ];
 
     await prisma.auditLog.create({
       data: {
         actorType: AuditActorType.USER, actorId: actor.userId, action: "seller.store_export.downloaded",
         resource: "store", resourceId: store.id, scopeType: "STORE", scopeId: store.id,
-        metadata: { productRows: Math.min(products.length, 5000), inventoryRows: Math.min(inventory.length, 5000), truncated: products.length > 5000 || inventory.length > 5000 }
+        metadata: { productRows: Math.min(products.length, 5000), inventoryRows: Math.min(inventory.length, 5000), truncated: products.length > 5000 || inventory.length > 5000 || variantRowsTruncated }
       }
     });
 
