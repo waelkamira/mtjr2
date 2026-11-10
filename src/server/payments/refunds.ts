@@ -253,7 +253,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
   return prisma.$transaction(async (tx) => {
     const refund = await tx.refund.findUnique({
       where: { id: refundId },
-      select: { id: true, orderId: true, paymentId: true, amountMinor: true, status: true, externalReference: true, providerSubmittedAt: true, requestedById: true, payment: { select: { amountMinor: true, status: true } } }
+      select: { id: true, orderId: true, paymentId: true, amountMinor: true, status: true, externalReference: true, requestedById: true, payment: { select: { amountMinor: true, status: true } } }
     });
     if (!refund) throw new Error("Refund not found.");
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
@@ -367,7 +367,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
       where: { id: refundId },
       select: {
         id: true, orderId: true, paymentId: true, amountMinor: true, currencyCode: true,
-        status: true, externalReference: true, requestedById: true, payment: {
+        status: true, externalReference: true, providerSubmittedAt: true, requestedById: true, payment: {
           select: {
             provider: true, providerReference: true, providerConfigId: true,
             providerEnvironment: true, amountMinor: true, status: true
