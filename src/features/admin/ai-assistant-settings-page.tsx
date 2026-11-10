@@ -89,7 +89,7 @@ export default function AiAssistantSettingsPage() {
   const canEnable = Boolean(settings?.environmentEnabled && settings.providerKeyConfigured);
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-5 py-8 lg:px-8">
+    <main className="min-h-screen bg-[var(--background)] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Platform operations", "عمليات المنصة")}</p>
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{t("AI assistant", "المساعد الذكي")}</h1>
