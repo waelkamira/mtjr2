@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireCurrentSession: vi.fn(),
+  requirePlatformManagement: vi.fn(),
   sellerFindUnique: vi.fn(),
   countryFindUnique: vi.fn(),
   currencyFindUnique: vi.fn(),
@@ -18,6 +19,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/current-session", () => ({ requireCurrentSession: mocks.requireCurrentSession }));
+vi.mock("@/server/identity/permission-guard", () => ({ requirePlatformManagement: mocks.requirePlatformManagement }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     seller: { findUnique: mocks.sellerFindUnique },
@@ -32,7 +34,7 @@ vi.mock("@/server/finance/seller-payout-encryption", () => ({
 }));
 
 import { PermissionDeniedError } from "@/server/identity/access-errors";
-import { createSellerPayoutMethod, SellerPayoutValidationError } from "@/server/marketplace/seller-payout-methods";
+import { createSellerPayoutMethod, reviewSellerPayoutMethod, SellerPayoutSelfVerificationError, SellerPayoutVerificationConflictError, SellerPayoutValidationError } from "@/server/marketplace/seller-payout-methods";
 
 const createdMethod = {
   id: "payout-1", type: "IBAN", accountHolderName: "Example Owner", bankName: "Example Bank",
@@ -45,6 +47,7 @@ describe("seller payout destination security", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireCurrentSession.mockResolvedValue({ userId: "owner-1" });
+    mocks.requirePlatformManagement.mockResolvedValue({ userId: "admin-1" });
     mocks.sellerFindUnique.mockResolvedValue({ id: "seller-1", status: "ACTIVE" });
     mocks.countryFindUnique.mockResolvedValue({ isActive: true });
     mocks.currencyFindUnique.mockResolvedValue({ code: "EUR", isActive: true });
@@ -134,5 +137,57 @@ describe("seller payout destination security", () => {
 
     expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.payoutCreate).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("admin seller bank destination review", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.requirePlatformManagement.mockResolvedValue({ userId: "admin-1" });
+    mocks.payoutFindUnique.mockResolvedValue({
+      id: "payout-1", sellerId: "seller-1", accountLast4: "3000", currencyCode: "EUR",
+      status: "PENDING_VERIFICATION", isDefault: true, seller: { ownerId: "owner-1" }
+    });
+    mocks.payoutUpdate.mockResolvedValue({ ...createdMethod, status: "VERIFIED", verifiedAt: new Date() });
+    mocks.transaction.mockImplementation((callback: (tx: unknown) => unknown) => callback({
+      sellerPayoutMethod: { findUnique: mocks.payoutFindUnique, update: mocks.payoutUpdate },
+      auditLog: { create: mocks.auditCreate }
+    }));
+  });
+
+  const reviewInput = {
+    decision: "VERIFIED",
+    evidenceReference: "BANK-CALL-CASE-2026-001",
+    reason: "Account ownership confirmed through the bank's official verification channel."
+  };
+
+  it("records an audited verification decision without exposing account details", async () => {
+    const result = await reviewSellerPayoutMethod("payout-1", reviewInput);
+    expect(result.status).toBe("VERIFIED");
+    expect(mocks.requirePlatformManagement).toHaveBeenCalledOnce();
+    expect(mocks.payoutUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "payout-1" },
+      data: expect.objectContaining({ status: "VERIFIED", verifiedAt: expect.any(Date) })
+    }));
+    const audit = mocks.auditCreate.mock.calls[0][0].data;
+    expect(audit.action).toBe("SELLER_PAYOUT_METHOD_VERIFIED");
+    expect(audit.metadata.evidenceReference).toBe(reviewInput.evidenceReference);
+    expect(JSON.stringify(audit)).not.toContain("accountIdentifier");
+  });
+
+  it("prevents a seller from reviewing their own bank destination", async () => {
+    mocks.requirePlatformManagement.mockResolvedValue({ userId: "owner-1" });
+    await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutSelfVerificationError);
+    expect(mocks.payoutUpdate).not.toHaveBeenCalled();
+  });
+
+  it("prevents a second review of an already reviewed destination", async () => {
+    mocks.payoutFindUnique.mockResolvedValue({
+      id: "payout-1", sellerId: "seller-1", accountLast4: "3000", currencyCode: "EUR",
+      status: "VERIFIED", isDefault: true, seller: { ownerId: "owner-1" }
+    });
+    await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutVerificationConflictError);
+    expect(mocks.payoutUpdate).not.toHaveBeenCalled();
   });
 });
