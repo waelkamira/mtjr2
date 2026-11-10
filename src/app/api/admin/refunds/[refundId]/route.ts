@@ -40,7 +40,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     if (error instanceof PermissionDeniedError) return Response.json({ error: "Permission denied." }, { status: 403 });
     if (error instanceof z.ZodError) return Response.json({ error: "Invalid provider refund action." }, { status: 400 });
     const message = error instanceof Error ? error.message : "Provider refund operation failed.";
-    const status = /not found/i.test(message) ? 404 : /already|changed|exceed|refundable state|processing state|pending or retryable|provider reference/i.test(message) ? 409 : 502;
+    const status = /not found/i.test(message) ? 404 : /already|changed|exceed|refundable state|processing state|pending or retryable|provider reference|idempotency retention window/i.test(message) ? 409 : 502;
     return Response.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
   }
 }
