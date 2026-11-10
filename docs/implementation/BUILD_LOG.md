@@ -4446,3 +4446,13 @@ The platform account policy is now explicit: email verification is not required 
 **Verification**
 - Source changes committed to `feat/seller-dashboard-command-center`.
 - Build, browser journeys, and database-backed verification have not been run in this session.
+
+
+## 2026-11-10 — Seller team invitation guidance correction
+
+**Implemented**
+- Corrected the seller staff invitation guidance in both English and Arabic. It now accurately explains that the selected store-scoped role is applied when the invited active account accepts, and that invitations expire after seven days and can be renewed.
+- No permission model, endpoint, or invitation behavior was changed.
+
+**Verification**
+- Source-level wording correction committed; no runtime or browser verification was run.
