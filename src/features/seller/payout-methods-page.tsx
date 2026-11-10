@@ -91,7 +91,7 @@ export default function SellerPayoutMethodsPage() {
 
       <section className="rounded-[26px] border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
         <strong>{t("Transfers are not enabled yet.", "التحويلات غير مفعّلة بعد.")}</strong>{" "}
-        {t("Saving a bank account does not create a withdrawable balance or initiate a transfer. Verification, seller ledger, payout approval and bank/provider settlement must be completed first. Do not enter a payment card number, expiry date or CVV here.", "حفظ الحساب لا ينشئ رصيداً قابلاً للسحب ولا يبدأ تحويلاً. يجب أولاً إكمال التحقق ودفتر مستحقات البائع واعتماد التحويل والتسوية البنكية أو عبر مزوّد الدفع. لا تدخل رقم بطاقة الدفع أو تاريخ انتهائها أو رمز CVV هنا.")}
+        {t("Saving a bank account does not create a withdrawable balance or initiate a transfer. Verification, seller ledger, payout approval and bank/provider settlement must be completed first. IBAN is currently supported; local account formats remain disabled until country-specific validation is implemented. Do not enter a payment card number, expiry date or CVV here.", "حفظ الحساب لا ينشئ رصيداً قابلاً للسحب ولا يبدأ تحويلاً. يجب أولاً إكمال التحقق ودفتر مستحقات البائع واعتماد التحويل والتسوية البنكية. ندعم IBAN حالياً؛ أما الحسابات المحلية فستبقى معطلة حتى إضافة تحقق خاص بكل دولة. لا تدخل بيانات بطاقة الدفع هنا.")}
       </section>
 
       {error && <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</p>}
@@ -102,7 +102,7 @@ export default function SellerPayoutMethodsPage() {
         <form onSubmit={submit} className="mt-5 grid gap-4 md:grid-cols-2">
           <label className="grid gap-2 text-sm font-bold text-[#526078]">{t("Account format", "نوع الحساب")}
             <select value={type} onChange={(event) => setType(event.target.value as typeof type)} className="rounded-xl border border-white bg-white/90 px-3 py-3 font-medium">
-              <option value="IBAN">IBAN</option><option value="LOCAL_BANK_ACCOUNT">{t("Local bank account", "حساب بنكي محلي")}</option>
+              <option value="IBAN">IBAN</option><option value="LOCAL_BANK_ACCOUNT" disabled>{t("Local bank account (not yet supported)", "الحساب المحلي (غير مدعوم حالياً)")}</option>
             </select>
           </label>
           <label className="grid gap-2 text-sm font-bold text-[#526078]">{t("Account holder name", "اسم صاحب الحساب")}
