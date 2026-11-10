@@ -54,6 +54,9 @@ export async function createSellerPayoutMethod(input: unknown) {
   const data = inputSchema.parse(input);
   const { actor, seller } = await requireSellerOwner();
   const accountIdentifier = data.accountIdentifier.replace(/\s+/g, "").toUpperCase();
+  if (data.type === SellerPayoutMethodType.LOCAL_BANK_ACCOUNT) {
+    throw new Error("Local bank account formats are not enabled until country-specific account and routing validation is implemented. Use an IBAN account for now.");
+  }
   if (data.type === SellerPayoutMethodType.IBAN && !isValidSellerIban(accountIdentifier)) {
     throw new Error("Enter a valid IBAN. The checksum did not pass validation.");
   }
@@ -170,8 +173,8 @@ export async function disableSellerPayoutMethod(methodIdInput: string) {
     });
     if (method.isDefault) {
       const replacement = await tx.sellerPayoutMethod.findFirst({
-        where: { sellerId: seller.id, currencyCode: method.currencyCode, status: SellerPayoutMethodStatus.VERIFIED },
-        orderBy: { createdAt: "asc" },
+        where: { sellerId: seller.id, currencyCode: method.currencyCode, status: { in: [SellerPayoutMethodStatus.VERIFIED, SellerPayoutMethodStatus.PENDING_VERIFICATION] } },
+        orderBy: [{ status: "asc" }, { createdAt: "asc" }],
         select: { id: true }
       });
       if (replacement) await tx.sellerPayoutMethod.update({ where: { id: replacement.id }, data: { isDefault: true } });
