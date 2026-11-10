@@ -42,3 +42,5 @@ Disposable PostgreSQL integration proves accounting invariants, idempotency, rol
 - Still blocked by policy: journal account mapping for processor clearing, seller payable, tax, shipping, reserves/holds and refund allocation. The ledger foundation is intentionally not posted to until Finance approves the chart of accounts and recognition policy. High-risk refund dual-approval/reauthentication policy also remains to be finalized; current API permission is `payments:refund`.
 
 - Dual-control implementation: the refund requester cannot execute or manually confirm the same refund; a different authorized finance account is required. This does not replace the still-required MFA step-up and amount-limit policy.
+
+- Provider idempotency retention: first submission time is persisted; automatic retries are blocked after conservative provider-specific retention windows (Stripe 23 hours, PayPal 44 days), requiring manual provider reconciliation after expiry.
