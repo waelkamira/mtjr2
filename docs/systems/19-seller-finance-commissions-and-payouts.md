@@ -137,7 +137,7 @@
 - Added `/seller/finance` as a read-only, per-store financial overview using the existing `GET /api/seller/stores` and `GET /api/seller/commissions` contracts.
 - Shows commission-covered sales, recorded platform commissions, and completed refunds separately, grouped by currency with BigInt-safe formatting.
 - Latest commission activity links through to the full statement. The UI explicitly states that these figures are not a payable balance and does not calculate an available-to-withdraw amount.
-- No new Prisma model or migration was introduced. The accounting ledger, holds, settlement/reconciliation, payout methods and withdrawal workflow remain unimplemented.
+- No new Prisma model or migration was introduced in the finance overview. The accounting ledger is not connected to payment/refund sources; holds, settlement/reconciliation, payable balances and withdrawals remain unimplemented. Encrypted seller payout-method management was added separately on 2026-11-10.
 - Added the route to seller navigation, updated the seller route registry and page inventory, and refreshed the seller shell to the pastel clay palette.
 - Runtime, build and browser verification are intentionally deferred until the seller portal build is complete, per the current work instruction.
 
@@ -157,3 +157,12 @@
 - `listLedgerAccountEntries` provides cursor-paginated immutable account activity. This is a low-level internal primitive only; no seller balance, payout, withdrawal, or API is exposed yet.
 - **Intentionally not connected to commission/payment/refund flows:** seller payable recognition timing, shipment/delivery/return-window policy, tax/shipping ownership, chargebacks, clearing accounts and negative-balance handling are not approved. No financial balance is calculated from the new tables until those policies and account mappings are agreed and implemented.
 - Required next: define chart-of-accounts codes and currency bootstrap; approve the marketplace accounting policy; then add source-specific journal posting for captured payment, seller payable release, refunds and chargebacks with idempotent source keys and immutable reversals. Only after that build seller statements and payout methods/requests.
+
+
+## 2026-11-10 — Encrypted seller payout methods (merged to main)
+- Added `SellerPayoutMethod` and enums `SellerPayoutMethodType` / `SellerPayoutMethodStatus`, with a forward migration. IBAN identifiers, account-holder name and optional routing code are encrypted using AES-256-GCM and a versioned key ring; the database stores a protected placeholder for the holder name and only masked account suffixes for display.
+- Added owner-only `GET/POST /api/seller/payout-methods` and `PATCH/DELETE /api/seller/payout-methods/[methodId]`, plus `/seller/payouts`. Defaults are scoped per seller and currency. Mutations are audited without recording account identifiers or routing data.
+- IBAN validation checks supported country-specific lengths, checksum and selected country prefix. Local bank-account entry remains disabled until country-specific account/routing validation is implemented.
+- Every newly saved method is `PENDING_VERIFICATION`. There is no seller self-verification endpoint, bank ownership verification, payout request, transfer execution or withdrawal API. A default method is only a saved preference; it is not proof of ownership or payout eligibility.
+- Verification on the merged PR: PostgreSQL integration, CodeQL and Browser E2E passed. The repository's broad CI still reports the same 17 unrelated baseline failures already present on the immediately preceding main commit; the new payout tests passed in that run.
+- **Financial gate unchanged:** no payable or withdrawable balance may be calculated from commission snapshots. Do not connect the ledger or expose withdrawals until the marketplace accounting policy and per-currency chart of accounts are approved and source-event posting/reversal/reconciliation paths are implemented.
