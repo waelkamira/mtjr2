@@ -62,7 +62,10 @@ export default function PaymentProvidersPage() {
     } finally { setLoading(false); }
   }, [t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   async function mutate(url: string, method: string, body?: unknown) {
     const response = await fetch(url, {
