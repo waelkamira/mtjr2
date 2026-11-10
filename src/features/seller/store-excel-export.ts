@@ -41,6 +41,18 @@ function xml(value: Cell): string {
   if (value === null || value === undefined) return "";
   return String(value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
+function formatMinorUnits(value: string, minorUnit: number): string {
+  if (!/^-?\\d+$/.test(value) || !Number.isInteger(minorUnit) || minorUnit < 0 || minorUnit > 6) return value;
+  const amount = BigInt(value);
+  const negative = amount < 0n;
+  const absolute = negative ? -amount : amount;
+  const scale = 10n ** BigInt(minorUnit);
+  const whole = absolute / scale;
+  if (minorUnit === 0) return `${negative ? "-" : ""}${whole.toString()}`;
+  const fraction = (absolute % scale).toString().padStart(minorUnit, "0");
+  return `${negative ? "-" : ""}${whole.toString()}.${fraction}`;
+}
+
 function cell(value: Cell): string {
   if (typeof value === "number" && Number.isFinite(value)) return `<Cell><Data ss:Type="Number">${value}</Data></Cell>`;
   if (typeof value === "boolean") return `<Cell><Data ss:Type="Boolean">${value ? 1 : 0}</Data></Cell>`;
@@ -77,7 +89,7 @@ export function downloadSellerStoreWorkbook(input: {
       ["Pending products", analytics.metrics.pendingProducts], ["Average rating", analytics.metrics.averageRating],
       ["Review count", analytics.metrics.reviewCount], ["Requested returns", analytics.metrics.requestedReturns],
       ["Gross sales", "", "", ""],
-      ...analytics.metrics.grossSalesByCurrency.map((item) => ["Gross sales", item.amountMinor, item.currencyCode, item.orderCount + " orders"]),
+      ...analytics.metrics.grossSalesByCurrency.map((item) => ["Gross sales", formatMinorUnits(item.amountMinor, item.minorUnit), item.currencyCode, item.orderCount + " orders"]),
       ["Order status", "Count"], ...analytics.orderStatuses.map((item) => [item.status, item.count]),
       ["Daily sales", "Amount minor", "Currency", "Orders"],
       ...analytics.dailySales.map((item) => [item.day, item.amountMinor, item.currencyCode, item.orderCount])
