@@ -71,7 +71,10 @@ export default function SellerFinanceOverviewPage() {
         <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#5d8192]">{t("SELLER FINANCE", "مالية البائع")}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div><h1 className="text-3xl font-black tracking-tight">{t("Financial overview", "الملخص المالي")}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#688394]">{t("Review recorded sales, platform commissions and completed refunds without mixing currencies.", "راجع المبيعات المسجلة وعمولات المنصة والمبالغ المستردة المكتملة دون خلط العملات.")}</p></div>
-          <Link href="/seller/commissions" className="rounded-2xl border border-white bg-white/75 px-4 py-3 text-sm font-bold text-[#4d5570] shadow-[0_5px_12px_rgba(74,75,112,.10),inset_0_1px_0_white]">{t("Open commission statements", "فتح كشوف العمولات")} ↗</Link>
+          <div className="flex flex-wrap gap-2">
+            {stores.find((store) => store.id === storeId)?.isOwner && <a href={`/api/seller/stores/${encodeURIComponent(storeId)}/export`} className="rounded-2xl border border-white bg-[#d9eeea] px-4 py-3 text-sm font-bold text-[#365b50] shadow-[0_5px_12px_rgba(63,100,91,.10),inset_0_1px_0_white]">{t("Export store to Excel", "تصدير المتجر إلى Excel")} ↓</a>}
+            <Link href="/seller/commissions" className="rounded-2xl border border-white bg-white/75 px-4 py-3 text-sm font-bold text-[#4d5570] shadow-[0_5px_12px_rgba(74,75,112,.10),inset_0_1px_0_white]">{t("Open commission statements", "فتح كشوف العمولات")} ↗</Link>
+          </div>
         </div>
       </header>
       <section className="rounded-[26px] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[8px_10px_22px_rgba(74,75,112,.09),inset_0_2px_0_white]">
