@@ -1,6 +1,6 @@
 import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { AuthenticationRequiredError, PermissionDeniedError } from "@/server/identity/permission-guard";
-import { createManualRefundForReturn, listRefundOperations } from "@/server/payments/refunds";
+import { createRefundForReturn, listRefundOperations } from "@/server/payments/refunds";
 
 export const runtime = "nodejs";
 
@@ -18,7 +18,7 @@ export async function POST(request: Request): Promise<Response> {
   const rejected = validateIdentityMutationRequest(request);
   if (rejected) return rejected;
   try {
-    const result = await createManualRefundForReturn(await request.json());
+    const result = await createRefundForReturn(await request.json());
     return Response.json({ result }, { status: result.alreadyApplied ? 200 : 201, headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
