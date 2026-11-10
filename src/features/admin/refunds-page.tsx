@@ -82,6 +82,27 @@ export default function AdminRefundsPage() {
     } finally { setBusy(""); }
   }
 
+
+  async function runProviderRefund(refund: RefundRow, action: "execute" | "refresh") {
+    setBusy(refund.id); setError(""); setNotice("");
+    try {
+      const response = await fetch("/api/admin/refunds/" + encodeURIComponent(refund.id), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action })
+      });
+      const data = await response.json() as { error?: string; result?: { status?: string } };
+      if (!response.ok) throw new Error(data.error || "Provider refund operation failed.");
+      const status = data.result?.status || "updated";
+      setNotice(action === "execute"
+        ? "Refund submitted to the original payment provider. Current status: " + status + "."
+        : "Provider refund status refreshed: " + status + ".");
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Provider refund operation failed.");
+      await load().catch(() => undefined);
+    } finally { setBusy(""); }
+  }
+
   async function completeRefund(refund: RefundRow) {
     const externalReference = (externalReferences[refund.id] || "").trim();
     if (externalReference.length < 4) { setError(t("Enter the external refund transaction reference first.", "أدخل مرجع معاملة رد الأموال الخارجية أولاً.")); return; }
@@ -110,7 +131,7 @@ export default function AdminRefundsPage() {
     <div className="mx-auto max-w-7xl px-5 py-8">
       <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Finance operations", "العمليات المالية")}</p>
       <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{t("Refunds", "رد الأموال")}</h1>
-      <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--muted)]">{t("Only physically received return items can enter the refund queue. This release is manual: process the refund outside Mtjr2, then record the external transaction reference. The platform does not call a payment-provider refund API.", "تدخل المنتجات المستلمة فعلياً فقط في قائمة رد الأموال. هذه العملية يدوية: نفّذ الرد خارج منصة متجر ثم سجّل مرجع المعاملة الخارجية. لا تستدعي المنصة واجهة رد الأموال لدى مزود الدفع.")}</p>
+      <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--muted)]">{t("Only physically received return items can enter the refund queue. Finance can submit a refund to the original Stripe or PayPal payment, refresh asynchronous provider status, or record an externally completed refund after reconciliation.", "تدخل المنتجات المستلمة فعلياً فقط في قائمة رد الأموال. يمكن للمالية إرسال طلب الرد إلى وسيلة الدفع الأصلية عبر Stripe أو PayPal، وتحديث حالة الرد غير المتزامن، أو تسجيل رد تم خارج المنصة بعد مطابقته.")}</p>
       <p className="mt-4 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">{t("Amounts below cover returned merchandise only. Shipping and tax are not automatically refunded or allocated; review them separately before processing an external refund.", "المبالغ أدناه تخص المنتجات المرتجعة فقط. لا تُرد تكاليف الشحن والضرائب تلقائياً؛ راجعها بشكل منفصل قبل تنفيذ رد خارجي.")}</p>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
       {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-white p-4 text-sm">{notice}</p>}
@@ -133,11 +154,21 @@ export default function AdminRefundsPage() {
             {refunds.map((refund) => <article key={refund.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
               <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{refund.returnNumber} · Order {refund.orderNumber}</p><p className="mt-1 font-semibold">{refund.amountDisplay}</p></div><div className="text-right"><p className="text-sm font-semibold">{translateStatus(locale, refund.status)}</p><p className="text-xs text-[var(--muted)]">{t("Payment:", "الدفع:")} {translateStatus(locale, refund.paymentStatus)} · {t("Provider:", "المزود:")} {refund.provider</p></div></div>
               <ul className="mt-3 space-y-1 text-sm text-[var(--muted)]">{refund.items.map((item) => <li key={item.sku}>{item.productName} · {item.sku} × {item.quantity}</li>)}</ul>
-              {refund.status === "PENDING_MANUAL" ? <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4">
-                <label className="grid gap-1 text-sm font-medium">{t("External refund transaction reference", "مرجع معاملة رد الأموال الخارجية")}<input value={externalReferences[refund.id] || ""} onChange={(event) => setExternalReferences((current) => ({ ...current, [refund.id]: event.target.value }))} maxLength={180} minLength={4} className="rounded-xl border border-[var(--border)] px-3 py-2.5" placeholder={t("Reference from the payment provider", "المرجع من مزود الدفع")}/></label>
-                <label className="grid gap-1 text-sm font-medium">{t("Finance note (optional)", "ملاحظة مالية (اختيارية)")}<textarea rows={2} maxLength={1000} value={notes[refund.id] || ""} onChange={(event) => setNotes((current) => ({ ...current, [refund.id]: event.target.value }))} className="rounded-xl border border-[var(--border)] p-3"/></label>
-                <button disabled={Boolean(busy) || (externalReferences[refund.id] || "").trim().length < 4} onClick={() => void completeRefund(refund)} className="w-fit rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === refund.id ? t("Saving…", "جارٍ الحفظ…") : t("Confirm external refund completed", "تأكيد إتمام رد الأموال خارجياً")}</button>
-              </div> : <p className="mt-4 border-t border-[var(--border)] pt-3 text-sm text-[var(--muted)]">External reference: {refund.externalReference || t("Not recorded", "غير مسجل")} · {t("Completed", "مكتمل")} {refund.completedAt ? new Date(refund.completedAt).toLocaleString() : "—"}</p>}
+              {refund.status === "PENDING_MANUAL" || refund.status === "PROVIDER_FAILED" ? <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4">
+                <p className="text-sm text-[var(--muted)]">{refund.status === "PROVIDER_FAILED" ? t("The provider did not confirm this attempt. Reconcile its dashboard before retrying or recording a manual completion.", "لم يؤكد المزود هذه المحاولة. طابق الحالة في لوحة المزود قبل إعادة المحاولة أو تسجيل الإكمال اليدوي.") : t("Submit this refund to the same provider that captured the original payment. The request uses a stable idempotency key.", "أرسل رد المبلغ إلى المزود نفسه الذي استلم الدفعة الأصلية. يستخدم الطلب مفتاحاً ثابتاً لمنع التكرار.")}</p>
+                <button disabled={Boolean(busy)} onClick={() => void runProviderRefund(refund, "execute")} className="w-fit rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === refund.id ? t("Submitting…", "جارٍ الإرسال…") : t("Send refund through provider", "إرسال رد الأموال عبر المزود")}</button>
+                <details className="rounded-xl border border-[var(--border)] p-3">
+                  <summary className="cursor-pointer text-sm font-semibold">{t("Record an externally completed refund", "تسجيل رد أموال تم خارج المنصة")}</summary>
+                  <div className="mt-3 grid gap-3">
+                    <label className="grid gap-1 text-sm font-medium">{t("External refund transaction reference", "مرجع معاملة رد الأموال الخارجية")}<input value={externalReferences[refund.id] || ""} onChange={(event) => setExternalReferences((current) => ({ ...current, [refund.id]: event.target.value }))} maxLength={180} minLength={4} className="rounded-xl border border-[var(--border)] px-3 py-2.5" placeholder={t("Reference from the payment provider", "المرجع من مزود الدفع")}/></label>
+                    <label className="grid gap-1 text-sm font-medium">{t("Finance note (optional)", "ملاحظة مالية (اختيارية)")}<textarea rows={2} maxLength={1000} value={notes[refund.id] || ""} onChange={(event) => setNotes((current) => ({ ...current, [refund.id]: event.target.value }))} className="rounded-xl border border-[var(--border)] p-3"/></label>
+                    <button disabled={Boolean(busy) || (externalReferences[refund.id] || "").trim().length < 4} onClick={() => void completeRefund(refund)} className="w-fit rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy === refund.id ? t("Saving…", "جارٍ الحفظ…") : t("Confirm external refund completed", "تأكيد إتمام رد الأموال خارجياً")}</button>
+                  </div>
+                </details>
+              </div> : refund.status === "PROCESSING_PROVIDER" ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+                <p className="text-sm text-[var(--muted)]">{t("The provider accepted the refund request. Refresh to retrieve its latest canonical status.", "قبل المزود طلب رد الأموال. حدّث الحالة لجلب آخر حالة مؤكدة من المزود.")} {refund.externalReference ? "· " + refund.externalReference : ""}</p>
+                <button disabled={Boolean(busy)} onClick={() => void runProviderRefund(refund, "refresh")} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy === refund.id ? t("Checking…", "جارٍ التحقق…") : t("Refresh provider status", "تحديث حالة المزود")}</button>
+              </div> : <p className="mt-4 border-t border-[var(--border)] pt-3 text-sm text-[var(--muted)]">Provider reference: {refund.externalReference || t("Not recorded", "غير مسجل")} · {t("Completed", "مكتمل")} {refund.completedAt ? new Date(refund.completedAt).toLocaleString() : "—"}</p>}
             </article>)}
           </div>}
         </section>
