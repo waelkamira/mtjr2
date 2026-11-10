@@ -27,6 +27,7 @@ function keyRing() {
   return { version, active: derive(master), fingerprintKey: derive(fingerprintMaster).fingerprintKey, versions: new Map([...keys.entries()].map(([keyVersion, key]) => [keyVersion, derive(key)])) };
 }
 
+/** Encrypts seller bank routing details using AES-256-GCM and the active key version. */
 export function encryptSellerPayoutDetails(details: { accountIdentifier: string; routingCode?: string }) {
   const keys = keyRing();
   const nonce = randomBytes(12);
@@ -38,6 +39,7 @@ export function encryptSellerPayoutDetails(details: { accountIdentifier: string;
   };
 }
 
+/** Creates a seller-scoped keyed fingerprint for duplicate bank-account detection. */
 export function fingerprintSellerPayoutAccount(sellerId: string, countryCode: string, accountIdentifier: string) {
   const keys = keyRing();
   return createHmac("sha256", keys.fingerprintKey)
@@ -49,6 +51,7 @@ export function fingerprintSellerPayoutAccount(sellerId: string, countryCode: st
     .digest("hex");
 }
 
+/** Decrypts a stored payout destination only when its historical key version is available. */
 export function decryptSellerPayoutDetails(envelope: string, version: number) {
   const keys = keyRing();
   const selected = keys.versions.get(version);
