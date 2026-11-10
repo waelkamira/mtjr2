@@ -44,3 +44,5 @@ Disposable PostgreSQL integration proves accounting invariants, idempotency, rol
 - Dual-control implementation: the refund requester cannot execute or manually confirm the same refund; a different authorized finance account is required. This does not replace the still-required MFA step-up and amount-limit policy.
 
 - Provider idempotency retention: first submission time is persisted; automatic retries are blocked after conservative provider-specific retention windows (Stripe 23 hours, PayPal 44 days), requiring manual provider reconciliation after expiry.
+
+- Provider retry lifecycle: confirmed provider failure clears the old provider reference, increments `Refund.providerAttempt`, and permits a new idempotency key; ambiguous requests retain the same attempt/key and are retried only inside the persisted retention window. Returned references must be reconciled before any new attempt.
