@@ -42,7 +42,10 @@ export default function SellerFinanceOverviewPage() {
         if (!active) return;
         const available = result.stores ?? [];
         setStores(available);
-        setStoreId(available.find((store) => store.isOwner)?.id ?? available[0]?.id ?? "");
+        let preferredStoreId = "";
+        try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
+        const activeStore = available.find((store) => store.id === preferredStoreId);
+        setStoreId(activeStore?.id ?? available.find((store) => store.isOwner)?.id ?? available[0]?.id ?? "");
         if (!available.length) setError(t("No seller stores are available.", "لا توجد متاجر بائع متاحة."));
       })
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : t("Unable to load stores.", "تعذر تحميل المتاجر.")); })
@@ -66,6 +69,23 @@ export default function SellerFinanceOverviewPage() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [storeId, locale, t]);
+
+  useEffect(() => {
+    const syncActiveStore = () => {
+      let preferredStoreId = "";
+      try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
+      if (preferredStoreId && stores.some((store) => store.id === preferredStoreId)) {
+        setStoreId(preferredStoreId);
+      }
+    };
+    window.addEventListener("mtjr:active-store-changed", syncActiveStore);
+    window.addEventListener("storage", syncActiveStore);
+    syncActiveStore();
+    return () => {
+      window.removeEventListener("mtjr:active-store-changed", syncActiveStore);
+      window.removeEventListener("storage", syncActiveStore);
+    };
+  }, [stores]);
 
   const storeOptions = useMemo(() => stores.map((store) => ({ id: store.id, name: store.name })), [stores]);
   return (
