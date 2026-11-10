@@ -253,7 +253,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
   return prisma.$transaction(async (tx) => {
     const refund = await tx.refund.findUnique({
       where: { id: refundId },
-      select: { id: true, orderId: true, paymentId: true, amountMinor: true, status: true, externalReference: true, payment: { select: { amountMinor: true, status: true } } }
+      select: { id: true, orderId: true, paymentId: true, amountMinor: true, status: true, externalReference: true, requestedById: true, payment: { select: { amountMinor: true, status: true } } }
     });
     if (!refund) throw new Error("Refund not found.");
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
@@ -265,6 +265,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
       throw new Error("This refund was already completed with a different external reference.");
     }
     if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED) throw new Error("Only pending or provider-failed refunds can be manually completed after external reconciliation.");
+    if (refund.requestedById === actor.userId) throw new Error("A different finance operator must confirm a refund requested by this account.");
     if (refund.payment.status !== PaymentStatus.SUCCEEDED && refund.payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
       throw new Error("The payment is not in a refundable state; reconcile it before completion.");
     }
@@ -366,7 +367,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
       where: { id: refundId },
       select: {
         id: true, orderId: true, paymentId: true, amountMinor: true, currencyCode: true,
-        status: true, externalReference: true, payment: {
+        status: true, externalReference: true, requestedById: true, payment: {
           select: {
             provider: true, providerReference: true, providerConfigId: true,
             providerEnvironment: true, amountMinor: true, status: true
@@ -377,6 +378,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
     if (!refund) throw new Error("Refund not found.");
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
     if (refund.status === RefundStatus.COMPLETED) return { done: true as const, id: refund.id };
+    if (refund.requestedById === actor.userId) throw new Error("A different finance operator must execute a refund requested by this account.");
     if (refund.status === RefundStatus.PROCESSING_PROVIDER && refund.externalReference) return { processing: true as const, id: refund.id, reference: refund.externalReference };
     if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED && refund.status !== RefundStatus.PROCESSING_PROVIDER) {
       throw new Error("Only pending or retryable provider-failed refunds can be submitted.");
