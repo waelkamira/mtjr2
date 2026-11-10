@@ -139,6 +139,9 @@ export async function createStripeRefund(input: ProviderRefundInput): Promise<Pr
   });
   const session = await sessionResponse.json() as { id?: string; payment_status?: string; amount_total?: number; currency?: string; payment_intent?: string | { id?: string } | null; client_reference_id?: string | null; metadata?: Record<string, string> };
   if (!sessionResponse.ok || session.id !== input.providerReference) throw new Error("Stripe could not verify the original Checkout payment.");
+  if (session.client_reference_id !== input.paymentId || session.metadata?.paymentId !== input.paymentId) throw new Error("Stripe Checkout session does not belong to this exact Matjar payment.");
+  if (input.providerEnvironment === "TEST" && !session.id.startsWith("cs_test_")) throw new Error("Stripe payment environment does not match its stored TEST credentials.");
+  if (input.providerEnvironment === "LIVE" && !session.id.startsWith("cs_live_")) throw new Error("Stripe payment environment does not match its stored LIVE credentials.");
   if (session.payment_status !== "paid" || !session.payment_intent) throw new Error("Stripe Checkout payment has not been captured.");
   if (session.currency?.toUpperCase() !== input.currencyCode || session.amount_total == null || BigInt(input.amountMinor) > BigInt(session.amount_total)) {
     throw new Error("Refund amount or currency does not match the captured Stripe payment.");
