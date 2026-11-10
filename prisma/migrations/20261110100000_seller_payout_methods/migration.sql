@@ -25,3 +25,5 @@ CREATE TABLE "SellerPayoutMethod" (
 
 CREATE UNIQUE INDEX "SellerPayoutMethod_sellerId_fingerprint_key" ON "SellerPayoutMethod"("sellerId", "fingerprint");
 CREATE INDEX "SellerPayoutMethod_sellerId_status_isDefault_idx" ON "SellerPayoutMethod"("sellerId", "status", "isDefault");
+
+CREATE UNIQUE INDEX "SellerPayoutMethod_one_default_per_seller_key" ON "SellerPayoutMethod"("sellerId") WHERE "isDefault" = true AND "status" <> 'DISABLED';
