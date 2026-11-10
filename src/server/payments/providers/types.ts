@@ -46,14 +46,6 @@ export type VerifiedPaymentEvent = {
   occurredAt: Date;
 };
 
-export interface PaymentProviderAdapter extends PaymentRefundProvider {
-  key: string;
-  displayName: string;
-  createIntent(input: PaymentProviderIntentInput): Promise<PaymentProviderIntentResult>;
-  verifyWebhook(request: Request, credentials?: Record<string, string>, environment?: "TEST" | "LIVE"): Promise<VerifiedPaymentEvent>;
-}
-
-
 export type ProviderRefundInput = {
   providerReference: string;
   amountMinor: string;
@@ -77,4 +69,11 @@ export interface PaymentRefundProvider {
     credentials?: Record<string, string>,
     environment?: "TEST" | "LIVE"
   ): Promise<ProviderRefundResult["status"]>;
+}
+
+export interface PaymentProviderAdapter extends PaymentRefundProvider {
+  key: string;
+  displayName: string;
+  createIntent(input: PaymentProviderIntentInput): Promise<PaymentProviderIntentResult>;
+  verifyWebhook(request: Request, credentials?: Record<string, string>, environment?: "TEST" | "LIVE"): Promise<VerifiedPaymentEvent>;
 }
