@@ -1023,6 +1023,41 @@ export default function SellerWorkspacePage() {
               </div>
             </section>
 
+            <section aria-label={translate(locale, "Customer relationships and team", "علاقات العملاء والفريق")} className="mt-7 rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,#edf5f7,#dce8f0)] p-5 shadow-[0_14px_28px_rgba(35,62,81,.10),inset_0_2px_0_white] sm:p-6">
+              <div className="mb-4">
+                <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#718a99]">{translate(locale, "CUSTOMER RELATIONSHIPS", "علاقات العملاء")}</p>
+                <h2 className="mt-1 text-lg font-black text-[#34445a]">{translate(locale, "Stay close to your customers", "ابقَ قريباً من عملائك")}</h2>
+                <p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Open the existing customer-service and reputation workspaces. Counts are shown only where the analytics API provides them.", "افتح مساحات خدمة العملاء والسمعة الحالية. لا نعرض أعداداً إلا عندما توفرها واجهة التحليلات.")}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Link href="/seller/messages" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e4f0f6,#cfe2eb)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">✉️</span>
+                  <h3 className="mt-2 text-sm font-black text-[#38566b]">{translate(locale, "Customer messages", "رسائل العملاء")}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#718a99]">{translate(locale, "Read conversations and reply to customer enquiries.", "اقرأ المحادثات وأجب عن استفسارات العملاء.")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#426d83]">{translate(locale, "Open inbox", "فتح الرسائل")} ↗</span>
+                </Link>
+                <Link href="/seller/questions" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#eee9f8,#ddd5ee)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">❔</span>
+                  <h3 className="mt-2 text-sm font-black text-[#554d78]">{translate(locale, "Product questions", "أسئلة المنتجات")}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#817aa4]">{translate(locale, "Review questions and manage published answers.", "راجع الأسئلة وأدر الإجابات المنشورة.")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#625c83]">{translate(locale, "Answer questions", "الإجابة عن الأسئلة")} ↗</span>
+                </Link>
+                <Link href="/seller/reviews" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f7f0dc,#eee3bd)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">⭐</span>
+                  <h3 className="mt-2 text-sm font-black text-[#74633b]">{translate(locale, "Store reputation", "سمعة المتجر")}</h3>
+                  <p className="mt-2 text-2xl font-black tabular-nums text-[#665b35]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.averageRating == null ? "—" : sellerAnalytics.metrics.averageRating.toFixed(1)} <span className="text-sm text-[#9b854e]">/ 5</span></p>
+                  <p className="mt-1 text-xs text-[#897b4b]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.reviewCount == null ? translate(locale, "Review count unavailable", "عدد التقييمات غير متاح") : formatMetric(sellerAnalytics.metrics.reviewCount) + " " + translate(locale, "customer reviews", "تقييمات العملاء")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#786b43]">{translate(locale, "Manage reviews", "إدارة التقييمات")} ↗</span>
+                </Link>
+                <Link href="/seller/staff" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e2f1e9,#cfe7dc)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">👥</span>
+                  <h3 className="mt-2 text-sm font-black text-[#426b59]">{translate(locale, "Team & permissions", "الفريق والصلاحيات")}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#668d7f]">{translate(locale, "Invite staff and manage store-scoped access.", "ادعُ أعضاء الفريق وأدر صلاحيات الوصول إلى المتجر.")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#4c7066]">{translate(locale, "Manage team", "إدارة الفريق")} ↗</span>
+                </Link>
+              </div>
+            </section>
+
             <section aria-label={translate(locale, "Recent orders", "الطلبات الأخيرة")} className="mt-7 overflow-hidden rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[0_14px_28px_rgba(35,62,81,.12),inset_0_2px_0_white] sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#817aa4]">{translate(locale, "CUSTOMER ACTIVITY", "نشاط العملاء")}</p><h2 className="mt-1 text-lg font-black text-[#34445a]">{translate(locale, "Recent orders", "الطلبات الأخيرة")}</h2><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "The latest orders for the selected store.", "أحدث الطلبات الخاصة بالمتجر المحدد.")}</p></div>
