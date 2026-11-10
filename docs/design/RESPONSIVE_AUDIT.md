@@ -57,3 +57,14 @@ For each route, inspect the page shell, title/action row, filters, forms, cards,
 ## Verification boundary
 
 The changes above are source-level corrections only. No claim is made that all 79 route files have passed browser testing or screenshot comparison. The next acceptance step is a browser sweep of the route inventory at the viewport matrix above, recording each route as PASS, ISSUE, or BLOCKED and fixing each issue before declaring the responsive audit complete.
+## Additional source-level page refinements (2026-11-10)
+
+- Admin page shells: reduced default horizontal and vertical padding on compact screens across users, orders, brands, logistics, shipments, audit log, payments, products, AI settings, payment details, user details, coupons, sellers, platform access, categories, order details, payment providers, privilege requests, dashboard and catalog product management.
+- Seller inventory: reduced mobile page/card padding, improved warehouse edit form breakpoints, and made the stock-count warehouse selector shrink without forcing a 220px minimum on phones. Existing inventory tables remain independently scrollable.
+- Seller commission view: store selector can shrink on compact screens; the commission snapshot tables stay inside their own horizontal scroll regions.
+- Catalog discovery: filter controls and result summary wrap; mobile page gutters and heading size are reduced.
+- Checkout review: header actions wrap, page gutters are reduced on phones, and long quote references may break rather than widen the viewport.
+- Public/storefront and customer routes: adjusted mobile gutters on account overview, stores, brand/category details, wishlist, MFA step-up, customer orders, returns, support-ticket details, storefront brand directory, home discovery sections, admin review listing and cart.
+- Product image preview uses the dynamic viewport height; floating AI assistant now respects device safe-area insets.
+
+These changes are code-level corrections only. No route has been marked visually PASS until inspected in an actual browser at the acceptance widths and in both RTL and LTR.
