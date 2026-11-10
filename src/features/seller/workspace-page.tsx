@@ -7,6 +7,7 @@ import AuthReturnLink from "@/components/auth-return-link";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import { toMinorUnits } from "@/lib/money";
+import { downloadSellerStoreWorkbook } from "@/features/seller/store-excel-export";
 import {
   type ChartDatum,
   HorizontalBarChart,
@@ -894,6 +895,17 @@ export default function SellerWorkspacePage() {
                     >{translate(locale, `Last ${days} days`, `آخر ${days} يومًا`)}</button>)}
                   </div>
                   {analyticsLoading && <span role="status" className="rounded-full bg-[var(--color-lavender-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-lavender-800)]">{translate(locale, "Refreshing store analytics…", "جارٍ تحديث تحليلات المتجر…")}</span>}
+                  <button
+                    type="button"
+                    disabled={!selectedStore || !sellerAnalytics || analyticsLoading || Boolean(analyticsError)}
+                    onClick={() => {
+                      if (!selectedStore || !sellerAnalytics) return;
+                      downloadSellerStoreWorkbook({ store: selectedStore, analytics: sellerAnalytics, inventory, orders: recentOrders });
+                    }}
+                    className="rounded-full border border-white/90 bg-white/75 px-4 py-2 text-xs font-extrabold text-[#526078] shadow-[0_4px_10px_rgba(74,75,112,.10),inset_0_1px_0_white] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    {translate(locale, "Export store to Excel", "تصدير المتجر إلى Excel")} ↓
+                  </button>
                 </div>
               </div>
               {analyticsError && <p role="status" className="mb-4 rounded-xl border border-[var(--color-blush-300)] bg-[var(--color-blush-50)] p-3 text-xs text-[var(--color-blush-800)]">{translate(locale, "Store analytics are temporarily unavailable for this account or store.", "تحليلات المتجر غير متاحة مؤقتًا لهذا الحساب أو المتجر.")}</p>}
