@@ -10,7 +10,7 @@ New records are always created as `PENDING_VERIFICATION`. No seller-facing or pu
 
 - Account identifiers, account-holder names, and optional routing codes are encrypted together with AES-256-GCM.
 - The database stores a fixed placeholder instead of the account-holder name in plaintext; the authenticated seller API decrypts it only for that seller.
-- The browser receives only the account type and last four characters, plus non-secret bank metadata.
+- The authenticated seller owner may see their own decrypted account-holder name; account identifiers are never returned, and the browser receives only the account type and last four characters plus non-secret bank metadata.
 - A seller-scoped HMAC fingerprint prevents duplicate registration for the same seller and settlement currency without storing a searchable plaintext account identifier.
 - Fingerprint derivation is pinned to key version 1. Keep that key available for as long as any payout destination exists, including after active encryption-key rotation.
 - Never log account identifiers, routing codes, encryption envelopes, or key material.
