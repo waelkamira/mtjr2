@@ -71,7 +71,7 @@ export default function AdminPaymentsPage() {
     setQuery(q);
   }
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Financial operations", "العمليات المالية")}</p>
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Payment transactions", "معاملات الدفع")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Inspect payment attempts and verified webhook processing. This view does not initiate charges, refunds, or payouts.", "استعرض محاولات الدفع ومعالجة إشعارات Webhook الموثقة. لا يبدأ هذا العرض عمليات الدفع أو الاسترداد أو التحويلات.")}</p></div><p className="text-sm text-[var(--muted)]">{data?.total ?? 0} {translate(locale, "matching transactions", "معاملة مطابقة")}</p></div>
     <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{translate(locale, "Accounting ledger, seller balances, payout requests, refunds, disputes, and settlement data are not available in the current data model; no financial totals or actions are fabricated here.", "دفتر الحسابات وأرصدة البائعين وطلبات التحويل والمبالغ المستردة والنزاعات وبيانات التسوية غير متاحة في نموذج البيانات الحالي؛ ولا يتم اختلاق إجماليات أو إجراءات مالية هنا.")}</div>
