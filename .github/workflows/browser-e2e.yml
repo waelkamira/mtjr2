@@ -48,6 +48,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install
+      - name: Configure ephemeral seller payout encryption key
+        run: |
+          printf 'PAYMENT_PROVIDER_ENCRYPTION_KEY=%s\n' "$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "PAYMENT_PROVIDER_ENCRYPTION_KEY_VERSION=1" >> "$GITHUB_ENV"
       - run: npx prisma migrate deploy
       - run: npx prisma generate
       - name: Seed isolated demo catalog and roles
