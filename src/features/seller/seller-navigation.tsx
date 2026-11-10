@@ -28,7 +28,8 @@ const groups: Array<{
     title: "Finance", ar: "المالية",
     links: [
       { href: "/seller/finance", label: "Financial overview", ar: "الملخص المالي", icon: "finance", tone: "lavender" },
-      { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "finance", tone: "sky" }
+      { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "finance", tone: "sky" },
+      { href: "/seller/payouts", label: "Bank accounts", ar: "الحسابات البنكية", icon: "finance", tone: "mint" }
     ]
   },
   {
