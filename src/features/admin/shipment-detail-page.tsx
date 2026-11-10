@@ -36,7 +36,7 @@ export default function AdminShipmentDetailPage({ shipmentId }: { shipmentId: st
     return () => { active = false; };
   }, [shipmentId]);
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-5xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-5xl">
     <Link href="/admin/logistics" className="text-sm font-semibold text-[var(--color-copper-600)] underline">{t("Back to shipments", "العودة إلى الشحنات")}</Link>
     {loading && <div className="mt-5 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" />}
     {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
