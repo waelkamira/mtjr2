@@ -144,7 +144,7 @@ export default function AdminRefundsPage() {
               <p className="mt-2 font-semibold">{t("Order", "الطلب")} {candidate.orderNumber}</p><p className="mt-1 text-xs text-[var(--muted)]">{t("Payment provider:", "مزود الدفع:")} {candidate.provider || t("Unavailable", "غير متاح")}</p>
               <ul className="mt-3 space-y-1 text-sm text-[var(--muted)]">{candidate.items.map((item) => <li key={item.sku}>{item.productName} · {item.sku} × {item.quantity}</li>)}</ul>
               {!candidate.eligible && <p className="mt-3 text-sm text-red-700">{candidate.reason || t("This return is not eligible.", "هذا الإرجاع غير مؤهل.")}</p>}
-              <button disabled={!candidate.eligible || Boolean(busy)} onClick={() => void createRefund(candidate)} className="mt-4 rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === candidate.returnRequestId ? t("Creating…", "جارٍ الإنشاء…") : t("Create manual refund", "إنشاء طلب رد يدوي")}</button>
+              <button disabled={!candidate.eligible || Boolean(busy)} onClick={() => void createRefund(candidate)} className="mt-4 rounded-xl bg-[var(--color-forest-900)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === candidate.returnRequestId ? t("Creating…", "جارٍ الإنشاء…") : t("Create refund request", "إنشاء طلب رد الأموال")}</button>
             </article>)}
           </div>}
         </section>
@@ -166,8 +166,8 @@ export default function AdminRefundsPage() {
                   </div>
                 </details>
               </div> : refund.status === "PROCESSING_PROVIDER" ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-                <p className="text-sm text-[var(--muted)]">{t("The provider accepted the refund request. Refresh to retrieve its latest canonical status.", "قبل المزود طلب رد الأموال. حدّث الحالة لجلب آخر حالة مؤكدة من المزود.")} {refund.externalReference ? "· " + refund.externalReference : ""}</p>
-                <button disabled={Boolean(busy)} onClick={() => void runProviderRefund(refund, "refresh")} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy === refund.id ? t("Checking…", "جارٍ التحقق…") : t("Refresh provider status", "تحديث حالة المزود")}</button>
+                <p className="text-sm text-[var(--muted)]">{t("The provider accepted the refund request. Refresh to retrieve its latest canonical status.", "قبل المزود طلب رد الأموال. حدّث الحالة لجلب آخر حالة مؤكدة من المزود.")} {refund.externalReference ? "· " + refund.externalReference : t("No provider reference was stored; safely resume using the same idempotency key.", "لم يُحفظ مرجع لدى المزود؛ يمكن الاستئناف بأمان باستخدام مفتاح منع التكرار نفسه.")}</p>
+                <button disabled={Boolean(busy)} onClick={() => void runProviderRefund(refund, refund.externalReference ? "refresh" : "execute")} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy === refund.id ? t("Checking…", "جارٍ التحقق…") : refund.externalReference ? t("Refresh provider status", "تحديث حالة المزود") : t("Resume provider request safely", "استئناف طلب المزود بأمان")}</button>
               </div> : <p className="mt-4 border-t border-[var(--border)] pt-3 text-sm text-[var(--muted)]">Provider reference: {refund.externalReference || t("Not recorded", "غير مسجل")} · {t("Completed", "مكتمل")} {refund.completedAt ? new Date(refund.completedAt).toLocaleString() : "—"}</p>}
             </article>)}
           </div>}
