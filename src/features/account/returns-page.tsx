@@ -59,7 +59,7 @@ export default function CustomerReturnsPage() {
 
   return <main className="min-h-screen bg-[var(--background)]">
     <header className="border-b border-[var(--border)] bg-[var(--surface)] shadow-clay-raised px-5 py-5"><div className="mx-auto flex max-w-5xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><nav className="flex gap-4 text-sm"><Link href="/account/orders">{t("Orders", "الطلبات")}</Link><Link href="/account/profile">{t("My account", "حسابي")}</Link></nav></div></header>
-    <div className="mx-auto max-w-5xl px-5 py-10">
+    <div className="mx-auto max-w-5xl px-3 py-6 sm:px-5 sm:py-10">
       <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Customer care", "خدمة العملاء")}</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Returns", "المرتجعات")}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{t("Request a return for delivered items and follow its review. Return eligibility and quantity are checked against your order. This workflow does not initiate a payment refund.", "اطلب إرجاع المنتجات التي تم توصيلها وتابع مراجعة الطلب. يتم التحقق من أهلية الإرجاع والكمية مقارنة بطلبك. لا تبدأ هذه العملية استردادًا للمبلغ.")}</p>
       {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
