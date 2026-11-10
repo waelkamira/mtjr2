@@ -20,7 +20,7 @@ The review covered every seller route currently present in `src/app/seller`, the
 | `/seller/questions` | Product Q&A, answer submission/editing, revision history and analytics | Connected to seller questions and answer APIs. Reworked the compressed component, localized status/chart/date labels, and added history loading and action feedback. |
 | `/seller/reviews` | Customer reviews, media and public seller responses | Connected to seller review/response APIs. Localized chart labels/dates/statuses, required a non-empty response, and normalized the card surface. |
 | `/seller/advertising` | Campaign creation, targeting, budgets, lifecycle and invoices | Connected to campaign and invoice APIs. Campaign budget/click-cost fields use currency minor-unit conversion; campaign lifecycle actions refresh server data. |
-| `/seller/finance` | Read-only store financial overview | Reuses recorded commission and completed-refund data. It explicitly does not represent those figures as a payable or withdrawable balance. |
+| `/seller/finance` | Read-only store financial overview | Reuses recorded commission and completed-refund data. It explicitly does not represent those figures as a payable or withdrawable balance. The selected store follows the shared active-store preference and broadcasts changes to the seller workspace/sidebar. |
 | `/seller/commissions` | Commission snapshots, refund allocations and CSV | Read-only statements based on immutable commission snapshots and completed refund item allocations. Refunds remain separately displayed. |
 | `/seller/staff` | Store team and invitations | Connected to store staff/invitation APIs; active-store selection is synchronized with the shared sidebar. |
 | `/seller/settings` | Seller profile and shortcuts to store operations/settings | Connected to seller profile API; store-specific operational settings remain linked to their existing workspace/shipping flows. |
@@ -47,6 +47,7 @@ This is not a UI-only omission. The accounting journal foundation exists, but it
 - Added a separate `Product.streetAddress` field and wired it through product creation, draft editing, seller API validation and Prisma.
 - Confirmed the existing topbar query hydration and removed a duplicate initial-search effect.
 - Synchronized the sidebar's selected-store identity with active-store changes.
+- Synchronized the seller finance page with the same active-store preference; selecting a store in finance updates the shared workspace selection, and changing the store elsewhere updates finance.
 - Hardened seller inbox sending/loading/error states.
 - Reworked seller Q&A and localized Q&A/review/product/order/status presentation.
 - Preserved the existing one-store-per-seller server-side lock and validation.
