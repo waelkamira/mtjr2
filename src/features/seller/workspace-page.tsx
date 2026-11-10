@@ -123,6 +123,7 @@ export default function SellerWorkspacePage() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState("");
   const [selectedSalesCurrency, setSelectedSalesCurrency] = useState("");
+  const [analyticsPeriodDays, setAnalyticsPeriodDays] = useState(30);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingMarketId, setShippingMarketId] = useState("");
   const [shippingCurrencyCode, setShippingCurrencyCode] = useState("");
@@ -285,7 +286,17 @@ export default function SellerWorkspacePage() {
       setRecentOrders([]);
       setAnalyticsLoading(true);
       setAnalyticsError("");
-      return fetch(`/api/seller/analytics?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
+      const today = new Date();
+      const analyticsTo = today.toISOString().slice(0, 10);
+      const analyticsFromDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+      analyticsFromDate.setUTCDate(analyticsFromDate.getUTCDate() - analyticsPeriodDays + 1);
+      const analyticsFrom = analyticsFromDate.toISOString().slice(0, 10);
+      const analyticsParams = new URLSearchParams({
+        storeId: selectedStoreId,
+        from: analyticsFrom,
+        to: analyticsTo
+      });
+      return fetch(`/api/seller/analytics?${analyticsParams.toString()}`, { cache: "no-store" })
         .then((response) => readJson<SellerAnalytics>(response))
         .then((data) => {
           if (!active) return;
@@ -311,7 +322,7 @@ export default function SellerWorkspacePage() {
         .finally(() => { if (active) setAnalyticsLoading(false); });
     });
     return () => { active = false; };
-  }, [locale, selectedStoreId]);
+  }, [analyticsPeriodDays, locale, selectedStoreId]);
 
   useEffect(() => {
     let active = true;
@@ -872,7 +883,18 @@ export default function SellerWorkspacePage() {
                   <h2 className="text-xl font-semibold text-[#2c485c]">{translate(locale, "Store performance", "أداء المتجر")}</h2>
                   <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Sales, order health, catalog performance and stock for the selected store.", "المبيعات وحالة الطلبات وأداء الكتالوج والمخزون للمتجر المحدد.")}</p>
                 </div>
-                {analyticsLoading && <span role="status" className="rounded-full bg-[var(--color-lavender-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-lavender-800)]">{translate(locale, "Refreshing store analytics…", "جارٍ تحديث تحليلات المتجر…")}</span>}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex rounded-full border border-white/90 bg-white/55 p-1 shadow-[inset_0_1px_0_white]">
+                    {[7, 30, 90].map((days) => <button
+                      key={days}
+                      type="button"
+                      aria-pressed={analyticsPeriodDays === days}
+                      onClick={() => setAnalyticsPeriodDays(days)}
+                      className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${analyticsPeriodDays === days ? "bg-[linear-gradient(145deg,#c8bee9,#a8d9d4)] text-[#40375f] shadow-[0_3px_8px_rgba(74,75,112,.12)]" : "text-[#687b8b] hover:bg-white/70"}`}
+                    >{translate(locale, `Last ${days} days`, `آخر ${days} يومًا`)}</button>)}
+                  </div>
+                  {analyticsLoading && <span role="status" className="rounded-full bg-[var(--color-lavender-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-lavender-800)]">{translate(locale, "Refreshing store analytics…", "جارٍ تحديث تحليلات المتجر…")}</span>}
+                </div>
               </div>
               {analyticsError && <p role="status" className="mb-4 rounded-xl border border-[var(--color-blush-300)] bg-[var(--color-blush-50)] p-3 text-xs text-[var(--color-blush-800)]">{translate(locale, "Store analytics are temporarily unavailable for this account or store.", "تحليلات المتجر غير متاحة مؤقتًا لهذا الحساب أو المتجر.")}</p>}
               {inventoryError && <p role="status" className="mb-4 rounded-xl bg-[var(--background)] p-3 text-xs text-[var(--muted)]">{translate(locale, "Inventory charts are temporarily unavailable.", "مخططات المخزون غير متاحة مؤقتًا.")}</p>}
@@ -889,7 +911,7 @@ export default function SellerWorkspacePage() {
               <div className="grid gap-5 lg:grid-cols-2">
                 <LineAreaChart
                   title={translate(locale, "Daily orders", "الطلبات اليومية")}
-                  description={translate(locale, "All eligible seller orders in the selected 30-day period.", "جميع طلبات البائع المؤهلة خلال فترة الثلاثين يومًا المحددة.")}
+                  description={translate(locale, "All eligible seller orders in the selected period.", "جميع طلبات البائع المؤهلة خلال الفترة المحددة.")}
                   data={sellerDailyOrders}
                   emptyLabel={emptyChartLabel}
                 />
