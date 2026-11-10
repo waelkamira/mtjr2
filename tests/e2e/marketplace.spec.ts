@@ -151,7 +151,7 @@ test.describe("seller journey", () => {
 
     const workspaceResponse = await page.request.get("/api/seller/stores");
     expect(workspaceResponse.status()).toBe(200);
-    const workspacePayload = await workspaceResponse.json() as { stores: Array<{ id: string }> };
+    const workspacePayload = await workspaceResponse.json() as { stores: Array<{ id: string; markets: Array<{ market: { defaultCurrencyCode: string } }> }> };
     const storeId = workspacePayload.stores[0]?.id;
     expect(storeId).toBeTruthy();
     const shippingContact = `E2E Dispatch ${Date.now()}`;
@@ -172,7 +172,9 @@ test.describe("seller journey", () => {
     await page.getByLabel(/Account holder name|اسم صاحب الحساب/i).fill("E2E Seller Owner");
     await page.getByLabel(/Bank name|اسم البنك/i).fill("E2E Test Bank");
     await page.getByLabel(/Country code \(ISO\)|رمز الدولة \(ISO\)/i).fill("DE");
-    await page.getByLabel(/Settlement currency|عملة التسوية/i).fill("USD");
+    const payoutCurrency = workspacePayload.stores[0]?.markets[0]?.market.defaultCurrencyCode;
+    expect(payoutCurrency).toBeTruthy();
+    await page.getByLabel(/Settlement currency|عملة التسوية/i).fill(payoutCurrency!);
     const testBban = Array.from({ length: 18 }, (_, index) => String((index + 1) % 10)).join("");
     let ibanRemainder = 0;
     for (const character of testBban + "DE00") {
