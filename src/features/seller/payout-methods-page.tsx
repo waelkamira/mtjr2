@@ -143,7 +143,7 @@ export default function SellerPayoutMethodsPage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-[#344d60]">{method.bankName}</h3>{method.isDefault && <span className="rounded-full bg-[#d9eee8] px-2 py-1 text-xs font-bold text-[#416d61]">{t("Default", "افتراضي")}</span>}</div>
               <p className="mt-1 text-sm text-[#687b8b]">{method.accountHolderName} · {method.countryCode} · {method.currencyCode}</p>
-              <p className="mt-1 font-mono text-sm text-[#526078]">{method.type === "IBAN" ? "IBAN" : t("Account")} •••• {method.accountLast4}</p>
+              <p className="mt-1 font-mono text-sm text-[#526078]">{method.type === "IBAN" ? "IBAN" : t("Account", "الحساب")} •••• {method.accountLast4}</p>
               <p className="mt-1 text-xs font-semibold text-[#8a789d]">{statusLabel(method.status)}</p>
             </div>
             <div className="flex flex-wrap gap-2">
