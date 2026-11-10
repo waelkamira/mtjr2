@@ -137,7 +137,7 @@ export async function createStripeRefund(input: ProviderRefundInput): Promise<Pr
     cache: "no-store",
     signal: AbortSignal.timeout(20_000)
   });
-  const session = await sessionResponse.json() as { id?: string; payment_status?: string; amount_total?: number; currency?: string; payment_intent?: string | { id?: string } | null };
+  const session = await sessionResponse.json() as { id?: string; payment_status?: string; amount_total?: number; currency?: string; payment_intent?: string | { id?: string } | null; client_reference_id?: string | null; metadata?: Record<string, string> };
   if (!sessionResponse.ok || session.id !== input.providerReference) throw new Error("Stripe could not verify the original Checkout payment.");
   if (session.payment_status !== "paid" || !session.payment_intent) throw new Error("Stripe Checkout payment has not been captured.");
   if (session.currency?.toUpperCase() !== input.currencyCode || session.amount_total == null || BigInt(input.amountMinor) > BigInt(session.amount_total)) {
