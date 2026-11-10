@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { env } from "@/lib/env";
 import { PaymentProviderConfigurationError, PaymentProviderUnavailableError, PaymentWebhookSignatureError } from "./types";
-import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
+import type { PaymentProviderAdapter, ProviderRefundInput, ProviderRefundResult, VerifiedPaymentEvent } from "./types";
 
 type PayPalLinks = { rel?: string; href?: string };
 type PayPalAmount = { currency_code?: string; value?: string };
@@ -306,9 +306,62 @@ async function verifyWebhook(request: Request, credentials?: Record<string, stri
   };
 }
 
+
+
+export async function createPayPalRefund(input: ProviderRefundInput): Promise<ProviderRefundResult> {
+  if (!/^[A-Za-z0-9-]{8,80}$/.test(input.providerReference)) throw new Error("PayPal order reference is invalid.");
+  if (!/^(0|[1-9]\\d*)$/.test(input.amountMinor) || BigInt(input.amountMinor) <= 0n) throw new Error("Refund amount is invalid.");
+  const order = await paypalRequest<PayPalOrder>(
+    `/v2/checkout/orders/${encodeURIComponent(input.providerReference)}`,
+    { method: "GET" }, undefined, input.providerCredentials, input.providerEnvironment
+  );
+  if (order.id !== input.providerReference) throw new Error("PayPal returned a different order reference.");
+  const captures = order.purchase_units?.flatMap((unit) => unit.payments?.captures ?? []) ?? [];
+  const capture = captures.find((item) => item.status === "COMPLETED" && item.id && item.amount?.currency_code === input.currencyCode);
+  if (!capture?.id || !capture.amount?.value) throw new Error("A completed PayPal capture for this currency could not be found.");
+  const capturedMinor = majorToMinor(capture.amount.value, input.currencyCode);
+  if (BigInt(input.amountMinor) > BigInt(capturedMinor)) throw new Error("Refund amount exceeds the PayPal capture.");
+  const refund = await paypalRequest<{ id?: string; status?: string }>(
+    `/v2/payments/captures/${encodeURIComponent(capture.id)}/refund`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        amount: {
+          currency_code: input.currencyCode,
+          value: minorToMajor(input.amountMinor, input.currencyCode)
+        },
+        invoice_id: input.refundId,
+        note_to_payer: `Matjar refund ${input.refundId}`
+      })
+    },
+    paypalRequestId(input.idempotencyKey),
+    input.providerCredentials,
+    input.providerEnvironment
+  );
+  if (!refund.id) throw new Error("PayPal did not return a refund reference.");
+  const status = refund.status === "COMPLETED" ? "COMPLETED" : refund.status === "PENDING" ? "PROCESSING" : "FAILED";
+  return { providerRefundReference: refund.id, status };
+}
+
+export async function getPayPalRefundStatus(
+  refundReference: string,
+  credentials?: Record<string, string>,
+  environment?: "TEST" | "LIVE"
+): Promise<ProviderRefundResult["status"]> {
+  if (!/^[A-Za-z0-9-]{8,80}$/.test(refundReference)) throw new Error("PayPal refund reference is invalid.");
+  const refund = await paypalRequest<{ id?: string; status?: string }>(
+    `/v2/payments/refunds/${encodeURIComponent(refundReference)}`,
+    { method: "GET" }, undefined, credentials, environment
+  );
+  if (refund.id !== refundReference) throw new Error("PayPal returned a different refund reference.");
+  return refund.status === "COMPLETED" ? "COMPLETED" : refund.status === "PENDING" ? "PROCESSING" : "FAILED";
+}
+
 export const paypalPaymentProvider: PaymentProviderAdapter = {
   key: "paypal",
   displayName: "PayPal",
   createIntent,
-  verifyWebhook
+  verifyWebhook,
+  createRefund: createPayPalRefund,
+  getRefundStatus: getPayPalRefundStatus
 };
