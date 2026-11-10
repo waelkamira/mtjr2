@@ -4407,3 +4407,9 @@ The platform account policy is now explicit: email verification is not required 
 - Added global viewport/content containment, responsive form-control sizing, bounded data-table scrolling, phone-width seller/admin grid collapse, and viewport-constrained dialogs.
 - Added docs/design/RESPONSIVE_AUDIT.md with the route groups, viewport/RTL/LTR acceptance matrix, remaining checks and explicit verification boundary.
 - Browser screenshot sweep, all-route interaction verification, 200% zoom review, typecheck, tests and build have not been run. Do not mark the full responsive audit complete until those checks are recorded.
+## 2026-11-10 — Responsive route-level refinements
+- Tightened seller inventory page spacing and form breakpoints for phone/tablet widths; kept stock-count and movement tables inside their own scroll containers.
+- Made seller commission store selection and catalog discovery filter/results header wrap cleanly on narrow viewports.
+- Reduced checkout horizontal padding on phones and allowed its header and long quote references to wrap.
+- Corrected an over-broad responsive CSS rule that forced every admin/seller grid into one column, which also collapsed intentional two-column image galleries and KPI tiles. Responsive Tailwind breakpoints now determine each grid's intended layout.
+- Updated the responsive audit to reflect this correction. Browser visual verification remains outstanding.
