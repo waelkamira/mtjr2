@@ -137,7 +137,7 @@
 - Added `/seller/finance` as a read-only, per-store financial overview using the existing `GET /api/seller/stores` and `GET /api/seller/commissions` contracts.
 - Shows commission-covered sales, recorded platform commissions, and completed refunds separately, grouped by currency with BigInt-safe formatting.
 - Latest commission activity links through to the full statement. The UI explicitly states that these figures are not a payable balance and does not calculate an available-to-withdraw amount.
-- No new Prisma model or migration was introduced. The accounting ledger, holds, settlement/reconciliation, payout methods and withdrawal workflow remain unimplemented.
+- No new Prisma model or migration was introduced. The accounting ledger, holds, settlement/reconciliation and withdrawal workflow remain unimplemented. Seller bank-destination capture is now implemented on the feature branch, but destinations remain pending verification and cannot be used for transfers.
 - Added the route to seller navigation, updated the seller route registry and page inventory, and refreshed the seller shell to the pastel clay palette.
 - Runtime, build and browser verification are intentionally deferred until the seller portal build is complete, per the current work instruction.
 
