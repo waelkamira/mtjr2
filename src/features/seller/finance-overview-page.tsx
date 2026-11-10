@@ -99,7 +99,14 @@ export default function SellerFinanceOverviewPage() {
       </header>
       <section className="rounded-[26px] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[8px_10px_22px_rgba(74,75,112,.09),inset_0_2px_0_white]">
         <label className="grid max-w-md gap-2 text-sm font-bold text-[#526078]">{t("Store", "المتجر")}
-          <select value={storeId} onChange={(event) => setStoreId(event.target.value)} disabled={!storeOptions.length} className="rounded-xl border border-white bg-white/85 px-3 py-3 text-sm text-[#344d60] shadow-[inset_0_2px_5px_rgba(74,75,112,.06)]">
+          <select value={storeId} onChange={(event) => {
+            const nextStoreId = event.target.value;
+            setStoreId(nextStoreId);
+            try {
+              localStorage.setItem("mtjr.activeStoreId", nextStoreId);
+              window.dispatchEvent(new Event("mtjr:active-store-changed"));
+            } catch { /* The financial page remains usable when storage is unavailable. */ }
+          }} disabled={!storeOptions.length} className="rounded-xl border border-white bg-white/85 px-3 py-3 text-sm text-[#344d60] shadow-[inset_0_2px_5px_rgba(74,75,112,.06)]">
             {storeOptions.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}
           </select>
         </label>
