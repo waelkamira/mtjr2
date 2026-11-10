@@ -52,8 +52,6 @@ export default function PaymentProvidersPage() {
   const [editDraft, setEditDraft] = useState({ displayName: "", countries: "", currencies: "", methods: "", sortOrder: 0, secretA: "", secretB: "", webhookId: "" });
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
     try {
       const response = await fetch("/api/admin/payment-providers", { cache: "no-store" });
       const data = await response.json() as { items?: Provider[]; error?: string };
