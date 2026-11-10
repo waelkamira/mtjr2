@@ -82,7 +82,7 @@ export default function MatjarAIAssistant() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-[70]">
+    <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-[70] max-w-[calc(100vw-2rem)]">
       {open && (
         <section dir={locale === "ar" ? "rtl" : "ltr"} aria-label={t("Matjar AI assistant", "مساعد Matjar AI")} className="mb-3 flex h-[min(650px,calc(100dvh-110px))] w-[min(390px,calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-[var(--surface)] shadow-[0_24px_80px_rgba(48,45,59,0.24)]">
           <header className="flex items-center justify-between bg-[var(--color-lavender-800)] px-5 py-4 text-white">
