@@ -139,7 +139,7 @@ export async function setSellerPayoutMethodDefault(methodIdInput: string) {
   const { actor, seller } = await requireSellerOwner();
   return prisma.$transaction(async (tx) => {
     const method = await tx.sellerPayoutMethod.findFirst({
-      where: { id: methodId, sellerId: seller.id, status: { not: SellerPayoutMethodStatus.DISABLED } },
+      where: { id: methodId, sellerId: seller.id, status: { in: [SellerPayoutMethodStatus.PENDING_VERIFICATION, SellerPayoutMethodStatus.VERIFIED] } },
       select: { id: true, status: true }
     });
     if (!method) throw new SellerPayoutMethodNotFoundError();
@@ -168,7 +168,7 @@ export async function disableSellerPayoutMethod(methodIdInput: string) {
     if (!method) throw new SellerPayoutMethodNotFoundError();
     const updated = await tx.sellerPayoutMethod.update({
       where: { id: method.id },
-      data: { status: SellerPayoutMethodStatus.DISABLED, isDefault: false },
+      data: { status: SellerPayoutMethodStatus.DISABLED, isDefault: false, encryptedDetails: "", accountHolderName: "Removed bank account", bankName: "Removed" },
       select: safeSelect
     });
     if (method.isDefault) {
