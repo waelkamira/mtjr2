@@ -93,7 +93,8 @@
 - [ ] `/admin/categories`, `/admin/brands` — Taxonomy administration.
 - [ ] `/admin/markets`, `/admin/currencies`, `/admin/locales` — Market/reference data management with controlled changes.
 - [ ] `/admin/orders` and `/admin/orders/[orderId]` — Order investigation, audit trail, allowed operational actions.
-- [ ] `/admin/payments`, `/admin/refunds`, `/admin/disputes` — Only as provider integration and financial controls become available.
+- [x] `/admin/payments`, `/admin/refunds` — Implemented in source with provider inspection and finance-authorized Stripe/PayPal refunds; migration, Sandbox, PostgreSQL and browser verification pending. General-ledger postings remain blocked by unapproved account mappings.
+- [ ] `/admin/disputes` — Separate dispute evidence, chargeback and representment workflow still required.
 - [ ] `/admin/returns` — Return review workflow.
 - [ ] `/admin/tax-rates`, `/admin/shipping` — Configuration with effective dates and audit trail.
 - [ ] `/admin/reviews`, `/admin/store-reviews`, `/admin/questions` — Trust and moderation queues.
@@ -131,7 +132,7 @@ The following records the current source implementation, not a claim that the da
 
 - [ ] Tax/customs configuration and reporting.
 - [ ] Fulfillment, shipments, tracking, delivery exceptions.
-- [ ] Returns logistics and refund reconciliation.
+- [ ] Returns logistics and complete refund reconciliation — Provider refund status refresh is implemented; carrier/return logistics, provider webhook reconciliation and accounting-ledger reconciliation remain.
 - [ ] Accounting ledger, journal entries, settlement/reconciliation, seller payouts.
 - [ ] Fraud/risk/dispute queues and evidence.
 - [ ] Supplier/procurement and purchase-order screens.
