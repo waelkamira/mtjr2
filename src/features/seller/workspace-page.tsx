@@ -871,6 +871,47 @@ export default function SellerWorkspacePage() {
               })}
             </section>
 
+            <section aria-label={translate(locale, "Seller quick actions", "إجراءات البائع السريعة")} className="mt-7">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-[#34445a]">{translate(locale, "Run your store", "أدر متجرك بسرعة")}</h2>
+                  <p className="mt-1 text-sm text-[#718596]">{translate(locale, "Shortcuts to the daily tasks and financial tools connected to this store.", "اختصارات للمهام اليومية والأدوات المالية المرتبطة بهذا المتجر.")}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <Link href="/seller/orders" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f7e8ee,#eacbd8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📦</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#60475b]">{translate(locale, "Process orders", "معالجة الطلبات")}</strong><span className="mt-1 block text-xs text-[#806d7b]">{translate(locale, "Review, prepare and ship customer orders.", "راجع طلبات العملاء وجهّزها واشحنها.")}</span></span>
+                  <span className="ms-auto text-lg text-[#806d7b] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/products" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#dff2ee,#b8dfd8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🛍️</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#365b50]">{translate(locale, "Manage products", "إدارة المنتجات")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Create products, update prices and manage media.", "أنشئ المنتجات وحدّث الأسعار وأدر الصور.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668d7f] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/finance" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e8e5f6,#cfc9e9)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📊</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#494467]">{translate(locale, "Financial overview", "الملخص المالي")}</strong><span className="mt-1 block text-xs text-[#716c91]">{translate(locale, "Review sales, commissions and completed refunds.", "راجع المبيعات والعمولات والمبالغ المستردة.")}</span></span>
+                  <span className="ms-auto text-lg text-[#716c91] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/payouts" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e4f0f5,#c4dfe8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🏦</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#3e6071]">{translate(locale, "Bank accounts", "الحسابات البنكية")}</strong><span className="mt-1 block text-xs text-[#668394]">{translate(locale, "Manage saved payout destinations and verification status.", "أدر حسابات استلام الأرباح وحالة التحقق.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668394] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/shipping" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f4f0d9,#e8dfae)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🚚</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#665b35]">{translate(locale, "Shipping settings", "إعدادات الشحن")}</strong><span className="mt-1 block text-xs text-[#897b4b]">{translate(locale, "Maintain delivery services, rates and destinations.", "حدّث خدمات التوصيل والأسعار والوجهات.")}</span></span>
+                  <span className="ms-auto text-lg text-[#897b4b] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                {selectedStore.isOwner && <a href={`/api/seller/stores/${encodeURIComponent(selectedStore.id)}/export`} className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#d9eeea,#b9ded9)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📥</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#365b50]">{translate(locale, "Export store to Excel", "تصدير بيانات المتجر إلى Excel")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Download your store profile, catalog, prices and inventory.", "نزّل ملف المتجر والمنتجات والأسعار والمخزون.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668d7f]" aria-hidden="true">↓</span>
+                </a>}
+              </div>
+            </section>
+
             <section aria-label={translate(locale, "Store analytics", "تحليلات المتجر")} className="mt-8">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
