@@ -987,6 +987,42 @@ export default function SellerWorkspacePage() {
               </div>
             </section>
 
+            <section aria-label={translate(locale, "Store action center", "مركز مهام المتجر")} className="mt-7 rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,#f5eff8,#e4e8f3)] p-5 shadow-[0_14px_28px_rgba(35,62,81,.10),inset_0_2px_0_white] sm:p-6">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#817aa4]">{translate(locale, "DAILY OPERATIONS", "العمليات اليومية")}</p>
+                  <h2 className="mt-1 text-lg font-black text-[#34445a]">{translate(locale, "Needs your attention", "يحتاج إلى متابعتك")}</h2>
+                  <p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Live counts from this store’s order, catalog, returns and inventory records.", "أعداد مباشرة من سجلات الطلبات والكتالوج والمرتجعات والمخزون لهذا المتجر.")}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Link href="/seller/orders" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f9e8ed,#efd5df)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#79576b]">{translate(locale, "Orders to fulfill", "طلبات بانتظار التجهيز")}</span><span className="text-lg" aria-hidden="true">📦</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#60475b]">{analyticsLoading || analyticsError ? "—" : formatMetric(fulfillmentOrderCount)}</p>
+                  <p className="mt-1 text-[11px] text-[#806d7b]">{translate(locale, "Confirmed, processing or ready to ship", "مؤكدة أو قيد التجهيز أو جاهزة للشحن")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#79576b]">{translate(locale, "Open orders", "فتح الطلبات")} ↗</span>
+                </Link>
+                <Link href="/seller/inventory" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f6f0d9,#e9e0b8)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#786b43]">{translate(locale, "Low-stock records", "سجلات المخزون المنخفض")}</span><span className="text-lg" aria-hidden="true">⚠️</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#665b35]">{inventoryLoading || inventoryError ? "—" : formatMetric(lowStockCount)}</p>
+                  <p className="mt-1 text-[11px] text-[#897b4b]">{translate(locale, "Inventory rows at or below reorder point", "سجلات وصلت إلى حد إعادة الطلب أو دونه")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#786b43]">{translate(locale, "Review inventory", "مراجعة المخزون")} ↗</span>
+                </Link>
+                <Link href="/seller/returns" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e9e5f7,#d8d2ee)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#625c83]">{translate(locale, "Return requests", "طلبات الإرجاع")}</span><span className="text-lg" aria-hidden="true">↶</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#494467]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.requestedReturns == null ? "—" : formatMetric(sellerAnalytics.metrics.requestedReturns)}</p>
+                  <p className="mt-1 text-[11px] text-[#716c91]">{translate(locale, "Waiting for seller review", "بانتظار مراجعة البائع")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#625c83]">{translate(locale, "Review returns", "مراجعة المرتجعات")} ↗</span>
+                </Link>
+                <Link href="/seller/products" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e0f1ed,#c9e4dc)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#4c7066]">{translate(locale, "Products awaiting approval", "منتجات بانتظار الموافقة")}</span><span className="text-lg" aria-hidden="true">🛍️</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#365b50]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.pendingProducts == null ? "—" : formatMetric(sellerAnalytics.metrics.pendingProducts)}</p>
+                  <p className="mt-1 text-[11px] text-[#668d7f]">{translate(locale, "Submitted products not yet approved", "منتجات أُرسلت ولم تتم الموافقة عليها بعد")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#4c7066]">{translate(locale, "Manage products", "إدارة المنتجات")} ↗</span>
+                </Link>
+              </div>
+            </section>
+
             <section aria-label={translate(locale, "Recent orders", "الطلبات الأخيرة")} className="mt-7 overflow-hidden rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[0_14px_28px_rgba(35,62,81,.12),inset_0_2px_0_white] sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#817aa4]">{translate(locale, "CUSTOMER ACTIVITY", "نشاط العملاء")}</p><h2 className="mt-1 text-lg font-black text-[#34445a]">{translate(locale, "Recent orders", "الطلبات الأخيرة")}</h2><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "The latest orders for the selected store.", "أحدث الطلبات الخاصة بالمتجر المحدد.")}</p></div>
