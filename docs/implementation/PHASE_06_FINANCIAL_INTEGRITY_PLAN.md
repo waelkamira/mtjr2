@@ -33,3 +33,10 @@ Make every monetary movement explainable, idempotent, auditable and reconcilable
 
 ## Exit criteria
 Disposable PostgreSQL integration proves accounting invariants, idempotency, rollback and concurrency. Provider sandbox tests pass for the selected approved provider. Production credentials, bank rails, tax treatment and merchant approval remain explicit launch gates.
+
+
+## 2026-11-10 — Provider refund implementation status
+- Source implementation: Stripe and PayPal partial/full refund adapters, original-payment identity checks, deterministic provider idempotency, persisted provider-pending/failure states, finance execution and provider status refresh are present.
+- Financial integrity safeguards: refund reservations include pending, processing, failed and completed refunds; order-scoped serializable transactions prevent aggregate refunds from exceeding the captured payment. Payment state changes only after provider-confirmed completion or explicit manual external-reference confirmation.
+- Not yet verified: migration deployment, PostgreSQL concurrency integration, duplicate/retry/pending Sandbox behavior and end-to-end finance browser journey.
+- Still blocked by policy: journal account mapping for processor clearing, seller payable, tax, shipping, reserves/holds and refund allocation. The ledger foundation is intentionally not posted to until Finance approves the chart of accounts and recognition policy. High-risk refund dual-approval/reauthentication policy also remains to be finalized; current API permission is `payments:refund`.
