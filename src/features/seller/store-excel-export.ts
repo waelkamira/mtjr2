@@ -96,17 +96,17 @@ export function downloadSellerStoreWorkbook(input: {
       ...orders.map((item) => [item.order.orderNumber, item.order.placedAt, item.store.name, item.status, item.totalMinor, item.order.currencyCode])
     ]}
   ];
-  const document = `<?xml version="1.0" encoding="UTF-8"?>
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">
 ${sheets.map(worksheet).join("\n")}
 </Workbook>`;
-  const blob = new Blob(["\uFEFF", document], { type: "application/vnd.ms-excel;charset=utf-8" });
+  const blob = new Blob(["\uFEFF", workbookXml], { type: "application/vnd.ms-excel;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
+  const anchor = window.document.createElement("a");
   anchor.href = url;
   anchor.download = `matjar-store-${store.storeNumber || store.slug}-export.xls`;
-  document.body.appendChild(anchor);
+  window.document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
