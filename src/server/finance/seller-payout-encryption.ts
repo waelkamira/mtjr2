@@ -38,9 +38,11 @@ export function encryptSellerPayoutDetails(details: { accountIdentifier: string;
   };
 }
 
-export function fingerprintSellerPayoutAccount(countryCode: string, accountIdentifier: string) {
+export function fingerprintSellerPayoutAccount(sellerId: string, countryCode: string, accountIdentifier: string) {
   const keys = keyRing();
   return createHmac("sha256", keys.fingerprintKey)
+    .update(sellerId)
+    .update(":")
     .update(countryCode.toUpperCase())
     .update(":")
     .update(accountIdentifier.replace(/\s+/g, "").toUpperCase())
