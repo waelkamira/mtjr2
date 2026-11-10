@@ -37,7 +37,7 @@ export default function BrandDirectoryPage() {
   }, [locale, t]);
 
   return (
-    <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
+    <main className="mx-auto min-h-[65vh] max-w-[1440px] px-3 py-6 sm:px-5 sm:py-10 lg:px-10 lg:py-14">
       <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{t("Independent labels", "علامات تجارية مستقلة")}</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)]">{t("Discover brands", "اكتشف العلامات التجارية")}</h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{t("Explore active brands and browse their products across the marketplace.", "استكشف العلامات التجارية النشطة وتصفّح منتجاتها في أنحاء السوق.")}</p>
