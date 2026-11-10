@@ -68,6 +68,15 @@ describe("seller store workbook export", () => {
     expect(response.headers.get("Content-Disposition")).toContain("matjar-demo-shop-export.xls");
     expect(body).toContain("&lt;Desk &amp; Lamp&gt;");
     expect(body).not.toContain("buyer");
+    expect(mocks.productFindMany).toHaveBeenCalledWith(expect.objectContaining({ take: 5_001 }));
+    expect(mocks.productVariantFindMany).toHaveBeenCalledWith(expect.objectContaining({ take: 25_001 }));
+    expect(mocks.inventoryFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      take: 5_001,
+      where: {
+        warehouse: { is: { storeId: "store-1" } },
+        variant: { is: { product: { is: { storeId: "store-1" } } } }
+      }
+    }));
     expect(mocks.auditLogCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         actorId: "owner-1",
