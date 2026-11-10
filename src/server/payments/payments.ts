@@ -39,6 +39,15 @@ export async function startOrderPayment(input: {
   guestToken: string; orderId: string; providerKey: string; idempotencyKey: string; now?: Date;
 }) {
   const now = input.now ?? new Date();
+  // Reject unknown legacy providers before resolving an owner or reading an order.
+  // Stripe and PayPal may be supplied by the managed database configuration below.
+  if (
+    input.providerKey !== "stripe" &&
+    input.providerKey !== "paypal" &&
+    !getPaymentProvider(input.providerKey)
+  ) {
+    throw new Error("This payment provider is not configured for the platform.");
+  }
   const session = await getCurrentSession(now);
   const owner: Owner = session
     ? { userId: session.userId }
