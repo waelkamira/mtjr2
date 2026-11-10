@@ -206,7 +206,7 @@ describe("identity HTTP routes", () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. Sign in to continue.", signedIn: false });
+    expect(await response.json()).toEqual({ message: "Account created successfully. You can now sign in." });
     expect(mocks.revokeUserSession).not.toHaveBeenCalled();
     expect(mocks.createUserSession).not.toHaveBeenCalled();
   });
