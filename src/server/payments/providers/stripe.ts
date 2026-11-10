@@ -167,7 +167,7 @@ export async function createStripeRefund(input: ProviderRefundInput): Promise<Pr
   if (!response.ok || !refund.id) throw new Error("Stripe could not create the refund. Reconcile the provider dashboard before retrying.");
   return {
     providerRefundReference: refund.id,
-    status: refund.status === "succeeded" ? "COMPLETED" : refund.status === "pending" ? "PROCESSING" : "FAILED"
+    status: refund.status === "succeeded" ? "COMPLETED" : refund.status === "pending" || refund.status === "requires_action" ? "PROCESSING" : "FAILED"
   };
 }
 
@@ -184,7 +184,7 @@ export async function getStripeRefundStatus(
   });
   const refund = await response.json() as { id?: string; status?: string };
   if (!response.ok || refund.id !== refundReference) throw new Error("Stripe refund status could not be retrieved.");
-  return refund.status === "succeeded" ? "COMPLETED" : refund.status === "pending" ? "PROCESSING" : "FAILED";
+  return refund.status === "succeeded" ? "COMPLETED" : refund.status === "pending" || refund.status === "requires_action" ? "PROCESSING" : "FAILED";
 }
 
 export const stripePaymentProvider: PaymentProviderAdapter = {
