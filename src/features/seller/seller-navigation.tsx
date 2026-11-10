@@ -81,7 +81,7 @@ function SellerIcon({ name }: { name: IconName }) {
   );
 }
 
-type SidebarStore = { id: string; name: string; slug: string; logoUrl: string | null };
+type SidebarStore = { id: string; name: string; slug: string; logoUrl: string | null; isOwner: boolean };
 
 export default function SellerNavigation() {
   const pathname = usePathname();
@@ -101,7 +101,7 @@ export default function SellerNavigation() {
           const available = data?.stores ?? [];
           let preferredId = "";
           try { preferredId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage may be unavailable. */ }
-          setStore(available.find((item) => item.id === preferredId) ?? available[0] ?? null);
+          setStore(available.find((item) => item.id === preferredId) ?? available.find((item) => item.isOwner) ?? available[0] ?? null);
         })
         .catch(() => undefined);
     };
