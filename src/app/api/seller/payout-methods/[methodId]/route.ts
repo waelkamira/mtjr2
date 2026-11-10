@@ -1,5 +1,6 @@
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/access-errors";
+import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import {
   disableSellerPayoutMethod,
   SellerPayoutMethodNotFoundError,
@@ -11,7 +12,9 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ methodId: string }> };
 
-export async function PATCH(_request: Request, context: RouteContext): Promise<Response> {
+export async function PATCH(request: Request, context: RouteContext): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   try {
     const { methodId } = await context.params;
     const method = await setSellerPayoutMethodDefault(methodId);
@@ -24,7 +27,9 @@ export async function PATCH(_request: Request, context: RouteContext): Promise<R
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext): Promise<Response> {
+export async function DELETE(request: Request, context: RouteContext): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   try {
     const { methodId } = await context.params;
     const method = await disableSellerPayoutMethod(methodId);
