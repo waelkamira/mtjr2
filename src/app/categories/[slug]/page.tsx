@@ -36,7 +36,7 @@ export default async function CategoryDetailPage({ params, searchParams }: Props
   ]);
   const sponsored = await listSponsoredCampaigns({ marketId: markets[0]?.id, categoryId: category.id, query: q, limit: 4 });
 
-  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
+  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-3 py-6 sm:px-5 sm:py-10 lg:px-10 lg:py-14">
     <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Marketplace category", "فئة السوق")}</p>
     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{category.name}</h1>
     {category.description && <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">{category.description}</p>}
