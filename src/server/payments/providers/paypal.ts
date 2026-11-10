@@ -333,6 +333,7 @@ export async function createPayPalRefund(input: ProviderRefundInput): Promise<Pr
           value: minorToMajor(input.amountMinor, input.currencyCode)
         },
         invoice_id: input.refundId,
+        custom_id: input.refundId,
         note_to_payer: `Matjar refund ${input.refundId}`
       })
     },
