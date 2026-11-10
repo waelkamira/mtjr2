@@ -110,7 +110,7 @@ export default function SupportTicketPage({ ticketId }: { ticketId: string }) {
           <Link href="/account/support" className="text-sm">{t("All support requests", "جميع طلبات الدعم")}</Link>
         </div>
       </header>
-      <div className="mx-auto max-w-4xl px-5 py-10">
+      <div className="mx-auto max-w-4xl px-3 py-6 sm:px-5 sm:py-10">
         {loading ? <div aria-label={t("Loading ticket", "جارٍ تحميل التذكرة")} className="h-40 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : ticket && <>
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{ticket.ticketNumber} · {ticket.status.replaceAll("_", " ")}</p>
           <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{ticket.subject}</h1>
