@@ -15,8 +15,8 @@ async function readJson(response: Response) {
 }
 
 export default function AdminSearchSynonymsPage() {
-  const { locale } = useLocale();
-  const t = (english: string, arabic: string) => translate(locale, english, arabic);
+  const { locale: uiLocale } = useLocale();
+  const t = (english: string, arabic: string) => translate(uiLocale, english, arabic);
   const [items, setItems] = useState<Synonym[]>([]);
   const [locale, setLocale] = useState("en");
   const [term, setTerm] = useState("");

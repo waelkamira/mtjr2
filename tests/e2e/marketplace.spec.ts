@@ -373,6 +373,16 @@ test.describe("seller catalog authoring", () => {
     await map.hover();
     await page.mouse.wheel(0, -600);
     await expect.poll(async () => Number(await map.getAttribute("data-map-zoom"))).toBeGreaterThan(zoomBeforeWheel);
+
+    // Neighbourhoods are currently seller-entered (not an official OpenSyria
+    // administrative level); leaving the field zooms to the selected locality
+    // pin so the seller can place it more precisely.
+    if (selectedLocalityHasCoordinates) {
+      const neighborhood = page.getByLabel(/Neighbourhood \(local name\)|الحي \(الاسم المحلي\)/i);
+      await neighborhood.fill("Al-Mazzeh");
+      await neighborhood.blur();
+      await expect(map).toHaveAttribute("data-map-zoom", "16", { timeout: 10000 });
+    }
   });
 });
 

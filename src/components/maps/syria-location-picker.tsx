@@ -289,6 +289,14 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setFocus({ ...coords, zoom: 15 });
   }
 
+  function focusNeighborhoodOnMap() {
+    const neighborhood = value.neighborhood?.trim();
+    if (!neighborhood || value.latitude === undefined || value.longitude === undefined) return;
+    // Neighborhood names are seller-entered; zoom to the selected locality/pin
+    // rather than pretending an unverified neighborhood centroid exists.
+    setFocus({ latitude: value.latitude, longitude: value.longitude, zoom: 16 });
+  }
+
   const fieldClass = "mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-sm text-[var(--color-ink-900)] outline-none transition focus:border-[var(--color-forest-500)] focus:ring-2 focus:ring-[var(--color-forest-500)]/10 disabled:cursor-not-allowed disabled:opacity-50";
   const name = (item: GeoItem) => item.nameAr || item.nameEn;
   const kindLabel = (kind?: string | null) => {
@@ -334,7 +342,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[var(--color-ink-800)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{labels.searchButton}</button>
       </div>}
       <label className="block text-sm font-medium">{labels.neighborhood}
-        <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => onChange({ ...value, neighborhood: event.target.value || undefined })} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
+        <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => onChange({ ...value, neighborhood: event.target.value || undefined })} onBlur={focusNeighborhoodOnMap} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
         <span className="mt-1 block text-xs font-normal leading-5 text-[var(--muted)]">{translate(locale, "OpenSyria does not publish a verified neighbourhood directory. Enter the local neighbourhood name here; the administrative selections above remain sourced from OpenSyria.", "لا تنشر OpenSyria دليلاً موثقاً مستقلاً للأحياء. اكتب اسم الحي هنا، أما التقسيمات الإدارية أعلاه فمصدرها OpenSyria حصراً.")}</span>
       </label>
       <label className="block text-sm font-medium">{translate(locale, "Exact street address", "العنوان الدقيق")}
