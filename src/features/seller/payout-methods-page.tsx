@@ -30,8 +30,6 @@ export default function SellerPayoutMethodsPage() {
   const [isDefault, setIsDefault] = useState(true);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
     try {
       const response = await fetch("/api/seller/payout-methods", { cache: "no-store" });
       const result = await response.json() as { methods?: PayoutMethod[]; error?: string };
@@ -56,6 +54,7 @@ export default function SellerPayoutMethodsPage() {
       if (!response.ok) throw new Error(result.error || t("Unable to save bank account.", "تعذر حفظ الحساب البنكي."));
       setAccountIdentifier(""); setRoutingCode("");
       setSuccess(result.message || t("Bank account saved.", "تم حفظ الحساب البنكي."));
+      setLoading(true);
       await load();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("Unable to save bank account.", "تعذر حفظ الحساب البنكي."));
@@ -69,6 +68,7 @@ export default function SellerPayoutMethodsPage() {
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || t("Unable to update bank account.", "تعذر تحديث الحساب البنكي."));
       setSuccess(action === "default" ? t("Default account updated.", "تم تحديث الحساب الافتراضي.") : t("Bank account removed from your payout methods.", "تمت إزالة الحساب من وسائل استلام الأرباح."));
+      setLoading(true);
       await load();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("Unable to update bank account.", "تعذر تحديث الحساب البنكي."));
