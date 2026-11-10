@@ -3,7 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "@/lib/env";
 import { PaymentProviderConfigurationError } from "./types";
-import type { PaymentProviderAdapter, VerifiedPaymentEvent } from "./types";
+import type { PaymentProviderAdapter, ProviderRefundInput, ProviderRefundResult, VerifiedPaymentEvent } from "./types";
 
 type StripeSession = {
   id: string;
@@ -126,9 +126,69 @@ async function verifyWebhook(request: Request, credentials?: Record<string, stri
   };
 }
 
+
+
+export async function createStripeRefund(input: ProviderRefundInput): Promise<ProviderRefundResult> {
+  const { secretKey } = requireStripeSecrets(input.providerCredentials);
+  if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(input.providerReference)) throw new Error("Stripe Checkout reference is invalid.");
+  if (!/^(0|[1-9]\\d*)$/.test(input.amountMinor) || BigInt(input.amountMinor) <= 0n) throw new Error("Refund amount is invalid.");
+  const sessionResponse = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(input.providerReference)}`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000)
+  });
+  const session = await sessionResponse.json() as { id?: string; payment_status?: string; amount_total?: number; currency?: string; payment_intent?: string | { id?: string } | null };
+  if (!sessionResponse.ok || session.id !== input.providerReference) throw new Error("Stripe could not verify the original Checkout payment.");
+  if (session.payment_status !== "paid" || !session.payment_intent) throw new Error("Stripe Checkout payment has not been captured.");
+  if (session.currency?.toUpperCase() !== input.currencyCode || session.amount_total == null || BigInt(input.amountMinor) > BigInt(session.amount_total)) {
+    throw new Error("Refund amount or currency does not match the captured Stripe payment.");
+  }
+  const paymentIntent = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
+  if (!paymentIntent) throw new Error("Stripe payment intent reference is unavailable.");
+  const body = new URLSearchParams();
+  body.set("payment_intent", paymentIntent);
+  body.set("amount", input.amountMinor);
+  body.set("metadata[matjar_refund_id]", input.refundId);
+  const response = await fetch("https://api.stripe.com/v1/refunds", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": input.idempotencyKey
+    },
+    body,
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000)
+  });
+  const refund = await response.json() as { id?: string; status?: string; error?: { message?: string } };
+  if (!response.ok || !refund.id) throw new Error("Stripe could not create the refund. Reconcile the provider dashboard before retrying.");
+  return {
+    providerRefundReference: refund.id,
+    status: refund.status === "succeeded" ? "COMPLETED" : refund.status === "pending" ? "PROCESSING" : "FAILED"
+  };
+}
+
+export async function getStripeRefundStatus(
+  refundReference: string,
+  credentials?: Record<string, string>
+): Promise<ProviderRefundResult["status"]> {
+  const { secretKey } = requireStripeSecrets(credentials);
+  if (!/^re_[A-Za-z0-9]+$/.test(refundReference)) throw new Error("Stripe refund reference is invalid.");
+  const response = await fetch(`https://api.stripe.com/v1/refunds/${encodeURIComponent(refundReference)}`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000)
+  });
+  const refund = await response.json() as { id?: string; status?: string };
+  if (!response.ok || refund.id !== refundReference) throw new Error("Stripe refund status could not be retrieved.");
+  return refund.status === "succeeded" ? "COMPLETED" : refund.status === "pending" ? "PROCESSING" : "FAILED";
+}
+
 export const stripePaymentProvider: PaymentProviderAdapter = {
   key: "stripe",
   displayName: "Stripe",
   createIntent,
-  verifyWebhook
+  verifyWebhook,
+  createRefund: createStripeRefund,
+  getRefundStatus: getStripeRefundStatus
 };
