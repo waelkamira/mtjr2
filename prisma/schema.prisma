@@ -640,6 +640,7 @@ model Seller {
   store       Store?
   commissionRules CommissionRule[]
   commissionTransactions CommissionTransaction[]
+  payoutMethods SellerPayoutMethod[]
 
   @@index([status, createdAt])
 }
