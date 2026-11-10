@@ -4456,3 +4456,15 @@ The platform account policy is now explicit: email verification is not required 
 
 **Verification**
 - Source-level wording correction committed; no runtime or browser verification was run.
+
+
+## 2026-11-10 — Seller workspace navigation coverage
+
+**Implemented**
+- Extended seller dashboard quick actions with direct links to existing advertising campaign, seller settings, and team-management pages.
+- Team management shortcut is shown only to the store owner; existing page/API authorization remains authoritative.
+- Reused routes documented in the page registry; no new route, API, schema, or migration was added.
+
+**Verification**
+- Source and documentation committed to `feat/seller-dashboard-command-center`.
+- Automated checks and live browser journeys remain deferred as requested; latest code has not been build-verified in this session.
