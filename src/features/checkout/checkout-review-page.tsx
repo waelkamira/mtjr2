@@ -96,15 +96,15 @@ export default function CheckoutReviewPage() {
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 px-5 py-5">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
+      <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 px-3 py-4 sm:px-5 sm:py-5">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
           <Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link>
           <Link href="/cart" className="text-sm text-[var(--color-ink-600)]">{t("Back to cart", "العودة إلى السلة")}</Link>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-5 py-10 md:py-14">
+      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-5 sm:py-10 md:py-14">
         <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Buying core · Step 2", "إتمام الشراء · الخطوة ٢")}</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{t("Review your order", "مراجعة طلبك")}</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl text-[var(--color-ink-950)]">{t("Review your order", "مراجعة طلبك")}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{t("This is a server-generated price quote. Available inventory is temporarily held while the quote is active.", "هذا عرض سعر أنشأه الخادم. يُحجز المخزون المتاح مؤقتًا ما دام العرض نشطًا.")}</p>
         {displayError && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-[var(--color-danger)]">{displayError}</p>}
         {isLoading ? <div className="mt-8 h-56 animate-pulse rounded-2xl bg-[var(--surface-soft)]" /> :
@@ -112,7 +112,7 @@ export default function CheckoutReviewPage() {
             <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
               <div className="border-b border-[var(--border)] bg-[var(--surface-soft)] px-5 py-4">
                 <p className="font-semibold text-[var(--color-ink-950)]">{quote.market.name}</p>
-                <p className="text-xs text-[var(--muted)]">{t("Quote reference", "مرجع عرض السعر")} · {quote.id}</p>
+                <p className="break-all text-xs text-[var(--muted)]">{t("Quote reference", "مرجع عرض السعر")} · {quote.id}</p>
               </div>
               <div className="divide-y divide-[var(--border)]">
                 {quote.lines.map((line) => <article key={line.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-5">
