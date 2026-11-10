@@ -301,7 +301,19 @@ enum MarketStatus {
   SUSPENDED
 }
 
-enum SellerPayoutMethodType {\n  IBAN\n  LOCAL_BANK_ACCOUNT\n}\n\nenum SellerPayoutMethodStatus {\n  PENDING_VERIFICATION\n  VERIFIED\n  REJECTED\n  DISABLED\n}\n\nenum SellerStatus {
+enum SellerPayoutMethodType {
+  IBAN
+  LOCAL_BANK_ACCOUNT
+}
+
+enum SellerPayoutMethodStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+  DISABLED
+}
+
+enum SellerStatus {
   PENDING
   ACTIVE
   SUSPENDED
@@ -655,7 +667,8 @@ model SellerPayoutMethod {
   @@unique([sellerId, fingerprint])
   @@index([sellerId, status, isDefault])
 }
-\nmodel Store {
+
+model Store {
   id                         String                      @id @default(cuid())
   storeNumber                BigInt                      @unique @default(autoincrement())
   sellerId                   String
