@@ -4424,3 +4424,92 @@ The platform account policy is now explicit: email verification is not required 
 - Notifications: preference labels and channel toggles wrap safely; card padding and page gutters adapt to phone widths.
 - Catalog list controls: search, sort and submit controls can wrap instead of competing for a single narrow row.
 - Re-reviewed the remaining fixed-minimum-width data tables: each is placed inside an explicit horizontal scroll container, so the page itself is not intended to scroll sideways.
+
+## 2026-11-10 — Seller dashboard command-center shortcuts
+- Added a seller dashboard quick-action section linking the selected store's daily workflows: orders, catalog, financial overview, payout destinations, shipping settings and owner-only store export.
+- Added a direct bank-account management action to the seller financial overview so the finance and payout workflows are connected from the same workspace.
+- Reused existing authenticated routes and the existing owner-scoped, audited Excel export endpoint; no duplicate APIs, Prisma models or migrations were introduced.
+- Automated tests intentionally deferred per the current development priority. Build/runtime verification remains pending and this slice is not marked launch-ready.
+- Added 7/30/90-day analytics controls to the seller dashboard using the existing date-bounded, store-scoped analytics API (maximum 90 days); gross sales remain grouped by currency without FX conversion.
+- Updated the shared seller topbar to identify the bank-account route correctly.
+- Added a seller daily-operations action center with store-scoped live counts for fulfillment-stage orders, low-stock inventory records, requested returns and products awaiting approval. Each tile links to the existing seller workflow; order counts explicitly follow the selected analytics period, while inventory and review queues reflect current records. No new API, schema or migration was added.
+
+
+## 2026-11-10 — Seller customer relationship hub
+
+**Implemented**
+- Added a customer relationship section to the seller dashboard linking directly to the existing customer inbox, product questions, reviews, and store staff workspaces.
+- Displayed the average rating and review count only from the existing seller analytics response; unavailable/loading/error states remain explicit rather than showing fabricated counts.
+- Kept message/question/staff counts out of the dashboard because the existing dashboard analytics contract does not provide those values. The destination pages remain the source of their operational records.
+- Reused existing routes and APIs; no schema, migration, or duplicate endpoint was introduced.
+
+**Verification**
+- Source changes committed to `feat/seller-dashboard-command-center`.
+- Build, browser journeys, and database-backed verification have not been run in this session.
+
+
+## 2026-11-10 — Seller team invitation guidance correction
+
+**Implemented**
+- Corrected the seller staff invitation guidance in both English and Arabic. It now accurately explains that the selected store-scoped role is applied when the invited active account accepts, and that invitations expire after seven days and can be renewed.
+- No permission model, endpoint, or invitation behavior was changed.
+
+**Verification**
+- Source-level wording correction committed; no runtime or browser verification was run.
+
+
+## 2026-11-10 — Seller workspace navigation coverage
+
+**Implemented**
+- Extended seller dashboard quick actions with direct links to existing advertising campaign, seller settings, and team-management pages.
+- Team management shortcut is shown only to the store owner; existing page/API authorization remains authoritative.
+- Reused routes documented in the page registry; no new route, API, schema, or migration was added.
+
+**Verification**
+- Source and documentation committed to `feat/seller-dashboard-command-center`.
+- Automated checks and live browser journeys remain deferred as requested; latest code has not been build-verified in this session.
+
+
+## 2026-11-10 — Finance readiness wording aligned with payout-method implementation
+
+**Implemented**
+- Corrected the seller finance disclaimer to acknowledge that encrypted payout destinations can be saved.
+- Explicitly distinguished saved beneficiary details from beneficiary ownership verification, seller ledger recognition, holds, settlement, and actual withdrawal execution.
+- Kept the financial overview from presenting commission snapshots as withdrawable funds.
+
+**Verification**
+- Source-level wording correction committed; no financial transaction behavior or schema was changed.
+
+
+## 2026-11-10 — Payment provider preflight and seller identity gate
+
+**Implemented**
+- Reject unknown legacy payment-provider keys before resolving a checkout owner or querying an order. Stripe and PayPal continue through the managed provider-configuration path.
+- No seller email-verification gate was added: the current registration contract creates active accounts without email verification, and introducing that gate here would block legitimate seller onboarding without an implemented verification journey.
+- Unknown payment providers are rejected before checkout owner resolution or order lookup.
+- No schema or migration changes.
+
+**Verification**
+- Prisma validation, migrations, TypeScript, lint, PostgreSQL integration and CodeQL passed on the preceding run. The payment lifecycle preflight regression is no longer among the failing tests; unrelated stale test fixtures/expectations remain to be reconciled before merge.
+- PR remains draft and is not merged until required checks complete.
+
+
+## 2026-11-10 — CI compatibility and seller onboarding correction
+
+**Implemented**
+- Kept seller application submission consistent with the current registration contract; did not introduce an email-verification prerequisite that would block active accounts.
+- Corrected existing test fixtures and expectations for the payment-provider adapter registry, multi-currency seller commission aggregates/refund reads, owner-only staff management, session-free registration, and conditional ACTIVE/PENDING login updates.
+- Preserved the payment-provider preflight guard that rejects unsupported providers before checkout owner/order reads.
+- No database schema or migration changes.
+
+**Verification**
+- Latest CI run passed Prisma validation/migrations, TypeScript and lint, but its existing test fixtures were stale; the fixtures/expectations have now been aligned and a fresh run is required.
+- PostgreSQL integration and CodeQL passed on the preceding source revision; browser E2E was still running at that point.
+- PR remains draft until fresh required checks pass.
+
+
+## 2026-11-10 — Seller identity boundary retained
+
+- Restored the seller-application email-verification prerequisite because the existing seller identity policy and lifecycle contract explicitly require a verified account email before seller onboarding.
+- Regular customer registration remains session-free; this seller-specific check does not change customer signup behavior.
+- Updated webhook route test requests to include the provider payment reference required by the current route, and aligned the registration fallback assertion with the current response contract.

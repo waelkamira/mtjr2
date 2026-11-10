@@ -122,6 +122,7 @@ export default function SellerWorkspacePage() {
   const [recentOrdersError, setRecentOrdersError] = useState("");
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState("");
+  const [analyticsRangeDays, setAnalyticsRangeDays] = useState<7 | 30 | 90>(30);
   const [selectedSalesCurrency, setSelectedSalesCurrency] = useState("");
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingMarketId, setShippingMarketId] = useState("");
@@ -285,7 +286,16 @@ export default function SellerWorkspacePage() {
       setRecentOrders([]);
       setAnalyticsLoading(true);
       setAnalyticsError("");
-      return fetch(`/api/seller/analytics?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
+      const rangeTo = new Date();
+      rangeTo.setUTCHours(0, 0, 0, 0);
+      const rangeFrom = new Date(rangeTo);
+      rangeFrom.setUTCDate(rangeFrom.getUTCDate() - (analyticsRangeDays - 1));
+      const analyticsParams = new URLSearchParams({
+        storeId: selectedStoreId,
+        from: rangeFrom.toISOString().slice(0, 10),
+        to: rangeTo.toISOString().slice(0, 10)
+      });
+      return fetch(`/api/seller/analytics?${analyticsParams.toString()}`, { cache: "no-store" })
         .then((response) => readJson<SellerAnalytics>(response))
         .then((data) => {
           if (!active) return;
@@ -311,7 +321,7 @@ export default function SellerWorkspacePage() {
         .finally(() => { if (active) setAnalyticsLoading(false); });
     });
     return () => { active = false; };
-  }, [locale, selectedStoreId]);
+  }, [locale, selectedStoreId, analyticsRangeDays]);
 
   useEffect(() => {
     let active = true;
@@ -871,6 +881,62 @@ export default function SellerWorkspacePage() {
               })}
             </section>
 
+            <section aria-label={translate(locale, "Seller quick actions", "إجراءات البائع السريعة")} className="mt-7">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-[#34445a]">{translate(locale, "Run your store", "أدر متجرك بسرعة")}</h2>
+                  <p className="mt-1 text-sm text-[#718596]">{translate(locale, "Shortcuts to the daily tasks and financial tools connected to this store.", "اختصارات للمهام اليومية والأدوات المالية المرتبطة بهذا المتجر.")}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <Link href="/seller/orders" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f7e8ee,#eacbd8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📦</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#60475b]">{translate(locale, "Process orders", "معالجة الطلبات")}</strong><span className="mt-1 block text-xs text-[#806d7b]">{translate(locale, "Review, prepare and ship customer orders.", "راجع طلبات العملاء وجهّزها واشحنها.")}</span></span>
+                  <span className="ms-auto text-lg text-[#806d7b] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/products" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#dff2ee,#b8dfd8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🛍️</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#365b50]">{translate(locale, "Manage products", "إدارة المنتجات")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Create products, update prices and manage media.", "أنشئ المنتجات وحدّث الأسعار وأدر الصور.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668d7f] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/finance" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e8e5f6,#cfc9e9)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📊</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#494467]">{translate(locale, "Financial overview", "الملخص المالي")}</strong><span className="mt-1 block text-xs text-[#716c91]">{translate(locale, "Review sales, commissions and completed refunds.", "راجع المبيعات والعمولات والمبالغ المستردة.")}</span></span>
+                  <span className="ms-auto text-lg text-[#716c91] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/payouts" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e4f0f5,#c4dfe8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🏦</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#3e6071]">{translate(locale, "Bank accounts", "الحسابات البنكية")}</strong><span className="mt-1 block text-xs text-[#668394]">{translate(locale, "Manage saved payout destinations and verification status.", "أدر حسابات استلام الأرباح وحالة التحقق.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668394] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/shipping" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f4f0d9,#e8dfae)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🚚</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#665b35]">{translate(locale, "Shipping settings", "إعدادات الشحن")}</strong><span className="mt-1 block text-xs text-[#897b4b]">{translate(locale, "Maintain delivery services, rates and destinations.", "حدّث خدمات التوصيل والأسعار والوجهات.")}</span></span>
+                  <span className="ms-auto text-lg text-[#897b4b] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/advertising" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f8e8d8,#efd2bd)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📣</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#79583f]">{translate(locale, "Advertising campaigns", "الحملات الإعلانية")}</strong><span className="mt-1 block text-xs text-[#92745f]">{translate(locale, "Manage campaign drafts, budgets and invoices.", "أدر مسودات الحملات والميزانيات والفواتير.")}</span></span>
+                  <span className="ms-auto text-lg text-[#92745f]" aria-hidden="true">↗</span>
+                </Link>
+                <Link href="/seller/settings" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#eeeaf6,#dcd6ed)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">⚙️</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#554d78]">{translate(locale, "Store settings", "إعدادات المتجر")}</strong><span className="mt-1 block text-xs text-[#817aa4]">{translate(locale, "Update your business profile and account preferences.", "حدّث ملف نشاطك التجاري وتفضيلات الحساب.")}</span></span>
+                  <span className="ms-auto text-lg text-[#817aa4]" aria-hidden="true">↗</span>
+                </Link>
+                {selectedStore.isOwner && <Link href="/seller/staff" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e2f1e9,#cfe7dc)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">👥</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#426b59]">{translate(locale, "Manage store team", "إدارة فريق المتجر")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Invite staff and assign least-privilege store roles.", "ادعُ الموظفين وامنحهم أقل الصلاحيات اللازمة.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668d7f]" aria-hidden="true">↗</span>
+                </Link>}
+                {selectedStore.isOwner && <a href={`/api/seller/stores/${encodeURIComponent(selectedStore.id)}/export`} className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#d9eeea,#b9ded9)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📥</span>
+                  <span className="min-w-0"><strong className="block text-sm font-black text-[#365b50]">{translate(locale, "Export store to Excel", "تصدير بيانات المتجر إلى Excel")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Download your store profile, catalog, prices and inventory.", "نزّل ملف المتجر والمنتجات والأسعار والمخزون.")}</span></span>
+                  <span className="ms-auto text-lg text-[#668d7f]" aria-hidden="true">↓</span>
+                </a>}
+              </div>
+            </section>
+
             <section aria-label={translate(locale, "Store analytics", "تحليلات المتجر")} className="mt-8">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -881,6 +947,16 @@ export default function SellerWorkspacePage() {
               </div>
               {analyticsError && <p role="status" className="mb-4 rounded-xl border border-[var(--color-blush-300)] bg-[var(--color-blush-50)] p-3 text-xs text-[var(--color-blush-800)]">{translate(locale, "Store analytics are temporarily unavailable for this account or store.", "تحليلات المتجر غير متاحة مؤقتًا لهذا الحساب أو المتجر.")}</p>}
               {inventoryError && <p role="status" className="mb-4 rounded-xl bg-[var(--background)] p-3 text-xs text-[var(--muted)]">{translate(locale, "Inventory charts are temporarily unavailable.", "مخططات المخزون غير متاحة مؤقتًا.")}</p>}
+              <div className="mb-4 flex justify-end">
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink-600)]">
+                  {translate(locale, "Analytics period", "فترة التحليلات")}
+                  <select value={analyticsRangeDays} onChange={(event) => setAnalyticsRangeDays(Number(event.target.value) as 7 | 30 | 90)} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs shadow-[var(--shadow-clay)]">
+                    <option value={7}>{translate(locale, "Last 7 days", "آخر 7 أيام")}</option>
+                    <option value={30}>{translate(locale, "Last 30 days", "آخر 30 يومًا")}</option>
+                    <option value={90}>{translate(locale, "Last 90 days", "آخر 90 يومًا")}</option>
+                  </select>
+                </label>
+              </div>
               {salesCurrencies.length > 1 && (
                 <div className="mb-4 flex justify-end">
                   <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink-600)]">
@@ -894,7 +970,7 @@ export default function SellerWorkspacePage() {
               <div className="grid gap-5 lg:grid-cols-2">
                 <LineAreaChart
                   title={translate(locale, "Daily orders", "الطلبات اليومية")}
-                  description={translate(locale, "All eligible seller orders in the selected 30-day period.", "جميع طلبات البائع المؤهلة خلال فترة الثلاثين يومًا المحددة.")}
+                  description={translate(locale, "All eligible seller orders in the selected period.", "جميع طلبات البائع المؤهلة خلال الفترة المحددة.")}
                   data={sellerDailyOrders}
                   emptyLabel={emptyChartLabel}
                 />
@@ -923,6 +999,77 @@ export default function SellerWorkspacePage() {
                     emptyLabel={inventoryError ? translate(locale, "Inventory data is unavailable.", "بيانات المخزون غير متاحة.") : emptyChartLabel}
                   />
                 </div>
+              </div>
+            </section>
+
+            <section aria-label={translate(locale, "Store action center", "مركز مهام المتجر")} className="mt-7 rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,#f5eff8,#e4e8f3)] p-5 shadow-[0_14px_28px_rgba(35,62,81,.10),inset_0_2px_0_white] sm:p-6">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#817aa4]">{translate(locale, "DAILY OPERATIONS", "العمليات اليومية")}</p>
+                  <h2 className="mt-1 text-lg font-black text-[#34445a]">{translate(locale, "Needs your attention", "يحتاج إلى متابعتك")}</h2>
+                  <p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Order counts follow the selected analytics period; inventory and review queues reflect current store records.", "تتبع أعداد الطلبات فترة التحليلات المختارة؛ أما المخزون وقوائم المراجعة فتعكس سجلات المتجر الحالية.")}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Link href="/seller/orders" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f9e8ed,#efd5df)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#79576b]">{translate(locale, "Orders to fulfill", "طلبات بانتظار التجهيز")}</span><span className="text-lg" aria-hidden="true">📦</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#60475b]">{analyticsLoading || analyticsError ? "—" : formatMetric(fulfillmentOrderCount)}</p>
+                  <p className="mt-1 text-[11px] text-[#806d7b]">{translate(locale, "Confirmed, processing or ready to ship", "مؤكدة أو قيد التجهيز أو جاهزة للشحن")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#79576b]">{translate(locale, "Open orders", "فتح الطلبات")} ↗</span>
+                </Link>
+                <Link href="/seller/inventory" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f6f0d9,#e9e0b8)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#786b43]">{translate(locale, "Low-stock records", "سجلات المخزون المنخفض")}</span><span className="text-lg" aria-hidden="true">⚠️</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#665b35]">{inventoryLoading || inventoryError ? "—" : formatMetric(lowStockCount)}</p>
+                  <p className="mt-1 text-[11px] text-[#897b4b]">{translate(locale, "Inventory rows at or below reorder point", "سجلات وصلت إلى حد إعادة الطلب أو دونه")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#786b43]">{translate(locale, "Review inventory", "مراجعة المخزون")} ↗</span>
+                </Link>
+                <Link href="/seller/returns" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e9e5f7,#d8d2ee)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#625c83]">{translate(locale, "Return requests", "طلبات الإرجاع")}</span><span className="text-lg" aria-hidden="true">↶</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#494467]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.requestedReturns == null ? "—" : formatMetric(sellerAnalytics.metrics.requestedReturns)}</p>
+                  <p className="mt-1 text-[11px] text-[#716c91]">{translate(locale, "Waiting for seller review", "بانتظار مراجعة البائع")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#625c83]">{translate(locale, "Review returns", "مراجعة المرتجعات")} ↗</span>
+                </Link>
+                <Link href="/seller/products" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e0f1ed,#c9e4dc)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#4c7066]">{translate(locale, "Products awaiting approval", "منتجات بانتظار الموافقة")}</span><span className="text-lg" aria-hidden="true">🛍️</span></div>
+                  <p className="mt-3 text-3xl font-black tabular-nums text-[#365b50]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.pendingProducts == null ? "—" : formatMetric(sellerAnalytics.metrics.pendingProducts)}</p>
+                  <p className="mt-1 text-[11px] text-[#668d7f]">{translate(locale, "Submitted products not yet approved", "منتجات أُرسلت ولم تتم الموافقة عليها بعد")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#4c7066]">{translate(locale, "Manage products", "إدارة المنتجات")} ↗</span>
+                </Link>
+              </div>
+            </section>
+
+            <section aria-label={translate(locale, "Customer relationships and team", "علاقات العملاء والفريق")} className="mt-7 rounded-[1.8rem] border border-white/90 bg-[linear-gradient(145deg,#edf5f7,#dce8f0)] p-5 shadow-[0_14px_28px_rgba(35,62,81,.10),inset_0_2px_0_white] sm:p-6">
+              <div className="mb-4">
+                <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#718a99]">{translate(locale, "CUSTOMER RELATIONSHIPS", "علاقات العملاء")}</p>
+                <h2 className="mt-1 text-lg font-black text-[#34445a]">{translate(locale, "Stay close to your customers", "ابقَ قريباً من عملائك")}</h2>
+                <p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Open the existing customer-service and reputation workspaces. Counts are shown only where the analytics API provides them.", "افتح مساحات خدمة العملاء والسمعة الحالية. لا نعرض أعداداً إلا عندما توفرها واجهة التحليلات.")}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Link href="/seller/messages" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e4f0f6,#cfe2eb)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">✉️</span>
+                  <h3 className="mt-2 text-sm font-black text-[#38566b]">{translate(locale, "Customer messages", "رسائل العملاء")}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#718a99]">{translate(locale, "Read conversations and reply to customer enquiries.", "اقرأ المحادثات وأجب عن استفسارات العملاء.")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#426d83]">{translate(locale, "Open inbox", "فتح الرسائل")} ↗</span>
+                </Link>
+                <Link href="/seller/questions" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#eee9f8,#ddd5ee)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">❔</span>
+                  <h3 className="mt-2 text-sm font-black text-[#554d78]">{translate(locale, "Product questions", "أسئلة المنتجات")}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#817aa4]">{translate(locale, "Review questions and manage published answers.", "راجع الأسئلة وأدر الإجابات المنشورة.")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#625c83]">{translate(locale, "Answer questions", "الإجابة عن الأسئلة")} ↗</span>
+                </Link>
+                <Link href="/seller/reviews" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#f7f0dc,#eee3bd)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">⭐</span>
+                  <h3 className="mt-2 text-sm font-black text-[#74633b]">{translate(locale, "Store reputation", "سمعة المتجر")}</h3>
+                  <p className="mt-2 text-2xl font-black tabular-nums text-[#665b35]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.averageRating == null ? "—" : sellerAnalytics.metrics.averageRating.toFixed(1)} <span className="text-sm text-[#9b854e]">/ 5</span></p>
+                  <p className="mt-1 text-xs text-[#897b4b]">{analyticsLoading || analyticsError || sellerAnalytics?.metrics.reviewCount == null ? translate(locale, "Review count unavailable", "عدد التقييمات غير متاح") : formatMetric(sellerAnalytics.metrics.reviewCount) + " " + translate(locale, "customer reviews", "تقييمات العملاء")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#786b43]">{translate(locale, "Manage reviews", "إدارة التقييمات")} ↗</span>
+                </Link>
+                <Link href="/seller/staff" className="group rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#e2f1e9,#cfe7dc)] p-4 shadow-[0_7px_15px_rgba(75,65,92,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5">
+                  <span className="text-xl" aria-hidden="true">👥</span>
+                  <h3 className="mt-2 text-sm font-black text-[#426b59]">{translate(locale, "Team & permissions", "الفريق والصلاحيات")}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#668d7f]">{translate(locale, "Invite staff and manage store-scoped access.", "ادعُ أعضاء الفريق وأدر صلاحيات الوصول إلى المتجر.")}</p>
+                  <span className="mt-3 inline-block text-xs font-extrabold text-[#4c7066]">{translate(locale, "Manage team", "إدارة الفريق")} ↗</span>
+                </Link>
               </div>
             </section>
 

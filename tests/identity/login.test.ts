@@ -87,8 +87,8 @@ describe("password login service", () => {
     expect(verifyMock).toHaveBeenCalledWith("a-secure-password", "stored-hash");
     expect(prismaMock.$transaction).toHaveBeenCalledOnce();
     expect(txMock.user.updateMany).toHaveBeenCalledWith({
-      where: { id: "user-1", status: UserStatus.ACTIVE, passwordHash: "stored-hash", adminStatusReason: null },
-      data: { status: UserStatus.ACTIVE, adminStatusReason: null, lastLoginAt: now }
+      where: { id: "user-1", passwordHash: "stored-hash", OR: [{ status: UserStatus.ACTIVE }, { status: UserStatus.PENDING, adminStatusReason: null }] },
+      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
     });
     expect(txMock.userSession.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -163,12 +163,8 @@ describe("password login service", () => {
 
     expect(result).toMatchObject({ authenticated: true, userId: "user-pending" });
     expect(txMock.user.updateMany).toHaveBeenCalledWith({
-      where: { id: "user-pending", status: UserStatus.PENDING, passwordHash: "stored-hash", adminStatusReason: null },
-      data: { status: UserStatus.ACTIVE, adminStatusReason: null, lastLoginAt: now }
-    });
-    expect(txMock.verificationToken.updateMany).toHaveBeenCalledWith({
-      where: { userId: "user-pending", purpose: "EMAIL_VERIFICATION", consumedAt: null },
-      data: { consumedAt: now }
+      where: { id: "user-pending", passwordHash: "stored-hash", OR: [{ status: UserStatus.ACTIVE }, { status: UserStatus.PENDING, adminStatusReason: null }] },
+      data: { status: UserStatus.ACTIVE, lastLoginAt: now }
     });
     expect(txMock.userSession.create).toHaveBeenCalledOnce();
   });

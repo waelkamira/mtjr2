@@ -160,7 +160,7 @@ describe("identity HTTP routes", () => {
     expect(mocks.setSessionCookie).toHaveBeenCalledOnce();
   });
 
-  it("creates an active account and immediately issues an authenticated session", async () => {
+  it("creates an active account without issuing a session before sign-in", async () => {
     const response = await register(request("/api/auth/register", {
       email: "buyer@example.test",
       password: "A-correct-password",
@@ -171,15 +171,14 @@ describe("identity HTTP routes", () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. Signed in successfully.", signedIn: true });
+    expect(await response.json()).toEqual({ message: "Account created successfully. You can now sign in." });
     expect(mocks.verifyRegistrationChallenge).toHaveBeenCalledWith("valid-token", "127.0.0.1");
     expect(mocks.registerUser).toHaveBeenCalledOnce();
-    expect(mocks.createUserSession).toHaveBeenCalledWith("user-1", { ipAddress: "127.0.0.1", userAgent: "Vitest browser" });
-    expect(mocks.setSessionCookie).toHaveBeenCalledWith("session-token", new Date("2026-11-06T00:00:00.000Z"));
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });
 
-  it("returns a recoverable sign-in response when session creation fails after account creation", async () => {
-    mocks.createUserSession.mockRejectedValueOnce(new Error("session store unavailable"));
+  it("does not attempt session creation during registration", async () => {
     const response = await register(request("/api/auth/register", {
       email: "buyer@example.test",
       password: "A-correct-password",
@@ -190,14 +189,13 @@ describe("identity HTTP routes", () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. Sign in to continue.", signedIn: false });
+    expect(await response.json()).toEqual({ message: "Account created successfully. You can now sign in." });
     expect(mocks.registerUser).toHaveBeenCalledOnce();
     expect(mocks.setSessionCookie).not.toHaveBeenCalled();
     expect(mocks.revokeUserSession).not.toHaveBeenCalled();
   });
 
-  it("revokes the new session and returns a sign-in response when setting its cookie fails", async () => {
-    mocks.setSessionCookie.mockRejectedValueOnce(new Error("cookie unavailable"));
+  it("does not set a session cookie during registration", async () => {
     const response = await register(request("/api/auth/register", {
       email: "buyer@example.test",
       password: "A-correct-password",
@@ -208,31 +206,31 @@ describe("identity HTTP routes", () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. Sign in to continue.", signedIn: false });
-    expect(mocks.revokeUserSession).toHaveBeenCalledWith("session-token");
+    expect(await response.json()).toEqual({ message: "Account created successfully. You can now sign in." });
+    expect(mocks.revokeUserSession).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
   });
 
 
-  it("sends a verification email without issuing a session before email verification", async () => {
+  it("keeps registration independent from session issuance", async () => {
     const response = await register(request("/api/auth/register", {
       email: "buyer@example.test", password: "A-correct-password", accountType: "CUSTOMER",
       acceptedTerms: true, acceptedPrivacy: true, turnstileToken: "valid-token"
     }));
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ message: "Account created. Check your email to verify your address.", verificationRequired: true });
-    expect(mocks.sendVerificationEmail).toHaveBeenCalledWith("buyer@example.test", "v".repeat(43));
+    expect(await response.json()).toEqual({ message: "Account created successfully. You can now sign in." });
+    expect(mocks.sendVerificationEmail).not.toHaveBeenCalled();
     expect(mocks.createUserSession).not.toHaveBeenCalled();
     expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });
 
-  it("returns accepted when verification email delivery is unavailable", async () => {
-    mocks.sendVerificationEmail.mockRejectedValue(new Error("mail provider unavailable"));
+  it("does not depend on email delivery for account creation", async () => {
     const response = await register(request("/api/auth/register", {
       email: "buyer@example.test", password: "A-correct-password", accountType: "CUSTOMER",
       acceptedTerms: true, acceptedPrivacy: true, turnstileToken: "valid-token"
     }));
-    expect(response.status).toBe(202);
-    expect(await response.json()).toMatchObject({ verificationRequired: true });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ message: "Account created successfully. You can now sign in." });
     expect(mocks.createUserSession).not.toHaveBeenCalled();
     expect(mocks.setSessionCookie).not.toHaveBeenCalled();
   });

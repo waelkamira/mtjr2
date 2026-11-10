@@ -66,7 +66,7 @@ describe("store staff lifecycle", () => {
 
   it("requires the store owner for team management", async () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "manager-1" });
-    await expect(inviteStoreStaff({ storeId: "store-1", userId: "staff-1" })).rejects.toThrow(/Only the store owner can invite or revoke team members/i);
+    await expect(inviteStoreStaff({ storeId: "store-1", userId: "staff-1" })).rejects.toThrow(/Only the store owner can manage this store's team/i);
     expect(mocks.membershipUpsert).not.toHaveBeenCalled();
   });
 
@@ -100,7 +100,7 @@ describe("store staff lifecycle", () => {
     mocks.requireCurrentSession.mockResolvedValue({ userId: "manager-1" });
     mocks.userHasScopedPermission.mockResolvedValue(true);
     await expect(inviteStoreStaff({ storeId: "store-1", userId: "staff-1" }))
-      .rejects.toThrow(/Only the store owner can invite or revoke team members/i);
+      .rejects.toThrow(/Only the store owner can manage this store's team/i);
     expect(mocks.membershipUpsert).not.toHaveBeenCalled();
     expect(mocks.userHasScopedPermission).not.toHaveBeenCalled();
   });
