@@ -31,7 +31,7 @@ export default async function BrandDetailPage({ params, searchParams }: Props) {
     : q ? "relevance" : "newest";
   const result = await listDiscoverableProducts({ brandId: brand.id, q: q || undefined, page, limit: 24, sort, locale });
 
-  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
+  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-3 py-6 sm:px-5 sm:py-10 lg:px-10 lg:py-14">
     <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{translate(locale, "Marketplace brand", "علامة السوق التجارية")}</p>
     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{brand.name}</h1>
     {brand.description && <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">{brand.description}</p>}
