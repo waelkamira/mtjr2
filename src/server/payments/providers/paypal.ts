@@ -316,7 +316,9 @@ export async function createPayPalRefund(input: ProviderRefundInput): Promise<Pr
     { method: "GET" }, undefined, input.providerCredentials, input.providerEnvironment
   );
   if (order.id !== input.providerReference) throw new Error("PayPal returned a different order reference.");
-  const captures = order.purchase_units?.flatMap((unit) => unit.payments?.captures ?? []) ?? [];
+  const matchingUnits = order.purchase_units?.filter((unit) => unit.custom_id === input.paymentId && unit.reference_id === input.paymentId) ?? [];
+  if (matchingUnits.length !== 1) throw new Error("PayPal order does not belong to this exact Matjar payment.");
+  const captures = matchingUnits.flatMap((unit) => unit.payments?.captures ?? []);
   const capture = captures.find((item) => item.status === "COMPLETED" && item.id && item.amount?.currency_code === input.currencyCode);
   if (!capture?.id || !capture.amount?.value) throw new Error("A completed PayPal capture for this currency could not be found.");
   const capturedMinor = majorToMinor(capture.amount.value, input.currencyCode);
