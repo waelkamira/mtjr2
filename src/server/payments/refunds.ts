@@ -1,9 +1,12 @@
 import "server-only";
 
-import { AuditActorType, PaymentStatus, Prisma, RefundStatus, ReturnItemStatus, ReturnRequestStatus } from "@prisma/client";
+import { AuditActorType, PaymentProviderEnvironment, PaymentStatus, Prisma, RefundStatus, ReturnItemStatus, ReturnRequestStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requirePermission } from "@/server/identity/permission-guard";
+import { getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
+import { paypalPaymentProvider } from "@/server/payments/providers/paypal";
+import { stripePaymentProvider } from "@/server/payments/providers/stripe";
 
 const createSchema = z.object({ returnRequestId: z.string().trim().min(1).max(128) }).strict();
 const completeSchema = z.object({
@@ -12,7 +15,7 @@ const completeSchema = z.object({
 }).strict();
 
 const refundablePaymentStatuses = [PaymentStatus.SUCCEEDED, PaymentStatus.PARTIALLY_REFUNDED];
-const committedRefundStatuses = [RefundStatus.PENDING_MANUAL, RefundStatus.COMPLETED];
+const committedRefundStatuses = [RefundStatus.PENDING_MANUAL, RefundStatus.PROCESSING_PROVIDER, RefundStatus.PROVIDER_FAILED, RefundStatus.COMPLETED];
 
 function displayAmount(amountMinor: bigint, currencyCode: string, minorUnit: number) {
   const scale = BigInt(10) ** BigInt(minorUnit);
@@ -261,7 +264,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
       }
       throw new Error("This refund was already completed with a different external reference.");
     }
-    if (refund.status !== RefundStatus.PENDING_MANUAL) throw new Error("Only pending manual refunds can be completed.");
+    if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED) throw new Error("Only pending or provider-failed refunds can be manually completed after external reconciliation.");
     if (refund.payment.status !== PaymentStatus.SUCCEEDED && refund.payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
       throw new Error("The payment is not in a refundable state; reconcile it before completion.");
     }
@@ -296,4 +299,197 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
     });
     return { id: refund.id, status: RefundStatus.COMPLETED, paymentStatus: nextPaymentStatus, alreadyApplied: false };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+
+function refundAdapter(provider: string) {
+  if (provider === "paypal") return paypalPaymentProvider;
+  if (provider === "stripe") return stripePaymentProvider;
+  throw new Error("Automatic refunds are not supported for this payment provider.");
+}
+
+async function finalizeProviderRefund(refundId: string, providerRefundReference: string, actorId: string, now: Date) {
+  return prisma.$transaction(async (tx) => {
+    const refund = await tx.refund.findUnique({
+      where: { id: refundId },
+      select: {
+        id: true, orderId: true, paymentId: true, amountMinor: true, status: true,
+        payment: { select: { amountMinor: true, status: true } }
+      }
+    });
+    if (!refund) throw new Error("Refund not found.");
+    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
+    if (refund.status === RefundStatus.COMPLETED) return { id: refund.id, status: refund.status, alreadyApplied: true };
+    if (refund.status !== RefundStatus.PROCESSING_PROVIDER) throw new Error("The provider refund is no longer in a processing state.");
+
+    const completedBefore = await tx.refund.aggregate({
+      where: { paymentId: refund.paymentId, status: RefundStatus.COMPLETED },
+      _sum: { amountMinor: true }
+    });
+    const totalAfter = (completedBefore._sum.amountMinor ?? 0n) + refund.amountMinor;
+    if (totalAfter > refund.payment.amountMinor) throw new Error("Completed provider refunds would exceed the captured payment.");
+
+    const changed = await tx.refund.updateMany({
+      where: { id: refund.id, status: RefundStatus.PROCESSING_PROVIDER },
+      data: {
+        status: RefundStatus.COMPLETED,
+        externalReference: providerRefundReference,
+        completedAt: now,
+        completedById: actorId
+      }
+    });
+    if (changed.count !== 1) throw new Error("The refund changed while finalizing the provider result.");
+    const nextPaymentStatus = totalAfter >= refund.payment.amountMinor ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED;
+    const paymentChanged = await tx.payment.updateMany({
+      where: { id: refund.paymentId, status: { in: refundablePaymentStatuses } },
+      data: { status: nextPaymentStatus }
+    });
+    if (paymentChanged.count !== 1) throw new Error("The payment changed during provider refund finalization; reconcile it before retrying.");
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId,
+        action: "refund.provider_completed", resource: "refund", resourceId: refund.id,
+        scopeType: "ORDER", scopeId: refund.orderId, occurredAt: now,
+        metadata: { amountMinor: refund.amountMinor.toString(), providerRefundReference, paymentStatus: nextPaymentStatus, providerAction: "PROVIDER_API_CONFIRMED" }
+      }
+    });
+    return { id: refund.id, status: RefundStatus.COMPLETED, paymentStatus: nextPaymentStatus, alreadyApplied: false };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+/** Sends an explicitly requested, finance-authorized refund to the original provider. */
+export async function executeProviderRefund(refundIdInput: string, now = new Date()) {
+  const refundId = z.string().trim().min(1).max(128).parse(refundIdInput);
+  const actor = await requirePermission({ permissionKey: "payments:refund", now });
+  const claim = await prisma.$transaction(async (tx) => {
+    const refund = await tx.refund.findUnique({
+      where: { id: refundId },
+      select: {
+        id: true, orderId: true, paymentId: true, amountMinor: true, currencyCode: true,
+        status: true, payment: {
+          select: {
+            provider: true, providerReference: true, providerConfigId: true,
+            providerEnvironment: true, amountMinor: true, status: true
+          }
+        }
+      }
+    });
+    if (!refund) throw new Error("Refund not found.");
+    await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
+    if (refund.status === RefundStatus.COMPLETED) return { done: true as const, id: refund.id };
+    if (refund.status === RefundStatus.PROCESSING_PROVIDER) return { processing: true as const, id: refund.id, reference: null as string | null };
+    if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED) {
+      throw new Error("Only pending or retryable provider-failed refunds can be submitted.");
+    }
+    if (!refund.payment.providerReference) throw new Error("The original payment has no provider transaction reference.");
+    if (refund.payment.status !== PaymentStatus.SUCCEEDED && refund.payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
+      throw new Error("The original payment is not in a refundable state.");
+    }
+    const completedOrReserved = await tx.refund.aggregate({
+      where: { paymentId: refund.paymentId, status: { in: committedRefundStatuses }, id: { not: refund.id } },
+      _sum: { amountMinor: true }
+    });
+    if ((completedOrReserved._sum.amountMinor ?? 0n) + refund.amountMinor > refund.payment.amountMinor) {
+      throw new Error("This refund and other committed refunds exceed the captured payment balance.");
+    }
+    const changed = await tx.refund.updateMany({
+      where: { id: refund.id, status: refund.status },
+      data: { status: RefundStatus.PROCESSING_PROVIDER }
+    });
+    if (changed.count !== 1) throw new Error("The refund changed. Refresh and try again.");
+    await tx.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId,
+        action: "refund.provider_submitted", resource: "refund", resourceId: refund.id,
+        scopeType: "ORDER", scopeId: refund.orderId, occurredAt: now,
+        metadata: { amountMinor: refund.amountMinor.toString(), provider: refund.payment.provider, providerAction: "PROVIDER_API_REQUESTED" }
+      }
+    });
+    return {
+      done: false as const, processing: false as const, id: refund.id,
+      provider: refund.payment.provider, providerReference: refund.payment.providerReference,
+      amountMinor: refund.amountMinor.toString(), currencyCode: refund.currencyCode,
+      providerConfigId: refund.payment.providerConfigId,
+      providerEnvironment: refund.payment.providerEnvironment
+    };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+  if ("done" in claim && claim.done) return { id: claim.id, status: RefundStatus.COMPLETED, alreadyApplied: true };
+  if ("processing" in claim && claim.processing) return { id: claim.id, status: RefundStatus.PROCESSING_PROVIDER, alreadyApplied: true };
+
+  try {
+    const adapter = refundAdapter(claim.provider);
+    const snapshot = await getPaymentProviderRuntimeSnapshot(claim.id === "" ? "" : (await prisma.refund.findUniqueOrThrow({ where: { id: claim.id }, select: { paymentId: true } })).paymentId);
+    if (claim.providerConfigId && !snapshot) throw new Error("The managed payment credential snapshot is unavailable; automatic refund is blocked.");
+    if (snapshot && snapshot.provider !== claim.provider) throw new Error("The stored provider snapshot does not match the payment provider.");
+    const result = await adapter.createRefund({
+      providerReference: claim.providerReference,
+      amountMinor: claim.amountMinor,
+      currencyCode: claim.currencyCode,
+      idempotencyKey: `matjar-refund-${claim.id}`,
+      refundId: claim.id,
+      providerCredentials: snapshot?.credentials,
+      providerEnvironment: snapshot?.environment
+    });
+    if (result.status === "COMPLETED") return finalizeProviderRefund(claim.id, result.providerRefundReference, actor.userId, now);
+    await prisma.refund.updateMany({
+      where: { id: claim.id, status: RefundStatus.PROCESSING_PROVIDER },
+      data: { externalReference: result.providerRefundReference, ...(result.status === "FAILED" ? { status: RefundStatus.PROVIDER_FAILED } : {}) }
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorType: AuditActorType.USER, actorId: actor.userId,
+        action: result.status === "PROCESSING" ? "refund.provider_pending" : "refund.provider_failed",
+        resource: "refund", resourceId: claim.id, scopeType: "ORDER",
+        scopeId: (await prisma.refund.findUniqueOrThrow({ where: { id: claim.id }, select: { orderId: true } })).orderId,
+        occurredAt: now,
+        metadata: { providerRefundReference: result.providerRefundReference, providerStatus: result.status }
+      }
+    });
+    return { id: claim.id, status: result.status === "PROCESSING" ? RefundStatus.PROCESSING_PROVIDER : RefundStatus.PROVIDER_FAILED, providerRefundReference: result.providerRefundReference, alreadyApplied: false };
+  } catch (error) {
+    await prisma.refund.updateMany({
+      where: { id: claim.id, status: RefundStatus.PROCESSING_PROVIDER },
+      data: { status: RefundStatus.PROVIDER_FAILED }
+    });
+    throw error;
+  }
+}
+
+/** Reconciles an asynchronous refund using the provider's canonical refund resource. */
+export async function refreshProviderRefundStatus(refundIdInput: string, now = new Date()) {
+  const refundId = z.string().trim().min(1).max(128).parse(refundIdInput);
+  const actor = await requirePermission({ permissionKey: "payments:refund", now });
+  const refund = await prisma.refund.findUnique({
+    where: { id: refundId },
+    select: {
+      id: true, orderId: true, status: true, externalReference: true,
+      payment: { select: { id: true, provider: true, providerConfigId: true } }
+    }
+  });
+  if (!refund) throw new Error("Refund not found.");
+  if (refund.status === RefundStatus.COMPLETED) return { id: refund.id, status: refund.status, alreadyApplied: true };
+  if (refund.status !== RefundStatus.PROCESSING_PROVIDER || !refund.externalReference) {
+    throw new Error("Only provider refunds with a returned reference can be refreshed.");
+  }
+  const snapshot = await getPaymentProviderRuntimeSnapshot(refund.payment.id);
+  if (refund.payment.providerConfigId && !snapshot) throw new Error("The managed payment credential snapshot is unavailable.");
+  const adapter = refundAdapter(refund.payment.provider);
+  const status = await adapter.getRefundStatus(refund.externalReference, snapshot?.credentials, snapshot?.environment);
+  if (status === "COMPLETED") return finalizeProviderRefund(refund.id, refund.externalReference, actor.userId, now);
+  if (status === "FAILED") {
+    await prisma.refund.updateMany({
+      where: { id: refund.id, status: RefundStatus.PROCESSING_PROVIDER },
+      data: { status: RefundStatus.PROVIDER_FAILED }
+    });
+  }
+  await prisma.auditLog.create({
+    data: {
+      actorType: AuditActorType.USER, actorId: actor.userId,
+      action: status === "FAILED" ? "refund.provider_failed" : "refund.provider_checked",
+      resource: "refund", resourceId: refund.id, scopeType: "ORDER", scopeId: refund.orderId,
+      occurredAt: now, metadata: { providerRefundReference: refund.externalReference, providerStatus: status }
+    }
+  });
+  return { id: refund.id, status: status === "FAILED" ? RefundStatus.PROVIDER_FAILED : RefundStatus.PROCESSING_PROVIDER, alreadyApplied: false };
 }
