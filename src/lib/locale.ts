@@ -22,7 +22,7 @@ const statusArabic: Record<string, string> = {
   IN_TRANSIT: "في الطريق", OUT_FOR_DELIVERY: "خرج للتوصيل", DELIVERED: "تم التسليم",
   COMPLETED: "مكتمل", CANCELLED: "ملغي", CANCELED: "ملغي", RETURNED: "مرتجع",
   RETURN_REQUESTED: "طلب إرجاع", REFUNDED: "تم رد المبلغ", PARTIALLY_REFUNDED: "تم رد جزء من المبلغ",
-  PENDING_MANUAL: "بانتظار المعالجة اليدوية", REQUESTED: "مطلوب", RECEIVED: "مستلم",
+  PENDING_MANUAL: "بانتظار المعالجة اليدوية", PROCESSING_PROVIDER: "قيد التنفيذ لدى مزود الدفع", PROVIDER_FAILED: "تعذر تأكيد الرد لدى المزود", REQUESTED: "مطلوب", RECEIVED: "مستلم",
   INSPECTED: "تم الفحص", READY_FOR_PICKUP: "جاهز للاستلام", PICKED_UP: "تم الاستلام",
   EXPIRED: "منتهي الصلاحية", SUSPENDED: "موقوف", DISABLED: "معطل", OPEN: "مفتوح",
   CLOSED: "مغلق", RESOLVED: "تم الحل", UNRESOLVED: "لم يتم الحل", UNDER_REVIEW: "قيد المراجعة",
