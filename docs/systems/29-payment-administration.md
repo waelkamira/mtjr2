@@ -219,3 +219,5 @@ The earlier manual-only boundary above is historical. The current source now sup
 - Dual control: the finance operator who creates the refund request cannot execute the provider refund or confirm the external refund. A different account with `payments:refund` must perform the money-moving confirmation. This implements independent-operator approval; MFA step-up, configurable amount limits and policy-based escalation remain separate launch controls.
 
 - Provider retry retention: the first submission timestamp is stored. Automatic retry is blocked after a conservative 23-hour Stripe window and 44-day PayPal window; after expiry finance must reconcile the provider dashboard manually. This prevents replaying a deterministic key after the provider may have pruned it.
+
+- Retry attempts: Refund.providerAttempt increments only after the provider's canonical refund resource confirms a failed attempt; ambiguous requests retry only with the same idempotency key and within the persisted retention window. A returned provider reference is always refreshed before a new attempt is permitted.
