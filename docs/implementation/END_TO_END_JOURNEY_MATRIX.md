@@ -375,3 +375,12 @@ Policy localization/versioning, market/currency controls, seller-specific notifi
 
 
 | Seller application pending review | Seller workspace /seller → authenticated owner profile | GET /api/seller/stores → getSellerWorkspace → Seller | The workspace now returns the authenticated owner's complete submitted application profile (business/contact details, selling plan, social links, map coordinates and submitted timestamp). A dedicated pending-review state displays the submitted record and status instead of dropping the seller into the operational dashboard. | Implemented on main; runtime/browser verification intentionally deferred. |
+
+
+## Seller owner workbook export — 2026-11-10
+
+| Actor action | UI → API | Authorization and data boundary | Persistence / outcome | Verification |
+|---|---|---|---|---|
+| Store owner exports store workbook | `/seller/finance` → `GET /api/seller/stores/[storeId]/export` | Current MFA-compliant session; server loads Store and checks `Store.seller.ownerId === session.userId`. Staff and other sellers are denied; no user ID or ownership claim is accepted from the browser. | Generates private/no-store SpreadsheetML workbook with Store, Products, Variants and prices, and Inventory worksheets. Exact integer minor-unit amounts are preserved with market/currency/precision columns. Buyer PII, payment credentials and identity-document references are excluded. AuditLog records store scope and export row counts. | Source added on `feat/seller-finance-and-export-spec`; build, authorization tests, spreadsheet openability and browser download pending. |
+
+The first workbook intentionally exports store configuration, catalog, market prices and warehouse inventory only. It does not yet export order/customer data, commission statements or payout records. Large datasets are capped at 5,000 product rows and 5,000 inventory rows; the workbook contains a note about the cap.
