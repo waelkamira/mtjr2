@@ -301,6 +301,18 @@ enum MarketStatus {
   SUSPENDED
 }
 
+enum SellerPayoutMethodType {
+  IBAN
+  LOCAL_BANK_ACCOUNT
+}
+
+enum SellerPayoutMethodStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+  DISABLED
+}
+
 enum SellerStatus {
   PENDING
   ACTIVE
@@ -558,6 +570,7 @@ model Currency {
   adSpendLedgerEntries AdSpendLedgerEntry[]
   ledgerAccounts LedgerAccount[]
   journalEntries JournalEntry[]
+  sellerPayoutMethods SellerPayoutMethod[]
 
   shippingRates StoreShippingRate[]
 
@@ -627,8 +640,33 @@ model Seller {
   store       Store?
   commissionRules CommissionRule[]
   commissionTransactions CommissionTransaction[]
+  payoutMethods SellerPayoutMethod[]
 
   @@index([status, createdAt])
+}
+
+model SellerPayoutMethod {
+  id                   String                   @id @default(cuid())
+  sellerId             String
+  type                 SellerPayoutMethodType
+  accountHolderName    String                   @db.VarChar(160)
+  bankName             String                   @db.VarChar(160)
+  countryCode          String                   @db.VarChar(2)
+  currencyCode         String                   @db.Char(3)
+  encryptedDetails     String                   @db.Text
+  encryptionKeyVersion Int
+  accountLast4         String                   @db.VarChar(4)
+  fingerprint          String                   @db.VarChar(64)
+  status               SellerPayoutMethodStatus @default(PENDING_VERIFICATION)
+  isDefault            Boolean                  @default(false)
+  verifiedAt           DateTime?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  seller               Seller                   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  currency             Currency                 @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+
+  @@unique([sellerId, currencyCode, fingerprint])
+  @@index([sellerId, currencyCode, status, isDefault])
 }
 
 model Store {
