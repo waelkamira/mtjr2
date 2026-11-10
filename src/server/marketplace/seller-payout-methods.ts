@@ -66,6 +66,9 @@ export async function createSellerPayoutMethod(input: unknown) {
   if (data.type === SellerPayoutMethodType.IBAN && !validIban(accountIdentifier)) {
     throw new Error("Enter a valid IBAN. The checksum did not pass validation.");
   }
+  if (data.type === SellerPayoutMethodType.IBAN && accountIdentifier.slice(0, 2) !== data.countryCode) {
+    throw new Error("The IBAN country prefix must match the selected bank country.");
+  }
   if (data.type === SellerPayoutMethodType.LOCAL_BANK_ACCOUNT && !/^[A-Z0-9-]{6,34}$/.test(accountIdentifier)) {
     throw new Error("Enter a valid local bank account number.");
   }
