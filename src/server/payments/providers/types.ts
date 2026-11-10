@@ -60,6 +60,7 @@ export type ProviderRefundInput = {
   currencyCode: string;
   idempotencyKey: string;
   refundId: string;
+  paymentId: string;
   providerCredentials?: Record<string, string>;
   providerEnvironment?: "TEST" | "LIVE";
 };
