@@ -50,6 +50,7 @@ const safeSelect = {
   verifiedAt: true, createdAt: true, updatedAt: true
 } as const;
 
+/** Lists only the authenticated seller owner's non-disabled, masked payout destinations. */
 export async function listSellerPayoutMethods() {
   const { seller } = await requireSellerOwner();
   return prisma.sellerPayoutMethod.findMany({
@@ -59,6 +60,7 @@ export async function listSellerPayoutMethods() {
   });
 }
 
+/** Validates, fingerprints, encrypts and audit-logs a new seller bank destination. */
 export async function createSellerPayoutMethod(input: unknown) {
   const data = inputSchema.parse(input);
   const { actor, seller } = await requireSellerOwner();
@@ -137,6 +139,7 @@ export async function createSellerPayoutMethod(input: unknown) {
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
+/** Atomically selects an owned pending or verified bank destination as the default. */
 export async function setSellerPayoutMethodDefault(methodIdInput: string) {
   const methodId = z.string().trim().min(1).max(128).parse(methodIdInput);
   const { actor, seller } = await requireSellerOwner();
@@ -160,6 +163,7 @@ export async function setSellerPayoutMethodDefault(methodIdInput: string) {
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
+/** Soft-disables an owned bank destination and clears its encrypted account details. */
 export async function disableSellerPayoutMethod(methodIdInput: string) {
   const methodId = z.string().trim().min(1).max(128).parse(methodIdInput);
   const { actor, seller } = await requireSellerOwner();
