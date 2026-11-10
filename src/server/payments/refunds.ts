@@ -366,7 +366,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
       where: { id: refundId },
       select: {
         id: true, orderId: true, paymentId: true, amountMinor: true, currencyCode: true,
-        status: true, payment: {
+        status: true, externalReference: true, payment: {
           select: {
             provider: true, providerReference: true, providerConfigId: true,
             providerEnvironment: true, amountMinor: true, status: true
@@ -377,8 +377,8 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
     if (!refund) throw new Error("Refund not found.");
     await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${refund.orderId}, 0))`);
     if (refund.status === RefundStatus.COMPLETED) return { done: true as const, id: refund.id };
-    if (refund.status === RefundStatus.PROCESSING_PROVIDER) return { processing: true as const, id: refund.id, reference: null as string | null };
-    if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED) {
+    if (refund.status === RefundStatus.PROCESSING_PROVIDER && refund.externalReference) return { processing: true as const, id: refund.id, reference: refund.externalReference };
+    if (refund.status !== RefundStatus.PENDING_MANUAL && refund.status !== RefundStatus.PROVIDER_FAILED && refund.status !== RefundStatus.PROCESSING_PROVIDER) {
       throw new Error("Only pending or retryable provider-failed refunds can be submitted.");
     }
     if (!refund.payment.providerReference) throw new Error("The original payment has no provider transaction reference.");
