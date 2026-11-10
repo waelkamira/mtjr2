@@ -1,4 +1,0 @@
-ALTER TABLE "Store"
-  ADD COLUMN "description" VARCHAR(2000),
-  ADD COLUMN "logoUrl" VARCHAR(2048),
-  ADD COLUMN "bannerUrl" VARCHAR(2048);
