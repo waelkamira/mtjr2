@@ -28,7 +28,7 @@ export default async function StoreDetailPage({ params, searchParams }: Props) {
     ? search.sort
     : q ? "relevance" : "newest";
   const result = await listDiscoverableProducts({ storeId: store.id, q: q || undefined, page, limit: 24, sort, locale });
-  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
+  return <main className="mx-auto min-h-[65vh] max-w-[1440px] px-3 py-6 sm:px-5 sm:py-10 lg:px-10 lg:py-14">
     <section className="overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_12px_30px_rgba(34,55,72,.09)]">
       <div className="relative h-36 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] sm:h-52">
         {store.bannerUrl && <img src={store.bannerUrl} alt="" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" />}
