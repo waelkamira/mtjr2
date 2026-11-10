@@ -55,7 +55,10 @@ export default function SellerPayoutReviewPage() {
     } finally { setLoading(false); }
   }, [page, status, t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   function updateDraft(id: string, key: keyof Draft, value: string) {
     setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? emptyDraft), [key]: value } }));
