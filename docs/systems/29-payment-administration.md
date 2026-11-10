@@ -201,3 +201,17 @@
 3. إعداد مفتاح vault مستقل 32-byte hex خارج Git وPostgreSQL backups، وإدخال بيانات PayPal Sandbox وWebhook من لوحة Super Admin.
 4. تنفيذ رحلة Sandbox كاملة: إنشاء الطلب، موافقة المشتري، capture من الخادم، Webhook مكرر، والتحقق من أن الطلب والدفع لا يتكرران.
 5. بعد ذلك فقط، بدء حزمة مستقلة لرد الأموال عبر المزود وربطها بقيود المحاسبة والتسوية، مع idempotency ومراجعة مالية مزدوجة.
+
+
+## 14. Provider refund execution — implementation tranche
+
+The earlier manual-only boundary above is historical. The current source now supports explicit finance-authorized provider refunds for Stripe and PayPal:
+
+- The finance page can submit a refund to the same provider that captured the original payment. Provider credentials are resolved from the immutable encrypted payment snapshot; a managed payment without its snapshot is blocked. Legacy payments use their existing server-side environment configuration.
+- Stripe resolves the original Checkout Session to its paid PaymentIntent and creates a partial/full refund using a stable idempotency key. PayPal resolves the exact Matjar Orders v2 order to its completed capture and submits a capture refund with a stable PayPal request ID.
+- The refund state machine now includes PENDING_MANUAL, PROCESSING_PROVIDER, PROVIDER_FAILED, and COMPLETED. Provider pending responses are persisted with the provider refund reference and can be refreshed against the provider's canonical refund resource.
+- A network interruption before the provider reference is persisted can be resumed with the same deterministic idempotency key. A provider-failed/ambiguous result is not silently marked complete; finance must reconcile it or use the manual external-reference confirmation after checking the provider dashboard.
+- Only a provider-confirmed completed response changes the Refund to COMPLETED and updates Payment to PARTIALLY_REFUNDED or REFUNDED. Provider calls occur outside the PostgreSQL transaction; claim/reservation, payment caps, finalization, audit records and idempotency guards are database-enforced.
+- API: POST /api/admin/refunds/[refundId] with action=execute or action=refresh; existing PATCH remains for externally completed manual refunds.
+- Migration: 20261110130000_provider_refund_execution adds the provider processing/failure states to RefundStatus.
+- Remaining external verification: apply migrations, run Stripe/PayPal Sandbox refunds including duplicate/retry/pending cases, and verify the resulting PostgreSQL state. No live refund or production credential was used in this implementation session.
