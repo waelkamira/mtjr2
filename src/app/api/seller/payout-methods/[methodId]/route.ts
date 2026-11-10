@@ -28,7 +28,7 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
 }
 
 export async function DELETE(request: Request, context: RouteContext): Promise<Response> {
-  const rejected = validateIdentityMutationRequest(request);
+  const rejected = validateIdentityMutationOrigin(request);
   if (rejected) return rejected;
   try {
     const { methodId } = await context.params;
