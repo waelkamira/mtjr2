@@ -122,6 +122,7 @@ export default function SellerWorkspacePage() {
   const [recentOrdersError, setRecentOrdersError] = useState("");
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState("");
+  const [analyticsRangeDays, setAnalyticsRangeDays] = useState<7 | 30 | 90>(30);
   const [selectedSalesCurrency, setSelectedSalesCurrency] = useState("");
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingMarketId, setShippingMarketId] = useState("");
@@ -285,7 +286,16 @@ export default function SellerWorkspacePage() {
       setRecentOrders([]);
       setAnalyticsLoading(true);
       setAnalyticsError("");
-      return fetch(`/api/seller/analytics?storeId=${encodeURIComponent(selectedStoreId)}`, { cache: "no-store" })
+      const rangeTo = new Date();
+      rangeTo.setUTCHours(0, 0, 0, 0);
+      const rangeFrom = new Date(rangeTo);
+      rangeFrom.setUTCDate(rangeFrom.getUTCDate() - (analyticsRangeDays - 1));
+      const analyticsParams = new URLSearchParams({
+        storeId: selectedStoreId,
+        from: rangeFrom.toISOString().slice(0, 10),
+        to: rangeTo.toISOString().slice(0, 10)
+      });
+      return fetch(`/api/seller/analytics?${analyticsParams.toString()}`, { cache: "no-store" })
         .then((response) => readJson<SellerAnalytics>(response))
         .then((data) => {
           if (!active) return;
@@ -311,7 +321,7 @@ export default function SellerWorkspacePage() {
         .finally(() => { if (active) setAnalyticsLoading(false); });
     });
     return () => { active = false; };
-  }, [locale, selectedStoreId]);
+  }, [locale, selectedStoreId, analyticsRangeDays]);
 
   useEffect(() => {
     let active = true;
@@ -922,6 +932,16 @@ export default function SellerWorkspacePage() {
               </div>
               {analyticsError && <p role="status" className="mb-4 rounded-xl border border-[var(--color-blush-300)] bg-[var(--color-blush-50)] p-3 text-xs text-[var(--color-blush-800)]">{translate(locale, "Store analytics are temporarily unavailable for this account or store.", "تحليلات المتجر غير متاحة مؤقتًا لهذا الحساب أو المتجر.")}</p>}
               {inventoryError && <p role="status" className="mb-4 rounded-xl bg-[var(--background)] p-3 text-xs text-[var(--muted)]">{translate(locale, "Inventory charts are temporarily unavailable.", "مخططات المخزون غير متاحة مؤقتًا.")}</p>}
+              <div className="mb-4 flex justify-end">
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink-600)]">
+                  {translate(locale, "Analytics period", "فترة التحليلات")}
+                  <select value={analyticsRangeDays} onChange={(event) => setAnalyticsRangeDays(Number(event.target.value) as 7 | 30 | 90)} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs shadow-[var(--shadow-clay)]">
+                    <option value={7}>{translate(locale, "Last 7 days", "آخر 7 أيام")}</option>
+                    <option value={30}>{translate(locale, "Last 30 days", "آخر 30 يومًا")}</option>
+                    <option value={90}>{translate(locale, "Last 90 days", "آخر 90 يومًا")}</option>
+                  </select>
+                </label>
+              </div>
               {salesCurrencies.length > 1 && (
                 <div className="mb-4 flex justify-end">
                   <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink-600)]">
@@ -935,7 +955,7 @@ export default function SellerWorkspacePage() {
               <div className="grid gap-5 lg:grid-cols-2">
                 <LineAreaChart
                   title={translate(locale, "Daily orders", "الطلبات اليومية")}
-                  description={translate(locale, "All eligible seller orders in the selected 30-day period.", "جميع طلبات البائع المؤهلة خلال فترة الثلاثين يومًا المحددة.")}
+                  description={translate(locale, "All eligible seller orders in the selected period.", "جميع طلبات البائع المؤهلة خلال الفترة المحددة.")}
                   data={sellerDailyOrders}
                   emptyLabel={emptyChartLabel}
                 />
