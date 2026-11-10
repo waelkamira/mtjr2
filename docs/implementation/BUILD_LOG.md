@@ -4419,3 +4419,8 @@ The platform account policy is now explicit: email verification is not required 
 - Updated product image preview to use dynamic viewport units and anchored the floating AI assistant within mobile safe areas.
 - Expanded docs/design/RESPONSIVE_AUDIT.md with the specific routes and components touched.
 - Still not browser-verified: no screenshots, interaction sweep, RTL/LTR viewport matrix, typecheck, build or automated tests have been run.
+## 2026-11-10 — Responsive fixes for seller inbox, notifications and catalog controls
+- Seller inbox: active-store selector now shrinks on phones; conversation list has a bounded scroll area below desktop widths so it does not push the active conversation far down the page.
+- Notifications: preference labels and channel toggles wrap safely; card padding and page gutters adapt to phone widths.
+- Catalog list controls: search, sort and submit controls can wrap instead of competing for a single narrow row.
+- Re-reviewed the remaining fixed-minimum-width data tables: each is placed inside an explicit horizontal scroll container, so the page itself is not intended to scroll sideways.
