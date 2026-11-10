@@ -82,7 +82,7 @@ export default function AdminBrandsPage() {
     } finally { setBusy(false); }
   }
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Catalog operations", "عمليات الكتالوج")}</p>
     <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Brand management", "إدارة العلامات التجارية")}</h1>
     <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Create and maintain brand identities, public visibility and product associations. Archiving preserves historical product references.", "أنشئ العلامات التجارية وأدر هويتها وظهورها العام وارتباطاتها بالمنتجات. تحافظ الأرشفة على المراجع التاريخية للمنتجات.")}</p>
