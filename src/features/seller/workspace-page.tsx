@@ -897,7 +897,7 @@ export default function SellerWorkspacePage() {
                   {analyticsLoading && <span role="status" className="rounded-full bg-[var(--color-lavender-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-lavender-800)]">{translate(locale, "Refreshing store analytics…", "جارٍ تحديث تحليلات المتجر…")}</span>}
                   <button
                     type="button"
-                    disabled={!selectedStore || !sellerAnalytics || analyticsLoading || Boolean(analyticsError)}
+                    disabled={!selectedStore || !sellerAnalytics || analyticsLoading || Boolean(analyticsError) || (sellerAnalytics.permissions.inventory && (inventoryLoading || Boolean(inventoryError))) || (sellerAnalytics.permissions.orders && (recentOrdersLoading || Boolean(recentOrdersError)))}
                     onClick={() => {
                       if (!selectedStore || !sellerAnalytics) return;
                       const canReadStoreDetails = sellerAnalytics.permissions.store;
