@@ -52,12 +52,12 @@ const groups: Array<{
 ];
 
 const toneClasses: Record<Tone, string> = {
-  lavender: "bg-[var(--color-lavender-100)] text-[var(--color-lavender-800)]",
-  mint: "bg-[var(--color-mint-100)] text-[var(--color-mint-800)]",
-  peach: "bg-[var(--color-peach-100)] text-[var(--color-peach-800)]",
-  butter: "bg-[var(--color-butter-100)] text-[var(--color-butter-800)]",
-  blush: "bg-[var(--color-blush-100)] text-[var(--color-blush-800)]",
-  sky: "bg-[var(--color-sky-100)] text-[var(--color-sky-700)]"
+  lavender: "bg-[#eeeaf7] text-[#6e5b9c]",
+  mint: "bg-[#eeeaf7] text-[#6e5b9c]",
+  peach: "bg-[#eeeaf7] text-[#6e5b9c]",
+  butter: "bg-[#eeeaf7] text-[#6e5b9c]",
+  blush: "bg-[#eeeaf7] text-[#6e5b9c]",
+  sky: "bg-[#eeeaf7] text-[#6e5b9c]"
 };
 
 function SellerIcon({ name }: { name: IconName }) {
@@ -120,30 +120,30 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="relative z-30 hidden h-screen w-[280px] shrink-0 flex-col overflow-hidden border-e border-[#263b52] bg-[#1d3248] text-[#edf4f7] shadow-[8px_0_24px_rgba(12,28,45,.16)] lg:sticky lg:top-0 lg:flex">
-        <div className="border-b border-white/10 px-6 py-6">
+      <aside className="seller-sidebar relative z-30 hidden h-screen w-[272px] shrink-0 flex-col overflow-hidden border-e border-[#e9e5f0] bg-[#fbfaff] text-[#343044] shadow-[8px_0_24px_rgba(48,38,78,.05)] lg:sticky lg:top-0 lg:flex">
+        <div className="border-b border-[#eeeaf4] px-6 py-6">
           <Link href="/seller" className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-2xl bg-[var(--color-lavender-100)] text-[var(--color-lavender-800)] shadow-[var(--shadow-clay)]">
+            <span className="grid size-11 place-items-center rounded-2xl bg-[#eeeaf7] text-[#705da1] shadow-[0_5px_12px_rgba(91,72,137,.10)]">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" /><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" /></svg>
             </span>
             <span>
-              <span className="block text-[22px] font-black tracking-tight text-[#f0f6fa]">matjar<span className="text-[var(--orange)]">.</span></span>
-              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.18em] text-[#a9c0cf]">{translate(locale, "Seller studio", "استوديو البائع")}</span>
+              <span className="block text-[22px] font-black tracking-tight text-[#302b40]">matjar<span className="text-[var(--orange)]">.</span></span>
+              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.18em] text-[#958da7]">{translate(locale, "Seller studio", "استوديو البائع")}</span>
             </span>
           </Link>
         </div>
 
-        <div className="mx-4 mt-4 flex shrink-0 items-center gap-3 rounded-[1.25rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-3 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
-          <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[1.25rem] border border-white/35 bg-[linear-gradient(145deg,#d8edf0,#9fc8d2)] text-xl font-black text-[#29475b] shadow-[0_7px_16px_rgba(9,24,38,.2),inset_0_2px_0_white]">
+        <div className="mx-4 mt-4 flex shrink-0 items-center gap-3 rounded-[1.25rem] border border-[#ece8f3] bg-white p-3 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
+          <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[1.25rem] border border-[#e6e0f0] bg-[#eeeaf7] text-xl font-black text-[#705da1] shadow-[inset_0_1px_0_white]">
             {store?.logoUrl ? <img src={store.logoUrl} alt="" className="size-full object-cover" /> : (store?.name ?? "M").trim().slice(0, 1).toLocaleUpperCase()}
           </span>
-          <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-white">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block truncate text-[10px] leading-4 text-[#b3c6d2]">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
+          <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[#383247]">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block truncate text-[10px] leading-4 text-[#8b849a]">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
         </div>
 
-        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-4 py-5">
+        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-sidebar-nav min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-4 py-5">
           {groups.map((group) => (
             <section key={group.title}>
-              <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#8fa9ba]">{translate(locale, group.title, group.ar)}</h2>
+              <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#9a93a8]">{translate(locale, group.title, group.ar)}</h2>
               <div className="space-y-1">
                 {group.links.map((link) => {
                   const active = link.href === "/seller"
@@ -152,13 +152,13 @@ export default function SellerNavigation() {
                   return (
                     <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
                       className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all duration-200 ${active
-                        ? "bg-[linear-gradient(135deg,#9fd5d4,#78b8bd)] font-extrabold text-[#17374b] ring-1 ring-white/70 shadow-[0_8px_18px_rgba(5,17,31,.25),inset_0_2px_0_rgba(255,255,255,.8)]"
-                        : "text-[#d1e0e8] hover:bg-white/10 hover:text-white"}`}>
+                        ? "bg-[#eeeaf7] font-extrabold text-[#67538f] ring-1 ring-[#e5def1] shadow-[inset_3px_0_0_#806bb0]"
+                        : "text-[#d1e0e8] hover:bg-white/10 hover:text-[#383247]"}`}>
                       <span className={`grid size-9 shrink-0 place-items-center rounded-xl transition-transform group-hover:-translate-y-0.5 ${toneClasses[link.tone]}`}>
                         <SellerIcon name={link.icon} />
                       </span>
                       <span>{translate(locale, link.label, link.ar)}</span>
-                      {active && <span className="ms-auto size-2 rounded-full bg-[#f2c66d] shadow-[0_0_12px_rgba(242,198,109,.55)]" />}
+                      {active && <span className="ms-auto size-2 rounded-full bg-[#806bb0] shadow-[0_0_8px_rgba(128,107,176,.25)]" />}
                     </Link>
                   );
                 })}
@@ -167,33 +167,33 @@ export default function SellerNavigation() {
           ))}
         </nav>
 
-        <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-white/15 bg-[linear-gradient(145deg,#314c65,#263d55)] p-4 shadow-[8px_10px_20px_rgba(5,17,31,.25),inset_0_1px_0_rgba(255,255,255,.16)]">
-          <span className="grid size-10 place-items-center rounded-xl border border-white/20 bg-[#9fd5d4]/20 text-lg text-[#a9dcd8] shadow-[inset_0_1px_0_rgba(255,255,255,.2)]" aria-hidden="true">✦</span>
-          <p className="mt-3 text-sm font-extrabold text-white">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
-          <p className="mt-1 text-[10px] leading-4 text-[#b3c6d2]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
-          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-white/25 bg-[linear-gradient(135deg,#9fd5d4,#78b8bd)] px-3 py-2 text-[11px] font-extrabold text-[#17374b] shadow-[0_5px_12px_rgba(5,17,31,.22),inset_0_1px_0_white]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
+        <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-[#ece8f3] bg-white p-4 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
+          <span className="grid size-10 place-items-center rounded-xl border border-[#e8e2f1] bg-[#f2eff8] text-lg text-[#806bb0] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
+          <p className="mt-3 text-sm font-extrabold text-[#383247]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
+          <p className="mt-1 text-[10px] leading-4 text-[#8b849a]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
+          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-[#e4ddef] bg-[#eeeaf7] px-3 py-2 text-[11px] font-extrabold text-[#67538f] shadow-[0_3px_8px_rgba(91,72,137,.08)]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
         </div>
-        <div className="shrink-0 border-t border-white/10 p-4">
-          <Link href="/" className="flex items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-[#eaf3f7] shadow-[6px_7px_16px_rgba(5,17,31,.18),inset_0_1px_0_rgba(255,255,255,.12)] transition hover:shadow-[var(--shadow-clay)]">
+        <div className="shrink-0 border-t border-[#eeeaf4] p-4">
+          <Link href="/" className="flex items-center justify-between rounded-2xl border border-[#ece8f3] bg-white px-4 py-3 text-sm font-semibold text-[#5c536d] shadow-[0_3px_10px_rgba(48,38,78,.05)] transition hover:shadow-[var(--shadow-clay)]">
             <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
           </Link>
-          <p className="mt-3 px-2 text-[10px] leading-5 text-[#9fb5c4]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
+          <p className="mt-3 px-2 text-[10px] leading-5 text-[#948da2]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
         </div>
       </aside>
 
-      <div className="border-b border-white/10 bg-[linear-gradient(180deg,#20364d,#172b40)] px-4 py-3 text-[#eaf3f7] shadow-[0_8px_22px_rgba(74,75,112,.10)] lg:hidden">
+      <div className="border-b border-[#eeeaf4] bg-[#fbfaff] px-4 py-3 text-[#343044] shadow-[0_4px_14px_rgba(48,38,78,.04)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#f0f6fa]">
+          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#302b40]">
             <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
-          <Link href="/" className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
+          <Link href="/" className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-[#383247] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
         </div>
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex max-h-28 flex-wrap gap-2 overflow-x-hidden overflow-y-auto overscroll-contain pb-1">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex min-w-0 shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-[linear-gradient(135deg,#9fd5d4,#78b8bd)] text-[#17374b] ring-1 ring-white/70 shadow-[0_5px_14px_rgba(5,17,31,.22),inset_0_2px_0_white]" : "bg-white/10 text-[#d1e0e8] hover:bg-white/20"}`}>
+              className={`flex min-w-0 shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-[#eeeaf7] text-[#67538f] ring-1 ring-[#e5def1] shadow-[0_3px_10px_rgba(91,72,137,.08)]" : "bg-white/10 text-[#686276] hover:bg-[#f1eef7]"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
