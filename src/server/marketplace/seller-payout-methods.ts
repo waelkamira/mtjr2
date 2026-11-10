@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { PermissionDeniedError } from "@/server/identity/access-errors";
-import { encryptSellerPayoutDetails, fingerprintSellerPayoutAccount } from "@/server/finance/seller-payout-encryption";
+import { decryptSellerPayoutDetails, encryptSellerPayoutDetails, fingerprintSellerPayoutAccount } from "@/server/finance/seller-payout-encryption";
 import { isValidSellerIban } from "@/server/finance/iban-validation";
 
 const inputSchema = z.object({
@@ -42,11 +42,15 @@ const safeSelect = {
 /** Lists only the authenticated seller owner's non-disabled, masked payout destinations. */
 export async function listSellerPayoutMethods() {
   const { seller } = await requireSellerOwner();
-  return prisma.sellerPayoutMethod.findMany({
+  const methods = await prisma.sellerPayoutMethod.findMany({
     where: { sellerId: seller.id, status: { not: SellerPayoutMethodStatus.DISABLED } },
     orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
-    select: safeSelect
+    select: { ...safeSelect, encryptedDetails: true, encryptionKeyVersion: true }
   });
+  return methods.map(({ encryptedDetails, encryptionKeyVersion, ...method }) => ({
+    ...method,
+    accountHolderName: decryptSellerPayoutDetails(encryptedDetails, encryptionKeyVersion).accountHolderName
+  }));
 }
 
 /** Validates, fingerprints, encrypts and audit-logs a new seller bank destination. */
@@ -78,6 +82,7 @@ export async function createSellerPayoutMethod(input: unknown) {
   const fingerprint = fingerprintSellerPayoutAccount(seller.id, data.countryCode, accountIdentifier);
   const encrypted = encryptSellerPayoutDetails({
     accountIdentifier,
+    accountHolderName: data.accountHolderName,
     ...(data.routingCode ? { routingCode: data.routingCode.trim().toUpperCase() } : {})
   });
 
@@ -101,7 +106,7 @@ export async function createSellerPayoutMethod(input: unknown) {
     }
     const methodData = {
       type: data.type,
-      accountHolderName: data.accountHolderName,
+      accountHolderName: "Protected account holder",
       bankName: data.bankName,
       countryCode: data.countryCode,
       currencyCode: data.currencyCode,
@@ -128,7 +133,7 @@ export async function createSellerPayoutMethod(input: unknown) {
         metadata: { type: method.type, countryCode: method.countryCode, currencyCode: method.currencyCode, accountLast4: method.accountLast4 }
       }
     });
-    return method;
+    return { ...method, accountHolderName: data.accountHolderName };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
