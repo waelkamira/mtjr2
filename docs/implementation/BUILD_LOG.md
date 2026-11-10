@@ -4432,3 +4432,4 @@ The platform account policy is now explicit: email verification is not required 
 - Automated tests intentionally deferred per the current development priority. Build/runtime verification remains pending and this slice is not marked launch-ready.
 - Added 7/30/90-day analytics controls to the seller dashboard using the existing date-bounded, store-scoped analytics API (maximum 90 days); gross sales remain grouped by currency without FX conversion.
 - Updated the shared seller topbar to identify the bank-account route correctly.
+- Added a seller daily-operations action center with store-scoped live counts for fulfillment-stage orders, low-stock inventory records, requested returns and products awaiting approval. Each tile links to the existing seller workflow; order counts explicitly follow the selected analytics period, while inventory and review queues reflect current records. No new API, schema or migration was added.
