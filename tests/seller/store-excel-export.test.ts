@@ -59,5 +59,6 @@ describe("seller store Excel export", () => {
     expect(xml).toContain('ss:Name="Inventory"');
     expect(xml).toContain('ss:Name="Recent orders"');
     expect(xml).toContain("A&amp;B &lt;Market&gt;");
+    expect(xml).not.toMatch(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]/);
   });
 });
