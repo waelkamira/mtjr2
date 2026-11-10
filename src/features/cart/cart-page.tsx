@@ -128,7 +128,7 @@ export default function CartPage() {
           <Link href="/" className="text-sm text-[var(--color-ink-600)]">{t("Continue shopping", "متابعة التسوق")}</Link>
         </div>
       </header>
-      <div className="mx-auto max-w-6xl px-5 py-10 md:py-14">
+      <div className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-10 md:py-14">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Your selection", "اختياراتك")}</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink-950)]">{t("Shopping cart", "سلة التسوق")}</h1></div>
           <p className="text-sm text-[var(--muted)]">{itemCount} {itemCount === 1 ? t("item", "منتج") : t("items", "منتجات")}</p>
