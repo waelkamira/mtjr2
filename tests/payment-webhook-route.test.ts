@@ -3,12 +3,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   getPaymentProvider: vi.fn(),
   getPaymentProviderAdapter: vi.fn(),
+  paymentFindFirst: vi.fn(),
+  getPaymentProviderRuntimeSnapshot: vi.fn(),
+  getActiveProviderCredentialsForWebhook: vi.fn(),
+  getPaymentProviderRuntimeEnvironment: vi.fn(),
   processVerifiedPaymentEvent: vi.fn(),
   verifyWebhook: vi.fn()
 }));
 
 vi.mock("@/server/payments/providers/registry", () => ({ getPaymentProvider: mocks.getPaymentProvider, getPaymentProviderAdapter: mocks.getPaymentProviderAdapter }));
 vi.mock("@/server/payments/payments", () => ({ processVerifiedPaymentEvent: mocks.processVerifiedPaymentEvent }));
+vi.mock("@/lib/db/prisma", () => ({ prisma: { payment: { findFirst: mocks.paymentFindFirst } } }));
+vi.mock("@/server/admin/payment-providers", () => ({
+  getPaymentProviderRuntimeSnapshot: mocks.getPaymentProviderRuntimeSnapshot,
+  getActiveProviderCredentialsForWebhook: mocks.getActiveProviderCredentialsForWebhook,
+  getPaymentProviderRuntimeEnvironment: mocks.getPaymentProviderRuntimeEnvironment
+}));
 
 import { POST } from "@/app/api/webhooks/payments/[provider]/route";
 
@@ -33,6 +43,10 @@ describe("payment webhook route retry behavior", () => {
     };
     mocks.getPaymentProvider.mockReturnValue(provider);
     mocks.getPaymentProviderAdapter.mockReturnValue(provider);
+    mocks.paymentFindFirst.mockResolvedValue(null);
+    mocks.getPaymentProviderRuntimeSnapshot.mockResolvedValue(null);
+    mocks.getActiveProviderCredentialsForWebhook.mockResolvedValue(null);
+    mocks.getPaymentProviderRuntimeEnvironment.mockReturnValue("test");
     mocks.processVerifiedPaymentEvent.mockResolvedValue({ accepted: true, duplicate: false });
   });
 
