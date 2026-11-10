@@ -26,7 +26,7 @@ describe("seller store Excel export", () => {
 
     downloadSellerStoreWorkbook({
       store: {
-        storeNumber: "1001", name: "A&B <Market>", slug: "market", status: "ACTIVE",
+        storeNumber: "1001", name: "A&B <Market>\u0001", slug: "market", status: "ACTIVE",
         description: null, publicPhone: null, publicAddress: null,
         shippingContactName: null, shippingPhone: null, shippingAddressLine1: null,
         shippingAddressLine2: null, shippingCity: null, shippingRegion: null,
@@ -59,6 +59,6 @@ describe("seller store Excel export", () => {
     expect(xml).toContain('ss:Name="Inventory"');
     expect(xml).toContain('ss:Name="Recent orders"');
     expect(xml).toContain("A&amp;B &lt;Market&gt;");
-    expect(xml).not.toMatch(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]/);
+    expect(xml).not.toContain(String.fromCharCode(1));
   });
 });
