@@ -157,3 +157,21 @@
 - `listLedgerAccountEntries` provides cursor-paginated immutable account activity. This is a low-level internal primitive only; no seller balance, payout, withdrawal, or API is exposed yet.
 - **Intentionally not connected to commission/payment/refund flows:** seller payable recognition timing, shipment/delivery/return-window policy, tax/shipping ownership, chargebacks, clearing accounts and negative-balance handling are not approved. No financial balance is calculated from the new tables until those policies and account mappings are agreed and implemented.
 - Required next: define chart-of-accounts codes and currency bootstrap; approve the marketplace accounting policy; then add source-specific journal posting for captured payment, seller payable release, refunds and chargebacks with idempotent source keys and immutable reversals. Only after that build seller statements and payout methods/requests.
+
+
+## 2026-11-10 — Owner-only seller workbook export (source added; verification pending)
+
+- Added `GET /api/seller/stores/[storeId]/export` as an owner-only export endpoint. It resolves the actor from the current HttpOnly session and checks the store's actual Seller.ownerId; a supplied store ID never grants access by itself.
+- Produces an Excel-compatible SpreadsheetML workbook (`.xls`) with separate `Store`, `Products`, `Variants and prices`, and `Inventory` sheets. Amounts remain exact integer minor units and each price row carries its market, currency and currency precision.
+- Includes store public profile and private dispatch-origin fields for the verified owner, product/variant identifiers and statuses, per-market variant prices, and warehouse-level on-hand/reserved/quarantined/reorder quantities.
+- Deliberately excludes buyer personal information, payment credentials, private identity-document references and provider secrets. Export is audited with row counts only and is marked private/no-store.
+- Export is bounded to 5,000 products and 5,000 inventory records per workbook; the workbook notes this limit. This first export does not include order/customer records, commission statements or payout details.
+- Added an owner-visible download link to `/seller/finance`. Staff may still read permitted operational data but cannot download the complete owner workbook.
+- **Verification pending:** exact branch build/typecheck, API owner-vs-non-owner test, XML workbook openability in Excel/LibreOffice, large-store truncation, and browser download. Do not mark launch-ready until these pass.
+
+## Payout implementation gate — not yet safe to expose
+
+- Existing `LedgerAccount`, `JournalEntry`, and `JournalLine` are immutable double-entry primitives only. They are not yet connected to payment capture, seller payable, refunds, chargebacks or settlement.
+- Before a withdrawable balance can be shown, finance policy must define: seller payable trigger (capture vs delivery/return-window), commission and vendor-discount treatment, shipping/tax ownership, processor clearing, refund/chargeback allocation, reserve/hold duration, negative balances, minimum payout, supported countries/currencies and payout rail.
+- After policy approval: create seller payable journals from verified source events with stable idempotency keys; calculate balances from posted journal lines only; encrypt bank identifiers using a dedicated versioned key ring; verify beneficiary ownership; store masked display values only; and enforce payout request limits and admin approval/reconciliation with append-only audit.
+- No bank details or withdrawal request UI should be exposed before those dependencies and tests exist.
