@@ -60,7 +60,7 @@ This is not a UI-only omission. The accounting journal foundation exists, but it
 
 ## Verification boundary
 
-Per the current instruction, no tests, builds, typechecks, browser journeys, or database imports were run. The OpenSyria geography import and Prisma migrations must be applied to the same PostgreSQL database used by the app before the updated location selector can display the new source data.
+Source review is not a substitute for automated verification. The PR runs Prisma migration/integration, CI typecheck/lint/unit tests/build, CodeQL and browser E2E checks; merge only after the latest head passes the applicable checks. The OpenSyria geography import and Prisma migrations must be applied to the same PostgreSQL database used by the app before the updated location selector can display the new source data.
 
 
 ## Store data export
