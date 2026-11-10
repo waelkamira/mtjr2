@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AuditActorType, PaymentProviderEnvironment, PaymentStatus, Prisma, RefundStatus, ReturnItemStatus, ReturnRequestStatus } from "@prisma/client";
+import { AuditActorType, PaymentStatus, Prisma, RefundStatus, ReturnItemStatus, ReturnRequestStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requirePermission } from "@/server/identity/permission-guard";
@@ -277,7 +277,7 @@ export async function completeManualRefund(refundIdInput: string, input: unknown
     if (totalAfter > refund.payment.amountMinor) throw new Error("Completed refunds would exceed the captured payment.");
 
     const changed = await tx.refund.updateMany({
-      where: { id: refund.id, status: RefundStatus.PENDING_MANUAL },
+      where: { id: refund.id, status: { in: [RefundStatus.PENDING_MANUAL, RefundStatus.PROVIDER_FAILED] } },
       data: { status: RefundStatus.COMPLETED, externalReference: data.externalReference, note: data.note || null, completedAt: now, completedById: actor.userId }
     });
     if (changed.count !== 1) throw new Error("The refund changed. Refresh and try again.");
@@ -407,7 +407,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
     });
     return {
       done: false as const, processing: false as const, id: refund.id,
-      provider: refund.payment.provider, providerReference: refund.payment.providerReference,
+      provider: refund.payment.provider, paymentId: refund.paymentId, providerReference: refund.payment.providerReference,
       amountMinor: refund.amountMinor.toString(), currencyCode: refund.currencyCode,
       providerConfigId: refund.payment.providerConfigId,
       providerEnvironment: refund.payment.providerEnvironment
@@ -419,7 +419,7 @@ export async function executeProviderRefund(refundIdInput: string, now = new Dat
 
   try {
     const adapter = refundAdapter(claim.provider);
-    const snapshot = await getPaymentProviderRuntimeSnapshot(claim.id === "" ? "" : (await prisma.refund.findUniqueOrThrow({ where: { id: claim.id }, select: { paymentId: true } })).paymentId);
+    const snapshot = await getPaymentProviderRuntimeSnapshot(claim.paymentId);
     if (claim.providerConfigId && !snapshot) throw new Error("The managed payment credential snapshot is unavailable; automatic refund is blocked.");
     if (snapshot && snapshot.provider !== claim.provider) throw new Error("The stored provider snapshot does not match the payment provider.");
     const result = await adapter.createRefund({
