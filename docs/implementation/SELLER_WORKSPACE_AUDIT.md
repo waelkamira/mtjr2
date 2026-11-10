@@ -60,5 +60,5 @@ Per the current instruction, no tests, builds, typechecks, browser journeys, or 
 
 ## Store data export
 - Added a one-click Excel-compatible workbook export to the seller performance header. The workbook contains separate sheets for store profile/shipping/policies, selected-period analytics and sales by currency, order-status and daily-sales breakdowns, top products, currently loaded inventory, and the recent orders already available in the workspace.
-- Export is generated in the browser from the selected store's already-authorized workspace data; it is not uploaded to a third-party conversion service. The button is disabled while analytics are loading or unavailable.
+- Export is generated in the browser from the selected store's already-authorized workspace data; it is not uploaded to a third-party conversion service. Private dispatch fields are included only when the server-provided `store` permission is present; inventory and order sheets are independently gated by their server-provided permissions. The button is disabled while analytics are loading or unavailable.
 - The current workbook uses Excel 2003 XML (.xls) for a dependency-free multi-sheet export. It is not an Office Open XML .xlsx package. Product catalog full export, full historical order pagination, and commission/refund detail export remain separate follow-up scope.
