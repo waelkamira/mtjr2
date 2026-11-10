@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuthenticationRequiredError } from "@/server/identity/current-session";
+import { validateIdentityMutationRequest } from "@/server/identity/request-security";
 import { PermissionDeniedError } from "@/server/identity/access-errors";
 import { createSellerPayoutMethod, listSellerPayoutMethods } from "@/server/marketplace/seller-payout-methods";
 
@@ -17,6 +18,8 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const rejected = validateIdentityMutationRequest(request);
+  if (rejected) return rejected;
   try {
     const body: unknown = await request.json();
     const method = await createSellerPayoutMethod(body);
