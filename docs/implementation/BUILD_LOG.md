@@ -4376,3 +4376,9 @@ The platform account policy is now explicit: email verification is not required 
 - Added provider refund controls, asynchronous status refresh and Arabic labels to /admin/refunds.
 - Provider calls are outside DB transactions; refund reservations and finalization are serialized by order lock, payment-balance limits, idempotency, and AuditLog.
 - Not run: Prisma migration application, typecheck, tests, build, Sandbox calls or any live financial operation. Sandbox verification remains required before enabling live refund workflows.
+
+
+## 2026-11-10 — Financial integration status after provider refund tranche
+- Updated the Prisma model usage map and platform system map: Return/Refund/RefundItem now drive physical-return-gated Stripe/PayPal refund execution; provider-confirmed completion updates Refund and Payment with AuditLog evidence.
+- The general ledger remains deliberately unconnected. Existing journal posting is append-only but there is no approved chart-of-accounts mapping or payment-capture journal, so no seller payable/clearing/tax/shipping allocation was invented.
+- Remaining before launch: deploy additive migrations; run the complete TEST/Sandbox payment and refund journey; confirm retry/duplicate/pending behavior in PostgreSQL; approve high-risk refund dual control and accounting mappings; then implement balanced, idempotent journal postings and seller payable reversals.
