@@ -12,7 +12,7 @@ VALUES (
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
 )
-ON CONFLICT ("slug") DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO "CategoryTranslation" ("id", "categoryId", "locale", "name", "description", "createdAt", "updatedAt")
 SELECT
@@ -25,4 +25,4 @@ SELECT
   CURRENT_TIMESTAMP
 FROM "Category"
 WHERE "slug" = 'real-estate'
-ON CONFLICT ("categoryId", "locale") DO NOTHING;
+ON CONFLICT DO NOTHING;
