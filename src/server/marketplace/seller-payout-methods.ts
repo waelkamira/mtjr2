@@ -174,7 +174,7 @@ export async function disableSellerPayoutMethod(methodIdInput: string) {
     if (method.isDefault) {
       const replacement = await tx.sellerPayoutMethod.findFirst({
         where: { sellerId: seller.id, currencyCode: method.currencyCode, status: { in: [SellerPayoutMethodStatus.VERIFIED, SellerPayoutMethodStatus.PENDING_VERIFICATION] } },
-        orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+        orderBy: [{ status: "desc" }, { createdAt: "asc" }],
         select: { id: true }
       });
       if (replacement) await tx.sellerPayoutMethod.update({ where: { id: replacement.id }, data: { isDefault: true } });
