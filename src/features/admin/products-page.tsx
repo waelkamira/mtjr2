@@ -81,7 +81,7 @@ export default function AdminProductsPage() {
     event.preventDefault();
   }
 
-  return <main className="min-h-screen px-5 py-8 lg:px-8"><div className="mx-auto max-w-7xl">
+  return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Catalog operations", "إدارة الكتالوج")}</p>
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{t("Product approvals", "اعتماد المنتجات")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{t("Review draft products submitted by active stores. Approval does not publish a product.", "راجع مسودات المنتجات المقدمة من المتاجر النشطة. الموافقة لا تنشر المنتج تلقائياً.")}</p></div><p className="text-sm text-[var(--muted)]">{items.length} {t("pending", "معلق")} · {visible.length} {t("shown", "معروض")}</p></div>
     <form onSubmit={search} className="mt-6 rounded-2xl border border-[var(--border)] bg-white p-4"><label className="block text-xs font-medium text-[var(--muted)]">{t("Search pending products, stores, sellers or SKU", "ابحث في المنتجات والمتاجر والبائعين أو رمز المنتج")}<input value={query} onChange={(event) => setQuery(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label></form>
