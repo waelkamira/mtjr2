@@ -1276,3 +1276,50 @@ textarea {
     border-radius: 20px !important;
   }
 }
+
+
+/* Dashboard-specific composition: the live overview uses a nested hero and action grid. */
+.seller-dashboard main > div > section:first-child {
+  background: linear-gradient(115deg, #17334f 0%, #24516b 58%, #267b7c 100%) !important;
+  border-color: #315b70 !important;
+  border-radius: 26px !important;
+  box-shadow: 0 16px 34px rgb(20 43 69 / 15%) !important;
+  color: #fff !important;
+}
+.seller-dashboard main > div > section:first-child > div[aria-hidden="true"] {
+  background: linear-gradient(110deg, rgb(20 43 69 / 92%), rgb(31 83 103 / 82%) 62%, rgb(35 121 121 / 76%)) !important;
+}
+.seller-dashboard main > div > section:first-child :is(h1, h2, h3, p, span, a, label) {
+  color: #fff !important;
+}
+.seller-dashboard main > div > section:first-child :is(button, a[class*="rounded"]) {
+  border-color: rgb(255 255 255 / 28%) !important;
+}
+.seller-dashboard main > div > section:nth-child(2) > article {
+  border-radius: 20px !important;
+}
+.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a,
+.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a {
+  background: #ffffff !important;
+  border: 1px solid #dce5ee !important;
+  border-radius: 18px !important;
+  box-shadow: 0 7px 20px rgb(30 57 83 / 6%) !important;
+}
+.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a strong,
+.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a strong {
+  color: #203850 !important;
+}
+.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a span span,
+.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a span span {
+  color: #718096 !important;
+}
+.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a > span:first-child,
+.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a > span:first-child {
+  background: #e8f5f4 !important;
+  border: 1px solid #d4eeeb;
+}
+.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a:hover,
+.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 13px 26px rgb(30 57 83 / 10%) !important;
+}
