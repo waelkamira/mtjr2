@@ -955,3 +955,31 @@ textarea {
 ):is(span, strong, svg, [class*="text-"]) {
   color: inherit !important;
 }
+
+/* Form controls placed on explicitly light surfaces must use a dark foreground.
+   This prevents the legacy dark-control defaults above from making entered text
+   and placeholders disappear on white, ivory, or theme surface backgrounds. */
+:where(input, textarea, select)[class*="bg-white"],
+:where(input, textarea, select)[class*="bg-[var(--surface)"],
+:where(input, textarea, select)[class*="bg-[var(--background)"],
+:where(input, textarea, select)[class*="bg-[var(--surface-soft)"],
+:where(input, textarea, select)[class*="bg-[var(--color-ivory-"],
+:where(input, textarea, select)[class*="bg-[var(--color-lavender-50)"],
+:where(input, textarea, select)[class*="bg-[var(--color-lavender-100)"],
+:where(input, textarea, select)[class*="bg-[var(--color-mint-50)"],
+:where(input, textarea, select)[class*="bg-[var(--color-mint-100)"],
+:where(input, textarea, select)[class*="bg-[var(--color-blush-50)"],
+:where(input, textarea, select)[class*="bg-[var(--color-blush-100)"],
+:where(input, textarea, select)[class*="bg-[var(--color-butter-50)"],
+:where(input, textarea, select)[class*="bg-[var(--color-butter-100)"] {
+  color: var(--foreground);
+}
+
+:where(input, textarea)[class*="bg-white"]::placeholder,
+:where(input, textarea)[class*="bg-[var(--surface)"]::placeholder,
+:where(input, textarea)[class*="bg-[var(--background)"]::placeholder,
+:where(input, textarea)[class*="bg-[var(--color-ivory-"]::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
