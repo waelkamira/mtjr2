@@ -176,3 +176,21 @@
 .seller-dashboard main :is([class~="bg-red-50"],[class~="bg-amber-50"],[class~="bg-green-50"],[class~="bg-emerald-50"]) {
   box-shadow: none !important;
 }
+
+
+/* Keep the seller shell below the global marketplace header in the root layout stacking order. */
+.seller-dashboard {
+  isolation: isolate;
+}
+.seller-dashboard .seller-topbar {
+  position: static !important;
+  inset: auto !important;
+  z-index: auto !important;
+  transform: none !important;
+}
+.seller-dashboard .seller-sidebar {
+  z-index: 1 !important;
+}
+.seller-dashboard .seller-mobile-navigation {
+  z-index: 1 !important;
+}
