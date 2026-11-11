@@ -177,7 +177,7 @@ export default function AddressesPage() {
   const inputClass = "mt-1.5 w-full rounded-xl border border-gray-200 p-3 text-sm placeholder-gray-400 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10";
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-8 text-white">
+    <main className="min-h-screen  px-4 py-8 sm:px-6 lg:px-8 text-white">
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-8">
