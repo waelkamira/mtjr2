@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } fr
 import Link from "next/link";
 import LeafletLocationMap from "@/components/maps/leaflet-location-map";
 import AuthReturnLink from "@/components/auth-return-link";
+import { SellerIcon } from "@/features/seller/seller-navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import { toMinorUnits } from "@/lib/money";
@@ -741,20 +742,38 @@ export default function SellerWorkspacePage() {
     }
   ];
 
+  const registrationRequired = businessType === "STORE" || businessType === "AGENCY";
+  const applicationChecklist = [
+    { id: "seller-application-step-applicant", label: translate(locale, "Applicant and store profile", "بيانات البائع والمتجر"), icon: "user" as const, complete: Boolean(legalName.trim() && displayName.trim() && contactName.trim() && contactEmail.trim() && phoneNumber.trim()) },
+    { id: "seller-application-step-registration", label: translate(locale, "Business registration", "التسجيل التجاري"), icon: "document" as const, complete: !registrationRequired || Boolean(registrationCountryCode.trim() && registrationNumber.trim()), required: registrationRequired },
+    { id: "seller-application-step-products", label: translate(locale, "Products and selling plan", "المنتجات وخطة البيع"), icon: "catalog" as const, complete: Boolean(sellingCategories.trim() && intendedProducts.trim().length >= 20) },
+    { id: "seller-application-step-location", label: translate(locale, "Business location", "موقع النشاط"), icon: "pin" as const, complete: sellerLatitude !== null && sellerLongitude !== null }
+  ];
+  const requiredApplicationChecklist = applicationChecklist.filter((item) => item.required !== false);
+  const completedApplicationSteps = requiredApplicationChecklist.filter((item) => item.complete).length;
+  const applicationProgress = Math.round((completedApplicationSteps / requiredApplicationChecklist.length) * 100);
+  const applicationSteps = [
+    { id: applicationChecklist[0].id, label: translate(locale, "Applicant", "مقدم الطلب"), icon: "user" as const },
+    { id: applicationChecklist[1].id, label: translate(locale, "Registration", "التسجيل"), icon: "document" as const },
+    { id: applicationChecklist[2].id, label: translate(locale, "Products", "المنتجات"), icon: "catalog" as const },
+    { id: applicationChecklist[3].id, label: translate(locale, "Location", "الموقع"), icon: "pin" as const },
+    { id: "seller-application-step-online", label: translate(locale, "Online profile", "الحضور الرقمي"), icon: "globe" as const }
+  ];
+
     if (!loading && workspace?.seller?.status === "PENDING") {
     const application = workspace.seller;
     return (
-      <main dir="rtl" className="min-h-screen bg-[var(--background)] px-4 py-10 text-[#46516b] sm:px-6">
-        <section className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#eeeaf8,#e0ebef)] shadow-[0_18px_42px_rgba(35,62,81,.16),inset_0_2px_0_white]">
-          <header className="bg-[linear-gradient(120deg,#263f56,#3f6878)] p-7 text-white sm:p-9">
+      <main dir={locale === "ar" ? "rtl" : "ltr"} className="min-h-screen bg-[var(--seller-canvas)] px-4 py-8 text-[#203850] sm:px-6">
+        <section className="seller-application-status mx-auto max-w-6xl overflow-hidden rounded-[1.75rem]">
+          <header className="bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-6 text-white sm:p-9">
             <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale, "SELLER APPLICATION", "طلب فتح متجر")}</p>
-            <h1 className="mt-3 text-3xl font-black">{translate(locale, "Your application is under review", "طلبك قيد المراجعة")}</h1>
+            <h1 className="mt-3 flex items-center gap-3 text-3xl font-black"><span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-[#8ce8e1]"><SellerIcon name="document" /></span>{translate(locale, "Your application is under review", "طلبك قيد المراجعة")}</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">{translate(locale, "Your application has been received. The marketplace team will review your business details before enabling store operations.", "تم استلام طلبك. سيراجع فريق المنصة بيانات نشاطك قبل تفعيل عمليات المتجر.")}</p>
             <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold"><span className="size-2 rounded-full bg-amber-300"/>{translate(locale, "Pending review", "بانتظار المراجعة")}</div>
           </header>
           <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-8">
-            <section className="rounded-[1.5rem] border border-white/90 bg-white/55 p-5 shadow-[inset_0_1px_0_white]">
-              <h2 className="text-lg font-black">{translate(locale, "Applicant profile", "ملف مقدم الطلب")}</h2>
+            <section className="rounded-2xl border border-[#e1e8f0] bg-white p-5">
+              <h2 className="flex items-center gap-2 text-lg font-black"><SellerIcon name="user" />{translate(locale, "Applicant profile", "ملف مقدم الطلب")}</h2>
               <dl className="mt-4 grid gap-3 text-sm">
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Full legal name", "الاسم القانوني")}</dt><dd className="mt-1 font-semibold">{application.legalName || "—"}</dd></div>
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Store / business", "اسم المتجر أو النشاط")}</dt><dd className="mt-1 font-semibold">{application.displayName || "—"}</dd></div>
@@ -775,8 +794,8 @@ export default function SellerWorkspacePage() {
                 </div>
               </dl>
             </section>
-            <section className="rounded-[1.5rem] border border-white/90 bg-white/55 p-5 shadow-[inset_0_1px_0_white]">
-              <h2 className="text-lg font-black">{translate(locale, "Products and selling plan", "المنتجات وخطة البيع")}</h2>
+            <section className="rounded-2xl border border-[#e1e8f0] bg-white p-5">
+              <h2 className="flex items-center gap-2 text-lg font-black"><SellerIcon name="catalog" />{translate(locale, "Products and selling plan", "المنتجات وخطة البيع")}</h2>
               <p className="mt-3 text-sm font-bold text-[#7883a8]">{application.sellingCategories || "—"}</p>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#657487]">{application.intendedProducts || "—"}</p>
               {application.description && <p className="mt-4 border-t border-white/80 pt-4 text-sm leading-7 text-[#657487]">{application.description}</p>}
@@ -787,7 +806,7 @@ export default function SellerWorkspacePage() {
               </div>
               {application.latitude !== null && application.longitude !== null && <p dir="ltr" className="mt-4 text-left text-xs text-[#8790a5]">{application.latitude.toFixed(5)}, {application.longitude.toFixed(5)}</p>}
             </section>
-            <p className="text-xs text-[#8790a5] sm:col-span-2">{translate(locale, "Submitted", "تاريخ التقديم")}: {new Date(application.createdAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>
+            <p className="flex items-center gap-2 border-t border-[#e7edf3] pt-4 text-xs text-[#718096] sm:col-span-2"><SellerIcon name="document" />{translate(locale, "Submitted", "تاريخ التقديم")}: {new Date(application.createdAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>
           </div>
         </section>
       </main>
@@ -800,7 +819,7 @@ export default function SellerWorkspacePage() {
   return (
     <main className="min-h-screen bg-[#fffaf6] text-[#454545]">
       <div className="mx-auto w-full max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
-        <section className="relative mb-7 min-h-[220px] overflow-hidden rounded-[2rem] border border-[#eee9e4] bg-white p-5 text-[#454545] shadow-[0_12px_28px_rgba(69,69,69,.07)] sm:p-7 lg:p-8">
+        <section className="seller-overview-hero relative mb-7 min-h-[220px] overflow-hidden rounded-[2rem] border border-[#eee9e4] bg-white p-5 text-[#454545] shadow-[0_12px_28px_rgba(69,69,69,.07)] sm:p-7 lg:p-8">
           {selectedStore?.bannerUrl && <img src={selectedStore.bannerUrl} alt="" aria-hidden="true" className="absolute inset-0 size-full object-cover opacity-25" />}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(100deg,rgba(255,250,246,.96),rgba(255,255,255,.90)_52%,rgba(255,241,232,.92))]" />
           <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 size-64 rounded-full bg-[#f6d8c5]/55 blur-3xl" />
@@ -832,8 +851,8 @@ export default function SellerWorkspacePage() {
             </div>
             <div className="relative z-10 flex flex-wrap gap-3 lg:justify-end">
               {selectedStore && <Link href="/seller/products#create-product" className="inline-flex items-center justify-center gap-2 rounded-full border border-[#f0660d] bg-[#f0660d] px-5 py-3 text-sm font-extrabold text-white shadow-[0_7px_16px_rgba(240,102,13,.18)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(38,94,105,.2)]"><span aria-hidden="true" className="text-lg leading-none">＋</span>{translate(locale, "Create product", "إنشاء منتج")}</Link>}
-              <Link href="/seller/orders" className="inline-flex items-center justify-center rounded-full border border-white/90 bg-[linear-gradient(145deg,#eaf3f5,#e1dfed)] px-5 py-3 text-sm font-bold text-[#454545] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "View orders", "عرض الطلبات")}</Link>
-              {selectedStore?.isOwner && <Link href="/seller#store-management" className="inline-flex items-center justify-center rounded-full border border-[#eee9e4] bg-white px-5 py-3 text-sm font-bold text-[#454545] shadow-[0_4px_12px_rgba(69,69,69,.06)] transition hover:-translate-y-0.5">{translate(locale, "Edit store", "تعديل المتجر")}</Link>}
+              <Link href="/seller/orders" className="seller-overview-secondary-action inline-flex items-center justify-center rounded-full border border-white/90 bg-[linear-gradient(145deg,#eaf3f5,#e1dfed)] px-5 py-3 text-sm font-bold text-[#454545] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "View orders", "عرض الطلبات")}</Link>
+              {selectedStore?.isOwner && <Link href="/seller#store-management" className="seller-overview-secondary-action inline-flex items-center justify-center rounded-full border border-[#eee9e4] bg-white px-5 py-3 text-sm font-bold text-[#454545] shadow-[0_4px_12px_rgba(69,69,69,.06)] transition hover:-translate-y-0.5">{translate(locale, "Edit store", "تعديل المتجر")}</Link>}
             </div>
           </div>
         </section>
@@ -849,18 +868,21 @@ export default function SellerWorkspacePage() {
             </div>
           </section>
         ) : (!workspace?.seller || workspace.seller.status === "REJECTED") ? (
-          <section className="mt-8 max-w-5xl rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,#eeeaf8,#ded9f0)] p-5 shadow-[0_18px_38px_rgba(35,62,81,.16),inset_0_2px_0_white,inset_0_-3px_8px_rgba(48,76,94,.07)] sm:p-8">
-            <div className="mb-6 rounded-[1.6rem] border border-white/80 bg-[linear-gradient(120deg,#263f56,#3f6878)] p-5 text-white shadow-[0_12px_25px_rgba(26,49,69,.2),inset_0_2px_0_rgba(255,255,255,.18)] sm:p-6">
+          <section className="seller-application-form mt-8 max-w-6xl rounded-[1.75rem] p-4 sm:p-7">
+              <div className="mb-6 rounded-2xl border border-[#29435d] bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-5 text-white shadow-[0_12px_25px_rgba(20,43,69,.16)] sm:p-7">
               <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale,"SELLER APPLICATION","طلب فتح متجر")}</p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight">{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
+                <h2 className="mt-2 flex items-center gap-3 text-2xl font-black tracking-tight"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-[#8ce8e1]"><SellerIcon name="store" /></span>{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d7e7ed]">{translate(locale,"A guided application for your business, products and store location. Complete each section so our marketplace team can review it.","طلب منظم للتعريف بنشاطك ومنتجاتك وموقع متجرك. أكمل الأقسام ليتمكن فريق السوق من مراجعة طلبك.")}</p>
-              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                {["01 · Applicant","02 · Registration","03 · Products","04 · Location","05 · Online profile"].map((step,index)=><div key={step} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-[10px] font-bold text-white/90"><span className="me-1 text-[#a9ded7]">●</span>{translate(locale,step,["01 · مقدم الطلب","02 · التسجيل","03 · المنتجات","04 · الموقع","05 · الحضور الرقمي"][index])}</div>)}
+                <nav aria-label={translate(locale, "Application sections", "أقسام الطلب")} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  {applicationSteps.map((step, index) => <a key={step.id} href={`#${step.id}`} className="flex min-w-0 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-white/90 transition hover:bg-white/[.16]">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-white/10 text-[#8ce8e1]"><SellerIcon name={step.icon} /></span>
+                    <span className="min-w-0"><span className="block text-[9px] font-bold text-white/55">0{index + 1}</span><span className="block truncate">{step.label}</span></span>
+                  </a>)}
+                </nav>
               </div>
-            </div>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{workspace?.seller?.status === "REJECTED" ? translate(locale, "Your previous application was not approved. Review the feedback below, correct the information and submit it again.", "لم تتم الموافقة على طلبك السابق. راجع الملاحظات أدناه وصحح البيانات ثم أعد الإرسال.") : translate(locale, "Complete the business details below. Your application will remain pending until reviewed by the marketplace team.", "أكمل بيانات نشاطك التجاري أدناه. سيظل طلبك قيد المراجعة حتى يراجعه فريق السوق.")}</p>
             {workspace?.seller?.status === "REJECTED" && workspace.seller.rejectionReason && <div role="alert" className="mt-4 rounded-2xl border border-[#e7c6ce] bg-[linear-gradient(145deg,#f9e9ed,#f2dce3)] p-4 text-sm leading-7 text-[#75495a] shadow-[inset_0_1px_0_white]"><p className="font-extrabold">{translate(locale, "Reviewer feedback", "ملاحظات المراجع")}</p><p className="mt-1 whitespace-pre-wrap">{workspace.seller.rejectionReason}</p>{workspace.seller.reviewedAt && <p className="mt-2 text-xs text-[#987384]">{translate(locale, "Reviewed", "تاريخ المراجعة")}: {new Date(workspace.seller.reviewedAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>}</div>}
-            <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
             <form onSubmit={(event) => {
               if (sellerLatitude === null || sellerLongitude === null) {
                 event.preventDefault();
@@ -877,8 +899,8 @@ export default function SellerWorkspacePage() {
                 latitude: sellerLatitude, longitude: sellerLongitude
               }, "Your seller application has been submitted.");
             }} className="grid gap-5">
-              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(69,69,69,.04)]">
-                <div><h3 className="font-extrabold text-[#34445a]">{translate(locale, "01 · Applicant and business", "01 · بيانات البائع والنشاط")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Your legal identity and public store details.", "بياناتك الشخصية واسم المتجر الذي سيظهر للعملاء.")}</p></div>
+              <section id="seller-application-step-applicant" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
+                <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e8f5f4] text-[#168b89]"><SellerIcon name="user" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "01 · Applicant and business", "01 · بيانات البائع والنشاط")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Your legal identity and public store details.", "بياناتك الشخصية واسم المتجر الذي سيظهر للعملاء.")}</p></div></div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="grid gap-1 text-sm">{translate(locale, "Full legal name", "الاسم الكامل كما في الهوية")}<input required minLength={2} maxLength={160} autoComplete="name" value={legalName} onChange={(e) => setLegalName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                   <label className="grid gap-1 text-sm">{translate(locale, "Store name", "اسم المتجر")}<input required minLength={2} maxLength={80} value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
@@ -889,10 +911,13 @@ export default function SellerWorkspacePage() {
                   <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Business address / residence", "عنوان النشاط أو مكان الإقامة")}<input required minLength={3} maxLength={240} value={residence} onChange={(e) => setResidence(e.target.value)} placeholder={translate(locale, "City, district, street", "المدينة، المنطقة، الشارع")} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                 </div>
               </section>
-              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-white p-4 shadow-[0_5px_14px_rgba(69,69,69,.04)]">
-                <div>
+              <section id="seller-application-step-registration" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
+                <div className="flex items-start gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eef4fa] text-[#3d6c92]"><SellerIcon name="document" /></span>
+                  <div>
                   <h3 className="font-extrabold text-[#34445a]">{translate(locale, "02 · Business registration and compliance", "02 · التسجيل التجاري والامتثال")}</h3>
                   <p className="mt-1 text-xs leading-6 text-[#8790a5]">{translate(locale, "Registered companies and agencies must provide their legal registration details and certificate. Tax and address documents can be added where applicable. Files are private and visible only to authorized reviewers.", "يجب على الشركات والوكالات المسجلة إدخال بيانات تسجيلها القانوني وإرفاق الشهادة. يمكن إضافة المستند الضريبي وإثبات العنوان عند انطباقهما. تحفظ الملفات بشكل خاص ولا يطلع عليها إلا المراجعون المخولون.")}</p>
+                  </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="grid gap-1 text-sm">{translate(locale, "Registration country (ISO 2-letter code)", "بلد التسجيل (رمز من حرفين)")}<input required={businessType === "STORE" || businessType === "AGENCY"} minLength={2} maxLength={2} pattern="[A-Za-z]{2}" value={registrationCountryCode} onChange={(e) => setRegistrationCountryCode(e.target.value.toUpperCase())} placeholder="DE" dir="ltr" className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 text-left font-normal" /></label>
@@ -924,19 +949,19 @@ export default function SellerWorkspacePage() {
                   </label>
                 </div>
               </section>
-              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(69,69,69,.04)]">
-                <div><h3 className="font-extrabold text-[#34445a]">{translate(locale, "03 · Products and selling plan", "03 · المنتجات وخطة البيع")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Tell us what you plan to offer and where it comes from.", "أخبرنا عن المنتجات التي ستعرضها ومصدرها وخطة توفيرها.")}</p></div>
+              <section id="seller-application-step-products" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
+                <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff3e8] text-[#c45b1b]"><SellerIcon name="catalog" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "03 · Products and selling plan", "03 · المنتجات وخطة البيع")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Tell us what you plan to offer and where it comes from.", "أخبرنا عن المنتجات التي ستعرضها ومصدرها وخطة توفيرها.")}</p></div></div>
                 <label className="grid gap-1 text-sm">{translate(locale, "Product categories", "فئات المنتجات")}<input required minLength={2} maxLength={300} value={sellingCategories} onChange={(e) => setSellingCategories(e.target.value)} placeholder={translate(locale, "Fashion, electronics, home, beauty…", "أزياء، إلكترونيات، منزل، تجميل...")} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                 <label className="grid gap-1 text-sm">{translate(locale, "Products and sales plan (at least 20 characters)", "المنتجات وخطة البيع (20 حرفاً على الأقل)")}<textarea required minLength={20} maxLength={4000} rows={4} value={intendedProducts} onChange={(e) => setIntendedProducts(e.target.value)} placeholder={translate(locale, "Examples, condition, sourcing, expected quantities and supply frequency…", "أمثلة المنتجات، حالتها، مصدرها، الكميات المتوقعة وتواتر التوريد...")} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /><span className="text-xs text-[#8790a5]">{intendedProducts.length}/4000</span></label>
                 <label className="grid gap-1 text-sm">{translate(locale, "About your business (optional)", "نبذة عن نشاطك (اختياري)")}<textarea maxLength={2000} rows={3} value={sellerDescription} onChange={(e) => setSellerDescription(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
               </section>
-              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(69,69,69,.04)]">
-                <div><h3 className="font-extrabold text-[#34445a]">{translate(locale, "04 · Business location", "04 · موقع النشاط")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Click or drag the pin to mark your business location.", "انقر على الخريطة أو اسحب الدبوس لتحديد موقع نشاطك بدقة.")}</p></div>
+              <section id="seller-application-step-location" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
+                <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eef4fa] text-[#3d6c92]"><SellerIcon name="pin" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "04 · Business location", "04 · موقع النشاط")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Click or drag the pin to mark your business location.", "انقر على الخريطة أو اسحب الدبوس لتحديد موقع نشاطك بدقة.")}</p></div></div>
                 <LeafletLocationMap locale={locale} value={sellerLatitude !== null && sellerLongitude !== null ? { latitude: sellerLatitude, longitude: sellerLongitude } : null} onChange={(point) => { setSellerLatitude(point.latitude); setSellerLongitude(point.longitude); }} height={300} />
                 <p className="text-xs text-[#8790a5]">{sellerLatitude === null || sellerLongitude === null ? translate(locale, "A map location is required.", "تحديد الموقع على الخريطة مطلوب.") : sellerLatitude.toFixed(5) + ", " + sellerLongitude.toFixed(5)}</p>
               </section>
-              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(69,69,69,.04)]">
-                <div><h3 className="font-extrabold text-[#34445a]">{translate(locale, "05 · Online presence", "05 · الحضور الرقمي")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Optional links help us understand your business.", "روابط اختيارية تساعدنا على التعرف على نشاطك.")}</p></div>
+              <section id="seller-application-step-online" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
+                <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f1eef9] text-[#7463a5]"><SellerIcon name="globe" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "05 · Online presence", "05 · الحضور الرقمي")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Optional links help us understand your business.", "روابط اختيارية تساعدنا على التعرف على نشاطك.")}</p></div></div>
                 <label className="grid gap-2 rounded-2xl border border-dashed border-[#f0c7ad] bg-[#fffaf6] p-4 text-sm">
                   <span className="font-bold text-[#34445a]">{translate(locale, "Identity document (optional)", "وثيقة الهوية (اختياري)")}</span>
                   <span className="text-xs text-[#8790a5]">{identityDocumentName || translate(locale, "Upload JPG, PNG, WebP or AVIF · up to 4 MB. Stored privately for authorized review only.", "ارفع JPG أو PNG أو WebP أو AVIF · حتى 4 ميغابايت. تحفظ بشكل خاص للمراجعة من المسؤولين المخولين فقط.")}</span>
@@ -949,27 +974,34 @@ export default function SellerWorkspacePage() {
                   <label className="grid gap-1 text-sm">X<input type="url" maxLength={2048} dir="ltr" value={twitterUrl} onChange={(e) => setTwitterUrl(e.target.value)} placeholder="https://x.com/…" className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                 </div>
               </section>
-              <button disabled={busy} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-5 py-3 text-sm font-extrabold text-[#40375f] shadow-[0_9px_20px_rgba(93,83,139,.14),inset_0_1px_0_rgba(255,255,255,.35)] disabled:opacity-50">{busy ? translate(locale, "Submitting…", "جارٍ الإرسال…") : translate(locale, "Submit application", "إرسال الطلب للمراجعة")}</button>
+              <button disabled={busy} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#173b59] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(20,43,69,.15)] transition hover:bg-[#20516b] disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Submitting…", "جارٍ الإرسال…") : translate(locale, "Submit application", "إرسال الطلب للمراجعة")}</button>
             </form>
               <aside className="space-y-4 lg:sticky lg:top-28">
-                <section className="overflow-hidden rounded-[1.7rem] border border-white/90 bg-[linear-gradient(145deg,#f5f2fb,#e3e2ef)] shadow-[0_12px_28px_rgba(74,75,112,.12),inset_0_1px_0_white]">
-                  <div className="bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] p-5 text-[#40375f]"><p className="text-[10px] font-extrabold uppercase tracking-[.18em]">{translate(locale, "SELLER PROFILE PREVIEW", "معاينة ملف البائع")}</p><h3 className="mt-2 break-words text-xl font-black">{displayName.trim() || translate(locale, "Your new store", "متجرك الجديد")}</h3><p className="mt-1 text-sm text-[#51476f]">{contactName.trim() || translate(locale, "Add your full name", "أضف اسمك الكامل")}</p></div>
+                <section className="rounded-2xl border border-[#e1e8f0] bg-white p-5 shadow-[0_8px_22px_rgba(30,57,83,.06)]">
+                  <div className="flex items-start justify-between gap-3"><div><h3 className="flex items-center gap-2 text-sm font-extrabold text-[#203850]"><SellerIcon name="document" />{translate(locale, "Application checklist", "قائمة إكمال الطلب")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "{done} of {total} required sections complete", "اكتمل {done} من {total} أقسام مطلوبة").replace("{done}", String(completedApplicationSteps)).replace("{total}", String(requiredApplicationChecklist.length))}</p></div><span className="text-sm font-extrabold text-[#168b89]">{applicationProgress}%</span></div>
+                  <div role="progressbar" aria-label={translate(locale, "Required application progress", "تقدم الطلب")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={applicationProgress} className="mt-4 h-2 overflow-hidden rounded-full bg-[#e8edf3]"><span className="block h-full rounded-full bg-[#39bdb6] transition-[width]" style={{ width: `${applicationProgress}%` }} /></div>
+                  <ul className="mt-4 space-y-3">
+                    {requiredApplicationChecklist.map((step) => <li key={step.id}><a href={`#${step.id}`} className="flex items-center gap-3 text-xs font-semibold text-[#40556d] hover:text-[#168b89]"><span className={`grid size-8 shrink-0 place-items-center rounded-lg ${step.complete ? "bg-[#e7f6f1] text-[#18815d]" : "bg-[#f1f5f9] text-[#718096]"}`}><SellerIcon name={step.icon} /></span><span className="min-w-0 flex-1">{step.label}</span><span className="text-[10px]">{step.complete ? translate(locale, "Complete", "مكتمل") : translate(locale, "Required", "مطلوب")}</span></a></li>)}
+                  </ul>
+                </section>
+                <section className="overflow-hidden rounded-2xl border border-[#dce5ee] bg-white shadow-[0_8px_22px_rgba(30,57,83,.06)]">
+                  <div className="seller-application-preview-header bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-5 text-white"><p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.18em] text-[#b9d9e2]"><SellerIcon name="store" />{translate(locale, "SELLER PROFILE PREVIEW", "معاينة ملف البائع")}</p><h3 className="mt-2 break-words text-xl font-black">{displayName.trim() || translate(locale, "Your new store", "متجرك الجديد")}</h3><p className="mt-1 text-sm text-white/75">{contactName.trim() || translate(locale, "Add your full name", "أضف اسمك الكامل")}</p></div>
                   <div className="space-y-4 p-5 text-sm text-[#657487]">
-                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "LEGAL NAME", "الاسم القانوني")}</p><p className="mt-1 break-words font-semibold text-[#46516b]">{legalName.trim() || "—"}</p></div>
-                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "CONTACT EMAIL", "البريد الإلكتروني")}</p><p dir="ltr" className="mt-1 break-all text-left">{contactEmail.trim() || translate(locale, "Required", "مطلوب")}</p></div>
-                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "PHONE", "الهاتف")}</p><p dir="ltr" className="mt-1 text-left">{phoneNumber.trim() || translate(locale, "Required", "مطلوب")}</p></div>
-                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "PRODUCT CATEGORIES", "فئات المنتجات")}</p><p className="mt-1 break-words">{sellingCategories.trim() || translate(locale, "Categories you plan to sell", "فئات المنتجات التي ستبيعها")}</p></div>
-                    <div><p className="text-[10px] font-bold text-[#9a91b7]">{translate(locale, "BUSINESS LOCATION", "موقع النشاط")}</p><p className="mt-1 break-words">{residence.trim() || translate(locale, "Add your address", "أضف عنوانك")}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#718096]">{translate(locale, "LEGAL NAME", "الاسم القانوني")}</p><p className="mt-1 break-words font-semibold text-[#203850]">{legalName.trim() || "—"}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#718096]">{translate(locale, "CONTACT EMAIL", "البريد الإلكتروني")}</p><p dir="ltr" className="mt-1 break-all text-left">{contactEmail.trim() || translate(locale, "Required", "مطلوب")}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#718096]">{translate(locale, "PHONE", "الهاتف")}</p><p dir="ltr" className="mt-1 text-left">{phoneNumber.trim() || translate(locale, "Required", "مطلوب")}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#718096]">{translate(locale, "PRODUCT CATEGORIES", "فئات المنتجات")}</p><p className="mt-1 break-words">{sellingCategories.trim() || translate(locale, "Categories you plan to sell", "فئات المنتجات التي ستبيعها")}</p></div>
+                    <div><p className="text-[10px] font-bold text-[#718096]">{translate(locale, "BUSINESS LOCATION", "موقع النشاط")}</p><p className="mt-1 break-words">{residence.trim() || translate(locale, "Add your address", "أضف عنوانك")}</p></div>
                   </div>
                 </section>
-                <section className="rounded-[1.5rem] border border-white/90 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-5 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(69,69,69,.04)]"><h3 className="flex items-center gap-2 text-sm font-extrabold text-[#46516b]"><span aria-hidden="true">◈</span>{translate(locale, "Your privacy matters", "خصوصيتك مهمة")}</h3><p className="mt-3 text-xs leading-6 text-[#718596]">{translate(locale, "Your contact details and map location are used only to review your seller application. Identity documents are optional and stored privately for authorized reviewers.", "تُستخدم بيانات التواصل وموقع الخريطة لمراجعة طلبك فقط. وثيقة الهوية اختيارية وتُحفظ بشكل خاص ولا يطّلع عليها إلا المسؤولون المخولون.")}</p></section>
+                <section className="rounded-2xl border border-[#dce5ee] bg-[#f7fafc] p-5"><h3 className="flex items-center gap-2 text-sm font-extrabold text-[#203850]"><SellerIcon name="shield" />{translate(locale, "Your privacy matters", "خصوصيتك مهمة")}</h3><p className="mt-3 text-xs leading-6 text-[#718096]">{translate(locale, "Your contact details and map location are used only to review your seller application. Identity documents are optional and stored privately for authorized reviewers.", "تُستخدم بيانات التواصل وموقع الخريطة لمراجعة طلبك فقط. وثيقة الهوية اختيارية وتُحفظ بشكل خاص ولا يطّلع عليها إلا المسؤولون المخولون.")}</p></section>
               </aside>
             </div>
           </section>
         ) : (
           <>
           {selectedStore && <>
-            <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="seller-overview-metrics mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric, index) => {
                 const surface = [
                   "bg-[#ffffff]",
@@ -996,7 +1028,7 @@ export default function SellerWorkspacePage() {
               })}
             </section>
 
-            <section aria-label={translate(locale, "Seller quick actions", "إجراءات البائع السريعة")} className="mt-7">
+            <section aria-label={translate(locale, "Seller quick actions", "إجراءات البائع السريعة")} className="seller-quick-actions mt-7">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-black text-[#34445a]">{translate(locale, "Run your store", "أدر متجرك بسرعة")}</h2>
@@ -1005,27 +1037,27 @@ export default function SellerWorkspacePage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <Link href="/seller/orders" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f7e8ee,#eacbd8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
-                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📦</span>
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-[#1d6370] shadow-[inset_0_1px_0_white]"><SellerIcon name="orders" /></span>
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#60475b]">{translate(locale, "Process orders", "معالجة الطلبات")}</strong><span className="mt-1 block text-xs text-[#806d7b]">{translate(locale, "Review, prepare and ship customer orders.", "راجع طلبات العملاء وجهّزها واشحنها.")}</span></span>
                   <span className="ms-auto text-lg text-[#806d7b] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
                 </Link>
                 <Link href="/seller/products" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#dff2ee,#b8dfd8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
-                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🛍️</span>
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-[#1d6370] shadow-[inset_0_1px_0_white]"><SellerIcon name="package" /></span>
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#365b50]">{translate(locale, "Manage products", "إدارة المنتجات")}</strong><span className="mt-1 block text-xs text-[#668d7f]">{translate(locale, "Create products, update prices and manage media.", "أنشئ المنتجات وحدّث الأسعار وأدر الصور.")}</span></span>
                   <span className="ms-auto text-lg text-[#668d7f] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
                 </Link>
                 <Link href="/seller/finance" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e8e5f6,#cfc9e9)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
-                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">📊</span>
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-[#1d6370] shadow-[inset_0_1px_0_white]"><SellerIcon name="finance" /></span>
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#494467]">{translate(locale, "Financial overview", "الملخص المالي")}</strong><span className="mt-1 block text-xs text-[#716c91]">{translate(locale, "Review sales, commissions and completed refunds.", "راجع المبيعات والعمولات والمبالغ المستردة.")}</span></span>
                   <span className="ms-auto text-lg text-[#716c91] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
                 </Link>
                 <Link href="/seller/payouts" className="group flex items-center gap-4 rounded-[1.45rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(69,69,69,.05)] transition hover:-translate-y-1">
-                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🏦</span>
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-[#1d6370] shadow-[inset_0_1px_0_white]"><SellerIcon name="finance" /></span>
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#3e6071]">{translate(locale, "Bank accounts", "الحسابات البنكية")}</strong><span className="mt-1 block text-xs text-[#668394]">{translate(locale, "Manage saved payout destinations and verification status.", "أدر حسابات استلام الأرباح وحالة التحقق.")}</span></span>
                   <span className="ms-auto text-lg text-[#668394] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
                 </Link>
                 <Link href="/seller/shipping" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#f4f0d9,#e8dfae)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
-                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🚚</span>
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-[#1d6370] shadow-[inset_0_1px_0_white]"><SellerIcon name="shipping" /></span>
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#665b35]">{translate(locale, "Shipping settings", "إعدادات الشحن")}</strong><span className="mt-1 block text-xs text-[#897b4b]">{translate(locale, "Maintain delivery services, rates and destinations.", "حدّث خدمات التوصيل والأسعار والوجهات.")}</span></span>
                   <span className="ms-auto text-lg text-[#897b4b] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
                 </Link>

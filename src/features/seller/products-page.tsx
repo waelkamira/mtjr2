@@ -8,6 +8,7 @@ import { translate } from "@/lib/locale";
 import { toMinorUnits } from "@/lib/money";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 import SyriaLocationPicker from "@/components/maps/syria-location-picker";
+import { SellerIcon } from "@/features/seller/seller-navigation";
 
 type Market = {
   id: string; code: string; name: string;
@@ -677,25 +678,25 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
-  const inputClass = "w-full rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#fff8f3,#e8e5f2)] px-4 py-3 text-sm text-[#46516b] shadow-[inset_0_2px_5px_rgba(74,75,112,.08),0_1px_0_white] outline-none transition placeholder:text-slate-400 focus:border-[#83b9c1] focus:ring-4 focus:ring-[#9bcbd0]/25";
-  return <main className="min-h-screen bg-[linear-gradient(145deg,#fffaf6_0%,#f5eee7_48%,#fbf6f1_100%)] text-[#3f3935]">
-    <div className="mx-auto max-w-[1680px] px-1 py-2 sm:px-2 lg:px-3 lg:py-3">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.9rem] border border-white/90 bg-[linear-gradient(115deg,#fff6ef_0%,#f7e9de_48%,#f2edf5_100%)] p-5 shadow-[0_14px_30px_rgba(119,86,62,.09),inset_0_2px_0_white] sm:p-7">
+  const inputClass = "w-full rounded-xl border border-[#dce5ee] bg-white px-3.5 py-3 text-sm text-[#203850] shadow-sm outline-none transition placeholder:text-[#9aa8b8] focus:border-[#39bdb6] focus:ring-4 focus:ring-[#39bdb6]/10";
+  return <main className="min-h-screen bg-[var(--seller-canvas)] text-[#203850]">
+    <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border border-white/15 bg-[linear-gradient(115deg,#17334f_0%,#24516b_58%,#267b7c_100%)] p-5 text-white shadow-[0_14px_30px_rgba(20,43,69,.15)] sm:p-7">
         <div className="flex min-w-0 items-center gap-4">
-          <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/90 bg-[linear-gradient(145deg,#fffdfb,#f4e9df)] text-2xl text-[#8a583b] shadow-[0_8px_18px_rgba(119,86,62,.09),inset_0_2px_0_white]" aria-hidden="true">▦</span>
+          <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/10 text-[#8ce8e1]" aria-hidden="true"><SellerIcon name="package" /></span>
           <div className="min-w-0"><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#628493]">{translate(locale, "CATALOG MANAGEMENT", "إدارة الكتالوج")}</p><h1 className="mt-1 text-2xl font-black tracking-tight text-[#46516b] sm:text-3xl">{translate(locale, "Products", "المنتجات")}</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-[#716b86]">{translate(locale, "Create, organize and maintain your store listings. Category-specific fields and publication rules are applied from the catalog.", "أنشئ منتجات متجرك ونظّمها وأدرها. تُحمّل خصائص كل فئة وتُطبق قواعد النشر من الكتالوج.")}</p></div>
         </div>
-        <Link href="#create-product" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/90 bg-[linear-gradient(145deg,#a8d9d4,#75b8b8)] px-5 py-3 text-sm font-extrabold text-[#24485a] shadow-[0_7px_16px_rgba(38,94,105,.18),inset_0_2px_0_rgba(255,255,255,.85)] transition hover:-translate-y-0.5">＋ {translate(locale, "New product", "منتج جديد")}</Link>
+        <Link href="#create-product" className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-[#78ded7]/40 bg-[#39bdb6] px-5 py-3 text-sm font-extrabold text-[#10364d] shadow-[0_7px_16px_rgba(9,31,49,.16)] transition hover:-translate-y-0.5"><span aria-hidden="true" className="text-xl leading-none">＋</span>{translate(locale, "New product", "منتج جديد")}</Link>
       </header>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
-      {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 2xl:grid-cols-[minmax(440px,.92fr)_minmax(540px,1.08fr)]">
-        <section id="create-product" className="scroll-mt-24 rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-5 shadow-[0_16px_34px_rgba(119,86,62,.10),inset_0_2px_0_white,inset_0_-3px_8px_rgba(119,86,62,.04)] sm:p-7">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3 rounded-[1.5rem] border border-white/75 bg-[linear-gradient(120deg,#fff1e7,#f8f1eb_58%,#f5eee7)] p-4 shadow-[inset_0_2px_0_white,0_6px_15px_rgba(119,86,62,.06)]">
+      {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 2xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,.8fr)]">
+        <section id="create-product" className="seller-product-create scroll-mt-24 rounded-2xl border border-[#dce5ee] bg-white p-5 shadow-[0_10px_28px_rgba(30,57,83,.06)] sm:p-7">
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-3 border-b border-[#e8edf3] pb-5">
             <div><p className="text-[10px] font-extrabold tracking-[.18em] text-[#628493]">{translate(locale,"PRODUCT STUDIO","استوديو المنتجات")}</p><h2 className="mt-1 text-xl font-black tracking-tight text-[#34445a]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2><p className="mt-1 max-w-lg text-xs leading-5 text-[#8790a5]">{translate(locale,"Build a complete listing with category-aware details, variants, pricing and a polished image gallery.","أنشئ إعلاناً متكاملاً يتضمن خصائص الفئة والمتغيرات والأسعار ومعرض صور احترافياً.")}</p></div>
-            <span className="rounded-full border border-white/80 bg-[#b9d6df] px-3 py-1.5 text-[10px] font-extrabold text-[#526078] shadow-[inset_0_1px_0_white,0_3px_8px_rgba(43,69,88,.1)]">{translate(locale,"DRAFT WORKFLOW","مسار المسودة")}</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#dce5ee] bg-[#f7fafc] px-3 py-1.5 text-[10px] font-extrabold text-[#40556d]"><SellerIcon name="document" />{translate(locale,"DRAFT WORKFLOW","مسار المسودة")}</span>
           </div>
-          <label className="mt-5 grid gap-2 text-sm font-medium">{translate(locale, "Store", "المتجر")}<select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
+          <label className="mt-5 grid gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><SellerIcon name="store" />{translate(locale, "Store", "المتجر")}</span><select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
             const nextId = e.target.value;
             uploadedImages.forEach((image) => {
               URL.revokeObjectURL(image.previewUrl);
@@ -711,16 +712,21 @@ export default function SellerProductsPage() {
             setMarketPrices(nextPrices);
             setVariantRows((rows) => rows.map((row) => ({ ...row, prices: nextPrices, optionValues: {} })));
           }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name} · STR-{store.storeNumber.padStart(8, "0")}</option>)}</select></label>
-          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="mt-4 grid gap-4">
-            <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
-            <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
-            <label className="grid gap-1 text-sm">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={3} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
-            <div className="grid gap-3 sm:grid-cols-2">
+          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="seller-product-form mt-4 grid gap-5">
+            <section className="grid gap-4 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
+              <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#e8f5f4] text-[#168b89]"><SellerIcon name="document" /></span><div><h3 className="text-sm font-extrabold text-[#203850]">{translate(locale, "Product information", "معلومات المنتج")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Start with a clear title and a customer-friendly description.", "ابدأ بعنوان واضح ووصف مناسب للعملاء.")}</p></div></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
+                <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={4} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1 text-sm">{translate(locale, "Contact phone", "هاتف التواصل")}<input type="tel" maxLength={40} className={inputClass} value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} /></label>
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
-            </div>
-            <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(119,86,62,.04)]">
-              <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-extrabold text-[#34445a]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-full border border-white bg-white/80 px-3 py-2 text-xs font-bold text-[#526078] shadow-sm disabled:opacity-40">＋ {translate(locale, "Add variant", "إضافة متغير")}</button></div>
+              </div>
+            </section>
+            <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#eef4fa] text-[#3d6c92]"><SellerIcon name="tag" /></span><div><h3 className="text-sm font-extrabold text-[#203850]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs leading-5 text-[#718096]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-xl border border-[#dce5ee] bg-white px-3 py-2 text-xs font-bold text-[#40556d] shadow-sm disabled:opacity-40"><span className="me-1 text-base">＋</span>{translate(locale, "Add variant", "إضافة متغير")}</button></div>
               {variantRows.map((variant, index) => <article key={variant.id} className="grid gap-3 rounded-2xl border border-white/90 bg-white/65 p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(43,69,88,.05)]">
                 <div className="flex items-center justify-between"><p className="text-xs font-extrabold text-[#8a583b]">{translate(locale, "Variant", "المتغير")} {index + 1}</p>{variantRows.length > 1 && <button type="button" onClick={() => setVariantRows((rows) => rows.filter((row) => row.id !== variant.id))} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-700">{translate(locale, "Remove", "حذف")}</button>}</div>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -729,13 +735,13 @@ export default function SellerProductsPage() {
                   <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Variant name (optional)", "اسم المتغير (اختياري)")}<input maxLength={180} className={inputClass} value={variant.name} onChange={(event) => updateVariant(variant.id, { name: event.target.value })} placeholder={translate(locale, "e.g. Blue / Large", "مثال: أزرق / كبير")} /></label>
                 </div>
                 <div className="grid gap-3 border-t border-[#eadfd5] pt-3">
-                  <p className="text-xs font-extrabold text-[#8a583b]">{translate(locale, "Market prices for this SKU", "أسعار الأسواق لهذا المتغير")}</p>
+                  <p className="text-xs font-extrabold text-[#40556d]">{translate(locale, "Market prices for this SKU", "أسعار الأسواق لهذا المتغير")}</p>
                   {!availableMarkets.length && <p className="text-xs text-amber-800">{translate(locale, "No active markets are enabled for this store.", "لا توجد أسواق مفعّلة لهذا المتجر.")}</p>}
                   {availableMarkets.map((market) => {
                     const price = variant.prices[market.id] ?? marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" };
                     const currencies = market.currencies.map((entry) => entry.currency);
                     const currency = currencies.find((item) => item.code === price.currencyCode) ?? market.defaultCurrency;
-                    return <div key={market.id} className="grid gap-2 rounded-xl border border-[#eadfd5] bg-[#fff8f3] p-3">
+                    return <div key={market.id} className="grid gap-2 rounded-xl border border-[#e1e8f0] bg-[#f7fafc] p-3">
                       <p className="text-xs font-bold">{market.name}</p>
                       <label className="grid gap-1 text-xs">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={price.currencyCode} onChange={(event) => updateVariantPrice(variant.id, market.id, { currencyCode: event.target.value, amount: "", compareAt: "" })}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
                       <label className="grid gap-1 text-xs">{translate(locale, "Selling price", "سعر البيع")} ({currency.code})<input required inputMode="decimal" type="text" className={inputClass} value={price.amount} onChange={(event) => updateVariantPrice(variant.id, market.id, { amount: event.target.value })} placeholder={currency.minorUnit === 0 ? "1299" : "1299.00"} /><span className="text-[11px] text-[#8790a5]">{translate(locale, "Enter the full customer-facing amount. Decimal places allowed", "أدخل المبلغ الكامل الذي سيظهر للعميل. عدد المنازل العشرية المسموح")} {currency.minorUnit}</span></label>
@@ -757,19 +763,21 @@ export default function SellerProductsPage() {
               {!variantSkusValid && <p className="text-xs font-semibold text-amber-800">{translate(locale, "Every variant needs a unique SKU.", "يجب أن يكون لكل متغير رمز SKU فريد.")}</p>}
             </section>
             <div
-              className="grid gap-4 rounded-[1.75rem] border border-dashed border-[#d7a17b] bg-[linear-gradient(145deg,#fff6ef,#f2e6dc)] p-4 shadow-[inset_0_3px_8px_rgba(119,86,62,.08),0_1px_0_white] transition-colors hover:border-[#d86b32] sm:p-5"
+              className="seller-product-dropzone grid gap-4 rounded-xl border border-dashed border-[#a8c9d0] bg-[#f7fafc] p-4 transition-colors hover:border-[#39bdb6] sm:p-5"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); void uploadProductImageFiles(Array.from(event.dataTransfer.files)); }}
               aria-label={translate(locale, "Product image upload area", "منطقة رفع صور المنتج")}
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold">{translate(locale, "Product image gallery", "معرض صور المنتج")}</p>
-                  <span className="rounded-full bg-[var(--color-lavender-100)] px-2.5 py-1 text-[10px] font-bold text-[var(--color-lavender-800)]">{uploadedImages.length}/10</span>
+                  <SellerIcon name="media" />
+                  <p className="text-sm font-extrabold text-[#203850]">{translate(locale, "Product image gallery", "معرض صور المنتج")}</p>
+                  <span className="rounded-full bg-[#e8f5f4] px-2.5 py-1 text-[10px] font-bold text-[#167d7a]">{uploadedImages.length}/10</span>
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each). The first image is the storefront cover. Imgur Client IDs rotate in order, then ImageKit and Cloudinary are used as fallbacks.", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة). الصورة الأولى هي غلاف المتجر. يتم تدوير معرفات Imgur بالترتيب ثم استخدام ImageKit وCloudinary كبدائل.")}</p>
               </div>
-              <label className="inline-flex w-fit cursor-pointer items-center rounded-xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-4 py-2.5 text-sm font-bold text-[#40375f] shadow-[0_7px_16px_rgba(93,83,139,.14),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:opacity-50">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[#d2e5e9] bg-white px-4 py-2.5 text-sm font-bold text-[#203850] shadow-sm transition hover:border-[#39bdb6] hover:-translate-y-0.5">
+                <SellerIcon name="media" />
                 {uploadingImages ? translate(locale, "Uploading images…", "جارٍ رفع الصور…") : translate(locale, "Choose images", "اختيار الصور")}
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
               </label>
@@ -798,8 +806,8 @@ export default function SellerProductsPage() {
               </div>}
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
-            <label className="grid gap-1 text-sm">{translate(locale, "Category", "الفئة")}<select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-            {categoryId && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(119,86,62,.04)]">
+            <label className="grid gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><SellerIcon name="catalog" />{translate(locale, "Category", "الفئة")}</span><select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            {categoryId && <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
               <div>
                 <h3 className="text-sm font-semibold">{translate(locale, "Category-specific details", "الخصائص الخاصة بالفئة")}</h3>
                 <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "These fields are defined by the catalog and validated again on the server.", "هذه الحقول معرّفة في الكتالوج ويعاد التحقق منها في الخادم قبل الحفظ.")}</p>
@@ -817,7 +825,7 @@ export default function SellerProductsPage() {
                   })}
                 </div>}
             </section>}
-            {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(119,86,62,.04)]">
+            {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
               <div><h3 className="text-sm font-extrabold text-[#34445a]">{translate(locale, "Variant options", "خيارات المتغير")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "These values are saved on the SKU variant, such as size or color.", "تُحفظ هذه القيم على متغير رمز SKU، مثل المقاس أو اللون.")}</p></div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
@@ -845,12 +853,12 @@ export default function SellerProductsPage() {
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input required type="number" min="0.01" max="999999999" step="0.01" className={inputClass} value={floorArea} onChange={(event) => setFloorArea(event.target.value)} /></label>
               </div>
             </fieldset>}
-            <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
-            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || !variantPricesValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length} className="mt-2 rounded-2xl bg-[linear-gradient(135deg,#c8bee9,#9b91c8)] px-5 py-3 text-sm font-extrabold text-[#40375f] shadow-[0_9px_20px_rgba(93,83,139,.14),inset_0_1px_0_rgba(255,255,255,.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <label className="grid gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><SellerIcon name="tag" />{translate(locale, "Brand", "العلامة التجارية")}</span><select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
+            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || !variantPricesValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#173b59] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(20,43,69,.15)] transition hover:bg-[#20516b] disabled:cursor-not-allowed disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
-        <section className="rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-6 shadow-[0_16px_32px_rgba(119,86,62,.09),inset_0_2px_0_white,inset_0_-2px_7px_rgba(119,86,62,.035)] sm:p-7">
-          <h2 className="text-xl font-extrabold tracking-tight text-[#34445a]">{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
+        <section className="rounded-2xl border border-[#dce5ee] bg-white p-5 shadow-[0_10px_28px_rgba(30,57,83,.06)] sm:p-7">
+          <h2 className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-[#203850]"><SellerIcon name="package" />{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
           {!loading && products.length > 0 && <section aria-label={translate(locale, "Seller catalog analytics", "تحليلات كتالوج البائع")} className="mt-5 grid gap-4 sm:grid-cols-2">
             <MetricBarChart title={translate(locale, "Product approval pipeline", "مسار اعتماد المنتجات")} description={translate(locale, "Counts reflect the currently loaded product list and active search.", "الأعداد للمنتجات المحمّلة حالياً ونتائج البحث النشط.")} rows={Object.entries(approvalCounts).map(([status, count], index) => ({
               label: productStatusLabel(status),

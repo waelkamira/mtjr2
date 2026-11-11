@@ -834,7 +834,7 @@ textarea {
   background: var(--seller-canvas) !important;
   color: var(--seller-ink) !important;
 }
-.seller-dashboard > div {
+.seller-dashboard > div:not(.seller-mobile-navigation) {
   background: var(--seller-canvas) !important;
 }
 .seller-dashboard .seller-sidebar {
@@ -988,20 +988,15 @@ textarea {
   outline-offset: 3px;
 }
 @media (max-width: 1023px) {
-  .seller-dashboard > div:nth-child(2) > div:first-child {
-    background: #142b45 !important;
-    color: #f5f8fc !important;
-    border-color: #29435d !important;
+  .seller-mobile-navigation__links {
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
   }
-  .seller-dashboard > div:nth-child(2) > div:first-child nav a {
-    background: rgb(255 255 255 / 9%) !important;
-    color: #eaf2f8 !important;
-    border: 1px solid rgb(255 255 255 / 10%) !important;
+  .seller-mobile-navigation__links::-webkit-scrollbar {
+    display: none;
   }
-  .seller-dashboard > div:nth-child(2) > div:first-child nav a[aria-current="page"] {
-    background: rgb(57 197 189 / 22%) !important;
-    color: #ffffff !important;
-    border-color: rgb(91 221 212 / 32%) !important;
+  .seller-mobile-navigation__links > a {
+    scroll-snap-align: start;
   }
 }
 @media (max-width: 640px) {
@@ -1014,48 +1009,96 @@ textarea {
 }
 
 
-/* Dashboard-specific composition: the live overview uses a nested hero and action grid. */
-.seller-dashboard main > div > section:first-child {
+/* Dashboard-specific composition: keep overview styling scoped away from forms. */
+.seller-dashboard .seller-overview-hero {
   background: linear-gradient(115deg, #17334f 0%, #24516b 58%, #267b7c 100%) !important;
   border-color: #315b70 !important;
   border-radius: 26px !important;
   box-shadow: 0 16px 34px rgb(20 43 69 / 15%) !important;
   color: #fff !important;
 }
-.seller-dashboard main > div > section:first-child > div[aria-hidden="true"] {
+.seller-dashboard .seller-overview-hero > div[aria-hidden="true"] {
   background: linear-gradient(110deg, rgb(20 43 69 / 92%), rgb(31 83 103 / 82%) 62%, rgb(35 121 121 / 76%)) !important;
 }
-.seller-dashboard main > div > section:first-child :is(h1, h2, h3, p, span, a, label) {
+.seller-dashboard .seller-overview-hero :is(h1, h2, h3, p, span, label) {
   color: #fff !important;
 }
-.seller-dashboard main > div > section:first-child :is(button, a[class*="rounded"]) {
+.seller-dashboard .seller-overview-hero :is(button, a[class*="rounded"]) {
   border-color: rgb(255 255 255 / 28%) !important;
 }
-.seller-dashboard main > div > section:nth-child(2) > article {
+.seller-dashboard .seller-overview-hero .seller-overview-secondary-action {
+  color: #17334f !important;
+  background: #ffffff !important;
+  border-color: #dce5ee !important;
+}
+.seller-dashboard .seller-overview-metrics > article {
   border-radius: 20px !important;
 }
-.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a,
-.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a {
+.seller-dashboard .seller-quick-actions > div:last-child > a {
   background: #ffffff !important;
   border: 1px solid #dce5ee !important;
   border-radius: 18px !important;
   box-shadow: 0 7px 20px rgb(30 57 83 / 6%) !important;
 }
-.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a strong,
-.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a strong {
+.seller-dashboard .seller-quick-actions > div:last-child > a strong {
   color: #203850 !important;
 }
-.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a span span,
-.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a span span {
+.seller-dashboard .seller-quick-actions > div:last-child > a span span {
   color: #718096 !important;
 }
-.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a > span:first-child,
-.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a > span:first-child {
+.seller-dashboard .seller-quick-actions > div:last-child > a > span:first-child {
   background: #e8f5f4 !important;
   border: 1px solid #d4eeeb;
 }
-.seller-dashboard main > div > section[aria-label="إجراءات البائع السريعة"] > div:last-child > a:hover,
-.seller-dashboard main > div > section[aria-label="Seller quick actions"] > div:last-child > a:hover {
+.seller-dashboard .seller-quick-actions > div:last-child > a:hover {
   transform: translateY(-3px);
   box-shadow: 0 13px 26px rgb(30 57 83 / 10%) !important;
+}
+.seller-dashboard main > .seller-application-status {
+  background: #fff !important;
+  border: 1px solid #dce5ee !important;
+  box-shadow: 0 16px 38px rgb(20 43 69 / 8%) !important;
+  color: #203850 !important;
+}
+.seller-dashboard main > header a[href="#create-product"] {
+  color: #10364d !important;
+  background: #75e0d9 !important;
+  border-color: rgb(117 224 217 / 60%) !important;
+}
+.seller-dashboard .seller-application-status > header :is(h1, h2, h3, p, span, a, label) {
+  color: inherit !important;
+}
+.seller-dashboard .seller-application-form {
+  background: #fff !important;
+  border: 1px solid #dce5ee !important;
+  box-shadow: 0 12px 32px rgb(20 43 69 / 7%) !important;
+}
+.seller-dashboard .seller-application-form > div:first-child :is(h1, h2, h3, p, span, a, label) {
+  color: inherit !important;
+}
+.seller-dashboard .seller-application-preview-header :is(h1, h2, h3, p, span, a, label) {
+  color: inherit !important;
+}
+.seller-dashboard .seller-application-section {
+  border-color: #e1e8f0 !important;
+  background: #fff !important;
+  box-shadow: 0 5px 16px rgb(30 57 83 / 4%) !important;
+}
+.seller-dashboard .seller-application-section h3 {
+  color: #203850;
+}
+.seller-dashboard .seller-application-section p {
+  color: #718096;
+}
+.seller-dashboard .seller-product-create {
+  border-color: #dce5ee !important;
+  background: #fff !important;
+}
+.seller-dashboard .seller-product-create > div:first-child :is(h2, h3, p, span) {
+  color: #203850;
+}
+.seller-dashboard .seller-product-form > section {
+  border-color: #e1e8f0 !important;
+  background: #fff !important;
+  box-shadow: 0 5px 16px rgb(30 57 83 / 4%) !important;
 }

@@ -6,12 +6,12 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
-type IconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping" | "finance";
+export type SellerIconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping" | "finance" | "user" | "business" | "catalog" | "pin" | "globe" | "document" | "shield" | "media" | "tag" | "store";
 type Tone = "lavender" | "mint" | "peach" | "butter" | "blush" | "sky";
 
 const groups: Array<{
   title: string; ar: string;
-  links: Array<{ href: string; label: string; ar: string; icon: IconName; tone: Tone }>;
+  links: Array<{ href: string; label: string; ar: string; icon: SellerIconName; tone: Tone }>;
 }> = [
   {
     title: "Workspace", ar: "مساحة العمل",
@@ -60,7 +60,7 @@ const toneClasses: Record<Tone, string> = {
   sky: "bg-[#eaf2f8] text-[#45677f]"
 };
 
-function SellerIcon({ name }: { name: IconName }) {
+export function SellerIcon({ name }: { name: SellerIconName }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-[18px]" {...common}>
@@ -77,6 +77,16 @@ function SellerIcon({ name }: { name: IconName }) {
       {name === "notifications" && <><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" /></>}
       {name === "shipping" && <><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z" /><circle cx="7.5" cy="18" r="1.8" /><circle cx="17.5" cy="18" r="1.8" /></>}
       {name === "finance" && <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h5M8 16h8" /></>}
+      {name === "user" && <><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></>}
+      {name === "business" && <><path d="M4 20V5l8-2v17M12 9h8v11M7 8h2M7 12h2M7 16h2M15 12h2M15 16h2M3 20h18" /></>}
+      {name === "catalog" && <><path d="M4 5.5h16v13H4z" /><path d="m5 17 4-4 3 3 2-2 5 4M9 9h.01" /></>}
+      {name === "pin" && <><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z" /><circle cx="12" cy="10" r="2.2" /></>}
+      {name === "globe" && <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>}
+      {name === "document" && <><path d="M6 3.5h8l4 4V21H6z" /><path d="M14 3.5V8h4M9 12h6M9 16h6" /></>}
+      {name === "shield" && <><path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" /><path d="m9 12 2 2 4-4" /></>}
+      {name === "media" && <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9" r="1.5" /><path d="m4 17 5-5 4 4 3-3 4 4" /></>}
+      {name === "tag" && <><path d="M20 13 13 20 4 11V4h7z" /><circle cx="8" cy="8" r="1" /></>}
+      {name === "store" && <><path d="M4 10v10h16V10M3 10l2-6h14l2 6" /><path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M9 20v-6h6v6" /></>}
     </svg>
   );
 }
@@ -181,7 +191,7 @@ export default function SellerNavigation() {
         </div>
       </aside>
 
-      <div className="border-b border-[#eee9e4] bg-[#fbfaff] px-4 py-3 text-[#343044] shadow-[0_4px_14px_rgba(48,38,78,.04)] lg:hidden">
+      <div className="seller-mobile-navigation border-b border-[#29435d] bg-[#142b45] px-4 py-3 text-[#f5f8fc] shadow-[0_4px_14px_rgba(20,43,69,.15)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
           <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
             <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
@@ -189,11 +199,11 @@ export default function SellerNavigation() {
           </Link>
           <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
         </div>
-        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="flex max-h-28 flex-wrap gap-2 overflow-x-hidden overflow-y-auto overscroll-contain pb-1">
+        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-mobile-navigation__links flex gap-2 overflow-x-auto overscroll-x-contain pb-1">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex min-w-0 shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-[#fff1e8] text-[#a94308] ring-1 ring-[#f6d8c5] shadow-[0_3px_10px_rgba(240,102,13,.10)]" : "bg-white text-[#5f5a55] hover:bg-[#fff4ed]"}`}>
+              className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[#57cfc8]/40 bg-[#39c5bd]/20 text-white" : "border-white/10 bg-white/[.06] text-[#d7e2ed] hover:bg-white/[.12]"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
