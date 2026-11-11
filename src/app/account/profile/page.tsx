@@ -80,7 +80,7 @@ export default function ProfilePage() {
   }));
 
   return (
-    <main className="account-profile-studio relative min-h-screen overflow-hidden bg-[#0B0B10] px-4 py-7 text-[#f4f2ee] sm:px-6 sm:py-10">
+    <main className="account-profile-studio relative min-h-screen overflow-hidden px-4 py-7 text-black sm:px-6 sm:py-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -top-40 -left-24 h-[28rem] w-[28rem] rounded-full bg-amber-500/10 blur-3xl" />
         <div className="absolute top-1/3 -right-40 h-[30rem] w-[30rem] rounded-full bg-violet-500/10 blur-3xl" />
@@ -88,37 +88,37 @@ export default function ProfilePage() {
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)", backgroundSize: "34px 34px" }} />
       </div>
       <div className="relative mx-auto max-w-6xl">
-        <Link href="/account" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm font-medium text-white/70 transition hover:border-amber-400/30 hover:bg-amber-500/[0.06] hover:text-white">← {t("My account", "حسابي")}</Link>
+        <Link href="/account" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm font-medium text-black/70 transition hover:border-amber-400/30 hover:bg-amber-500/[0.06] hover:text-black">← {t("My account", "حسابي")}</Link>
         <div className="mt-7 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.25em] text-amber-300/75">{t("MATJAR / PERSONAL SPACE", "متجر / المساحة الشخصية")}</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">{t("Personal profile", "الملف الشخصي")}</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">{t("Manage the details associated with your marketplace account.", "أدر التفاصيل المرتبطة بحسابك في السوق.")}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.25em] text-black">{t("MATJAR / PERSONAL SPACE", "متجر / المساحة الشخصية")}</p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-black sm:text-4xl">{t("Personal profile", "الملف الشخصي")}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/50">{t("Manage the details associated with your marketplace account.", "أدر التفاصيل المرتبطة بحسابك في السوق.")}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,.2)]">
-            <p className="text-[9px] font-bold uppercase tracking-[.2em] text-white/35">{t("Account status", "حالة الحساب")}</p>
-            <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white"><span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.65)]" />{profile?.status ?? t("Loading", "جارٍ التحميل")}</p>
+            <p className="text-[9px] font-bold uppercase tracking-[.2em] text-black/35">{t("Account status", "حالة الحساب")}</p>
+            <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-black"><span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.65)]" />{profile?.status ?? t("Loading", "جارٍ التحميل")}</p>
           </div>
         </div>
-        {loading ? <p className="mt-8 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-sm text-white/55">{t("Loading profile…", "جارٍ تحميل الملف الشخصي…")}</p> : profile ? <>
-          <section className="mt-7 overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-[#191a24] via-[#15161e] to-[#111219] p-5 shadow-[0_18px_48px_rgba(0,0,0,.3),inset_0_1px_0_rgba(255,255,255,.04)] sm:p-8">
+        {loading ? <p className="mt-8 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-sm text-black/55">{t("Loading profile…", "جارٍ تحميل الملف الشخصي…")}</p> : profile ? <>
+          <section className="mt-7 overflow-hidden rounded-[1.75rem] border border-white/10 p-5 shadow-[0_18px_48px_rgba(0,0,0,.3),inset_0_1px_0_rgba(255,255,255,.04)] sm:p-8">
             <div className="mb-6 flex items-center gap-3">
               <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-amber-400/25 to-orange-500/10 text-amber-300 ring-1 ring-amber-400/20">
                 <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
               </span>
-              <div><h2 className="text-base font-bold text-white">{t("Account details", "بيانات الحساب")}</h2><p className="mt-1 text-xs text-white/40">{t("Your personal information and contact address.", "معلوماتك الشخصية وبيانات التواصل.")}</p></div>
+              <div><h2 className="text-base font-bold text-black">{t("Account details", "بيانات الحساب")}</h2><p className="mt-1 text-xs text-black/40">{t("Your personal information and contact address.", "معلوماتك الشخصية وبيانات التواصل.")}</p></div>
             </div>
             {error && <p role="alert" className="mb-4 rounded-xl border border-rose-400/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
             {notice && <p role="status" className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{notice}</p>}
             <form onSubmit={save} className="grid gap-5 md:grid-cols-2">
-              <label className="block text-sm font-semibold text-white/75">{t("Display name", "الاسم المعروض")}
-                <input className="mt-2 w-full rounded-xl border border-white/10 bg-[#0d0e14] px-4 py-3 text-sm text-white shadow-inner outline-none transition placeholder:text-white/30 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/10" value={name} onChange={(event) => setName(event.target.value)} required minLength={1} maxLength={80} />
+              <label className="block text-sm font-semibold text-black/75">{t("Display name", "الاسم المعروض")}
+                <input className="mt-2 w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-black shadow-inner outline-none transition placeholder:text-black/30 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/10" value={name} onChange={(event) => setName(event.target.value)} required minLength={1} maxLength={80} />
               </label>
-              <label className="block text-sm font-semibold text-white/75">{t("Email address", "البريد الإلكتروني")}
-                <input className="mt-2 w-full rounded-xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-sm text-white/55 shadow-inner outline-none" value={profile.email} readOnly />
+              <label className="block text-sm font-semibold text-black/75">{t("Email address", "البريد الإلكتروني")}
+                <input className="mt-2 w-full rounded-xl border border-white/[0.07] px-4 py-3 text-sm text-black/55 shadow-inner outline-none" value={profile.email} readOnly />
               </label>
               <div className="flex flex-wrap items-center justify-between gap-3 md:col-span-2">
-                <span className="text-xs text-white/40">{t("Account status:", "حالة الحساب:")} <strong className="font-semibold text-emerald-300">{profile.status}</strong></span>
+                <span className="text-xs text-black/40">{t("Account status:", "حالة الحساب:")} <strong className="font-semibold text-emerald-300">{profile.status}</strong></span>
                 <button disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-bold text-[#17120c] shadow-[0_7px_20px_rgba(251,146,60,.22)] transition hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">
                   {busy ? t("Saving…", "جارٍ الحفظ…") : t("Save changes", "حفظ التغييرات")}
                 </button>
@@ -131,9 +131,9 @@ export default function ProfilePage() {
 
           {analytics && <section aria-label="Personal account analytics" className="mt-8">
             <div className="mb-5">
-              <p className="text-[10px] font-bold uppercase tracking-[.22em] text-violet-300/75">{t("YOUR ACTIVITY", "نشاطك")}</p>
-              <h2 className="mt-2 text-xl font-bold text-white">{t("Your marketplace activity", "نشاطك في السوق")}</h2>
-              <p className="mt-1 text-sm text-white/45">{t("Private statistics for your signed-in account only.", "إحصاءات خاصة بحسابك المسجل فقط.")}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[.22em] text-black">{t("YOUR ACTIVITY", "نشاطك")}</p>
+              <h2 className="mt-2 text-xl font-bold text-black">{t("Your marketplace activity", "نشاطك في السوق")}</h2>
+              <p className="mt-1 text-sm text-black/45">{t("Private statistics for your signed-in account only.", "إحصاءات خاصة بحسابك المسجل فقط.")}</p>
             </div>
             <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
@@ -148,10 +148,10 @@ export default function ProfilePage() {
                   "from-sky-500/15 to-blue-600/[0.04] text-sky-200 ring-sky-400/15",
                   "from-emerald-500/15 to-teal-600/[0.04] text-emerald-200 ring-emerald-400/15"
                 ];
-                return <div key={String(label)} className={`rounded-2xl border border-white/[0.08] bg-gradient-to-br ${tones[index]} p-5 shadow-[0_10px_28px_rgba(0,0,0,.2)] ring-1 ring-inset`}><p className="text-xs text-white/50">{label}</p><p className="mt-2 text-3xl font-black tabular-nums text-white">{value}</p></div>;
+                return <div key={String(label)} className={`rounded-2xl border border-white/[0.08] bg-gradient-to-br ${tones[index]} p-5 shadow-[0_10px_28px_rgba(0,0,0,.2)] ring-1 ring-inset`}><p className="text-xs text-black/50">{label}</p><p className="mt-2 text-3xl font-black tabular-nums text-black">{value}</p></div>;
               })}
             </div>
-            <div className="account-profile-charts grid gap-4 md:grid-cols-2">
+            <div className=" grid gap-4 md:grid-cols-2">
               <MetricBarChart variant="donut" title="Orders by status" rows={analytics.orderStatuses.map((row, index) => ({
                 label: row.status.replaceAll("_", " ").toLowerCase(),
                 value: row.count,
