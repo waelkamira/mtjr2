@@ -80,36 +80,60 @@ export default function ProfilePage() {
   }));
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(255,140,28,.07),transparent_34%),radial-gradient(ellipse_at_top_right,rgba(255,140,28,.035),transparent_34%),#fafafa] px-5 py-8">
-      <div className="mx-auto max-w-6xl">
-        <Link href="/account" className="text-sm text-[var(--color-ink-600)]">← {t("My account", "حسابي")}</Link>
-        <h1 className="mt-5 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Personal profile", "الملف الشخصي")}</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">{t("Manage the details associated with your marketplace account.", "أدر التفاصيل المرتبطة بحسابك في السوق.")}</p>
-        {loading ? <p className="mt-8">{t("Loading profile…", "جارٍ تحميل الملف الشخصي…")}</p> : profile ? <>
-          <section className="mt-7 rounded-3xl border border-white/80 bg-white/95 p-6 shadow-[0_12px_34px_rgba(15,23,42,.05)] sm:p-8">
-            {error && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
-            {notice && <p role="status" className="mb-4 rounded-xl bg-[var(--color-sage-100)] p-3 text-sm">{notice}</p>}
-            <form onSubmit={save} className="space-y-5">
-              <label className="block text-sm font-medium">{t("Display name", "الاسم المعروض")}
-                <input className="mt-2 w-full rounded-xl border border-[var(--border)] px-4 py-3" value={name} onChange={(event) => setName(event.target.value)} required minLength={1} maxLength={80} />
+    <main className="account-profile-studio relative min-h-screen overflow-hidden bg-[#0B0B10] px-4 py-7 text-[#f4f2ee] sm:px-6 sm:py-10">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-40 -left-24 h-[28rem] w-[28rem] rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="absolute top-1/3 -right-40 h-[30rem] w-[30rem] rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/[0.06] blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)", backgroundSize: "34px 34px" }} />
+      </div>
+      <div className="relative mx-auto max-w-6xl">
+        <Link href="/account" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm font-medium text-white/70 transition hover:border-amber-400/30 hover:bg-amber-500/[0.06] hover:text-white">← {t("My account", "حسابي")}</Link>
+        <div className="mt-7 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.25em] text-amber-300/75">{t("MATJAR / PERSONAL SPACE", "متجر / المساحة الشخصية")}</p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">{t("Personal profile", "الملف الشخصي")}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">{t("Manage the details associated with your marketplace account.", "أدر التفاصيل المرتبطة بحسابك في السوق.")}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,.2)]">
+            <p className="text-[9px] font-bold uppercase tracking-[.2em] text-white/35">{t("Account status", "حالة الحساب")}</p>
+            <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white"><span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.65)]" />{profile?.status ?? t("Loading", "جارٍ التحميل")}</p>
+          </div>
+        </div>
+        {loading ? <p className="mt-8 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-sm text-white/55">{t("Loading profile…", "جارٍ تحميل الملف الشخصي…")}</p> : profile ? <>
+          <section className="mt-7 overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-[#191a24] via-[#15161e] to-[#111219] p-5 shadow-[0_18px_48px_rgba(0,0,0,.3),inset_0_1px_0_rgba(255,255,255,.04)] sm:p-8">
+            <div className="mb-6 flex items-center gap-3">
+              <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-amber-400/25 to-orange-500/10 text-amber-300 ring-1 ring-amber-400/20">
+                <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+              </span>
+              <div><h2 className="text-base font-bold text-white">{t("Account details", "بيانات الحساب")}</h2><p className="mt-1 text-xs text-white/40">{t("Your personal information and contact address.", "معلوماتك الشخصية وبيانات التواصل.")}</p></div>
+            </div>
+            {error && <p role="alert" className="mb-4 rounded-xl border border-rose-400/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
+            {notice && <p role="status" className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{notice}</p>}
+            <form onSubmit={save} className="grid gap-5 md:grid-cols-2">
+              <label className="block text-sm font-semibold text-white/75">{t("Display name", "الاسم المعروض")}
+                <input className="mt-2 w-full rounded-xl border border-white/10 bg-[#0d0e14] px-4 py-3 text-sm text-white shadow-inner outline-none transition placeholder:text-white/30 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/10" value={name} onChange={(event) => setName(event.target.value)} required minLength={1} maxLength={80} />
               </label>
-              <label className="block text-sm font-medium">{t("Email address", "البريد الإلكتروني")}
-                <input className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3" value={profile.email} readOnly />
+              <label className="block text-sm font-semibold text-white/75">{t("Email address", "البريد الإلكتروني")}
+                <input className="mt-2 w-full rounded-xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-sm text-white/55 shadow-inner outline-none" value={profile.email} readOnly />
               </label>
-              <div className="text-xs text-[var(--muted)]">{t("Account status:", "حالة الحساب:")} {profile.status}</div>
-              <button disabled={busy} className="rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">
-                {busy ? t("Saving…", "جارٍ الحفظ…") : t("Save changes", "حفظ التغييرات")}
-              </button>
+              <div className="flex flex-wrap items-center justify-between gap-3 md:col-span-2">
+                <span className="text-xs text-white/40">{t("Account status:", "حالة الحساب:")} <strong className="font-semibold text-emerald-300">{profile.status}</strong></span>
+                <button disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-bold text-[#17120c] shadow-[0_7px_20px_rgba(251,146,60,.22)] transition hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">
+                  {busy ? t("Saving…", "جارٍ الحفظ…") : t("Save changes", "حفظ التغييرات")}
+                </button>
+              </div>
             </form>
-            <div className="mt-8 border-t border-[var(--border)] pt-5">
-              <Link href="/account/addresses" className="font-semibold text-[var(--color-ink-600)]">{t("Manage saved addresses →", "إدارة العناوين المحفوظة ←")}</Link>
+            <div className="mt-7 border-t border-white/10 pt-5">
+              <Link href="/account/addresses" className="inline-flex items-center gap-2 text-sm font-semibold text-amber-300 transition hover:text-amber-200">{t("Manage saved addresses →", "إدارة العناوين المحفوظة ←")}</Link>
             </div>
           </section>
 
           {analytics && <section aria-label="Personal account analytics" className="mt-8">
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold text-[var(--color-ink-950)]">{t("Your marketplace activity", "نشاطك في السوق")}</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">{t("Private statistics for your signed-in account only.", "إحصاءات خاصة بحسابك المسجل فقط.")}</p>
+            <div className="mb-5">
+              <p className="text-[10px] font-bold uppercase tracking-[.22em] text-violet-300/75">{t("YOUR ACTIVITY", "نشاطك")}</p>
+              <h2 className="mt-2 text-xl font-bold text-white">{t("Your marketplace activity", "نشاطك في السوق")}</h2>
+              <p className="mt-1 text-sm text-white/45">{t("Private statistics for your signed-in account only.", "إحصاءات خاصة بحسابك المسجل فقط.")}</p>
             </div>
             <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
@@ -117,9 +141,17 @@ export default function ProfilePage() {
                 [t("Saved favorites", "المنتجات المفضلة"), analytics.favorites],
                 [t("Product reviews", "مراجعات المنتجات"), analytics.productReviews],
                 [t("Store reviews", "مراجعات المتاجر"), analytics.storeReviews]
-              ].map(([label, value]) => <div key={String(label)} className="rounded-3xl border border-white/80 bg-gradient-to-br from-white to-violet-50/70 p-5 shadow-[0_8px_24px_rgba(15,23,42,.045)]"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>)}
+              ].map(([label, value], index) => {
+                const tones = [
+                  "from-violet-500/15 to-purple-600/[0.04] text-violet-200 ring-violet-400/15",
+                  "from-rose-500/15 to-pink-600/[0.04] text-rose-200 ring-rose-400/15",
+                  "from-sky-500/15 to-blue-600/[0.04] text-sky-200 ring-sky-400/15",
+                  "from-emerald-500/15 to-teal-600/[0.04] text-emerald-200 ring-emerald-400/15"
+                ];
+                return <div key={String(label)} className={`rounded-2xl border border-white/[0.08] bg-gradient-to-br ${tones[index]} p-5 shadow-[0_10px_28px_rgba(0,0,0,.2)] ring-1 ring-inset`}><p className="text-xs text-white/50">{label}</p><p className="mt-2 text-3xl font-black tabular-nums text-white">{value}</p></div>;
+              })}
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="account-profile-charts grid gap-4 md:grid-cols-2">
               <MetricBarChart variant="donut" title="Orders by status" rows={analytics.orderStatuses.map((row, index) => ({
                 label: row.status.replaceAll("_", " ").toLowerCase(),
                 value: row.count,
@@ -133,8 +165,20 @@ export default function ProfilePage() {
               ]} />
             </div>
           </section>}
-        </> : <p role="alert" className="mt-8">{error || t("Profile unavailable.", "الملف الشخصي غير متاح.")}</p>}
+        </> : <p role="alert" className="mt-8 rounded-2xl border border-rose-400/20 bg-rose-500/10 p-5 text-sm text-rose-200">{error || t("Profile unavailable.", "الملف الشخصي غير متاح.")}</p>}
       </div>
+      <style jsx global>{`
+        .account-profile-studio .account-profile-charts article {
+          border-color: rgba(255,255,255,.09) !important;
+          background: linear-gradient(145deg,#191b25,#13151d) !important;
+          box-shadow: 0 12px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035) !important;
+        }
+        .account-profile-studio .account-profile-charts article h3 { color: #f4f2ee !important; }
+        .account-profile-studio .account-profile-charts article :is(p,strong,span) { color: #b8b8c4; }
+        .account-profile-studio .account-profile-charts article :is(.text-slate-800,.text-slate-700,.text-\\[\\#405a6d\\],.text-\\[\\#344d60\\]) { color: #f4f2ee !important; }
+        .account-profile-studio .account-profile-charts article :is(.text-slate-500,.text-slate-400,.text-\\[\\#688394\\],.text-\\[\\#829aa7\\]) { color: #a6a6b2 !important; }
+        .account-profile-studio .account-profile-charts article :is(.bg-slate-100) { background: rgba(255,255,255,.09) !important; }
+      `}</style>
     </main>
   );
 }
