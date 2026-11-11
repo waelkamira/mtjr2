@@ -404,7 +404,7 @@ export default function SellerInventoryPage() {
   }
 
   const field = "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm";
-  const button = "rounded-xl bg-[var(--color-ink-800)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50";
+  const button = "rounded-xl bg-[var(--action)] px-4 py-3 text-sm font-semibold text-white shadow-[0_4px_9px_rgba(240,102,13,.18)] transition-colors hover:bg-[var(--action-hover)] disabled:opacity-50";
   const movementLabel = (type: string) => {
     const labels: Record<string, string> = {
       RECEIPT: "استلام مخزون", RETURN_RECEIPT: "استلام مرتجع", SALE: "بيع",
