@@ -762,6 +762,17 @@ export default function SellerWorkspacePage() {
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Email / phone", "البريد والهاتف")}</dt><dd dir="ltr" className="mt-1 text-left">{application.contactEmail || "—"} · {application.phoneNumber || "—"}</dd></div>
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Address", "العنوان")}</dt><dd className="mt-1">{application.residence || "—"}</dd></div>
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Business type", "نوع النشاط")}</dt><dd className="mt-1">{application.businessType || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Registration country / number", "بلد ورقم التسجيل")}</dt><dd className="mt-1" dir="ltr">{application.registrationCountryCode || "—"} · {application.registrationNumber || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Registration authority", "جهة التسجيل")}</dt><dd className="mt-1">{application.registrationAuthority || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Registration date", "تاريخ التسجيل")}</dt><dd className="mt-1">{application.registrationDate ? new Date(application.registrationDate).toLocaleDateString(locale === "ar" ? "ar" : "en") : "—"}</dd></div>
+                <div className="sm:col-span-2"><dt className="text-xs text-[#8790a5]">{translate(locale, "Registered address", "العنوان المسجل")}</dt><dd className="mt-1">{application.registeredAddress || "—"}</dd></div>
+                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Tax ID", "الرقم الضريبي")}</dt><dd className="mt-1">{application.taxIdentificationNumber || "—"}</dd></div>
+                {application.businessWebsite && <div className="sm:col-span-2"><dt className="text-xs text-[#8790a5]">{translate(locale, "Business website", "موقع النشاط")}</dt><dd className="mt-1 break-all" dir="ltr"><a href={application.businessWebsite} target="_blank" rel="noreferrer" className="underline">{application.businessWebsite}</a></dd></div>}
+                <div className="sm:col-span-2 flex flex-wrap gap-3 text-xs">
+                  {application.hasBusinessRegistrationDocument && <span className="font-semibold text-emerald-700">{translate(locale, "Registration certificate attached", "شهادة السجل التجاري مرفقة")}</span>}
+                  {application.hasTaxCertificateDocument && <span className="font-semibold text-emerald-700">{translate(locale, "Tax certificate attached", "الشهادة الضريبية مرفقة")}</span>}
+                  {application.hasProofOfAddressDocument && <span className="font-semibold text-emerald-700">{translate(locale, "Address proof attached", "إثبات العنوان مرفق")}</span>}
+                </div>
               </dl>
             </section>
             <section className="rounded-[1.5rem] border border-white/90 bg-white/55 p-5 shadow-[inset_0_1px_0_white]">
