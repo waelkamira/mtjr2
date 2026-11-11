@@ -1730,3 +1730,21 @@ button[data-button-style="link"]:hover:not(:disabled) {
     width: 100%;
   }
 }
+
+
+.seller-dashboard main button:not([data-variant="primary"]):not([data-variant="danger"]):not(:disabled):not([class*="bg-red-"]):not([class*="bg-rose-"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-lime-"]) {
+  background-color: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.12);
+  color: #f4f2ee;
+}
+.seller-dashboard main button:not([data-variant="primary"]):not([data-variant="danger"]):not(:disabled):not([class*="bg-red-"]):not([class*="bg-rose-"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-lime-"]):hover {
+  background-color: rgba(255,255,255,.085);
+  border-color: rgba(255,140,28,.38);
+  color: #ffffff;
+  box-shadow: 0 5px 16px rgba(0,0,0,.18);
+}
+.seller-dashboard main button:disabled {
+  background: #292a31 !important;
+  border-color: rgba(255,255,255,.07) !important;
+  color: #858592 !important;
+}
