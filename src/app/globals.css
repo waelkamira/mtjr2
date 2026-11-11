@@ -1267,6 +1267,31 @@ button[class*="bg-[#dc2626]"]:hover {
   border-color: var(--matjar-danger-hover) !important;
   color: #ffffff !important;
 }
+button[class*="bg-green-"],
+button[class*="bg-emerald-"],
+button[class*="bg-lime-"] {
+  background: var(--matjar-active) !important;
+  border-color: #a3e635 !important;
+  color: var(--matjar-active-ink) !important;
+}
+button[class*="bg-green-"]:hover,
+button[class*="bg-emerald-"]:hover,
+button[class*="bg-lime-"]:hover {
+  background: #bef264 !important;
+  color: var(--matjar-active-ink) !important;
+}
+button[class*="bg-amber-"],
+button[class*="bg-yellow-"] {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+}
+button[class*="bg-blue-"],
+button[class*="bg-sky-"] {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
 button[data-variant="active"],
 button[aria-pressed="true"],
 button[aria-selected="true"] {
@@ -1293,7 +1318,7 @@ button[data-variant="danger"] svg { color: #ffffff; }
   color: var(--matjar-ink);
   box-shadow: 0 8px 22px rgb(69 69 69 / 5%);
 }
-.seller-dashboard :is(section, form, article, div)[class*="bg-[linear-gradient"]:not(.seller-chart-card):not(.clay-surface):not([class*="pointer-events-none"]) :is(h1,h2,h3,h4,h5,p,label,span) {
+.seller-dashboard :is(section, form, article, div)[class*="bg-[linear-gradient"]:not(.seller-chart-card):not(.clay-surface):not([class*="pointer-events-none"]) :is(h1,h2,h3,h4,h5,p,label) {
   color: inherit;
 }
 /* Seller workspace now follows the same white / onyx / Matjar orange system. */
