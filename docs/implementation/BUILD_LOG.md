@@ -4530,3 +4530,13 @@ The platform account policy is now explicit: email verification is not required 
 - Added a seller-route-scoped surface correction so white/pale seller cards, panels, inputs and placeholders retain readable light surfaces without changing storefront or administration styling.
 - Updated the seller layout canvas to a warm near-white background and kept the change isolated to the seller workspace.
 - Verification remains source-level only; no build, browser visual pass, tests, database operations or migrations were run.
+
+
+## 2026-11-11 — Seller dashboard and finance visual alignment
+
+- Replaced the seller workspace's blue/teal gradient canvas and hero with a warm near-white canvas, white surfaces, charcoal typography and a restrained orange primary action.
+- Aligned recent-order cards and seller profile/warehouse/shipping form surfaces to the same neutral palette.
+- Replaced the finance overview's legacy blue gradient panels and teal action treatments with consistent white/ivory surfaces and orange emphasis.
+- Restored restrained pastel icon accents in the seller navigation (lavender, mint, peach, butter, blush and sky) while retaining a consistent readable icon/label treatment.
+- Kept existing data fetching, currency handling, API calls, order navigation, shipping forms, seller permissions and export actions unchanged.
+- Source review only. Build and browser visual verification are still outstanding; no tests or migrations were run.
