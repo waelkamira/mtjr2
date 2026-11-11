@@ -52,12 +52,12 @@ const groups: Array<{
 ];
 
 const toneClasses: Record<Tone, string> = {
-  lavender: "bg-[#f1edfa] text-[#67538f]",
-  mint: "bg-[#e8f4ef] text-[#356b58]",
+  lavender: "bg-[var(--surface-soft)] text-[var(--action)]",
+  mint: "bg-[var(--surface-soft)] text-[var(--action)]",
   peach: "bg-[var(--surface-soft)] text-[var(--action)]",
-  butter: "bg-[#fbf4df] text-[#80621b]",
-  blush: "bg-[#faeaf0] text-[#98516b]",
-  sky: "bg-[#eaf2f8] text-[#45677f]"
+  butter: "bg-[var(--surface-soft)] text-[var(--action)]",
+  blush: "bg-[var(--surface-soft)] text-[var(--action)]",
+  sky: "bg-[var(--surface-soft)] text-[var(--action)]"
 };
 
 export function SellerIcon({ name }: { name: SellerIconName }) {
@@ -168,7 +168,7 @@ export default function SellerNavigation() {
                         <SellerIcon name={link.icon} />
                       </span>
                       <span>{translate(locale, link.label, link.ar)}</span>
-                      {active && <span className="ms-auto size-2 rounded-full bg-[#806bb0] shadow-[0_0_8px_rgba(128,107,176,.25)]" />}
+                      {active && <span className="ms-auto size-2 rounded-full bg-[var(--action)]" />}
                     </Link>
                   );
                 })}
@@ -177,11 +177,11 @@ export default function SellerNavigation() {
           ))}
         </nav>
 
-        <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
+        <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_5px_16px_rgba(69,69,69,.05)]">
           <span className="grid size-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] text-lg text-[var(--action)] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
-          <p className="mt-3 text-sm font-extrabold text-[#454545]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
-          <p className="mt-1 text-[10px] leading-4 text-[#77716c]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
-          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-[#f6d8c5] bg-[#fff1e8] px-3 py-2 text-[11px] font-extrabold text-[#a94308] shadow-[0_3px_8px_rgba(91,72,137,.08)]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
+          <p className="mt-3 text-sm font-extrabold text-[var(--foreground)]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
+          <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
+          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-[11px] font-extrabold text-[var(--action)] shadow-[0_3px_8px_rgba(91,72,137,.08)]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
         </div>
         <div className="shrink-0 border-t border-[#eee9e4] p-4">
           <Link href="/" className="flex items-center justify-between rounded-2xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-semibold text-[#5f5a55] shadow-[0_3px_10px_rgba(48,38,78,.05)] transition hover:shadow-[var(--shadow-clay)]">
@@ -194,16 +194,16 @@ export default function SellerNavigation() {
       <div className="seller-mobile-navigation border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] shadow-[var(--shadow-clay)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
           <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
-            <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
+            <span className="grid size-8 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] text-sm text-[var(--action)] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
-          <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
+          <Link href="/" className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
         </div>
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-mobile-navigation__links flex gap-2 overflow-x-auto overscroll-x-contain pb-1">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[#57cfc8]/40 bg-[#39c5bd]/20 text-white" : "border-white/10 bg-white/[.06] text-[#d7e2ed] hover:bg-white/[.12]"}`}>
+              className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[var(--action)] bg-[var(--surface-soft)] text-[var(--action)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--action)] hover:text-[var(--action)]"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
