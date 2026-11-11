@@ -471,3 +471,13 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - The same-head CI run failed in the seller-application unit suite (4/564), not in seller product or geography browser tests. The root cause and regression repair are recorded in BUILD_LOG.md.
 - The application service now checks authenticated email verification before returning registered-business KYC validation details. Registered-business fixtures use a mocked private ImageKit verification response and include required registration fields.
 - Post-repair CI/E2E results remain pending until the new main commit completes. Vercel currently reports a deployment-rate-limit provider failure (retry in 24 hours), distinct from application test/build status.
+
+
+## 2026-11-11 — Post-repair seller product and Leaflet verification
+
+- Verified source commit: `fe1105832591a2c8902ea6340c5d972dc5d1b596`; CI `42996942461` PASS (112 Vitest files / 565 tests plus typecheck, lint and production build); Browser E2E `42996942716` PASS (9/9); PostgreSQL Integration `42996942668` PASS (3 files / 9 tests); CodeQL `42996942530` PASS.
+- `/seller/products` — Browser E2E creates a draft product, confirms it appears through `GET /api/seller/products`, edits its name/slug, and confirms the same product ID persists with the updated data. The flow also verifies seller shipping-service edits through a fresh API read.
+- Product location picker — Browser E2E selects Damascus governorate, a coordinate-bearing district and subdistrict, and a locality. The map test checks zoom 7/10/12/15 when the selected hierarchy record has coordinates, confirms mouse-wheel zoom increases, and checks zoom 16 on neighbourhood-field blur when the selected locality pin has coordinates.
+- Neighbourhood is seller-entered text, not an official OpenSyria administrative level. Zoom 16 focuses the selected locality/pin for manual placement; it does not claim to geocode an unverified neighbourhood centroid.
+- Vercel production deployment for the verified `main` SHA is `READY`; the GitHub Vercel commit status is `success`. The earlier deployment-rate-limit event is historical, not the current state.
+- Coverage boundary: locality and neighbourhood zoom assertions are conditional on a source centroid being present. Do not interpret this as proof that every OpenSyria locality has coordinates.
