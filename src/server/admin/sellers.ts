@@ -57,6 +57,16 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
         youtubeUrl: true,
         twitterUrl: true,
         identityDocumentFileId: true,
+        registrationCountryCode: true,
+        registrationNumber: true,
+        registrationAuthority: true,
+        registrationDate: true,
+        registeredAddress: true,
+        taxIdentificationNumber: true,
+        businessWebsite: true,
+        businessRegistrationDocumentFileId: true,
+        taxCertificateDocumentFileId: true,
+        proofOfAddressDocumentFileId: true,
         latitude: true,
         longitude: true,
         createdAt: true,
@@ -69,10 +79,16 @@ export async function listAdminSellers(input: unknown, now = new Date()) {
   ]);
   return {
     items: items.map((item) => {
-      const { identityDocumentFileId, ...seller } = item;
+      const {
+        identityDocumentFileId, businessRegistrationDocumentFileId,
+        taxCertificateDocumentFileId, proofOfAddressDocumentFileId, ...seller
+      } = item;
       return {
       ...seller,
       hasIdentityDocument: Boolean(identityDocumentFileId),
+      hasBusinessRegistrationDocument: Boolean(businessRegistrationDocumentFileId),
+      hasTaxCertificateDocument: Boolean(taxCertificateDocumentFileId),
+      hasProofOfAddressDocument: Boolean(proofOfAddressDocumentFileId),
       createdAt: item.createdAt.toISOString(),
       stores: item.store ? [{ ...item.store, createdAt: item.store.createdAt.toISOString() }] : [],
       storeCount: item.store ? 1 : 0
