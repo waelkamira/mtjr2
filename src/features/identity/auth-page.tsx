@@ -153,7 +153,7 @@ export default function AuthPage({ mode, initialToken = "", initialEmail = "", i
               <h2 className="mt-8 max-w-md text-4xl font-semibold leading-tight xl:text-5xl">{mode === "login" ? t("Your marketplace. One secure account.", "سوقك. حساب آمن واحد.") : t("Your account, protected at every step.", "حسابك محمي في كل خطوة.")}</h2>
               <p className="mt-5 max-w-md text-sm leading-7 text-[var(--color-lavender-800)]/80">{mode === "login" ? t("Discover products, manage orders, save favorites and connect with trusted stores.", "اكتشف المنتجات وأدر الطلبات واحفظ المفضلة وتواصل مع المتاجر الموثوقة.") : t("Protect your sessions and keep account recovery simple.", "احمِ جلساتك واجعل استعادة الحساب سهلة.")}</p>
             </div>
-            <div className="relative space-y-4 text-sm text-white/80">
+            <div className="relative space-y-4 text-sm text-[var(--color-lavender-800)]/80">
               <p>{t("01 · One account for shopping and selling", "٠١ · حساب واحد للتسوق والبيع")}</p>
               <p>{t("02 · Secure sessions and account recovery", "٠٢ · جلسات آمنة واستعادة الحساب")}</p>
               <p>{t("03 · Seller access after marketplace review", "٠٣ · صلاحية البيع بعد مراجعة السوق")}</p>

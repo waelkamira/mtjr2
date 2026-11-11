@@ -158,210 +158,8 @@ html[dir="rtl"] .text-right { text-align: left; }
   color: #ffffff;
 }
 
-:is(
-  .clay-surface,
-  .clay-surface-inset,
-  .clay-dashboard-sidebar,
-  .clay-dashboard-card,
-  [class~="bg-[var(--color-forest-950)]"],
-  [class~="bg-white"],
-  [class*="bg-white/"],
-  [class~="bg-gray-100"],
-  [class~="bg-slate-50"],
-  [class~="bg-slate-100"],
-  [class~="bg-[var(--surface)]"],
-  [class*="bg-[var(--surface)]/"],
-  [class~="bg-[var(--color-snow)]"],
-  [class~="bg-[var(--color-white)]"],
-  [class~="bg-[var(--color-ivory-50)]"],
-  [class~="bg-[var(--color-ivory-100)]"],
-  [class~="bg-[var(--color-ivory-200)]"],
-  [class~="bg-[var(--color-lavender-50)]"],
-  [class~="bg-[var(--color-lavender-100)]"],
-  [class~="bg-[var(--color-lavender-300)]"],
-  [class~="bg-[var(--color-mint-50)]"],
-  [class~="bg-[var(--color-mint-100)]"],
-  [class~="bg-[var(--color-mint-300)]"],
-  [class~="bg-[var(--color-blush-50)]"],
-  [class~="bg-[var(--color-blush-100)]"],
-  [class~="bg-[var(--color-blush-300)]"],
-  [class~="bg-[var(--color-peach-50)]"],
-  [class~="bg-[var(--color-peach-100)]"],
-  [class~="bg-[var(--color-peach-300)]"],
-  [class~="bg-[var(--color-butter-50)]"],
-  [class~="bg-[var(--color-butter-100)]"],
-  [class~="bg-[var(--color-butter-300)]"],
-  [class~="bg-[var(--color-sky-100)]"],
-  [class~="bg-[var(--color-orange-100)]"],
-  [class~="bg-[var(--color-violet-100)]"],
-  [class~="bg-[var(--color-cyan-100)]"],
-  [class~="bg-[var(--color-cyan-300)]"],
-  [class~="bg-[var(--color-sage-100)]"],
-  [class*="bg-[var(--color-sage-100)]/"],
-  [class~="bg-[var(--color-copper-100)]"],
-  [class~="bg-red-50"],
-  [class~="bg-amber-50"],
-  [class~="bg-green-50"],
-  [class~="bg-emerald-50"]
-):not(footer):not(footer *) {
-  background: linear-gradient(145deg, #454545, #3e3e3e);
-  border-color: rgb(255 255 255 / 10%);
-  color: #ffffff;
-  box-shadow: 0 18px 44px rgb(69 69 69 / 16%), 0 3px 8px rgb(69 69 69 / 5%);
-}
-
-:is(
-  .clay-surface,
-  .clay-surface-inset,
-  .clay-dashboard-sidebar,
-  .clay-dashboard-card,
-  [class~="bg-[var(--color-forest-950)]"],
-  [class~="bg-white"],
-  [class*="bg-white/"],
-  [class~="bg-gray-100"],
-  [class~="bg-slate-50"],
-  [class~="bg-slate-100"],
-  [class~="bg-[var(--surface)]"],
-  [class*="bg-[var(--surface)]/"],
-  [class~="bg-[var(--color-snow)]"],
-  [class~="bg-[var(--color-white)]"],
-  [class~="bg-[var(--color-ivory-50)]"],
-  [class~="bg-[var(--color-ivory-100)]"],
-  [class~="bg-[var(--color-ivory-200)]"],
-  [class~="bg-[var(--color-lavender-50)]"],
-  [class~="bg-[var(--color-lavender-100)]"],
-  [class~="bg-[var(--color-lavender-300)]"],
-  [class~="bg-[var(--color-mint-50)]"],
-  [class~="bg-[var(--color-mint-100)]"],
-  [class~="bg-[var(--color-mint-300)]"],
-  [class~="bg-[var(--color-blush-50)]"],
-  [class~="bg-[var(--color-blush-100)]"],
-  [class~="bg-[var(--color-blush-300)]"],
-  [class~="bg-[var(--color-peach-50)]"],
-  [class~="bg-[var(--color-peach-100)]"],
-  [class~="bg-[var(--color-peach-300)]"],
-  [class~="bg-[var(--color-butter-50)]"],
-  [class~="bg-[var(--color-butter-100)]"],
-  [class~="bg-[var(--color-butter-300)]"],
-  [class~="bg-[var(--color-sky-100)]"],
-  [class~="bg-[var(--color-orange-100)]"],
-  [class~="bg-[var(--color-violet-100)]"],
-  [class~="bg-[var(--color-cyan-100)]"],
-  [class~="bg-[var(--color-cyan-300)]"],
-  [class~="bg-[var(--color-sage-100)]"],
-  [class*="bg-[var(--color-sage-100)]/"],
-  [class~="bg-[var(--color-copper-100)]"],
-  [class~="bg-red-50"],
-  [class~="bg-amber-50"],
-  [class~="bg-green-50"],
-  [class~="bg-emerald-50"]
-):not(footer):not(footer *) :is([class*="text-"]) {
-  color: rgb(255 255 255 / 82%);
-}
-
-:is(
-  .clay-surface,
-  .clay-surface-inset,
-  .clay-dashboard-sidebar,
-  .clay-dashboard-card,
-  [class~="bg-[var(--color-forest-950)]"],
-  [class~="bg-white"],
-  [class*="bg-white/"],
-  [class~="bg-gray-100"],
-  [class~="bg-slate-50"],
-  [class~="bg-slate-100"],
-  [class~="bg-[var(--surface)]"],
-  [class*="bg-[var(--surface)]/"],
-  [class~="bg-[var(--color-snow)]"],
-  [class~="bg-[var(--color-white)]"],
-  [class~="bg-[var(--color-ivory-50)]"],
-  [class~="bg-[var(--color-ivory-100)]"],
-  [class~="bg-[var(--color-ivory-200)]"],
-  [class~="bg-[var(--color-lavender-50)]"],
-  [class~="bg-[var(--color-lavender-100)]"],
-  [class~="bg-[var(--color-lavender-300)]"],
-  [class~="bg-[var(--color-mint-50)]"],
-  [class~="bg-[var(--color-mint-100)]"],
-  [class~="bg-[var(--color-mint-300)]"],
-  [class~="bg-[var(--color-blush-50)]"],
-  [class~="bg-[var(--color-blush-100)]"],
-  [class~="bg-[var(--color-blush-300)]"],
-  [class~="bg-[var(--color-peach-50)]"],
-  [class~="bg-[var(--color-peach-100)]"],
-  [class~="bg-[var(--color-peach-300)]"],
-  [class~="bg-[var(--color-butter-50)]"],
-  [class~="bg-[var(--color-butter-100)]"],
-  [class~="bg-[var(--color-butter-300)]"],
-  [class~="bg-[var(--color-sky-100)]"],
-  [class~="bg-[var(--color-orange-100)]"],
-  [class~="bg-[var(--color-violet-100)]"],
-  [class~="bg-[var(--color-cyan-100)]"],
-  [class~="bg-[var(--color-cyan-300)]"],
-  [class~="bg-[var(--color-sage-100)]"],
-  [class*="bg-[var(--color-sage-100)]/"],
-  [class~="bg-[var(--color-copper-100)]"],
-  [class~="bg-red-50"],
-  [class~="bg-amber-50"],
-  [class~="bg-green-50"],
-  [class~="bg-emerald-50"]
-):not(footer):not(footer *) [class*="bg-white/"] {
-  background: rgb(255 255 255 / 6%);
-  border-color: rgb(255 255 255 / 10%);
-  color: var(--color-orange);
-  box-shadow: none;
-}
-
-:is(
-  .clay-surface,
-  .clay-surface-inset,
-  .clay-dashboard-sidebar,
-  .clay-dashboard-card,
-  [class~="bg-[var(--color-forest-950)]"],
-  [class~="bg-white"],
-  [class*="bg-white/"],
-  [class~="bg-gray-100"],
-  [class~="bg-slate-50"],
-  [class~="bg-slate-100"],
-  [class~="bg-[var(--surface)]"],
-  [class*="bg-[var(--surface)]/"],
-  [class~="bg-[var(--color-snow)]"],
-  [class~="bg-[var(--color-white)]"],
-  [class~="bg-[var(--color-ivory-50)]"],
-  [class~="bg-[var(--color-ivory-100)]"],
-  [class~="bg-[var(--color-ivory-200)]"],
-  [class~="bg-[var(--color-lavender-50)]"],
-  [class~="bg-[var(--color-lavender-100)]"],
-  [class~="bg-[var(--color-lavender-300)]"],
-  [class~="bg-[var(--color-mint-50)]"],
-  [class~="bg-[var(--color-mint-100)]"],
-  [class~="bg-[var(--color-mint-300)]"],
-  [class~="bg-[var(--color-blush-50)]"],
-  [class~="bg-[var(--color-blush-100)]"],
-  [class~="bg-[var(--color-blush-300)]"],
-  [class~="bg-[var(--color-peach-50)]"],
-  [class~="bg-[var(--color-peach-100)]"],
-  [class~="bg-[var(--color-peach-300)]"],
-  [class~="bg-[var(--color-butter-50)]"],
-  [class~="bg-[var(--color-butter-100)]"],
-  [class~="bg-[var(--color-butter-300)]"],
-  [class~="bg-[var(--color-sky-100)]"],
-  [class~="bg-[var(--color-orange-100)]"],
-  [class~="bg-[var(--color-violet-100)]"],
-  [class~="bg-[var(--color-cyan-100)]"],
-  [class~="bg-[var(--color-cyan-300)]"],
-  [class~="bg-[var(--color-sage-100)]"],
-  [class*="bg-[var(--color-sage-100)]/"],
-  [class~="bg-[var(--color-copper-100)]"],
-  [class~="bg-red-50"],
-  [class~="bg-amber-50"],
-  [class~="bg-green-50"],
-  [class~="bg-emerald-50"]
-):not(footer):not(footer *) [class*="rounded-"][class*="bg-"]:has(> svg):not(a):not(button) {
-  background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 10%);
-  color: var(--color-orange);
-  box-shadow: 0 8px 22px rgb(240 102 13 / 12%);
-}
+/* Light utility backgrounds are intentionally left to their component classes.
+   Only the explicit clay surface primitives above receive the dark clay treatment. */
 
 body:not(footer *) [class*="text-[var(--color-orange)]"][class*="text-"],
 body:not(footer *) [class*="text-[var(--color-copper-"] {
@@ -438,26 +236,17 @@ body:not(footer *) :is(
   color: #ffffff;
 }
 
+/* Global controls share geometry and motion only. Component classes own their
+   foreground/background pair so hover never forces unreadable text. */
 button[class], button {
-  border: 1px solid rgb(255 255 255 / 10%);
   border-radius: var(--radius-control);
-  background: #454545;
-  color: #ffffff;
-  box-shadow: 0 8px 22px rgb(69 69 69 / 16%);
-  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-button[class]:hover, button:hover {
-  border-color: rgb(240 102 13 / 55%);
-  background-color: #f0660d;
-  color: #000000;
-  box-shadow: 0 8px 22px rgb(240 102 13 / 20%);
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 html body .site-navigation-header button {
   border: 1px solid transparent;
   background: var(--surface);
-  color: var(--color-onyx);
+  color: var(--foreground);
   box-shadow: var(--shadow-clay);
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
@@ -465,7 +254,7 @@ html body .site-navigation-header button {
 html body .site-navigation-header button:hover {
   border-color: var(--border);
   background: var(--surface);
-  color: #000000;
+  color: var(--foreground);
   box-shadow: var(--shadow-clay-hover);
 }
 
@@ -481,17 +270,8 @@ html body .site-navigation-header button:is(
   border: 2px solid var(--color-orange);
 }
 
-:is(button, a, [role="button"], [role="tab"], [role="option"]):hover {
-  color: #000000;
-}
-
-button:hover [class*="text-"],
-a:hover [class*="text-"],
-[role="button"]:hover [class*="text-"],
-[role="tab"]:hover [class*="text-"],
-[role="option"]:hover [class*="text-"] {
-  color: #000000;
-}
+/* Do not globally recolor hover text: dark and light surfaces require
+   component-specific contrasting foreground colors. */
 
 :is(
   [aria-pressed="true"],
@@ -1101,4 +881,77 @@ textarea {
   border-color: #e1e8f0 !important;
   background: #fff !important;
   box-shadow: 0 5px 16px rgb(30 57 83 / 4%) !important;
+}
+
+
+/* Accessible foreground pairing for interactive surfaces.
+   Light backgrounds (including hover backgrounds) always use dark text;
+   dark/brand backgrounds use white text. Explicit component styling remains
+   available through data-contrast="custom" for intentionally special controls. */
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="bg-white"], [class~="bg-gray-50"], [class~="bg-gray-100"],
+  [class~="bg-slate-50"], [class~="bg-slate-100"], [class~="bg-zinc-50"],
+  [class~="bg-neutral-50"], [class~="bg-stone-50"],
+  [class~="bg-[var(--surface)]"], [class~="bg-[var(--surface-soft)]"],
+  [class~="bg-[var(--color-snow)]"], [class~="bg-[var(--color-white)]"],
+  [class~="bg-[var(--color-ivory-50)]"], [class~="bg-[var(--color-ivory-100)]"],
+  [class~="bg-[var(--color-lavender-50)]"], [class~="bg-[var(--color-lavender-100)]"],
+  [class~="bg-[var(--color-mint-50)]"], [class~="bg-[var(--color-mint-100)]"],
+  [class~="bg-[var(--color-peach-50)]"], [class~="bg-[var(--color-peach-100)]"],
+  [class~="bg-[var(--color-blush-50)]"], [class~="bg-[var(--color-blush-100)]"],
+  [class~="bg-[var(--color-butter-50)]"], [class~="bg-[var(--color-butter-100)]"],
+  [class~="bg-red-50"], [class~="bg-amber-50"], [class~="bg-green-50"], [class~="bg-emerald-50"]
+),
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="hover:bg-white"], [class~="hover:bg-gray-50"], [class~="hover:bg-gray-100"],
+  [class~="hover:bg-slate-50"], [class~="hover:bg-slate-100"],
+  [class~="hover:bg-zinc-50"], [class~="hover:bg-neutral-50"], [class~="hover:bg-stone-50"],
+  [class~="hover:bg-[var(--surface)]"], [class~="hover:bg-[var(--surface-soft)]"],
+  [class~="hover:bg-[var(--color-ivory-50)]"], [class~="hover:bg-[var(--color-ivory-100)]"],
+  [class~="hover:bg-[var(--color-lavender-50)]"], [class~="hover:bg-[var(--color-lavender-100)]"],
+  [class~="hover:bg-[var(--color-mint-50)]"], [class~="hover:bg-[var(--color-mint-100)]"],
+  [class~="hover:bg-[var(--color-peach-50)]"], [class~="hover:bg-[var(--color-peach-100)]"],
+  [class~="hover:bg-[var(--color-blush-50)]"], [class~="hover:bg-[var(--color-blush-100)]"],
+  [class~="hover:bg-[var(--color-butter-50)]"], [class~="hover:bg-[var(--color-butter-100)]"],
+  [class~="hover:bg-[var(--color-sage-100)]"], [class~="hover:bg-[var(--color-copper-100)]"],
+  [class~="hover:bg-red-50"], [class~="hover:bg-amber-50"],
+  [class~="hover:bg-green-50"], [class~="hover:bg-emerald-50"]
+):hover {
+  color: #17212b !important;
+}
+
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="bg-black"], [class~="bg-gray-800"], [class~="bg-gray-900"],
+  [class~="bg-slate-800"], [class~="bg-slate-900"], [class~="bg-zinc-800"],
+  [class~="bg-neutral-900"], [class~="bg-[var(--color-forest-950)]"],
+  [class~="bg-[var(--color-forest-900)]"], [class~="bg-[var(--color-forest-800)]"],
+  [class~="bg-[var(--color-ink-800)]"], [class~="bg-[var(--color-ink-600)]"],
+  [class~="bg-[var(--color-lavender-600)]"], [class~="bg-[var(--color-mint-600)]"],
+  [class~="bg-[var(--color-blush-600)]"], [class~="bg-[var(--color-peach-600)]"],
+  [class~="bg-[var(--color-butter-600)]"], [class~="bg-[var(--color-violet-700)]"],
+  [class~="bg-[var(--color-violet-600)]"], [class~="bg-[var(--color-copper-500)]"],
+  [class~="bg-[var(--color-copper-600)]"], [class~="bg-[var(--color-copper-700)]"],
+  [class~="bg-[var(--color-orange)]"], [class~="bg-[var(--color-orange-500)]"],
+  [class~="bg-[var(--color-orange-600)]"], [class~="bg-orange-500"], [class~="bg-orange-600"]
+),
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="hover:bg-black"], [class~="hover:bg-gray-800"], [class~="hover:bg-gray-900"],
+  [class~="hover:bg-slate-800"], [class~="hover:bg-slate-900"], [class~="hover:bg-zinc-800"],
+  [class~="hover:bg-[var(--color-forest-950)]"], [class~="hover:bg-[var(--color-forest-900)]"],
+  [class~="hover:bg-[var(--color-forest-800)]"], [class~="hover:bg-[var(--color-ink-800)]"],
+  [class~="hover:bg-[var(--color-lavender-800)]"], [class~="hover:bg-[var(--color-violet-700)]"],
+  [class~="hover:bg-[var(--color-orange)]"], [class~="hover:bg-[var(--color-orange-600)]"]
+):hover {
+  color: #ffffff !important;
+}
+
+
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="bg-white"], [class~="bg-gray-50"], [class~="bg-gray-100"],
+  [class~="bg-slate-50"], [class~="bg-slate-100"], [class~="bg-[var(--surface)]"],
+  [class~="bg-[var(--surface-soft)]"], [class~="hover:bg-white"],
+  [class~="hover:bg-gray-50"], [class~="hover:bg-slate-50"],
+  [class~="hover:bg-[var(--surface)]"], [class~="hover:bg-[var(--surface-soft)]"]
+):is(span, strong, svg, [class*="text-"]) {
+  color: inherit !important;
 }
