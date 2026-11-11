@@ -154,7 +154,7 @@ export default function SellerQuestionsPage() {
           </div>)}
           {item.status === "PUBLISHED" && <form onSubmit={(event) => void answer(event, item.id)} className="mt-5 border-t border-[#eadfd5] pt-4">
             <label className="block text-sm font-medium text-[#334155]">{t("Write an answer", "اكتب إجابة")}<textarea required minLength={3} maxLength={4000} rows={3} value={drafts[item.id] ?? ""} onChange={(event) => setDrafts((current) => ({ ...current, [item.id]: event.target.value }))} className="mt-2 block w-full rounded-xl border border-[#d8dee5] bg-white px-3 py-3 text-sm text-[#253548] outline-none focus:border-[#d86b32] focus:ring-2 focus:ring-[#d86b32]/15" /></label>
-            <button disabled={busy === item.id} className="mt-3 rounded-xl bg-[#d86b32] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{busy === item.id ? t("Submitting…", "جارٍ الإرسال…") : t("Submit answer", "إرسال الإجابة")}</button>
+            <button disabled={busy === item.id} className="mt-3 rounded-xl bg-[#d86b32] px-5 py-3 text-sm font-bold text-[#17212b] disabled:opacity-50">{busy === item.id ? t("Submitting…", "جارٍ الإرسال…") : t("Submit answer", "إرسال الإجابة")}</button>
           </form>}
         </article>)}
       </div> : !error ? <p className="mt-6 rounded-2xl border border-[#eadfd5] bg-white p-6 text-sm text-[var(--muted)]">{t("No product questions for your stores.", "لا توجد أسئلة عن منتجات متاجرك.")}</p> : null}
