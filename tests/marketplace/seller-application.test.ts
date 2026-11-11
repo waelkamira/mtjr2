@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Prisma } from "@prisma/client";
 
 const { requireCurrentSession, requirePermission, sellerFindUnique, sellerCreate, auditCreate, transaction, roleFindUnique, roleUpsert, sellerUpdateMany, storeFindUnique, storeFindFirst, storeCreate, marketFindMany, queryRaw } = vi.hoisted(() => ({
@@ -24,6 +24,14 @@ import { createSellerStore, reviewSellerApplication, submitSellerApplication } f
 describe("marketplace seller lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("IMAGEKIT_PRIVATE_KEY", "test-imagekit-private-key");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        isPrivateFile: true,
+        tags: ["matjar-seller-business-registration", "user-user-1"]
+      })
+    }));
     requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: new Date("2026-01-01T00:00:00.000Z") } });
     requirePermission.mockResolvedValue({ userId: "admin-1" });
     sellerFindUnique.mockResolvedValue(null);
@@ -47,11 +55,18 @@ describe("marketplace seller lifecycle", () => {
     } as unknown as Prisma.TransactionClient));
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
   it("submits one authenticated-user application and audits it atomically", async () => {
     const result = await submitSellerApplication({
       legalName: "Example Trading BV", displayName: "Example Store",
       contactName: "Alex Example", contactEmail: "SELLER@example.com", phoneNumber: "+33123456789",
       residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      registrationCountryCode: "NL", registrationNumber: "NL-KVK-123456",
+      businessRegistrationDocumentFileId: "business-registration-file",
       intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
       facebookUrl: "https://facebook.com/example", latitude: 48.8566, longitude: 2.3522
     });
@@ -63,12 +78,27 @@ describe("marketplace seller lifecycle", () => {
     }) }));
   });
 
+  it("requires registration metadata and a private certificate for registered businesses", async () => {
+    await expect(submitSellerApplication({
+      legalName: "Example Trading BV", displayName: "Example Store",
+      contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
+      residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
+      latitude: 48.8566, longitude: 2.3522
+    })).rejects.toThrow(/registration country, number and certificate/i);
+    expect(requireCurrentSession).toHaveBeenCalledOnce();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(sellerCreate).not.toHaveBeenCalled();
+  });
+
   it("requires a verified account email before seller application submission", async () => {
     requireCurrentSession.mockResolvedValue({ userId: "user-1", user: { emailVerifiedAt: null } });
     await expect(submitSellerApplication({
       legalName: "Example Trading BV", displayName: "Example Store",
       contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
       residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      registrationCountryCode: "NL", registrationNumber: "NL-KVK-123456",
+      businessRegistrationDocumentFileId: "business-registration-file",
       intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
       latitude: 48.8566, longitude: 2.3522
     })).rejects.toThrow(/verify your email/i);
@@ -94,6 +124,8 @@ describe("marketplace seller lifecycle", () => {
       legalName: "Updated Trading BV", displayName: "Updated Store",
       contactName: "Alex Example", contactEmail: "seller@example.com", phoneNumber: "+33123456789",
       residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      registrationCountryCode: "NL", registrationNumber: "NL-KVK-123456",
+      businessRegistrationDocumentFileId: "business-registration-file",
       intendedProducts: "Updated household products and a clearer supplier and fulfilment plan.",
       latitude: 48.8566, longitude: 2.3522
     });
@@ -113,6 +145,8 @@ describe("marketplace seller lifecycle", () => {
       legalName: "Example Trading BV", displayName: "Example Store",
       contactName: "Alex Example", contactEmail: "SELLER@example.com", phoneNumber: "+33123456789",
       residence: "Paris, France", businessType: "STORE", sellingCategories: "Home goods",
+      registrationCountryCode: "NL", registrationNumber: "NL-KVK-123456",
+      businessRegistrationDocumentFileId: "business-registration-file",
       intendedProducts: "Household products sourced from local suppliers, with weekly restock.",
       facebookUrl: "https://facebook.com/example", latitude: 48.8566, longitude: 2.3522
     });

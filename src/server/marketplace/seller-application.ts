@@ -80,6 +80,12 @@ function isMatchingStoreRequest(
 /** Authenticated user submits one pending seller application. */
 export async function submitSellerApplication(input: SellerApplicationInput, now = new Date()) {
   const data = sellerApplicationSchema.parse(input);
+  // Establish the authenticated, verified actor before returning business/KYC
+  // validation details. Zod still rejects malformed input without a session.
+  const actor = await requireCurrentSession(now);
+  if (!actor.user.emailVerifiedAt) {
+    throw new Error("Please verify your email before submitting a seller application.");
+  }
   const isRegisteredEntity = data.businessType === "STORE" || data.businessType === "AGENCY";
   if (isRegisteredEntity && (!data.registrationCountryCode || !data.registrationNumber || !data.businessRegistrationDocumentFileId)) {
     throw new Error("Registered businesses must provide their registration country, number and certificate.");
@@ -89,10 +95,6 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data.registrationDate) || Number.isNaN(parsedRegistrationDate.getTime()) || parsedRegistrationDate.toISOString().slice(0, 10) !== data.registrationDate) {
       throw new Error("Enter a valid business registration date.");
     }
-  }
-  const actor = await requireCurrentSession(now);
-  if (!actor.user.emailVerifiedAt) {
-    throw new Error("Please verify your email before submitting a seller application.");
   }
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY?.trim();
   const documentChecks = [

@@ -462,3 +462,12 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 
 
 | `/admin/payment-providers` | Super Admin only | `GET/POST /api/admin/payment-providers`, `PATCH/DELETE /api/admin/payment-providers/[id]`, verify/enable/disable actions, `POST /api/admin/payment-providers/rotate-credentials`; PaymentProviderConfig, Payment, AuditLog | Implemented in source / runtime verification pending | Stripe/PayPal TEST/LIVE configuration, country/currency/method allowlists, encrypted credentials and per-payment historical snapshots. Versioned AES-256-GCM key rotation is implemented and MFA/audit protected. Migration `20261110120000_payment_provider_control_center` is present but database application and PayPal Sandbox journey remain unverified. |
+
+
+## 2026-11-11 — Seller product and Syrian Leaflet verification review
+
+- On main `541c46302a1c74c0b1a3cf54b96b315a474cc418`, Browser E2E passed. The seller product journey creates and edits a draft product and verifies persisted API state.
+- The geography browser journey selects Damascus governorate, a coordinate-bearing district, subdistrict and locality; it asserts map zoom levels 7, 10, 12 and 15 when coordinates exist, tests mouse-wheel zoom, then enters a seller-supplied neighborhood and asserts zoom 16.
+- The same-head CI run failed in the seller-application unit suite (4/564), not in seller product or geography browser tests. The root cause and regression repair are recorded in BUILD_LOG.md.
+- The application service now checks authenticated email verification before returning registered-business KYC validation details. Registered-business fixtures use a mocked private ImageKit verification response and include required registration fields.
+- Post-repair CI/E2E results remain pending until the new main commit completes. Vercel currently reports a deployment-rate-limit provider failure (retry in 24 hours), distinct from application test/build status.

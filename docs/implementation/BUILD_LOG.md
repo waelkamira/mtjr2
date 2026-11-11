@@ -4662,3 +4662,23 @@ The platform account policy is now explicit: email verification is not required 
 - Commits: `3dea9edb`, `926c869f`, `db195128`, `d6cfc930`, `dba5df07`.
 - Follow-up cleanup: removed 9 KB of obsolete, contradictory seller-only CSS blocks instead of leaving old palette rules layered underneath the new design. Consolidated the seller skin into the final scoped theme block. Cleanup commit: `a6be6ddc`.
 - Verification: source changes were committed directly to `main`. Build, typecheck, and browser visual verification have not been run in this pass; appearance is not yet runtime-confirmed.
+
+
+## 2026-11-11 — Seller application CI regression repair
+
+**Finding**
+- Exact-main CI run `42960676089` failed only in `tests/marketplace/seller-application.test.ts`: 4 of 564 tests failed; 560 passed.
+- The new registered-business KYC rule correctly requires a country, registration number and private registration certificate for STORE/AGENCY applications, but the older STORE test fixtures still omitted those fields.
+- The unverified-email test also exposed validation ordering: business KYC errors were returned before the service checked that the requester had a verified account.
+
+**Implemented on main**
+- Moved the authenticated-session and verified-email check immediately after Zod parsing, before business-registration/KYC checks. Invalid input still fails Zod before session lookup.
+- Updated registered-business unit fixtures with registration metadata and a mocked private ImageKit file-details response scoped to the test user; no real provider request or secret is used.
+- Added an explicit regression test proving a registered business without registration metadata/certificate is rejected after the verified-user gate.
+- Restored mocked global/environment state after each test.
+
+**Verification**
+- Before repair: CI typecheck and lint passed; Vitest failed 4/564 in the seller-application test file; production build was skipped by the workflow after the test failure.
+- Browser E2E on the same pre-repair main commit passed. Its seller product create/edit journey and Syrian geography/Leaflet journey passed, including governorate/district/subdistrict/locality zoom levels, mouse-wheel zoom and neighborhood focus.
+- Targeted Vitest and the post-repair exact-head CI are pending; no post-repair pass is claimed yet.
+- Vercel's GitHub deployment status is provider-side `failure`: `Deployment rate limited — retry in 24 hours`. This is not an application build error; no Vercel project settings or production configuration were changed.
