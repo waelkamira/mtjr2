@@ -195,7 +195,7 @@ export default function StorefrontHomePage() {
                 <span className="absolute right-5 top-5 font-serif text-5xl text-[var(--color-copper-600)]/30 sm:right-8 sm:top-8 sm:text-7xl">01</span>
                 <span className="relative text-[10px] font-semibold uppercase tracking-[.2em] text-[var(--color-copper-600)]">{t("Explore", "استكشف")}</span>
                 <span className="relative mt-2 text-xl font-semibold sm:text-2xl">{t("Everyday finds", "اكتشافات يومية")}</span>
-                <span className="relative mt-2 text-xs leading-5 text-white/70">{t("Useful things, thoughtfully chosen", "أشياء مفيدة مختارة بعناية")}</span>
+                <span className="relative mt-2 text-xs leading-5 text-[var(--color-ink-700)]/80">{t("Useful things, thoughtfully chosen", "أشياء مفيدة مختارة بعناية")}</span>
               </a>
               <a href="#discover" className="group relative mt-8 flex min-h-40 flex-col justify-end overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--color-ivory-50)] p-5 transition hover:shadow-[var(--shadow-card)] sm:mt-12 sm:min-h-64 sm:p-7">
                 <span className="absolute -right-10 -top-10 h-40 w-40 rounded-full border border-[var(--color-copper-600)]/30 transition duration-500 group-hover:scale-110 sm:h-56 sm:w-56" />
