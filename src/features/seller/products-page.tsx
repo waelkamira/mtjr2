@@ -678,7 +678,7 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
-  const inputClass = "w-full rounded-xl border border-[#dce5ee] bg-white px-3.5 py-3 text-sm text-[#203850] shadow-sm outline-none transition placeholder:text-[#68788a] focus:border-[#39bdb6] focus:ring-4 focus:ring-[#39bdb6]/10";
+  const inputClass = "w-full rounded-xl border border-[#dce5ee] bg-white px-3.5 py-3 text-sm text-[#203850] shadow-sm outline-none transition placeholder:text-[#68788a] focus:border-[#168b89] focus:ring-4 focus:ring-[#168b89]/20";
   return <main className="min-h-screen bg-[var(--seller-canvas)] text-[#203850]">
     <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border border-white/15 bg-[linear-gradient(115deg,#17334f_0%,#24516b_58%,#267b7c_100%)] p-5 text-white shadow-[0_14px_30px_rgba(20,43,69,.15)] sm:p-7">
@@ -763,7 +763,7 @@ export default function SellerProductsPage() {
               {!variantSkusValid && <p className="text-xs font-semibold text-amber-800">{translate(locale, "Every variant needs a unique SKU.", "يجب أن يكون لكل متغير رمز SKU فريد.")}</p>}
             </section>
             <div
-              className="seller-product-dropzone grid gap-4 rounded-xl border border-dashed border-[#a8c9d0] bg-[#f7fafc] p-4 transition-colors hover:border-[#39bdb6] sm:p-5"
+              className="seller-product-dropzone grid gap-4 rounded-xl border border-dashed border-[#a8c9d0] bg-[#f7fafc] p-4 transition-colors hover:border-[#168b89] sm:p-5"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); void uploadProductImageFiles(Array.from(event.dataTransfer.files)); }}
               aria-label={translate(locale, "Product image upload area", "منطقة رفع صور المنتج")}
@@ -776,7 +776,7 @@ export default function SellerProductsPage() {
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each). The first image is the storefront cover. Imgur Client IDs rotate in order, then ImageKit and Cloudinary are used as fallbacks.", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة). الصورة الأولى هي غلاف المتجر. يتم تدوير معرفات Imgur بالترتيب ثم استخدام ImageKit وCloudinary كبدائل.")}</p>
               </div>
-              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[#d2e5e9] bg-white px-4 py-2.5 text-sm font-bold text-[#203850] shadow-sm transition hover:border-[#39bdb6] hover:-translate-y-0.5">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[#d2e5e9] bg-white px-4 py-2.5 text-sm font-bold text-[#203850] shadow-sm transition hover:border-[#168b89] hover:-translate-y-0.5">
                 <SellerIcon name="media" />
                 {uploadingImages ? translate(locale, "Uploading images…", "جارٍ رفع الصور…") : translate(locale, "Choose images", "اختيار الصور")}
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
