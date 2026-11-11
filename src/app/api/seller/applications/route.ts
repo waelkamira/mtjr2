@@ -19,6 +19,16 @@ const bodySchema = z.object({
   youtubeUrl: z.string().trim().max(2048).optional(),
   twitterUrl: z.string().trim().max(2048).optional(),
   identityDocumentFileId: z.string().trim().max(255).optional(),
+  registrationCountryCode: z.string().trim().length(2).optional(),
+  registrationNumber: z.string().trim().max(120).optional(),
+  registrationAuthority: z.string().trim().max(160).optional(),
+  registrationDate: z.string().trim().max(10).optional(),
+  registeredAddress: z.string().trim().max(500).optional(),
+  taxIdentificationNumber: z.string().trim().max(120).optional(),
+  businessWebsite: z.string().trim().max(2048).optional(),
+  businessRegistrationDocumentFileId: z.string().trim().max(255).optional(),
+  taxCertificateDocumentFileId: z.string().trim().max(255).optional(),
+  proofOfAddressDocumentFileId: z.string().trim().max(255).optional(),
   latitude: z.number().finite().min(-90).max(90),
   longitude: z.number().finite().min(-180).max(180)
 }).strict();
