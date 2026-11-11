@@ -232,14 +232,14 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
         <div className="hidden shrink-0 items-center gap-1 md:ml-auto md:flex md:gap-2">
           {isAdministrator && (
             <Link href={controlPanelHref} className="clay-interactive inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]">
-              {translate(locale, "Control panel", "لوحة التحكم")}
+              <NavigationIcon name="admin" />{localizedNavigationLabel(locale, "Control panel")}
             </Link>
           )}
           <Link
             href="/cart"
             className="clay-interactive inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"
           >
-            {translate(locale, "Cart", "السلة")}
+            <NavigationIcon name="cart" />{localizedNavigationLabel(locale, "Cart")}
           </Link>
           {account && (
             <>
@@ -247,13 +247,13 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 href="/account/favorites"
                 className="clay-interactive inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"
               >
-                {translate(locale, "Favorites", "المفضلة")}
+                <NavigationIcon name="heart" />{localizedNavigationLabel(locale, "Favorites")}
               </Link>
               <Link
                 href="/account/orders"
                 className="clay-interactive inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"
               >
-                {translate(locale, "Orders", "الطلبات")}
+                <NavigationIcon name="orders" />{localizedNavigationLabel(locale, "Orders")}
               </Link>
             </>
           )}
@@ -268,7 +268,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                   setAccountOpen((open) => !open);
                   setLogoutError("");
                 }}
-                className="clay-interactive flex max-w-[min(42vw,15rem)] items-center gap-2 rounded-2xl border border-white/80 bg-[var(--surface)] py-1.5 pl-1.5 pr-2.5 text-left shadow-[var(--shadow-clay)] transition hover:bg-[var(--color-lavender-50)] sm:gap-2.5 sm:pr-3"
+                className="clay-interactive flex max-w-[min(42vw,15rem)] items-center gap-2 rounded-2xl border border-[var(--border)] bg-white py-1.5 pl-1.5 pr-2.5 text-left text-[var(--foreground)] shadow-[var(--shadow-clay)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] sm:gap-2.5 sm:pr-3"
               >
                 <Avatar account={account} size="sm" />
                 <span className="min-w-0">
@@ -297,8 +297,8 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                   {account.accountTypeError && (
                     <p role="status" className="px-3 py-2 text-xs text-[var(--color-danger)]">{translate(locale, account.accountTypeError, "تعذر تحميل نوع حسابك.")}</p>
                   )}
-                  <Link href="/account/profile" onClick={() => setAccountOpen(false)} className={menuLinkClass}>{translate(locale, "My profile", "ملفي الشخصي")}</Link>
-                  <Link href="/account" onClick={() => setAccountOpen(false)} className={menuLinkClass}>{translate(locale, "My account", "حسابي")}</Link>
+                  <Link href="/account/profile" onClick={() => setAccountOpen(false)} className={menuLinkClass}><NavigationIcon name="user" />{localizedNavigationLabel(locale, "My profile")}</Link>
+                  <Link href="/account" onClick={() => setAccountOpen(false)} className={menuLinkClass}><NavigationIcon name="user" />{localizedNavigationLabel(locale, "My account")}</Link>
                   {logoutError && <p role="alert" className="px-3 py-2 text-xs text-[var(--color-danger)]">{logoutError}</p>}
                   <button
                     type="button"
@@ -317,7 +317,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 href="/login"
                 className="clay-interactive inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"
               >
-                {translate(locale, "Sign in", "تسجيل الدخول")}
+                <NavigationIcon name="login" />{localizedNavigationLabel(locale, "Sign in")}
               </AuthReturnLink>
               <AuthReturnLink
                 href="/register"
@@ -326,7 +326,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
                   <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4.75 16a5.25 5.25 0 0 1 10.5 0M16 5.5v5M13.5 8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {translate(locale, "Join", "انضم")}
+                {localizedNavigationLabel(locale, "Join")}
               </AuthReturnLink>
             </>
           )}
@@ -340,7 +340,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
             <Link
               key={link.href}
               href={link.href}
-              className={`whitespace-nowrap rounded-full px-4 py-2 transition hover:bg-[var(--color-lavender-100)] hover:text-[var(--color-lavender-950)] ${link.href === "/" ? "clay-surface-inset font-semibold text-[var(--color-lavender-800)]" : ""}`}
+              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 font-medium transition ${link.href === "/" ? "border-[var(--color-orange)] bg-lime-100 text-[var(--foreground)]" : "border-transparent text-[var(--foreground)] hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"}`}
             >
               {translate(locale, link.label, {
                 Home: "الرئيسية",
@@ -362,7 +362,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
               href={link.href}
               className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-transparent px-4 py-2 font-medium text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"
             >
-              {translate(locale, link.label, { About: "من نحن", Contact: "اتصل بنا", Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)}
+              <NavigationIcon name={navigationIconFor(link.label)} />{localizedNavigationLabel(locale, link.label)}
             </Link>
           ))}
           {publicLinks.slice(6).map((link) => (
@@ -426,8 +426,8 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
               ))}
               {account ? (
                 <>
-                  <Link href="/account/profile" onClick={() => setMobileOpen(false)} className={menuLinkClass}>{translate(locale, "My profile", "ملفي الشخصي")}</Link>
-                  <Link href="/account" onClick={() => setMobileOpen(false)} className={menuLinkClass}>{translate(locale, "My account", "حسابي")}</Link>
+                  <Link href="/account/profile" onClick={() => setMobileOpen(false)} className={menuLinkClass}><NavigationIcon name="user" />{localizedNavigationLabel(locale, "My profile")}</Link>
+                  <Link href="/account" onClick={() => setMobileOpen(false)} className={menuLinkClass}><NavigationIcon name="user" />{localizedNavigationLabel(locale, "My account")}</Link>
                   {logoutError && <p role="alert" className="px-3 py-2 text-xs text-[var(--color-danger)]">{logoutError}</p>}
                   <button
                     type="button"
@@ -440,12 +440,12 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] p-2">
-                  <AuthReturnLink href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-orange)] bg-[var(--color-orange)] px-3 py-3 text-center text-sm font-semibold text-white transition hover:bg-[var(--action-hover)] hover:text-white">{translate(locale, "Sign in", "تسجيل الدخول")}</AuthReturnLink>
+                  <AuthReturnLink href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-orange)] bg-[var(--color-orange)] px-3 py-3 text-center text-sm font-semibold text-white transition hover:bg-[var(--action-hover)] hover:text-white"><NavigationIcon name="login" />{localizedNavigationLabel(locale, "Sign in")}</AuthReturnLink>
                   <AuthReturnLink href="/register" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-3 text-center text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)]">
                     <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
                       <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4.75 16a5.25 5.25 0 0 1 10.5 0M16 5.5v5M13.5 8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    {translate(locale, "Join", "انضم")}
+                    {localizedNavigationLabel(locale, "Join")}
                   </AuthReturnLink>
                 </div>
               )}
