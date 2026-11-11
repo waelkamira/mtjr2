@@ -4738,3 +4738,14 @@ The platform account policy is now explicit: email verification is not required 
 - Source changes were committed directly to `main`.
 
 **Verification boundary:** No local build, typecheck, lint, automated tests, browser screenshot review, or full page-by-page responsive/RTL audit was run. Visual verification remains outstanding.
+
+
+## 2026-11-11 — Continued platform-wide `#FF8C1C` consistency pass
+
+- Removed remaining legacy orange gradients from seller shipping and advertising actions, and aligned seller messaging, payout, and settings accents with the approved brand token.
+- Updated storefront hero primary action and marketplace search submit button to use the shared action color with white text.
+- Updated seller inventory and order chart brand-accent series to consume `var(--orange)`; rating-band colors remain semantic.
+- Confirmed the shared theme token remains `--orange: #FF8C1C`, with `--action` consuming that token and a darker `--action-hover` for hover feedback.
+- Kept deep-orange text on white surfaces where required for readability, and preserved warning/error/success colors.
+
+**Verification boundary:** GitHub source changes are committed to `main`. No local build/typecheck/lint, tests, or browser-based page review was run. Vercel preview/build may remain unavailable under the repository's current deployment rate limit.
