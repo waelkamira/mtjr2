@@ -1,0 +1,203 @@
+/* Seller workspace visual layer: mirrors the sign-in page's white / orange / onyx palette. */
+.seller-dashboard {
+  --seller-orange: #f0660d;
+  --seller-onyx: #454545;
+  --seller-white: #ffffff;
+  background: var(--background);
+  color: var(--foreground);
+}
+.seller-dashboard__content { min-width: 0; background: var(--background); }
+.seller-dashboard main {
+  color: var(--foreground);
+  background: var(--background) !important;
+}
+.seller-dashboard main :is(h1,h2,h3,h4) { color: var(--foreground); }
+.seller-dashboard main :is(section,article) {
+  border-color: var(--border);
+}
+.seller-dashboard main :is(input,select,textarea) {
+  border-color: var(--border);
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+.seller-dashboard main :is(input,select,textarea):focus {
+  border-color: var(--action);
+  outline-color: var(--action);
+}
+.seller-dashboard main :is(button,[role="button"]):focus-visible,
+.seller-dashboard a:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 3px;
+}
+.seller-dashboard :is(.seller-sidebar-nav,.seller-mobile-navigation__links) { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.seller-dashboard aside[class*="seller"] {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.seller-dashboard .seller-sidebar-nav a[aria-current="page"] {
+  color: var(--action);
+  background: var(--surface-soft);
+  box-shadow: inset 3px 0 0 var(--action);
+}
+.seller-dashboard .seller-sidebar-nav a:not([aria-current="page"]):hover {
+  color: var(--action);
+  background: var(--surface-soft);
+}
+.seller-dashboard .seller-mobile-navigation {
+  background: var(--surface);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+.seller-dashboard .seller-mobile-navigation__links a[aria-current="page"] {
+  color: var(--action);
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+.seller-dashboard .seller-mobile-navigation__links a:not([aria-current="page"]) {
+  color: var(--foreground);
+  border-color: var(--border);
+  background: var(--surface);
+}
+.seller-dashboard :is(.seller-overview-hero,.seller-application-section) {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+.seller-dashboard [class*="text-[#203850]"],
+.seller-dashboard [class*="text-[#142b45]"],
+.seller-dashboard [class*="text-[#17374b]"] { color: var(--foreground) !important; }
+.seller-dashboard [class*="bg-[#142b45]"],
+.seller-dashboard [class*="bg-[#203850]"] { background: var(--surface) !important; }
+/* Navigation remains the topmost persistent layer at every viewport size. The search/topbar is normal document flow and scrolls away beneath it. */
+.seller-dashboard .seller-sidebar { position: sticky; top: 0; z-index: 50; }
+.seller-dashboard .seller-mobile-navigation { position: sticky; top: 0; z-index: 50; }
+.seller-dashboard .seller-topbar { position: relative; z-index: 0; }
+@media (max-width: 1023px) {
+  .seller-dashboard .seller-mobile-navigation__links { max-width: 100%; }
+}
+
+/* Scope the platform's legacy dark clay-surface treatment back to the seller's light login palette. */
+.seller-dashboard main :is(
+  [class~="bg-white"], [class*="bg-white/"],
+  [class~="bg-gray-100"], [class~="bg-slate-50"], [class~="bg-slate-100"],
+  [class~="bg-[var(--surface)]"], [class*="bg-[var(--surface)]/"],
+  [class~="bg-[var(--color-snow)]"], [class~="bg-[var(--color-white)]"],
+  [class~="bg-[var(--color-ivory-50)]"], [class~="bg-[var(--color-ivory-100)]"], [class~="bg-[var(--color-ivory-200)]"],
+  [class~="bg-[var(--color-lavender-50)]"], [class~="bg-[var(--color-lavender-100)]"], [class~="bg-[var(--color-lavender-300)]"],
+  [class~="bg-[var(--color-mint-50)]"], [class~="bg-[var(--color-mint-100)]"], [class~="bg-[var(--color-mint-300)]"],
+  [class~="bg-[var(--color-blush-50)]"], [class~="bg-[var(--color-blush-100)]"], [class~="bg-[var(--color-blush-300)]"],
+  [class~="bg-[var(--color-peach-50)]"], [class~="bg-[var(--color-peach-100)]"], [class~="bg-[var(--color-peach-300)]"],
+  [class~="bg-[var(--color-butter-50)]"], [class~="bg-[var(--color-butter-100)]"], [class~="bg-[var(--color-butter-300)]"],
+  [class~="bg-[var(--color-sky-100)]"], [class~="bg-[var(--color-orange-100)]"],
+  [class~="bg-[var(--color-violet-100)]"], [class~="bg-[var(--color-cyan-100)]"], [class~="bg-[var(--color-cyan-300)]"],
+  [class~="bg-[var(--color-sage-100)]"], [class*="bg-[var(--color-sage-100)]/"],
+  [class~="bg-[var(--color-copper-100)]"], [class~="bg-red-50"], [class~="bg-amber-50"],
+  [class~="bg-green-50"], [class~="bg-emerald-50"]
+):not(footer):not(footer *) {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+  box-shadow: var(--shadow-clay) !important;
+}
+.seller-dashboard main :is(
+  [class~="text-[#203850]"], [class~="text-[#142b45]"], [class~="text-[#17374b]"],
+  [class~="text-[#718096]"], [class~="text-[#8790a5]"], [class~="text-[#5f5a55]"],
+  [class~="text-[#77716c]"], [class~="text-[#918a84]"]
+) { color: var(--foreground) !important; }
+.seller-dashboard .seller-sidebar,
+.seller-dashboard .seller-mobile-navigation {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+.seller-dashboard .seller-mobile-navigation a,
+.seller-dashboard .seller-sidebar a { color: inherit; }
+.seller-dashboard .seller-sidebar a[aria-current="page"],
+.seller-dashboard .seller-mobile-navigation a[aria-current="page"] {
+  color: var(--action) !important;
+  background: var(--surface-soft) !important;
+}
+.seller-dashboard .seller-sidebar :is(a,span,div),
+.seller-dashboard .seller-mobile-navigation :is(a,span,div) {
+  border-color: var(--border);
+}
+
+/* Keep navigation accents strictly within the sign-in palette. */
+.seller-dashboard .seller-sidebar-nav .group > span:first-child,
+.seller-dashboard .seller-sidebar > div:first-child a > span:first-child,
+.seller-dashboard .seller-sidebar > div:nth-child(2) > span:first-child,
+.seller-dashboard .seller-mobile-navigation a > span:first-child {
+  background: var(--surface-soft) !important;
+  color: var(--action) !important;
+  border-color: var(--border) !important;
+}
+.seller-dashboard .seller-sidebar-nav .group > span:last-of-type {
+  background: var(--action) !important;
+}
+.seller-dashboard .seller-sidebar > div:last-child,
+.seller-dashboard .seller-sidebar > div:last-child a {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+.seller-dashboard .seller-sidebar > div:last-child a {
+  color: var(--action) !important;
+}
+.seller-dashboard header a {
+  border-color: var(--border);
+}
+.seller-dashboard header a:hover {
+  color: var(--action);
+  border-color: var(--action);
+}
+
+
+/* Seller pages intentionally use the login page's light palette, overriding the global dark clay surfaces. */
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card,.clay-dashboard-sidebar) {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  box-shadow: 0 8px 24px rgb(69 69 69 / 7%), 0 2px 6px rgb(69 69 69 / 4%) !important;
+}
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card) :is(h1,h2,h3,h4,p,dt,dd,label,small,strong) {
+  color: var(--foreground);
+}
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card) :is(input,select,textarea) {
+  background: var(--surface-soft) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card) .clay-icon-tile {
+  background: var(--surface-soft) !important;
+  color: var(--action) !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+.seller-dashboard main :is([class~="bg-red-50"],[class~="bg-amber-50"],[class~="bg-green-50"],[class~="bg-emerald-50"]) {
+  box-shadow: none !important;
+}
+
+
+/* Keep the seller shell below the global marketplace header in the root layout stacking order. */
+.seller-dashboard {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+.seller-dashboard .seller-topbar {
+  position: static !important;
+  z-index: 0 !important;
+  isolation: auto !important;
+  display: flex;
+  inset-block-start: auto !important;
+  margin-block-start: 0 !important;
+  inset: auto !important;
+  z-index: auto !important;
+  transform: none !important;
+}
+.seller-dashboard .seller-sidebar {
+  z-index: 1 !important;
+}
+.seller-dashboard .seller-mobile-navigation {
+  z-index: 1 !important;
+}

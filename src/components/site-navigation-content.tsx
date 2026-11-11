@@ -191,7 +191,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
     "block rounded-xl px-4 py-3 text-sm font-medium text-[var(--color-ink-800)] transition hover:bg-[var(--color-lavender-50)] hover:text-[var(--color-lavender-950)] focus-visible:outline-offset-2";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/70 bg-[var(--surface)]/95 shadow-[var(--shadow-clay)] backdrop-blur-xl">
+    <header style={{ position: "sticky", top: 0, zIndex: 2147483000, isolation: "isolate", backgroundColor: "var(--surface)" }} className="site-navigation-header sticky top-0 z-[2147483000] border-b border-white/70 bg-[var(--surface)] shadow-[var(--shadow-clay)]">
       <div className="mx-auto flex max-w-[1440px] items-center gap-3 px-4 pr-16 py-3 sm:px-5 sm:pr-16 md:pr-0 lg:px-10">
         <Link
           href="/"
