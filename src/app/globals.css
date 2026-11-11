@@ -1171,21 +1171,8 @@ button[data-variant="danger"] svg { color: #ffffff; }
 .seller-dashboard .seller-overview-hero h3 {
   color: var(--matjar-ink) !important;
 }
-.seller-dashboard .seller-overview-hero [class*="text-[#b9d9e2]"],
-.seller-dashboard .seller-overview-hero [class*="text-[#8ce8e1]"] {
-  color: var(--matjar-action) !important;
-}
 .seller-dashboard .seller-overview-hero .pointer-events-none {
   opacity: .35;
-}
-.seller-dashboard [class*="bg-[linear-gradient(115deg,#17334f"] {
-  background: linear-gradient(120deg, #ffffff, #fffaf6) !important;
-  color: var(--matjar-ink) !important;
-  border: 1px solid var(--matjar-line);
-  box-shadow: 0 12px 28px rgb(69 69 69 / 6%);
-}
-.seller-dashboard [class*="bg-[linear-gradient(115deg,#17334f"] :is(h1,h2,h3,p,span) {
-  color: var(--matjar-ink) !important;
 }
 .seller-dashboard .seller-topbar button[data-variant="primary"] {
   background: var(--matjar-action) !important;
