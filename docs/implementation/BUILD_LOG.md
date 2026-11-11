@@ -4589,3 +4589,19 @@ The platform account policy is now explicit: email verification is not required 
 - Updated the shipping page from the current `main` blob SHA.
 - No runtime/build verification is claimed.
 - Commit: 285919eecd2f887bc7ba3a8e0f0a3c8953b327c2.
+
+
+## 2026-11-11 — Seller settings, finance and advertising palette alignment
+
+**Implemented**
+- Unified seller business settings, commission statements, advertising campaign surfaces, and bank-account management with the warm ivory/orange seller studio palette.
+- Replaced remaining blue-grey and turquoise panel/action treatments while retaining semantic status colors and existing page workflows.
+- No changes to financial calculations, encrypted payout data handling, advertising APIs, or seller settings persistence.
+
+**Verification**
+- Each page was fetched from the latest `main` state and updated sequentially using its current blob SHA.
+- Source-only presentation change; no build/browser verification is claimed.
+- src/features/seller/settings-page.tsx: 3e38ecdff2fd11f2cc8148c20e4fd1406cd71291
+- src/features/seller/commissions-page.tsx: 21aa5ea858bf618c91a0688c032964f081f83107
+- src/features/seller/advertising-page.tsx: 75d450f5526d0cad2b84e13657656380dd97bf0f
+- src/features/seller/payout-methods-page.tsx: c8e33b4cc4d2fbe902c0e63e87f341c42661c826
