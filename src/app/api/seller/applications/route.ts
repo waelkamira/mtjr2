@@ -19,7 +19,7 @@ const bodySchema = z.object({
   youtubeUrl: z.string().trim().max(2048).optional(),
   twitterUrl: z.string().trim().max(2048).optional(),
   identityDocumentFileId: z.string().trim().max(255).optional(),
-  registrationCountryCode: z.string().trim().length(2).optional(),
+  registrationCountryCode: z.string().trim().refine((value) => value === "" || /^[A-Za-z]{2}$/.test(value)).optional(),
   registrationNumber: z.string().trim().max(120).optional(),
   registrationAuthority: z.string().trim().max(160).optional(),
   registrationDate: z.string().trim().max(10).optional(),
