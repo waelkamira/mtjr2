@@ -118,3 +118,32 @@
 .seller-dashboard .seller-mobile-navigation :is(a,span,div) {
   border-color: var(--border);
 }
+
+/* Keep navigation accents strictly within the sign-in palette. */
+.seller-dashboard .seller-sidebar-nav .group > span:first-child,
+.seller-dashboard .seller-sidebar > div:first-child a > span:first-child,
+.seller-dashboard .seller-sidebar > div:nth-child(2) > span:first-child,
+.seller-dashboard .seller-mobile-navigation a > span:first-child {
+  background: var(--surface-soft) !important;
+  color: var(--action) !important;
+  border-color: var(--border) !important;
+}
+.seller-dashboard .seller-sidebar-nav .group > span:last-of-type {
+  background: var(--action) !important;
+}
+.seller-dashboard .seller-sidebar > div:last-child,
+.seller-dashboard .seller-sidebar > div:last-child a {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+.seller-dashboard .seller-sidebar > div:last-child a {
+  color: var(--action) !important;
+}
+.seller-dashboard header a {
+  border-color: var(--border);
+}
+.seller-dashboard header a:hover {
+  color: var(--action);
+  border-color: var(--action);
+}
