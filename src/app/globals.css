@@ -709,7 +709,7 @@ textarea {
   color: #dceaf5 !important;
   border: 1px solid rgb(255 255 255 / 8%);
 }
-.seller-dashboard .seller-sidebar nav a[aria-current="page"] {
+.seller-dashboard .seller-sidebar nav .seller-dashboard a[aria-current="page"] {
   color: #ffffff !important;
   background: linear-gradient(100deg, rgb(57 197 189 / 23%), rgb(57 197 189 / 11%)) !important;
   border: 1px solid rgb(91 221 212 / 28%) !important;
@@ -1178,8 +1178,9 @@ textarea {
 
 /* Matjar interaction system — semantic states are consistent across dashboards. */
 :root {
-  --matjar-action: #f0660d;
-  --matjar-action-hover: #d95708;
+  --matjar-brand-orange: #f0660d;
+  --matjar-action: #b94708;
+  --matjar-action-hover: #923806;
   --matjar-ink: #454545;
   --matjar-line: #eee9e4;
   --matjar-hover-line: #f3b58f;
@@ -1195,12 +1196,12 @@ textarea {
 /* Default buttons are quiet white controls. Primary, destructive and selected
    states are explicit and always carry their matching foreground. */
 /* Platform-wide button defaults: white secondary controls with dark ink. */
-button:not([data-variant="primary"]):not([data-variant="danger"]):not([data-variant="active"]):not([aria-pressed="true"]):not([aria-selected="true"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#dc2626]"]):not([class*="bg-[#f0660d]"]):not([class*="bg-[#d86b32]"]):not([class*="bg-[var(--color-orange)]"]):not([class*="bg-[var(--color-orange-500)]"]):not([class*="bg-[var(--color-orange-600)]"]):not([class*="bg-[var(--action)]"]):not([class*="bg-[var(--color-forest-900)]"]):not([class*="bg-[var(--color-forest-800)]"]):not([class*="bg-[var(--color-ink-800)]"]):not([class*="bg-[var(--color-ink-600)]"]):not([class*="bg-[var(--color-lavender-600)]"]):not([class*="bg-[var(--color-mint-600)]"]):not([class*="bg-[var(--color-blush-600)]"]):not([class*="bg-[var(--color-peach-600)]"]):not([class*="bg-[var(--color-butter-600)]"]):not([class*="bg-[var(--color-violet-700)]"]):not([class*="bg-[var(--color-violet-600)]"]):not([class*="bg-[var(--color-copper-500)]"]):not([class*="bg-[var(--color-copper-600)]"]):not([class*="bg-[var(--color-copper-700)]"]):not([class*="bg-orange-500"]):not([class*="bg-orange-600"]):not([class*="bg-[linear-gradient"]) {
+button:not(:where([data-variant="primary"], [data-variant="danger"], [data-variant="active"], [aria-pressed="true"], [aria-selected="true"], [class*="bg-red"], [class*="bg-rose"], [class*="bg-[#dc2626]"], [class*="bg-[#f0660d]"], [class*="bg-[#d86b32]"], [class*="bg-[var(--color-orange)]"], [class*="bg-[var(--color-orange-500)]"], [class*="bg-[var(--color-orange-600)]"], [class*="bg-[var(--action)]"], [class*="bg-[var(--color-forest-900)]"], [class*="bg-[var(--color-forest-800)]"], [class*="bg-[var(--color-ink-800)]"], [class*="bg-[var(--color-ink-600)]"], [class*="bg-[var(--color-lavender-600)]"], [class*="bg-[var(--color-mint-600)]"], [class*="bg-[var(--color-blush-600)]"], [class*="bg-[var(--color-peach-600)]"], [class*="bg-[var(--color-butter-600)]"], [class*="bg-[var(--color-violet-700)]"], [class*="bg-[var(--color-violet-600)]"], [class*="bg-[var(--color-copper-500)]"], [class*="bg-[var(--color-copper-600)]"], [class*="bg-[var(--color-copper-700)]"], [class*="bg-orange-500"], [class*="bg-orange-600"], [class*="bg-[linear-gradient"])) {
   background: #ffffff !important;
   border: 1px solid var(--matjar-line) !important;
   color: var(--matjar-ink) !important;
 }
-button:not([data-variant="primary"]):not([data-variant="danger"]):not([data-variant="active"]):not(:disabled):not([aria-pressed="true"]):not([aria-selected="true"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#dc2626]"]):not([class*="bg-[#f0660d]"]):not([class*="bg-[#d86b32]"]):not([class*="bg-[var(--color-orange)]"]):not([class*="bg-[var(--color-orange-500)]"]):not([class*="bg-[var(--color-orange-600)]"]):not([class*="bg-[var(--action)]"]):not([class*="bg-[var(--color-forest-900)]"]):not([class*="bg-[var(--color-forest-800)]"]):not([class*="bg-[var(--color-ink-800)]"]):not([class*="bg-[var(--color-ink-600)]"]):not([class*="bg-[var(--color-lavender-600)]"]):not([class*="bg-[var(--color-mint-600)]"]):not([class*="bg-[var(--color-blush-600)]"]):not([class*="bg-[var(--color-peach-600)]"]):not([class*="bg-[var(--color-butter-600)]"]):not([class*="bg-[var(--color-violet-700)]"]):not([class*="bg-[var(--color-violet-600)]"]):not([class*="bg-[var(--color-copper-500)]"]):not([class*="bg-[var(--color-copper-600)]"]):not([class*="bg-[var(--color-copper-700)]"]):not([class*="bg-orange-500"]):not([class*="bg-orange-600"]):not([class*="bg-[linear-gradient"]):hover {
+button:not(:where([data-variant="primary"], [data-variant="danger"], [data-variant="active"], :disabled, [aria-pressed="true"], [aria-selected="true"], [class*="bg-red"], [class*="bg-rose"], [class*="bg-[#dc2626]"], [class*="bg-[#f0660d]"], [class*="bg-[#d86b32]"], [class*="bg-[var(--color-orange)]"], [class*="bg-[var(--color-orange-500)]"], [class*="bg-[var(--color-orange-600)]"], [class*="bg-[var(--action)]"], [class*="bg-[var(--color-forest-900)]"], [class*="bg-[var(--color-forest-800)]"], [class*="bg-[var(--color-ink-800)]"], [class*="bg-[var(--color-ink-600)]"], [class*="bg-[var(--color-lavender-600)]"], [class*="bg-[var(--color-mint-600)]"], [class*="bg-[var(--color-blush-600)]"], [class*="bg-[var(--color-peach-600)]"], [class*="bg-[var(--color-butter-600)]"], [class*="bg-[var(--color-violet-700)]"], [class*="bg-[var(--color-violet-600)]"], [class*="bg-[var(--color-copper-500)]"], [class*="bg-[var(--color-copper-600)]"], [class*="bg-[var(--color-copper-700)]"], [class*="bg-orange-500"], [class*="bg-orange-600"], [class*="bg-[linear-gradient"])):hover {
   border-color: var(--matjar-hover-line) !important;
   box-shadow: var(--matjar-hover-shadow) !important;
   color: var(--matjar-ink) !important;
@@ -1568,3 +1569,21 @@ a[aria-disabled="true"] {
   pointer-events: none;
 }
 a svg { flex: 0 0 auto; color: currentColor; }
+
+
+/* Inline link-actions retain their semantic color without button chrome. */
+button[data-button-style="link"] {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--color-danger) !important;
+  box-shadow: none !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+button[data-button-style="link"]:hover:not(:disabled) {
+  background: transparent !important;
+  color: #b91c1c !important;
+  box-shadow: none !important;
+}
