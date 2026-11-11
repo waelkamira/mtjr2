@@ -766,9 +766,9 @@ export default function SellerWorkspacePage() {
       <main dir={locale === "ar" ? "rtl" : "ltr"} className="min-h-screen bg-[var(--seller-canvas)] px-4 py-8 text-[#203850] sm:px-6">
         <section className="seller-application-status mx-auto max-w-6xl overflow-hidden rounded-[1.75rem]">
           <header className="bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-6 text-white sm:p-9">
-            <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale, "SELLER APPLICATION", "طلب فتح متجر")}</p>
+            <p className="text-[10px] font-extrabold tracking-[.2em] text-[#c7fff7]">{translate(locale, "SELLER APPLICATION", "طلب فتح متجر")}</p>
             <h1 className="mt-3 flex items-center gap-3 text-3xl font-black"><span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-[#8ce8e1]"><SellerIcon name="document" /></span>{translate(locale, "Your application is under review", "طلبك قيد المراجعة")}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">{translate(locale, "Your application has been received. The marketplace team will review your business details before enabling store operations.", "تم استلام طلبك. سيراجع فريق المنصة بيانات نشاطك قبل تفعيل عمليات المتجر.")}</p>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white">{translate(locale, "Your application has been received. The marketplace team will review your business details before enabling store operations.", "تم استلام طلبك. سيراجع فريق المنصة بيانات نشاطك قبل تفعيل عمليات المتجر.")}</p>
             <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold"><span className="size-2 rounded-full bg-amber-300"/>{translate(locale, "Pending review", "بانتظار المراجعة")}</div>
           </header>
           <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-8">
@@ -870,13 +870,13 @@ export default function SellerWorkspacePage() {
         ) : (!workspace?.seller || workspace.seller.status === "REJECTED") ? (
           <section className="seller-application-form mt-8 max-w-6xl rounded-[1.75rem] p-4 sm:p-7">
               <div className="mb-6 rounded-2xl border border-[#29435d] bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-5 text-white shadow-[0_12px_25px_rgba(20,43,69,.16)] sm:p-7">
-              <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale,"SELLER APPLICATION","طلب فتح متجر")}</p>
+              <p className="text-[10px] font-extrabold tracking-[.2em] text-[#c7fff7]">{translate(locale,"SELLER APPLICATION","طلب فتح متجر")}</p>
                 <h2 className="mt-2 flex items-center gap-3 text-2xl font-black tracking-tight"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-[#8ce8e1]"><SellerIcon name="store" /></span>{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d7e7ed]">{translate(locale,"A guided application for your business, products and store location. Complete each section so our marketplace team can review it.","طلب منظم للتعريف بنشاطك ومنتجاتك وموقع متجرك. أكمل الأقسام ليتمكن فريق السوق من مراجعة طلبك.")}</p>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#c7fff7]">{translate(locale,"A guided application for your business, products and store location. Complete each section so our marketplace team can review it.","طلب منظم للتعريف بنشاطك ومنتجاتك وموقع متجرك. أكمل الأقسام ليتمكن فريق السوق من مراجعة طلبك.")}</p>
                 <nav aria-label={translate(locale, "Application sections", "أقسام الطلب")} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                  {applicationSteps.map((step, index) => <a key={step.id} href={`#${step.id}`} className="flex min-w-0 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-white/90 transition hover:bg-white/[.16]">
+                  {applicationSteps.map((step, index) => <a key={step.id} href={`#${step.id}`} className="flex min-w-0 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-white transition hover:bg-white/[.16]">
                     <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-white/10 text-[#8ce8e1]"><SellerIcon name={step.icon} /></span>
-                    <span className="min-w-0"><span className="block text-[9px] font-bold text-white/55">0{index + 1}</span><span className="block truncate">{step.label}</span></span>
+                    <span className="min-w-0"><span className="block text-[9px] font-bold text-[#c7fff7]">0{index + 1}</span><span className="block truncate">{step.label}</span></span>
                   </a>)}
                 </nav>
               </div>
@@ -985,7 +985,7 @@ export default function SellerWorkspacePage() {
                   </ul>
                 </section>
                 <section className="overflow-hidden rounded-2xl border border-[#dce5ee] bg-white shadow-[0_8px_22px_rgba(30,57,83,.06)]">
-                  <div className="seller-application-preview-header bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-5 text-white"><p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.18em] text-[#b9d9e2]"><SellerIcon name="store" />{translate(locale, "SELLER PROFILE PREVIEW", "معاينة ملف البائع")}</p><h3 className="mt-2 break-words text-xl font-black">{displayName.trim() || translate(locale, "Your new store", "متجرك الجديد")}</h3><p className="mt-1 text-sm text-white/75">{contactName.trim() || translate(locale, "Add your full name", "أضف اسمك الكامل")}</p></div>
+                  <div className="seller-application-preview-header bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-5 text-white"><p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.18em] text-[#c7fff7]"><SellerIcon name="store" />{translate(locale, "SELLER PROFILE PREVIEW", "معاينة ملف البائع")}</p><h3 className="mt-2 break-words text-xl font-black">{displayName.trim() || translate(locale, "Your new store", "متجرك الجديد")}</h3><p className="mt-1 text-sm text-white/95">{contactName.trim() || translate(locale, "Add your full name", "أضف اسمك الكامل")}</p></div>
                   <div className="space-y-4 p-5 text-sm text-[#657487]">
                     <div><p className="text-[10px] font-bold text-[#5c6878]">{translate(locale, "LEGAL NAME", "الاسم القانوني")}</p><p className="mt-1 break-words font-semibold text-[#203850]">{legalName.trim() || "—"}</p></div>
                     <div><p className="text-[10px] font-bold text-[#5c6878]">{translate(locale, "CONTACT EMAIL", "البريد الإلكتروني")}</p><p dir="ltr" className="mt-1 break-all text-left">{contactEmail.trim() || translate(locale, "Required", "مطلوب")}</p></div>
