@@ -1659,3 +1659,18 @@ html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff !important;
 }
+
+
+/* Platform-wide text selection policy: interface copy-drag selection is disabled.
+   Editable controls and editable content retain native text selection. */
+html body,
+html body * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html body :is(input, textarea, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]),
+html body :is(input, textarea, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]) * {
+  -webkit-user-select: text;
+  user-select: text;
+}
