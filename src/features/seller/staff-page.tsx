@@ -102,13 +102,13 @@ export default function SellerStaffPage() {
     <main className="min-h-screen bg-transparent">
       
       <div className="mx-auto max-w-[1440px] px-5 py-10">
-        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#a35f3a]">{translate(locale, "Store access", "إمكانية الوصول إلى المتجر")}</p>
-        <h1 className="mt-2 text-3xl font-semibold text-[#51433a]">{translate(locale, "Team & invitations", "الفريق والدعوات")}</h1>
+        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#a94308]">{translate(locale, "Store access", "إمكانية الوصول إلى المتجر")}</p>
+        <h1 className="mt-2 text-3xl font-semibold text-[#454545]">{translate(locale, "Team & invitations", "الفريق والدعوات")}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Store owners invite and revoke active accounts; invited users accept their own invitations. Every action is scoped to the selected store.", "مالك المتجر يدعو الحسابات النشطة ويلغي عضويتها؛ ويقبل المدعوون دعواتهم بأنفسهم. كل إجراء مرتبط بالمتجر المحدد.")}</p>
         {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
-        {message && <p role="status" className="mt-6 rounded-xl bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[#51433a]">{message}</p>}
+        {message && <p role="status" className="mt-6 rounded-xl bg-[var(--color-sage-100)] px-4 py-3 text-sm text-[#454545]">{message}</p>}
 
-        <section className="mt-8 rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-6 shadow-[0_14px_30px_rgba(119,86,62,.08),inset_0_2px_0_white,inset_0_-2px_6px_rgba(119,86,62,.035)]">
+        <section className="mt-8 rounded-[1.8rem] border border-[#eee9e4] bg-white p-6 shadow-[0_8px_22px_rgba(69,69,69,.06)]">
           <h2 className="text-lg font-semibold">{translate(locale, "Your invitations", "دعواتك")}</h2>
           {!invitations.length ? <p className="mt-3 text-sm text-[var(--muted)]">{translate(locale, "You have no pending store invitations.", "ليس لديك دعوات متجر معلقة.")}</p> : <div className="mt-4 grid gap-3">{invitations.map((invitation) => <div key={invitation.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[var(--surface-soft)] p-4"><div><p className="font-medium">{invitation.store.name}</p><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Invited by", "بدعوة من")} {invitation.invitedBy?.displayName ?? invitation.invitedBy?.email ?? translate(locale, "Store owner", "مالك المتجر")}</p><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Expires", "تنتهي")} {invitation.expiresAt ? new Date(invitation.expiresAt).toLocaleString() : translate(locale, "No expiry", "بلا انتهاء")}</p></div><button disabled={busy} onClick={() => void action(`/api/stores/staff-invitations/${encodeURIComponent(invitation.id)}/accept`, translate(locale, "Invitation accepted.", "تم قبول الدعوة."))} className="rounded-lg bg-[var(--color-ink-800)] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{translate(locale, "Accept invitation", "قبول الدعوة")}</button></div>)}</div>}
         </section>
