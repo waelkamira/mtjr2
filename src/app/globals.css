@@ -55,6 +55,7 @@ html[dir="rtl"] .text-right { text-align: left; }
 [class~="text-[var(--color-copper-700)]"],
 [class~="text-[var(--color-lavender-600)]"],
 [class~="text-[var(--color-mint-600)]"],
+[class~="text-[var(--color-mint-500)]"],
 [class~="text-[var(--color-blush-600)]"],
 [class~="text-[var(--color-peach-600)]"],
 [class~="text-[var(--color-butter-600)]"],
@@ -72,6 +73,7 @@ html[dir="rtl"] .text-right { text-align: left; }
 [class~="hover:text-[var(--color-copper-700)]"]:hover,
 [class~="hover:text-[var(--color-lavender-600)]"]:hover,
 [class~="hover:text-[var(--color-mint-600)]"]:hover,
+[class~="hover:text-[var(--color-mint-500)]"]:hover,
 [class~="hover:text-[var(--color-blush-600)]"]:hover,
 [class~="hover:text-[var(--color-peach-600)]"]:hover,
 [class~="hover:text-[var(--color-butter-600)]"]:hover,
@@ -89,6 +91,13 @@ html[dir="rtl"] .text-right { text-align: left; }
 /* The admin brand mark sits on a dark navigation surface and remains orange. */
 aside [class~="text-[var(--color-copper-600)]"] {
   color: var(--orange);
+}
+/* The footer intentionally uses orange accents on a charcoal surface. */
+footer [class~="text-[var(--color-orange)]"] {
+  color: var(--orange);
+}
+footer [class~="hover:text-[var(--color-orange)]"]:hover {
+  color: #ff9a5a;
 }
 
 [class~="text-[var(--color-forest-800)]"],
