@@ -28,9 +28,9 @@ const groups: Array<{ titleEn: string; titleAr: string; links: FooterLink[] }> =
     titleEn: "Information",
     titleAr: "معلومات",
     links: [
-      { href: "/about", en: "About Mtjr", ar: "عن متجر" },
-      { href: "/terms", en: "Terms of use", ar: "شروط الاستخدام" },
-      { href: "/privacy", en: "Privacy notice", ar: "إشعار الخصوصية" }
+      { href: "/about", en: "About us", ar: "من نحن" },
+      { href: "/terms", en: "Terms & conditions", ar: "الشروط والأحكام" },
+      { href: "/privacy", en: "Privacy policy", ar: "سياسة الخصوصية" }
     ]
   }
 ];

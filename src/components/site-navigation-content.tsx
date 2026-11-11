@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import MarketplaceSearchBox from "@/features/storefront/marketplace-search-box";
 import AuthReturnLink from "@/components/auth-return-link";
 import LanguageSwitcher from "@/components/language-switcher";
@@ -21,11 +22,7 @@ const publicLinks = [
   { href: "/categories", label: "Categories" },
   { href: "/brands", label: "Brands" },
   { href: "/stores", label: "Stores" },
-  { href: "/seller", label: "Sell on Mtjr" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-  { href: "/terms", label: "Terms" },
-  { href: "/privacy", label: "Privacy" }
+  { href: "/seller", label: "Sell on Mtjr" }
 ];
 
 function localizeAccountType(locale: Locale, accountType: string) {
@@ -129,6 +126,7 @@ function MenuIcon({ open }: { open: boolean }) {
 
 export default function SiteNavigationContent({ account }: { account: AccountSummary | null }) {
   const { locale } = useLocale();
+  const pathname = usePathname();
   const isAdministrator = account?.accountType === "Admin" || account?.accountType === "Super Admin";
   const controlPanelHref = account?.accountType === "Super Admin" ? "/admin/control-panel" : "/admin/dashboard";
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -195,10 +193,9 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
           { href: "/account/orders", label: "Orders" }
         ]
       : []),
-    ...publicLinks.slice(0, 8),
+    ...publicLinks,
     ...(account ? signedInLinks : []),
-    ...(isAdministrator ? [{ href: controlPanelHref, label: "Control panel" }] : []),
-    ...publicLinks.slice(6)
+    ...(isAdministrator ? [{ href: controlPanelHref, label: "Control panel" }] : [])
   ];
 
   const menuLinkClass = "flex w-full items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)]";
@@ -322,35 +319,34 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
       </div>
 
       <div className="mx-auto max-w-[1440px] px-4 pb-3 sm:px-5 lg:px-10">
-        <nav aria-label={translate(locale, "Main navigation", "القائمة الرئيسية")} className="hidden gap-2 overflow-x-auto text-sm text-[var(--color-ink-600)] md:flex">
-          {publicLinks.slice(0, 6).map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 font-medium transition ${link.href === "/" ? "border-[var(--color-orange)] bg-lime-100 text-[var(--foreground)]" : "border-transparent text-[var(--foreground)] hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"}`}
-            >
-              <NavigationIcon name={navigationIconFor(link.label)} />
-              {localizedNavigationLabel(locale, link.label)}
-            </Link>
-          ))}
-          {account && signedInLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-transparent px-4 py-2 font-medium text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"
-            >
-              <NavigationIcon name={navigationIconFor(link.label)} />{localizedNavigationLabel(locale, link.label)}
-            </Link>
-          ))}
-          {publicLinks.slice(6).map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-transparent px-4 py-2 font-medium text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"
-            >
-              {localizedNavigationLabel(locale, link.label)}
-            </Link>
-          ))}
+        <nav aria-label={translate(locale, "Main navigation", "القائمة الرئيسية")} className="hidden gap-2 overflow-x-auto text-sm md:flex">
+          {publicLinks.map((link) => {
+            const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive ? "page" : undefined}
+                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border-0 px-4 py-2 font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)] ${isActive ? "bg-[var(--color-orange)] text-white shadow-[0_3px_10px_rgb(255_122_48/22%)] hover:bg-[var(--action-hover)] hover:text-white" : "bg-transparent text-[var(--foreground)] hover:bg-orange-50 hover:text-[var(--foreground)]"}`}
+              >
+                <NavigationIcon name={navigationIconFor(link.label)} />
+                {localizedNavigationLabel(locale, link.label)}
+              </Link>
+            );
+          })}
+          {account && signedInLinks.map((link) => {
+            const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive ? "page" : undefined}
+                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border-0 px-4 py-2 font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)] ${isActive ? "bg-[var(--color-orange)] text-white hover:bg-[var(--action-hover)] hover:text-white" : "bg-transparent text-[var(--foreground)] hover:bg-orange-50 hover:text-[var(--foreground)]"}`}
+              >
+                <NavigationIcon name={navigationIconFor(link.label)} />{localizedNavigationLabel(locale, link.label)}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="absolute right-4 top-3 sm:right-5 md:hidden" ref={mobileMenuRef}>
