@@ -4548,3 +4548,17 @@ The platform account policy is now explicit: email verification is not required 
 - Removed the remaining blue gradient from the bank-account quick action.
 - Confirmed by source scan that the seller workspace and finance overview no longer contain the legacy blue/teal gradient palette patterns targeted in this pass.
 - No runtime build or browser screenshots were available in this source-only pass.
+
+
+## 2026-11-11 — Seller inventory visual alignment
+
+**Implemented**
+- Replaced the remaining cool blue-grey warehouse/inventory panel gradients with the seller studio's warm ivory surface palette.
+- Softened the associated shadows to neutral warm tones so inventory, stock counts, quarantine, movement ledger, and transfer panels sit consistently within the refreshed seller workspace.
+- Kept inventory queries, pagination, stock adjustments, quarantine decisions, stock counts, and transfer actions unchanged; this was a presentation-only change.
+
+**Verification**
+- Re-fetched the inventory source from `main` before editing and updated it using its current blob SHA.
+- Source scan confirmed the targeted legacy blue-grey panel colors were removed from this page.
+- No runtime/browser/build verification is claimed in this change.
+- Commit: 0e0cbfbe3d97ffc8c4c2f56035af52ff4592546c.
