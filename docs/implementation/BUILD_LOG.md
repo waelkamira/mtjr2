@@ -4697,3 +4697,17 @@ The platform account policy is now explicit: email verification is not required 
 - No application code changes were needed after this verification. This entry records the completed post-repair results; no secrets or production settings were changed.
 
 **Remaining verification boundary:** the E2E test intentionally guards locality/neighbourhood zoom assertions when the selected OpenSyria record has no centroid. The current run proves the test passed, but does not claim that every locality in the source dataset has coordinates.
+
+## 2026-11-11 — Seller dashboard visual consistency pass
+
+**Implemented on main**
+- Added a final seller-scoped visual contract in `src/app/globals.css` to override the obsolete navy/teal seller skin that was still taking precedence at the end of the stylesheet.
+- Seller navigation now resolves to the platform's white / onyx / orange palette; active navigation remains lime with dark text, and inactive links use white surfaces with a subtle orange hover border and shadow.
+- Seller search submit uses the same `#f0660d` primary orange as the marketplace “Browse products” action, with white text and a darker orange hover state.
+- Seller topbar is explicitly non-sticky with automatic stacking order, preventing it from competing with the marketplace header. Search layout is constrained on desktop and becomes a full-width row on smaller screens.
+- Seller dashboard cards, forms, headings, placeholders, mobile navigation and focus outlines receive explicit foreground/background pairings to avoid unreadable hover or active states.
+- No page routes, API behavior, Prisma models, or database migrations were changed.
+
+**Verification boundary**
+- GitHub source update succeeded. Local browser visual verification could not be performed from this session because the connected browser context is unavailable. The app's appearance must still be checked locally at `/seller` on desktop and mobile after pulling the commit.
+- The prior successful CI/E2E results recorded above apply to their exact earlier commit, not this CSS-only commit. Do not treat them as verification of this new change.
