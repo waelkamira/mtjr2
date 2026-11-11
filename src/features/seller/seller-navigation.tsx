@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
-export type SellerIconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping" | "finance" | "user" | "business" | "catalog" | "pin" | "globe" | "document" | "shield" | "media" | "tag" | "store" | "plus" | "edit" | "trash" | "check" | "close" | "warehouse";
+export type SellerIconName = "home" | "package" | "orders" | "inventory" | "returns" | "messages" | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping" | "finance" | "user" | "business" | "catalog" | "pin" | "globe" | "document" | "shield" | "media" | "tag" | "store" | "plus" | "edit" | "trash" | "check" | "close" | "warehouse" | "refresh" | "arrow-up" | "arrow-down";
 type Tone = "lavender" | "mint" | "peach" | "butter" | "blush" | "sky";
 
 const groups: Array<{
@@ -93,6 +93,9 @@ export function SellerIcon({ name }: { name: SellerIconName }) {
       {name === "check" && <><path d="m5 12 4 4L19 6" /></>}
       {name === "close" && <><path d="m6 6 12 12M18 6 6 18" /></>}
       {name === "warehouse" && <><path d="m3 10 9-7 9 7v10H3z" /><path d="M8 20v-6h8v6M7 10h.01M12 10h.01M17 10h.01" /></>}
+      {name === "refresh" && <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M5.5 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.5-3" /></>}
+      {name === "arrow-up" && <><path d="M12 19V5M5 12l7-7 7 7" /></>}
+      {name === "arrow-down" && <><path d="M12 5v14M19 12l-7 7-7-7" /></>}
     </svg>
   );
 }
