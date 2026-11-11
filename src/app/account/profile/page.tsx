@@ -80,7 +80,7 @@ export default function ProfilePage() {
   }));
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(236,72,153,.07),transparent_34%),radial-gradient(ellipse_at_top_right,rgba(59,130,246,.07),transparent_34%),#f8fafc] px-5 py-8">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(255,140,28,.07),transparent_34%),radial-gradient(ellipse_at_top_right,rgba(255,140,28,.035),transparent_34%),#fafafa] px-5 py-8">
       <div className="mx-auto max-w-6xl">
         <Link href="/account" className="text-sm text-[var(--color-ink-600)]">← {t("My account", "حسابي")}</Link>
         <h1 className="mt-5 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Personal profile", "الملف الشخصي")}</h1>
