@@ -186,6 +186,8 @@
 }
 .seller-dashboard .seller-topbar {
   position: static !important;
+  z-index: 0 !important;
+  isolation: auto !important;
   display: flex;
   inset-block-start: auto !important;
   margin-block-start: 0 !important;
