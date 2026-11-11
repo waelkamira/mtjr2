@@ -4726,3 +4726,15 @@ The platform account policy is now explicit: email verification is not required 
 **Verification boundary**
 - GitHub source updates completed sequentially on `main`.
 - No build, typecheck, lint, automated tests, browser screenshots, or responsive/RTL visual review were run in this pass. The updated colors require a local visual review after pulling the latest `main`.
+
+
+## 2026-11-11 — Brand-orange audit: storefront, admin, and seller follow-through
+
+- Continued the `#FF8C1C` migration beyond the shared theme and seller dashboard.
+- Updated the shared site navigation orange glow, seller payout-method primary action, and admin dashboard orange metric accents to consume the approved brand orange.
+- Updated seller returns and product-list orange chart/category accents to resolve through the shared orange token.
+- Replaced remaining legacy orange color selectors in the global button compatibility rules.
+- Preserved status-specific colors (for example low-stock, warning, error, and rating bands) where orange is being used as data/status encoding rather than as a brand action.
+- Source changes were committed directly to `main`.
+
+**Verification boundary:** No local build, typecheck, lint, automated tests, browser screenshot review, or full page-by-page responsive/RTL audit was run. Visual verification remains outstanding.
