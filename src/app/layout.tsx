@@ -7,6 +7,7 @@ import MatjarAIAssistant from "@/components/ai/matjar-ai-assistant";
 import { getAiAssistantRuntimeSettings } from "@/server/ai/assistant-config";
 import RegistrationNotice from "@/components/registration-notice";
 import SonnerToaster from "@/components/sonner-toaster";
+import PaginationScrollReset from "@/components/pagination-scroll-reset";
 import { LocaleProvider } from "@/components/locale-provider";
 import { cookies } from "next/headers";
 import { defaultLocale, isLocale, localeCookieName } from "@/lib/locale";
@@ -38,6 +39,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       <body>
         <LocaleProvider initialLocale={locale}>
+          <PaginationScrollReset />
           <SiteNavigation />
           <AuthJourney />
           <RegistrationNotice />
