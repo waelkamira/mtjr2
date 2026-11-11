@@ -193,7 +193,7 @@ export default function SellerNavigation() {
 
       <div className="seller-mobile-navigation border-b border-[#29435d] bg-[#142b45] px-4 py-3 text-[#f5f8fc] shadow-[0_4px_14px_rgba(20,43,69,.15)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
+          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-white">
             <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
