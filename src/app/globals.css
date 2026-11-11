@@ -400,7 +400,7 @@ html body :is(
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]):not([type="range"]):not([type="color"]),
   textarea,
   select
-):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-"]) {
+):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-"]):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select) {
   background-color: #454545 !important;
   color: #ffffff !important;
   caret-color: #ffffff !important;
@@ -432,6 +432,31 @@ html body select:not([data-field-style="custom"]):not([data-field-style="none"])
 
 html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) option,
 html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) optgroup {
+  background: #ffffff;
+  color: #454545;
+}
+html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):is(
+  [class~="bg-black"], [class*="bg-gray-7"], [class*="bg-gray-8"], [class*="bg-gray-9"],
+  [class*="bg-slate-7"], [class*="bg-slate-8"], [class*="bg-slate-9"],
+  [class*="bg-zinc-7"], [class*="bg-zinc-8"], [class*="bg-zinc-9"],
+  [class*="bg-neutral-7"], [class*="bg-neutral-8"], [class*="bg-neutral-9"],
+  [class*="bg-stone-7"], [class*="bg-stone-8"], [class*="bg-stone-9"],
+  [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"], [class*="bg-[#3"],
+  [class*="bg-[#4"], [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
+  [class*="bg-[#8"], [class*="bg-[#9"], [class*="bg-[var(--color-onyx)"],
+  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"], [class*="dark:bg-"]
+) option,
+html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):is(
+  [class~="bg-black"], [class*="bg-gray-7"], [class*="bg-gray-8"], [class*="bg-gray-9"],
+  [class*="bg-slate-7"], [class*="bg-slate-8"], [class*="bg-slate-9"],
+  [class*="bg-zinc-7"], [class*="bg-zinc-8"], [class*="bg-zinc-9"],
+  [class*="bg-neutral-7"], [class*="bg-neutral-8"], [class*="bg-neutral-9"],
+  [class*="bg-stone-7"], [class*="bg-stone-8"], [class*="bg-stone-9"],
+  [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"], [class*="bg-[#3"],
+  [class*="bg-[#4"], [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
+  [class*="bg-[#8"], [class*="bg-[#9"], [class*="bg-[var(--color-onyx)"],
+  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"], [class*="dark:bg-"]
+) optgroup {
   background: #454545;
   color: #ffffff;
 }
