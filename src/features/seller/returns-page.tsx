@@ -79,7 +79,7 @@ export default function SellerReturnsPage() {
     return counts;
   }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([reason, value], index) => ({
     label: reason.replaceAll("_", " ").toLowerCase(), value,
-    color: ["bg-fuchsia-500", "bg-orange-500", "bg-cyan-500", "bg-indigo-500", "bg-teal-500", "bg-pink-500"][index]
+    color: ["bg-fuchsia-500", "bg-[var(--orange)]", "bg-cyan-500", "bg-indigo-500", "bg-teal-500", "bg-pink-500"][index]
   }));
   async function decide(item: SellerReturn, status: "APPROVED" | "REJECTED") {
     const key = item.id + ":" + item.storeId;
