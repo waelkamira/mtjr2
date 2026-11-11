@@ -133,7 +133,7 @@ export default function SellerNavigation() {
       <aside className="seller-sidebar relative z-30 hidden h-screen w-[288px] shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[#454545] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
         <div className="border-b border-[#eee9e4] px-6 py-7">
           <Link href="/seller" className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#c6530b] shadow-[0_5px_12px_rgba(91,72,137,.10)]">
+            <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#f0660d] shadow-[0_5px_12px_rgba(240,102,13,.12)]">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" /><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" /></svg>
             </span>
             <span>
@@ -181,7 +181,7 @@ export default function SellerNavigation() {
           <span className="grid size-10 place-items-center rounded-xl border border-[#e8e2f1] bg-[#f2eff8] text-lg text-[#806bb0] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
           <p className="mt-3 text-sm font-extrabold text-[#454545]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
           <p className="mt-1 text-[10px] leading-4 text-[#77716c]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
-          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-[#f6d8c5] bg-[#fff1e8] px-3 py-2 text-[11px] font-extrabold text-[#a94308] shadow-[0_3px_8px_rgba(91,72,137,.08)]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
+          <Link href="/seller/advertising" className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[#f0660d] bg-[#f0660d] px-3 py-2 text-[11px] font-extrabold text-white shadow-[0_4px_12px_rgba(240,102,13,.16)]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
         </div>
         <div className="shrink-0 border-t border-[#eee9e4] p-4">
           <Link href="/" className="flex items-center justify-between rounded-2xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-semibold text-[#5f5a55] shadow-[0_3px_10px_rgba(48,38,78,.05)] transition hover:shadow-[var(--shadow-clay)]">
@@ -194,7 +194,7 @@ export default function SellerNavigation() {
       <div className="seller-mobile-navigation border-b border-[#eee9e4] bg-white px-4 py-3 text-[#454545] shadow-[0_4px_14px_rgba(69,69,69,.05)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
           <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
-            <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
+            <span className="grid size-8 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-sm text-[#a94308] shadow-[0_4px_10px_rgba(240,102,13,.10),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
           <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
