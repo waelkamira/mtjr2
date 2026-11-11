@@ -175,7 +175,7 @@ export default function SellerWorkspacePage() {
   const [proofOfAddressDocumentName, setProofOfAddressDocumentName] = useState("");
   const [sellerLatitude, setSellerLatitude] = useState<number | null>(null);
   const [sellerLongitude, setSellerLongitude] = useState<number | null>(null);
-  const [sellerLocation, setSellerLocation] = useState<{ city?: string; district?: string; localityId?: string; neighborhood?: string; streetAddress?: string }>({});
+  const [sellerLocation, setSellerLocation] = useState<{ governorate?: string; district?: string; subdistrict?: string; city?: string; localityId?: string; neighborhood?: string; streetAddress?: string }>({});
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [editingStoreProfile, setEditingStoreProfile] = useState(false);
@@ -968,13 +968,19 @@ export default function SellerWorkspacePage() {
                   }}
                   onChange={(location) => {
                     setSellerLocation({
-                      city: location.city,
+                      governorate: location.governorate,
                       district: location.district,
+                      subdistrict: location.subdistrict,
+                      city: location.city,
                       localityId: location.localityId,
                       neighborhood: location.neighborhood,
                       streetAddress: location.streetAddress
                     });
-                    setResidence([location.city, location.district, location.neighborhood].filter(Boolean).join("، "));
+                    const addressParts = [
+                      location.streetAddress, location.neighborhood, location.city,
+                      location.subdistrict, location.district, location.governorate
+                    ].filter((part): part is string => Boolean(part?.trim()));
+                    setResidence(addressParts.join("، ").slice(0, 240));
                     setSellerLatitude(location.latitude ?? null);
                     setSellerLongitude(location.longitude ?? null);
                   }}
