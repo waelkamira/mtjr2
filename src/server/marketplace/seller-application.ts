@@ -22,6 +22,16 @@ const sellerApplicationSchema = z.object({
   youtubeUrl: httpsUrl.optional().default(""),
   twitterUrl: httpsUrl.optional().default(""),
   identityDocumentFileId: z.string().trim().max(255).optional().default(""),
+  registrationCountryCode: z.string().trim().length(2).transform((value) => value.toUpperCase()).optional().default(""),
+  registrationNumber: z.string().trim().max(120).optional().default(""),
+  registrationAuthority: z.string().trim().max(160).optional().default(""),
+  registrationDate: z.string().trim().max(10).optional().default(""),
+  registeredAddress: z.string().trim().max(500).optional().default(""),
+  taxIdentificationNumber: z.string().trim().max(120).optional().default(""),
+  businessWebsite: httpsUrl.optional().default(""),
+  businessRegistrationDocumentFileId: z.string().trim().max(255).optional().default(""),
+  taxCertificateDocumentFileId: z.string().trim().max(255).optional().default(""),
+  proofOfAddressDocumentFileId: z.string().trim().max(255).optional().default(""),
   latitude: z.number().finite().min(-90).max(90),
   longitude: z.number().finite().min(-180).max(180)
 });
@@ -70,21 +80,34 @@ function isMatchingStoreRequest(
 /** Authenticated user submits one pending seller application. */
 export async function submitSellerApplication(input: SellerApplicationInput, now = new Date()) {
   const data = sellerApplicationSchema.parse(input);
+  const isRegisteredEntity = data.businessType === "STORE" || data.businessType === "AGENCY";
+  if (isRegisteredEntity && (!data.registrationCountryCode || !data.registrationNumber || !data.businessRegistrationDocumentFileId)) {
+    throw new Error("Registered businesses must provide their registration country, number and certificate.");
+  }
+  if (data.registrationDate && !/^\\d{4}-\\d{2}-\\d{2}$/.test(data.registrationDate)) throw new Error("Enter a valid business registration date.");
   const actor = await requireCurrentSession(now);
   if (!actor.user.emailVerifiedAt) {
     throw new Error("Please verify your email before submitting a seller application.");
   }
-  if (data.identityDocumentFileId) {
-    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY?.trim();
-    if (!privateKey) throw new Error("Private identity document storage is not configured.");
-    const response = await fetch(`https://api.imagekit.io/v1/files/${encodeURIComponent(data.identityDocumentFileId)}/details`, {
+  const privateKey = process.env.IMAGEKIT_PRIVATE_KEY?.trim();
+  const documentChecks = [
+    [data.identityDocumentFileId, "matjar-seller-identity"],
+    [data.businessRegistrationDocumentFileId, "matjar-seller-business-registration"],
+    [data.taxCertificateDocumentFileId, "matjar-seller-tax-certificate"],
+    [data.proofOfAddressDocumentFileId, "matjar-seller-proof-of-address"]
+  ] as const;
+  for (const [fileId, tag] of documentChecks) {
+    if (!fileId) continue;
+    if (!privateKey) throw new Error("Private seller document storage is not configured.");
+    const response = await fetch(`https://api.imagekit.io/v1/files/${encodeURIComponent(fileId)}/details`, {
       headers: { Authorization: `Basic ${Buffer.from(privateKey + ":").toString("base64")}` },
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(10000),
+      cache: "no-store"
     });
-    if (!response.ok) throw new Error("The identity document could not be verified. Upload it again.");
+    if (!response.ok) throw new Error("A seller verification document could not be verified. Upload it again.");
     const details = await response.json() as { isPrivateFile?: boolean; tags?: string[] | null };
-    if (!details.isPrivateFile || !(details.tags ?? []).includes("matjar-seller-identity") || !(details.tags ?? []).includes(`user-${actor.userId}`)) {
-      throw new Error("The identity document is not a private upload belonging to this account.");
+    if (!details.isPrivateFile || !(details.tags ?? []).includes(tag) || !(details.tags ?? []).includes(`user-${actor.userId}`)) {
+      throw new Error("A seller verification document is not a private upload belonging to this account.");
     }
   }
 
@@ -105,6 +128,16 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
             intendedProducts: data.intendedProducts, description: data.description,
             facebookUrl: data.facebookUrl || null, youtubeUrl: data.youtubeUrl || null, twitterUrl: data.twitterUrl || null,
             identityDocumentFileId: data.identityDocumentFileId || null,
+            registrationCountryCode: data.registrationCountryCode || null,
+            registrationNumber: data.registrationNumber || null,
+            registrationAuthority: data.registrationAuthority || null,
+            registrationDate: data.registrationDate ? new Date(data.registrationDate + "T00:00:00.000Z") : null,
+            registeredAddress: data.registeredAddress || null,
+            taxIdentificationNumber: data.taxIdentificationNumber || null,
+            businessWebsite: data.businessWebsite || null,
+            businessRegistrationDocumentFileId: data.businessRegistrationDocumentFileId || null,
+            taxCertificateDocumentFileId: data.taxCertificateDocumentFileId || null,
+            proofOfAddressDocumentFileId: data.proofOfAddressDocumentFileId || null,
             latitude: data.latitude, longitude: data.longitude, status: SellerStatus.PENDING
           }
         });
