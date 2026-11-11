@@ -1217,6 +1217,17 @@ button:not(:disabled):not([data-variant="primary"]):not([data-variant="danger"])
   box-shadow: var(--matjar-hover-shadow) !important;
   color: var(--matjar-ink) !important;
 }
+/* Legacy white-on-color controls are primary actions: normalize them to brand orange. */
+button[class*="text-white"]:not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-green"]):not([class*="bg-emerald"]):not([class*="bg-lime"]):not([class*="bg-blue"]):not([class*="bg-sky"]):not([class*="bg-amber"]):not([class*="bg-yellow"]) {
+  background: var(--matjar-action) !important;
+  border-color: var(--matjar-action) !important;
+  color: #ffffff !important;
+}
+button[class*="text-white"]:not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-green"]):not([class*="bg-emerald"]):not([class*="bg-lime"]):not([class*="bg-blue"]):not([class*="bg-sky"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):hover {
+  background: var(--matjar-action-hover) !important;
+  border-color: var(--matjar-action-hover) !important;
+  color: #ffffff !important;
+}
 button[data-variant="primary"],
 button[class*="bg-[#f0660d]"],
 button[class*="bg-[#d86b32]"],
@@ -1320,6 +1331,28 @@ button[data-variant="danger"] svg { color: #ffffff; }
 }
 .seller-dashboard :is(section, form, article, div)[class*="bg-[linear-gradient"]:not(.seller-chart-card):not(.clay-surface):not([class*="pointer-events-none"]) :is(h1,h2,h3,h4,h5,p,label) {
   color: inherit;
+}
+.seller-dashboard [class~="text-[#203850]"],
+.seller-dashboard [class~="text-[#34445a]"],
+.seller-dashboard [class~="text-[#46516b]"],
+.seller-dashboard [class~="text-[#494467]"],
+.seller-dashboard [class~="text-[#657487]"] {
+  color: var(--matjar-ink) !important;
+}
+.seller-dashboard [class~="text-[#8790a5]"],
+.seller-dashboard [class~="text-[#718096]"],
+.seller-dashboard [class~="text-[#7883a8]"] {
+  color: #6b6b6b !important;
+}
+.seller-dashboard [class~="bg-[#f5f2fb]"],
+.seller-dashboard [class~="bg-[#e8e5f2]"],
+.seller-dashboard [class~="bg-[#edf3f5]"],
+.seller-dashboard [class~="bg-[#d5e1e7]"],
+.seller-dashboard [class~="bg-[#d8e9ee]"],
+.seller-dashboard [class~="bg-[#cfe8df]"],
+.seller-dashboard [class~="bg-[#fffaf6]"] {
+  background: #ffffff !important;
+  border-color: var(--matjar-line) !important;
 }
 /* Seller workspace now follows the same white / onyx / Matjar orange system. */
 .seller-dashboard {
