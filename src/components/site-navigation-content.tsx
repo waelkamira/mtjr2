@@ -293,7 +293,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                     onClick={logout}
                     className={`${menuLinkClass} w-full text-start text-[var(--color-danger)] disabled:cursor-wait disabled:opacity-60`}
                   >
-                    {logoutBusy ? translate(locale, "Signing out…", "جارٍ تسجيل الخروج…") : translate(locale, "Sign out", "تسجيل الخروج")}
+                    {logoutBusy ? translate(locale, "Signing out…", "جارٍ تسجيل الخروج…") : <><NavigationIcon name="logout" />{localizedNavigationLabel(locale, "Sign out")}</>}
                   </button>
                 </div>
               )}
@@ -329,18 +329,8 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
               href={link.href}
               className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 font-medium transition ${link.href === "/" ? "border-[var(--color-orange)] bg-lime-100 text-[var(--foreground)]" : "border-transparent text-[var(--foreground)] hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)]"}`}
             >
-              {translate(locale, link.label, {
-                Home: "الرئيسية",
-                Shop: "تسوق",
-                Categories: "الفئات",
-                Brands: "العلامات التجارية",
-                Stores: "المتاجر",
-                "Sell on Mtjr": "بع على متجر",
-                About: "من نحن",
-                Contact: "اتصل بنا",
-                Terms: "الشروط",
-                Privacy: "الخصوصية"
-              }[link.label] ?? link.label)}
+              <NavigationIcon name={navigationIconFor(link.label)} />
+              {localizedNavigationLabel(locale, link.label)}
             </Link>
           ))}
           {account && signedInLinks.map((link) => (
