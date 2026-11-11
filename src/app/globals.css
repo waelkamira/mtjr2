@@ -1633,6 +1633,10 @@ html body :is(input, textarea, select)[class*="bg-[#fff"],
 html body :is(input, textarea, select)[class*="bg-[#faf"],
 html body :is(input, textarea, select)[class*="bg-[#fef"],
 html body :is(input, textarea, select)[class*="bg-[var(--surface)"],
+html body :is(input, textarea, select)[class*="bg-[var(--surface-soft)"],
+html body :is(input, textarea, select)[class*="bg-[var(--surface-tint)"],
+html body :is(input, textarea, select)[class*="bg-[var(--surface-peach)"],
+html body :is(input, textarea, select)[class*="bg-[var(--surface-butter)"],
 html body :is(input, textarea, select)[class*="bg-[var(--background)"] {
   color: var(--foreground) !important;
   -webkit-text-fill-color: var(--foreground) !important;
@@ -1643,6 +1647,10 @@ html body :is(input, textarea, select)[class*="bg-[#fff"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[#faf"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[#fef"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[var(--surface)"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--surface-soft)"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--surface-tint)"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--surface-peach)"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--surface-butter)"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[var(--background)"]::placeholder {
   color: #777777 !important;
   opacity: 1 !important;
