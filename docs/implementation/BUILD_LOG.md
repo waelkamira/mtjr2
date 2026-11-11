@@ -4772,3 +4772,13 @@ The platform account policy is now explicit: email verification is not required 
 - Kept the seller sidebar and topbar's white/onyx surfaces, orange brand accents, and lime active state aligned with the shared theme.
 
 **Verification boundary:** All listed source changes were committed directly to `main`. GitHub source review confirms the targeted seller pages no longer contain the former navy/teal brand treatment or dark text on the orange primary actions. No local build/typecheck/lint/tests or browser screenshot review was run, so responsive visual rendering still needs a live local check.
+
+
+## 2026-11-11 — Seller dashboard final consistency refinements
+
+- Standardized the seller dashboard's quick-action cards to the same white surface, subtle neutral border/shadow, orange icon accent and onyx text; removed the unrelated multicolor gradients from those navigation shortcuts.
+- Completed the remaining seller application form and preview palette cleanup, including its section icons, labels, input surfaces, checklist and primary submit action.
+- Confirmed the seller product-creation primary action and dashboard create-product action use brand orange with white text and the darker orange hover state.
+- Preserved lime for the active seller navigation item and kept semantic colors in analytics/status charts distinct from brand-action colors.
+
+**Verification boundary:** GitHub source was reviewed after committing. No local build/typecheck/lint/test run or live browser screenshot review was performed. This confirms source-level palette alignment, not pixel-perfect rendering on every viewport.
