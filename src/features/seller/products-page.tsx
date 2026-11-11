@@ -22,7 +22,7 @@ type CategoryAttribute = {
   valueType: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "MULTI_SELECT";
   required: boolean; variantLevel: boolean; options: string[];
 };
-type ProductLocationDraft = { city?: string; district?: string; localityId?: string; neighborhood?: string; streetAddress?: string; latitude?: number; longitude?: number };
+type ProductLocationDraft = { governorate?: string; district?: string; subdistrict?: string; city?: string; localityId?: string; neighborhood?: string; streetAddress?: string; latitude?: number; longitude?: number };
 type Product = {
   id: string; productNumber: string; name: string; slug: string; description: string | null;
   city: string | null; district: string | null; contactPhone: string | null; videoUrl: string | null;
