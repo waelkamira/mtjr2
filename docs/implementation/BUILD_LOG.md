@@ -4540,3 +4540,11 @@ The platform account policy is now explicit: email verification is not required 
 - Restored restrained pastel icon accents in the seller navigation (lavender, mint, peach, butter, blush and sky) while retaining a consistent readable icon/label treatment.
 - Kept existing data fetching, currency handling, API calls, order navigation, shipping forms, seller permissions and export actions unchanged.
 - Source review only. Build and browser visual verification are still outstanding; no tests or migrations were run.
+
+
+## 2026-11-11 — Seller metric cards refinement
+
+- Replaced the dashboard's saturated multi-gradient metric cards with restrained light surfaces and consistent borders/shadows to improve visual hierarchy and number readability.
+- Removed the remaining blue gradient from the bank-account quick action.
+- Confirmed by source scan that the seller workspace and finance overview no longer contain the legacy blue/teal gradient palette patterns targeted in this pass.
+- No runtime build or browser screenshots were available in this source-only pass.
