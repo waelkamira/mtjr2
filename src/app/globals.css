@@ -1081,3 +1081,198 @@ textarea {
 .seller-dashboard :is(input, select, textarea)::placeholder {
   color: #918a84;
 }
+
+
+/* Seller studio v2 — cohesive navy / mist / turquoise system.
+   This block intentionally comes last to replace the conflicting legacy seller overrides above. */
+.seller-dashboard {
+  --seller-canvas: #eef2f7;
+  --seller-surface: #ffffff;
+  --seller-ink: #172b43;
+  --seller-muted: #718096;
+  --seller-line: #dce5ee;
+  --seller-navy: #142b45;
+  --seller-navy-soft: #1c3b5b;
+  --seller-teal: #39c5bd;
+  --seller-teal-dark: #138b89;
+  background: var(--seller-canvas) !important;
+  color: var(--seller-ink) !important;
+}
+.seller-dashboard > div {
+  background: var(--seller-canvas) !important;
+}
+.seller-dashboard .seller-sidebar {
+  background: linear-gradient(180deg, #142b45 0%, #183651 55%, #142b45 100%) !important;
+  color: #eaf2f8 !important;
+  border-color: #29435d !important;
+  box-shadow: 10px 0 34px rgb(16 37 59 / 14%) !important;
+}
+.seller-dashboard .seller-sidebar > div:first-child {
+  border-color: rgb(255 255 255 / 10%) !important;
+}
+.seller-dashboard .seller-sidebar > div:first-child a,
+.seller-dashboard .seller-sidebar > div:first-child a span,
+.seller-dashboard .seller-sidebar > div:first-child a span span {
+  color: #f5f8fc !important;
+}
+.seller-dashboard .seller-sidebar > div:nth-child(2),
+.seller-dashboard .seller-sidebar > div:nth-last-child(2),
+.seller-dashboard .seller-sidebar > div:last-child a {
+  background: rgb(255 255 255 / 7%) !important;
+  border-color: rgb(255 255 255 / 12%) !important;
+  color: #eaf2f8 !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%) !important;
+}
+.seller-dashboard .seller-sidebar :is(h2, p) {
+  color: #9fb3c8 !important;
+}
+.seller-dashboard .seller-sidebar nav a {
+  color: #d7e2ed !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+.seller-dashboard .seller-sidebar nav a span:first-child {
+  background: rgb(255 255 255 / 10%) !important;
+  color: #dceaf5 !important;
+  border: 1px solid rgb(255 255 255 / 8%);
+}
+.seller-dashboard .seller-sidebar nav a[aria-current="page"] {
+  color: #ffffff !important;
+  background: linear-gradient(100deg, rgb(57 197 189 / 23%), rgb(57 197 189 / 11%)) !important;
+  border: 1px solid rgb(91 221 212 / 28%) !important;
+  box-shadow: inset 3px 0 0 #55d6ce, 0 5px 16px rgb(4 18 33 / 12%) !important;
+}
+.seller-dashboard .seller-sidebar nav a[aria-current="page"] span:first-child {
+  color: #112f48 !important;
+  background: #75e0d9 !important;
+}
+.seller-dashboard .seller-sidebar nav a:not([aria-current="page"]):hover {
+  color: #ffffff !important;
+  background: rgb(255 255 255 / 9%) !important;
+  transform: translateX(2px);
+}
+.seller-dashboard .seller-sidebar nav a:not([aria-current="page"]):hover span:first-child {
+  background: rgb(255 255 255 / 16%) !important;
+}
+.seller-dashboard .seller-sidebar a[href="/seller/advertising"] {
+  background: rgb(57 197 189 / 15%) !important;
+  color: #8ce8e1 !important;
+  border-color: rgb(91 221 212 / 25%) !important;
+}
+.seller-dashboard > div > header {
+  background: rgb(255 255 255 / 94%) !important;
+  border-color: var(--seller-line) !important;
+  box-shadow: 0 5px 20px rgb(24 49 76 / 5%) !important;
+  color: var(--seller-ink) !important;
+  backdrop-filter: blur(14px);
+}
+.seller-dashboard > div > header p,
+.seller-dashboard > div > header a {
+  color: #40556d;
+}
+.seller-dashboard > div > header form[role="search"] {
+  background: #f3f6fa !important;
+  border: 1px solid #e1e8f0 !important;
+  box-shadow: inset 0 1px 3px rgb(20 43 69 / 4%) !important;
+}
+.seller-dashboard > div > header form[role="search"] input {
+  background: transparent !important;
+  color: #203850 !important;
+}
+.seller-dashboard > div > header form[role="search"] button {
+  background: #183b59 !important;
+  color: #fff !important;
+  border-color: #183b59 !important;
+  box-shadow: 0 4px 10px rgb(20 43 69 / 15%) !important;
+}
+.seller-dashboard main {
+  background: var(--seller-canvas) !important;
+  color: var(--seller-ink) !important;
+}
+.seller-dashboard main > header {
+  background: linear-gradient(115deg, #17334f 0%, #24516b 58%, #267b7c 100%) !important;
+  border: 1px solid #315b70 !important;
+  border-radius: 26px !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 34px rgb(20 43 69 / 15%) !important;
+}
+.seller-dashboard main > header :is(h1, h2, h3, p, span, a, label) {
+  color: inherit !important;
+}
+.seller-dashboard main > header a,
+.seller-dashboard main > header button {
+  border-color: rgb(255 255 255 / 25%) !important;
+}
+.seller-dashboard main :is(h1, h2, h3, h4) {
+  color: #1b344d !important;
+}
+.seller-dashboard main p {
+  color: #718096;
+}
+.seller-dashboard main > section {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.seller-dashboard main :is(article, [data-chart-card], .seller-clay-card) {
+  background: #ffffff !important;
+  border: 1px solid #e1e8f0 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 7px 22px rgb(30 57 83 / 6%), 0 1px 2px rgb(30 57 83 / 3%) !important;
+}
+.seller-dashboard main :is(article, [data-chart-card], .seller-clay-card) :is(h2, h3, h4) {
+  color: #203850 !important;
+}
+.seller-dashboard main :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background: #ffffff !important;
+  border: 1px solid #dce5ee !important;
+  border-radius: 12px !important;
+  color: #203850 !important;
+  box-shadow: inset 0 1px 2px rgb(20 43 69 / 3%) !important;
+}
+.seller-dashboard main :is(input, textarea, select)::placeholder {
+  color: #9aa8b8 !important;
+}
+.seller-dashboard main :is(button, a[class*="rounded-full"]) {
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.seller-dashboard main button:hover,
+.seller-dashboard main a[class*="rounded-full"]:hover {
+  filter: brightness(.98);
+}
+.seller-dashboard main :is(table thead, table th) {
+  color: #718096;
+}
+.seller-dashboard main table tbody tr {
+  border-color: #e8edf3 !important;
+}
+.seller-dashboard :focus-visible {
+  outline: 3px solid rgb(57 197 189 / 55%) !important;
+  outline-offset: 3px;
+}
+@media (max-width: 1023px) {
+  .seller-dashboard > div:nth-child(2) > div:first-child {
+    background: #142b45 !important;
+    color: #f5f8fc !important;
+    border-color: #29435d !important;
+  }
+  .seller-dashboard > div:nth-child(2) > div:first-child nav a {
+    background: rgb(255 255 255 / 9%) !important;
+    color: #eaf2f8 !important;
+    border: 1px solid rgb(255 255 255 / 10%) !important;
+  }
+  .seller-dashboard > div:nth-child(2) > div:first-child nav a[aria-current="page"] {
+    background: rgb(57 197 189 / 22%) !important;
+    color: #ffffff !important;
+    border-color: rgb(91 221 212 / 32%) !important;
+  }
+}
+@media (max-width: 640px) {
+  .seller-dashboard main {
+    padding-inline: 1rem !important;
+  }
+  .seller-dashboard main > header {
+    border-radius: 20px !important;
+  }
+}
