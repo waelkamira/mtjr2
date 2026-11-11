@@ -4621,3 +4621,16 @@ The platform account policy is now explicit: email verification is not required 
 - src/features/seller/reviews-page.tsx: 112c2be6b436ac303c65cc0e22267102aa5d5863
 - src/features/seller/staff-page.tsx: d374570805f538676b6527fe2dec6ec2e053a658
 - src/app/seller/messages/page.tsx: 0d846c3f1a645de3cb3be20b32e7490eff741795
+
+
+## 2026-11-11 — Seller product questions palette alignment
+
+**Implemented**
+- Matched seller product-question cards, inline response/edit separators, and empty state borders to the warm neutral workspace surface.
+- Replaced the remaining lavender-only heading accent with the shared muted orange accent.
+- Preserved question moderation, answer/edit API calls, and published-state behavior.
+
+**Verification**
+- Updated the file from its current `main` blob SHA and confirmed the targeted legacy cool-grey tokens are absent from the edited source.
+- No build or browser verification is claimed.
+- Commit: dbefae07ccd6d5fe874ee1c273e93d7f431b7cf2.
