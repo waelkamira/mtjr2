@@ -13,6 +13,9 @@ type SellerRow = {
   businessType: string | null; sellingCategories: string | null; intendedProducts: string | null; description: string | null;
   facebookUrl: string | null; youtubeUrl: string | null; twitterUrl: string | null; latitude: number | null; longitude: number | null;
   hasIdentityDocument: boolean;
+  registrationCountryCode: string | null; registrationNumber: string | null; registrationAuthority: string | null;
+  registrationDate: string | null; registeredAddress: string | null; taxIdentificationNumber: string | null; businessWebsite: string | null;
+  hasBusinessRegistrationDocument: boolean; hasTaxCertificateDocument: boolean; hasProofOfAddressDocument: boolean;
   owner: { id: string; email: string; displayName: string | null; status: string };
   stores: StoreRow[]; storeCount: number;
 };
@@ -127,6 +130,18 @@ export default function AdminSellersPage() {
         <div className="flex items-center gap-2"><strong>{translate(locale, "Identity document", "وثيقة الهوية")}:</strong>{seller.hasIdentityDocument ? <a href={`/api/admin/sellers/${encodeURIComponent(seller.id)}/identity-document`} target="_blank" rel="noreferrer" className="font-semibold text-[var(--color-copper-700)] underline">{translate(locale, "View secure document", "عرض الوثيقة بشكل آمن")}</a> : <span className="text-[var(--muted)]">{translate(locale, "Not provided", "لم تُرفق")}</span>}</div>
         <p><strong>{translate(locale, "Business type", "نوع النشاط")}:</strong> {seller.businessType || "—"}</p>
         <p className="sm:col-span-2"><strong>{translate(locale, "Business address", "عنوان النشاط")}:</strong> {seller.residence || "—"}</p>
+        <p><strong>{translate(locale, "Registration country", "بلد التسجيل")}:</strong> {seller.registrationCountryCode || "—"}</p>
+        <p><strong>{translate(locale, "Registration number", "رقم السجل التجاري")}:</strong> {seller.registrationNumber || "—"}</p>
+        <p><strong>{translate(locale, "Registration authority", "جهة التسجيل")}:</strong> {seller.registrationAuthority || "—"}</p>
+        <p><strong>{translate(locale, "Registration date", "تاريخ التسجيل")}:</strong> {seller.registrationDate ? new Date(seller.registrationDate).toLocaleDateString(locale === "ar" ? "ar" : "en") : "—"}</p>
+        <p className="sm:col-span-2"><strong>{translate(locale, "Registered address", "العنوان المسجل")}:</strong> {seller.registeredAddress || "—"}</p>
+        <p><strong>{translate(locale, "Tax ID", "الرقم الضريبي")}:</strong> {seller.taxIdentificationNumber || "—"}</p>
+        <p className="sm:col-span-2"><strong>{translate(locale, "Business website", "الموقع الإلكتروني للنشاط")}:</strong> {seller.businessWebsite ? <a href={seller.businessWebsite} target="_blank" rel="noreferrer" className="underline">{seller.businessWebsite}</a> : "—"}</p>
+        <div className="flex flex-wrap gap-3 sm:col-span-2">
+          {seller.hasBusinessRegistrationDocument && <a href={`/api/admin/sellers/${encodeURIComponent(seller.id)}/documents/businessRegistration`} target="_blank" rel="noreferrer" className="font-semibold text-[var(--color-copper-700)] underline">{translate(locale, "Business registration certificate", "شهادة السجل التجاري")}</a>}
+          {seller.hasTaxCertificateDocument && <a href={`/api/admin/sellers/${encodeURIComponent(seller.id)}/documents/taxCertificate`} target="_blank" rel="noreferrer" className="font-semibold text-[var(--color-copper-700)] underline">{translate(locale, "Tax certificate", "الشهادة الضريبية")}</a>}
+          {seller.hasProofOfAddressDocument && <a href={`/api/admin/sellers/${encodeURIComponent(seller.id)}/documents/proofOfAddress`} target="_blank" rel="noreferrer" className="font-semibold text-[var(--color-copper-700)] underline">{translate(locale, "Proof of address", "إثبات العنوان")}</a>}
+        </div>
         <p className="sm:col-span-2"><strong>{translate(locale, "Product categories", "فئات المنتجات")}:</strong> {seller.sellingCategories || "—"}</p>
         <p className="whitespace-pre-wrap sm:col-span-2"><strong>{translate(locale, "Products and sales plan", "المنتجات وخطة البيع")}:</strong> {seller.intendedProducts || "—"}</p>
         {seller.description && <p className="whitespace-pre-wrap sm:col-span-2"><strong>{translate(locale, "Business description", "نبذة عن النشاط")}:</strong> {seller.description}</p>}
