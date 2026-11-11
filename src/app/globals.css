@@ -905,7 +905,17 @@ textarea {
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
   [class~="hover:bg-white"], [class~="hover:bg-gray-50"], [class~="hover:bg-gray-100"],
   [class~="hover:bg-slate-50"], [class~="hover:bg-slate-100"],
-  [class~="hover:bg-[var(--surface)]"], [class~="hover:bg-[var(--surface-soft)]"]
+  [class~="hover:bg-zinc-50"], [class~="hover:bg-neutral-50"], [class~="hover:bg-stone-50"],
+  [class~="hover:bg-[var(--surface)]"], [class~="hover:bg-[var(--surface-soft)]"],
+  [class~="hover:bg-[var(--color-ivory-50)]"], [class~="hover:bg-[var(--color-ivory-100)]"],
+  [class~="hover:bg-[var(--color-lavender-50)]"], [class~="hover:bg-[var(--color-lavender-100)]"],
+  [class~="hover:bg-[var(--color-mint-50)]"], [class~="hover:bg-[var(--color-mint-100)]"],
+  [class~="hover:bg-[var(--color-peach-50)]"], [class~="hover:bg-[var(--color-peach-100)]"],
+  [class~="hover:bg-[var(--color-blush-50)]"], [class~="hover:bg-[var(--color-blush-100)]"],
+  [class~="hover:bg-[var(--color-butter-50)]"], [class~="hover:bg-[var(--color-butter-100)]"],
+  [class~="hover:bg-[var(--color-sage-100)]"], [class~="hover:bg-[var(--color-copper-100)]"],
+  [class~="hover:bg-red-50"], [class~="hover:bg-amber-50"],
+  [class~="hover:bg-green-50"], [class~="hover:bg-emerald-50"]
 ):hover {
   color: #17212b !important;
 }
@@ -926,8 +936,10 @@ textarea {
 ),
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
   [class~="hover:bg-black"], [class~="hover:bg-gray-800"], [class~="hover:bg-gray-900"],
-  [class~="hover:bg-slate-800"], [class~="hover:bg-slate-900"],
-  [class~="hover:bg-[var(--color-forest-950)]"], [class~="hover:bg-[var(--color-ink-800)]"],
+  [class~="hover:bg-slate-800"], [class~="hover:bg-slate-900"], [class~="hover:bg-zinc-800"],
+  [class~="hover:bg-[var(--color-forest-950)]"], [class~="hover:bg-[var(--color-forest-900)]"],
+  [class~="hover:bg-[var(--color-forest-800)]"], [class~="hover:bg-[var(--color-ink-800)]"],
+  [class~="hover:bg-[var(--color-lavender-800)]"], [class~="hover:bg-[var(--color-violet-700)]"],
   [class~="hover:bg-[var(--color-orange)]"], [class~="hover:bg-[var(--color-orange-600)]"]
 ):hover {
   color: #ffffff !important;
