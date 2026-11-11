@@ -4577,3 +4577,15 @@ The platform account policy is now explicit: email verification is not required 
 - No build, browser, or runtime verification is claimed.
 - Product commit: 974f2abcc4575bb0b256335275fdb846bb844302.
 - Orders commit: fd87ead1bb061cf8ff359d97d2fefd9a8ed28dcb.
+
+
+## 2026-11-11 — Seller shipping visual alignment
+
+**Implemented**
+- Replaced the remaining turquoise shipping-save action with the seller studio's warm orange accent and high-contrast white label.
+- Kept shipping market selection, rate calculation, delivery windows, priority, and active-state behavior unchanged.
+
+**Verification**
+- Updated the shipping page from the current `main` blob SHA.
+- No runtime/build verification is claimed.
+- Commit: 285919eecd2f887bc7ba3a8e0f0a3c8953b327c2.
