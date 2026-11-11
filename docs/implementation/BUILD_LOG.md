@@ -4634,3 +4634,20 @@ The platform account policy is now explicit: email verification is not required 
 - Updated the file from its current `main` blob SHA and confirmed the targeted legacy cool-grey tokens are absent from the edited source.
 - No build or browser verification is claimed.
 - Commit: dbefae07ccd6d5fe874ee1c273e93d7f431b7cf2.
+
+
+## 2026-11-11 — Seller application business registration and KYC expansion
+
+**Implemented**
+- Expanded the seller record with registration country, commercial registration number and authority, registration date, registered legal address, tax ID, business website, and private file references for business registration, tax certificate, and proof of address.
+- Added a forward-only Prisma migration, preserving existing seller applications through nullable columns.
+- Extended the authenticated application API and transactional seller application service to validate and persist the new fields for first submissions and rejected-application resubmissions.
+- Registered companies and agencies must provide a two-letter registration country, commercial registration number, and a verified private registration certificate. Individual sellers and other seller types can leave company-only fields blank.
+- Added private PDF/image uploads for registration, tax and address documents. Uploads are signature-checked, size-limited, stored as private ImageKit files, tagged to the document type and owner, and verified before the seller application can reference them.
+- Extended the admin seller review queue to show the business registration profile and provide short-lived, permission-checked links to each private verification document.
+- Extended the seller's pending-application view to show the submitted business registration details and attached-document indicators.
+- Kept the existing Akaar-aligned seller application fields, map location, social links and identity document workflow intact.
+
+**Verification**
+- Source-level review only; no database migration was applied, no Prisma client generation, build, typecheck, browser flow or tests were run in this session.
+- Migration must be applied through the project's normal controlled database migration process before the new fields can be used in a live environment.
