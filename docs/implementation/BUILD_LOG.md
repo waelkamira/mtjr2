@@ -4522,3 +4522,11 @@ The platform account policy is now explicit: email verification is not required 
 - Removed the unrelated blue/teal gradients from the seller search field, search action, account shortcut and topbar controls.
 - Preserved all seller routes, active-route matching, store identity loading, locale labels, product search submission and notification/account destinations.
 - Source-level verification only. Build, browser screenshots, responsive RTL/LTR review and database journeys remain pending; no tests or migrations were run in accordance with the current priority.
+
+
+## 2026-11-11 — Seller workspace surface contrast correction
+
+- Identified a legacy global compatibility selector that converted white and pale utility surfaces into dark charcoal cards, conflicting with the documented light Snow/Orange/Onyx design and making seller pages visually inconsistent.
+- Added a seller-route-scoped surface correction so white/pale seller cards, panels, inputs and placeholders retain readable light surfaces without changing storefront or administration styling.
+- Updated the seller layout canvas to a warm near-white background and kept the change isolated to the seller workspace.
+- Verification remains source-level only; no build, browser visual pass, tests, database operations or migrations were run.
