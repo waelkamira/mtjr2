@@ -12,8 +12,8 @@ The visual language applies across the storefront, buyer account, seller workspa
 
 | Color | Value | Use |
 |---|---|---|
-| Snow | `#FFF5F5` | Page canvas, cards, menus, fields, and other surfaces |
-| Spanish orange | `#F0660D` | Buttons, indicators, icons, focus rings, and active states |
+| Snow | `#FFFFFF` | Page canvas, cards, menus, fields, and other surfaces |
+| Spanish orange | `#FF8C1C` | Buttons, indicators, icons, focus rings, and active states |
 | Onyx | `#454545` | Text, borders, and all other interface elements |
 
 Legacy color tokens remain as compatibility aliases and resolve only to these three colors. Success, warning, error, and information states use onyx text with orange indicators rather than introducing additional hues.
