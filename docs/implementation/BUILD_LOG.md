@@ -4562,3 +4562,18 @@ The platform account policy is now explicit: email verification is not required 
 - Source scan confirmed the targeted legacy blue-grey panel colors were removed from this page.
 - No runtime/browser/build verification is claimed in this change.
 - Commit: 0e0cbfbe3d97ffc8c4c2f56035af52ff4592546c.
+
+
+## 2026-11-11 — Seller product and order surface alignment
+
+**Implemented**
+- Reworked the seller product workspace's remaining blue-grey page canvas, form panels, media upload surface, variant sections, and drop zone into warm ivory/clay tones with restrained orange accents.
+- Updated seller order cards and delivery-address panels to the same neutral/warm palette.
+- Preserved product editing, image upload/delete, variant, order status, shipment and tracking behavior; this batch changes presentation only.
+
+**Verification**
+- Both source files were fetched from `main` and updated using their current blob SHAs.
+- Source scan confirmed the targeted legacy blue-grey product surface tokens were removed.
+- No build, browser, or runtime verification is claimed.
+- Product commit: 974f2abcc4575bb0b256335275fdb846bb844302.
+- Orders commit: fd87ead1bb061cf8ff359d97d2fefd9a8ed28dcb.
