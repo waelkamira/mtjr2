@@ -4711,3 +4711,18 @@ The platform account policy is now explicit: email verification is not required 
 **Verification boundary**
 - GitHub source update succeeded. Local browser visual verification could not be performed from this session because the connected browser context is unavailable. The app's appearance must still be checked locally at `/seller` on desktop and mobile after pulling the commit.
 - The prior successful CI/E2E results recorded above apply to their exact earlier commit, not this CSS-only commit. Do not treat them as verification of this new change.
+
+
+## 2026-11-11 — Platform-wide brand orange update
+
+**Implemented on main**
+- Confirmed the requested Matjar brand orange as `#FF8C1C` and changed the shared `--orange` design token in `src/app/theme.css`; Tailwind v4 aliases and components that consume the token now resolve to the approved orange.
+- Updated the shared action-hover token to a darker orange (`#E8750B`) so primary controls retain clear hover feedback with white text.
+- Updated global focus, selection, border-glow, and seller dashboard primary-action styling in `src/app/globals.css` to use the approved brand orange.
+- Replaced remaining seller-workspace legacy orange values and orange-tinted shadows in navigation, topbar, finance, orders, inventory, product questions, messages, reviews, and settings.
+- Updated both design-system documents to record `#FF8C1C` as the platform brand orange.
+- Preserved semantic success, warning, danger, and informational colors. Kept darker orange text treatments where needed for readable contrast on white surfaces.
+
+**Verification boundary**
+- GitHub source updates completed sequentially on `main`.
+- No build, typecheck, lint, automated tests, browser screenshots, or responsive/RTL visual review were run in this pass. The updated colors require a local visual review after pulling the latest `main`.
