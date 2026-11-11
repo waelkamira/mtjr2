@@ -14,12 +14,12 @@ export type ScatterDatum = {
 };
 
 const palette = [
-  "#F59E0B",
+  "var(--orange)",
   "#8B5CF6",
   "#38BDF8",
   "#34D399",
   "#F472B6",
-  "#FB923C",
+  "var(--orange)",
   "#22D3EE",
   "#A3E635"
 ];
@@ -40,7 +40,7 @@ function ChartCard({
   return (
     <section className="seller-chart-card min-w-0 overflow-hidden rounded-[1.7rem] border border-white/[.09] bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,.16),transparent_45%),linear-gradient(145deg,#172338_0%,#11192a_58%,#151d31_100%)] p-5 shadow-[0_18px_38px_rgba(2,8,23,.28),inset_0_1px_0_rgba(255,255,255,.07)] transition duration-200 hover:-translate-y-0.5 hover:border-white/[.16]">
       <div className="mb-4">
-        <div aria-hidden="true" className="mb-3 h-1.5 w-16 rounded-full bg-[linear-gradient(90deg,#F59E0B_0%,#8B5CF6_35%,#38BDF8_68%,#34D399_100%)] shadow-[0_0_18px_rgba(56,189,248,.25)]" />
+        <div aria-hidden="true" className="mb-3 h-1.5 w-16 rounded-full bg-[linear-gradient(90deg,#FF8C1C_0%,#8B5CF6_35%,#38BDF8_68%,#34D399_100%)] shadow-[0_0_18px_rgba(56,189,248,.25)]" />
         <h2 className="text-base font-extrabold text-white">{title}</h2>
         {description && <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p>}
       </div>
