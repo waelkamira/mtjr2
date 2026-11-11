@@ -4837,3 +4837,12 @@ The platform account policy is now explicit: email verification is not required 
 - Search submission, autocomplete suggestions, labels, and existing destinations are unchanged.
 
 **Verification boundary:** Source-level changes only; no local build or browser visual check was run.
+
+
+## 2026-11-11 — Identity verification inputs
+
+- Set the seller identity-review panel's editable text fields (seller search and review/store reason fields) to an explicit white background with black text, including neutral placeholder text.
+- Added a restrained Matjar-orange focus treatment while preserving the existing field layout and behavior.
+- Left select controls and status/decision colors unchanged.
+
+**Verification boundary:** Source-level change only; no local build, typecheck, or browser visual validation was run.
