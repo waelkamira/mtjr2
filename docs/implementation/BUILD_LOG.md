@@ -4682,3 +4682,18 @@ The platform account policy is now explicit: email verification is not required 
 - Browser E2E on the same pre-repair main commit passed. Its seller product create/edit journey and Syrian geography/Leaflet journey passed, including governorate/district/subdistrict/locality zoom levels, mouse-wheel zoom and neighborhood focus.
 - Targeted Vitest and the post-repair exact-head CI are pending; no post-repair pass is claimed yet.
 - Vercel's GitHub deployment status is provider-side `failure`: `Deployment rate limited — retry in 24 hours`. This is not an application build error; no Vercel project settings or production configuration were changed.
+
+
+## 2026-11-11 — Post-repair verification on exact main head
+
+**Commit verified:** `fe1105832591a2c8902ea6340c5d972dc5d1b596` (`fix(seller): repair KYC validation order and CI fixtures`).
+
+- GitHub Actions CI run `42996942461` completed successfully. The quality job passed Prisma validate, migration deploy, Prisma generate, TypeScript, ESLint, Vitest (112 test files / 565 tests), production build, and route/authorization/UI-mutation inventory generation.
+- Browser E2E run `42996942716` completed successfully: 9/9 tests passed. The seller catalog journey created a draft product, verified it through the seller products API, edited it, and verified the persisted update; it also edited and reloaded seller shipping configuration.
+- The same browser run passed the Syrian geography/Leaflet journey. The test selects Damascus, a coordinate-bearing district and subdistrict, then a locality; it checks automatic zoom values 7, 10, 12 and 15 when the selected record has coordinates, verifies mouse-wheel zoom increases, and checks zoom 16 after entering a seller-provided neighbourhood and blurring the field when the locality pin has coordinates. Neighbourhood is not an official OpenSyria administrative level: the map zooms to the selected locality/pin rather than inventing a neighbourhood centroid.
+- Platform PostgreSQL Integration run `42996942668` passed: 3 test files / 9 tests, including migration deployment and repeatable demo seeding.
+- CodeQL run `42996942530` completed successfully.
+- Vercel deployment `dpl_GfChBDgbLzPKoacVgbYL1KJnMfEb` is `READY` for Production and is linked to this exact `main` SHA. GitHub's Vercel commit status is `success`. The earlier rate-limit failure recorded above was an earlier provider response and is no longer the current deployment state.
+- No application code changes were needed after this verification. This entry records the completed post-repair results; no secrets or production settings were changed.
+
+**Remaining verification boundary:** the E2E test intentionally guards locality/neighbourhood zoom assertions when the selected OpenSyria record has no centroid. The current run proves the test passed, but does not claim that every locality in the source dataset has coordinates.
