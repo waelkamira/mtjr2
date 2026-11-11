@@ -147,3 +147,29 @@
   color: var(--action);
   border-color: var(--action);
 }
+
+
+/* Seller pages intentionally use the login page's light palette, overriding the global dark clay surfaces. */
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card,.clay-dashboard-sidebar) {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  box-shadow: 0 8px 24px rgb(69 69 69 / 7%), 0 2px 6px rgb(69 69 69 / 4%) !important;
+}
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card) :is(h1,h2,h3,h4,p,dt,dd,label,small,strong) {
+  color: var(--foreground);
+}
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card) :is(input,select,textarea) {
+  background: var(--surface-soft) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+.seller-dashboard main :is(.clay-surface,.clay-surface-inset,.clay-dashboard-card) .clay-icon-tile {
+  background: var(--surface-soft) !important;
+  color: var(--action) !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+.seller-dashboard main :is([class~="bg-red-50"],[class~="bg-amber-50"],[class~="bg-green-50"],[class~="bg-emerald-50"]) {
+  box-shadow: none !important;
+}
