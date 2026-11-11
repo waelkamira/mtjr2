@@ -327,9 +327,8 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 key={link.href}
                 href={link.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border-0 px-4 py-2 font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)] ${isActive ? "bg-[var(--color-orange)] text-white shadow-[0_3px_10px_rgb(255_122_48/22%)] hover:bg-[var(--action-hover)] hover:text-white" : "bg-transparent text-[var(--foreground)] hover:bg-orange-50 hover:text-[var(--foreground)]"}`}
+                className={`inline-flex items-center whitespace-nowrap rounded-full border-0 px-4 py-2 font-semibold text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)] ${isActive ? "bg-[var(--color-orange)] text-white shadow-[0_3px_10px_rgb(255_122_48/22%)] hover:bg-[var(--action-hover)] hover:text-white" : "bg-white text-black hover:bg-white hover:text-black"}`}
               >
-                <NavigationIcon name={navigationIconFor(link.label)} />
                 {localizedNavigationLabel(locale, link.label)}
               </Link>
             );
@@ -341,9 +340,9 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 key={link.href}
                 href={link.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border-0 px-4 py-2 font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)] ${isActive ? "bg-[var(--color-orange)] text-white hover:bg-[var(--action-hover)] hover:text-white" : "bg-transparent text-[var(--foreground)] hover:bg-orange-50 hover:text-[var(--foreground)]"}`}
+                className={`inline-flex items-center whitespace-nowrap rounded-full border-0 px-4 py-2 font-semibold text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)] ${isActive ? "bg-[var(--color-orange)] text-white hover:bg-[var(--action-hover)] hover:text-white" : "bg-white text-black hover:bg-white hover:text-black"}`}
               >
-                <NavigationIcon name={navigationIconFor(link.label)} />{localizedNavigationLabel(locale, link.label)}
+                {localizedNavigationLabel(locale, link.label)}
               </Link>
             );
           })}
