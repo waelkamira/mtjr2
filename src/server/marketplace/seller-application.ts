@@ -321,7 +321,15 @@ export async function getSellerWorkspace(now = new Date()) {
   const actor = await requireCurrentSession(now);
   const seller = await prisma.seller.findUnique({
     where: { ownerId: actor.userId },
-    select: { id: true, status: true, legalName: true, displayName: true, contactName: true, contactEmail: true, phoneNumber: true, residence: true, businessType: true, sellingCategories: true, intendedProducts: true, description: true, facebookUrl: true, youtubeUrl: true, twitterUrl: true, latitude: true, longitude: true, createdAt: true }
+    select: {
+      id: true, status: true, legalName: true, displayName: true, contactName: true, contactEmail: true,
+      phoneNumber: true, residence: true, businessType: true, sellingCategories: true, intendedProducts: true,
+      description: true, facebookUrl: true, youtubeUrl: true, twitterUrl: true, latitude: true, longitude: true,
+      registrationCountryCode: true, registrationNumber: true, registrationAuthority: true, registrationDate: true,
+      registeredAddress: true, taxIdentificationNumber: true, businessWebsite: true,
+      businessRegistrationDocumentFileId: true, taxCertificateDocumentFileId: true, proofOfAddressDocumentFileId: true,
+      createdAt: true
+    }
   });
   const latestRejection = seller?.status === SellerStatus.REJECTED
     ? await prisma.auditLog.findFirst({
@@ -363,8 +371,18 @@ export async function getSellerWorkspace(now = new Date()) {
       }
     }
   });
+  const sellerView = seller ? (({
+    businessRegistrationDocumentFileId, taxCertificateDocumentFileId, proofOfAddressDocumentFileId, ...profile
+  }) => ({
+    ...profile,
+    hasBusinessRegistrationDocument: Boolean(businessRegistrationDocumentFileId),
+    hasTaxCertificateDocument: Boolean(taxCertificateDocumentFileId),
+    hasProofOfAddressDocument: Boolean(proofOfAddressDocumentFileId),
+    rejectionReason,
+    reviewedAt: latestRejection?.occurredAt ?? null
+  }))(seller) : null;
   return {
-    seller: seller ? { ...seller, rejectionReason, reviewedAt: latestRejection?.occurredAt ?? null } : null,
+    seller: sellerView,
     stores: stores.map(({ seller: storeSeller, ...store }) => ({
       ...store,
       storeNumber: store.storeNumber.toString(),
