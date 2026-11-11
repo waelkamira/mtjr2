@@ -86,7 +86,7 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
 
     const icon = L.divIcon({
       className: "mtjr-leaflet-marker",
-      html: '<span style="display:block;width:28px;height:28px;transform:translateY(-2px) rotate(-45deg);border-radius:50% 50% 50% 0;background:#ea580c;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,.45);position:relative"><span style="position:absolute;width:8px;height:8px;left:7px;top:7px;border-radius:50%;background:#fff"></span></span>',
+      html: '<span style="display:block;width:28px;height:28px;transform:translateY(-2px) rotate(-45deg);border-radius:50% 50% 50% 0;background:#FF8C1C;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,.45);position:relative"><span style="position:absolute;width:8px;height:8px;left:7px;top:7px;border-radius:50%;background:#fff"></span></span>',
       iconSize: [34, 42],
       iconAnchor: [14, 27]
     });
@@ -162,7 +162,7 @@ export default function LeafletLocationMap({ value, focus, onChange, height = 34
       if (!markerRef.current) {
         const icon = L.divIcon({
           className: "mtjr-leaflet-marker",
-          html: '<span style="display:block;width:28px;height:28px;transform:translateY(-2px) rotate(-45deg);border-radius:50% 50% 50% 0;background:#ea580c;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,.45);position:relative"><span style="position:absolute;width:8px;height:8px;left:7px;top:7px;border-radius:50%;background:#fff"></span></span>',
+          html: '<span style="display:block;width:28px;height:28px;transform:translateY(-2px) rotate(-45deg);border-radius:50% 50% 50% 0;background:#FF8C1C;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,.45);position:relative"><span style="position:absolute;width:8px;height:8px;left:7px;top:7px;border-radius:50%;background:#fff"></span></span>',
           iconSize: [34, 42],
           iconAnchor: [14, 27]
         });
