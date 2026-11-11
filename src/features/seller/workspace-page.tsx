@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
-import LeafletLocationMap from "@/components/maps/leaflet-location-map";
+import SyriaLocationPicker from "@/components/maps/syria-location-picker";
 import AuthReturnLink from "@/components/auth-return-link";
 import { SellerIcon } from "@/features/seller/seller-navigation";
 import { useLocale } from "@/components/locale-provider";
@@ -957,7 +957,14 @@ export default function SellerWorkspacePage() {
               </section>
               <section id="seller-application-step-location" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
                 <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eef4fa] text-[#3d6c92]"><SellerIcon name="pin" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "04 · Business location", "04 · موقع النشاط")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Click or drag the pin to mark your business location.", "انقر على الخريطة أو اسحب الدبوس لتحديد موقع نشاطك بدقة.")}</p></div></div>
-                <LeafletLocationMap locale={locale} value={sellerLatitude !== null && sellerLongitude !== null ? { latitude: sellerLatitude, longitude: sellerLongitude } : null} onChange={(point) => { setSellerLatitude(point.latitude); setSellerLongitude(point.longitude); }} height={300} />
+                <SyriaLocationPicker
+                  locale={locale}
+                  value={sellerLatitude !== null && sellerLongitude !== null ? { latitude: sellerLatitude, longitude: sellerLongitude } : {}}
+                  onChange={(location) => {
+                    setSellerLatitude(location.latitude ?? null);
+                    setSellerLongitude(location.longitude ?? null);
+                  }}
+                />
                 <p className="text-xs text-[#8790a5]">{sellerLatitude === null || sellerLongitude === null ? translate(locale, "A map location is required.", "تحديد الموقع على الخريطة مطلوب.") : sellerLatitude.toFixed(5) + ", " + sellerLongitude.toFixed(5)}</p>
               </section>
               <section id="seller-application-step-online" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
