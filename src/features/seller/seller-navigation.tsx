@@ -130,7 +130,7 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="seller-sidebar relative z-30 hidden h-screen w-[288px] shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[var(--foreground)] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
+      <aside className="seller-sidebar relative z-30 hidden h-screen w-[288px] shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[var(--foreground)] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:z-50 lg:flex">
         <div className="border-b border-[var(--border)] px-6 py-7">
           <Link href="/seller" className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#c6530b] shadow-[0_5px_12px_rgba(91,72,137,.10)]">
