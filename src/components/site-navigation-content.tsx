@@ -184,8 +184,8 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
   }
 
   const signedInLinks = [
-    { href: "/account/messages", label: translate(locale, "Messages", "الرسائل") },
-    { href: "/notifications", label: translate(locale, "Notifications", "الإشعارات") }
+    { href: "/account/messages", label: "Messages" },
+    { href: "/notifications", label: "Notifications" }
   ];
   const mobileLinks = [
     { href: "/cart", label: translate(locale, "Cart", "السلة") },
