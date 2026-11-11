@@ -4,9 +4,9 @@ import SellerTopbar from "@/features/seller/seller-topbar";
 
 export default function SellerLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="seller-dashboard min-h-screen overflow-x-clip bg-[#fffaf6] lg:flex">
+    <div className="seller-dashboard min-h-screen overflow-x-clip bg-[#eef2f7] lg:flex">
       <SellerNavigation />
-      <div className="min-w-0 flex-1 bg-[#fffaf6]">
+      <div className="min-w-0 flex-1 bg-[#eef2f7]">
         <SellerTopbar />
         {children}
       </div>
