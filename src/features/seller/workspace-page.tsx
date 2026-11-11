@@ -175,6 +175,7 @@ export default function SellerWorkspacePage() {
   const [proofOfAddressDocumentName, setProofOfAddressDocumentName] = useState("");
   const [sellerLatitude, setSellerLatitude] = useState<number | null>(null);
   const [sellerLongitude, setSellerLongitude] = useState<number | null>(null);
+  const [sellerLocation, setSellerLocation] = useState<{ city?: string; district?: string; localityId?: string; neighborhood?: string; streetAddress?: string }>({});
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [editingStoreProfile, setEditingStoreProfile] = useState(false);
@@ -959,8 +960,21 @@ export default function SellerWorkspacePage() {
                 <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eef4fa] text-[#3d6c92]"><SellerIcon name="pin" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "04 · Business location", "04 · موقع النشاط")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Click or drag the pin to mark your business location.", "انقر على الخريطة أو اسحب الدبوس لتحديد موقع نشاطك بدقة.")}</p></div></div>
                 <SyriaLocationPicker
                   locale={locale}
-                  value={sellerLatitude !== null && sellerLongitude !== null ? { latitude: sellerLatitude, longitude: sellerLongitude } : {}}
+                  value={{
+                    ...sellerLocation,
+                    ...(sellerLatitude !== null && sellerLongitude !== null
+                      ? { latitude: sellerLatitude, longitude: sellerLongitude }
+                      : {})
+                  }}
                   onChange={(location) => {
+                    setSellerLocation({
+                      city: location.city,
+                      district: location.district,
+                      localityId: location.localityId,
+                      neighborhood: location.neighborhood,
+                      streetAddress: location.streetAddress
+                    });
+                    setResidence([location.city, location.district, location.neighborhood].filter(Boolean).join("، "));
                     setSellerLatitude(location.latitude ?? null);
                     setSellerLongitude(location.longitude ?? null);
                   }}
