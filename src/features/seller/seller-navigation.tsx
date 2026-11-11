@@ -173,10 +173,10 @@ export default function SellerNavigation() {
               key={link.href}
               href={link.href}
               aria-current={active ? "page" : undefined}
-              className={`group flex min-w-0 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
+              className={`group relative flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 ${
                 active
-                  ? "bg-[#ecfccb] font-semibold text-[#365314] shadow-[inset_3px_0_0_#84cc16]"
-                  : "text-[#5f5a55] hover:bg-[#fff7ed] hover:text-[#454545] hover:shadow-[inset_0_0_0_1px_rgba(255,140,28,.22)]"
+                  ? "bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent text-white shadow-[inset_0_0_0_1px_rgba(251,191,36,.15)]"
+                  : "text-white/60 hover:bg-white/[0.04] hover:text-white"
               }`}
             >
               <span className={`grid size-8 shrink-0 place-items-center rounded-lg transition-transform duration-300 group-hover:scale-110 ${active ? "bg-gradient-to-br from-amber-400/30 to-orange-500/20 text-amber-300 ring-1 ring-amber-400/40 shadow-[0_4px_12px_rgba(251,191,36,.2)]" : toneClasses[link.tone]}`}>
