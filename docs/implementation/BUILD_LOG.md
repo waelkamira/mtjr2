@@ -4806,3 +4806,8 @@ The platform account policy is now explicit: email verification is not required 
 - The seller-specific final CSS contract remains scoped to the seller workspace and defines the shared sidebar, topbar/search, active/hover navigation, neutral cards, orange primary actions and responsive search behavior.
 
 **Verification boundary:** GitHub source inspection and targeted CSS/source checks only. No local build, typecheck, lint, automated test suite, or browser-based visual validation was run. No deployment platform was used.
+
+
+- Extended the consistency pass to checkout delivery/review/shipping/tax, cart, registration/MFA/email verification, account overview/profile/addresses/security/store, customer order and support surfaces, and additional admin catalog, coupon, commission, logistics, payment, refund and review screens.
+- Replaced the customer profile dashboard's unrelated pink/blue radial canvas with the shared warm-neutral/orange background. Kept the multi-color order and engagement charts because those colors encode distinct metrics rather than button branding.
+- Confirmed the seller navy/teal legacy token block and its obsolete hero compatibility selectors are absent from the current global stylesheet; the canonical theme tokens remain `#FF8C1C`, `#454545`, and `#E8750B`.
