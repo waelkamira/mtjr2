@@ -171,13 +171,13 @@ export default function SellerNavigation() {
                   return (
                     <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
                       className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all duration-200 ${active
-                        ? "bg-[#fff1e8] font-extrabold text-[#a94308] ring-1 ring-[#f6d8c5] shadow-[inset_3px_0_0_#f0660d]"
-                        : "text-[#5f5a55] hover:bg-[#fff4ed] hover:text-[#454545]"}`}>
+                        ? "bg-[#ecfccb] font-extrabold text-[#365314] ring-1 ring-[#bef264] shadow-[inset_3px_0_0_#84cc16]"
+                        : "text-[#5f5a55] hover:bg-white hover:text-[#454545] hover:ring-1 hover:ring-[#f6d8c5] hover:shadow-[0_4px_12px_rgba(240,102,13,.08)]"}`}>
                       <span className={`grid size-9 shrink-0 place-items-center rounded-xl transition-transform group-hover:-translate-y-0.5 ${toneClasses[link.tone]}`}>
                         <SellerIcon name={link.icon} />
                       </span>
                       <span>{translate(locale, link.label, link.ar)}</span>
-                      {active && <span className="ms-auto size-2 rounded-full bg-[#806bb0] shadow-[0_0_8px_rgba(128,107,176,.25)]" />}
+                      {active && <span className="ms-auto size-2 rounded-full bg-[#65a30d] shadow-[0_0_8px_rgba(101,163,13,.25)]" />}
                     </Link>
                   );
                 })}
