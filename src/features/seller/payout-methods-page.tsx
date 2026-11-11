@@ -127,7 +127,7 @@ export default function SellerPayoutMethodsPage() {
             <input maxLength={34} value={routingCode} onChange={(event) => setRoutingCode(event.target.value.toUpperCase())} autoComplete="off" className="rounded-xl border border-white bg-white/90 px-3 py-3 font-mono font-medium" />
           </label>
           <label className="flex items-center gap-3 text-sm font-semibold text-[#526078] md:col-span-2">
-            <input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} className="size-4 accent-[#8b80b5]" />
+            <input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} className="size-4 accent-[#FF8C1C]" />
             {t("Make this my default bank account", "اجعل هذا الحساب البنكي الافتراضي")}
           </label>
           <div className="md:col-span-2">
