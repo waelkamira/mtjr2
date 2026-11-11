@@ -32,6 +32,7 @@ type LocationValue = {
 };
 type Props = {
   locale: Locale;
+  title?: string;
   value: LocationValue;
   onChange: (value: LocationValue) => void;
 };
@@ -62,7 +63,7 @@ async function loadAllLevel(level: string, params: Record<string, string> = {}):
   return { ...first, items, pagination: { ...first.pagination, totalPages: 1 } };
 }
 
-export default function SyriaLocationPicker({ locale, value, onChange }: Props) {
+export default function SyriaLocationPicker({ locale, title, value, onChange }: Props) {
   const ar = locale === "ar";
   const [governorates, setGovernorates] = useState<GeoItem[]>([]);
   const [districts, setDistricts] = useState<GeoItem[]>([]);
@@ -331,7 +332,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   return (
     <section className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <div>
-        <h3 className="font-semibold text-[var(--color-ink-900)]">{translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3>
+        <h3 className="font-semibold text-[var(--color-ink-900)]">{title ?? translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3>
         <p className="mt-1 text-xs leading-6 text-[var(--muted)]">{translate(locale, "Choose the administrative area from largest to smallest. The map follows each selection.", "اختر الموقع بالتسلسل الإداري من الأكبر إلى الأصغر، وستنتقل الخريطة تلقائياً مع كل اختيار.")}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
