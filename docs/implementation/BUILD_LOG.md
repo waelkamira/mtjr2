@@ -4605,3 +4605,19 @@ The platform account policy is now explicit: email verification is not required 
 - src/features/seller/commissions-page.tsx: 21aa5ea858bf618c91a0688c032964f081f83107
 - src/features/seller/advertising-page.tsx: 75d450f5526d0cad2b84e13657656380dd97bf0f
 - src/features/seller/payout-methods-page.tsx: c8e33b4cc4d2fbe902c0e63e87f341c42661c826
+
+
+## 2026-11-11 — Seller customer operations and team palette alignment
+
+**Implemented**
+- Aligned seller review cards and analytics accents with the warm neutral/orange workspace palette.
+- Replaced the remaining blue-grey and turquoise inbox surfaces, selected conversation state, message bubbles, focus ring, and send action with warm neutral/orange treatments.
+- Harmonized staff invitation and team-management panels with the same warm clay surface palette.
+- Kept review responses, staff invitations/roles, message loading, conversation selection, and message sending logic unchanged.
+
+**Verification**
+- Fetched all three files from the current `main` branch and updated them using their current blob SHAs.
+- Presentation-only source edits; no build or browser verification is claimed.
+- src/features/seller/reviews-page.tsx: 112c2be6b436ac303c65cc0e22267102aa5d5863
+- src/features/seller/staff-page.tsx: d374570805f538676b6527fe2dec6ec2e053a658
+- src/app/seller/messages/page.tsx: 0d846c3f1a645de3cb3be20b32e7490eff741795
