@@ -14,39 +14,54 @@ const groups: Array<{
   links: Array<{ href: string; label: string; ar: string; icon: SellerIconName; tone: Tone }>;
 }> = [
   {
-    title: "Workspace", ar: "مساحة العمل",
+    title: "Overview", ar: "الرئيسية",
     links: [
-      { href: "/seller", label: "Overview", ar: "نظرة عامة", icon: "home", tone: "lavender" },
+      { href: "/seller", label: "Dashboard", ar: "لوحة التحكم", icon: "home", tone: "lavender" }
+    ]
+  },
+  {
+    title: "Catalog", ar: "إدارة الكتالوج",
+    links: [
       { href: "/seller/products", label: "Products", ar: "المنتجات", icon: "package", tone: "mint" },
+      { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" }
+    ]
+  },
+  {
+    title: "Sales & fulfillment", ar: "المبيعات والتنفيذ",
+    links: [
       { href: "/seller/orders", label: "Orders", ar: "الطلبات", icon: "orders", tone: "peach" },
-      { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" },
-      { href: "/seller/shipping", label: "Shipping", ar: "الشحن", icon: "shipping", tone: "sky" },
-      { href: "/seller/settings", label: "Store settings", ar: "إعدادات المتجر", icon: "home", tone: "lavender" }
+      { href: "/seller/shipping", label: "Shipping", ar: "الشحن والتوصيل", icon: "shipping", tone: "sky" },
+      { href: "/seller/returns", label: "Returns", ar: "المرتجعات", icon: "returns", tone: "blush" }
     ]
   },
   {
-    title: "Finance", ar: "المالية",
+    title: "Customer experience", ar: "تجربة العملاء",
     links: [
-      { href: "/seller/finance", label: "Financial overview", ar: "الملخص المالي", icon: "finance", tone: "lavender" },
-      { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "finance", tone: "sky" },
-      { href: "/seller/payouts", label: "Bank accounts", ar: "الحسابات البنكية", icon: "finance", tone: "mint" }
-    ]
-  },
-  {
-    title: "Customer operations", ar: "عمليات العملاء",
-    links: [
-      { href: "/seller/returns", label: "Returns", ar: "المرتجعات", icon: "returns", tone: "blush" },
       { href: "/seller/messages", label: "Messages", ar: "الرسائل", icon: "messages", tone: "sky" },
       { href: "/seller/questions", label: "Product questions", ar: "أسئلة المنتجات", icon: "questions", tone: "lavender" },
       { href: "/seller/reviews", label: "Reviews", ar: "التقييمات", icon: "reviews", tone: "butter" }
     ]
   },
   {
-    title: "Growth & team", ar: "النمو والفريق",
+    title: "Growth", ar: "النمو والتسويق",
     links: [
-      { href: "/seller/advertising", label: "Advertising", ar: "الإعلانات", icon: "ads", tone: "peach" },
-      { href: "/seller/staff", label: "Team & access", ar: "الفريق والصلاحيات", icon: "team", tone: "mint" },
+      { href: "/seller/advertising", label: "Advertising", ar: "الإعلانات والحملات", icon: "ads", tone: "peach" },
       { href: "/notifications", label: "Notifications", ar: "الإشعارات", icon: "notifications", tone: "blush" }
+    ]
+  },
+  {
+    title: "Finance", ar: "الشؤون المالية",
+    links: [
+      { href: "/seller/finance", label: "Financial overview", ar: "الملخص المالي", icon: "finance", tone: "lavender" },
+      { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "document", tone: "sky" },
+      { href: "/seller/payouts", label: "Payout accounts", ar: "حسابات السحب", icon: "business", tone: "mint" }
+    ]
+  },
+  {
+    title: "Store & team", ar: "المتجر والفريق",
+    links: [
+      { href: "/seller/settings", label: "Store settings", ar: "إعدادات المتجر", icon: "store", tone: "lavender" },
+      { href: "/seller/staff", label: "Team & access", ar: "الفريق والصلاحيات", icon: "team", tone: "mint" }
     ]
   }
 ];
@@ -159,7 +174,7 @@ export default function SellerNavigation() {
           <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[#454545]">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block truncate text-[10px] leading-4 text-[#77716c]">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
         </div>
 
-        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-sidebar-nav min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 py-4">
+        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-sidebar-nav min-h-0 flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto px-3 py-4">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller"
               ? pathname === "/seller"
@@ -179,7 +194,7 @@ export default function SellerNavigation() {
           })}
         </nav>
 
-        <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
+        <div className="mx-3 mb-3 shrink-0 rounded-[1.25rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
           <span className="grid size-10 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-lg text-[#FF8C1C] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
           <p className="mt-3 text-sm font-extrabold text-[#454545]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
           <p className="mt-1 text-[10px] leading-4 text-[#77716c]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
