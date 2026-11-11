@@ -1174,3 +1174,182 @@ textarea {
 ):is(span, strong, svg, [class*="text-"]) {
   color: inherit !important;
 }
+
+
+/* Matjar interaction system — semantic states are consistent across dashboards. */
+:root {
+  --matjar-action: #f0660d;
+  --matjar-action-hover: #d95708;
+  --matjar-ink: #454545;
+  --matjar-line: #eee9e4;
+  --matjar-hover-line: #f3b58f;
+  --matjar-hover-shadow: 0 4px 12px rgb(240 102 13 / 10%);
+  --matjar-active: #d9f99d;
+  --matjar-active-ink: #365314;
+  --matjar-danger: #dc2626;
+  --matjar-danger-hover: #b91c1c;
+  --matjar-disabled: #e7e7e7;
+  --matjar-disabled-ink: #858585;
+}
+
+/* Default buttons are quiet white controls. Primary, destructive and selected
+   states are explicit and always carry their matching foreground. */
+button:not([data-variant]) {
+  color: var(--matjar-ink);
+}
+button:not([data-variant]):not(:disabled):not([aria-pressed="true"]):not([aria-selected="true"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#dc2626]"]):not([class*="bg-[#f0660d]"]):not([class*="bg-[var(--color-orange)]"]):not([class*="bg-[var(--color-orange-500)]"]):not([class*="bg-[var(--color-orange-600)]"]):not([class*="bg-[var(--action)]"]):not([class*="bg-[linear-gradient"]) {
+  background-color: #ffffff;
+  color: var(--matjar-ink);
+}
+button:not(:disabled):not([data-variant="primary"]):not([data-variant="danger"]):not([data-variant="active"]):not([aria-pressed="true"]):not([aria-selected="true"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#dc2626]"]):not([class*="bg-[#f0660d]"]):not([class*="bg-[var(--color-orange)]"]):not([class*="bg-[var(--color-orange-500)]"]):not([class*="bg-[var(--color-orange-600)]"]):not([class*="bg-[var(--action)]"]):not([class*="bg-[linear-gradient"]):hover {
+  border-color: var(--matjar-hover-line) !important;
+  box-shadow: var(--matjar-hover-shadow) !important;
+  color: var(--matjar-ink) !important;
+}
+button[data-variant="primary"],
+button[class*="bg-[#f0660d]"],
+button[class*="bg-[var(--color-orange)]"],
+button[class*="bg-[var(--color-orange-500)]"],
+button[class*="bg-[var(--color-orange-600)]"],
+button[class*="bg-[var(--action)]"],
+button[class*="bg-[linear-gradient"] {
+  background: var(--matjar-action) !important;
+  border-color: var(--matjar-action) !important;
+  color: #ffffff !important;
+}
+button[data-variant="primary"]:hover,
+button[class*="bg-[#f0660d]"]:hover,
+button[class*="bg-[var(--color-orange)]"]:hover,
+button[class*="bg-[var(--color-orange-500)]"]:hover,
+button[class*="bg-[var(--color-orange-600)]"]:hover,
+button[class*="bg-[var(--action)]"]:hover,
+button[class*="bg-[linear-gradient"]:hover {
+  background: var(--matjar-action-hover) !important;
+  border-color: var(--matjar-action-hover) !important;
+  color: #ffffff !important;
+}
+button[data-variant="danger"],
+button[class*="bg-red-"],
+button[class*="bg-rose-"],
+button[class*="bg-[#dc2626]"] {
+  background: var(--matjar-danger) !important;
+  border-color: var(--matjar-danger) !important;
+  color: #ffffff !important;
+}
+button[data-variant="danger"]:hover,
+button[class*="bg-red-"]:hover,
+button[class*="bg-rose-"]:hover,
+button[class*="bg-[#dc2626]"]:hover {
+  background: var(--matjar-danger-hover) !important;
+  border-color: var(--matjar-danger-hover) !important;
+  color: #ffffff !important;
+}
+button[data-variant="active"],
+button[aria-pressed="true"],
+button[aria-selected="true"] {
+  background: var(--matjar-active) !important;
+  border-color: #a3e635 !important;
+  color: var(--matjar-active-ink) !important;
+}
+button:disabled,
+button[aria-disabled="true"] {
+  background: var(--matjar-disabled) !important;
+  border-color: #d5d5d5 !important;
+  color: var(--matjar-disabled-ink) !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+button svg { flex: 0 0 auto; color: currentColor; }
+button[data-variant="primary"] svg,
+button[data-variant="danger"] svg { color: #ffffff; }
+
+/* Seller workspace now follows the same white / onyx / Matjar orange system. */
+.seller-dashboard {
+  background: #ffffff !important;
+  color: var(--matjar-ink);
+}
+.seller-dashboard > div.min-w-0 {
+  background: #ffffff !important;
+}
+.seller-dashboard .seller-sidebar,
+.seller-dashboard .seller-mobile-navigation {
+  background: #ffffff !important;
+  color: var(--matjar-ink) !important;
+  border-color: var(--matjar-line) !important;
+  box-shadow: 0 8px 24px rgb(69 69 69 / 5%);
+}
+.seller-dashboard .seller-sidebar-nav a[aria-current="page"],
+.seller-dashboard .seller-mobile-navigation a[aria-current="page"] {
+  background: var(--matjar-active) !important;
+  border-color: #a3e635 !important;
+  color: var(--matjar-active-ink) !important;
+  box-shadow: inset 3px 0 0 #84cc16, 0 3px 8px rgb(101 163 13 / 9%) !important;
+}
+.seller-dashboard .seller-sidebar-nav a:not([aria-current="page"]),
+.seller-dashboard .seller-mobile-navigation a:not([aria-current="page"]) {
+  background: #ffffff !important;
+  color: var(--matjar-ink) !important;
+  border-color: var(--matjar-line) !important;
+}
+.seller-dashboard .seller-sidebar-nav a:not([aria-current="page"]):hover,
+.seller-dashboard .seller-mobile-navigation a:not([aria-current="page"]):hover {
+  background: #ffffff !important;
+  color: var(--matjar-ink) !important;
+  border-color: var(--matjar-hover-line) !important;
+  box-shadow: var(--matjar-hover-shadow) !important;
+}
+.seller-dashboard .seller-sidebar-nav a span.grid {
+  background: #f5f5f5 !important;
+  color: #626262 !important;
+  border: 1px solid #ececec;
+}
+.seller-dashboard .seller-sidebar-nav a[aria-current="page"] span.grid,
+.seller-dashboard .seller-mobile-navigation a[aria-current="page"] svg {
+  background: transparent !important;
+  color: var(--matjar-active-ink) !important;
+  border-color: transparent !important;
+}
+.seller-dashboard .seller-mobile-navigation a:not([aria-current="page"]) svg {
+  color: #777777 !important;
+}
+.seller-dashboard .seller-overview-hero {
+  background: #ffffff !important;
+  color: var(--matjar-ink) !important;
+  border-color: var(--matjar-line) !important;
+}
+.seller-dashboard .seller-overview-hero h1,
+.seller-dashboard .seller-overview-hero h2,
+.seller-dashboard .seller-overview-hero h3 {
+  color: var(--matjar-ink) !important;
+}
+.seller-dashboard .seller-overview-hero [class*="text-[#b9d9e2]"],
+.seller-dashboard .seller-overview-hero [class*="text-[#8ce8e1]"] {
+  color: var(--matjar-action) !important;
+}
+.seller-dashboard .seller-overview-hero .pointer-events-none {
+  opacity: .35;
+}
+.seller-dashboard [class*="bg-[linear-gradient(115deg,#17334f"] {
+  background: linear-gradient(120deg, #ffffff, #fffaf6) !important;
+  color: var(--matjar-ink) !important;
+  border: 1px solid var(--matjar-line);
+  box-shadow: 0 12px 28px rgb(69 69 69 / 6%);
+}
+.seller-dashboard [class*="bg-[linear-gradient(115deg,#17334f"] :is(h1,h2,h3,p,span) {
+  color: var(--matjar-ink) !important;
+}
+.seller-dashboard .seller-topbar button[data-variant="primary"] {
+  background: var(--matjar-action) !important;
+  color: #ffffff !important;
+}
+.seller-dashboard input,
+.seller-dashboard select,
+.seller-dashboard textarea {
+  color: var(--matjar-ink);
+  background-color: #ffffff;
+}
+.seller-dashboard input::placeholder,
+.seller-dashboard textarea::placeholder {
+  color: #777777;
+  opacity: 1;
+}
