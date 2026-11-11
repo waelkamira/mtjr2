@@ -1454,3 +1454,55 @@ button[data-variant="danger"] svg { color: #ffffff; }
   color: #777777;
   opacity: 1;
 }
+
+
+/* Links rendered as controls follow the same semantic button contract. */
+a[aria-current="page"] {
+  background-color: var(--matjar-active) !important;
+  border-color: #a3e635 !important;
+  color: var(--matjar-active-ink) !important;
+}
+a[class*="bg-white"],
+a[class*="bg-[#fff"],
+a[role="button"][class*="border"] {
+  color: var(--matjar-ink);
+}
+a[class*="bg-white"]:not([aria-current="page"]):hover,
+a[class*="bg-[#fff"]:not([aria-current="page"]):hover,
+a[role="button"][class*="border"]:not([aria-current="page"]):hover {
+  background: #ffffff !important;
+  border-color: var(--matjar-hover-line) !important;
+  box-shadow: var(--matjar-hover-shadow) !important;
+  color: var(--matjar-ink) !important;
+}
+a[class*="bg-[#f0660d]"],
+a[class*="bg-[var(--color-orange)]"],
+a[class*="bg-[var(--action)]"],
+a[class*="bg-[linear-gradient"],
+a[class*="bg-orange-"] {
+  background: var(--matjar-action) !important;
+  border-color: var(--matjar-action) !important;
+  color: #ffffff !important;
+}
+a[class*="bg-[#f0660d]"]:hover,
+a[class*="bg-[var(--color-orange)]"]:hover,
+a[class*="bg-[var(--action)]"]:hover,
+a[class*="bg-[linear-gradient"]:hover,
+a[class*="bg-orange-"]:hover {
+  background: var(--matjar-action-hover) !important;
+  border-color: var(--matjar-action-hover) !important;
+  color: #ffffff !important;
+}
+a[class*="bg-red-"],
+a[class*="bg-rose-"] {
+  background: var(--matjar-danger) !important;
+  border-color: var(--matjar-danger) !important;
+  color: #ffffff !important;
+}
+a[aria-disabled="true"] {
+  background: var(--matjar-disabled) !important;
+  border-color: #d5d5d5 !important;
+  color: var(--matjar-disabled-ink) !important;
+  pointer-events: none;
+}
+a svg { flex: 0 0 auto; color: currentColor; }
