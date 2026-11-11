@@ -149,6 +149,19 @@ export default function SellerWorkspacePage() {
   const [twitterUrl, setTwitterUrl] = useState("");
   const [identityDocumentFileId, setIdentityDocumentFileId] = useState("");
   const [identityDocumentName, setIdentityDocumentName] = useState("");
+  const [registrationCountryCode, setRegistrationCountryCode] = useState("");
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [registrationAuthority, setRegistrationAuthority] = useState("");
+  const [registrationDate, setRegistrationDate] = useState("");
+  const [registeredAddress, setRegisteredAddress] = useState("");
+  const [taxIdentificationNumber, setTaxIdentificationNumber] = useState("");
+  const [businessWebsite, setBusinessWebsite] = useState("");
+  const [businessRegistrationDocumentFileId, setBusinessRegistrationDocumentFileId] = useState("");
+  const [businessRegistrationDocumentName, setBusinessRegistrationDocumentName] = useState("");
+  const [taxCertificateDocumentFileId, setTaxCertificateDocumentFileId] = useState("");
+  const [taxCertificateDocumentName, setTaxCertificateDocumentName] = useState("");
+  const [proofOfAddressDocumentFileId, setProofOfAddressDocumentFileId] = useState("");
+  const [proofOfAddressDocumentName, setProofOfAddressDocumentName] = useState("");
   const [sellerLatitude, setSellerLatitude] = useState<number | null>(null);
   const [sellerLongitude, setSellerLongitude] = useState<number | null>(null);
   const [storeName, setStoreName] = useState("");
@@ -372,6 +385,48 @@ export default function SellerWorkspacePage() {
       setMessage(translate(locale, "Private identity document uploaded.", "تم رفع وثيقة الهوية إلى مساحة تخزين خاصة."));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "The identity document could not be uploaded.", "تعذر رفع وثيقة الهوية."));
+    } finally {
+      input.value = "";
+      setBusy(false);
+    }
+  }
+
+  async function uploadSellerVerificationDocument(
+    event: ChangeEvent<HTMLInputElement>,
+    documentType: "businessRegistration" | "taxCertificate" | "proofOfAddress"
+  ) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!["application/pdf", "image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+      setError(translate(locale, "Choose a PDF, JPG, PNG, WebP or AVIF document.", "اختر مستنداً بصيغة PDF أو JPG أو PNG أو WebP أو AVIF."));
+      input.value = "";
+      return;
+    }
+    if (file.size <= 0 || file.size > 8 * 1024 * 1024) {
+      setError(translate(locale, "Business documents must be 8 MB or smaller.", "يجب ألا يتجاوز حجم المستند 8 ميغابايت."));
+      input.value = "";
+      return;
+    }
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      body.append("documentType", documentType);
+      const result = await readJson<{ fileId: string }>(await fetch("/api/seller/applications/documents", { method: "POST", body }));
+      if (documentType === "businessRegistration") {
+        setBusinessRegistrationDocumentFileId(result.fileId);
+        setBusinessRegistrationDocumentName(file.name);
+      } else if (documentType === "taxCertificate") {
+        setTaxCertificateDocumentFileId(result.fileId);
+        setTaxCertificateDocumentName(file.name);
+      } else {
+        setProofOfAddressDocumentFileId(result.fileId);
+        setProofOfAddressDocumentName(file.name);
+      }
+      setMessage(translate(locale, "Private verification document uploaded and ready to attach.", "تم رفع مستند التحقق بشكل خاص وأصبح جاهزاً للإرفاق."));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : translate(locale, "The business document could not be uploaded.", "تعذر رفع مستند النشاط."));
     } finally {
       input.value = "";
       setBusy(false);
@@ -794,7 +849,11 @@ export default function SellerWorkspacePage() {
               void submit(event, "/api/seller/applications", {
                 legalName, displayName, contactName, contactEmail, phoneNumber, residence, businessType,
                 sellingCategories, intendedProducts, description: sellerDescription,
-                facebookUrl, youtubeUrl, twitterUrl, identityDocumentFileId, latitude: sellerLatitude, longitude: sellerLongitude
+                facebookUrl, youtubeUrl, twitterUrl, identityDocumentFileId,
+                registrationCountryCode, registrationNumber, registrationAuthority, registrationDate,
+                registeredAddress, taxIdentificationNumber, businessWebsite,
+                businessRegistrationDocumentFileId, taxCertificateDocumentFileId, proofOfAddressDocumentFileId,
+                latitude: sellerLatitude, longitude: sellerLongitude
               }, "Your seller application has been submitted.");
             }} className="grid gap-5">
               <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(69,69,69,.04)]">
@@ -809,8 +868,43 @@ export default function SellerWorkspacePage() {
                   <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Business address / residence", "عنوان النشاط أو مكان الإقامة")}<input required minLength={3} maxLength={240} value={residence} onChange={(e) => setResidence(e.target.value)} placeholder={translate(locale, "City, district, street", "المدينة، المنطقة، الشارع")} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                 </div>
               </section>
+              <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-white p-4 shadow-[0_5px_14px_rgba(69,69,69,.04)]">
+                <div>
+                  <h3 className="font-extrabold text-[#34445a]">{translate(locale, "02 · Business registration and compliance", "02 · التسجيل التجاري والامتثال")}</h3>
+                  <p className="mt-1 text-xs leading-6 text-[#8790a5]">{translate(locale, "Registered companies and agencies must provide their legal registration details and certificate. Tax and address documents can be added where applicable. Files are private and visible only to authorized reviewers.", "يجب على الشركات والوكالات المسجلة إدخال بيانات تسجيلها القانوني وإرفاق الشهادة. يمكن إضافة المستند الضريبي وإثبات العنوان عند انطباقهما. تحفظ الملفات بشكل خاص ولا يطلع عليها إلا المراجعون المخولون.")}</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-1 text-sm">{translate(locale, "Registration country (ISO 2-letter code)", "بلد التسجيل (رمز من حرفين)")}<input required={businessType === "STORE" || businessType === "AGENCY"} minLength={2} maxLength={2} pattern="[A-Za-z]{2}" value={registrationCountryCode} onChange={(e) => setRegistrationCountryCode(e.target.value.toUpperCase())} placeholder="DE" dir="ltr" className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 text-left font-normal" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Commercial registration number", "رقم السجل التجاري")}<input required={businessType === "STORE" || businessType === "AGENCY"} maxLength={120} value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 font-normal" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Registration authority", "جهة التسجيل")}<input maxLength={160} value={registrationAuthority} onChange={(e) => setRegistrationAuthority(e.target.value)} placeholder={translate(locale, "Chamber of commerce / company registry", "غرفة التجارة / سجل الشركات")} className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 font-normal" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Registration date", "تاريخ التسجيل")}<input type="date" value={registrationDate} onChange={(e) => setRegistrationDate(e.target.value)} className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 font-normal" /></label>
+                  <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Registered legal address", "العنوان القانوني المسجل")}<input maxLength={500} value={registeredAddress} onChange={(e) => setRegisteredAddress(e.target.value)} className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 font-normal" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Tax identification number", "الرقم الضريبي")}<input maxLength={120} value={taxIdentificationNumber} onChange={(e) => setTaxIdentificationNumber(e.target.value)} className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 font-normal" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Business website", "الموقع الإلكتروني للنشاط")}<input type="url" maxLength={2048} dir="ltr" value={businessWebsite} onChange={(e) => setBusinessWebsite(e.target.value)} placeholder="https://example.com" className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 text-left font-normal" /></label>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-2 rounded-2xl border border-dashed border-[#f0c7ad] bg-[#fffaf6] p-4 text-sm">
+                    <span className="font-bold text-[#34445a]">{translate(locale, "Business registration certificate", "شهادة السجل التجاري")} {businessType === "STORE" || businessType === "AGENCY" ? "*" : ""}</span>
+                    <span className="text-xs text-[#8790a5]">{businessRegistrationDocumentName || translate(locale, "PDF or image · up to 8 MB · private upload", "PDF أو صورة · حتى 8 ميغابايت · رفع خاص")}</span>
+                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/avif" required={false} onChange={(e) => void uploadSellerVerificationDocument(e, "businessRegistration")} disabled={busy} className="block w-full text-xs" />
+                    {businessRegistrationDocumentFileId && <span className="text-xs font-semibold text-emerald-700">{translate(locale, "Certificate attached", "تم إرفاق الشهادة")}</span>}
+                  </label>
+                  <label className="grid gap-2 rounded-2xl border border-dashed border-[#f0c7ad] bg-[#fffaf6] p-4 text-sm">
+                    <span className="font-bold text-[#34445a]">{translate(locale, "Tax certificate (if applicable)", "الشهادة الضريبية (إن وجدت)")}</span>
+                    <span className="text-xs text-[#8790a5]">{taxCertificateDocumentName || translate(locale, "PDF or image · up to 8 MB · private upload", "PDF أو صورة · حتى 8 ميغابايت · رفع خاص")}</span>
+                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/avif" onChange={(e) => void uploadSellerVerificationDocument(e, "taxCertificate")} disabled={busy} className="block w-full text-xs" />
+                    {taxCertificateDocumentFileId && <span className="text-xs font-semibold text-emerald-700">{translate(locale, "Tax document attached", "تم إرفاق المستند الضريبي")}</span>}
+                  </label>
+                  <label className="grid gap-2 rounded-2xl border border-dashed border-[#f0c7ad] bg-[#fffaf6] p-4 text-sm sm:col-span-2">
+                    <span className="font-bold text-[#34445a]">{translate(locale, "Proof of registered address (optional)", "إثبات العنوان المسجل (اختياري)")}</span>
+                    <span className="text-xs text-[#8790a5]">{proofOfAddressDocumentName || translate(locale, "PDF or image · up to 8 MB · private upload", "PDF أو صورة · حتى 8 ميغابايت · رفع خاص")}</span>
+                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/avif" onChange={(e) => void uploadSellerVerificationDocument(e, "proofOfAddress")} disabled={busy} className="block w-full text-xs" />
+                    {proofOfAddressDocumentFileId && <span className="text-xs font-semibold text-emerald-700">{translate(locale, "Address proof attached", "تم إرفاق إثبات العنوان")}</span>}
+                  </label>
+                </div>
+              </section>
               <section className="grid gap-4 rounded-[1.5rem] border border-white/80 bg-[linear-gradient(145deg,#eaf2f5,#e0ebef)] p-4 shadow-[inset_0_1px_0_white,0_5px_14px_rgba(69,69,69,.04)]">
-                <div><h3 className="font-extrabold text-[#34445a]">{translate(locale, "02 · Products and selling plan", "02 · المنتجات وخطة البيع")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Tell us what you plan to offer and where it comes from.", "أخبرنا عن المنتجات التي ستعرضها ومصدرها وخطة توفيرها.")}</p></div>
+                <div><h3 className="font-extrabold text-[#34445a]">{translate(locale, "03 · Products and selling plan", "03 · المنتجات وخطة البيع")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "Tell us what you plan to offer and where it comes from.", "أخبرنا عن المنتجات التي ستعرضها ومصدرها وخطة توفيرها.")}</p></div>
                 <label className="grid gap-1 text-sm">{translate(locale, "Product categories", "فئات المنتجات")}<input required minLength={2} maxLength={300} value={sellingCategories} onChange={(e) => setSellingCategories(e.target.value)} placeholder={translate(locale, "Fashion, electronics, home, beauty…", "أزياء، إلكترونيات، منزل، تجميل...")} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                 <label className="grid gap-1 text-sm">{translate(locale, "Products and sales plan (at least 20 characters)", "المنتجات وخطة البيع (20 حرفاً على الأقل)")}<textarea required minLength={20} maxLength={4000} rows={4} value={intendedProducts} onChange={(e) => setIntendedProducts(e.target.value)} placeholder={translate(locale, "Examples, condition, sourcing, expected quantities and supply frequency…", "أمثلة المنتجات، حالتها، مصدرها، الكميات المتوقعة وتواتر التوريد...")} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /><span className="text-xs text-[#8790a5]">{intendedProducts.length}/4000</span></label>
                 <label className="grid gap-1 text-sm">{translate(locale, "About your business (optional)", "نبذة عن نشاطك (اختياري)")}<textarea maxLength={2000} rows={3} value={sellerDescription} onChange={(e) => setSellerDescription(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
