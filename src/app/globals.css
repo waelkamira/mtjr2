@@ -246,7 +246,7 @@ button[class], button {
 html body .site-navigation-header button {
   border: 1px solid transparent;
   background: var(--surface);
-  color: var(--color-onyx);
+  color: var(--foreground);
   box-shadow: var(--shadow-clay);
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
