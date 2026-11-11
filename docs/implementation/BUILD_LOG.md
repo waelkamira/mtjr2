@@ -4846,3 +4846,12 @@ The platform account policy is now explicit: email verification is not required 
 - Left select controls and status/decision colors unchanged.
 
 **Verification boundary:** Source-level change only; no local build, typecheck, or browser visual validation was run.
+
+
+## 2026-11-11 — Return to top on next-page navigation
+
+- Added a shared client-side pagination handler at the root layout so the behavior applies across storefront, customer, seller and admin routes rather than being reimplemented page by page.
+- Activating a Next/التالي pagination control (including links marked `rel=next`) scrolls the viewport to the top, allowing the next result set to be read from its beginning.
+- Previous-page controls and disabled pagination controls are not intercepted.
+
+**Verification boundary:** Source-level implementation only; no local build, typecheck, or browser interaction test was run.
