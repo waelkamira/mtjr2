@@ -438,20 +438,11 @@ body:not(footer *) :is(
   color: #ffffff;
 }
 
+/* Global controls share geometry and motion only. Component classes own their
+   foreground/background pair so hover never forces unreadable text. */
 button[class], button {
-  border: 1px solid rgb(255 255 255 / 10%);
   border-radius: var(--radius-control);
-  background: #454545;
-  color: #ffffff;
-  box-shadow: 0 8px 22px rgb(69 69 69 / 16%);
-  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-button[class]:hover, button:hover {
-  border-color: rgb(240 102 13 / 55%);
-  background-color: #f0660d;
-  color: #000000;
-  box-shadow: 0 8px 22px rgb(240 102 13 / 20%);
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 html body .site-navigation-header button {
@@ -481,17 +472,8 @@ html body .site-navigation-header button:is(
   border: 2px solid var(--color-orange);
 }
 
-:is(button, a, [role="button"], [role="tab"], [role="option"]):hover {
-  color: #000000;
-}
-
-button:hover [class*="text-"],
-a:hover [class*="text-"],
-[role="button"]:hover [class*="text-"],
-[role="tab"]:hover [class*="text-"],
-[role="option"]:hover [class*="text-"] {
-  color: #000000;
-}
+/* Do not globally recolor hover text: dark and light surfaces require
+   component-specific contrasting foreground colors. */
 
 :is(
   [aria-pressed="true"],
