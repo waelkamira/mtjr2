@@ -23,10 +23,10 @@ export default function MarketplaceSearchBox() {
   function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();const params=new URLSearchParams();if(query.trim())params.set("q",query.trim().slice(0,120));const suffix=params.toString();setOpen(false);router.push(`/search${suffix?`?${suffix}`:""}`);}
   const hasResults=suggestions.products.length>0||suggestions.stores.length>0;
   return <div ref={root} className="relative min-w-0 flex-1 md:ml-3 md:max-w-xl">
-    <form onSubmit={submit} role="search" dir="ltr" className={`flex overflow-hidden rounded-xl border border-[var(--border)] bg-white ${locale === "ar" ? "flex-row" : "flex-row-reverse"}`}>
+    <form onSubmit={submit} role="search" dir="ltr" className={`flex overflow-hidden rounded-xl bg-white ${locale === "ar" ? "flex-row" : "flex-row-reverse"}`}>
       <label htmlFor="site-search" className="sr-only">{t("Search products and stores","ابحث عن المنتجات والمتاجر")}</label>
       <input id="site-search" dir={locale} role="combobox" aria-autocomplete="list" aria-expanded={open&&query.trim().length>=2} aria-controls="site-search-suggestions" autoComplete="off" maxLength={120} value={query} onFocus={()=>setOpen(true)} onChange={e=>{const value=e.target.value;setQuery(value);setSuggestions({products:[],stores:[]});setLoading(false);setError("");setOpen(value.trim().length>=2);}} placeholder={t("Search products, brands, stores and more","ابحث عن المنتجات والعلامات التجارية والمتاجر والمزيد")} className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] outline-none"/>
-      <button type="submit" className="bg-[var(--action)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--action-hover)]">{t("Search","بحث")}</button>
+      <button type="submit" className="bg-[var(--action)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--action-hover)] rounded-0">{t("Search","بحث")}</button>
 
     </form>
     {open&&query.trim().length>=2&&<div id="site-search-suggestions" role="listbox" className="absolute left-0 right-0 top-full z-50 mt-2 max-h-96 overflow-y-auto rounded-2xl border border-[var(--border)] bg-white p-3 shadow-xl">
