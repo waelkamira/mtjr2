@@ -443,7 +443,7 @@ export default function SellerInventoryPage() {
             { label: translate(locale, "Healthy stock records", "سجلات المخزون السليم"), value: Math.max(0, inventory.length - inventoryTotals.lowStock), color: "bg-emerald-500" }
           ]} />
           <MetricBarChart title={translate(locale, "Available stock by warehouse", "المخزون المتاح حسب المستودع")} rows={warehouseStock.map((row, index) => ({
-            ...row, color: ["bg-indigo-500", "bg-violet-500", "bg-cyan-500", "bg-teal-500", "bg-orange-500", "bg-fuchsia-500", "bg-blue-500", "bg-lime-500"][index]
+            ...row, color: ["bg-indigo-500", "bg-violet-500", "bg-cyan-500", "bg-teal-500", "bg-[var(--orange)]", "bg-fuchsia-500", "bg-blue-500", "bg-lime-500"][index]
           }))} />
           <MetricBarChart title={translate(locale, "Internal transfer pipeline", "حركة التحويلات الداخلية")} rows={Object.entries(transferStatuses).map(([status, value], index) => ({
             label: status.replaceAll("_", " ").toLowerCase(), value,
