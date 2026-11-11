@@ -4811,3 +4811,10 @@ The platform account policy is now explicit: email verification is not required 
 - Extended the consistency pass to checkout delivery/review/shipping/tax, cart, registration/MFA/email verification, account overview/profile/addresses/security/store, customer order and support surfaces, and additional admin catalog, coupon, commission, logistics, payment, refund and review screens.
 - Replaced the customer profile dashboard's unrelated pink/blue radial canvas with the shared warm-neutral/orange background. Kept the multi-color order and engagement charts because those colors encode distinct metrics rather than button branding.
 - Confirmed the seller navy/teal legacy token block and its obsolete hero compatibility selectors are absent from the current global stylesheet; the canonical theme tokens remain `#FF8C1C`, `#454545`, and `#E8750B`.
+
+
+## 2026-11-11 — Selected orange button state
+
+- Added a final global state rule for brand-orange primary controls (including orange utility classes, the Matjar action token and primary button variant).
+- When selected/pressed/current/active, the control remains Matjar orange `#FF8C1C` with white text; hover while selected does not change it to lime or darken the label.
+- Removed the visible border, outline and box-shadow frame for the selected orange state, and suppressed the focus frame on these orange controls as requested. Other non-orange active controls retain their existing lime active state.
