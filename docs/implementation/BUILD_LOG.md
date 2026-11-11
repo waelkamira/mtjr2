@@ -4513,3 +4513,12 @@ The platform account policy is now explicit: email verification is not required 
 - Restored the seller-application email-verification prerequisite because the existing seller identity policy and lifecycle contract explicitly require a verified account email before seller onboarding.
 - Regular customer registration remains session-free; this seller-specific check does not change customer signup behavior.
 - Updated webhook route test requests to include the provider payment reference required by the current route, and aligned the registration fallback assertion with the current response contract.
+
+
+## 2026-11-11 — Seller workspace visual consistency pass
+
+- Reconciled the seller sidebar and topbar with the centralized Snow/Orange/Onyx design tokens: white surfaces, onyx typography, restrained orange actions and active-state indicators.
+- Fixed low-contrast sidebar navigation labels that were rendered in a pale blue tone against a pale background; mobile inactive navigation labels now retain readable contrast.
+- Removed the unrelated blue/teal gradients from the seller search field, search action, account shortcut and topbar controls.
+- Preserved all seller routes, active-route matching, store identity loading, locale labels, product search submission and notification/account destinations.
+- Source-level verification only. Build, browser screenshots, responsive RTL/LTR review and database journeys remain pending; no tests or migrations were run in accordance with the current priority.
