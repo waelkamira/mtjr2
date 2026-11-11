@@ -1262,6 +1262,26 @@ button[class*="bg-[linear-gradient"]:hover {
   border-color: var(--matjar-action-hover) !important;
   color: #ffffff !important;
 }
+button[class*="bg-[var(--color-danger)]"] {
+  background: var(--matjar-danger) !important;
+  border-color: var(--matjar-danger) !important;
+  color: #ffffff !important;
+}
+button[class*="bg-[var(--color-success)]"] {
+  background: var(--matjar-active) !important;
+  border-color: #a3e635 !important;
+  color: var(--matjar-active-ink) !important;
+}
+button[class*="bg-[var(--color-warning)]"] {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+}
+button[class*="bg-[var(--color-info)]"] {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
 button[data-variant="danger"],
 button[class*="bg-red-"],
 button[class*="bg-rose-"],
@@ -1491,6 +1511,26 @@ a[class*="bg-[linear-gradient"]:hover,
 a[class*="bg-orange-"]:hover {
   background: var(--matjar-action-hover) !important;
   border-color: var(--matjar-action-hover) !important;
+  color: #ffffff !important;
+}
+a[class*="bg-[var(--color-success)]"] {
+  background: var(--matjar-active) !important;
+  border-color: #a3e635 !important;
+  color: var(--matjar-active-ink) !important;
+}
+a[class*="bg-[var(--color-danger)]"] {
+  background: var(--matjar-danger) !important;
+  border-color: var(--matjar-danger) !important;
+  color: #ffffff !important;
+}
+a[class*="bg-[var(--color-warning)]"] {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+}
+a[class*="bg-[var(--color-info)]"] {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
   color: #ffffff !important;
 }
 a[class*="bg-red-"],
