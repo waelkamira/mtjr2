@@ -69,7 +69,7 @@
 .seller-dashboard [class*="bg-[#142b45]"],
 .seller-dashboard [class*="bg-[#203850]"] { background: var(--surface) !important; }
 @media (max-width: 1023px) {
-  .seller-dashboard .seller-mobile-navigation { position: sticky; top: 0; z-index: 20; }
+  .seller-dashboard .seller-mobile-navigation { position: sticky; top: 0; z-index: 30; }
   .seller-dashboard .seller-mobile-navigation__links { max-width: 100%; }
 }
 
