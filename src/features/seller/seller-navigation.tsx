@@ -400,7 +400,7 @@ export default function SellerNavigation() {
   return (
     <>
       {/* ============ DESKTOP SIDEBAR ============ */}
-      <aside className="seller-sidebar relative z-30 hidden h-screen w-72 shrink-0 flex-col overflow-hidden border-e border-white/5 bg-[#0B0B10] text-black shadow-[20px_0_60px_-20px_rgba(0,0,0,.6)] lg:sticky lg:top-0 lg:flex">
+      <aside className="seller-sidebar relative z-30 hidden h-screen max-h-screen w-72 shrink-0 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain border-e border-white/5 bg-[#0B0B10] text-white shadow-[20px_0_60px_-20px_rgba(0,0,0,.6)] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.18)_transparent] lg:sticky lg:top-0 lg:flex">
         {/* Ambient background glow */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-32 -right-20 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
@@ -480,7 +480,7 @@ export default function SellerNavigation() {
         {/* Navigation */}
         <nav
           aria-label={translate(locale, "Seller navigation", "تنقل البائع")}
-          className="seller-sidebar-nav min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-4 py-6 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.1)_transparent]"
+          className="seller-sidebar-nav relative flex-none space-y-6 overflow-visible px-4 py-6"
         >
           {groupedNav.map((group, gIdx) => (
             <div key={group.title}>
