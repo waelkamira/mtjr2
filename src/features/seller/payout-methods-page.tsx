@@ -86,10 +86,10 @@ export default function SellerPayoutMethodsPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1120px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      <header className="rounded-[30px] border border-white/90 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] p-6 text-[#344d60] shadow-[12px_14px_28px_rgba(74,75,112,.12),inset_0_2px_0_white] sm:p-8">
-        <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#5d8192]">{t("SELLER FINANCE", "مالية البائع")}</p>
+      <header className="rounded-[30px] border border-white/90 bg-[linear-gradient(115deg,#fff6ef_0%,#f7e9de_48%,#f2edf5_100%)] p-6 text-[#51433a] shadow-[12px_14px_28px_rgba(119,86,62,.08),inset_0_2px_0_white] sm:p-8">
+        <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#9a6548]">{t("SELLER FINANCE", "مالية البائع")}</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">{t("Bank accounts", "الحسابات البنكية")}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#688394]">{t("Save the bank account where future seller settlements may be sent. Account details are encrypted and only the last four characters are displayed.", "احفظ الحساب البنكي الذي يمكن استخدامه لتحويل مستحقاتك مستقبلاً. تُشفّر بيانات الحساب ولا يظهر منها إلا آخر أربعة أحرف.")}</p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#80695b]">{t("Save the bank account where future seller settlements may be sent. Account details are encrypted and only the last four characters are displayed.", "احفظ الحساب البنكي الذي يمكن استخدامه لتحويل مستحقاتك مستقبلاً. تُشفّر بيانات الحساب ولا يظهر منها إلا آخر أربعة أحرف.")}</p>
       </header>
 
       <section className="rounded-[26px] border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
@@ -100,8 +100,8 @@ export default function SellerPayoutMethodsPage() {
       {error && <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</p>}
       {success && <p role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{success}</p>}
 
-      <section className="rounded-[26px] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[8px_10px_22px_rgba(74,75,112,.09),inset_0_2px_0_white] sm:p-6">
-        <h2 className="text-xl font-black text-[#344d60]">{t("Add a bank account", "إضافة حساب بنكي")}</h2>
+      <section className="rounded-[26px] border border-white/90 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-5 shadow-[8px_10px_22px_rgba(119,86,62,.06),inset_0_2px_0_white] sm:p-6">
+        <h2 className="text-xl font-black text-[#51433a]">{t("Add a bank account", "إضافة حساب بنكي")}</h2>
         <form onSubmit={submit} className="mt-5 grid gap-4 md:grid-cols-2">
           <label className="grid gap-2 text-sm font-bold text-[#526078]">{t("Account format", "نوع الحساب")}
             <select value={type} onChange={(event) => setType(event.target.value as typeof type)} className="rounded-xl border border-white bg-white/90 px-3 py-3 font-medium">
@@ -131,7 +131,7 @@ export default function SellerPayoutMethodsPage() {
             {t("Make this my default bank account", "اجعل هذا الحساب البنكي الافتراضي")}
           </label>
           <div className="md:col-span-2">
-            <button disabled={saving} type="submit" className="rounded-2xl bg-[linear-gradient(145deg,#c8bee9,#a8d9d4)] px-6 py-3 text-sm font-black text-[#40375f] shadow-[0_5px_12px_rgba(74,75,112,.14)] disabled:opacity-50">
+            <button disabled={saving} type="submit" className="rounded-2xl bg-[linear-gradient(145deg,#f2eaf8,#e99a68)] px-6 py-3 text-sm font-black text-[#ffffff] shadow-[0_5px_12px_rgba(119,86,62,.09)] disabled:opacity-50">
               {saving ? t("Saving securely…", "جارٍ الحفظ الآمن…") : t("Save bank account", "حفظ الحساب البنكي")}
             </button>
           </div>
@@ -139,18 +139,18 @@ export default function SellerPayoutMethodsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-black text-[#344d60]">{t("Saved bank accounts", "الحسابات البنكية المحفوظة")}</h2>
-        {loading ? <p className="rounded-2xl bg-white/70 p-5 text-sm text-[#688394]">{t("Loading bank accounts…", "جارٍ تحميل الحسابات البنكية…")}</p>
-          : methods.length === 0 ? <p className="rounded-2xl bg-white/70 p-5 text-sm text-[#688394]">{t("No bank accounts have been added.", "لم تتم إضافة أي حساب بنكي بعد.")}</p>
+        <h2 className="text-xl font-black text-[#51433a]">{t("Saved bank accounts", "الحسابات البنكية المحفوظة")}</h2>
+        {loading ? <p className="rounded-2xl bg-white/70 p-5 text-sm text-[#80695b]">{t("Loading bank accounts…", "جارٍ تحميل الحسابات البنكية…")}</p>
+          : methods.length === 0 ? <p className="rounded-2xl bg-white/70 p-5 text-sm text-[#80695b]">{t("No bank accounts have been added.", "لم تتم إضافة أي حساب بنكي بعد.")}</p>
           : methods.map((method) => <article key={method.id} className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-white bg-white/75 p-5 shadow-[6px_8px_18px_rgba(74,75,112,.08),inset_0_1px_0_white]">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-[#344d60]">{method.bankName}</h3>{method.isDefault && <span className="rounded-full bg-[#d9eee8] px-2 py-1 text-xs font-bold text-[#416d61]">{t("Default", "افتراضي")}</span>}</div>
+              <div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-[#51433a]">{method.bankName}</h3>{method.isDefault && <span className="rounded-full bg-[#e8f4ef] px-2 py-1 text-xs font-bold text-[#356b58]">{t("Default", "افتراضي")}</span>}</div>
               <p className="mt-1 text-sm text-[#687b8b]">{method.accountHolderName} · {method.countryCode} · {method.currencyCode}</p>
               <p className="mt-1 font-mono text-sm text-[#526078]">{method.type === "IBAN" ? "IBAN" : t("Account", "الحساب")} •••• {method.accountLast4}</p>
               <p className="mt-1 text-xs font-semibold text-[#8a789d]">{statusLabel(method.status)}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {!method.isDefault && <button type="button" disabled={busyId === method.id} onClick={() => void changeMethod(method, "default")} className="rounded-xl border border-[#d6d1e7] px-3 py-2 text-xs font-bold text-[#62577f] disabled:opacity-50">{t("Make default", "تعيين افتراضي")}</button>}
+              {!method.isDefault && <button type="button" disabled={busyId === method.id} onClick={() => void changeMethod(method, "default")} className="rounded-xl border border-[#eadfd5] px-3 py-2 text-xs font-bold text-[#8a583b] disabled:opacity-50">{t("Make default", "تعيين افتراضي")}</button>}
               <button type="button" disabled={busyId === method.id} onClick={() => { if (window.confirm(t("Remove this bank account?", "هل تريد إزالة هذا الحساب البنكي؟"))) void changeMethod(method, "disable"); }} className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 disabled:opacity-50">{t("Remove", "إزالة")}</button>
             </div>
           </article>)}
