@@ -4749,3 +4749,14 @@ The platform account policy is now explicit: email verification is not required 
 - Kept deep-orange text on white surfaces where required for readability, and preserved warning/error/success colors.
 
 **Verification boundary:** GitHub source changes are committed to `main`. No local build/typecheck/lint, tests, or browser-based page review was run. Vercel preview/build may remain unavailable under the repository's current deployment rate limit.
+
+
+## 2026-11-11 — Final brand-accent sweep for storefront, charts, and maps
+
+- Corrected storefront hero and marketplace search primary-action text to white on the approved orange background.
+- Updated seller shipping/advertising actions and messaging accents to remove their remaining orange gradients and legacy orange shades.
+- Updated the location-map pin and shared chart palette orange entries to use the Matjar brand orange.
+- Updated the legacy `--matjar-action` compatibility variables and hover token in global CSS so older components cannot silently fall back to the previous dark orange.
+- Preserved readable deep-orange text on light surfaces, semantic review-rating colors, and non-brand status colors.
+
+**Verification boundary:** Source edits are committed to `main`. No local build, typecheck, lint, tests, or browser visual verification were performed. Deployment status is checked separately and is not treated as a successful build unless it reports success.
