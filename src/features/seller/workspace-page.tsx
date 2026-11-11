@@ -960,6 +960,7 @@ export default function SellerWorkspacePage() {
                 <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eef4fa] text-[#3d6c92]"><SellerIcon name="pin" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "04 · Business location", "04 · موقع النشاط")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Click or drag the pin to mark your business location.", "انقر على الخريطة أو اسحب الدبوس لتحديد موقع نشاطك بدقة.")}</p></div></div>
                 <SyriaLocationPicker
                   locale={locale}
+                  title={translate(locale, "Business location in Syria", "موقع النشاط في سوريا")}
                   value={{
                     ...sellerLocation,
                     ...(sellerLatitude !== null && sellerLongitude !== null
