@@ -433,7 +433,7 @@ html body select:not([data-field-style="custom"]):not([data-field-style="none"])
 html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) {
   color-scheme: light;
 }
-html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-"]) {
+html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-"]):not(.seller-dashboard select) {
   color-scheme: dark;
 }
 html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) option,
@@ -441,7 +441,7 @@ html body select:not([data-field-style="custom"]):not([data-field-style="none"])
   background: #ffffff;
   color: #454545;
 }
-html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-"]) option,
+html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-"]):not(.seller-dashboard select) option,
 html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):is(
   [class~="bg-black"], [class*="bg-gray-7"], [class*="bg-gray-8"], [class*="bg-gray-9"],
   [class*="bg-slate-7"], [class*="bg-slate-8"], [class*="bg-slate-9"],
