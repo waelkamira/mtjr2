@@ -69,6 +69,52 @@
 .seller-dashboard [class*="bg-[#142b45]"],
 .seller-dashboard [class*="bg-[#203850]"] { background: var(--surface) !important; }
 @media (max-width: 1023px) {
-  .seller-dashboard .seller-mobile-navigation { position: relative; z-index: 5; }
+  .seller-dashboard .seller-mobile-navigation { position: sticky; top: 0; z-index: 20; }
   .seller-dashboard .seller-mobile-navigation__links { max-width: 100%; }
+}
+
+/* Scope the platform's legacy dark clay-surface treatment back to the seller's light login palette. */
+.seller-dashboard main :is(
+  [class~="bg-white"], [class*="bg-white/"],
+  [class~="bg-gray-100"], [class~="bg-slate-50"], [class~="bg-slate-100"],
+  [class~="bg-[var(--surface)]"], [class*="bg-[var(--surface)]/"],
+  [class~="bg-[var(--color-snow)]"], [class~="bg-[var(--color-white)]"],
+  [class~="bg-[var(--color-ivory-50)]"], [class~="bg-[var(--color-ivory-100)]"], [class~="bg-[var(--color-ivory-200)]"],
+  [class~="bg-[var(--color-lavender-50)]"], [class~="bg-[var(--color-lavender-100)]"], [class~="bg-[var(--color-lavender-300)]"],
+  [class~="bg-[var(--color-mint-50)]"], [class~="bg-[var(--color-mint-100)]"], [class~="bg-[var(--color-mint-300)]"],
+  [class~="bg-[var(--color-blush-50)]"], [class~="bg-[var(--color-blush-100)]"], [class~="bg-[var(--color-blush-300)]"],
+  [class~="bg-[var(--color-peach-50)]"], [class~="bg-[var(--color-peach-100)]"], [class~="bg-[var(--color-peach-300)]"],
+  [class~="bg-[var(--color-butter-50)]"], [class~="bg-[var(--color-butter-100)]"], [class~="bg-[var(--color-butter-300)]"],
+  [class~="bg-[var(--color-sky-100)]"], [class~="bg-[var(--color-orange-100)]"],
+  [class~="bg-[var(--color-violet-100)]"], [class~="bg-[var(--color-cyan-100)]"], [class~="bg-[var(--color-cyan-300)]"],
+  [class~="bg-[var(--color-sage-100)]"], [class*="bg-[var(--color-sage-100)]/"],
+  [class~="bg-[var(--color-copper-100)]"], [class~="bg-red-50"], [class~="bg-amber-50"],
+  [class~="bg-green-50"], [class~="bg-emerald-50"]
+):not(footer):not(footer *) {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+  box-shadow: var(--shadow-clay) !important;
+}
+.seller-dashboard main :is(
+  [class~="text-[#203850]"], [class~="text-[#142b45]"], [class~="text-[#17374b]"],
+  [class~="text-[#718096]"], [class~="text-[#8790a5]"], [class~="text-[#5f5a55]"],
+  [class~="text-[#77716c]"], [class~="text-[#918a84]"]
+) { color: var(--foreground) !important; }
+.seller-dashboard .seller-sidebar,
+.seller-dashboard .seller-mobile-navigation {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+.seller-dashboard .seller-mobile-navigation a,
+.seller-dashboard .seller-sidebar a { color: inherit; }
+.seller-dashboard .seller-sidebar a[aria-current="page"],
+.seller-dashboard .seller-mobile-navigation a[aria-current="page"] {
+  color: var(--action) !important;
+  background: var(--surface-soft) !important;
+}
+.seller-dashboard .seller-sidebar :is(a,span,div),
+.seller-dashboard .seller-mobile-navigation :is(a,span,div) {
+  border-color: var(--border);
 }
