@@ -100,6 +100,18 @@ aside [class~="text-[var(--color-copper-600)]"] {
 footer [class~="text-[var(--color-orange)]"] {
   color: var(--orange);
 }
+footer [class~="text-[var(--color-copper-500)]"],
+footer [class~="text-[var(--color-copper-600)]"],
+footer [class~="text-[var(--color-copper-700)]"],
+footer [class~="text-[var(--color-lavender-600)]"],
+footer [class~="text-[var(--color-mint-600)]"],
+footer [class~="text-[var(--color-blush-600)]"],
+footer [class~="text-[var(--color-peach-600)]"],
+footer [class~="text-[var(--color-butter-600)]"],
+footer [class~="text-[var(--color-violet-600)]"],
+footer [class~="text-[var(--color-violet-700)]"] {
+  color: var(--orange);
+}
 footer [class~="hover:text-[var(--color-orange)]"]:hover {
   color: #ff9a5a;
 }

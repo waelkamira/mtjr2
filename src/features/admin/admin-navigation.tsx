@@ -62,7 +62,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
           );
         })}
       </nav>
-      <div className="hidden px-6 pt-5 text-xs leading-5 text-white/50 lg:block">
+      <div className="hidden px-6 pt-5 text-xs leading-5 text-white/75 lg:block">
         {translate(locale, "Navigation includes implemented admin areas only. Additional modules will appear as their workflows are built.", "تتضمن قائمة التنقل أقسام الإدارة المتاحة فقط. ستظهر الوحدات الإضافية عند اكتمال إجراءات العمل الخاصة بها.")}
       </div>
     </aside>

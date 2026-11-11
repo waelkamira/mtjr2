@@ -52,7 +52,7 @@ export default function SiteFooter({ locale, contactEmail }: { locale: Locale; c
             {translate(locale, "A multi-vendor marketplace bringing independent stores and shoppers together.", "سوق متعدد البائعين يجمع المتاجر المستقلة والمتسوقين في مكان واحد.")}
           </p>
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">{translate(locale, "Contact", "التواصل")}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">{translate(locale, "Contact", "التواصل")}</p>
             {contactEmail ? (
               <a href={`mailto:${contactEmail}`} className="mt-2 inline-block break-all text-sm font-medium text-white transition hover:text-[var(--color-orange)]">{contactEmail}</a>
             ) : (
@@ -81,7 +81,7 @@ export default function SiteFooter({ locale, contactEmail }: { locale: Locale; c
       </div>
 
       <div className="border-t border-white/10 bg-black/20">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between lg:px-10">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-5 text-xs text-white/70 sm:flex-row sm:items-center sm:justify-between lg:px-10">
           <p>© {year} <span className="font-semibold text-white/75">Mtjr</span>. {translate(locale, "All rights reserved.", "جميع الحقوق محفوظة.")}</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             <Link href="/about" className="transition hover:text-[var(--color-orange)]">{translate(locale, "About", "من نحن")}</Link>

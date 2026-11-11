@@ -57,13 +57,13 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-sm font-bold tracking-tight text-[#344d60]">{translate(locale, title, title)}</h3>
-          {description && <p className="mt-1 text-xs leading-5 text-[#829aa7]">{translate(locale, description, description)}</p>}
+          {description && <p className="mt-1 text-xs leading-5 text-[#526477]">{translate(locale, description, description)}</p>}
         </div>
         <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-gradient-to-br from-[#8fc9c8] to-[#5d9fb5] shadow-[0_0_0_4px_rgba(89,157,174,.14)]" />
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-5 rounded-2xl bg-white/55 p-5 text-xs text-slate-400">{translate(locale, "No analytics data is available for this view yet.", "لا تتوفر بيانات إحصائية لهذا العرض حتى الآن.")}</p>
+        <p className="mt-5 rounded-2xl bg-white/55 p-5 text-xs text-[#526477]">{translate(locale, "No analytics data is available for this view yet.", "لا تتوفر بيانات إحصائية لهذا العرض حتى الآن.")}</p>
       ) : <>
         {variant === "donut" && <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row">
           <div className="relative h-44 w-44 shrink-0">
@@ -73,7 +73,7 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <strong className="text-2xl font-black tabular-nums text-slate-800">{total.toLocaleString(locale)}</strong>
-              <span className="mt-1 text-[10px] font-medium text-slate-400">{translate(locale, centerLabel || "Total", centerLabel || "الإجمالي")}</span>
+              <span className="mt-1 text-[10px] font-medium text-[#526477]">{translate(locale, centerLabel || "Total", centerLabel || "الإجمالي")}</span>
             </div>
           </div>
           <div className="w-full space-y-2.5">
@@ -85,7 +85,7 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
         </div>}
 
         {(variant === "line" || variant === "area") && <div className="mt-4">
-          <div className="mb-2 flex items-end justify-between"><strong className="text-2xl font-black tabular-nums text-slate-800">{total.toLocaleString(locale)}</strong><span className="text-[10px] text-slate-400">{translate(locale, "Across selected period", "خلال الفترة المحددة")}</span></div>
+          <div className="mb-2 flex items-end justify-between"><strong className="text-2xl font-black tabular-nums text-slate-800">{total.toLocaleString(locale)}</strong><span className="text-[10px] text-[#526477]">{translate(locale, "Across selected period", "خلال الفترة المحددة")}</span></div>
           <svg viewBox="0 0 360 132" className="h-36 w-full overflow-visible" role="img" aria-label={title}>
             {[30, 60, 90, 120].map((y) => <line key={y} x1="12" x2="348" y1={y} y2={y} stroke="#d6e4e9" strokeDasharray="3 5" />)}
             {variant === "area" && <polygon points={area} fill={`url(#analyticsArea-${chartId})`} />}
@@ -93,7 +93,7 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
             <polyline points={line} fill="none" stroke={variant === "area" ? "#69b5b0" : "#438fb4"} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
             {points.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="4" fill="white" stroke={palette[index % palette.length]} strokeWidth="2.5" />)}
           </svg>
-          <div className="mt-1 flex justify-between gap-2 text-[10px] text-slate-400">{rows.map((row) => <span key={row.label} className="min-w-0 truncate">{translate(locale, row.label, row.label)}</span>)}</div>
+          <div className="mt-1 flex justify-between gap-2 text-[10px] text-[#526477]">{rows.map((row) => <span key={row.label} className="min-w-0 truncate">{translate(locale, row.label, row.label)}</span>)}</div>
         </div>}
 
         {variant === "gauge" && <div className="relative mx-auto mt-3 h-36 max-w-xs overflow-hidden">
@@ -109,7 +109,7 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
         {variant === "bar" && <div className="mt-5 space-y-4">
           {rows.map((row, index) => <div key={row.label}>
             <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
-              <span className="flex min-w-0 items-center gap-2 text-slate-500"><i className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: palette[index % palette.length] }} /><span className="truncate">{translate(locale, row.label, row.label)}</span></span>
+              <span className="flex min-w-0 items-center gap-2 text-[#526477]"><i className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: palette[index % palette.length] }} /><span className="truncate">{translate(locale, row.label, row.label)}</span></span>
               <strong className="tabular-nums text-slate-700">{row.value.toLocaleString(locale)}</strong>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-slate-100">
