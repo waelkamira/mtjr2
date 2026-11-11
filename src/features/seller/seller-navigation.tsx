@@ -138,7 +138,7 @@ export default function SellerNavigation() {
             </span>
             <span>
               <span className="block text-[22px] font-black tracking-tight text-[#454545]">matjar<span className="text-[var(--orange)]">.</span></span>
-              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.18em] text-[#918a84]">{translate(locale, "Seller studio", "استوديو البائع")}</span>
+              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.18em] text-[#625b55]">{translate(locale, "Seller studio", "استوديو البائع")}</span>
             </span>
           </Link>
         </div>
@@ -153,7 +153,7 @@ export default function SellerNavigation() {
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-sidebar-nav min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-4 py-5">
           {groups.map((group) => (
             <section key={group.title}>
-              <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#918a84]">{translate(locale, group.title, group.ar)}</h2>
+              <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#625b55]">{translate(locale, group.title, group.ar)}</h2>
               <div className="space-y-1">
                 {group.links.map((link) => {
                   const active = link.href === "/seller"
@@ -193,7 +193,7 @@ export default function SellerNavigation() {
 
       <div className="seller-mobile-navigation border-b border-[#29435d] bg-[#142b45] px-4 py-3 text-[#f5f8fc] shadow-[0_4px_14px_rgba(20,43,69,.15)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
+          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-white">
             <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>

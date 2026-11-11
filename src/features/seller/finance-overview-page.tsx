@@ -68,7 +68,7 @@ export default function SellerFinanceOverviewPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <header className="rounded-[30px] border border-[#eee9e4] bg-white p-6 text-[#454545] shadow-[0_12px_28px_rgba(69,69,69,.07)] sm:p-8">
-        <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#918a84]">{t("SELLER FINANCE", "مالية البائع")}</p>
+        <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#625b55]">{t("SELLER FINANCE", "مالية البائع")}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div><h1 className="text-3xl font-black tracking-tight">{t("Financial overview", "الملخص المالي")}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#77716c]">{t("Review recorded sales, platform commissions and completed refunds without mixing currencies.", "راجع المبيعات المسجلة وعمولات المنصة والمبالغ المستردة المكتملة دون خلط العملات.")}</p></div>
           <div className="flex flex-wrap gap-2">
@@ -94,7 +94,7 @@ export default function SellerFinanceOverviewPage() {
               {data.totals.length ? data.totals.map((item) => <p key={item.currencyCode} className="mt-3 text-xl font-black tabular-nums">{formatMinor(item.baseAmountMinor ?? "0", item.currencyCode, item.minorUnit, locale)} <span className="text-xs font-semibold">{item.transactionCount ?? 0} {t("items", "عملية")}</span></p>) : <p className="mt-3 text-sm">{t("No commissionable sales records yet.", "لا توجد مبيعات مؤهلة مسجلة بعد.")}</p>}
             </article>
             <article className="rounded-[25px] border border-white bg-[linear-gradient(145deg,#e9e5f3,#d8e1eb)] p-5 text-[#494467] shadow-[8px_10px_20px_rgba(93,83,139,.10),inset_0_2px_0_white]">
-              <p className="text-xs font-extrabold uppercase tracking-wide text-[#918a84]">{t("Recorded platform commissions", "عمولات المنصة المسجلة")}</p>
+              <p className="text-xs font-extrabold uppercase tracking-wide text-[#625b55]">{t("Recorded platform commissions", "عمولات المنصة المسجلة")}</p>
               {data.totals.length ? data.totals.map((item) => <p key={item.currencyCode} className="mt-3 text-xl font-black tabular-nums">{formatMinor(item.commissionMinor ?? "0", item.currencyCode, item.minorUnit, locale)}</p>) : <p className="mt-3 text-sm">{t("No commission records yet.", "لا توجد عمولات مسجلة بعد.")}</p>}
             </article>
             <article className="rounded-[25px] border border-white bg-[linear-gradient(145deg,#f2e8e7,#e5d8e0)] p-5 text-[#765247] shadow-[8px_10px_20px_rgba(125,83,66,.09),inset_0_2px_0_white]">
