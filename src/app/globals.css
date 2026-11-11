@@ -368,31 +368,58 @@ button[class~="bg-[var(--color-violet-600)]"] {
   color: #ffffff;
 }
 
-input, textarea, select {
-  border: 1px solid rgb(132, 131, 131);
-  border-radius: var(--radius-control);
-  background-color: #454545;
-  color: #ffff;
+/* Unified platform field design. Opt out on a single element with
+   data-field-style="custom" (or className="input-unstyled") and define its
+   own Tailwind classes/styles without changing any other field. */
+html body :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select
+):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) {
+  min-height: 44px !important;
+  padding: .7rem .9rem !important;
+  border: 1px solid var(--color-line) !important;
+  border-radius: .875rem !important;
+  font-family: var(--font-body) !important;
+  font-size: .875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  box-shadow: var(--shadow-clay-inset) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease !important;
+  outline: none;
 }
 
-select {
-  color-scheme: dark;
+html body textarea:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) {
+  min-height: 112px !important;
+  resize: vertical;
 }
 
-select option,
-select optgroup {
-  background-color: #454545;
+html body :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select
+):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):focus {
+  border-color: var(--color-orange) !important;
+  box-shadow: 0 0 0 3px rgb(255 140 28 / 16%), var(--shadow-clay-inset) !important;
+}
+
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled)::placeholder {
+  opacity: 1;
+}
+
+html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) {
+  cursor: pointer;
+}
+
+html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) option,
+html body select:not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) optgroup {
+  background: #454545;
   color: #ffffff;
-}
-
-input::placeholder, textarea::placeholder {
-  color: #ffffff;
-}
-
-input:focus, textarea:focus, select:focus {
-  border-color: var(--color-orange);
-  /* outline-color: var(--color-orange); */
-  box-shadow: 0 0 0 4px rgb(255 140 28 / 16%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1178,13 +1205,11 @@ button[data-variant="danger"] svg { color: #ffffff; }
   background: var(--matjar-action) !important;
   color: #ffffff !important;
 }
-.seller-dashboard input,
-.seller-dashboard select,
-.seller-dashboard textarea {
-  color: var(--matjar-ink);
-  background-color: #ffffff;
+.seller-dashboard :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), select, textarea):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) {
+  color: var(--matjar-ink) !important;
+  background-color: #ffffff !important;
   background-image: none !important;
-  border-color: var(--matjar-line);
+  border-color: var(--matjar-line) !important;
 }
 .seller-dashboard input::file-selector-button {
   border: 1px solid var(--matjar-action);
@@ -1194,9 +1219,8 @@ button[data-variant="danger"] svg { color: #ffffff; }
   padding: .5rem .8rem;
   font-weight: 700;
 }
-.seller-dashboard input::placeholder,
-.seller-dashboard textarea::placeholder {
-  color: #777777;
+.seller-dashboard :is(input, textarea):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled)::placeholder {
+  color: #777777 !important;
   opacity: 1;
 }
 
@@ -1437,13 +1461,11 @@ button[data-button-style="link"]:hover:not(:disabled) {
   color: #454545 !important;
   box-shadow: 0 6px 20px rgb(69 69 69 / 5%) !important;
 }
-.seller-dashboard main :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+/* Seller pages inherit the same shared field geometry; this rule only
+   retains their established white surface and dark foreground. */
+.seller-dashboard main :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), select, textarea):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled) {
   background: #ffffff !important;
-  border: 1px solid #e5e5e5 !important;
   color: #454545 !important;
-}
-.seller-dashboard main :is(input, textarea, select)::placeholder {
-  color: #777777 !important;
 }
 .seller-dashboard :is(button, a)[data-variant="primary"],
 .seller-dashboard button.bg-\[var\(--action\)\],
@@ -1568,217 +1590,69 @@ button[data-button-style="link"]:hover:not(:disabled) {
 }
 
 
-/* Input contrast contract: dark field surfaces always use white text.
-   Light surfaces keep their normal dark foreground. This is global so legacy,
-   account, checkout, admin and dashboard forms stay readable consistently. */
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-"]),
-html body :is(input, textarea, select)[class~="bg-black"],
-html body :is(input, textarea, select)[class~="bg-gray-800"],
-html body :is(input, textarea, select)[class~="bg-gray-900"],
-html body :is(input, textarea, select)[class~="bg-slate-800"],
-html body :is(input, textarea, select)[class~="bg-slate-900"],
-html body :is(input, textarea, select)[class~="bg-zinc-800"],
-html body :is(input, textarea, select)[class~="bg-zinc-900"],
-html body :is(input, textarea, select)[class~="bg-neutral-800"],
-html body :is(input, textarea, select)[class~="bg-neutral-900"],
-html body :is(input, textarea, select)[class~="bg-stone-800"],
-html body :is(input, textarea, select)[class~="bg-stone-900"],
-html body :is(input, textarea, select)[class*="bg-[#0"],
-html body :is(input, textarea, select)[class*="bg-[#1"],
-html body :is(input, textarea, select)[class*="bg-[#2"],
-html body :is(input, textarea, select)[class*="bg-[#3"],
-html body :is(input, textarea, select)[class*="bg-[#4"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-ink-800)"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-ink-950)"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-forest-800)"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-forest-900)"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-forest-950)"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-lavender-800)"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-lavender-950)"],
-html body :is(input, textarea, select)[class*="dark:bg-gray-800"],
-html body :is(input, textarea, select)[class*="dark:bg-gray-900"],
-html body :is(input, textarea, select)[class*="dark:bg-slate-800"],
-html body :is(input, textarea, select)[class*="dark:bg-slate-900"],
-html body :is(input, textarea, select)[class*="dark:bg-zinc-800"],
-html body :is(input, textarea, select)[class*="dark:bg-zinc-900"] {
-  color: #ffffff !important;
-  caret-color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-"])::placeholder,
-html body :is(input, textarea, select)[class~="bg-black"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-gray-800"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-gray-900"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-slate-800"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-slate-900"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-zinc-800"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-zinc-900"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-neutral-800"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-neutral-900"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-stone-800"]::placeholder,
-html body :is(input, textarea, select)[class~="bg-stone-900"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#0"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#1"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#2"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#3"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#4"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--color-ink-"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--color-forest-"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--color-lavender-"]::placeholder {
-  color: rgb(255 255 255 / 72%) !important;
-  opacity: 1 !important;
-}
-html body :is(input, textarea, select)[class*="bg-white"],
-html body :is(input, textarea, select)[class*="bg-[#fff"],
-html body :is(input, textarea, select)[class*="bg-[#faf"],
-html body :is(input, textarea, select)[class*="bg-[#fef"],
-html body :is(input, textarea, select)[class*="bg-[var(--surface)"],
-html body :is(input, textarea, select)[class*="bg-[var(--surface-soft)"],
-html body :is(input, textarea, select)[class*="bg-[var(--surface-tint)"],
-html body :is(input, textarea, select)[class*="bg-[var(--surface-peach)"],
-html body :is(input, textarea, select)[class*="bg-[var(--surface-butter)"],
-html body :is(input, textarea, select)[class*="bg-[var(--background)"] {
-  color: var(--foreground) !important;
-  -webkit-text-fill-color: var(--foreground) !important;
-  caret-color: var(--foreground) !important;
-}
-html body :is(input, textarea, select)[class*="bg-white"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#fff"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#faf"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[#fef"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--surface)"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--surface-soft)"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--surface-tint)"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--surface-peach)"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--surface-butter)"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--background)"]::placeholder {
-  color: #777777 !important;
-  opacity: 1 !important;
-}
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-white"]):not([class*="bg-[#fff"]):not([class*="bg-[#faf"]):not([class*="bg-[#fef"]):not([class*="bg-[var(--surface)"]):not([class*="bg-[var(--surface-soft)"]):not([class*="bg-[var(--surface-tint)"]):not([class*="bg-[var(--surface-peach)"]):not([class*="bg-[var(--surface-butter)"]):not([class*="bg-[var(--background)"]):-webkit-autofill {
-  -webkit-text-fill-color: #ffffff !important;
-  caret-color: #ffffff !important;
-}
-
-
-/* Platform-wide text selection policy: interface copy-drag selection is disabled.
-   Editable controls and editable content retain native text selection. */
-html body,
-html body * {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-html body :is(input, textarea, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]),
-html body :is(input, textarea, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]) * {
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-
-/* Complete dark-field contrast coverage.
-   Keep every dark input/select/textarea readable even when a component uses
-   legacy Tailwind shades, custom onyx hex values, theme tokens, or inline styles. */
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):is(
-  [class~="bg-gray-700"], [class~="bg-gray-800"], [class~="bg-gray-900"],
-  [class~="bg-slate-700"], [class~="bg-slate-800"], [class~="bg-slate-900"],
-  [class~="bg-zinc-700"], [class~="bg-zinc-800"], [class~="bg-zinc-900"],
-  [class~="bg-neutral-700"], [class~="bg-neutral-800"], [class~="bg-neutral-900"],
-  [class~="bg-stone-700"], [class~="bg-stone-800"], [class~="bg-stone-900"],
-  [class*="bg-[#45"], [class*="bg-[#46"], [class*="bg-[#47"],
-  [class*="bg-[#50"], [class*="bg-[#51"], [class*="bg-[#52"],
-  [class*="bg-[#53"], [class*="bg-[#54"], [class*="bg-[#55"],
-  [class*="bg-[#56"], [class*="bg-[#57"], [class*="bg-[#58"],
-  [class*="bg-[#59"], [class*="bg-[#60"], [class*="bg-[#61"],
-  [class*="bg-[#62"], [class*="bg-[#63"], [class*="bg-[#64"],
-  [class*="bg-[#65"], [class*="bg-[#66"], [class*="bg-[#67"],
-  [class*="bg-[#68"], [class*="bg-[#69"], [class*="bg-[#70"],
-  [class*="bg-[#71"], [class*="bg-[#72"], [class*="bg-[#73"],
-  [class*="bg-[#74"], [class*="bg-[#75"], [class*="bg-[#76"],
-  [class*="bg-[#77"], [class*="bg-[#78"], [class*="bg-[#79"],
-  [class*="bg-[var(--color-onyx)"],
-  [class*="bg-[var(--color-black)"],
-  [class*="bg-[var(--color-ink-"],
-  [class*="bg-[var(--color-forest-"],
-  [class*="bg-[var(--color-lavender-800)"],
-  [class*="bg-[var(--color-lavender-950)"],
-  [class*="dark:bg-gray-700"], [class*="dark:bg-gray-800"], [class*="dark:bg-gray-900"],
-  [class*="dark:bg-slate-700"], [class*="dark:bg-slate-800"], [class*="dark:bg-slate-900"],
-  [class*="dark:bg-zinc-700"], [class*="dark:bg-zinc-800"], [class*="dark:bg-zinc-900"],
-  [class*="dark:bg-neutral-700"], [class*="dark:bg-neutral-800"], [class*="dark:bg-neutral-900"],
-  [class*="dark:bg-stone-700"], [class*="dark:bg-stone-800"], [class*="dark:bg-stone-900"]
+/* Text contrast is based on the field surface. Dark surfaces always use
+   white entered text, caret, placeholder and autofill; light surfaces use ink.
+   The custom opt-out is deliberately respected by every shared field rule. */
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):is(
+  [class~="bg-black"], [class*="bg-gray-7"], [class*="bg-gray-8"], [class*="bg-gray-9"],
+  [class*="bg-slate-7"], [class*="bg-slate-8"], [class*="bg-slate-9"],
+  [class*="bg-zinc-7"], [class*="bg-zinc-8"], [class*="bg-zinc-9"],
+  [class*="bg-neutral-7"], [class*="bg-neutral-8"], [class*="bg-neutral-9"],
+  [class*="bg-stone-7"], [class*="bg-stone-8"], [class*="bg-stone-9"],
+  [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"], [class*="bg-[#3"],
+  [class*="bg-[#4"], [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
+  [class*="bg-[#8"], [class*="bg-[#9"],
+  [class*="bg-[var(--color-onyx)"], [class*="bg-[var(--color-black)"],
+  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"],
+  [class*="bg-[var(--color-lavender-800)"], [class*="bg-[var(--color-lavender-950)"],
+  [class*="dark:bg-"]
 ),
-html body :is(input, textarea, select)[style*="background-color: rgb(69, 69, 69)"],
-html body :is(input, textarea, select)[style*="background-color: rgb(103, 103, 103)"],
-html body :is(input, textarea, select)[style*="background: rgb(69, 69, 69)"],
-html body :is(input, textarea, select)[style*="background: rgb(103, 103, 103)"],
-html body :is(input, textarea, select)[style*="background-color: #454545"],
-html body :is(input, textarea, select)[style*="background-color:#454545"],
-html body :is(input, textarea, select)[style*="background-color: #676767"],
-html body :is(input, textarea, select)[style*="background-color:#676767"],
-html body :is(input, textarea, select)[style*="background: #454545"],
-html body :is(input, textarea, select)[style*="background:#454545"],
-html body :is(input, textarea, select)[style*="background: #676767"],
-html body :is(input, textarea, select)[style*="background:#676767"] {
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled)[style*="background-color: rgb(69, 69, 69)"],
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled)[style*="background-color: #454545"],
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled)[style*="background: #454545"] {
   color: #ffffff !important;
   caret-color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):is(
-  [class~="bg-gray-700"], [class~="bg-gray-800"], [class~="bg-gray-900"],
-  [class~="bg-slate-700"], [class~="bg-slate-800"], [class~="bg-slate-900"],
-  [class~="bg-zinc-700"], [class~="bg-zinc-800"], [class~="bg-zinc-900"],
-  [class~="bg-neutral-700"], [class~="bg-neutral-800"], [class~="bg-neutral-900"],
-  [class~="bg-stone-700"], [class~="bg-stone-800"], [class~="bg-stone-900"],
-  [class*="bg-[#45"], [class*="bg-[#46"], [class*="bg-[#47"],
-  [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
-  [class*="bg-[var(--color-onyx)"], [class*="bg-[var(--color-black)"],
-  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"],
-  [class*="bg-[var(--color-lavender-800)"], [class*="bg-[var(--color-lavender-950)"],
-  [class*="dark:bg-"]
+html body :is(input, textarea):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):is(
+  [class~="bg-black"], [class*="bg-gray-7"], [class*="bg-gray-8"], [class*="bg-gray-9"],
+  [class*="bg-slate-7"], [class*="bg-slate-8"], [class*="bg-slate-9"],
+  [class*="bg-zinc-7"], [class*="bg-zinc-8"], [class*="bg-zinc-9"],
+  [class*="bg-neutral-7"], [class*="bg-neutral-8"], [class*="bg-neutral-9"],
+  [class*="bg-stone-7"], [class*="bg-stone-8"], [class*="bg-stone-9"],
+  [class*="bg-[#0"], [class*="bg-[#1"], [class*="bg-[#2"], [class*="bg-[#3"],
+  [class*="bg-[#4"], [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
+  [class*="bg-[#8"], [class*="bg-[#9"], [class*="bg-[var(--color-onyx)"],
+  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"], [class*="dark:bg-"]
 )::placeholder {
   color: rgb(255 255 255 / 76%) !important;
-  opacity: 1 !important;
 }
 
-html body :is(input, textarea, select):is(
-  [class~="bg-gray-700"], [class~="bg-gray-800"], [class~="bg-gray-900"],
-  [class~="bg-slate-700"], [class~="bg-slate-800"], [class~="bg-slate-900"],
-  [class~="bg-zinc-700"], [class~="bg-zinc-800"], [class~="bg-zinc-900"],
-  [class~="bg-neutral-700"], [class~="bg-neutral-800"], [class~="bg-neutral-900"],
-  [class~="bg-stone-700"], [class~="bg-stone-800"], [class~="bg-stone-900"],
-  [class*="bg-[var(--color-onyx)"], [class*="bg-[var(--color-black)"],
-  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"],
-  [class*="dark:bg-"]
-):-webkit-autofill {
-  -webkit-text-fill-color: #ffffff !important;
-  caret-color: #ffffff !important;
-}
-
-
-/* Catch hexadecimal dark neutrals regardless of whether the value uses
-   numeric or alphabetic hex digits (for example #555, #5b6470, or #6a6a6a). */
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):is(
-  [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
-  [class*="bg-[#8"], [class*="bg-[#9"],
-  [class*="bg-[var(--color-onyx)"], [class*="bg-[var(--color-black)"],
-  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"],
-  [class*="bg-[var(--color-lavender-800)"], [class*="bg-[var(--color-lavender-950)"],
-  [class*="dark:bg-"]
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):is(
+  [class*="bg-white"], [class*="bg-[#fff"], [class*="bg-[#faf"], [class*="bg-[#fef"],
+  [class*="bg-[var(--surface)"], [class*="bg-[var(--background)"], [class*="bg-[var(--color-ivory-"],
+  [class*="bg-[var(--color-lavender-50)"], [class*="bg-[var(--color-lavender-100)"],
+  [class*="bg-[var(--color-mint-50)"], [class*="bg-[var(--color-mint-100)"],
+  [class*="bg-[var(--color-blush-50)"], [class*="bg-[var(--color-blush-100)"],
+  [class*="bg-[var(--color-butter-50)"], [class*="bg-[var(--color-butter-100)"]
 ) {
-  color: #ffffff !important;
-  caret-color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
+  -webkit-text-fill-color: var(--foreground) !important;
 }
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):is(
-  [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
-  [class*="bg-[#8"], [class*="bg-[#9"],
-  [class*="bg-[var(--color-onyx)"], [class*="bg-[var(--color-black)"],
-  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"],
-  [class*="bg-[var(--color-lavender-800)"], [class*="bg-[var(--color-lavender-950)"],
-  [class*="dark:bg-"]
+
+html body :is(input, textarea):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):is(
+  [class*="bg-white"], [class*="bg-[#fff"], [class*="bg-[#faf"], [class*="bg-[#fef"],
+  [class*="bg-[var(--surface)"], [class*="bg-[var(--background)"], [class*="bg-[var(--color-ivory-"]
 )::placeholder {
-  color: rgb(255 255 255 / 76%) !important;
-  opacity: 1 !important;
+  color: #777777 !important;
 }
+
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):-webkit-autofill {
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+}
+
+/* Native editable areas remain selectable. Custom controls can opt out of the
+   platform-wide selection rule separately when required. */
