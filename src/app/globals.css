@@ -94,7 +94,7 @@ aside [class~="text-[var(--color-copper-600)]"] {
 }
 /* The 404 panel uses the dark clay surface, so its eyebrow needs a light accent. */
 .clay-surface [class~="text-[var(--color-lavender-600)]"] {
-  color: #ff9a5a;
+  color: var(--orange);
 }
 /* The footer intentionally uses orange accents on a charcoal surface. */
 footer [class~="text-[var(--color-orange)]"] {
@@ -1179,8 +1179,8 @@ textarea {
 /* Matjar interaction system — semantic states are consistent across dashboards. */
 :root {
   --matjar-brand-orange: #FF8C1C;
-  --matjar-action: #b94708;
-  --matjar-action-hover: #923806;
+  --matjar-action: #FF8C1C;
+  --matjar-action-hover: #E8750B;
   --matjar-ink: #454545;
   --matjar-line: #eee9e4;
   --matjar-hover-line: #f3b58f;
