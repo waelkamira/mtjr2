@@ -950,8 +950,8 @@ export default function SellerProductsPage() {
                   <div className="flex flex-wrap items-center justify-between gap-1 p-2">
                     <span className="text-[10px] text-[var(--muted)]">{index + 1} / {editMedia.length}</span>
                     <div className="flex gap-1">
-                      <button type="button" disabled={index === 0 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, -1)} aria-label={translate(locale, "Move image earlier", "تحريك الصورة للأعلى")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40">↑</button>
-                      <button type="button" disabled={index === editMedia.length - 1 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, 1)} aria-label={translate(locale, "Move image later", "تحريك الصورة للأسفل")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40">↓</button>
+                      <button type="button" disabled={index === 0 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, -1)} aria-label={translate(locale, "Move image earlier", "تحريك الصورة للأعلى")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40"><SellerIcon name="arrow-up" /></button>
+                      <button type="button" disabled={index === editMedia.length - 1 || busy || editMediaUploading} onClick={() => moveEditProductImage(media.id, 1)} aria-label={translate(locale, "Move image later", "تحريك الصورة للأسفل")} className="rounded-md border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-40"><SellerIcon name="arrow-down" /></button>
                       <label className="cursor-pointer rounded-md border border-[var(--border)] px-2 py-1 text-xs font-semibold">
                         {translate(locale, "Replace", "استبدال")}
                         <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="sr-only" disabled={busy || editMediaUploading} onChange={(event) => void replaceEditProductImage(media.id, event)} />
@@ -972,7 +972,7 @@ export default function SellerProductsPage() {
       <section role="dialog" aria-modal="true" aria-label={translate(locale, "Image preview", "معاينة الصورة")} className="relative z-10 flex max-h-[94dvh] w-full max-w-5xl flex-col items-center gap-3 rounded-[2rem] border border-white/30 bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-3 shadow-[0_24px_70px_rgba(12,10,24,.42),inset_0_2px_0_rgba(255,255,255,.9)] sm:p-5">
         <div className="flex w-full items-center justify-between gap-3 px-1">
           <p className="min-w-0 truncate text-sm font-extrabold text-[#34445a]">{imagePreview.alt}</p>
-          <button type="button" autoFocus onClick={() => setImagePreview(null)} className="grid size-10 shrink-0 place-items-center rounded-full border border-white bg-white/80 text-xl font-bold text-[#8a583b] shadow-[0_4px_10px_rgba(65,59,86,.12)]" aria-label={translate(locale, "Close preview", "إغلاق المعاينة")}><SellerIcon name="trash" /></button>
+          <button type="button" autoFocus onClick={() => setImagePreview(null)} className="grid size-10 shrink-0 place-items-center rounded-full border border-white bg-white/80 text-xl font-bold text-[#8a583b] shadow-[0_4px_10px_rgba(65,59,86,.12)]" aria-label={translate(locale, "Close preview", "إغلاق المعاينة")}><SellerIcon name="close" /></button>
         </div>
         <img src={imagePreview.url} alt={imagePreview.alt} className="max-h-[calc(94dvh-90px)] max-w-full rounded-2xl object-contain shadow-[0_12px_30px_rgba(36,31,54,.18)]" />
         <p className="text-[11px] font-medium text-[#8790a5]">{translate(locale, "Click outside the image or press Escape to close.", "انقر خارج الصورة أو اضغط Escape للإغلاق.")}</p>
