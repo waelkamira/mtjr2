@@ -131,7 +131,7 @@ export default function SellerPayoutMethodsPage() {
             {t("Make this my default bank account", "اجعل هذا الحساب البنكي الافتراضي")}
           </label>
           <div className="md:col-span-2">
-            <button disabled={saving} type="submit" className="rounded-2xl bg-[linear-gradient(145deg,#f2eaf8,#e99a68)] px-6 py-3 text-sm font-black text-[#ffffff] shadow-[0_5px_12px_rgba(119,86,62,.09)] disabled:opacity-50">
+            <button disabled={saving} type="submit" className="rounded-2xl bg-[linear-gradient(145deg,#f2eaf8,#e99a68)] px-6 py-3 text-sm font-black text-[#17212b] shadow-[0_5px_12px_rgba(119,86,62,.09)] disabled:opacity-50">
               {saving ? t("Saving securely…", "جارٍ الحفظ الآمن…") : t("Save bank account", "حفظ الحساب البنكي")}
             </button>
           </div>
