@@ -162,6 +162,16 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
           intendedProducts: data.intendedProducts, description: data.description,
           facebookUrl: data.facebookUrl || null, youtubeUrl: data.youtubeUrl || null, twitterUrl: data.twitterUrl || null,
           identityDocumentFileId: data.identityDocumentFileId || null,
+          registrationCountryCode: data.registrationCountryCode || null,
+          registrationNumber: data.registrationNumber || null,
+          registrationAuthority: data.registrationAuthority || null,
+          registrationDate: data.registrationDate ? new Date(data.registrationDate + "T00:00:00.000Z") : null,
+          registeredAddress: data.registeredAddress || null,
+          taxIdentificationNumber: data.taxIdentificationNumber || null,
+          businessWebsite: data.businessWebsite || null,
+          businessRegistrationDocumentFileId: data.businessRegistrationDocumentFileId || null,
+          taxCertificateDocumentFileId: data.taxCertificateDocumentFileId || null,
+          proofOfAddressDocumentFileId: data.proofOfAddressDocumentFileId || null,
           latitude: data.latitude, longitude: data.longitude, status: SellerStatus.PENDING
         },
         select: { id: true, status: true }
