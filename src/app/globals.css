@@ -394,6 +394,20 @@ html body textarea:not([data-field-style="custom"]):not([data-field-style="none"
   resize: vertical;
 }
 
+/* Fields without an explicit background keep the platform's established
+   onyx surface. Add bg-white (or another bg-* utility) for a light field. */
+html body :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select
+):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-"]) {
+  background-color: #454545 !important;
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
 html body :is(
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]):not([type="range"]):not([type="color"]),
   textarea,
@@ -1649,10 +1663,23 @@ html body :is(input, textarea):not([data-field-style="custom"]):not([data-field-
   color: #777777 !important;
 }
 
-html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):-webkit-autofill {
+html body :is(input, textarea, select):not([data-field-style="custom"]):not([data-field-style="none"]):not(.input-unstyled):not([class*="bg-white"]):not([class*="bg-[#fff"]):not([class*="bg-[#faf"]):not([class*="bg-[#fef"]):not([class*="bg-[var(--surface)"]):not([class*="bg-[var(--background)"]):-webkit-autofill {
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff !important;
 }
 
 /* Native editable areas remain selectable. Custom controls can opt out of the
    platform-wide selection rule separately when required. */
+
+
+/* Global text-selection preference: keep form values editable/selectable. */
+html body,
+html body * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+html body :is(input, textarea, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]),
+html body :is(input, textarea, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]) * {
+  -webkit-user-select: text;
+  user-select: text;
+}
