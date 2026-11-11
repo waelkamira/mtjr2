@@ -45,7 +45,7 @@ export default function SiteFooter({ locale, contactEmail }: { locale: Locale; c
       <div className="relative mx-auto grid max-w-[1440px] gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-10">
         <section>
           <Link href="/" className="inline-flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange)]">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--color-orange)] to-amber-500 text-xl font-black text-white shadow-lg">m</span>
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--color-orange)] to-amber-500 text-xl font-black text-[#17212b] shadow-lg">m</span>
             <span className="text-2xl font-black tracking-tight text-white">mtjr<span className="text-[var(--color-orange)]">.</span></span>
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-7 text-white/60">
