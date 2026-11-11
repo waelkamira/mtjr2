@@ -1566,3 +1566,91 @@ button[data-button-style="link"]:hover:not(:disabled) {
   outline: none !important;
   box-shadow: none !important;
 }
+
+
+/* Input contrast contract: dark field surfaces always use white text.
+   Light surfaces keep their normal dark foreground. This is global so legacy,
+   account, checkout, admin and dashboard forms stay readable consistently. */
+html body :is(input, textarea, select):not(.seller-dashboard *) :is(*) {
+  /* Intentionally empty: the selectors below own field contrast. */
+}
+html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-"]),
+html body :is(input, textarea, select)[class~="bg-black"],
+html body :is(input, textarea, select)[class~="bg-gray-800"],
+html body :is(input, textarea, select)[class~="bg-gray-900"],
+html body :is(input, textarea, select)[class~="bg-slate-800"],
+html body :is(input, textarea, select)[class~="bg-slate-900"],
+html body :is(input, textarea, select)[class~="bg-zinc-800"],
+html body :is(input, textarea, select)[class~="bg-zinc-900"],
+html body :is(input, textarea, select)[class~="bg-neutral-800"],
+html body :is(input, textarea, select)[class~="bg-neutral-900"],
+html body :is(input, textarea, select)[class~="bg-stone-800"],
+html body :is(input, textarea, select)[class~="bg-stone-900"],
+html body :is(input, textarea, select)[class*="bg-[#0"],
+html body :is(input, textarea, select)[class*="bg-[#1"],
+html body :is(input, textarea, select)[class*="bg-[#2"],
+html body :is(input, textarea, select)[class*="bg-[#3"],
+html body :is(input, textarea, select)[class*="bg-[#4"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-ink-800)"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-ink-950)"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-forest-800)"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-forest-900)"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-forest-950)"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-lavender-800)"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-lavender-950)"],
+html body :is(input, textarea, select)[class*="dark:bg-gray-800"],
+html body :is(input, textarea, select)[class*="dark:bg-gray-900"],
+html body :is(input, textarea, select)[class*="dark:bg-slate-800"],
+html body :is(input, textarea, select)[class*="dark:bg-slate-900"],
+html body :is(input, textarea, select)[class*="dark:bg-zinc-800"],
+html body :is(input, textarea, select)[class*="dark:bg-zinc-900"] {
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-"])::placeholder,
+html body :is(input, textarea, select)[class~="bg-black"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-gray-800"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-gray-900"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-slate-800"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-slate-900"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-zinc-800"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-zinc-900"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-neutral-800"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-neutral-900"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-stone-800"]::placeholder,
+html body :is(input, textarea, select)[class~="bg-stone-900"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#0"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#1"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#2"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#3"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#4"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--color-ink-"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-forest-"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-lavender-"]::placeholder {
+  color: rgb(255 255 255 / 72%) !important;
+  opacity: 1 !important;
+}
+html body :is(input, textarea, select)[class*="bg-white"],
+html body :is(input, textarea, select)[class*="bg-[#fff"],
+html body :is(input, textarea, select)[class*="bg-[#faf"],
+html body :is(input, textarea, select)[class*="bg-[#fef"],
+html body :is(input, textarea, select)[class*="bg-[var(--surface)"],
+html body :is(input, textarea, select)[class*="bg-[var(--background)"] {
+  color: var(--foreground) !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
+}
+html body :is(input, textarea, select)[class*="bg-white"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#fff"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#faf"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[#fef"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--surface)"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--background)"]::placeholder {
+  color: #777777 !important;
+  opacity: 1 !important;
+}
+html body :is(input, textarea, select):-webkit-autofill {
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+}
