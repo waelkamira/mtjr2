@@ -794,7 +794,7 @@ export default function SellerWorkspacePage() {
                 </div>
               </dl>
             </section>
-            <section className="rounded-2xl border border-[#e1e8f0] bg-white p-5">
+            <section className="rounded-2xl border border-[#eee9e4] bg-white p-5">
               <h2 className="flex items-center gap-2 text-lg font-black"><SellerIcon name="catalog" />{translate(locale, "Products and selling plan", "المنتجات وخطة البيع")}</h2>
               <p className="mt-3 text-sm font-bold text-[#a94308]">{application.sellingCategories || "—"}</p>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#77716c]">{application.intendedProducts || "—"}</p>
@@ -850,8 +850,8 @@ export default function SellerWorkspacePage() {
               </div>
             </div>
             <div className="relative z-10 flex flex-wrap gap-3 lg:justify-end">
-              {selectedStore && <Link href="/seller/products#create-product" className="inline-flex items-center justify-center gap-2 rounded-full border border-[#FF8C1C] bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-[#17212b] shadow-[0_7px_16px_rgba(255,140,28,.18)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_22px_rgba(38,94,105,.2)]"><span aria-hidden="true" className="text-lg leading-none">＋</span>{translate(locale, "Create product", "إنشاء منتج")}</Link>}
-              <Link href="/seller/orders" className="seller-overview-secondary-action inline-flex items-center justify-center rounded-full border border-white/90 bg-[linear-gradient(145deg,#eaf3f5,#e1dfed)] px-5 py-3 text-sm font-bold text-[#454545] shadow-[0_6px_14px_rgba(35,62,81,.1),inset_0_2px_0_white] transition hover:-translate-y-0.5">{translate(locale, "View orders", "عرض الطلبات")}</Link>
+              {selectedStore && <Link href="/seller/products#create-product" className="inline-flex items-center justify-center gap-2 rounded-full border border-[#FF8C1C] bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-white shadow-[0_7px_16px_rgba(255,140,28,.18)] transition hover:-translate-y-0.5 hover:bg-[#E8750B]"><span aria-hidden="true" className="text-lg leading-none">＋</span>{translate(locale, "Create product", "إنشاء منتج")}</Link>}
+              <Link href="/seller/orders" className="seller-overview-secondary-action inline-flex items-center justify-center rounded-full border border-[#eee9e4] bg-white px-5 py-3 text-sm font-bold text-[#454545] shadow-[0_4px_12px_rgba(69,69,69,.06)] transition hover:-translate-y-0.5">{translate(locale, "View orders", "عرض الطلبات")}</Link>
               {selectedStore?.isOwner && <Link href="/seller#store-management" className="seller-overview-secondary-action inline-flex items-center justify-center rounded-full border border-[#eee9e4] bg-white px-5 py-3 text-sm font-bold text-[#454545] shadow-[0_4px_12px_rgba(69,69,69,.06)] transition hover:-translate-y-0.5">{translate(locale, "Edit store", "تعديل المتجر")}</Link>}
             </div>
           </div>
@@ -869,14 +869,14 @@ export default function SellerWorkspacePage() {
           </section>
         ) : (!workspace?.seller || workspace.seller.status === "REJECTED") ? (
           <section className="seller-application-form mt-8 max-w-6xl rounded-[1.75rem] p-4 sm:p-7">
-              <div className="mb-6 rounded-2xl border border-[#29435d] bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-5 text-white shadow-[0_12px_25px_rgba(20,43,69,.16)] sm:p-7">
-              <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale,"SELLER APPLICATION","طلب فتح متجر")}</p>
-                <h2 className="mt-2 flex items-center gap-3 text-2xl font-black tracking-tight"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-[#8ce8e1]"><SellerIcon name="store" /></span>{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d7e7ed]">{translate(locale,"A guided application for your business, products and store location. Complete each section so our marketplace team can review it.","طلب منظم للتعريف بنشاطك ومنتجاتك وموقع متجرك. أكمل الأقسام ليتمكن فريق السوق من مراجعة طلبك.")}</p>
+              <div className="mb-6 rounded-2xl border border-[#eee9e4] bg-[linear-gradient(110deg,#fff6ef_0%,#ffffff_58%,#fff1e8_100%)] p-5 text-[#454545] shadow-[0_12px_28px_rgba(69,69,69,.07)] sm:p-7">
+              <p className="text-[10px] font-extrabold tracking-[.2em] text-[#a94308]">{translate(locale,"SELLER APPLICATION","طلب فتح متجر")}</p>
+                <h2 className="mt-2 flex items-center gap-3 text-2xl font-black tracking-tight"><span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name="store" /></span>{translate(locale, "Apply to become a seller", "تقدّم لتصبح بائعًا")}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#77716c]">{translate(locale,"A guided application for your business, products and store location. Complete each section so our marketplace team can review it.","طلب منظم للتعريف بنشاطك ومنتجاتك وموقع متجرك. أكمل الأقسام ليتمكن فريق السوق من مراجعة طلبك.")}</p>
                 <nav aria-label={translate(locale, "Application sections", "أقسام الطلب")} className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                  {applicationSteps.map((step, index) => <a key={step.id} href={`#${step.id}`} className="flex min-w-0 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-white/90 transition hover:bg-white/[.16]">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-white/10 text-[#8ce8e1]"><SellerIcon name={step.icon} /></span>
-                    <span className="min-w-0"><span className="block text-[9px] font-bold text-white/55">0{index + 1}</span><span className="block truncate">{step.label}</span></span>
+                  {applicationSteps.map((step, index) => <a key={step.id} href={`#${step.id}`} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#eee9e4] bg-white px-3 py-2.5 text-xs font-bold text-[#454545] transition hover:border-[#f6d8c5] hover:bg-[#fffaf6]">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name={step.icon} /></span>
+                    <span className="min-w-0"><span className="block text-[9px] font-bold text-[#918a84]">0{index + 1}</span><span className="block truncate">{step.label}</span></span>
                   </a>)}
                 </nav>
               </div>
@@ -900,10 +900,10 @@ export default function SellerWorkspacePage() {
               }, "Your seller application has been submitted.");
             }} className="grid gap-5">
               <section id="seller-application-step-applicant" className="seller-application-section grid scroll-mt-24 gap-4 rounded-2xl border border-[#e1e8f0] bg-white p-5">
-                <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e8f5f4] text-[#168b89]"><SellerIcon name="user" /></span><div><h3 className="font-extrabold text-[#203850]">{translate(locale, "01 · Applicant and business", "01 · بيانات البائع والنشاط")}</h3><p className="mt-1 text-xs text-[#718096]">{translate(locale, "Your legal identity and public store details.", "بياناتك الشخصية واسم المتجر الذي سيظهر للعملاء.")}</p></div></div>
+                <div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name="user" /></span><div><h3 className="font-extrabold text-[#454545]">{translate(locale, "01 · Applicant and business", "01 · بيانات البائع والنشاط")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Your legal identity and public store details.", "بياناتك الشخصية واسم المتجر الذي سيظهر للعملاء.")}</p></div></div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="grid gap-1 text-sm">{translate(locale, "Full legal name", "الاسم الكامل كما في الهوية")}<input required minLength={2} maxLength={160} autoComplete="name" value={legalName} onChange={(e) => setLegalName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
-                  <label className="grid gap-1 text-sm">{translate(locale, "Store name", "اسم المتجر")}<input required minLength={2} maxLength={80} value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Full legal name", "الاسم الكامل كما في الهوية")}<input required minLength={2} maxLength={160} autoComplete="name" value={legalName} onChange={(e) => setLegalName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#fffaf6] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
+                  <label className="grid gap-1 text-sm">{translate(locale, "Store name", "اسم المتجر")}<input required minLength={2} maxLength={80} value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-2xl border border-[#eee9e4] bg-[#fffaf6] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                   <label className="grid gap-1 text-sm">{translate(locale, "Contact person", "الشخص المسؤول")}<input required minLength={2} maxLength={120} value={contactName} onChange={(e) => setContactName(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                   <label className="grid gap-1 text-sm">{translate(locale, "Contact email", "البريد الإلكتروني للتواصل")}<input required type="email" maxLength={254} autoComplete="email" dir="ltr" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
                   <label className="grid gap-1 text-sm">{translate(locale, "Phone number", "رقم الهاتف")}<input required type="tel" maxLength={25} autoComplete="tel" dir="ltr" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+963 9xx xxx xxx" className="rounded-2xl border border-white/90 bg-[#f5f2fb] px-4 py-3 text-left font-normal shadow-[inset_0_2px_5px_rgba(74,75,112,.08)]" /></label>
