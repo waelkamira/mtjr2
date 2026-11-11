@@ -185,7 +185,7 @@ export default function SellerOrdersPage() {
         <MetricBarChart title={t("Orders by store", "الطلبات حسب المتجر")} description={t("Counts from the currently loaded seller order list (up to 100 records).", "الأعداد من قائمة طلبات البائع المحمّلة حالياً (حتى 100 سجل).")} rows={Object.entries(storeCounts).slice(0, 8).map(([store, count], index) => ({
           label: store,
           value: count,
-          color: ["bg-indigo-500", "bg-fuchsia-500", "bg-teal-500", "bg-orange-500"][index % 4]
+          color: ["bg-indigo-500", "bg-fuchsia-500", "bg-teal-500", "bg-[var(--orange)]"][index % 4]
         }))} />
       </section>}
       <label className="mt-6 block max-w-xl text-xs font-medium">{t("Search orders", "ابحث عن الطلبات")}<input value={query} onChange={event=>setQuery(event.target.value)} maxLength={120} placeholder={t("Order number, product, SKU or store", "رقم الطلب أو المنتج أو SKU أو المتجر")} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised px-3 py-2.5 text-sm"/></label>
