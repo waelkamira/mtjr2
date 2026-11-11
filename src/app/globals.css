@@ -1038,3 +1038,46 @@ textarea {
   .seller-dashboard > div:first-child + div { background: #f7f6fa !important; }
   .seller-dashboard > div > header { border-radius: 0; }
 }
+
+
+/* Seller workspace: keep the commerce workspace on the documented light palette.
+   The legacy compatibility selector above darkens generic white utility surfaces;
+   scope this correction to seller routes without changing storefront/admin styling. */
+.seller-dashboard {
+  background: #fffaf6;
+  color: #454545;
+}
+.seller-dashboard > div {
+  background: transparent;
+}
+.seller-dashboard :is(
+  [class~="bg-white"],
+  [class~="bg-[var(--color-white)]"],
+  [class~="bg-[var(--color-snow)]"],
+  [class~="bg-[var(--color-ivory-50)]"],
+  [class~="bg-[var(--color-ivory-100)]"],
+  [class~="bg-[var(--color-ivory-200)]"],
+  [class~="bg-[var(--color-lavender-50)]"],
+  [class~="bg-[var(--color-lavender-100)]"],
+  [class~="bg-[var(--color-mint-50)]"],
+  [class~="bg-[var(--color-mint-100)]"],
+  [class~="bg-[var(--color-blush-50)]"],
+  [class~="bg-[var(--color-blush-100)]"],
+  [class~="bg-[var(--color-peach-50)]"],
+  [class~="bg-[var(--color-peach-100)]"],
+  [class~="bg-[var(--color-butter-50)]"],
+  [class~="bg-[var(--color-butter-100)]"],
+  [class~="bg-[var(--color-sky-100)]"],
+  [class~="bg-[var(--surface)]"]
+) {
+  background: #ffffff;
+  border-color: #eee9e4;
+  color: #454545;
+  box-shadow: 0 3px 12px rgb(69 69 69 / 5%);
+}
+.seller-dashboard :is(input, select, textarea) {
+  color: #454545;
+}
+.seller-dashboard :is(input, select, textarea)::placeholder {
+  color: #918a84;
+}
