@@ -987,6 +987,8 @@ textarea {
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
   [class~="bg-[var(--color-forest-900)]"],
   [class~="bg-[var(--color-forest-800)]"],
+  [class~="bg-[var(--color-ink-800)]"],
+  [class~="bg-[var(--color-ink-600)]"],
   [class~="bg-[var(--color-lavender-600)]"],
   [class~="bg-[var(--color-mint-600)]"],
   [class~="bg-[var(--color-blush-600)]"],
@@ -1011,6 +1013,8 @@ textarea {
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
   [class~="hover:bg-[var(--color-forest-900)]"],
   [class~="hover:bg-[var(--color-forest-800)]"],
+  [class~="hover:bg-[var(--color-ink-800)]"],
+  [class~="hover:bg-[var(--color-ink-600)]"],
   [class~="hover:bg-[var(--color-lavender-600)]"],
   [class~="hover:bg-[var(--color-mint-600)]"],
   [class~="hover:bg-[var(--color-blush-600)]"],
@@ -1034,6 +1038,8 @@ textarea {
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
   [class~="bg-[var(--color-forest-900)]"],
   [class~="bg-[var(--color-forest-800)]"],
+  [class~="bg-[var(--color-ink-800)]"],
+  [class~="bg-[var(--color-ink-600)]"],
   [class~="bg-[var(--color-lavender-600)]"],
   [class~="bg-[var(--color-mint-600)]"],
   [class~="bg-[var(--color-blush-600)]"],
@@ -1055,6 +1061,8 @@ textarea {
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
   [class~="hover:bg-[var(--color-forest-900)]"],
   [class~="hover:bg-[var(--color-forest-800)]"],
+  [class~="hover:bg-[var(--color-ink-800)]"],
+  [class~="hover:bg-[var(--color-ink-600)]"],
   [class~="hover:bg-[var(--color-lavender-600)]"],
   [class~="hover:bg-[var(--color-mint-600)]"],
   [class~="hover:bg-[var(--color-blush-600)]"],
@@ -1081,13 +1089,14 @@ textarea {
   [class~="hover:bg-black"], [class~="hover:bg-gray-800"], [class~="hover:bg-gray-900"],
   [class~="hover:bg-slate-800"], [class~="hover:bg-slate-900"], [class~="hover:bg-zinc-800"],
   [class~="hover:bg-neutral-900"], [class~="hover:bg-[var(--color-forest-950)]"],
-  [class~="hover:bg-[var(--color-ink-800)]"], [class~="hover:bg-[var(--color-lavender-800)]"]
+  [class~="hover:bg-[var(--color-lavender-800)]"]
 ):hover {
   color: #ffffff !important;
 }
 
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
   [class~="bg-[var(--color-forest-900)]"], [class~="bg-[var(--color-forest-800)]"],
+  [class~="bg-[var(--color-ink-800)]"], [class~="bg-[var(--color-ink-600)]"],
   [class~="bg-[var(--color-lavender-600)]"], [class~="bg-[var(--color-mint-600)]"],
   [class~="bg-[var(--color-blush-600)]"], [class~="bg-[var(--color-peach-600)]"],
   [class~="bg-[var(--color-butter-600)]"], [class~="bg-[var(--color-violet-700)]"],
@@ -1097,6 +1106,7 @@ textarea {
   [class~="bg-[var(--color-orange-600)]"], [class~="bg-[var(--action)]"],
   [class~="bg-[var(--accent)]"], [class~="bg-orange-500"], [class~="bg-orange-600"],
   [class~="hover:bg-[var(--color-forest-900)]"], [class~="hover:bg-[var(--color-forest-800)]"],
+  [class~="hover:bg-[var(--color-ink-800)]"], [class~="hover:bg-[var(--color-ink-600)]"],
   [class~="hover:bg-[var(--color-lavender-600)]"], [class~="hover:bg-[var(--color-mint-600)]"],
   [class~="hover:bg-[var(--color-blush-600)]"], [class~="hover:bg-[var(--color-peach-600)]"],
   [class~="hover:bg-[var(--color-butter-600)]"], [class~="hover:bg-[var(--color-violet-700)]"],
