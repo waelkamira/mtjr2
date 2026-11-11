@@ -1522,3 +1522,47 @@ button[data-button-style="link"]:hover:not(:disabled) {
 ):hover {
   color: #ffffff !important;
 }
+
+
+/* Selected brand-orange controls stay orange: no lime override, border, or selection ring. */
+:is(button, a, [role="button"], [role="tab"]):is(
+  [data-variant="primary"],
+  [class*="bg-[#FF8C1C]"],
+  [class*="bg-[var(--color-orange)]"],
+  [class*="bg-[var(--color-orange-500)]"],
+  [class*="bg-[var(--color-orange-600)]"],
+  [class*="bg-[var(--action)]"],
+  [class*="bg-orange-500"],
+  [class*="bg-orange-600"]
+):is(:active, [aria-pressed="true"], [aria-selected="true"], [aria-current="page"], [data-state="active"]),
+:is(button, a, [role="button"], [role="tab"]):is(
+  [data-variant="primary"],
+  [class*="bg-[#FF8C1C]"],
+  [class*="bg-[var(--color-orange)]"],
+  [class*="bg-[var(--color-orange-500)]"],
+  [class*="bg-[var(--color-orange-600)]"],
+  [class*="bg-[var(--action)]"],
+  [class*="bg-orange-500"],
+  [class*="bg-orange-600"]
+):is(:active, [aria-pressed="true"], [aria-selected="true"], [aria-current="page"], [data-state="active"]):hover {
+  background: #FF8C1C !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+:is(button, a, [role="button"], [role="tab"]):is(
+  [data-variant="primary"],
+  [class*="bg-[#FF8C1C]"],
+  [class*="bg-[var(--color-orange)]"],
+  [class*="bg-[var(--color-orange-500)]"],
+  [class*="bg-[var(--color-orange-600)]"],
+  [class*="bg-[var(--action)]"],
+  [class*="bg-orange-500"],
+  [class*="bg-orange-600"]
+):focus-visible {
+  color: #ffffff !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
