@@ -181,11 +181,11 @@ export default function SellerNavigation() {
           <span className="grid size-10 place-items-center rounded-xl border border-[#e8e2f1] bg-[#f2eff8] text-lg text-[#806bb0] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
           <p className="mt-3 text-sm font-extrabold text-[#454545]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
           <p className="mt-1 text-[10px] leading-4 text-[#77716c]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
-          <Link href="/seller/advertising" className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[#f0660d] bg-[#f0660d] px-3 py-2 text-[11px] font-extrabold text-white shadow-[0_4px_12px_rgba(240,102,13,.16)]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
+          <Link href="/seller/advertising" className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[#f0660d] bg-[#f0660d] px-3 py-2 text-[11px] font-extrabold text-white shadow-[0_4px_12px_rgba(240,102,13,.16)]"><SellerIcon name="ads" />{translate(locale, "Explore campaigns", "استكشف الحملات")}</Link>
         </div>
         <div className="shrink-0 border-t border-[#eee9e4] p-4">
           <Link href="/" className="flex items-center justify-between rounded-2xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-semibold text-[#5f5a55] shadow-[0_3px_10px_rgba(48,38,78,.05)] transition hover:shadow-[var(--shadow-clay)]">
-            <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
+            <span className="flex items-center gap-2"><SellerIcon name="store" />{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6H5V6h6"/></svg>
           </Link>
           <p className="mt-3 px-2 text-[10px] leading-5 text-[#77716c]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
         </div>
@@ -197,7 +197,7 @@ export default function SellerNavigation() {
             <span className="grid size-8 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-sm text-[#a94308] shadow-[0_4px_10px_rgba(240,102,13,.10),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
-          <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
+          <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]"><span className="inline-flex items-center gap-1"><SellerIcon name="store" />{translate(locale, "Marketplace", "المتجر")}</span></Link>
         </div>
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-mobile-navigation__links flex gap-2 overflow-x-auto overscroll-x-contain pb-1">
           {groups.flatMap((group) => group.links).map((link) => {
