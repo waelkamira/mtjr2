@@ -159,7 +159,7 @@ export default function MatjarAIAssistant() {
             {error && <p role="alert" className="rounded-xl bg-[var(--color-blush-50)] p-3 text-xs text-[var(--color-danger)]">{error}</p>}
           </div>
           <form onSubmit={(event) => { event.preventDefault(); void send(); }} className="flex gap-2 border-t border-[var(--border)] bg-white/70 p-3">
-            <input value={message} onChange={(event) => setMessage(event.target.value)} maxLength={1200} placeholder={t("Ask your question...", "اكتب سؤالك...")} aria-label={t("Your message", "رسالتك")} className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-lavender-600)]" />
+            <input value={message} onChange={(event) => setMessage(event.target.value)} maxLength={1200} placeholder={t("Ask your question...", "اكتب سؤالك...")} aria-label={t("Your message", "رسالتك")} className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[var(--color-lavender-600)]" />
             <button type="submit" disabled={busy || !message.trim()} className="rounded-xl bg-[var(--color-lavender-800)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{t("Send", t("Send", "إرسال"))}</button>
           </form>
         </section>
