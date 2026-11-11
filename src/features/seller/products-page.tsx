@@ -725,8 +725,8 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
               </div>
             </section>
-            <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name="tag" /></span><div><h3 className="text-sm font-extrabold text-[#203850]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs leading-5 text-[#718096]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-xl border border-[#eee9e4] bg-white px-3 py-2 text-xs font-bold text-[#5f5a55] shadow-sm disabled:opacity-40"><SellerIcon name="plus" />{translate(locale, "Add variant", "إضافة متغير")}</button></div>
+            <section className="grid gap-3 rounded-xl border border-[#eee9e4] bg-white p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name="tag" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs leading-5 text-[#718096]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-xl border border-[#eee9e4] bg-white px-3 py-2 text-xs font-bold text-[#5f5a55] shadow-sm disabled:opacity-40"><SellerIcon name="plus" />{translate(locale, "Add variant", "إضافة متغير")}</button></div>
               {variantRows.map((variant, index) => <article key={variant.id} className="grid gap-3 rounded-2xl border border-white/90 bg-white/65 p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(43,69,88,.05)]">
                 <div className="flex items-center justify-between"><p className="text-xs font-extrabold text-[#8a583b]">{translate(locale, "Variant", "المتغير")} {index + 1}</p>{variantRows.length > 1 && <button type="button" onClick={() => setVariantRows((rows) => rows.filter((row) => row.id !== variant.id))} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-700"><SellerIcon name="trash" />{translate(locale, "Remove", "حذف")}</button>}</div>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -735,7 +735,7 @@ export default function SellerProductsPage() {
                   <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Variant name (optional)", "اسم المتغير (اختياري)")}<input maxLength={180} className={inputClass} value={variant.name} onChange={(event) => updateVariant(variant.id, { name: event.target.value })} placeholder={translate(locale, "e.g. Blue / Large", "مثال: أزرق / كبير")} /></label>
                 </div>
                 <div className="grid gap-3 border-t border-[#eadfd5] pt-3">
-                  <p className="text-xs font-extrabold text-[#40556d]">{translate(locale, "Market prices for this SKU", "أسعار الأسواق لهذا المتغير")}</p>
+                  <p className="text-xs font-extrabold text-[#5f5a55]">{translate(locale, "Market prices for this SKU", "أسعار الأسواق لهذا المتغير")}</p>
                   {!availableMarkets.length && <p className="text-xs text-amber-800">{translate(locale, "No active markets are enabled for this store.", "لا توجد أسواق مفعّلة لهذا المتجر.")}</p>}
                   {availableMarkets.map((market) => {
                     const price = variant.prices[market.id] ?? marketPrices[market.id] ?? { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" };
@@ -755,7 +755,7 @@ export default function SellerProductsPage() {
                     const label = <span>{attribute.label}{attribute.required && <span className="ms-1 text-red-600">*</span>}</span>;
                     if (attribute.valueType === "BOOLEAN") return <label key={attribute.id} className="flex items-center gap-2 rounded-xl bg-[#fffaf6] p-3 text-sm">{label}<input type="checkbox" checked={current === true} onChange={(event) => updateVariantOption(variant.id, attribute.key, event.target.checked)} /></label>;
                     if (attribute.valueType === "SELECT") return <label key={attribute.id} className="grid gap-1 text-sm">{label}<select required={attribute.required} className={inputClass} value={typeof current === "string" ? current : ""} onChange={(event) => updateVariantOption(variant.id, attribute.key, event.target.value)}><option value="">{translate(locale, "Choose…", "اختر…")}</option>{attribute.options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
-                    if (attribute.valueType === "MULTI_SELECT") return <fieldset key={attribute.id} className="grid gap-2 rounded-xl bg-[#f0f6f7] p-3"><legend className="px-1 text-sm font-medium">{label}</legend>{attribute.options.map((option) => { const selected = Array.isArray(current) ? current : []; return <label key={option} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selected.includes(option)} onChange={(event) => updateVariantOption(variant.id, attribute.key, event.target.checked ? [...selected, option] : selected.filter((item) => item !== option))} />{option}</label>; })}</fieldset>;
+                    if (attribute.valueType === "MULTI_SELECT") return <fieldset key={attribute.id} className="grid gap-2 rounded-xl bg-[#fffaf6] p-3"><legend className="px-1 text-sm font-medium">{label}</legend>{attribute.options.map((option) => { const selected = Array.isArray(current) ? current : []; return <label key={option} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selected.includes(option)} onChange={(event) => updateVariantOption(variant.id, attribute.key, event.target.checked ? [...selected, option] : selected.filter((item) => item !== option))} />{option}</label>; })}</fieldset>;
                     return <label key={attribute.id} className="grid gap-1 text-sm">{label}<input required={attribute.required} type={attribute.valueType === "NUMBER" ? "number" : "text"} step={attribute.valueType === "NUMBER" ? "any" : undefined} className={inputClass} value={current === undefined ? "" : String(current)} onChange={(event) => updateVariantOption(variant.id, attribute.key, attribute.valueType === "NUMBER" ? (event.target.value === "" ? "" : Number(event.target.value)) : event.target.value)} placeholder={attribute.description ?? ""} /></label>;
                   })}
                 </div>}
@@ -782,7 +782,7 @@ export default function SellerProductsPage() {
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
               </label>
               {uploadedImages.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-white/80 bg-[#e6eff2] shadow-[0_5px_14px_rgba(43,69,88,.1),inset_0_1px_0_white]">
+                {uploadedImages.map((image, index) => <article key={image.id} className="overflow-hidden rounded-2xl border border-white/80 bg-[#fffaf6] shadow-[0_5px_14px_rgba(43,69,88,.1),inset_0_1px_0_white]">
                   <div className="relative aspect-square bg-[var(--surface-soft)]">
                     <button type="button" onClick={() => setImagePreview({ url: image.previewUrl, alt: `${translate(locale, "Product image", "صورة المنتج")} ${index + 1}` })} aria-label={translate(locale, "Preview image", "معاينة الصورة")} className="absolute inset-0 h-full w-full cursor-zoom-in"><img src={image.previewUrl} alt="" className={`h-full w-full object-cover ${image.status === "uploading" ? "opacity-60" : ""}`} /></button>
                     {index === 0 && <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2.5 py-1 text-[10px] font-bold text-white">{translate(locale, "Primary image", "الصورة الرئيسية")}</span>}
@@ -826,7 +826,7 @@ export default function SellerProductsPage() {
                 </div>}
             </section>}
             {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
-              <div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Variant options", "خيارات المتغير")}</h3><p className="mt-1 text-xs text-[#8790a5]">{translate(locale, "These values are saved on the SKU variant, such as size or color.", "تُحفظ هذه القيم على متغير رمز SKU، مثل المقاس أو اللون.")}</p></div>
+              <div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Variant options", "خيارات المتغير")}</h3><p className="mt-1 text-xs text-[#918a84]">{translate(locale, "These values are saved on the SKU variant, such as size or color.", "تُحفظ هذه القيم على متغير رمز SKU، مثل المقاس أو اللون.")}</p></div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
                   const current = attributeValues[attribute.id];
@@ -922,7 +922,7 @@ export default function SellerProductsPage() {
                 {availableMarkets.map((market) => {
                   const price = variant.prices[market.id];
                   const currency = market.currencies.find((entry) => entry.currency.code === price.currencyCode)?.currency ?? market.defaultCurrency;
-                  return <div key={market.id} className="grid gap-2 rounded-lg bg-[#f5fafb] p-3 sm:grid-cols-3">
+                  return <div key={market.id} className="grid gap-2 rounded-lg bg-[#fffaf6] p-3 sm:grid-cols-3">
                     <p className="self-center text-xs font-bold">{market.name}</p>
                     <label className="grid gap-1 text-xs">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={price.currencyCode} onChange={(event) => updateEditVariantPrice(variant.id, market.id, { currencyCode: event.target.value, amount: "", compareAt: "" })}>{market.currencies.map(({ currency: item }) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
                     <label className="grid gap-1 text-xs">{translate(locale, "Selling price", "سعر البيع")} ({currency.code})<input required type="text" inputMode="decimal" className={inputClass} value={price.amount} onChange={(event) => updateEditVariantPrice(variant.id, market.id, { amount: event.target.value })} placeholder={currency.minorUnit === 0 ? "1299" : "1299.00"} /></label>
@@ -933,7 +933,7 @@ export default function SellerProductsPage() {
               {!editVariantPricesValid && <p className="text-xs text-amber-800">{translate(locale, "Enter a valid price for every SKU and enabled market. Compare-at prices cannot be lower than selling prices.", "أدخل سعراً صالحاً لكل متغير وسوق مفعّل. لا يجوز أن يكون السعر قبل الخصم أقل من سعر البيع.")}</p>}
             </fieldset>}
             <SyriaLocationPicker locale={locale} value={editProductLocation} onChange={setEditProductLocation} />
-            <section className="grid gap-3 rounded-2xl border border-white/80 bg-[linear-gradient(145deg,#f4effa,#e1f1e9)] p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(119,86,62,.04)]" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
+            <section className="grid gap-3 rounded-2xl border border-white/80 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(119,86,62,.04)]" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div><h4 className="text-sm font-semibold">{translate(locale, "Product image gallery", "معرض صور المنتج")}</h4><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Preview, remove, replace and reorder up to 10 images. The first image is the cover.", "عاين الصور واحذفها واستبدلها ورتبها. الصورة الأولى هي الغلاف، بحد أقصى ١٠ صور.")}</p></div>
                 <label className="cursor-pointer rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">
@@ -967,11 +967,11 @@ export default function SellerProductsPage() {
         </section>
       </div>}
     </div>
-    {imagePreview && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#172b3c]/85 p-4 backdrop-blur-md">
+    {imagePreview && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#454545]/85 p-4 backdrop-blur-md">
       <button type="button" aria-label={translate(locale, "Close image preview", "إغلاق معاينة الصورة")} onClick={() => setImagePreview(null)} className="absolute inset-0 cursor-zoom-out bg-transparent" />
       <section role="dialog" aria-modal="true" aria-label={translate(locale, "Image preview", "معاينة الصورة")} className="relative z-10 flex max-h-[94dvh] w-full max-w-5xl flex-col items-center gap-3 rounded-[2rem] border border-white/30 bg-[linear-gradient(145deg,#f1eff8,#e1dfed)] p-3 shadow-[0_24px_70px_rgba(12,10,24,.42),inset_0_2px_0_rgba(255,255,255,.9)] sm:p-5">
         <div className="flex w-full items-center justify-between gap-3 px-1">
-          <p className="min-w-0 truncate text-sm font-extrabold text-[#34445a]">{imagePreview.alt}</p>
+          <p className="min-w-0 truncate text-sm font-extrabold text-[#454545]">{imagePreview.alt}</p>
           <button type="button" autoFocus onClick={() => setImagePreview(null)} className="grid size-10 shrink-0 place-items-center rounded-full border border-white bg-white/80 text-xl font-bold text-[#8a583b] shadow-[0_4px_10px_rgba(65,59,86,.12)]" aria-label={translate(locale, "Close preview", "إغلاق المعاينة")}><SellerIcon name="close" /></button>
         </div>
         <img src={imagePreview.url} alt={imagePreview.alt} className="max-h-[calc(94dvh-90px)] max-w-full rounded-2xl object-contain shadow-[0_12px_30px_rgba(36,31,54,.18)]" />
