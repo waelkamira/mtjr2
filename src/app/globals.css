@@ -1405,6 +1405,16 @@ button[data-variant="danger"] svg { color: #ffffff; }
 .seller-dashboard textarea {
   color: var(--matjar-ink);
   background-color: #ffffff;
+  background-image: none !important;
+  border-color: var(--matjar-line);
+}
+.seller-dashboard input::file-selector-button {
+  border: 1px solid var(--matjar-action);
+  border-radius: .75rem;
+  background: var(--matjar-action);
+  color: #ffffff;
+  padding: .5rem .8rem;
+  font-weight: 700;
 }
 .seller-dashboard input::placeholder,
 .seller-dashboard textarea::placeholder {
