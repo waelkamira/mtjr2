@@ -4828,3 +4828,12 @@ The platform account policy is now explicit: email verification is not required 
 - Mobile navigation remains horizontally scrollable and preserves all seller destinations.
 
 **Verification boundary:** Source-level change only. No local build, typecheck, or browser visual validation was run in this turn.
+
+
+## 2026-11-11 — Locale-aware search control order
+
+- Updated the marketplace search and seller dashboard search forms to use an explicit left-to-right control layout so physical placement is predictable in both locales.
+- Arabic places the Search button to the right of the input; English places it to the left. Input text direction follows the selected locale.
+- Search submission, autocomplete suggestions, labels, and existing destinations are unchanged.
+
+**Verification boundary:** Source-level changes only; no local build or browser visual check was run.
