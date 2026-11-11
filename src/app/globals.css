@@ -1755,3 +1755,30 @@ html body :is(input, textarea, select):is(
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff !important;
 }
+
+
+/* Catch hexadecimal dark neutrals regardless of whether the value uses
+   numeric or alphabetic hex digits (for example #555, #5b6470, or #6a6a6a). */
+html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):is(
+  [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
+  [class*="bg-[#8"], [class*="bg-[#9"],
+  [class*="bg-[var(--color-onyx)"], [class*="bg-[var(--color-black)"],
+  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"],
+  [class*="bg-[var(--color-lavender-800)"], [class*="bg-[var(--color-lavender-950)"],
+  [class*="dark:bg-"]
+) {
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):is(
+  [class*="bg-[#5"], [class*="bg-[#6"], [class*="bg-[#7"],
+  [class*="bg-[#8"], [class*="bg-[#9"],
+  [class*="bg-[var(--color-onyx)"], [class*="bg-[var(--color-black)"],
+  [class*="bg-[var(--color-ink-"], [class*="bg-[var(--color-forest-"],
+  [class*="bg-[var(--color-lavender-800)"], [class*="bg-[var(--color-lavender-950)"],
+  [class*="dark:bg-"]
+)::placeholder {
+  color: rgb(255 255 255 / 76%) !important;
+  opacity: 1 !important;
+}
