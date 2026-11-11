@@ -96,7 +96,7 @@
   color-scheme: light;
 
   --snow: #ffffff;
-  --orange: #f0660d;
+  --orange: #FF8C1C;
   --onyx: #454545;
   --color-lavender-950: var(--onyx);
   --color-lavender-800: var(--onyx);
@@ -187,7 +187,7 @@
   --border: var(--color-line);
   --brand: var(--onyx);
   --action: var(--orange);
-  --action-hover: #d95708;
+  --action-hover: #E8750B;
   --accent: var(--orange);
   --surface: var(--snow);
   --surface-soft: var(--snow);
@@ -246,7 +246,7 @@
     inset 0 -1px 0 rgb(255 245 245 / 90%);
   --shadow-card: var(--shadow-clay);
   --shadow-floating: 0 18px 44px rgb(69 69 69 / 16%), 0 3px 8px rgb(69 69 69 / 5%);
-  --shadow-glow: 0 8px 22px rgb(240 102 13 / 16%);
+  --shadow-glow: 0 8px 22px rgb(255 140 28 / 16%);
 
   /* Standard icon tile shape and sizes; icon glyphs remain supplied by components */
   --icon-tile-radius: 0.875rem;
