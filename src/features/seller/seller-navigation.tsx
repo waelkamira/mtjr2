@@ -120,8 +120,8 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="seller-sidebar relative z-30 hidden h-screen w-[272px] shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[#454545] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
-        <div className="border-b border-[#eee9e4] px-6 py-6">
+      <aside className="seller-sidebar relative z-30 hidden h-screen w-[288px] shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[#454545] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
+        <div className="border-b border-[#eee9e4] px-6 py-7">
           <Link href="/seller" className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#c6530b] shadow-[0_5px_12px_rgba(91,72,137,.10)]">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" /><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" /></svg>
