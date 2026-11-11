@@ -130,6 +130,10 @@ export default function SellerNavigation() {
   return (
     <>
       <aside className="seller-sidebar relative z-30 hidden h-screen w-72 shrink-0 flex-col overflow-hidden border-e border-white/5 bg-[#0B0B10] text-[#E8E6E1] shadow-[20px_0_60px_-20px_rgba(0,0,0,.6)] lg:sticky lg:top-0 lg:flex">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -right-20 -top-32 size-80 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -left-20 top-1/3 size-72 rounded-full bg-violet-500/10 blur-3xl" />
+        </div>
         <div className="relative border-b border-white/5 px-6 py-6 backdrop-blur-sm">
           <Link href="/seller" className="group flex items-center gap-3">
             <span className="relative grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-white shadow-[0_8px_24px_rgba(251,146,60,.35),inset_0_1px_0_rgba(255,255,255,.3)] transition-transform duration-300 group-hover:scale-105">
@@ -157,9 +161,11 @@ export default function SellerNavigation() {
   {groups.map((group) => (
     <div key={group.title}>
       <div className="mb-2 flex items-center gap-2 px-2">
+        <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
         <span className="text-[9px] font-bold uppercase tracking-[.25em] text-white/30">
           {translate(locale, group.title, group.ar)}
         </span>
+        <span className="h-px flex-1 bg-gradient-to-l from-white/10 to-transparent" />
       </div>
 
       <div className="space-y-0.5">
@@ -209,7 +215,7 @@ export default function SellerNavigation() {
           <Link href="/" className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/70 transition-all hover:border-amber-400/30 hover:bg-amber-500/5 hover:text-white">
             <span className="flex items-center gap-2"><SellerIcon name="store" />{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6H5V6h6"/></svg>
           </Link>
-          <p className="mt-3 px-2 text-[10px] leading-5 text-[#77716c]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
+          <p className="mt-3 px-2 text-[10px] leading-5 text-white/40">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
         </div>
       </aside>
 
