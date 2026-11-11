@@ -315,7 +315,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(255,140,28,.08),transparent_36%),radial-gradient(ellipse_at_top_right,rgba(139,92,246,.07),transparent_32%),#f8fafc] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(255,140,28,.08),transparent_36%),radial-gradient(ellipse_at_top_right,rgba(255,140,28,.035),transparent_32%),#fafafa] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
