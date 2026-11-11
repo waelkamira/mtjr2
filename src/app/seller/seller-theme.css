@@ -180,10 +180,15 @@
 
 /* Keep the seller shell below the global marketplace header in the root layout stacking order. */
 .seller-dashboard {
+  position: relative;
+  z-index: 0;
   isolation: isolate;
 }
 .seller-dashboard .seller-topbar {
   position: static !important;
+  display: flex;
+  inset-block-start: auto !important;
+  margin-block-start: 0 !important;
   inset: auto !important;
   z-index: auto !important;
   transform: none !important;
