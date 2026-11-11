@@ -52,12 +52,12 @@ const groups: Array<{
 ];
 
 const toneClasses: Record<Tone, string> = {
-  lavender: "bg-[#f1edfa] text-[#67538f]",
-  mint: "bg-[#e8f4ef] text-[#356b58]",
-  peach: "bg-[#fff1e8] text-[#a94308]",
-  butter: "bg-[#fbf4df] text-[#80621b]",
-  blush: "bg-[#faeaf0] text-[#98516b]",
-  sky: "bg-[#eaf2f8] text-[#45677f]"
+  lavender: "bg-[#f5f5f5] text-[#626262]",
+  mint: "bg-[#f5f5f5] text-[#626262]",
+  peach: "bg-[#f5f5f5] text-[#626262]",
+  butter: "bg-[#f5f5f5] text-[#626262]",
+  blush: "bg-[#f5f5f5] text-[#626262]",
+  sky: "bg-[#f5f5f5] text-[#626262]"
 };
 
 export function SellerIcon({ name }: { name: SellerIconName }) {
@@ -133,7 +133,7 @@ export default function SellerNavigation() {
       <aside className="seller-sidebar relative z-30 hidden h-screen w-[288px] shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[#454545] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
         <div className="border-b border-[#eee9e4] px-6 py-7">
           <Link href="/seller" className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#c6530b] shadow-[0_5px_12px_rgba(91,72,137,.10)]">
+            <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#f0660d] shadow-[0_5px_12px_rgba(240,102,13,.12)]">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" /><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" /></svg>
             </span>
             <span>
@@ -181,29 +181,29 @@ export default function SellerNavigation() {
           <span className="grid size-10 place-items-center rounded-xl border border-[#e8e2f1] bg-[#f2eff8] text-lg text-[#806bb0] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
           <p className="mt-3 text-sm font-extrabold text-[#454545]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
           <p className="mt-1 text-[10px] leading-4 text-[#77716c]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
-          <Link href="/seller/advertising" className="mt-3 inline-flex rounded-full border border-[#f6d8c5] bg-[#fff1e8] px-3 py-2 text-[11px] font-extrabold text-[#a94308] shadow-[0_3px_8px_rgba(91,72,137,.08)]">{translate(locale, "Explore campaigns", "استكشف الحملات")} ↗</Link>
+          <Link href="/seller/advertising" className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[#f0660d] bg-[#f0660d] px-3 py-2 text-[11px] font-extrabold text-white shadow-[0_4px_12px_rgba(240,102,13,.16)]"><SellerIcon name="ads" />{translate(locale, "Explore campaigns", "استكشف الحملات")}</Link>
         </div>
         <div className="shrink-0 border-t border-[#eee9e4] p-4">
           <Link href="/" className="flex items-center justify-between rounded-2xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-semibold text-[#5f5a55] shadow-[0_3px_10px_rgba(48,38,78,.05)] transition hover:shadow-[var(--shadow-clay)]">
-            <span>{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><span aria-hidden="true">↗</span>
+            <span className="flex items-center gap-2"><SellerIcon name="store" />{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6H5V6h6"/></svg>
           </Link>
           <p className="mt-3 px-2 text-[10px] leading-5 text-[#77716c]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
         </div>
       </aside>
 
-      <div className="seller-mobile-navigation border-b border-[#29435d] bg-[#142b45] px-4 py-3 text-[#f5f8fc] shadow-[0_4px_14px_rgba(20,43,69,.15)] lg:hidden">
+      <div className="seller-mobile-navigation border-b border-[#eee9e4] bg-white px-4 py-3 text-[#454545] shadow-[0_4px_14px_rgba(69,69,69,.05)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
           <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
-            <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
+            <span className="grid size-8 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-sm text-[#a94308] shadow-[0_4px_10px_rgba(240,102,13,.10),inset_0_2px_0_white]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
-          <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]">{translate(locale, "Marketplace", "المتجر")} ↗</Link>
+          <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]"><span className="inline-flex items-center gap-1"><SellerIcon name="store" />{translate(locale, "Marketplace", "المتجر")}</span></Link>
         </div>
         <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-mobile-navigation__links flex gap-2 overflow-x-auto overscroll-x-contain pb-1">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[#57cfc8]/40 bg-[#39c5bd]/20 text-white" : "border-white/10 bg-white/[.06] text-[#d7e2ed] hover:bg-white/[.12]"}`}>
+              className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[#a3e635] bg-[#d9f99d] text-[#365314]" : "border-[#eee9e4] bg-white text-[#454545] hover:border-[#f3b58f] hover:shadow-[0_4px_12px_rgba(240,102,13,.10)]"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}

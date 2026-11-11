@@ -169,7 +169,7 @@ export default function CartPage() {
                               {Array.from({ length: Math.min(99, Math.max(item.availableQuantity, item.quantity, 1)) }, (_, index) => index + 1).map((quantity) => <option key={quantity} value={quantity}>{quantity}</option>)}
                             </select>
                           </label>
-                          <button type="button" disabled={busyItem === item.id} onClick={() => void removeItem(item.id)} className="text-xs font-medium text-[var(--color-danger)] underline disabled:opacity-50">{t("Remove", "إزالة")}</button>
+                          <button type="button" disabled={busyItem === item.id} onClick={() => void removeItem(item.id)} data-button-style="link" className="cart-remove-action text-xs font-medium text-[var(--color-danger)] underline disabled:opacity-50">{t("Remove", "إزالة")}</button>
                         </div>
                       </article>;
                     })}
