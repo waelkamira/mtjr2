@@ -868,7 +868,7 @@ export default function SellerProductsPage() {
             <MetricBarChart title={translate(locale, "Product publication status", "حالة نشر المنتجات")} description={translate(locale, "Counts reflect the currently loaded product list and active search.", "الأعداد للمنتجات المحمّلة حالياً ونتائج البحث النشط.")} rows={Object.entries(publicationCounts).map(([status, count], index) => ({
               label: status.replaceAll("_", " ").toLowerCase(),
               value: count,
-              color: ["bg-indigo-500", "bg-teal-500", "bg-slate-500", "bg-orange-500"][index % 4]
+              color: ["bg-indigo-500", "bg-teal-500", "bg-slate-500", "bg-[var(--orange)]"][index % 4]
             }))} />
           </section>}<label className="mt-4 block text-xs font-medium">{translate(locale, "Search this store catalog", "البحث في كتالوج المتجر")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product name, slug, SKU or barcode", "اسم المنتج أو المعرّف أو SKU أو الباركود")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>
           {!products.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-5 text-sm text-[var(--muted)]">{search ? translate(locale, "No products match this search.", "لا توجد منتجات تطابق هذا البحث.") : translate(locale, "No products in this store yet.", "لا توجد منتجات في هذا المتجر بعد.")}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
