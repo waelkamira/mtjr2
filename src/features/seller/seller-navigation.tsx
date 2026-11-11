@@ -250,7 +250,11 @@ export default function SellerNavigation() {
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex min-h-10 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[#a3e635] bg-[#d9f99d] text-[#365314]" : "border-[#eee9e4] bg-white text-[#454545] hover:border-[#f3b58f] hover:shadow-[0_4px_12px_rgba(255,140,28,.10)]}`}>
+              className={`flex min-h-10 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+                active
+                  ? "border-[#a3e635] bg-[#d9f99d] text-[#365314]"
+                  : "border-[#eee9e4] bg-white text-[#454545] hover:border-[#f3b58f] hover:shadow-[0_4px_12px_rgba(255,140,28,.10)]"
+              }`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
