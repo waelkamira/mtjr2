@@ -1587,3 +1587,212 @@ button[data-button-style="link"]:hover:not(:disabled) {
   color: #b91c1c !important;
   box-shadow: none !important;
 }
+
+/* Seller dashboard final visual contract — aligned with the marketplace CTA. */
+.seller-dashboard {
+  --seller-canvas: #fafafa;
+  --seller-surface: #ffffff;
+  --seller-ink: #454545;
+  --seller-muted: #777777;
+  --seller-line: #eee9e4;
+  --seller-orange: #f0660d;
+  --seller-orange-hover: #d95708;
+  --seller-active: #d9f99d;
+  --seller-active-ink: #365314;
+  background: var(--seller-canvas) !important;
+  color: var(--seller-ink) !important;
+}
+.seller-dashboard > div:not(.seller-mobile-navigation) {
+  background: var(--seller-canvas) !important;
+}
+.seller-dashboard .seller-sidebar {
+  background: #ffffff !important;
+  color: #454545 !important;
+  border-color: #eee9e4 !important;
+  box-shadow: 8px 0 24px rgb(69 69 69 / 6%) !important;
+}
+.seller-dashboard .seller-sidebar > div:first-child,
+.seller-dashboard .seller-sidebar > div:nth-child(2),
+.seller-dashboard .seller-sidebar > div:nth-last-child(2),
+.seller-dashboard .seller-sidebar > div:last-child a {
+  background: #ffffff !important;
+  border-color: #eee9e4 !important;
+  color: #454545 !important;
+  box-shadow: 0 4px 14px rgb(69 69 69 / 5%) !important;
+}
+.seller-dashboard .seller-sidebar :is(h2, p) {
+  color: #777777 !important;
+}
+.seller-dashboard .seller-sidebar > div:first-child a,
+.seller-dashboard .seller-sidebar > div:first-child a span,
+.seller-dashboard .seller-sidebar > div:first-child a span span {
+  color: #454545 !important;
+}
+.seller-dashboard .seller-sidebar nav a {
+  color: #454545 !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+.seller-dashboard .seller-sidebar nav a span:first-child {
+  color: #454545 !important;
+  background: #f5f5f5 !important;
+  border-color: #eeeeee !important;
+}
+.seller-dashboard .seller-sidebar nav a:not([aria-current="page"]):hover {
+  color: #454545 !important;
+  background: #ffffff !important;
+  border-color: #f6d8c5 !important;
+  box-shadow: 0 4px 12px rgb(240 102 13 / 8%) !important;
+  transform: translateY(-1px);
+}
+.seller-dashboard .seller-sidebar nav a[aria-current="page"],
+.seller-dashboard .seller-mobile-navigation__links a[aria-current="page"] {
+  color: var(--seller-active-ink) !important;
+  background: var(--seller-active) !important;
+  border: 1px solid #bef264 !important;
+  box-shadow: inset 3px 0 0 #84cc16 !important;
+}
+.seller-dashboard .seller-sidebar nav a[aria-current="page"] span:first-child {
+  color: var(--seller-active-ink) !important;
+  background: rgb(255 255 255 / 68%) !important;
+}
+.seller-dashboard .seller-sidebar a[href="/seller/advertising"] {
+  color: #ffffff !important;
+  background: var(--seller-orange) !important;
+  border-color: var(--seller-orange) !important;
+}
+.seller-dashboard > div > header {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  background: #ffffff !important;
+  border-color: #eee9e4 !important;
+  box-shadow: 0 3px 12px rgb(69 69 69 / 5%) !important;
+  color: #454545 !important;
+  backdrop-filter: none !important;
+}
+.seller-dashboard > div > header p,
+.seller-dashboard > div > header a {
+  color: #454545 !important;
+}
+.seller-dashboard > div > header form[role="search"] {
+  min-width: 0 !important;
+  max-width: 440px !important;
+  background: #ffffff !important;
+  border: 1px solid #eee9e4 !important;
+  color: #454545 !important;
+  box-shadow: inset 0 1px 3px rgb(69 69 69 / 5%) !important;
+}
+.seller-dashboard > div > header form[role="search"] input {
+  min-width: 0 !important;
+  background: transparent !important;
+  color: #454545 !important;
+}
+.seller-dashboard > div > header form[role="search"] input::placeholder {
+  color: #777777 !important;
+}
+.seller-dashboard > div > header form[role="search"] button[data-variant="primary"] {
+  background: #f0660d !important;
+  color: #ffffff !important;
+  border: 1px solid #f0660d !important;
+}
+.seller-dashboard > div > header form[role="search"] button[data-variant="primary"]:hover {
+  background: #d95708 !important;
+  color: #ffffff !important;
+  border-color: #d95708 !important;
+}
+.seller-dashboard main {
+  background: var(--seller-canvas) !important;
+  color: #454545 !important;
+}
+.seller-dashboard main > header,
+.seller-dashboard .seller-overview-hero {
+  background: #ffffff !important;
+  border: 1px solid #eee9e4 !important;
+  border-radius: 24px !important;
+  box-shadow: 0 8px 24px rgb(69 69 69 / 6%) !important;
+  color: #454545 !important;
+}
+.seller-dashboard main > header :is(h1, h2, h3, p, span, a, label),
+.seller-dashboard .seller-overview-hero :is(h1, h2, h3, p, span, label) {
+  color: #454545 !important;
+}
+.seller-dashboard main :is(h1, h2, h3, h4) {
+  color: #454545 !important;
+}
+.seller-dashboard main p {
+  color: #777777;
+}
+.seller-dashboard main :is(article, [data-chart-card], .seller-clay-card),
+.seller-dashboard .seller-application-status,
+.seller-dashboard .seller-application-form,
+.seller-dashboard .seller-application-section,
+.seller-dashboard .seller-product-create,
+.seller-dashboard .seller-product-form > section {
+  background: #ffffff !important;
+  border: 1px solid #eee9e4 !important;
+  color: #454545 !important;
+  box-shadow: 0 6px 20px rgb(69 69 69 / 5%) !important;
+}
+.seller-dashboard main :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background: #ffffff !important;
+  border: 1px solid #e5e5e5 !important;
+  color: #454545 !important;
+}
+.seller-dashboard main :is(input, textarea, select)::placeholder {
+  color: #777777 !important;
+}
+.seller-dashboard :is(button, a)[data-variant="primary"],
+.seller-dashboard button.bg-\[var\(--action\)\],
+.seller-dashboard button.bg-\[var\(--color-orange\)\] {
+  background: #f0660d !important;
+  color: #ffffff !important;
+  border-color: #f0660d !important;
+}
+.seller-dashboard :is(button, a)[data-variant="primary"]:hover,
+.seller-dashboard button.bg-\[var\(--action\)\]:hover,
+.seller-dashboard button.bg-\[var\(--color-orange\)\]:hover {
+  background: #d95708 !important;
+  color: #ffffff !important;
+  border-color: #d95708 !important;
+}
+.seller-dashboard .seller-mobile-navigation {
+  background: #ffffff !important;
+  color: #454545 !important;
+  border-color: #eee9e4 !important;
+}
+.seller-dashboard .seller-mobile-navigation__links a:not([aria-current="page"]) {
+  background: #ffffff !important;
+  color: #454545 !important;
+  border-color: #eee9e4 !important;
+}
+.seller-dashboard .seller-mobile-navigation__links a:not([aria-current="page"]):hover {
+  background: #ffffff !important;
+  color: #454545 !important;
+  border-color: #f3b58f !important;
+  box-shadow: 0 4px 12px rgb(240 102 13 / 8%) !important;
+}
+.seller-dashboard :focus-visible {
+  outline: 3px solid rgb(240 102 13 / 45%) !important;
+  outline-offset: 3px;
+}
+@media (max-width: 1023px) {
+  .seller-dashboard > div > header {
+    position: static !important;
+    width: 100%;
+  }
+  .seller-dashboard > div > header form[role="search"] {
+    order: 3;
+    width: 100%;
+    max-width: none !important;
+    flex: 1 1 100%;
+  }
+}
+@media (min-width: 1024px) {
+  .seller-dashboard > div > header form[role="search"] {
+    order: initial;
+    width: min(100%, 440px);
+    flex: 1 1 440px;
+  }
+}
