@@ -187,7 +187,7 @@ export default function SellerNavigation() {
         </nav>
 
         <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
-          <span className="grid size-10 place-items-center rounded-xl border border-[#e8e2f1] bg-[#f2eff8] text-lg text-[#806bb0] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
+          <span className="grid size-10 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-lg text-[#FF8C1C] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
           <p className="mt-3 text-sm font-extrabold text-[#454545]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
           <p className="mt-1 text-[10px] leading-4 text-[#77716c]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
           <Link href="/seller/advertising" className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[#FF8C1C] bg-[#FF8C1C] px-3 py-2 text-[11px] font-extrabold text-white shadow-[0_4px_12px_rgba(255,140,28,.16)]"><SellerIcon name="ads" />{translate(locale, "Explore campaigns", "استكشف الحملات")}</Link>
