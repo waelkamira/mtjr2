@@ -67,26 +67,26 @@ export default function SellerFinanceOverviewPage() {
   const storeOptions = useMemo(() => stores.map((store) => ({ id: store.id, name: store.name })), [stores]);
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      <header className="rounded-[30px] border border-white/90 bg-[linear-gradient(115deg,#dcebef_0%,#c5dbe2_48%,#e2e5ef_100%)] p-6 text-[#344d60] shadow-[12px_14px_28px_rgba(74,75,112,.12),inset_0_2px_0_white] sm:p-8">
-        <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#5d8192]">{t("SELLER FINANCE", "مالية البائع")}</p>
+      <header className="rounded-[30px] border border-[#eee9e4] bg-white p-6 text-[#454545] shadow-[0_12px_28px_rgba(69,69,69,.07)] sm:p-8">
+        <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#918a84]">{t("SELLER FINANCE", "مالية البائع")}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div><h1 className="text-3xl font-black tracking-tight">{t("Financial overview", "الملخص المالي")}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#688394]">{t("Review recorded sales, platform commissions and completed refunds without mixing currencies.", "راجع المبيعات المسجلة وعمولات المنصة والمبالغ المستردة المكتملة دون خلط العملات.")}</p></div>
+          <div><h1 className="text-3xl font-black tracking-tight">{t("Financial overview", "الملخص المالي")}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#77716c]">{t("Review recorded sales, platform commissions and completed refunds without mixing currencies.", "راجع المبيعات المسجلة وعمولات المنصة والمبالغ المستردة المكتملة دون خلط العملات.")}</p></div>
           <div className="flex flex-wrap gap-2">
-            {stores.find((store) => store.id === storeId)?.isOwner && <a href={`/api/seller/stores/${encodeURIComponent(storeId)}/export`} className="rounded-2xl border border-white bg-[#d9eeea] px-4 py-3 text-sm font-bold text-[#365b50] shadow-[0_5px_12px_rgba(63,100,91,.10),inset_0_1px_0_white]">{t("Export store to Excel", "تصدير المتجر إلى Excel")} ↓</a>}
-            <Link href="/seller/commissions" className="rounded-2xl border border-white bg-white/75 px-4 py-3 text-sm font-bold text-[#4d5570] shadow-[0_5px_12px_rgba(74,75,112,.10),inset_0_1px_0_white]">{t("Open commission statements", "فتح كشوف العمولات")} ↗</Link>
-            <Link href="/seller/payouts" className="rounded-2xl border border-white bg-[linear-gradient(135deg,#e4f0f5,#c4dfe8)] px-4 py-3 text-sm font-bold text-[#3e6071] shadow-[0_5px_12px_rgba(63,100,115,.10),inset_0_1px_0_white]">{t("Manage bank accounts", "إدارة الحسابات البنكية")} ↗</Link>
+            {stores.find((store) => store.id === storeId)?.isOwner && <a href={`/api/seller/stores/${encodeURIComponent(storeId)}/export`} className="rounded-2xl border border-[#f6d8c5] bg-[#fff1e8] px-4 py-3 text-sm font-bold text-[#a94308] shadow-[0_4px_12px_rgba(240,102,13,.10)]">{t("Export store to Excel", "تصدير المتجر إلى Excel")} ↓</a>}
+            <Link href="/seller/commissions" className="rounded-2xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-bold text-[#454545] shadow-[0_4px_12px_rgba(69,69,69,.06)]">{t("Open commission statements", "فتح كشوف العمولات")} ↗</Link>
+            <Link href="/seller/payouts" className="rounded-2xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-bold text-[#454545] shadow-[0_4px_12px_rgba(69,69,69,.06)]">{t("Manage bank accounts", "إدارة الحسابات البنكية")} ↗</Link>
           </div>
         </div>
       </header>
-      <section className="rounded-[26px] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[8px_10px_22px_rgba(74,75,112,.09),inset_0_2px_0_white]">
-        <label className="grid max-w-md gap-2 text-sm font-bold text-[#526078]">{t("Store", "المتجر")}
+      <section className="rounded-[26px] border border-[#eee9e4] bg-[#fffaf6] p-5 shadow-[0_6px_18px_rgba(69,69,69,.05)]">
+        <label className="grid max-w-md gap-2 text-sm font-bold text-[#5f5a55]">{t("Store", "المتجر")}
           <select value={storeId} onChange={(event) => { setData(null); setLoading(Boolean(event.target.value)); setError(""); setStoreId(event.target.value); }} disabled={!storeOptions.length} className="rounded-xl border border-white bg-white/85 px-3 py-3 text-sm text-[#344d60] shadow-[inset_0_2px_5px_rgba(74,75,112,.06)]">
             {storeOptions.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}
           </select>
         </label>
       </section>
       {error && <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</p>}
-      {loading ? <div className="rounded-2xl border border-white bg-white/60 p-8 text-sm text-[#688394]">{t("Loading financial records…", "جارٍ تحميل السجلات المالية…")}</div>
+      {loading ? <div className="rounded-2xl border border-white bg-white/60 p-8 text-sm text-[#77716c]">{t("Loading financial records…", "جارٍ تحميل السجلات المالية…")}</div>
         : data ? <>
           <div className="grid gap-4 md:grid-cols-3">
             <article className="rounded-[25px] border border-white bg-[linear-gradient(145deg,#d9eeea,#b9ded9)] p-5 text-[#365b50] shadow-[8px_10px_20px_rgba(63,100,91,.10),inset_0_2px_0_white]">
@@ -94,7 +94,7 @@ export default function SellerFinanceOverviewPage() {
               {data.totals.length ? data.totals.map((item) => <p key={item.currencyCode} className="mt-3 text-xl font-black tabular-nums">{formatMinor(item.baseAmountMinor ?? "0", item.currencyCode, item.minorUnit, locale)} <span className="text-xs font-semibold">{item.transactionCount ?? 0} {t("items", "عملية")}</span></p>) : <p className="mt-3 text-sm">{t("No commissionable sales records yet.", "لا توجد مبيعات مؤهلة مسجلة بعد.")}</p>}
             </article>
             <article className="rounded-[25px] border border-white bg-[linear-gradient(145deg,#e9e5f3,#d8e1eb)] p-5 text-[#494467] shadow-[8px_10px_20px_rgba(93,83,139,.10),inset_0_2px_0_white]">
-              <p className="text-xs font-extrabold uppercase tracking-wide text-[#5d8192]">{t("Recorded platform commissions", "عمولات المنصة المسجلة")}</p>
+              <p className="text-xs font-extrabold uppercase tracking-wide text-[#918a84]">{t("Recorded platform commissions", "عمولات المنصة المسجلة")}</p>
               {data.totals.length ? data.totals.map((item) => <p key={item.currencyCode} className="mt-3 text-xl font-black tabular-nums">{formatMinor(item.commissionMinor ?? "0", item.currencyCode, item.minorUnit, locale)}</p>) : <p className="mt-3 text-sm">{t("No commission records yet.", "لا توجد عمولات مسجلة بعد.")}</p>}
             </article>
             <article className="rounded-[25px] border border-white bg-[linear-gradient(145deg,#f2e8e7,#e5d8e0)] p-5 text-[#765247] shadow-[8px_10px_20px_rgba(125,83,66,.09),inset_0_2px_0_white]">
@@ -102,13 +102,13 @@ export default function SellerFinanceOverviewPage() {
               {data.completedRefundTotals.length ? data.completedRefundTotals.map((item) => <p key={item.currencyCode} className="mt-3 text-xl font-black tabular-nums">{formatMinor(item.amountMinor ?? "0", item.currencyCode, item.minorUnit, locale)} <span className="text-xs font-semibold">{item.itemCount ?? 0} {t("items", "عنصر")}</span></p>) : <p className="mt-3 text-sm">{t("No completed refunds recorded.", "لا توجد مبالغ مستردة مكتملة.")}</p>}
             </article>
           </div>
-          <section className="rounded-[26px] border border-white/90 bg-[linear-gradient(145deg,#e8f1f4,#d1e0e6)] p-5 shadow-[8px_10px_22px_rgba(74,75,112,.09),inset_0_2px_0_white]">
+          <section className="rounded-[26px] border border-[#eee9e4] bg-[#fffaf6] p-5 shadow-[0_6px_18px_rgba(69,69,69,.05)]">
             <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-black text-[#344d60]">{t("Latest commission activity", "أحدث حركات العمولات")}</h2><p className="mt-1 text-xs text-[#78849a]">{t("Latest records available for this store.", "أحدث السجلات المتاحة لهذا المتجر.")}</p></div><Link href="/seller/commissions" className="text-sm font-bold text-[#6c6595] underline underline-offset-4">{t("View full statement", "عرض الكشف الكامل")}</Link></div>
             {data.transactions.length ? <div className="mt-4 divide-y divide-white/80">{data.transactions.slice(0, 6).map((item) => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="text-sm font-bold text-[#46516b]">{item.productName}</p><p className="mt-1 text-xs text-[#8992a5]">#{item.orderNumber} · {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(item.createdAt))}</p></div><p className="text-sm font-black tabular-nums text-[#4e5872]">{formatMinor(item.commissionMinor, item.currencyCode, item.minorUnit, locale)}</p></div>)}</div> : <p className="mt-4 rounded-xl bg-white/60 p-5 text-sm text-[#78849a]">{t("Commission activity will appear here when eligible orders are recorded.", "ستظهر حركات العمولات هنا عند تسجيل طلبات مؤهلة.")}</p>}
           </section>
           <p className="rounded-2xl border border-[#e7dcb8] bg-[#fbf5df] p-4 text-sm leading-6 text-[#786a43]">{t("Important: these are separate recorded sales, commission and refund figures—not a payable balance. You can save an encrypted payout destination, but beneficiary verification, seller ledger, holds, settlement and withdrawal execution are not yet available. No available-to-withdraw amount is shown.", "تنبيه: هذه أرقام منفصلة للمبيعات والعمولات والمبالغ المستردة المسجلة وليست رصيداً مستحقاً للدفع. يمكنك حفظ حساب استلام مشفّر، لكن التحقق من ملكية المستفيد ودفتر حسابات البائع والحجوزات والتسويات وتنفيذ السحب لم تُفعّل بعد. لذلك لا نعرض مبلغاً قابلاً للسحب.")}</p>
         </> : null}
-      {!loading && !data && !error && <p className="rounded-2xl bg-white/60 p-6 text-sm text-[#688394]">{t("Select a store to view its financial summary.", "اختر متجراً لعرض ملخصه المالي.")}</p>}
+      {!loading && !data && !error && <p className="rounded-2xl bg-white/60 p-6 text-sm text-[#77716c]">{t("Select a store to view its financial summary.", "اختر متجراً لعرض ملخصه المالي.")}</p>}
     </main>
   );
 }
