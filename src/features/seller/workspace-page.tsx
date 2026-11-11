@@ -763,19 +763,19 @@ export default function SellerWorkspacePage() {
     if (!loading && workspace?.seller?.status === "PENDING") {
     const application = workspace.seller;
     return (
-      <main dir={locale === "ar" ? "rtl" : "ltr"} className="min-h-screen bg-[var(--seller-canvas)] px-4 py-8 text-[#203850] sm:px-6">
+      <main dir={locale === "ar" ? "rtl" : "ltr"} className="min-h-screen bg-[#fffaf6] px-4 py-8 text-[#454545] sm:px-6">
         <section className="seller-application-status mx-auto max-w-6xl overflow-hidden rounded-[1.75rem]">
-          <header className="bg-[linear-gradient(115deg,#17334f,#24516b_58%,#267b7c)] p-6 text-white sm:p-9">
-            <p className="text-[10px] font-extrabold tracking-[.2em] text-[#b9d9e2]">{translate(locale, "SELLER APPLICATION", "طلب فتح متجر")}</p>
-            <h1 className="mt-3 flex items-center gap-3 text-3xl font-black"><span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-[#8ce8e1]"><SellerIcon name="document" /></span>{translate(locale, "Your application is under review", "طلبك قيد المراجعة")}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">{translate(locale, "Your application has been received. The marketplace team will review your business details before enabling store operations.", "تم استلام طلبك. سيراجع فريق المنصة بيانات نشاطك قبل تفعيل عمليات المتجر.")}</p>
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold"><span className="size-2 rounded-full bg-amber-300"/>{translate(locale, "Pending review", "بانتظار المراجعة")}</div>
+          <header className="bg-[linear-gradient(110deg,#fff6ef_0%,#ffffff_58%,#fff1e8_100%)] p-6 text-[#454545] sm:p-9">
+            <p className="text-[10px] font-extrabold tracking-[.2em] text-[#a94308]">{translate(locale, "SELLER APPLICATION", "طلب فتح متجر")}</p>
+            <h1 className="mt-3 flex items-center gap-3 text-3xl font-black"><span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-[#f6d8c5] bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name="document" /></span>{translate(locale, "Your application is under review", "طلبك قيد المراجعة")}</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#77716c]">{translate(locale, "Your application has been received. The marketplace team will review your business details before enabling store operations.", "تم استلام طلبك. سيراجع فريق المنصة بيانات نشاطك قبل تفعيل عمليات المتجر.")}</p>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900"><span className="size-2 rounded-full bg-amber-300"/>{translate(locale, "Pending review", "بانتظار المراجعة")}</div>
           </header>
           <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-8">
-            <section className="rounded-2xl border border-[#e1e8f0] bg-white p-5">
+            <section className="rounded-2xl border border-[#eee9e4] bg-white p-5">
               <h2 className="flex items-center gap-2 text-lg font-black"><SellerIcon name="user" />{translate(locale, "Applicant profile", "ملف مقدم الطلب")}</h2>
               <dl className="mt-4 grid gap-3 text-sm">
-                <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Full legal name", "الاسم القانوني")}</dt><dd className="mt-1 font-semibold">{application.legalName || "—"}</dd></div>
+                <div><dt className="text-xs text-[#918a84]">{translate(locale, "Full legal name", "الاسم القانوني")}</dt><dd className="mt-1 font-semibold">{application.legalName || "—"}</dd></div>
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Store / business", "اسم المتجر أو النشاط")}</dt><dd className="mt-1 font-semibold">{application.displayName || "—"}</dd></div>
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Contact person", "الشخص المسؤول")}</dt><dd className="mt-1">{application.contactName || "—"}</dd></div>
                 <div><dt className="text-xs text-[#8790a5]">{translate(locale, "Email / phone", "البريد والهاتف")}</dt><dd dir="ltr" className="mt-1 text-left">{application.contactEmail || "—"} · {application.phoneNumber || "—"}</dd></div>
@@ -796,9 +796,9 @@ export default function SellerWorkspacePage() {
             </section>
             <section className="rounded-2xl border border-[#e1e8f0] bg-white p-5">
               <h2 className="flex items-center gap-2 text-lg font-black"><SellerIcon name="catalog" />{translate(locale, "Products and selling plan", "المنتجات وخطة البيع")}</h2>
-              <p className="mt-3 text-sm font-bold text-[#7883a8]">{application.sellingCategories || "—"}</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#657487]">{application.intendedProducts || "—"}</p>
-              {application.description && <p className="mt-4 border-t border-white/80 pt-4 text-sm leading-7 text-[#657487]">{application.description}</p>}
+              <p className="mt-3 text-sm font-bold text-[#a94308]">{application.sellingCategories || "—"}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#77716c]">{application.intendedProducts || "—"}</p>
+              {application.description && <p className="mt-4 border-t border-[#eee9e4] pt-4 text-sm leading-7 text-[#657487]">{application.description}</p>}
               <div className="mt-4 flex flex-wrap gap-3 text-xs">
                 {application.facebookUrl && <a href={application.facebookUrl} target="_blank" rel="noreferrer" className="underline">Facebook</a>}
                 {application.youtubeUrl && <a href={application.youtubeUrl} target="_blank" rel="noreferrer" className="underline">YouTube</a>}
@@ -806,7 +806,7 @@ export default function SellerWorkspacePage() {
               </div>
               {application.latitude !== null && application.longitude !== null && <p dir="ltr" className="mt-4 text-left text-xs text-[#8790a5]">{application.latitude.toFixed(5)}, {application.longitude.toFixed(5)}</p>}
             </section>
-            <p className="flex items-center gap-2 border-t border-[#e7edf3] pt-4 text-xs text-[#718096] sm:col-span-2"><SellerIcon name="document" />{translate(locale, "Submitted", "تاريخ التقديم")}: {new Date(application.createdAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>
+            <p className="flex items-center gap-2 border-t border-[#eee9e4] pt-4 text-xs text-[#77716c] sm:col-span-2"><SellerIcon name="document" />{translate(locale, "Submitted", "تاريخ التقديم")}: {new Date(application.createdAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>
           </div>
         </section>
       </main>
