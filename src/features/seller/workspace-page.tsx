@@ -857,17 +857,17 @@ export default function SellerWorkspacePage() {
             <section aria-label={translate(locale, "Store metrics", "مؤشرات المتجر")} className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {sellerMetrics.map((metric, index) => {
                 const surface = [
-                  "bg-[linear-gradient(145deg,#dff2ee_0%,#b8dfd8_100%)]",
-                  "bg-[linear-gradient(145deg,#e7edf8_0%,#c7d8eb_100%)]",
-                  "bg-[linear-gradient(145deg,#e8e5f6_0%,#cfc9e9_100%)]",
-                  "bg-[linear-gradient(145deg,#f8eee0_0%,#eed8b8_100%)]",
-                  "bg-[linear-gradient(145deg,#f7e8ee_0%,#eacbd8_100%)]",
-                  "bg-[linear-gradient(145deg,#e4f0f5_0%,#c4dfe8_100%)]",
-                  "bg-[linear-gradient(145deg,#f4f0d9_0%,#e8dfae_100%)]",
-                  "bg-[linear-gradient(145deg,#e8f1e4_0%,#c9dfc0_100%)]"
+                  "bg-[#ffffff]",
+                  "bg-[#fffaf6]",
+                  "bg-[#f8f5fc]",
+                  "bg-[#f2f8f4]",
+                  "bg-[#fff7f0]",
+                  "bg-[#f7f8fb]",
+                  "bg-[#fbf8ed]",
+                  "bg-[#f5f8f4]"
                 ][index % 8];
                 return (
-                  <article key={metric.label} className={`group relative isolate overflow-hidden rounded-[1.8rem] border border-white/90 ${surface} p-5 shadow-[0_12px_26px_rgba(37,65,84,.16),inset_0_2px_0_rgba(255,255,255,.95),inset_0_-3px_7px_rgba(54,84,101,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(37,65,84,.22)]`}>
+                  <article key={metric.label} className={`group relative isolate overflow-hidden rounded-[1.8rem] border border-[#eee9e4] ${surface} p-5 shadow-[0_5px_16px_rgba(69,69,69,.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_26px_rgba(69,69,69,.09)]`}>
                     <div className="flex items-center gap-3">
                       <span className="grid size-11 shrink-0 place-items-center rounded-[1rem] border border-white/75 bg-white/45 shadow-[0_5px_12px_rgba(35,62,81,.1),inset_0_1px_0_white]" style={{ color: metric.color }}>
                         <span aria-hidden="true" className="text-xl leading-none">{metric.icon}</span>
@@ -904,7 +904,7 @@ export default function SellerWorkspacePage() {
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#494467]">{translate(locale, "Financial overview", "الملخص المالي")}</strong><span className="mt-1 block text-xs text-[#716c91]">{translate(locale, "Review sales, commissions and completed refunds.", "راجع المبيعات والعمولات والمبالغ المستردة.")}</span></span>
                   <span className="ms-auto text-lg text-[#716c91] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
                 </Link>
-                <Link href="/seller/payouts" className="group flex items-center gap-4 rounded-[1.45rem] border border-white/90 bg-[linear-gradient(145deg,#e4f0f5,#c4dfe8)] p-4 shadow-[0_9px_18px_rgba(37,65,84,.10),inset_0_2px_0_white] transition hover:-translate-y-1">
+                <Link href="/seller/payouts" className="group flex items-center gap-4 rounded-[1.45rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(69,69,69,.05)] transition hover:-translate-y-1">
                   <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/65 text-2xl shadow-[inset_0_1px_0_white]">🏦</span>
                   <span className="min-w-0"><strong className="block text-sm font-black text-[#3e6071]">{translate(locale, "Bank accounts", "الحسابات البنكية")}</strong><span className="mt-1 block text-xs text-[#668394]">{translate(locale, "Manage saved payout destinations and verification status.", "أدر حسابات استلام الأرباح وحالة التحقق.")}</span></span>
                   <span className="ms-auto text-lg text-[#668394] transition group-hover:translate-x-1" aria-hidden="true">↗</span>
