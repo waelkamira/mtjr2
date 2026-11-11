@@ -220,8 +220,8 @@
   --type-display-tracking: -0.035em;
 
   /* Shape, spacing, and dashboard layout */
-  --radius-control: 1rem;
-  --radius-card: 1.5rem;
+  --radius-control: 0.5rem;
+  --radius-card: 0rem;
   --radius-panel: 1.875rem;
   --radius-feature: 2.25rem;
   --content-max: 1440px;
