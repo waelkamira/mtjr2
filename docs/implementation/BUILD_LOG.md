@@ -4793,3 +4793,16 @@ The platform account policy is now explicit: email verification is not required 
 - Source-level audit across the seller feature pages and seller messages found no primary orange action using dark text. The seller sidebar's lime active state and data/status chart colors remain intentionally semantic.
 
 **Verification boundary:** Changes were committed directly to `main` and source-level contrast/palette checks were performed. No local build, typecheck, lint, automated tests, or browser visual inspection was performed. Deployment services were not used or consulted for this work.
+
+
+## 2026-11-11 — Platform-wide theme foundation and cross-area consistency pass
+
+- Removed the obsolete seller-dashboard CSS override block that still declared navy/mist/turquoise tokens and overrode page-level styling. This was a late-cascade conflict: editing individual seller pages alone could not neutralize those old global rules.
+- Removed stale seller hero compatibility selectors after confirming the overview hero component already uses the warm-neutral palette.
+- Corrected the global foreground rule for the approved brand-orange action surfaces and hover shade to white, including direct `#FF8C1C`, theme action/orange tokens and Tailwind orange utility classes. Existing semantic status colors remain separate.
+- Updated the shared footer brand mark to use white foreground on its orange gradient.
+- Aligned the admin dashboard canvas with the warm-neutral marketplace background while retaining semantic metric colors (success, pending, failed, moderation and logistics).
+- Reviewed storefront catalog/search/product components, customer account/reviews/returns/support, notifications, order detail, identity security, admin navigation/orders/products/users/sellers/support/payments/returns, and seller feature pages for hard-coded conflicting palette colors. Most of these areas already consume shared theme tokens; amber/emerald/rose/blue status and alert colors were intentionally retained.
+- The seller-specific final CSS contract remains scoped to the seller workspace and defines the shared sidebar, topbar/search, active/hover navigation, neutral cards, orange primary actions and responsive search behavior.
+
+**Verification boundary:** GitHub source inspection and targeted CSS/source checks only. No local build, typecheck, lint, automated test suite, or browser-based visual validation was run. No deployment platform was used.
