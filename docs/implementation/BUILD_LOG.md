@@ -4760,3 +4760,15 @@ The platform account policy is now explicit: email verification is not required 
 - Preserved readable deep-orange text on light surfaces, semantic review-rating colors, and non-brand status colors.
 
 **Verification boundary:** Source edits are committed to `main`. No local build, typecheck, lint, tests, or browser visual verification were performed. Deployment status is checked separately and is not treated as a successful build unless it reports success.
+
+
+## 2026-11-11 — Seller dashboard palette harmonization
+
+- Reworked the seller product-management header, form surfaces, inputs, image-gallery accents and draft action to use the same warm-white/onyx/orange design language as the seller workspace and storefront.
+- Removed the legacy navy/teal treatment from seller application review and application-form headers; aligned application section icons, field text and preview surfaces with the Matjar palette.
+- Standardized seller dashboard quick-action cards as white clay surfaces with restrained orange icon accents and consistent dark text, rather than a mix of unrelated pink, teal, purple and yellow gradients.
+- Updated primary action labels on advertising, shipping and review-response forms to white over brand orange; primary hover uses `#E8750B`.
+- Preserved lime active navigation states and semantic status colors (success, warning, error, inventory/order states and rating charts) rather than recoloring status indicators as brand actions.
+- Kept the seller sidebar and topbar's white/onyx surfaces, orange brand accents, and lime active state aligned with the shared theme.
+
+**Verification boundary:** All listed source changes were committed directly to `main`. GitHub source review confirms the targeted seller pages no longer contain the former navy/teal brand treatment or dark text on the orange primary actions. No local build/typecheck/lint/tests or browser screenshot review was run, so responsive visual rendering still needs a live local check.
