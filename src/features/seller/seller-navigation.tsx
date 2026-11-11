@@ -13,66 +13,41 @@ const groups: Array<{
   title: string; ar: string;
   links: Array<{ href: string; label: string; ar: string; icon: SellerIconName; tone: Tone }>;
 }> = [
-  {
-    title: "Overview", ar: "الرئيسية",
-    links: [
-      { href: "/seller", label: "Dashboard", ar: "لوحة التحكم", icon: "home", tone: "lavender" }
-    ]
-  },
-  {
-    title: "Catalog", ar: "إدارة الكتالوج",
-    links: [
-      { href: "/seller/products", label: "Products", ar: "المنتجات", icon: "package", tone: "mint" },
-      { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" }
-    ]
-  },
-  {
-    title: "Sales & fulfillment", ar: "المبيعات والتنفيذ",
-    links: [
-      { href: "/seller/orders", label: "Orders", ar: "الطلبات", icon: "orders", tone: "peach" },
-      { href: "/seller/shipping", label: "Shipping", ar: "الشحن والتوصيل", icon: "shipping", tone: "sky" },
-      { href: "/seller/returns", label: "Returns", ar: "المرتجعات", icon: "returns", tone: "blush" }
-    ]
-  },
-  {
-    title: "Customer experience", ar: "تجربة العملاء",
-    links: [
-      { href: "/seller/messages", label: "Messages", ar: "الرسائل", icon: "messages", tone: "sky" },
-      { href: "/seller/questions", label: "Product questions", ar: "أسئلة المنتجات", icon: "questions", tone: "lavender" },
-      { href: "/seller/reviews", label: "Reviews", ar: "التقييمات", icon: "reviews", tone: "butter" }
-    ]
-  },
-  {
-    title: "Growth", ar: "النمو والتسويق",
-    links: [
-      { href: "/seller/advertising", label: "Advertising", ar: "الإعلانات والحملات", icon: "ads", tone: "peach" },
-      { href: "/notifications", label: "Notifications", ar: "الإشعارات", icon: "notifications", tone: "blush" }
-    ]
-  },
-  {
-    title: "Finance", ar: "الشؤون المالية",
-    links: [
-      { href: "/seller/finance", label: "Financial overview", ar: "الملخص المالي", icon: "finance", tone: "lavender" },
-      { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "document", tone: "sky" },
-      { href: "/seller/payouts", label: "Payout accounts", ar: "حسابات السحب", icon: "business", tone: "mint" }
-    ]
-  },
-  {
-    title: "Store & team", ar: "المتجر والفريق",
-    links: [
-      { href: "/seller/settings", label: "Store settings", ar: "إعدادات المتجر", icon: "store", tone: "lavender" },
-      { href: "/seller/staff", label: "Team & access", ar: "الفريق والصلاحيات", icon: "team", tone: "mint" }
-    ]
-  }
+  { title: "Main", ar: "الرئيسية", links: [
+    { href: "/seller", label: "Overview", ar: "نظرة عامة", icon: "home", tone: "lavender" }
+  ]},
+  { title: "Store Management", ar: "إدارة المتجر", links: [
+    { href: "/seller/products", label: "Products", ar: "المنتجات", icon: "package", tone: "mint" },
+    { href: "/seller/inventory", label: "Inventory", ar: "المخزون", icon: "inventory", tone: "butter" },
+    { href: "/seller/orders", label: "Orders", ar: "الطلبات", icon: "orders", tone: "peach" },
+    { href: "/seller/shipping", label: "Shipping", ar: "الشحن", icon: "shipping", tone: "sky" },
+    { href: "/seller/returns", label: "Returns", ar: "المرتجعات", icon: "returns", tone: "blush" },
+    { href: "/seller/settings", label: "Store settings", ar: "إعدادات المتجر", icon: "business", tone: "lavender" }
+  ]},
+  { title: "Customers", ar: "العملاء والتواصل", links: [
+    { href: "/seller/messages", label: "Messages", ar: "الرسائل", icon: "messages", tone: "sky" },
+    { href: "/seller/questions", label: "Product questions", ar: "أسئلة المنتجات", icon: "questions", tone: "lavender" },
+    { href: "/seller/reviews", label: "Reviews", ar: "التقييمات", icon: "reviews", tone: "butter" }
+  ]},
+  { title: "Finance", ar: "المالية", links: [
+    { href: "/seller/finance", label: "Financial overview", ar: "الملخص المالي", icon: "finance", tone: "mint" },
+    { href: "/seller/commissions", label: "Commission statements", ar: "كشوف العمولات", icon: "document", tone: "sky" },
+    { href: "/seller/payouts", label: "Bank accounts", ar: "الحسابات البنكية", icon: "finance", tone: "peach" }
+  ]},
+  { title: "Growth & Admin", ar: "النمو والإدارة", links: [
+    { href: "/seller/advertising", label: "Advertising", ar: "الإعلانات", icon: "ads", tone: "peach" },
+    { href: "/seller/staff", label: "Team & access", ar: "الفريق والصلاحيات", icon: "team", tone: "mint" },
+    { href: "/notifications", label: "Notifications", ar: "الإشعارات", icon: "notifications", tone: "blush" }
+  ]}
 ];
 
 const toneClasses: Record<Tone, string> = {
-  lavender: "bg-[#f5f5f5] text-[#626262]",
-  mint: "bg-[#f5f5f5] text-[#626262]",
-  peach: "bg-[#f5f5f5] text-[#626262]",
-  butter: "bg-[#f5f5f5] text-[#626262]",
-  blush: "bg-[#f5f5f5] text-[#626262]",
-  sky: "bg-[#f5f5f5] text-[#626262]"
+  lavender: "bg-gradient-to-br from-violet-500/20 to-purple-600/10 text-violet-300 ring-1 ring-violet-400/20",
+  mint: "bg-gradient-to-br from-emerald-500/20 to-teal-600/10 text-emerald-300 ring-1 ring-emerald-400/20",
+  peach: "bg-gradient-to-br from-orange-500/20 to-amber-600/10 text-orange-300 ring-1 ring-orange-400/20",
+  butter: "bg-gradient-to-br from-yellow-500/20 to-amber-500/10 text-yellow-300 ring-1 ring-yellow-400/20",
+  blush: "bg-gradient-to-br from-rose-500/20 to-pink-600/10 text-rose-300 ring-1 ring-rose-400/20",
+  sky: "bg-gradient-to-br from-sky-500/20 to-blue-600/10 text-sky-300 ring-1 ring-sky-400/20"
 };
 
 export function SellerIcon({ name }: { name: SellerIconName }) {
@@ -154,35 +129,35 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="seller-sidebar relative z-30 hidden h-screen w-64 shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[#454545] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
-        <div className="border-b border-[#eee9e4] px-6 py-7">
-          <Link href="/seller" className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#FF8C1C] shadow-[0_5px_12px_rgba(255,140,28,.12)]">
+      <aside className="seller-sidebar relative z-30 hidden h-screen w-72 shrink-0 flex-col overflow-hidden border-e border-white/5 bg-[#0B0B10] text-[#E8E6E1] shadow-[20px_0_60px_-20px_rgba(0,0,0,.6)] lg:sticky lg:top-0 lg:flex">
+        <div className="relative border-b border-white/5 px-6 py-6 backdrop-blur-sm">
+          <Link href="/seller" className="group flex items-center gap-3">
+            <span className="relative grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-white shadow-[0_8px_24px_rgba(251,146,60,.35),inset_0_1px_0_rgba(255,255,255,.3)] transition-transform duration-300 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" /><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" /></svg>
             </span>
             <span>
-              <span className="block text-[22px] font-black tracking-tight text-[#454545]">matjar<span className="text-[var(--orange)]">.</span></span>
-              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.18em] text-[#918a84]">{translate(locale, "Seller studio", "استوديو البائع")}</span>
+              <span className="block text-[20px] font-black tracking-tight text-white">matjar<span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">.</span></span>
+              <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[.25em] text-white/40">{translate(locale, "Seller studio", "استوديو البائع")}</span>
             </span>
           </Link>
         </div>
 
-        <div className="mx-4 mt-4 flex shrink-0 items-center gap-3 rounded-[1.25rem] border border-[#eee9e4] bg-white p-3 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
-          <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[1.25rem] border border-[#f6d8c5] bg-[#fff1e8] text-xl font-black text-[#a94308] shadow-[inset_0_1px_0_white]">
+        <div className="relative mx-4 mt-4 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-3.5 shadow-[0_8px_24px_rgba(0,0,0,.3)] backdrop-blur-xl">
+          <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-600/10 text-base font-black text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,.1)]">
             {store?.logoUrl ? <img src={store.logoUrl} alt="" className="size-full object-cover" /> : (store?.name ?? "M").trim().slice(0, 1).toLocaleUpperCase()}
           </span>
-          <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[#454545]">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block truncate text-[10px] leading-4 text-[#77716c]">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
+          <span className="min-w-0"><span className="block truncate text-sm font-bold text-white">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 flex items-center gap-1.5 truncate text-[10px] text-white/40">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
         </div>
 
 
 <nav
   aria-label={translate(locale, "Seller navigation", "تنقل البائع")}
-  className="seller-sidebar-nav min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto px-3 py-4"
+  className="seller-sidebar-nav relative min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto px-4 py-5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.1)_transparent]"
 >
   {groups.map((group) => (
     <div key={group.title}>
-      <div className="px-3 pb-1 pt-2">
-        <span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#918a84]">
+      <div className="mb-2 flex items-center gap-2 px-2">
+        <span className="text-[9px] font-bold uppercase tracking-[.25em] text-white/30">
           {translate(locale, group.title, group.ar)}
         </span>
       </div>
@@ -204,16 +179,16 @@ export default function SellerNavigation() {
                   : "text-[#5f5a55] hover:bg-[#fff7ed] hover:text-[#454545] hover:shadow-[inset_0_0_0_1px_rgba(255,140,28,.22)]"
               }`}
             >
-              <span className={`grid size-8 shrink-0 place-items-center rounded-lg ${toneClasses[link.tone]}`}>
+              <span className={`grid size-8 shrink-0 place-items-center rounded-lg transition-transform duration-300 group-hover:scale-110 ${active ? "bg-gradient-to-br from-amber-400/30 to-orange-500/20 text-amber-300 ring-1 ring-amber-400/40 shadow-[0_4px_12px_rgba(251,191,36,.2)]" : toneClasses[link.tone]}`}>
                 <SellerIcon name={link.icon} />
               </span>
 
-              <span className="min-w-0 truncate">
+              <span className="min-w-0 flex-1 truncate font-medium">
                 {translate(locale, link.label, link.ar)}
               </span>
 
               {active && (
-                <span className="ms-auto size-2 shrink-0 rounded-full bg-[#65a30d]" />
+                <span className="relative shrink-0"><span className="absolute inset-0 animate-ping rounded-full bg-amber-400/40" /><span className="relative block size-1.5 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 shadow-[0_0_8px_rgba(251,191,36,.8)]" /></span>
               )}
             </Link>
           );
@@ -224,37 +199,33 @@ export default function SellerNavigation() {
 </nav>
 
 
-        <div className="mx-3 mb-3 shrink-0 rounded-[1.25rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
-          <span className="grid size-10 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-lg text-[#FF8C1C] shadow-[inset_0_1px_0_white]" aria-hidden="true">✦</span>
-          <p className="mt-3 text-sm font-extrabold text-[#454545]">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
-          <p className="mt-1 text-[10px] leading-4 text-[#77716c]">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
+        <div className="relative mx-3 mb-3 shrink-0 rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm">
+          <span className="grid size-10 place-items-center rounded-xl border border-amber-400/20 bg-amber-500/10 text-lg text-amber-300" aria-hidden="true">✦</span>
+          <p className="mt-3 text-sm font-extrabold text-white">{translate(locale, "Grow your store", "طوّر متجرك")}</p>
+          <p className="mt-1 text-[10px] leading-4 text-white/45">{translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}</p>
           <Link href="/seller/advertising" className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[#FF8C1C] bg-[#FF8C1C] px-3 py-2 text-[11px] font-extrabold text-white shadow-[0_4px_12px_rgba(255,140,28,.16)]"><SellerIcon name="ads" />{translate(locale, "Explore campaigns", "استكشف الحملات")}</Link>
         </div>
-        <div className="shrink-0 border-t border-[#eee9e4] p-4">
-          <Link href="/" className="flex items-center justify-between rounded-2xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-semibold text-[#5f5a55] shadow-[0_3px_10px_rgba(48,38,78,.05)] transition hover:shadow-[var(--shadow-clay)]">
+        <div className="relative shrink-0 border-t border-white/5 p-4 backdrop-blur-sm">
+          <Link href="/" className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/70 transition-all hover:border-amber-400/30 hover:bg-amber-500/5 hover:text-white">
             <span className="flex items-center gap-2"><SellerIcon name="store" />{translate(locale, "View marketplace", "عرض واجهة المتجر")}</span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6H5V6h6"/></svg>
           </Link>
           <p className="mt-3 px-2 text-[10px] leading-5 text-[#77716c]">{translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}</p>
         </div>
       </aside>
 
-      <div className="seller-mobile-navigation border-b border-[#eee9e4] bg-white px-4 py-3 text-[#454545] shadow-[0_4px_14px_rgba(69,69,69,.05)] lg:hidden">
+      <div className="seller-mobile-navigation border-b border-white/5 bg-[#0B0B10] px-4 py-3 text-white shadow-[0_4px_20px_rgba(0,0,0,.4)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
-            <span className="grid size-8 place-items-center rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-sm text-[#a94308] shadow-[0_4px_10px_rgba(255,140,28,.10),inset_0_2px_0_white]">m</span>
+          <Link href="/seller" className="flex items-center gap-2 text-lg font-black text-white">
+            <span className="relative grid size-8 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-xs font-black text-white shadow-[0_4px_12px_rgba(251,146,60,.4)]">m</span>
             matjar<span className="text-[var(--orange)]">.</span>
           </Link>
-          <Link href="/" className="rounded-full border border-[#eee9e4] bg-white px-3 py-2 text-xs font-semibold text-[#454545] shadow-[0_4px_10px_rgba(74,75,112,.08),inset_0_1px_0_white]"><span className="inline-flex items-center gap-1"><SellerIcon name="store" />{translate(locale, "Marketplace", "المتجر")}</span></Link>
+          <Link href="/" className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-sm transition hover:border-amber-400/30 hover:text-amber-300"><span className="inline-flex items-center gap-1"><SellerIcon name="store" />{translate(locale, "Marketplace", "المتجر")}</span></Link>
         </div>
-        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-mobile-navigation__links flex flex-wrap gap-2 pb-1">
+        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-mobile-navigation__links grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex min-h-10 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
-                active
-                  ? "border-[#a3e635] bg-[#d9f99d] text-[#365314]"
-                  : "border-[#eee9e4] bg-white text-[#454545] hover:border-[#f3b58f] hover:shadow-[0_4px_12px_rgba(255,140,28,.10)]"
-              }`}>
+              className={`flex min-h-12 min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${active ? "border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-orange-500/10 text-white shadow-[0_4px_12px_rgba(251,146,60,.15)]" : "border-white/5 bg-white/[0.02] text-white/65 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
