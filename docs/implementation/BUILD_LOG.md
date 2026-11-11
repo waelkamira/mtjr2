@@ -4855,3 +4855,12 @@ The platform account policy is now explicit: email verification is not required 
 - Previous-page controls and disabled pagination controls are not intercepted.
 
 **Verification boundary:** Source-level implementation only; no local build, typecheck, or browser interaction test was run.
+
+
+## 2026-11-11 — Seller sidebar information architecture redesign
+
+- Reorganized seller navigation into task-oriented sections: Overview, Catalog, Sales & fulfillment, Customer experience, Growth, Finance, and Store & team. Moved returns alongside orders/shipping, grouped product questions/messages/reviews under customer experience, and grouped store settings with team access.
+- Replaced the dark luxury sidebar treatment with the platform's warm-white/neutral system and restrained Matjar orange. Active items use a soft orange surface with readable dark text; active icon tiles use orange with white icons. Inactive icons use neutral surfaces rather than unrelated pastel gradients.
+- Applied the matching light treatment to mobile navigation while retaining the existing links, route matching, store context, and responsive horizontal mobile layout.
+
+**Verification boundary:** Source-level implementation only; no local build, typecheck, or browser visual validation was run. The mobile and desktop layouts still need a visual pass at narrow and wide viewport sizes.
