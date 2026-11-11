@@ -418,8 +418,9 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] p-2">
-                  <AuthReturnLink href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-orange)] bg-[var(--color-orange)] px-3 py-3 text-center text-sm font-semibold text-white transition hover:bg-[var(--action-hover)] hover:text-white"><NavigationIcon name="login" />{localizedNavigationLabel(locale, "Sign in")}</AuthReturnLink>
-                  <AuthReturnLink href="/register" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-3 text-center text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)]">
+                  <AuthReturnLink href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-3 text-center text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)]"><NavigationIcon name="login" />{localizedNavigationLabel(locale, "Sign in")}</AuthReturnLink>
+                  <AuthReturnLink href="/register" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-orange)] bg-[var(--color-orange)] px-3 py-3 text-center text-sm font-semibold text-white transition hover:border-[var(--action-hover)] hover:bg-[var(--action-hover)] hover:text-white">
+                    <NavigationIcon name="user" />
                     <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
                       <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4.75 16a5.25 5.25 0 0 1 10.5 0M16 5.5v5M13.5 8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
