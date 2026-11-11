@@ -139,7 +139,7 @@ export default function SellerNavigation() {
 
   return (
     <>
-      <aside className="seller-sidebar relative z-30 hidden h-screen w-[288px] shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[#454545] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
+      <aside className="seller-sidebar relative z-30 hidden h-screen w-64 shrink-0 flex-col overflow-hidden border-e border-[#e8e5e0] bg-white text-[#454545] shadow-[8px_0_24px_rgba(69,69,69,.06)] lg:sticky lg:top-0 lg:flex">
         <div className="border-b border-[#eee9e4] px-6 py-7">
           <Link href="/seller" className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[#fff1e8] text-[#FF8C1C] shadow-[0_5px_12px_rgba(255,140,28,.12)]">
@@ -159,31 +159,24 @@ export default function SellerNavigation() {
           <span className="min-w-0"><span className="block truncate text-sm font-extrabold text-[#454545]">{store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}</span><span className="mt-1 block truncate text-[10px] leading-4 text-[#77716c]">{store ? `/stores/${store.slug}` : translate(locale, "One workspace for every store task", "مساحة واحدة لكل مهام متجرك")}</span></span>
         </div>
 
-        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-sidebar-nav min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-4 py-5">
-          {groups.map((group) => (
-            <section key={group.title}>
-              <h2 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#918a84]">{translate(locale, group.title, group.ar)}</h2>
-              <div className="space-y-1">
-                {group.links.map((link) => {
-                  const active = link.href === "/seller"
-                    ? pathname === "/seller"
-                    : pathname === link.href || pathname.startsWith(`${link.href}/`);
-                  return (
-                    <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-                      className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all duration-200 ${active
-                        ? "bg-[#ecfccb] font-extrabold text-[#365314] ring-1 ring-[#bef264] shadow-[inset_3px_0_0_#84cc16]"
-                        : "text-[#5f5a55] hover:bg-white hover:text-[#454545] hover:ring-1 hover:ring-[#f6d8c5] hover:shadow-[0_4px_12px_rgba(255,140,28,.08)]"}`}>
-                      <span className={`grid size-9 shrink-0 place-items-center rounded-xl transition-transform group-hover:-translate-y-0.5 ${toneClasses[link.tone]}`}>
-                        <SellerIcon name={link.icon} />
-                      </span>
-                      <span>{translate(locale, link.label, link.ar)}</span>
-                      {active && <span className="ms-auto size-2 rounded-full bg-[#65a30d] shadow-[0_0_8px_rgba(101,163,13,.25)]" />}
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+        <nav aria-label={translate(locale, "Seller navigation", "تنقل البائع")} className="seller-sidebar-nav min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 py-4">
+          {groups.flatMap((group) => group.links).map((link) => {
+            const active = link.href === "/seller"
+              ? pathname === "/seller"
+              : pathname === link.href || pathname.startsWith(`${link.href}/`);
+            return (
+              <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
+                className={`group flex min-w-0 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${active
+                  ? "bg-[#ecfccb] font-semibold text-[#365314] shadow-[inset_3px_0_0_#84cc16]"
+                  : "text-[#5f5a55] hover:bg-[#fff7ed] hover:text-[#454545] hover:shadow-[inset_0_0_0_1px_rgba(255,140,28,.22)]"}`}>
+                <span className={`grid size-8 shrink-0 place-items-center rounded-lg ${toneClasses[link.tone]}`}>
+                  <SellerIcon name={link.icon} />
+                </span>
+                <span className="min-w-0 truncate">{translate(locale, link.label, link.ar)}</span>
+                {active && <span className="ms-auto size-2 shrink-0 rounded-full bg-[#65a30d]" />}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mx-4 mb-3 shrink-0 rounded-[1.25rem] border border-[#eee9e4] bg-white p-4 shadow-[0_5px_16px_rgba(48,38,78,.05)]">
