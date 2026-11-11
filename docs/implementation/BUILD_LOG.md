@@ -4782,3 +4782,14 @@ The platform account policy is now explicit: email verification is not required 
 - Preserved lime for the active seller navigation item and kept semantic colors in analytics/status charts distinct from brand-action colors.
 
 **Verification boundary:** GitHub source was reviewed after committing. No local build/typecheck/lint/test run or live browser screenshot review was performed. This confirms source-level palette alignment, not pixel-perfect rendering on every viewport.
+
+
+## 2026-11-11 — Seller subpage palette completion (Vercel excluded)
+
+- Aligned seller financial overview KPI cards to the same white surface, neutral border, restrained shadow and orange section-label treatment used across the Matjar workspace; removed the mismatched mint, lavender and rose metric-card gradients.
+- Unified seller Q&A typography, inputs, neutral card surfaces and answer actions; orange primary buttons now use white text and the approved darker hover color.
+- Reworked seller inbox conversation list, selected row, message surface, form and send action to match the warm-white/onyx/orange design system, with readable contrast in selected and default states.
+- Aligned seller commission statements and staff/team pages with the same shared surface, text and border palette while preserving refund/error/success semantic colors.
+- Source-level audit across the seller feature pages and seller messages found no primary orange action using dark text. The seller sidebar's lime active state and data/status chart colors remain intentionally semantic.
+
+**Verification boundary:** Changes were committed directly to `main` and source-level contrast/palette checks were performed. No local build, typecheck, lint, automated tests, or browser visual inspection was performed. Deployment services were not used or consulted for this work.
