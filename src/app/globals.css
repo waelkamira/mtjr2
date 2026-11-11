@@ -1655,7 +1655,7 @@ html body :is(input, textarea, select)[class*="bg-[var(--background)"]::placehol
   color: #777777 !important;
   opacity: 1 !important;
 }
-html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-white"]):not([class*="bg-[#fff"]):not([class*="bg-[#faf"]):not([class*="bg-[#fef"]):not([class*="bg-[var(--surface)"]):not([class*="bg-[var(--background)"]):-webkit-autofill {
+html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-white"]):not([class*="bg-[#fff"]):not([class*="bg-[#faf"]):not([class*="bg-[#fef"]):not([class*="bg-[var(--surface)"]):not([class*="bg-[var(--surface-soft)"]):not([class*="bg-[var(--surface-tint)"]):not([class*="bg-[var(--surface-peach)"]):not([class*="bg-[var(--surface-butter)"]):not([class*="bg-[var(--background)"]):-webkit-autofill {
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff !important;
 }
