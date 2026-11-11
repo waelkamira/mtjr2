@@ -26,7 +26,7 @@ export default function SellerTopbar() {
     : translate(locale, "Seller studio", "استوديو البائع");
 
   return (
-    <header className="relative z-auto flex lg:sticky lg:top-0 lg:z-10 min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[0_3px_12px_rgba(69,69,69,.05)] sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
+    <header className="relative z-0 flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[0_3px_12px_rgba(69,69,69,.05)] sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
       <div className="min-w-0 flex-1 sm:flex-none">
         <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[var(--muted)]">{translate(locale, "MATJAR / SELLER STUDIO", "متجر / استوديو البائع")}</p>
         <p className="mt-1 break-words text-sm font-black text-[var(--foreground)] sm:text-base">{section}</p>
