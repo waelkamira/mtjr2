@@ -92,6 +92,10 @@ html[dir="rtl"] .text-right { text-align: left; }
 aside [class~="text-[var(--color-copper-600)]"] {
   color: var(--orange);
 }
+/* The 404 panel uses the dark clay surface, so its eyebrow needs a light accent. */
+.clay-surface [class~="text-[var(--color-lavender-600)]"] {
+  color: #ff9a5a;
+}
 /* The footer intentionally uses orange accents on a charcoal surface. */
 footer [class~="text-[var(--color-orange)]"] {
   color: var(--orange);
