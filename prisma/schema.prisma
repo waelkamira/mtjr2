@@ -632,6 +632,16 @@ model Seller {
   youtubeUrl String?
   twitterUrl String?
   identityDocumentFileId String?
+  registrationCountryCode String? @db.Char(2)
+  registrationNumber String? @db.VarChar(120)
+  registrationAuthority String? @db.VarChar(160)
+  registrationDate DateTime?
+  registeredAddress String? @db.VarChar(500)
+  taxIdentificationNumber String? @db.VarChar(120)
+  businessWebsite String? @db.VarChar(2048)
+  businessRegistrationDocumentFileId String?
+  taxCertificateDocumentFileId String?
+  proofOfAddressDocumentFileId String?
   latitude Float?
   longitude Float?
   createdAt   DateTime     @default(now())
