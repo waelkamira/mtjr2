@@ -28,12 +28,12 @@ export default function SellerTopbar() {
   return (
     <header className="static z-auto flex min-h-[var(--dashboard-topbar-height)] flex-wrap items-center justify-between gap-3 border-b border-[#eee9e4] bg-white px-4 py-3 shadow-[0_3px_12px_rgba(69,69,69,.05)] sm:px-6 lg:h-[var(--dashboard-topbar-height)] lg:flex-nowrap lg:px-8">
       <div className="min-w-0 flex-1 sm:flex-none">
-        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#918a84]">{translate(locale, "MATJAR / SELLER STUDIO", "متجر / استوديو البائع")}</p>
+        <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-[#625b55]">{translate(locale, "MATJAR / SELLER STUDIO", "متجر / استوديو البائع")}</p>
         <p className="mt-1 break-words text-sm font-black text-[#454545] sm:text-base">{section}</p>
       </div>
       <form action="/seller/products" method="GET" role="search" className="order-3 flex w-full max-w-none flex-1 items-center gap-3 rounded-2xl border border-[#eee9e4] bg-[#faf8f6] px-4 py-2.5 text-[#6f6963] shadow-[inset_0_1px_3px_rgba(69,69,69,.05)] lg:order-none lg:mx-6 lg:max-w-[440px]">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="size-5 shrink-0"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>
-        <input name="search" aria-label={translate(locale, "Search products", "ابحث عن المنتجات")} placeholder={translate(locale, "Search products, SKU…", "ابحث عن المنتجات أو رمز SKU...")} className="min-w-0 flex-1 bg-transparent text-sm text-[#454545] outline-none placeholder:text-[#a19a94]" />
+        <input name="search" aria-label={translate(locale, "Search products", "ابحث عن المنتجات")} placeholder={translate(locale, "Search products, SKU…", "ابحث عن المنتجات أو رمز SKU...")} className="min-w-0 flex-1 bg-transparent text-sm text-[#454545] outline-none placeholder:text-[#777777]" />
         <button type="submit" data-variant="primary" className="rounded-xl bg-[#f0660d] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_4px_9px_rgba(240,102,13,.18)]">{translate(locale, "Search", "بحث")}</button>
       </form>
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
