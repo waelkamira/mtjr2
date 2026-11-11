@@ -4651,3 +4651,13 @@ The platform account policy is now explicit: email verification is not required 
 **Verification**
 - Source-level review only; no database migration was applied, no Prisma client generation, build, typecheck, browser flow or tests were run in this session.
 - Migration must be applied through the project's normal controlled database migration process before the new fields can be used in a live environment.
+
+## 2026-11-11 — Seller studio visual redesign pass
+
+- Replaced the conflicting final seller visual overrides with one cohesive navy / mist / turquoise theme scoped to the seller dashboard; storefront and admin styling remain outside this scope.
+- Reworked the seller sidebar to a deep navy gradient, clearer active/hover navigation states, pastel icon accents, and a 288px desktop rail.
+- Restyled the seller toolbar and search surface, dashboard hero, metric cards, quick-action cards, forms, and responsive mobile navigation.
+- Updated the seller layout canvas to the blue-grey background and made the toolbar sticky for long workspace pages.
+- Existing page routes, data fetching, API calls, permission checks, and Prisma-backed operations were left intact.
+- Commits: `3dea9edb`, `926c869f`, `db195128`, `d6cfc930`, `dba5df07`.
+- Verification: source changes were committed directly to `main`. Build, typecheck, and browser visual verification have not been run in this pass; appearance is not yet runtime-confirmed.
