@@ -188,30 +188,17 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
     { href: "/notifications", label: "Notifications" }
   ];
   const mobileLinks = [
-    { href: "/cart", label: translate(locale, "Cart", "السلة") },
+    { href: "/cart", label: "Cart" },
     ...(account
       ? [
-          { href: "/account/favorites", label: translate(locale, "Favorites", "المفضلة") },
-          { href: "/account/orders", label: translate(locale, "Orders", "الطلبات") }
+          { href: "/account/favorites", label: "Favorites" },
+          { href: "/account/orders", label: "Orders" }
         ]
       : []),
-    ...publicLinks.slice(0, 8).map((link) => ({
-      ...link,
-      label: translate(locale, link.label, {
-        Home: "الرئيسية",
-        Shop: "تسوق",
-        Categories: "الفئات",
-        Brands: "العلامات التجارية",
-        Stores: "المتاجر",
-        "Sell on Mtjr": "بع على متجر"
-      }[link.label] ?? link.label)
-    })),
+    ...publicLinks.slice(0, 8),
     ...(account ? signedInLinks : []),
-    ...(isAdministrator ? [{ href: controlPanelHref, label: translate(locale, "Control panel", "لوحة التحكم") }] : []),
-    ...publicLinks.slice(6).map((link) => ({
-      ...link,
-      label: translate(locale, link.label, { About: "من نحن", Contact: "اتصل بنا", Terms: "الشروط", Privacy: "الخصوصية" }[link.label] ?? link.label)
-    }))
+    ...(isAdministrator ? [{ href: controlPanelHref, label: "Control panel" }] : []),
+    ...publicLinks.slice(6)
   ];
 
   const menuLinkClass = "flex w-full items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--color-orange)] hover:bg-white hover:text-[var(--foreground)] hover:shadow-[0_4px_12px_rgb(69_69_69/8%)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-orange)]";
@@ -421,6 +408,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                   onClick={() => setMobileOpen(false)}
                   className={menuLinkClass}
                 >
+                  <NavigationIcon name={navigationIconFor(link.label)} />
                   {localizedNavigationLabel(locale, link.label)}
                 </Link>
               ))}
