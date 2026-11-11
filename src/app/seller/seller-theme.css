@@ -68,8 +68,11 @@
 .seller-dashboard [class*="text-[#17374b]"] { color: var(--foreground) !important; }
 .seller-dashboard [class*="bg-[#142b45]"],
 .seller-dashboard [class*="bg-[#203850]"] { background: var(--surface) !important; }
+/* Navigation remains the topmost persistent layer at every viewport size. The search/topbar is normal document flow and scrolls away beneath it. */
+.seller-dashboard .seller-sidebar { position: sticky; top: 0; z-index: 50; }
+.seller-dashboard .seller-mobile-navigation { position: sticky; top: 0; z-index: 50; }
+.seller-dashboard .seller-topbar { position: relative; z-index: 0; }
 @media (max-width: 1023px) {
-  .seller-dashboard .seller-mobile-navigation { position: sticky; top: 0; z-index: 30; }
   .seller-dashboard .seller-mobile-navigation__links { max-width: 100%; }
 }
 
