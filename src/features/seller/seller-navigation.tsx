@@ -52,12 +52,12 @@ const groups: Array<{
 ];
 
 const toneClasses: Record<Tone, string> = {
-  lavender: "bg-[#fff1e8] text-[#c6530b]",
-  mint: "bg-[#fff1e8] text-[#c6530b]",
-  peach: "bg-[#fff1e8] text-[#c6530b]",
-  butter: "bg-[#fff1e8] text-[#c6530b]",
-  blush: "bg-[#fff1e8] text-[#c6530b]",
-  sky: "bg-[#fff1e8] text-[#c6530b]"
+  lavender: "bg-[#f1edfa] text-[#67538f]",
+  mint: "bg-[#e8f4ef] text-[#356b58]",
+  peach: "bg-[#fff1e8] text-[#a94308]",
+  butter: "bg-[#fbf4df] text-[#80621b]",
+  blush: "bg-[#faeaf0] text-[#98516b]",
+  sky: "bg-[#eaf2f8] text-[#45677f]"
 };
 
 function SellerIcon({ name }: { name: IconName }) {
