@@ -84,7 +84,7 @@ export async function submitSellerApplication(input: SellerApplicationInput, now
   if (isRegisteredEntity && (!data.registrationCountryCode || !data.registrationNumber || !data.businessRegistrationDocumentFileId)) {
     throw new Error("Registered businesses must provide their registration country, number and certificate.");
   }
-  if (data.registrationDate && !/^\\d{4}-\\d{2}-\\d{2}$/.test(data.registrationDate)) throw new Error("Enter a valid business registration date.");
+  if (data.registrationDate && !/^\d{4}-\d{2}-\d{2}$/.test(data.registrationDate)) throw new Error("Enter a valid business registration date.");
   const actor = await requireCurrentSession(now);
   if (!actor.user.emailVerifiedAt) {
     throw new Error("Please verify your email before submitting a seller application.");
