@@ -1571,9 +1571,6 @@ button[data-button-style="link"]:hover:not(:disabled) {
 /* Input contrast contract: dark field surfaces always use white text.
    Light surfaces keep their normal dark foreground. This is global so legacy,
    account, checkout, admin and dashboard forms stay readable consistently. */
-html body :is(input, textarea, select):not(.seller-dashboard *) :is(*) {
-  /* Intentionally empty: the selectors below own field contrast. */
-}
 html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-"]),
 html body :is(input, textarea, select)[class~="bg-black"],
 html body :is(input, textarea, select)[class~="bg-gray-800"],
@@ -1625,8 +1622,8 @@ html body :is(input, textarea, select)[class*="bg-[#1"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[#2"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[#3"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[#4"]::placeholder,
-html body :is(input, textarea, select)[class*="bg-[var(--color-ink-"],
-html body :is(input, textarea, select)[class*="bg-[var(--color-forest-"],
+html body :is(input, textarea, select)[class*="bg-[var(--color-ink-"]::placeholder,
+html body :is(input, textarea, select)[class*="bg-[var(--color-forest-"]::placeholder,
 html body :is(input, textarea, select)[class*="bg-[var(--color-lavender-"]::placeholder {
   color: rgb(255 255 255 / 72%) !important;
   opacity: 1 !important;
@@ -1650,7 +1647,7 @@ html body :is(input, textarea, select)[class*="bg-[var(--background)"]::placehol
   color: #777777 !important;
   opacity: 1 !important;
 }
-html body :is(input, textarea, select):-webkit-autofill {
+html body :is(input, textarea, select):not(.seller-dashboard input):not(.seller-dashboard textarea):not(.seller-dashboard select):not([class*="bg-white"]):not([class*="bg-[#fff"]):not([class*="bg-[#faf"]):not([class*="bg-[#fef"]):not([class*="bg-[var(--surface)"]):not([class*="bg-[var(--background)"]):-webkit-autofill {
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff !important;
 }
