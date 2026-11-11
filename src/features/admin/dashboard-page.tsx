@@ -315,7 +315,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(249,115,22,.08),transparent_36%),radial-gradient(ellipse_at_top_right,rgba(139,92,246,.07),transparent_32%),#f8fafc] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,rgba(255,140,28,.08),transparent_36%),radial-gradient(ellipse_at_top_right,rgba(139,92,246,.07),transparent_32%),#f8fafc] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -375,7 +375,7 @@ export default function AdminDashboardPage() {
             ]} />
             <MetricBarChart variant="donut" title="Products" rows={[
               { label: "Total products", value: dashboard.metrics.totalProducts, color: "bg-indigo-500" },
-              { label: "Products awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-orange-500" }
+              { label: "Products awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-[var(--orange)]" }
             ]} />
             <MetricBarChart variant="donut" title="Orders" rows={[
               { label: "Awaiting payment", value: dashboard.metrics.pendingOrders, color: "bg-amber-500" },
@@ -393,7 +393,7 @@ export default function AdminDashboardPage() {
             ]} />
             <MetricBarChart variant="donut" title="Customer care" rows={[
               { label: "Open support tickets", value: dashboard.metrics.openSupportTickets, color: "bg-cyan-500" },
-              { label: "Requested returns", value: dashboard.metrics.requestedReturns, color: "bg-orange-500" }
+              { label: "Requested returns", value: dashboard.metrics.requestedReturns, color: "bg-[var(--orange)]" }
             ]} />
             <MetricBarChart variant="donut" title="Order fulfillment pipeline" rows={[
               { label: "Awaiting payment", value: dashboard.metrics.pendingOrders, color: "bg-yellow-500" },
@@ -427,7 +427,7 @@ export default function AdminDashboardPage() {
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
             <div className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_10px_34px_rgba(15,23,42,.05)]">
               <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{translate(locale, "Daily orders", "الطلبات اليومية")}</h2><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Number of orders placed; canceled orders are excluded from the bars.", "عدد الطلبات المقدمة؛ لا تشمل الأعمدة الطلبات الملغاة.")}</p></div><span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span></div>
-              <div className="mt-4"><MetricBarChart title="Daily order trend" variant="area" rows={dashboard.dailyOrders.map((day) => ({ label: day.day.slice(5), value: day.count, color: "bg-orange-500" }))} /></div>
+              <div className="mt-4"><MetricBarChart title="Daily order trend" variant="area" rows={dashboard.dailyOrders.map((day) => ({ label: day.day.slice(5), value: day.count, color: "bg-[var(--orange)]" }))} /></div>
               <div className="mt-2 flex justify-between text-[10px] text-[var(--muted)]"><span>{dashboard.dailyOrders[0]?.day}</span><span>{dashboard.dailyOrders.at(-1)?.day}</span></div>
             </div>
             <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
