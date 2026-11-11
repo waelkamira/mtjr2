@@ -1135,3 +1135,13 @@ textarea {
   color: #ffffff !important;
 }
 
+
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="bg-white"], [class~="bg-gray-50"], [class~="bg-gray-100"],
+  [class~="bg-slate-50"], [class~="bg-slate-100"], [class~="bg-[var(--surface)]"],
+  [class~="bg-[var(--surface-soft)]"], [class~="hover:bg-white"],
+  [class~="hover:bg-gray-50"], [class~="hover:bg-slate-50"],
+  [class~="hover:bg-[var(--surface)]"], [class~="hover:bg-[var(--surface-soft)]"]
+):is(span, strong, svg, [class*="text-"]) {
+  color: inherit !important;
+}
