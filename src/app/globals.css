@@ -982,28 +982,52 @@ textarea {
   color: var(--muted);
   opacity: 1;
 }
-/* Brand orange is a bright action color, not a dark surface.
-   Use a dark foreground on orange brand backgrounds and their hover states. */
+
+/* Brand orange is a bright action color, not a dark surface. */
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
-  [class~="bg-[var(--color-forest-900)]"], [class~="bg-[var(--color-forest-800)]"],
-  [class~="bg-[var(--color-lavender-600)]"], [class~="bg-[var(--color-mint-600)]"],
-  [class~="bg-[var(--color-blush-600)]"], [class~="bg-[var(--color-peach-600)]"],
-  [class~="bg-[var(--color-butter-600)]"], [class~="bg-[var(--color-violet-700)]"],
-  [class~="bg-[var(--color-violet-600)]"], [class~="bg-[var(--color-copper-500)]"],
-  [class~="bg-[var(--color-copper-600)]"], [class~="bg-[var(--color-copper-700)]"],
-  [class~="bg-[var(--color-orange)]"], [class~="bg-[var(--color-orange-500)]"],
-  [class~="bg-[var(--color-orange-600)]"], [class~="bg-[var(--action)]"],
-  [class~="bg-[var(--accent)]"], [class~="bg-orange-500"], [class~="bg-orange-600"],
-  [class~="hover:bg-[var(--color-forest-900)]"], [class~="hover:bg-[var(--color-forest-800)]"],
-  [class~="hover:bg-[var(--color-lavender-600)]"], [class~="hover:bg-[var(--color-mint-600)]"],
-  [class~="hover:bg-[var(--color-blush-600)]"], [class~="hover:bg-[var(--color-peach-600)]"],
-  [class~="hover:bg-[var(--color-butter-600)]"], [class~="hover:bg-[var(--color-violet-700)]"],
-  [class~="hover:bg-[var(--color-violet-600)]"], [class~="hover:bg-[var(--color-copper-500)]"],
-  [class~="hover:bg-[var(--color-copper-600)]"], [class~="hover:bg-[var(--color-copper-700)]"],
-  [class~="hover:bg-[var(--color-orange)]"], [class~="hover:bg-[var(--color-orange-500)]"],
-  [class~="hover:bg-[var(--color-orange-600)]"], [class~="hover:bg-[var(--action-hover)]"],
-  [class~="hover:bg-orange-500"], [class~="hover:bg-orange-600"]
-):is(:hover, :not(:hover)) {
+  [class~="bg-[var(--color-forest-900)]"],
+  [class~="bg-[var(--color-forest-800)]"],
+  [class~="bg-[var(--color-lavender-600)]"],
+  [class~="bg-[var(--color-mint-600)]"],
+  [class~="bg-[var(--color-blush-600)]"],
+  [class~="bg-[var(--color-peach-600)]"],
+  [class~="bg-[var(--color-butter-600)]"],
+  [class~="bg-[var(--color-violet-700)]"],
+  [class~="bg-[var(--color-violet-600)]"],
+  [class~="bg-[var(--color-copper-500)]"],
+  [class~="bg-[var(--color-copper-600)]"],
+  [class~="bg-[var(--color-copper-700)]"],
+  [class~="bg-[var(--color-orange)]"],
+  [class~="bg-[var(--color-orange-500)]"],
+  [class~="bg-[var(--color-orange-600)]"],
+  [class~="bg-[var(--action)]"],
+  [class~="bg-[var(--accent)]"],
+  [class~="bg-orange-500"],
+  [class~="bg-orange-600"]
+) {
   color: #17212b !important;
 }
-\n
+
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="hover:bg-[var(--color-forest-900)]"],
+  [class~="hover:bg-[var(--color-forest-800)]"],
+  [class~="hover:bg-[var(--color-lavender-600)]"],
+  [class~="hover:bg-[var(--color-mint-600)]"],
+  [class~="hover:bg-[var(--color-blush-600)]"],
+  [class~="hover:bg-[var(--color-peach-600)]"],
+  [class~="hover:bg-[var(--color-butter-600)]"],
+  [class~="hover:bg-[var(--color-violet-700)]"],
+  [class~="hover:bg-[var(--color-violet-600)]"],
+  [class~="hover:bg-[var(--color-copper-500)]"],
+  [class~="hover:bg-[var(--color-copper-600)]"],
+  [class~="hover:bg-[var(--color-copper-700)]"],
+  [class~="hover:bg-[var(--color-orange)]"],
+  [class~="hover:bg-[var(--color-orange-500)]"],
+  [class~="hover:bg-[var(--color-orange-600)]"],
+  [class~="hover:bg-[var(--action-hover)]"],
+  [class~="hover:bg-[var(--accent)]"],
+  [class~="hover:bg-orange-500"],
+  [class~="hover:bg-orange-600"]
+):hover {
+  color: #17212b !important;
+}
