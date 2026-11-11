@@ -27,7 +27,17 @@ type Store = {
   warehouses: Array<{ id: string; code: string; name: string; _count: { inventories: number } }>;
 };
 type Workspace = {
-  seller: null | { id: string; status: string; legalName: string | null; displayName: string | null; contactName: string | null; contactEmail: string | null; phoneNumber: string | null; residence: string | null; businessType: string | null; sellingCategories: string | null; intendedProducts: string | null; description: string | null; facebookUrl: string | null; youtubeUrl: string | null; twitterUrl: string | null; latitude: number | null; longitude: number | null; createdAt: string; rejectionReason: string | null; reviewedAt: string | null };
+  seller: null | {
+    id: string; status: string; legalName: string | null; displayName: string | null; contactName: string | null;
+    contactEmail: string | null; phoneNumber: string | null; residence: string | null; businessType: string | null;
+    sellingCategories: string | null; intendedProducts: string | null; description: string | null;
+    facebookUrl: string | null; youtubeUrl: string | null; twitterUrl: string | null;
+    latitude: number | null; longitude: number | null;
+    registrationCountryCode: string | null; registrationNumber: string | null; registrationAuthority: string | null;
+    registrationDate: string | null; registeredAddress: string | null; taxIdentificationNumber: string | null; businessWebsite: string | null;
+    hasBusinessRegistrationDocument: boolean; hasTaxCertificateDocument: boolean; hasProofOfAddressDocument: boolean;
+    createdAt: string; rejectionReason: string | null; reviewedAt: string | null
+  };
   stores: Store[];
 };
 type ShippingRate = { id: string; marketId: string; market: { code: string; name: string }; currencyCode: string; currency: { minorUnit: number }; name: string; description: string | null; amountMinor: string; destinationRegion: string | null; minDeliveryDays: number | null; maxDeliveryDays: number | null; isActive: boolean };
@@ -886,7 +896,7 @@ export default function SellerWorkspacePage() {
                   <label className="grid gap-2 rounded-2xl border border-dashed border-[#f0c7ad] bg-[#fffaf6] p-4 text-sm">
                     <span className="font-bold text-[#34445a]">{translate(locale, "Business registration certificate", "شهادة السجل التجاري")} {businessType === "STORE" || businessType === "AGENCY" ? "*" : ""}</span>
                     <span className="text-xs text-[#8790a5]">{businessRegistrationDocumentName || translate(locale, "PDF or image · up to 8 MB · private upload", "PDF أو صورة · حتى 8 ميغابايت · رفع خاص")}</span>
-                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/avif" required={false} onChange={(e) => void uploadSellerVerificationDocument(e, "businessRegistration")} disabled={busy} className="block w-full text-xs" />
+                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/avif" required={(businessType === "STORE" || businessType === "AGENCY") && !businessRegistrationDocumentFileId} onChange={(e) => void uploadSellerVerificationDocument(e, "businessRegistration")} disabled={busy} className="block w-full text-xs" />
                     {businessRegistrationDocumentFileId && <span className="text-xs font-semibold text-emerald-700">{translate(locale, "Certificate attached", "تم إرفاق الشهادة")}</span>}
                   </label>
                   <label className="grid gap-2 rounded-2xl border border-dashed border-[#f0c7ad] bg-[#fffaf6] p-4 text-sm">
