@@ -1196,12 +1196,12 @@ textarea {
 /* Default buttons are quiet white controls. Primary, destructive and selected
    states are explicit and always carry their matching foreground. */
 /* Platform-wide button defaults: white secondary controls with dark ink. */
-button:not(:where([data-button-style="link"], [data-variant="primary"], [data-variant="danger"], [data-variant="active"], [aria-pressed="true"], [aria-selected="true"], [class*="bg-red"], [class*="bg-rose"], [class*="bg-[#dc2626]"], [class*="bg-[#FF8C1C]"], [class*="bg-[#d86b32]"], [class*="bg-[var(--color-orange)]"], [class*="bg-[var(--color-orange-500)]"], [class*="bg-[var(--color-orange-600)]"], [class*="bg-[var(--action)]"], [class*="bg-[var(--color-forest-900)]"], [class*="bg-[var(--color-forest-800)]"], [class*="bg-[var(--color-ink-800)]"], [class*="bg-[var(--color-ink-600)]"], [class*="bg-[var(--color-lavender-600)]"], [class*="bg-[var(--color-mint-600)]"], [class*="bg-[var(--color-blush-600)]"], [class*="bg-[var(--color-peach-600)]"], [class*="bg-[var(--color-butter-600)]"], [class*="bg-[var(--color-violet-700)]"], [class*="bg-[var(--color-violet-600)]"], [class*="bg-[var(--color-copper-500)]"], [class*="bg-[var(--color-copper-600)]"], [class*="bg-[var(--color-copper-700)]"], [class*="bg-orange-500"], [class*="bg-orange-600"], [class*="bg-[linear-gradient"])) {
+button:not(:where([data-button-style="link"], [data-variant="primary"], [data-variant="danger"], [data-variant="active"], [aria-pressed="true"], [aria-selected="true"], [class*="bg-red"], [class*="bg-rose"], [class*="bg-[#dc2626]"], [class*="bg-[#FF8C1C]"], [class*="bg-[#FF8C1C]"], [class*="bg-[var(--color-orange)]"], [class*="bg-[var(--color-orange-500)]"], [class*="bg-[var(--color-orange-600)]"], [class*="bg-[var(--action)]"], [class*="bg-[var(--color-forest-900)]"], [class*="bg-[var(--color-forest-800)]"], [class*="bg-[var(--color-ink-800)]"], [class*="bg-[var(--color-ink-600)]"], [class*="bg-[var(--color-lavender-600)]"], [class*="bg-[var(--color-mint-600)]"], [class*="bg-[var(--color-blush-600)]"], [class*="bg-[var(--color-peach-600)]"], [class*="bg-[var(--color-butter-600)]"], [class*="bg-[var(--color-violet-700)]"], [class*="bg-[var(--color-violet-600)]"], [class*="bg-[var(--color-copper-500)]"], [class*="bg-[var(--color-copper-600)]"], [class*="bg-[var(--color-copper-700)]"], [class*="bg-orange-500"], [class*="bg-orange-600"], [class*="bg-[linear-gradient"])) {
   background: #ffffff !important;
   border: 1px solid var(--matjar-line) !important;
   color: var(--matjar-ink) !important;
 }
-button:not(:where([data-button-style="link"], [data-variant="primary"], [data-variant="danger"], [data-variant="active"], :disabled, [aria-pressed="true"], [aria-selected="true"], [class*="bg-red"], [class*="bg-rose"], [class*="bg-[#dc2626]"], [class*="bg-[#FF8C1C]"], [class*="bg-[#d86b32]"], [class*="bg-[var(--color-orange)]"], [class*="bg-[var(--color-orange-500)]"], [class*="bg-[var(--color-orange-600)]"], [class*="bg-[var(--action)]"], [class*="bg-[var(--color-forest-900)]"], [class*="bg-[var(--color-forest-800)]"], [class*="bg-[var(--color-ink-800)]"], [class*="bg-[var(--color-ink-600)]"], [class*="bg-[var(--color-lavender-600)]"], [class*="bg-[var(--color-mint-600)]"], [class*="bg-[var(--color-blush-600)]"], [class*="bg-[var(--color-peach-600)]"], [class*="bg-[var(--color-butter-600)]"], [class*="bg-[var(--color-violet-700)]"], [class*="bg-[var(--color-violet-600)]"], [class*="bg-[var(--color-copper-500)]"], [class*="bg-[var(--color-copper-600)]"], [class*="bg-[var(--color-copper-700)]"], [class*="bg-orange-500"], [class*="bg-orange-600"], [class*="bg-[linear-gradient"])):hover {
+button:not(:where([data-button-style="link"], [data-variant="primary"], [data-variant="danger"], [data-variant="active"], :disabled, [aria-pressed="true"], [aria-selected="true"], [class*="bg-red"], [class*="bg-rose"], [class*="bg-[#dc2626]"], [class*="bg-[#FF8C1C]"], [class*="bg-[#FF8C1C]"], [class*="bg-[var(--color-orange)]"], [class*="bg-[var(--color-orange-500)]"], [class*="bg-[var(--color-orange-600)]"], [class*="bg-[var(--action)]"], [class*="bg-[var(--color-forest-900)]"], [class*="bg-[var(--color-forest-800)]"], [class*="bg-[var(--color-ink-800)]"], [class*="bg-[var(--color-ink-600)]"], [class*="bg-[var(--color-lavender-600)]"], [class*="bg-[var(--color-mint-600)]"], [class*="bg-[var(--color-blush-600)]"], [class*="bg-[var(--color-peach-600)]"], [class*="bg-[var(--color-butter-600)]"], [class*="bg-[var(--color-violet-700)]"], [class*="bg-[var(--color-violet-600)]"], [class*="bg-[var(--color-copper-500)]"], [class*="bg-[var(--color-copper-600)]"], [class*="bg-[var(--color-copper-700)]"], [class*="bg-orange-500"], [class*="bg-orange-600"], [class*="bg-[linear-gradient"])):hover {
   border-color: var(--matjar-hover-line) !important;
   box-shadow: var(--matjar-hover-shadow) !important;
   color: var(--matjar-ink) !important;
@@ -1231,7 +1231,7 @@ button[class*="text-white"]:not([class*="bg-red"]):not([class*="bg-rose"]):not([
 }
 button[data-variant="primary"],
 button[class*="bg-[#FF8C1C]"],
-button[class*="bg-[#d86b32]"],
+button[class*="bg-[#FF8C1C]"],
 button[class*="bg-[var(--color-forest-900)]"],
 button[class*="bg-[var(--color-forest-800)]"],
 button[class*="bg-[var(--color-ink-800)]"],
@@ -1259,7 +1259,7 @@ button[class*="bg-[linear-gradient"] {
 }
 button[data-variant="primary"]:hover,
 button[class*="bg-[#FF8C1C]"]:hover,
-button[class*="bg-[#d86b32]"]:hover,
+button[class*="bg-[#FF8C1C]"]:hover,
 button[class*="bg-[var(--color-forest-900)]"]:hover,
 button[class*="bg-[var(--color-forest-800)]"]:hover,
 button[class*="bg-[var(--color-ink-800)]"]:hover,
