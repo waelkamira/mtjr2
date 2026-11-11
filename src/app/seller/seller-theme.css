@@ -1,0 +1,74 @@
+/* Seller workspace visual layer: mirrors the sign-in page's white / orange / onyx palette. */
+.seller-dashboard {
+  --seller-orange: #f0660d;
+  --seller-onyx: #454545;
+  --seller-white: #ffffff;
+  background: var(--background);
+  color: var(--foreground);
+}
+.seller-dashboard__content { min-width: 0; background: var(--background); }
+.seller-dashboard main {
+  color: var(--foreground);
+  background: var(--background) !important;
+}
+.seller-dashboard main :is(h1,h2,h3,h4) { color: var(--foreground); }
+.seller-dashboard main :is(section,article) {
+  border-color: var(--border);
+}
+.seller-dashboard main :is(input,select,textarea) {
+  border-color: var(--border);
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+.seller-dashboard main :is(input,select,textarea):focus {
+  border-color: var(--action);
+  outline-color: var(--action);
+}
+.seller-dashboard main :is(button,[role="button"]):focus-visible,
+.seller-dashboard a:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 3px;
+}
+.seller-dashboard :is(.seller-sidebar-nav,.seller-mobile-navigation__links) { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.seller-dashboard aside[class*="seller"] {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.seller-dashboard .seller-sidebar-nav a[aria-current="page"] {
+  color: var(--action);
+  background: var(--surface-soft);
+  box-shadow: inset 3px 0 0 var(--action);
+}
+.seller-dashboard .seller-sidebar-nav a:not([aria-current="page"]):hover {
+  color: var(--action);
+  background: var(--surface-soft);
+}
+.seller-dashboard .seller-mobile-navigation {
+  background: var(--surface);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+.seller-dashboard .seller-mobile-navigation__links a[aria-current="page"] {
+  color: var(--action);
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+.seller-dashboard .seller-mobile-navigation__links a:not([aria-current="page"]) {
+  color: var(--foreground);
+  border-color: var(--border);
+  background: var(--surface);
+}
+.seller-dashboard :is(.seller-overview-hero,.seller-application-section) {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+.seller-dashboard [class*="text-[#203850]"],
+.seller-dashboard [class*="text-[#142b45]"],
+.seller-dashboard [class*="text-[#17374b]"] { color: var(--foreground) !important; }
+.seller-dashboard [class*="bg-[#142b45]"],
+.seller-dashboard [class*="bg-[#203850]"] { background: var(--surface) !important; }
+@media (max-width: 1023px) {
+  .seller-dashboard .seller-mobile-navigation { position: relative; z-index: 5; }
+  .seller-dashboard .seller-mobile-navigation__links { max-width: 100%; }
+}
