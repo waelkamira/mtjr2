@@ -7,7 +7,7 @@ import { safeReturnPath } from "@/lib/safe-return-path";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 
-const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--color-lavender-600)]";
+const fieldClass = "mt-2 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--color-lavender-600)]";
 const mfaButtonClass = "rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50";
 
 export default function SecurityPage() {
