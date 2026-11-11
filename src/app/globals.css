@@ -1084,3 +1084,54 @@ textarea {
   background: #fff !important;
   box-shadow: 0 5px 16px rgb(30 57 83 / 4%) !important;
 }
+
+
+/* Accessible foreground pairing for interactive surfaces.
+   Light backgrounds (including hover backgrounds) always use dark text;
+   dark/brand backgrounds use white text. Explicit component styling remains
+   available through data-contrast="custom" for intentionally special controls. */
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="bg-white"], [class~="bg-gray-50"], [class~="bg-gray-100"],
+  [class~="bg-slate-50"], [class~="bg-slate-100"], [class~="bg-zinc-50"],
+  [class~="bg-neutral-50"], [class~="bg-stone-50"],
+  [class~="bg-[var(--surface)]"], [class~="bg-[var(--surface-soft)]"],
+  [class~="bg-[var(--color-snow)]"], [class~="bg-[var(--color-white)]"],
+  [class~="bg-[var(--color-ivory-50)]"], [class~="bg-[var(--color-ivory-100)]"],
+  [class~="bg-[var(--color-lavender-50)]"], [class~="bg-[var(--color-lavender-100)]"],
+  [class~="bg-[var(--color-mint-50)]"], [class~="bg-[var(--color-mint-100)]"],
+  [class~="bg-[var(--color-peach-50)]"], [class~="bg-[var(--color-peach-100)]"],
+  [class~="bg-[var(--color-blush-50)]"], [class~="bg-[var(--color-blush-100)]"],
+  [class~="bg-[var(--color-butter-50)]"], [class~="bg-[var(--color-butter-100)]"],
+  [class~="bg-red-50"], [class~="bg-amber-50"], [class~="bg-green-50"], [class~="bg-emerald-50"]
+),
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="hover:bg-white"], [class~="hover:bg-gray-50"], [class~="hover:bg-gray-100"],
+  [class~="hover:bg-slate-50"], [class~="hover:bg-slate-100"],
+  [class~="hover:bg-[var(--surface)]"], [class~="hover:bg-[var(--surface-soft)]"]
+):hover {
+  color: #17212b !important;
+}
+
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="bg-black"], [class~="bg-gray-800"], [class~="bg-gray-900"],
+  [class~="bg-slate-800"], [class~="bg-slate-900"], [class~="bg-zinc-800"],
+  [class~="bg-neutral-900"], [class~="bg-[var(--color-forest-950)]"],
+  [class~="bg-[var(--color-forest-900)]"], [class~="bg-[var(--color-forest-800)]"],
+  [class~="bg-[var(--color-ink-800)]"], [class~="bg-[var(--color-ink-600)]"],
+  [class~="bg-[var(--color-lavender-600)]"], [class~="bg-[var(--color-mint-600)]"],
+  [class~="bg-[var(--color-blush-600)]"], [class~="bg-[var(--color-peach-600)]"],
+  [class~="bg-[var(--color-butter-600)]"], [class~="bg-[var(--color-violet-700)]"],
+  [class~="bg-[var(--color-violet-600)]"], [class~="bg-[var(--color-copper-500)]"],
+  [class~="bg-[var(--color-copper-600)]"], [class~="bg-[var(--color-copper-700)]"],
+  [class~="bg-[var(--color-orange)]"], [class~="bg-[var(--color-orange-500)]"],
+  [class~="bg-[var(--color-orange-600)]"], [class~="bg-orange-500"], [class~="bg-orange-600"]
+),
+:is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
+  [class~="hover:bg-black"], [class~="hover:bg-gray-800"], [class~="hover:bg-gray-900"],
+  [class~="hover:bg-slate-800"], [class~="hover:bg-slate-900"],
+  [class~="hover:bg-[var(--color-forest-950)]"], [class~="hover:bg-[var(--color-ink-800)]"],
+  [class~="hover:bg-[var(--color-orange)]"], [class~="hover:bg-[var(--color-orange-600)]"]
+):hover {
+  color: #ffffff !important;
+}
+
