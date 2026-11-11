@@ -125,7 +125,7 @@ export default function SellerQuestionsPage() {
 
   return <main className="min-h-screen bg-transparent px-4 py-6 sm:px-6 lg:px-8">
     <div className="mx-auto max-w-[1440px]">
-      <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Customer engagement", "التفاعل مع العملاء")}</p>
+      <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#a35f3a]">{t("Customer engagement", "التفاعل مع العملاء")}</p>
       <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Product questions", "أسئلة المنتجات")}</h1>
       {!loading && !error && items.length > 0 && <section aria-label={t("Product Q&A analytics", "تحليلات أسئلة المنتجات")} className="mt-6 grid gap-4 md:grid-cols-2">
         <MetricBarChart title={t("Questions by moderation status", "الأسئلة حسب حالة المراجعة")} rows={questionStatusRows} />
@@ -134,7 +134,7 @@ export default function SellerQuestionsPage() {
       {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{message}</p>}
       {loading ? <div className="mt-6 h-40 animate-pulse rounded-3xl bg-[var(--surface-soft)]" /> : items.length ? <div className="mt-6 space-y-4">
-        {items.map((item) => <article key={item.id} className="rounded-3xl border border-[#e3e7eb] bg-white p-5 shadow-[0_8px_24px_rgba(20,35,50,.06)] sm:p-6">
+        {items.map((item) => <article key={item.id} className="rounded-3xl border border-[#eadfd5] bg-white p-5 shadow-[0_8px_24px_rgba(119,86,62,.06)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0"><p className="text-xs text-[var(--muted)]">{item.product.store.name} · {item.product.name}</p><h2 className="mt-2 font-semibold text-[var(--color-ink-950)]">{t("Q:", "س:")} {item.question}</h2><p className="mt-1 text-xs text-[var(--muted)]">{t("Asked by", "طرح السؤال")} {item.author} · {new Date(item.createdAt).toLocaleDateString(locale === "ar" ? "ar" : "en-GB")}</p></div>
             <span className="rounded-full bg-[#f2f4f6] px-3 py-1.5 text-xs font-semibold text-[#475569]">{statusLabel(item.status)}</span>
@@ -147,17 +147,17 @@ export default function SellerQuestionsPage() {
               <button type="button" disabled={historyLoading[entry.id]} onClick={() => void showHistory(entry.id)} className="text-xs font-semibold text-[#475569] underline underline-offset-4 disabled:opacity-50">{historyLoading[entry.id] ? t("Loading history…", "جارٍ تحميل السجل…") : t("View history", "عرض السجل")}</button>
             </div>
             {histories[entry.id]?.map((revision) => <p key={revision.id} className="mt-3 border-s-2 border-[#d5dbe1] ps-3 text-xs leading-5 text-[var(--muted)]">{t("Previous version", "نسخة سابقة")} · {new Date(revision.createdAt).toLocaleString(locale === "ar" ? "ar" : "en-GB")}: {revision.body}</p>)}
-            {editing === entry.id && <form onSubmit={(event) => void saveEdit(event, entry.id)} className="mt-4 border-t border-[#e3e7eb] pt-4">
+            {editing === entry.id && <form onSubmit={(event) => void saveEdit(event, entry.id)} className="mt-4 border-t border-[#eadfd5] pt-4">
               <textarea required minLength={3} maxLength={4000} rows={3} value={answerDrafts[entry.id] ?? ""} onChange={(event) => setAnswerDrafts((current) => ({ ...current, [entry.id]: event.target.value }))} className="block w-full rounded-xl border border-[#d8dee5] bg-white px-3 py-3 text-sm text-[#253548] outline-none focus:border-[#d86b32] focus:ring-2 focus:ring-[#d86b32]/15" />
               <div className="mt-3 flex gap-2"><button disabled={busy === entry.id} className="rounded-xl bg-[#d86b32] px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50">{busy === entry.id ? t("Saving…", "جارٍ الحفظ…") : t("Save for moderation", "حفظ للمراجعة")}</button><button type="button" onClick={() => setEditing("")} className="rounded-xl border border-[#d8dee5] px-4 py-2.5 text-xs font-semibold text-[#475569]">{t("Cancel", "إلغاء")}</button></div>
             </form>}
           </div>)}
-          {item.status === "PUBLISHED" && <form onSubmit={(event) => void answer(event, item.id)} className="mt-5 border-t border-[#e3e7eb] pt-4">
+          {item.status === "PUBLISHED" && <form onSubmit={(event) => void answer(event, item.id)} className="mt-5 border-t border-[#eadfd5] pt-4">
             <label className="block text-sm font-medium text-[#334155]">{t("Write an answer", "اكتب إجابة")}<textarea required minLength={3} maxLength={4000} rows={3} value={drafts[item.id] ?? ""} onChange={(event) => setDrafts((current) => ({ ...current, [item.id]: event.target.value }))} className="mt-2 block w-full rounded-xl border border-[#d8dee5] bg-white px-3 py-3 text-sm text-[#253548] outline-none focus:border-[#d86b32] focus:ring-2 focus:ring-[#d86b32]/15" /></label>
             <button disabled={busy === item.id} className="mt-3 rounded-xl bg-[#d86b32] px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{busy === item.id ? t("Submitting…", "جارٍ الإرسال…") : t("Submit answer", "إرسال الإجابة")}</button>
           </form>}
         </article>)}
-      </div> : !error ? <p className="mt-6 rounded-2xl border border-[#e3e7eb] bg-white p-6 text-sm text-[var(--muted)]">{t("No product questions for your stores.", "لا توجد أسئلة عن منتجات متاجرك.")}</p> : null}
+      </div> : !error ? <p className="mt-6 rounded-2xl border border-[#eadfd5] bg-white p-6 text-sm text-[var(--muted)]">{t("No product questions for your stores.", "لا توجد أسئلة عن منتجات متاجرك.")}</p> : null}
     </div>
   </main>;
 }
