@@ -1213,7 +1213,7 @@ button:not([data-variant]):not(:disabled):not([aria-pressed="true"]):not([aria-s
   background-color: #ffffff;
   color: var(--matjar-ink);
 }
-button:not(:disabled):not([data-variant="primary"]):not([data-variant="danger"]):not([data-variant="active"]):not([aria-pressed="true"]):not([aria-selected="true"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#dc2626]"]):not([class*="bg-[#f0660d]"]):not([class*="bg-[var(--color-orange)]"]):not([class*="bg-[var(--color-orange-500)]"]):not([class*="bg-[var(--color-orange-600)]"]):not([class*="bg-[var(--action)]"]):not([class*="bg-[linear-gradient"]):hover {
+button:not(:disabled):not([data-button-style="link"]):not([data-variant="primary"]):not([data-variant="danger"]):not([data-variant="active"]):not([aria-pressed="true"]):not([aria-selected="true"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#dc2626]"]):not([class*="bg-[#f0660d]"]):not([class*="bg-[var(--color-orange)]"]):not([class*="bg-[var(--color-orange-500)]"]):not([class*="bg-[var(--color-orange-600)]"]):not([class*="bg-[var(--action)]"]):not([class*="bg-[linear-gradient"]):hover {
   border-color: var(--matjar-hover-line) !important;
   box-shadow: var(--matjar-hover-shadow) !important;
   color: var(--matjar-ink) !important;
