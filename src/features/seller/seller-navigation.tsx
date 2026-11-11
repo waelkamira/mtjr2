@@ -52,12 +52,12 @@ const groups: Array<{
 ];
 
 const toneClasses: Record<Tone, string> = {
-  lavender: "bg-[#f1edfa] text-[#67538f]",
-  mint: "bg-[#e8f4ef] text-[#356b58]",
-  peach: "bg-[#fff1e8] text-[#a94308]",
-  butter: "bg-[#fbf4df] text-[#80621b]",
-  blush: "bg-[#faeaf0] text-[#98516b]",
-  sky: "bg-[#eaf2f8] text-[#45677f]"
+  lavender: "bg-[#f5f5f5] text-[#626262]",
+  mint: "bg-[#f5f5f5] text-[#626262]",
+  peach: "bg-[#f5f5f5] text-[#626262]",
+  butter: "bg-[#f5f5f5] text-[#626262]",
+  blush: "bg-[#f5f5f5] text-[#626262]",
+  sky: "bg-[#f5f5f5] text-[#626262]"
 };
 
 export function SellerIcon({ name }: { name: SellerIconName }) {
@@ -191,7 +191,7 @@ export default function SellerNavigation() {
         </div>
       </aside>
 
-      <div className="seller-mobile-navigation border-b border-[#29435d] bg-[#142b45] px-4 py-3 text-[#f5f8fc] shadow-[0_4px_14px_rgba(20,43,69,.15)] lg:hidden">
+      <div className="seller-mobile-navigation border-b border-[#eee9e4] bg-white px-4 py-3 text-[#454545] shadow-[0_4px_14px_rgba(69,69,69,.05)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
           <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-[#454545]">
             <span className="grid size-8 place-items-center rounded-xl border border-white/20 bg-[linear-gradient(145deg,#9fd5d4,#78b8bd)] text-sm text-[#17374b] shadow-[0_4px_10px_rgba(93,83,139,.12),inset_0_2px_0_white]">m</span>
@@ -203,7 +203,7 @@ export default function SellerNavigation() {
           {groups.flatMap((group) => group.links).map((link) => {
             const active = link.href === "/seller" ? pathname === "/seller" : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-              className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[#57cfc8]/40 bg-[#39c5bd]/20 text-white" : "border-white/10 bg-white/[.06] text-[#d7e2ed] hover:bg-white/[.12]"}`}>
+              className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-[#a3e635] bg-[#d9f99d] text-[#365314]" : "border-[#eee9e4] bg-white text-[#454545] hover:border-[#f3b58f] hover:shadow-[0_4px_12px_rgba(240,102,13,.10)]"}`}>
               <SellerIcon name={link.icon} /><span>{translate(locale, link.label, link.ar)}</span>
             </Link>;
           })}
