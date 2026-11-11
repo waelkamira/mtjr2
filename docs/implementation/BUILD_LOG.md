@@ -4660,4 +4660,5 @@ The platform account policy is now explicit: email verification is not required 
 - Updated the seller layout canvas to the blue-grey background and made the toolbar sticky for long workspace pages.
 - Existing page routes, data fetching, API calls, permission checks, and Prisma-backed operations were left intact.
 - Commits: `3dea9edb`, `926c869f`, `db195128`, `d6cfc930`, `dba5df07`.
+- Follow-up cleanup: removed 9 KB of obsolete, contradictory seller-only CSS blocks instead of leaving old palette rules layered underneath the new design. Consolidated the seller skin into the final scoped theme block. Cleanup commit: `a6be6ddc`.
 - Verification: source changes were committed directly to `main`. Build, typecheck, and browser visual verification have not been run in this pass; appearance is not yet runtime-confirmed.
