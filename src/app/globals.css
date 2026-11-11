@@ -369,10 +369,10 @@ button[class~="bg-[var(--color-violet-600)]"] {
 }
 
 input, textarea, select {
-  border-color: rgb(255 255 255 / 12%);
+  border: 1px solid rgb(0, 0, 0);
   border-radius: var(--radius-control);
-  background-color: #454545;
-  color: #ffffff;
+  background-color: #676767;
+  color: #ffff;
 }
 
 select {
