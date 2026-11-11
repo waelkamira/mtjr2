@@ -4818,3 +4818,13 @@ The platform account policy is now explicit: email verification is not required 
 - Added a final global state rule for brand-orange primary controls (including orange utility classes, the Matjar action token and primary button variant).
 - When selected/pressed/current/active, the control remains Matjar orange `#FF8C1C` with white text; hover while selected does not change it to lime or darken the label.
 - Removed the visible border, outline and box-shadow frame for the selected orange state, and suppressed the focus frame on these orange controls as requested. Other non-orange active controls retain their existing lime active state.
+
+
+## 2026-11-11 — Seller sidebar structure aligned with admin navigation
+
+- Replaced the seller sidebar's four visually separated navigation groups with one continuous, vertically stacked navigation list, matching the admin sidebar's information hierarchy and item rhythm.
+- Kept the seller-specific destinations, Arabic/English labels, route-aware active state, store identity block, and seller palette; this is a layout alignment, not a replacement of seller links with admin links.
+- Matched the desktop sidebar width to the admin navigation width and tightened item spacing so the full seller menu reads as one coherent navigation system.
+- Mobile navigation remains horizontally scrollable and preserves all seller destinations.
+
+**Verification boundary:** Source-level change only. No local build, typecheck, or browser visual validation was run in this turn.
