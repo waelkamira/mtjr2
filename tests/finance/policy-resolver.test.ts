@@ -100,4 +100,11 @@ describe("jurisdiction-aware financial policy resolver", () => {
     expect(resolveFinancialPolicy([category], context, at).status).toBe("MISSING_CONFIGURATION");
   });
 
+  it("matches seller and category identifiers case-sensitively", () => {
+    const category = rule({ id: "category-case", categoryId: "Category-Electronics" });
+    const seller = rule({ id: "seller-case", sellerId: "Seller-1" });
+    expect(resolveFinancialPolicy([category], { ...context, categoryId: "category-electronics" }, at).status).toBe("MISSING_CONFIGURATION");
+    expect(resolveFinancialPolicy([seller], { ...context, sellerId: "seller-1" }, at).status).toBe("MISSING_CONFIGURATION");
+  });
+
 });
