@@ -36,8 +36,8 @@ export async function GET(request: Request): Promise<Response> {
           verifiedAt: true, createdAt: true,
           seller: {
             select: {
-              displayName: true, legalName: true, contactName: true, contactEmail: true,
-              owner: { select: { id: true, email: true, displayName: true } }
+              displayName: true, legalName: true, contactName: true,
+              owner: { select: { email: true, displayName: true } }
             }
           }
         }
