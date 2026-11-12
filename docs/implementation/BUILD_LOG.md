@@ -4917,3 +4917,5 @@ The platform account policy is now explicit: email verification is not required 
   this session**. Prisma validate/generate, typecheck, lint, focused Vitest, migration replay
   and PostgreSQL integration remain required. No account mappings or money-flow wiring were
   inferred; seller payable, reconciliation and withdrawals remain blocked by FIN-01–FIN-12.
+
+- Follow-up hardening: migration also freezes a used ledger account's code, account type, scope and currency; only safe deactivation/label maintenance remains possible. PostgreSQL integration coverage now asserts a used account code cannot be rewritten.
