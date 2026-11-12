@@ -32,7 +32,7 @@ export async function GET(request: Request): Promise<Response> {
         select: {
           id: true, sellerId: true, type: true, bankName: true, countryCode: true,
           currencyCode: true, accountLast4: true, status: true, isDefault: true,
-          verifiedAt: true, createdAt: true, updatedAt: true,
+          verifiedAt: true, createdAt: true, submissionVersion: true,
           seller: {
             select: {
               displayName: true, legalName: true, contactName: true, contactEmail: true,
