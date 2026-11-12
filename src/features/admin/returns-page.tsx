@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/locale-provider";
-import { translate, translateStatus } from "@/lib/locale";
+import { translate } from "@/lib/locale";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ type ReturnRow = { id: string; returnNumber: string; orderNumber: string; custom
 export default function AdminReturnsPage() {
   const { locale } = useLocale();
   const t = (english: string, arabic: string) => translate(locale, english, arabic);
-  const statusLabel = (status: string) => translateStatus(locale, status);
   const reasonLabel = (reason: string) => ({ DEFECTIVE: t("Defective", "معيب"), DAMAGED: t("Damaged", "تالف"), WRONG_ITEM: t("Wrong item", "منتج خاطئ"), NOT_AS_DESCRIBED: t("Not as described", "غير مطابق للوصف"), OTHER: t("Other", "سبب آخر") }[reason] || reason.replaceAll("_", " "));
   const [items, setItems] = useState<ReturnRow[]>([]);
   const [selected, setSelected] = useState("");
