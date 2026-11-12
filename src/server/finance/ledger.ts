@@ -129,7 +129,7 @@ export async function listLedgerAccountEntries(input: {
   const cursor = input.cursor ? z.string().trim().min(1).max(128).parse(input.cursor) : undefined;
   const account = await prisma.ledgerAccount.findUnique({
     where: { id: accountId },
-    select: { id: true, code: true, name: true, accountType: true, scopeType: true, scopeId: true, currencyCode: true, isActive: true }
+    select: { id: true, code: true, name: true, accountType: true, scopeType: true, scopeId: true, currencyCode: true, isActive: true, currency: { select: { minorUnit: true } } }
   });
   if (!account) throw new Error("Ledger account not found.");
   const rows = await prisma.journalLine.findMany({
@@ -192,7 +192,8 @@ export async function listLedgerAccounts(input: {
     orderBy: [{ currencyCode: "asc" }, { code: "asc" }, { id: "asc" }],
     select: {
       id: true, code: true, name: true, accountType: true,
-      scopeType: true, scopeId: true, currencyCode: true, isActive: true
+      scopeType: true, scopeId: true, currencyCode: true, isActive: true,
+      currency: { select: { minorUnit: true } }
     }
   });
   const hasMore = rows.length > data.take;
