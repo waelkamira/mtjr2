@@ -106,3 +106,5 @@ This schema snapshot does not yet provide a complete implementation for all 49 s
 | Prisma model | Primary code ownership | Notes |
 |---|---|---|
 | `JournalEntry.createdTransactionId` | `src/server/finance/ledger.ts`; migration `20261112130000_journal_append_only_integrity` | Database-generated PostgreSQL transaction ID captured when a journal is created. A BEFORE INSERT trigger on JournalLine requires the same transaction ID, so nested journal lines are inserted atomically with the entry and cannot be appended in a later transaction. Deferred integrity also rejects inactive accounts. Verification remains pending on disposable PostgreSQL. |
+
+- Used ledger account identity fields (`code`, `accountType`, `scopeType`, `scopeId`, `currencyCode`) are protected by PostgreSQL after the first JournalLine references the account. Migration: `20261112130000_journal_append_only_integrity`.
