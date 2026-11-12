@@ -71,6 +71,9 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
   const filteredLinks = links.filter(
     (link) => !("platformOnly" in link) || !link.platformOnly || canManagePlatform
   );
+  const activeHref = filteredLinks
+    .filter((link) => pathname === link.href || pathname.startsWith(`${link.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   return (
     <aside className="relative min-h-screen w-full h-fit overflow-hidden bg-gray-600 backdrop-blur-md shadow-xl lg:w-80 lg:shrink-0 border-2 border-orange-400" dir="rtl">
@@ -112,7 +115,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
           className="flex-1 overflow-y-auto px-4 py-6 space-y-1"
         >
           {filteredLinks.map((link, index) => {
-            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+            const isActive = activeHref === link.href;
             const Icon = link.icon;
             
             return (
