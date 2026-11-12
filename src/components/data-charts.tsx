@@ -355,7 +355,7 @@ export function RadarChart({
             <polygon points={points} fill="#8B5CF6" fillOpacity=".22" stroke="#38BDF8" strokeWidth="2.5" />
             {data.map((item, index) => {
               const angle = angleFor(index);
-              return <g key={item.label}><circle cx={center + (item.value / max) * radius * Math.cos(angle)} cy={center + (item.value / max) * radius * Math.sin(angle)} r="3" fill="#438FB4" /><text x={center + 88 * Math.cos(angle)} y={center + 88 * Math.sin(angle)} textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[8px]">{item.label.slice(0, 14)}</text></g>;
+              return <g key={item.label}><circle cx={center + (item.value / max) * radius * Math.cos(angle)} cy={center + (item.value / max) * radius * Math.sin(angle)} r="3" fill="#438FB4" /><text x={center + 88 * Math.cos(angle)} y={center + 88 * Math.sin(angle)} textAnchor="middle" dominantBaseline="middle" className="fill-[#777777] text-[8px]">{item.label.slice(0, 14)}</text></g>;
             })}
           </svg>
           <ul className="space-y-1.5 text-xs">{data.map((item, index) => <li key={item.label} className="flex items-center gap-2"><i className="h-2 w-2 rounded-full" style={{ backgroundColor: chartColor(index) }} />{item.label}: <b>{item.value}</b></li>)}</ul>
