@@ -18,6 +18,7 @@ type PayoutMethod = {
   isDefault: boolean;
   verifiedAt: string | null;
   createdAt: string;
+  submittedAt: string;
   submissionVersion: number;
   seller: {
     displayName: string | null;
@@ -42,6 +43,7 @@ export default function SellerPayoutReviewPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<{ id: string; decision: "VERIFIED" | "REJECTED" } | null>(null);
   const [error, setError] = useState("");
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const loadRequestId = useRef(0);
   const draftsRef = useRef<Record<string, Draft>>({});
   const draftStorageKey = "seller-payout-review-draft";
@@ -114,18 +116,24 @@ export default function SellerPayoutReviewPage() {
       window.clearTimeout(timer);
       loadRequestId.current += 1;
     };
-  }, [load]);
+  }, [load, refreshCounter]);
 
-  function updateDraft(id: string, key: keyof Draft, value: string) {
+  function draftKey(item: Pick<PayoutMethod, "id" | "submissionVersion">) {
+    return `${item.id}:${item.submissionVersion}`;
+  }
+
+  function updateDraft(item: PayoutMethod, key: keyof Draft, value: string) {
+    const keyForSubmission = draftKey(item);
     setDrafts((current) => {
-      const next = { ...current, [id]: { ...(current[id] ?? emptyDraft), [key]: value } };
+      const next = { ...current, [keyForSubmission]: { ...(current[keyForSubmission] ?? emptyDraft), [key]: value } };
       draftsRef.current = next;
       return next;
     });
   }
 
   async function review(item: PayoutMethod, decision: "VERIFIED" | "REJECTED") {
-    const draft = drafts[item.id] ?? emptyDraft;
+    const keyForSubmission = draftKey(item);
+    const draft = drafts[keyForSubmission] ?? emptyDraft;
     const evidenceReference = draft.evidenceReference.trim();
     const reason = draft.reason.trim();
     if (evidenceReference.length < 6 || reason.length < 10) {
@@ -148,12 +156,12 @@ export default function SellerPayoutReviewPage() {
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || t("Bank account review failed.", "تعذرت مراجعة الحساب البنكي."));
       setDrafts((current) => {
-        const next = { ...current, [item.id]: emptyDraft };
+        const next = { ...current, [keyForSubmission]: emptyDraft };
         draftsRef.current = next;
         return next;
       });
       toast.success(t("Bank account review saved and audited.", "تم حفظ مراجعة الحساب البنكي وتسجيلها في سجل التدقيق."));
-      await load();
+      setRefreshCounter((value) => value + 1);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("Bank account review failed.", "تعذرت مراجعة الحساب البنكي.");
       setError(message); toast.error(message);
@@ -178,10 +186,10 @@ export default function SellerPayoutReviewPage() {
             <div><p className="text-xs text-[var(--muted)]">{t("Masked identifier", "المعرّف المقنّع")}</p><p className="mt-1 font-semibold" dir="ltr">•••• {item.accountLast4}</p></div>
             <div><p className="text-xs text-[var(--muted)]">{t("Country / currency", "الدولة / العملة")}</p><p className="mt-1 font-semibold">{item.countryCode} / {item.currencyCode}</p></div>
           </div>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-[var(--muted)]"><span>{t("Submitted", "تاريخ الإضافة")}: {new Date(item.createdAt).toLocaleString(locale)}</span><span>{item.isDefault ? t("Default for this currency", "افتراضي لهذه العملة") : t("Not default", "ليس افتراضياً")}</span></div>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-[var(--muted)]"><span>{t("Submitted", "تاريخ الإضافة")}: {new Date(item.submittedAt).toLocaleString(locale)}</span><span>{item.isDefault ? t("Default for this currency", "افتراضي لهذه العملة") : t("Not default", "ليس افتراضياً")}</span></div>
           {item.status === "PENDING_VERIFICATION" && <div className="mt-5 grid gap-3 lg:grid-cols-2">
-            <label className="text-xs font-semibold text-[var(--muted)]">{t("External evidence reference", "مرجع الإثبات الخارجي")}<input value={draft.evidenceReference} onChange={(event) => updateDraft(item.id, "evidenceReference", event.target.value)} maxLength={180} className={inputClass} placeholder={t("Bank case / verification ticket", "رقم حالة البنك / تذكرة التحقق")} /></label>
-            <label className="text-xs font-semibold text-[var(--muted)]">{t("Review reason", "سبب المراجعة")}<textarea value={draft.reason} onChange={(event) => updateDraft(item.id, "reason", event.target.value)} minLength={10} maxLength={500} rows={2} className={inputClass} placeholder={t("Record what was checked and the outcome", "سجّل ما تم التحقق منه والنتيجة")} /></label>
+            <label className="text-xs font-semibold text-[var(--muted)]">{t("External evidence reference", "مرجع الإثبات الخارجي")}<input value={draft.evidenceReference} onChange={(event) => updateDraft(item, "evidenceReference", event.target.value)} maxLength={180} className={inputClass} placeholder={t("Bank case / verification ticket", "رقم حالة البنك / تذكرة التحقق")} /></label>
+            <label className="text-xs font-semibold text-[var(--muted)]">{t("Review reason", "سبب المراجعة")}<textarea value={draft.reason} onChange={(event) => updateDraft(item, "reason", event.target.value)} minLength={10} maxLength={500} rows={2} className={inputClass} placeholder={t("Record what was checked and the outcome", "سجّل ما تم التحقق منه والنتيجة")} /></label>
             <div className="flex flex-wrap gap-2 lg:col-span-2"><button type="button" disabled={Boolean(busy)} onClick={() => void review(item, "VERIFIED")} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy?.id === item.id && busy.decision === "VERIFIED" ? t("Saving…", "جارٍ الحفظ…") : t("Confirm verified", "تأكيد التحقق")}</button><button type="button" disabled={Boolean(busy)} onClick={() => void review(item, "REJECTED")} className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-800 disabled:opacity-50">{busy?.id === item.id && busy.decision === "REJECTED" ? t("Saving…", "جارٍ الحفظ…") : t("Reject account", "رفض الحساب")}</button></div>
           </div>}
           {item.status !== "PENDING_VERIFICATION" && item.verifiedAt && <p className="mt-4 text-xs text-[var(--muted)]">{t("Verified at", "تاريخ التحقق")}: {new Date(item.verifiedAt).toLocaleString(locale)}</p>}
