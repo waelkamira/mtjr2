@@ -88,7 +88,7 @@ export default function PlatformAuditLogPage() {
                 <tbody className="divide-y divide-[var(--border)]">
                   {events.map((event) => (
                     <tr key={event.id} className="align-top">
-                      <td className="whitespace-nowrap px-4 py-3 text-xs text-[var(--muted)]">{new Date(event.occurredAt).toLocaleString(locale)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-[var(--muted)]">{new Date(event.occurredAt).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB")}</td>
                       <td className="px-4 py-3"><div className="font-medium">{event.actor?.displayName || event.actor?.email || event.actorId || event.actorType}</div><div className="mt-1 text-xs text-[var(--muted)]">{event.actorType}</div></td>
                       <td className="px-4 py-3 font-medium text-[var(--color-forest-950)]">{event.action}</td>
                       <td className="px-4 py-3"><div>{event.resource}</div><div className="mt-1 break-all text-xs text-[var(--muted)]">{event.resourceId || "—"}</div></td>
