@@ -46,3 +46,12 @@ Disposable PostgreSQL integration proves accounting invariants, idempotency, rol
 - Provider idempotency retention: first submission time is persisted; automatic retries are blocked after conservative provider-specific retention windows (Stripe 23 hours, PayPal 44 days), requiring manual provider reconciliation after expiry.
 
 - Provider retry lifecycle: confirmed provider failure clears the old provider reference, increments `Refund.providerAttempt`, and permits a new idempotency key; ambiguous requests retain the same attempt/key and are retried only inside the persisted retention window. Returned references must be reconciled before any new attempt.
+
+## 2026-11-12 — Current implementation checkpoint
+
+- The currency-specific immutable double-entry journal primitive is present in `src/server/finance/ledger.ts`; the admin ledger page/API are read-only and protected by `platform:manage` plus MFA/step-up. Account activity is cursor-paginated. No balances are exposed.
+- Journal retries compare the full immutable entry payload; reversals must exactly negate the original lines. The latest append-only database migration restricts line insertion to the parent-entry creation transaction and enforces balance, active-account and same-currency constraints. The latest hardening still requires exact-HEAD CI and disposable PostgreSQL reruns; older passing commits are not evidence for later changes.
+- Financial policy resolution now includes category scope in matching, specificity and preview context. This is policy selection plumbing only; it does not approve any accounting treatment.
+- The route registry and System 31 specification were corrected to distinguish the current read-only ledger from obsolete baseline notes.
+- **Next safe engineering work:** complete exact-HEAD validation of journal/policy changes; then add non-posting read-only diagnostics for ledger integrity only if they can be derived from persisted journal lines without assuming seller allocation policy.
+- **Still blocked:** FIN-01..FIN-12 owner decisions and approved per-currency chart-of-accounts mapping. Until those are explicitly approved, do not add capture/refund journal postings, seller payable/available balances, holds/releases, payout requests, transfers or settlement reconciliation.
