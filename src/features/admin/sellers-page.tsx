@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 
 type StoreRow = { id: string; name: string; slug: string; status: string; createdAt: string };
 type SellerRow = {
@@ -117,7 +117,7 @@ export default function AdminSellersPage() {
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Sellers and stores", "البائعون والمتاجر")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Review seller applications and administer active store availability.", "راجع طلبات البائعين وأدِر إتاحة المتاجر النشطة.")}</p></div><p className="text-sm text-[var(--muted)]">{data?.total ?? 0} {translate(locale, "sellers", "بائع")}</p></div>
     <form onSubmit={search} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 sm:grid-cols-[1fr_220px_auto]">
       <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Search seller, owner, email or ID", "ابحث عن البائع أو المالك أو البريد الإلكتروني أو المعرّف")}<input value={draftQuery} onChange={(event) => setDraftQuery(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-black placeholder:text-neutral-500 focus:border-[#FF8C1C] focus:outline-none focus:ring-2 focus:ring-[#FF8C1C]/20" /></label>
-      <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Seller status", "حالة البائع")}<select value={status} onChange={(event) => { setLoading(true); setStatus(event.target.value); setPage(1); }} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">{translate(locale, "All statuses", "جميع الحالات")}</option>{statuses.map((item) => <option key={item}>{item}</option>)}</select></label>
+      <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Seller status", "حالة البائع")}<select value={status} onChange={(event) => { setLoading(true); setStatus(event.target.value); setPage(1); }} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">{translate(locale, "All statuses", "جميع الحالات")}</option>{statuses.map((item) => <option key={item} value={item}>{translateStatus(locale, item)}</option>)}</select></label>
       <button disabled={loading} className="self-end rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{translate(locale, "Search", "بحث")}</button>
     </form>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
