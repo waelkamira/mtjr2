@@ -127,8 +127,8 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
                   aria-current={isActive ? "page" : undefined}
                   className={`group relative flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-300 ${
                     isActive
-                      ? "bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-400 shadow-md shadow-orange-500/10"
-                      : "bg-white/60 border  border-stone-200/60 hover:bg-white hover:border-orange-400 hover:shadow-sm"
+                      ? "border border-transparent bg-orange-500 text-white shadow-[0_5px_14px_rgba(249,115,22,0.22)]"
+                      : "border border-stone-200/70 bg-white text-stone-800 hover:border-orange-200 hover:bg-white hover:shadow-[0_4px_12px_rgba(249,115,22,0.10)]"
                   }`}
                 >
                   {/* مؤشر النشاط */}
@@ -138,16 +138,16 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
                   
                   <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                     isActive
-                      ? "bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25"
-                      : "bg-stone-100 text-stone-500 group-hover:bg-orange-100 group-hover:text-orange-600"
+                      ? "bg-white/15 text-white shadow-none"
+                      : "bg-stone-100 text-stone-700 group-hover:bg-orange-50 group-hover:text-orange-600"
                   }`}>
                     <Icon size={20} />
                   </div>
                   
                   <span className={`flex-1 text-sm font-semibold transition-colors duration-300 ${
                     isActive
-                      ? "text-stone-900"
-                      : "text-stone-600 group-hover:text-stone-900"
+                      ? "text-white"
+                      : "text-stone-800 group-hover:text-stone-950"
                   }`}>
                     {translate(locale, link.label, link.ar)}
                   </span>
