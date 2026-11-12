@@ -55,6 +55,14 @@ describe("jurisdiction-aware financial policy resolver", () => {
     expect(result.status).toBe("CONFLICT");
   });
 
+  it("uses explicit priority only to break ties within the same policy rank", () => {
+    const lower = rule({ id: "priority-low", classification: "LEGAL", countryCode: "FR", priority: 1, value: { holdDays: 10 } });
+    const higher = rule({ id: "priority-high", classification: "LEGAL", countryCode: "FR", priority: 5, value: { holdDays: 20 } });
+    const result = resolveFinancialPolicy([lower, higher], context, at);
+    expect(result.status).toBe("APPLICABLE");
+    if (result.status === "APPLICABLE") expect(result.rule.id).toBe("priority-high");
+  });
+
   it("does not use future or expired rules", () => {
     const future = rule({ id: "future", classification: "LEGAL", countryCode: "FR", effectiveFrom: new Date("2027-01-01T00:00:00.000Z") });
     const expired = rule({ id: "expired", classification: "LEGAL", countryCode: "FR", effectiveUntil: new Date("2026-01-01T00:00:00.000Z") });
