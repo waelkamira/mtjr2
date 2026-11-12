@@ -182,7 +182,7 @@ export default function SellerNavigation() {
         {/* Brand header */}
         <div className="relative border-b border-white/5 px-6 py-7 backdrop-blur-sm">
           <Link href="/seller" className="group flex items-center gap-3">
-            <span className="relative grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-black shadow-[0_8px_24px_rgba(251,146,60,.35),inset_0_1px_0_rgba(255,255,255,.3)] transition-transform duration-300 group-hover:scale-105">
+            <span className="relative grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-white shadow-[0_8px_24px_rgba(251,146,60,.35),inset_0_1px_0_rgba(255,255,255,.3)] transition-transform duration-300 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
                 <path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" />
@@ -190,10 +190,10 @@ export default function SellerNavigation() {
               <span className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />
             </span>
             <span className="min-w-0">
-              <span className="block text-[22px] font-black tracking-tight text-black">
+              <span className="block text-[22px] font-black tracking-tight text-white">
                 matjar<span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">.</span>
               </span>
-              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.22em] text-black/40">
+              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[.22em] text-white/55">
                 {translate(locale, "Seller studio", "استوديو البائع")}
               </span>
             </span>
@@ -214,10 +214,10 @@ export default function SellerNavigation() {
                 <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-black">
+                <span className="block truncate text-sm font-bold text-white">
                   {store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}
                 </span>
-                <span className="mt-1 flex items-center gap-1.5 text-[11px] text-black/40">
+                <span className="mt-1 flex items-center gap-1.5 text-[11px] text-white/55">
                   <span className="inline-block size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.6)]" />
                   <span className="truncate font-mono">
                     {store ? `/${store.slug}` : translate(locale, "Active workspace", "مساحة نشطة")}
@@ -226,7 +226,7 @@ export default function SellerNavigation() {
               </span>
               <button
                 type="button"
-                className="grid size-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-black/60 transition hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300"
+                className="grid size-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300"
                 aria-label={translate(locale, "Switch store", "تبديل المتجر")}
               >
                 <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -246,7 +246,7 @@ export default function SellerNavigation() {
             <div key={group.title}>
               <div className="mb-2 flex items-center gap-2 px-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-                <span className="text-[9px] font-bold uppercase tracking-[.25em] text-black/30">
+                <span className="text-[9px] font-bold uppercase tracking-[.25em] text-white/45">
                   {translate(locale, group.title, group.ar)}
                 </span>
                 <span className="h-px flex-1 bg-gradient-to-l from-white/10 to-transparent" />
@@ -259,8 +259,8 @@ export default function SellerNavigation() {
                     aria-current={link.active ? "page" : undefined}
                     className={`group relative flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 ${
                       link.active
-                        ? "bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent text-black shadow-[inset_0_0_0_1px_rgba(251,191,36,.2)]"
-                        : "text-black/60 hover:bg-white/[0.04] hover:text-black"
+                        ? "bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent text-white shadow-[inset_0_0_0_1px_rgba(251,191,36,.2)]"
+                        : "text-white/70 hover:bg-white/[0.04] hover:text-white"
                     }`}
                   >
                     {/* Active indicator bar */}
@@ -302,7 +302,7 @@ export default function SellerNavigation() {
 
             <div className="relative">
               <div className="flex items-center gap-2">
-                <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-black shadow-[0_4px_12px_rgba(251,146,60,.4)]">
+                <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_4px_12px_rgba(251,146,60,.4)]">
                   <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m12 3 2.7 5.6 6.2.9-4.5 4.4 1.1 6.2-5.5-2.9-5.5 2.9 1.1-6.2-4.5-4.4 6.2-.9L12 3Z" />
                   </svg>
@@ -311,15 +311,15 @@ export default function SellerNavigation() {
                   {translate(locale, "Premium", "مميز")}
                 </span>
               </div>
-              <p className="mt-3 text-sm font-bold text-black">
+              <p className="mt-3 text-sm font-bold text-white">
                 {translate(locale, "Grow your store", "طوّر متجرك")}
               </p>
-              <p className="mt-1 text-[11px] leading-5 text-black/50">
+              <p className="mt-1 text-[11px] leading-5 text-white/60">
                 {translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}
               </p>
               <Link
                 href="/seller/advertising"
-                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-3.5 py-2 text-[11px] font-bold text-black shadow-[0_4px_16px_rgba(251,146,60,.4)] transition-all hover:shadow-[0_6px_20px_rgba(251,146,60,.6)] hover:brightness-110"
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-3.5 py-2 text-[11px] font-bold text-white shadow-[0_4px_16px_rgba(251,146,60,.4)] transition-all hover:shadow-[0_6px_20px_rgba(251,146,60,.6)] hover:brightness-110"
               >
                 <SellerIcon name="ads" />
                 {translate(locale, "Explore campaigns", "استكشف الحملات")}
@@ -335,10 +335,10 @@ export default function SellerNavigation() {
         <div className="relative shrink-0 border-t border-white/5 p-4 backdrop-blur-sm">
           <Link
             href="/"
-            className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-black/70 transition-all hover:border-amber-400/30 hover:bg-amber-500/5 hover:text-black"
+            className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/75 transition-all hover:border-amber-400/30 hover:bg-amber-500/5 hover:text-white"
           >
             <span className="flex items-center gap-2">
-              <span className="grid size-8 place-items-center rounded-lg bg-white/5 text-black/70 transition group-hover:bg-amber-500/10 group-hover:text-amber-300">
+              <span className="grid size-8 place-items-center rounded-lg bg-white/5 text-white/75 transition group-hover:bg-amber-500/10 group-hover:text-amber-300">
                 <SellerIcon name="store" />
               </span>
               {translate(locale, "View marketplace", "عرض واجهة المتجر")}
@@ -356,24 +356,24 @@ export default function SellerNavigation() {
               <path d="M7 17 17 7M7 7h10v10" />
             </svg>
           </Link>
-          <p className="mt-3 px-2 text-[10px] leading-5 text-black/30">
+          <p className="mt-3 px-2 text-[10px] leading-5 text-white/45">
             {translate(locale, "One workspace for your products, orders and store operations.", "مساحة واحدة لمنتجاتك وطلباتك وعمليات متجرك.")}
           </p>
         </div>
       </aside>
 
       {/* ============ MOBILE NAVIGATION ============ */}
-      <div className="seller-mobile-navigation border-b border-white/5 bg-[#0B0B10] px-4 py-3 text-black shadow-[0_4px_20px_rgba(0,0,0,.4)] lg:hidden">
+      <div className="seller-mobile-navigation border-b border-white/5 bg-[#0B0B10] px-4 py-3 text-white shadow-[0_4px_20px_rgba(0,0,0,.4)] lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-black">
-            <span className="relative grid size-9 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-sm font-black text-black shadow-[0_4px_12px_rgba(251,146,60,.4)]">
+          <Link href="/seller" className="flex items-center gap-2 text-xl font-black text-white">
+            <span className="relative grid size-9 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-sm font-black text-white shadow-[0_4px_12px_rgba(251,146,60,.4)]">
               m
             </span>
             matjar<span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">.</span>
           </Link>
           <Link
             href="/"
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-black/80 backdrop-blur-sm transition hover:border-amber-400/30 hover:text-amber-300"
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/85 backdrop-blur-sm transition hover:border-amber-400/30 hover:text-amber-300"
           >
             <span className="inline-flex items-center gap-1.5">
               <SellerIcon name="store" />
@@ -397,7 +397,7 @@ export default function SellerNavigation() {
                 className={`flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
                   active
                     ? "border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-orange-500/10 text-amber-200 shadow-[0_4px_16px_rgba(251,146,60,.2)]"
-                    : "border-white/10 bg-white/[0.03] text-black/70 hover:border-amber-400/20 hover:bg-white/[0.06] hover:text-black"
+                    : "border-white/10 bg-white/[0.03] text-white/75 hover:border-amber-400/20 hover:bg-white/[0.06] hover:text-white"
                 }`}
               >
                 <span className={`grid size-6 place-items-center rounded-md ${
