@@ -41,7 +41,7 @@ const createdMethod = {
   id: "payout-1", type: "IBAN", accountHolderName: "Example Owner", bankName: "Example Bank",
   countryCode: "DE", currencyCode: "EUR", accountLast4: "3000",
   status: "PENDING_VERIFICATION", isDefault: true, verifiedAt: null, submissionVersion: 1,
-  createdAt: new Date("2026-11-10T00:00:00.000Z"), updatedAt: new Date("2026-11-10T00:00:00.000Z")
+  submittedAt: new Date("2026-11-10T00:00:00.000Z"), createdAt: new Date("2026-11-10T00:00:00.000Z"), updatedAt: new Date("2026-11-10T00:00:00.000Z")
 };
 
 describe("seller payout destination security", () => {
@@ -114,7 +114,7 @@ describe("seller payout destination security", () => {
 
   it("increments the submission version when a disabled destination is re-registered", async () => {
     mocks.payoutFindUnique.mockResolvedValue({ id: "payout-1", status: "DISABLED" });
-    mocks.payoutUpdate.mockResolvedValue({ ...createdMethod, submissionVersion: 2 });
+    mocks.payoutUpdate.mockResolvedValue({ ...createdMethod, submissionVersion: 2, submittedAt: new Date("2026-11-12T10:00:00.000Z") });
 
     const result = await createSellerPayoutMethod({
       type: "IBAN",
@@ -129,7 +129,7 @@ describe("seller payout destination security", () => {
     expect(result.submissionVersion).toBe(2);
     expect(mocks.payoutUpdate).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "payout-1" },
-      data: expect.objectContaining({ submissionVersion: { increment: 1 }, status: "PENDING_VERIFICATION" })
+      data: expect.objectContaining({ submissionVersion: { increment: 1 }, submittedAt: expect.any(Date), status: "PENDING_VERIFICATION" })
     }));
     expect(mocks.payoutCreate).not.toHaveBeenCalled();
   });
