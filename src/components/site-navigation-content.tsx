@@ -921,7 +921,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       key={action.href}
                       href={action.href}
                       onClick={() => setMobileOpen(false)}
-                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition ${isNavigationActive(pathname, action.href) ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20" : "border-stone-100 bg-white text-stone-700 hover:border-orange-200 hover:bg-orange-50"}`}
+                      className={`group flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition ${isNavigationActive(pathname, action.href) ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20" : "border-stone-100 bg-white text-stone-700 hover:border-orange-200 hover:bg-orange-50"}`}
                     >
                       <span className={`grid size-8 place-items-center rounded-lg transition ${isNavigationActive(pathname, action.href) ? "bg-white/15 text-white" : "bg-stone-50 text-stone-700 group-hover:bg-orange-100 group-hover:text-orange-600"}`}>
                         <NavigationIcon name={action.icon} className="h-5 w-5" />
