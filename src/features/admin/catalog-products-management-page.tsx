@@ -103,7 +103,7 @@ export default function AdminCatalogProductsManagementPage() {
       <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Store owner user ID", "معرّف مستخدم مالك المتجر")}<input value={ownerId} onChange={(event) => setOwnerId(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
     </section>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
-    {message && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 text-sm text-green-800">{message}</p>}
+    {message && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{message}</p>}
     {selected.length > 100 && <p role="alert" className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{translate(locale, "Select no more than 100 products per action.", "حدد 100 منتج كحد أقصى لكل إجراء.")}</p>}
     <form onSubmit={(event) => void archive(event, { productIds: selected })} className="mt-5 flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--border)] bg-white p-4">
       <label className="min-w-64 flex-1 text-xs font-medium text-[var(--muted)]">{translate(locale, "Reason for selected-product archive", "سبب أرشفة المنتجات المحددة")}<input required minLength={5} maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
