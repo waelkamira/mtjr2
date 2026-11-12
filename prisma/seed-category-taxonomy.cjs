@@ -1,6 +1,8 @@
 // Global bilingual marketplace taxonomy. Inspired by public category structures from Amazon, eBay, Walmart and Etsy.
 // This is original Matjar taxonomy data; it does not copy marketplace IDs or proprietary listing metadata.
 // Safe to run repeatedly: upserts by stable slug, preserves existing category status and unrelated categories.
+// This CommonJS seed script intentionally uses require for its runtime entry point.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 

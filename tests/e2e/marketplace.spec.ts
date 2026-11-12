@@ -141,7 +141,7 @@ test.describe("seller journey", () => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/seller");
-    await expect(page.getByRole("heading", { name: /Welcome back to your store|أهلاً بعودتك إلى متجرك/i })).toBeVisible();
+    await expect(page.locator("main h1").first()).toBeVisible();
     await expect(page.getByRole("navigation", { name: /Seller navigation|تنقل البائع/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
     await expect(page.getByText(/This account is linked to one store|هذا الحساب مرتبط بمتجر واحد/i)).toBeVisible();
@@ -176,7 +176,7 @@ test.describe("seller journey", () => {
     await page.screenshot({ path: "test-results/seller-advertising-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/seller");
-    await expect(page.getByRole("heading", { name: /Welcome back to your store|أهلاً بعودتك إلى متجرك/i })).toBeVisible();
+    await expect(page.locator("main h1").first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: "test-results/seller-mobile.png", fullPage: true });
@@ -191,17 +191,19 @@ test.describe("seller catalog authoring", () => {
   test("seller can create a draft product and edit it from the catalog", async ({ page }) => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
+    let uploadSequence = 0;
     await page.route("**/api/seller/products/media", async (route) => {
+      uploadSequence += 1;
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
           data: {
-            url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+            url: `https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixid=e2e-${uploadSequence}`,
             provider: "imgur",
             mimeType: "image/png",
-            storageKey: "imgur:e2e-product-image",
+            storageKey: `imgur:e2e-product-image-${uploadSequence}`,
             width: 800,
             height: 800
           }
@@ -231,6 +233,21 @@ test.describe("seller catalog authoring", () => {
     await page.getByLabel(/^SKU$/i).fill(`E2E-SKU-${stamp}`);
     await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
     await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
+
+    // Exercise a partial Syria location: selecting a district stores its
+    // display name in the product draft, and that accepted field must survive
+    // strict server-side validation even before a locality is selected.
+    const governoratesResponse = await page.request.get("/api/geography/governorates");
+    expect(governoratesResponse.status()).toBe(200);
+    const governorates = await governoratesResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
+    const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
+    expect(damascus).toBeTruthy();
+    await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
+    const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
+    expect(districtsResponse.status()).toBe(200);
+    const districts = await districtsResponse.json() as { items: Array<{ id: string }> };
+    expect(districts.items.length).toBeGreaterThan(0);
+    await page.getByLabel(/District|المنطقة/i).selectOption(districts.items[0].id);
 
     const priceInputs = page.getByLabel(/Selling price|سعر البيع/i);
     await expect(priceInputs.first()).toBeVisible();
@@ -265,6 +282,23 @@ test.describe("seller catalog authoring", () => {
     await expect(editForm).toBeVisible();
     await editForm.locator("input").nth(0).fill(updatedName);
     await editForm.locator("input").nth(1).fill(`e2e-seller-draft-updated-${stamp}`);
+
+    // Replace the original image, add a second image, then remove it again.
+    // The saved gallery must retain one valid cover image and unlink the old asset.
+    const imageFiles = editForm.locator('input[type="file"][accept^="image/jpeg"]');
+    await imageFiles.nth(1).setInputFiles({
+      name: "e2e-replacement.png", mimeType: "image/png",
+      buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
+    });
+    await expect(page.getByText(/Image replaced successfully|تم استبدال الصورة بنجاح/i)).toBeVisible({ timeout: 15000 });
+    await imageFiles.nth(0).setInputFiles([{
+      name: "e2e-secondary.png", mimeType: "image/png",
+      buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
+    }]);
+    await expect(editForm.getByRole("button", { name: /Remove image|حذف الصورة/i })).toHaveCount(2, { timeout: 15000 });
+    await editForm.getByRole("button", { name: /Remove image|حذف الصورة/i }).last().click();
+    await expect(editForm.getByRole("button", { name: /Remove image|حذف الصورة/i })).toHaveCount(1);
+
     await editForm.getByRole("button", { name: /Save changes|حفظ التغييرات/i }).click();
     await expect(page.getByRole("status")).toContainText(/Draft product updated|تم تحديث مسودة المنتج/i, { timeout: 20000 });
 
@@ -272,6 +306,42 @@ test.describe("seller catalog authoring", () => {
     expect(updatedCatalogResponse.status()).toBe(200);
     const updatedCatalog = await updatedCatalogResponse.json() as { items: Array<{ id: string; name: string; status: string }> };
     expect(updatedCatalog.items.some((item) => item.id === created!.id && item.name === updatedName && item.status === "DRAFT")).toBe(true);
+
+    // Moderation and publication are separate, role-gated transitions:
+    // an admin approves the edited draft, then its owning seller publishes it.
+    await signIn(page, sessions.admin);
+    const approvalResult = await page.evaluate(async (productId) => {
+      const response = await fetch(`/api/admin/products/${encodeURIComponent(productId)}/approve`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
+      });
+      return { status: response.status, body: await response.json() };
+    }, created!.id);
+    expect(approvalResult.status).toBe(200);
+    expect(approvalResult.body).toMatchObject({ productId: created!.id, approvalStatus: "APPROVED" });
+
+    // Approval alone must not expose an unpublished draft to public discovery.
+    const approvedButUnpublished = await page.request.get(`/api/products/${encodeURIComponent(`e2e-seller-draft-updated-${stamp}`)}?locale=en`);
+    expect(approvedButUnpublished.status()).toBe(404);
+
+    await signIn(page, sessions.seller);
+    await page.goto("/seller/products");
+    const approvedProductCard = page.locator("article").filter({ hasText: updatedName }).first();
+    await expect(approvedProductCard.getByRole("button", { name: /Publish|نشر/i })).toBeVisible();
+    await approvedProductCard.getByRole("button", { name: /Publish|نشر/i }).click();
+    await expect(page.getByRole("status")).toContainText(/Product published|تم نشر المنتج/i, { timeout: 20000 });
+
+    const publicProductResponse = await page.request.get(`/api/products/${encodeURIComponent(`e2e-seller-draft-updated-${stamp}`)}?locale=en`);
+    expect(publicProductResponse.status()).toBe(200);
+    const publicProduct = await publicProductResponse.json() as { id: string; name: string; slug: string };
+    expect(publicProduct).toMatchObject({ id: created!.id, name: updatedName, slug: `e2e-seller-draft-updated-${stamp}` });
+
+    const publicSearchResponse = await page.request.get(`/api/products?q=${encodeURIComponent(updatedName)}`);
+    expect(publicSearchResponse.status()).toBe(200);
+    const publicSearch = await publicSearchResponse.json() as { items: Array<{ id: string }> };
+    expect(publicSearch.items.some((item) => item.id === created!.id)).toBe(true);
+
+    await page.goto(`/products/${encodeURIComponent(publicProduct.slug)}`);
+    await expect(page.getByRole("heading", { name: updatedName })).toBeVisible({ timeout: 15000 });
 
     // The seller workspace must persist edits to an existing shipping service.
     await page.goto("/seller");

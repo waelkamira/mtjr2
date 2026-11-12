@@ -483,7 +483,18 @@ export default function SellerProductsPage() {
               ? []
               : [{ attributeDefinitionId: attribute.id, value }];
           }),
-          ...productLocation,
+          // Keep the API payload aligned with the strict server schema.
+          // The picker stores canonical locality IDs and seller-entered location details;
+          // the server resolves administrative relations from localityId.
+          ...{
+            city: productLocation.city,
+            district: productLocation.district,
+            localityId: productLocation.localityId,
+            neighborhood: productLocation.neighborhood,
+            streetAddress: productLocation.streetAddress,
+            latitude: productLocation.latitude,
+            longitude: productLocation.longitude
+          },
           media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, storageKey: image.storageKey, width: image.width, height: image.height, altText: name, sortOrder: index, isPrimary: index === 0 })),
           variants: variantRows.map((variant) => ({
             sku: variant.sku.trim(),
@@ -677,7 +688,11 @@ export default function SellerProductsPage() {
   async function publish(id: string) {
     setBusy(true); setError(""); setMessage("");
     try {
-      await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, { method: "POST" }));
+      await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      }));
       setMessage(translate(locale, "Product published.", "تم نشر المنتج."));
       toast.success(translate(locale, "Product published", "تم نشر المنتج"));
       await loadProducts(storeId, search);
