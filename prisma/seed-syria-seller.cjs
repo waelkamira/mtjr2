@@ -710,7 +710,8 @@ async function main() {
   const { owner, store } = await seedSellerIdentityAndStore();
   const { market, syp, usd, warehouse } = await seedSyriaMarket(store);
   const { products, categories } = await seedCatalog(store, warehouse, market, syp, usd);
-  const { createdOrders, customers } = await seedOrdersAndEngagement(owner, store, market, usd, products);\n  const communications = await seedSellerCommunications(owner, store, market, usd, products, customers);
+  const { createdOrders, customers } = await seedOrdersAndEngagement(owner, store, market, usd, products);
+  const communications = await seedSellerCommunications(owner, store, market, usd, products, customers);
 
   const categoryCounts = [];
   for (const [slug, category] of categories) {
@@ -741,7 +742,7 @@ async function main() {
   if (storeReviewCount < 3 || productReviewCount < 3) throw new Error("Expected store and product review records.");
   if (questionCount < 6) throw new Error("Expected at least 6 product questions.");
   if (communications.notifications < 5 || communications.conversations < 3 || communications.supportTickets < 3 || communications.campaigns < 2) {
-    throw new Error("Expected demo notifications, store conversations, support tickets, and draft ad campaigns.");
+    throw new Error("Expected demo notifications, store conversations, support tickets, and ad campaigns.");
   }
 
   console.log(JSON.stringify({
@@ -750,7 +751,8 @@ async function main() {
     activeBrands: brandCount, activeProducts: productCount, productsPerCategory: categoryCounts,
     demoOrders: orderCount, pendingReturns: returnCount, lowStockVariants: lowStockCount,
     storeReviews: storeReviewCount, productQuestions: questionCount,
-    demoOrderRecordsCreatedThisRun: createdOrders.length,\n    communications,
+    demoOrderRecordsCreatedThisRun: createdOrders.length,
+    communications,
     note: "All DEMO-SYR orders, customers, reviews, questions and shipping records are test data. No payment, refund, payout or ledger records were created.",
   }, null, 2));
 }
