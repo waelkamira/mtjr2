@@ -332,9 +332,10 @@ export default function SellerProductsPage() {
 
     const failed = results.filter((result) => result.status === "rejected");
     if (failed.length) {
-      const firstError = failed[0].status === "rejected" && failed[0].reason instanceof Error
+      const rawError = failed[0].status === "rejected" && failed[0].reason instanceof Error
         ? failed[0].reason.message
         : translate(locale, "One or more images could not be uploaded.", "تعذر رفع صورة واحدة أو أكثر.");
+      const firstError = friendlySellerError(rawError);
       setUploadedImages((current) => current.map((image) => drafts.some((draft) => draft.id === image.id) && image.status === "uploading"
         ? { ...image, status: "failed", error: firstError }
         : image));
@@ -381,7 +382,7 @@ export default function SellerProductsPage() {
       toast.success(translate(locale, "Image replaced successfully.", "تم استبدال الصورة بنجاح."));
     } catch (cause) {
       URL.revokeObjectURL(previewUrl);
-      toast.error(cause instanceof Error ? cause.message : translate(locale, "Image could not be replaced.", "تعذر استبدال الصورة."));
+      toast.error(friendlySellerError(cause instanceof Error ? cause.message : translate(locale, "Image could not be replaced.", "تعذر استبدال الصورة.")));
     } finally {
       setUploadingImages(false);
     }
@@ -405,7 +406,7 @@ export default function SellerProductsPage() {
       setError("");
       toast.success(translate(locale, "Image uploaded successfully.", "تم رفع الصورة بنجاح."));
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "فشل رفع الصورة.");
+      const message = friendlySellerError(cause instanceof Error ? cause.message : translate(locale, "Image upload failed.", "فشل رفع الصورة."));
       setUploadedImages((current) => current.map((entry) => entry.id === id ? { ...entry, status: "failed", error: message } : entry));
       toast.error(message);
     } finally {
@@ -514,7 +515,8 @@ export default function SellerProductsPage() {
       uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setSeoTitle(""); setSeoDescription(""); setBrandId(""); setBasicSpecifications({ model: "", color: "", material: "", weight: "", dimensions: "", condition: "", warranty: "", countryOfOrigin: "" }); setCustomSpecifications([]); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", weightGrams: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({});
       await loadProducts(storeId, search);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
+      const message = friendlySellerError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
+      setError(message);
       toast.error(translate(locale, "Product could not be created", "تعذر إنشاء المنتج"));
     } finally { setBusy(false); }
   }
@@ -684,7 +686,7 @@ export default function SellerProductsPage() {
       toast.success(translate(locale, "Product updated", "تم تحديث المنتج"));
       await loadProducts(storeId, search);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be updated.", "تعذر تحديث المنتج."));
+      setError(friendlySellerError(cause instanceof Error ? cause.message : translate(locale, "Product could not be updated.", "تعذر تحديث المنتج.")));
       toast.error(translate(locale, "Product could not be updated", "تعذر تحديث المنتج"));
     } finally { setBusy(false); }
   }
@@ -706,7 +708,19 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
-  const inputClass = "w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-sm text-[var(--foreground)] shadow-sm outline-none transition placeholder:text-[var(--muted)] focus:border-[#FF8C1C] focus:ring-4 focus:ring-[#FF8C1C]/10";
+  const friendlySellerError = (message: string) => {
+    const normalized = message.toLowerCase();
+    if (normalized.includes("10 mb") || normalized.includes("exceeds the 10 mb limit") || normalized.includes("image size must be")) {
+      return translate(locale,
+        "The image is larger than the allowed 10 MB. Choose a smaller image and try again.",
+        "حجم الصورة يتجاوز الحد المسموح (10 ميغابايت). اختر صورة أصغر ثم أعد المحاولة.");
+    }
+    if (normalized.includes("unsupported image format")) return translate(locale, "This image format is not supported. Use JPG, PNG, WebP, GIF or AVIF.", "صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP أو GIF أو AVIF.");
+    if (normalized.includes("too many image uploads")) return translate(locale, "You have reached the image upload limit. Please wait 15 minutes before trying again.", "وصلت إلى حد محاولات رفع الصور. انتظر 15 دقيقة ثم حاول مجدداً.");
+    if (normalized.includes("image upload is not configured") || normalized.includes("providers are unavailable")) return translate(locale, "Image upload is temporarily unavailable. Please try again later or contact platform support.", "رفع الصور غير متاح حالياً. حاول مرة أخرى لاحقاً أو تواصل مع دعم المنصة.");
+    return message;
+  };
+  const inputClass = "w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-sm text-[var(--foreground)] shadow-sm outline-none transition placeholder:text-[var(--muted)] focus:border-[#FF8C1C] focus:ring-4 focus:ring-[#FF8C1C]/10 user-invalid:border-red-500 user-invalid:bg-red-50 user-invalid:ring-2 user-invalid:ring-red-100";
   return <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
     <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border border-[#eee9e4] bg-[linear-gradient(110deg,#fff6ef_0%,#ffffff_58%,#fff1e8_100%)] p-5 text-[#454545] shadow-[0_12px_28px_rgba(69,69,69,.07)] sm:p-7">
