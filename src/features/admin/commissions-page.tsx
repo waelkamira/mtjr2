@@ -161,7 +161,7 @@ export default function CommissionsPage() {
   const needsCategory = scope === "CATEGORY" || scope === "SELLER_CATEGORY";
 
   return (
-    <main className="mx-auto max-w-7xl px-5 py-8">
+    <main className="mx-auto max-w-[1600px] px-5 py-8">
       <header>
         <p className="text-sm font-semibold text-[var(--color-lavender-700)]">{translate(locale, "Platform finance", "الشؤون المالية للمنصة")}</p>
         <h1 className="mt-1 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Commissions", "العمولات")}</h1>
@@ -213,7 +213,7 @@ export default function CommissionsPage() {
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead><tr className="border-b border-[var(--border)] text-xs uppercase text-[var(--muted)]"><th className="py-3 pr-4">{translate(locale, "Scope", "النطاق")}</th><th className="py-3 pr-4">{translate(locale, "Rate", "المعدل")}</th><th className="py-3 pr-4">{translate(locale, "Effective period", "فترة السريان")}</th><th className="py-3 pr-4">{translate(locale, "Status", "الحالة")}</th><th className="py-3">{translate(locale, "Action", "الإجراء")}</th></tr></thead>
-              <tbody>{rules.map((rule) => <tr key={rule.id} className="border-b border-[var(--border)] last:border-0">
+              <tbody>{rules.map((rule) => <tr key={rule.id} className="border-b border-slate-100 last:border-0 transition-colors hover:bg-orange-50/40">
                 <td className="py-3 pr-4 font-medium">{scopeLabel(locale, rule)}</td><td className="py-3 pr-4">{(rule.rateBasisPoints / 100).toFixed(2)}%</td>
                 <td className="py-3 pr-4">{new Date(rule.effectiveFrom).toLocaleString()} – {rule.effectiveUntil ? new Date(rule.effectiveUntil).toLocaleString() : translate(locale, "No end", "بلا تاريخ انتهاء")}</td>
                 <td className="py-3 pr-4"><StatusBadge locale={locale} status={rule.isActive ? "ACTIVE" : "INACTIVE"} /></td>
@@ -230,7 +230,7 @@ export default function CommissionsPage() {
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead><tr className="border-b border-[var(--border)] text-xs uppercase text-[var(--muted)]"><th className="py-3 pr-4">{translate(locale, "Order", "الطلب")}</th><th className="py-3 pr-4">{translate(locale, "Seller / store", "البائع / المتجر")}</th><th className="py-3 pr-4">{translate(locale, "Category", "الفئة")}</th><th className="py-3 pr-4">{translate(locale, "Base", "الأساس")}</th><th className="py-3 pr-4">{translate(locale, "Rate", "المعدل")}</th><th className="py-3 pr-4">{translate(locale, "Commission", "العمولة")}</th><th className="py-3">{translate(locale, "Recorded", "تاريخ التسجيل")}</th></tr></thead>
-              <tbody>{transactions.map((item) => <tr key={item.id} className="border-b border-[var(--border)] last:border-0">
+              <tbody>{transactions.map((item) => <tr key={item.id} className="border-b border-slate-100 last:border-0 transition-colors hover:bg-orange-50/40">
                 <td className="py-3 pr-4">{item.order.orderNumber}</td><td className="py-3 pr-4">{item.sellerName} / {item.store.name}</td><td className="py-3 pr-4">{item.categoryName || translate(locale, "Uncategorized", "غير مصنف")}</td>
                 <td className="py-3 pr-4">{formatMinorAmount(item.baseAmountMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3 pr-4">{(item.rateBasisPoints / 100).toFixed(2)}% ({item.ruleScopeType})</td><td className="py-3 pr-4">{formatMinorAmount(item.commissionMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3">{new Date(item.createdAt).toLocaleString()}</td>
               </tr>)}</tbody>
