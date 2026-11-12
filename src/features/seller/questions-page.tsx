@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Answer = { id: string; body: string; status: string; createdAt: string };
@@ -29,13 +29,7 @@ export default function SellerQuestionsPage() {
   const [editing, setEditing] = useState("");
 
   const t = (english: string, arabic: string) => translate(locale, english, arabic);
-  const statusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      PUBLISHED: "منشور", PENDING: "قيد المراجعة", REJECTED: "مرفوض",
-      HIDDEN: "مخفي", ARCHIVED: "مؤرشف"
-    };
-    return translate(locale, status.replaceAll("_", " "), labels[status] ?? status.replaceAll("_", " "));
-  };
+  const statusLabel = (status: string) => translateStatus(locale, status);
 
   async function load() {
     const response = await fetch("/api/seller/questions", { cache: "no-store" });
