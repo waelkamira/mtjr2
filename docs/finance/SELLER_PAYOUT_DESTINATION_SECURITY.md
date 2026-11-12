@@ -44,7 +44,7 @@ A privileged manual review command is now implemented at `POST /api/admin/seller
 - Accepts only `VERIFIED` or `REJECTED`, a non-empty external evidence reference, and a reason.
 - Rejects self-review when the platform actor is also the seller owner.
 - Reviews only `PENDING_VERIFICATION` records; repeat or conflicting reviews return a conflict.
-- Each review is bound to the exact `updatedAt` snapshot returned by the queue. Disable/re-registration changes this timestamp; stale evidence is rejected even if the database row ID is reused. The write also checks the expected timestamp and pending status atomically.
+- Each review is bound to an immutable `submissionVersion` returned by the queue. Re-registering a disabled destination increments this version even when the database row ID is reused. Stale evidence is rejected, and the write checks the expected version and pending status atomically.
 - Updates the destination status and audit record in one serializable transaction.
 - Stores the evidence reference and reason in the audit metadata, never the account identifier or encrypted payload.
 - A rejection clears the default flag. A successful manual review records `verifiedAt`.
