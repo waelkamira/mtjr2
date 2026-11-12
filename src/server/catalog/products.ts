@@ -23,6 +23,20 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(180),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180),
   description: z.string().trim().max(12000).optional(),
+  specifications: z.object({
+    model: z.string().trim().max(160).optional(),
+    color: z.string().trim().max(160).optional(),
+    material: z.string().trim().max(160).optional(),
+    weight: z.string().trim().max(160).optional(),
+    dimensions: z.string().trim().max(160).optional(),
+    condition: z.string().trim().max(160).optional(),
+    warranty: z.string().trim().max(160).optional(),
+    countryOfOrigin: z.string().trim().max(160).optional(),
+    custom: z.array(z.object({
+      name: z.string().trim().min(1).max(80),
+      value: z.string().trim().min(1).max(240)
+    }).strict()).max(50).default([])
+  }).strict().optional(),
   city: z.string().trim().min(1).max(120).optional(),
   district: z.string().trim().max(120).optional(),
   contactPhone: z.string().trim().min(6).max(40).optional(),
@@ -216,6 +230,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
       data: {
         storeId: store.id, brandId: data.brandId, name: data.name, slug: data.slug,
         description: data.description,
+        specifications: data.specifications ? data.specifications as Prisma.InputJsonValue : Prisma.JsonNull,
         city: data.city,
         district: data.district,
         contactPhone: data.contactPhone,
