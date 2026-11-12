@@ -209,8 +209,7 @@ export async function transitionFinancialPolicyVersion(versionId: string, input:
       update = {
         approvalStatus: "APPROVED",
         approvedAt: now,
-        approvedById: actor.userId,
-        ...(action.notes ? { reviewNotes: action.notes } : {})
+        approvedById: actor.userId
       };
     } else {
       if (version.createdById === actor.userId) throw new Error("The policy author cannot reject their own policy.");
