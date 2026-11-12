@@ -38,12 +38,13 @@ export default function SellerPayoutReviewPage() {
   const t = useCallback((en: string, ar: string) => translate(locale, en, ar), [locale]);
   const [status, setStatus] = useState("PENDING_VERIFICATION");
   const [page, setPage] = useState(1);
+  const statusRef = useRef(status);
+  const pageRef = useRef(page);
   const [data, setData] = useState<Listing | null>(null);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<{ id: string; decision: "VERIFIED" | "REJECTED" } | null>(null);
   const [error, setError] = useState("");
-  const [refreshCounter, setRefreshCounter] = useState(0);
   const loadRequestId = useRef(0);
   const draftsRef = useRef<Record<string, Draft>>({});
   const draftStorageKey = "seller-payout-review-draft";
@@ -81,12 +82,12 @@ export default function SellerPayoutReviewPage() {
     };
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (requestedStatus: string, requestedPage: number) => {
     const requestId = ++loadRequestId.current;
     setLoading(true);
     setError("");
     try {
-      const params = new URLSearchParams({ status, page: String(page) });
+      const params = new URLSearchParams({ status: requestedStatus, page: String(requestedPage) });
       const response = await fetch("/api/admin/seller-payout-methods?" + params, { cache: "no-store" });
       if (requestId !== loadRequestId.current) return;
       if (response.status === 428) {
@@ -96,8 +97,10 @@ export default function SellerPayoutReviewPage() {
       const result = await response.json() as Listing & { error?: string };
       if (requestId !== loadRequestId.current) return;
       if (!response.ok) throw new Error(result.error || t("Unable to load bank destinations.", "تعذر تحميل الحسابات البنكية."));
-      if (page > result.pageCount) {
-        setPage(Math.max(1, result.pageCount));
+      if (requestedPage > result.pageCount) {
+        const lastPage = Math.max(1, result.pageCount);
+        pageRef.current = lastPage;
+        setPage(lastPage);
         return;
       }
       setData(result);
@@ -108,15 +111,15 @@ export default function SellerPayoutReviewPage() {
     } finally {
       if (requestId === loadRequestId.current) setLoading(false);
     }
-  }, [page, status, t, redirectForStepUp]);
+  }, [t, redirectForStepUp]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { void load(); }, 0);
+    const timer = window.setTimeout(() => { void load(status, page); }, 0);
     return () => {
       window.clearTimeout(timer);
       loadRequestId.current += 1;
     };
-  }, [load, refreshCounter]);
+  }, [load, status, page]);
 
   function draftKey(item: Pick<PayoutMethod, "id" | "submissionVersion">) {
     return `${item.id}:${item.submissionVersion}`;
@@ -161,7 +164,7 @@ export default function SellerPayoutReviewPage() {
         return next;
       });
       toast.success(t("Bank account review saved and audited.", "تم حفظ مراجعة الحساب البنكي وتسجيلها في سجل التدقيق."));
-      setRefreshCounter((value) => value + 1);
+      await load(statusRef.current, pageRef.current);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("Bank account review failed.", "تعذرت مراجعة الحساب البنكي.");
       setError(message); toast.error(message);
@@ -172,7 +175,7 @@ export default function SellerPayoutReviewPage() {
   return <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8"><div className="mx-auto max-w-7xl">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Platform finance controls", "ضوابط مالية المنصة")}</p>
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{t("Seller bank verification", "التحقق من الحسابات البنكية للبائعين")}</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{t("Review masked payout destinations after independently checking account ownership with the bank or approved provider. Every decision requires evidence and a reason.", "راجع بيانات الحسابات المقنّعة بعد التحقق المستقل من الملكية لدى البنك أو مزود معتمد. يتطلب كل قرار مرجع إثبات وسبباً موثقاً.")}</p></div><button type="button" onClick={() => void load()} disabled={loading} className="rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{t("Refresh", "تحديث")}</button></div>
-    <div className="mt-6 flex flex-wrap gap-2">{[["PENDING_VERIFICATION", t("Pending review", "بانتظار المراجعة")], ["VERIFIED", t("Verified", "تم التحقق")], ["REJECTED", t("Rejected", "مرفوض")]].map(([value, label]) => <button key={value} type="button" onClick={() => { setStatus(value); setPage(1); }} className={status === value ? "rounded-full bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white" : "rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]"}>{label}</button>)}</div>
+    <div className="mt-6 flex flex-wrap gap-2">{[["PENDING_VERIFICATION", t("Pending review", "بانتظار المراجعة")], ["VERIFIED", t("Verified", "تم التحقق")], ["REJECTED", t("Rejected", "مرفوض")]].map(([value, label]) => <button key={value} type="button" onClick={() => { statusRef.current = value; pageRef.current = 1; setStatus(value); setPage(1); }} className={status === value ? "rounded-full bg-[var(--color-forest-900)] px-4 py-2 text-sm font-semibold text-white" : "rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]"}>{label}</button>)}</div>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
     {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : <div className="mt-5 space-y-4">
       {!data?.items.length ? <div className="rounded-2xl border border-[var(--border)] bg-white p-8 text-center text-sm text-[var(--muted)]">{t("No bank destinations in this status.", "لا توجد حسابات بنكية بهذه الحالة.")}</div> : data.items.map((item) => {
@@ -196,7 +199,7 @@ export default function SellerPayoutReviewPage() {
         </article>;
       })}
     </div>}
-    {data && (data.pageCount > 1 || page > 1) && <div className="mt-5 flex items-center justify-between"><p className="text-sm text-[var(--muted)]">{t("Page", "صفحة")} {data.page} / {data.pageCount} · {data.total} {t("records", "سجل")}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Previous", "السابق")}</button><button type="button" disabled={page >= data.pageCount || loading} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Next", "التالي")}</button></div></div>}
+    {data && (data.pageCount > 1 || page > 1) && <div className="mt-5 flex items-center justify-between"><p className="text-sm text-[var(--muted)]">{t("Page", "صفحة")} {data.page} / {data.pageCount} · {data.total} {t("records", "سجل")}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => { const nextPage = Math.max(1, pageRef.current - 1); pageRef.current = nextPage; setPage(nextPage); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Previous", "السابق")}</button><button type="button" disabled={page >= data.pageCount || loading} onClick={() => { const nextPage = pageRef.current + 1; pageRef.current = nextPage; setPage(nextPage); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Next", "التالي")}</button></div></div>}
     <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{t("Important: this screen records a human administrator's attestation only. It does not contact banks, independently verify ownership, or initiate seller transfers. Never approve without completing the external check.", "تنبيه: تسجل هذه الصفحة إقراراً من مسؤول بشري فقط. لا تتصل بالبنوك ولا تتحقق آلياً من الملكية ولا تنفذ تحويلات للبائعين. لا توافق قبل إتمام التحقق الخارجي.")}</p>
   </div></main>;
 }
