@@ -76,7 +76,6 @@ export default function FinancialPoliciesPage() {
   const [previewBusy, setPreviewBusy] = useState(false);
 
   const load = useCallback(async () => {
-    setError("");
     const params = new URLSearchParams();
     if (statusFilter) params.set("approvalStatus", statusFilter);
     if (domainFilter.trim()) params.set("domain", domainFilter.trim().toUpperCase());
@@ -85,6 +84,7 @@ export default function FinancialPoliciesPage() {
     const response = await fetch(`/api/admin/financial-policies?${params.toString()}`, { cache: "no-store" });
     const data = await response.json() as { versions?: PolicyVersion[]; error?: string };
     if (!response.ok) throw new Error(data.error || translate(locale, "Financial policies could not be loaded.", "تعذر تحميل السياسات المالية."));
+    setError("");
     setVersions(data.versions || []);
   }, [domainFilter, keyFilter, locale, statusFilter]);
 
