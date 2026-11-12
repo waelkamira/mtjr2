@@ -45,6 +45,20 @@ async function main() {
   const seller = await prisma.user.findUnique({ where: { emailNormalized: "electronics@demo.mtjr2.test" }, select: { id: true, sellerProfile: { select: { id: true, status: true } } } });
   if (!seller?.sellerProfile || seller.sellerProfile.status !== "ACTIVE") throw new Error("Demo seller fixture was not seeded.");
   await ensureRole(seller.id, "SELLER");
+  const store = await prisma.store.findFirst({
+    where: { sellerId: seller.sellerProfile.id, status: "ACTIVE" },
+    include: { markets: { where: { isEnabled: true }, include: { market: true }, orderBy: { marketId: "asc" } } }
+  });
+  if (!store?.markets.length) throw new Error("Demo seller store has no enabled market.");
+  const market = store.markets[0].market;
+  const payoutCountry = await prisma.country.findUnique({
+    where: { id: market.countryId },
+    select: { code: true }
+  });
+  if (!payoutCountry) throw new Error("Demo seller market country is missing.");
+
+  // Reuse the seeded market's default currency so the payout fixture always
+  // satisfies the SellerPayoutMethod -> Currency foreign key.
   await prisma.sellerPayoutMethod.upsert({
     where: { id: "e2e-seller-payout-review" },
     create: {
@@ -53,8 +67,8 @@ async function main() {
       type: "IBAN",
       accountHolderName: "E2E Protected Placeholder",
       bankName: "E2E Demo Bank",
-      countryCode: "FR",
-      currencyCode: "EUR",
+      countryCode: payoutCountry.code,
+      currencyCode: market.defaultCurrencyCode,
       encryptedDetails: "e2e-fixture-encrypted-payload",
       encryptionKeyVersion: 1,
       accountLast4: "4242",
@@ -67,15 +81,11 @@ async function main() {
       verifiedAt: null,
       isDefault: false,
       bankName: "E2E Demo Bank",
-      accountLast4: "4242"
+      accountLast4: "4242",
+      countryCode: payoutCountry.code,
+      currencyCode: market.defaultCurrencyCode
     }
   });
-  const store = await prisma.store.findFirst({
-    where: { sellerId: seller.sellerProfile.id, status: "ACTIVE" },
-    include: { markets: { where: { isEnabled: true }, include: { market: true }, orderBy: { marketId: "asc" } } }
-  });
-  if (!store?.markets.length) throw new Error("Demo seller store has no enabled market.");
-  const market = store.markets[0].market;
   const product = await prisma.product.findFirst({
     where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED", categories: { some: {} }, variants: { some: { isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } } } },
     select: { id: true, slug: true, categories: { take: 1, select: { category: { select: { slug: true } } } } }
