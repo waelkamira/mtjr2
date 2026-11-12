@@ -120,7 +120,7 @@ export default function AdminCategoriesPage() {
     <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Category management", "إدارة الفئات")}</h1>
     <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Manage category hierarchy and visibility. Empty categories remain hidden from storefront discovery. Archiving preserves product and order history.", "أدِر التسلسل الهرمي للفئات وظهورها. تظل الفئات الفارغة مخفية من واجهة المتجر. تحافظ الأرشفة على سجل المنتجات والطلبات.")}</p>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
-    {message && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 text-sm text-green-800">{message}</p>}
+    {message && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{message}</p>}
     <form onSubmit={(event) => void save(event)} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-5 md:grid-cols-2 xl:grid-cols-3">
       <h2 className="text-lg font-semibold md:col-span-2 xl:col-span-3">{editingId ? translate(locale, "Edit category", "تعديل الفئة") : translate(locale, "Create category", "إنشاء فئة")}</h2>
       <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Name", "الاسم")}<input required minLength={2} maxLength={120} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
