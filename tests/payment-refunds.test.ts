@@ -31,14 +31,20 @@ describe("manual return refund lifecycle", () => {
       order: { id: "order-1", orderNumber: "ORD-1", currencyCode: "EUR" },
       items: [{
         id: "return-item-1", quantity: 1,
-        orderItem: { id: "order-item-1", quantity: 2, lineTotalMinor: BigInt(3000), productName: "Item", sku: "SKU-1" }
+        orderItem: {
+           id: "order-item-1", quantity: 2, lineTotalMinor: BigInt(3000), productName: "Item", sku: "SKU-1",
+           vendorOrder: {
+             id: "vendor-order-1", subtotalMinor: BigInt(3000), discountMinor: BigInt(300),
+             items: [{ id: "order-item-1", lineTotalMinor: BigInt(3000) }]
+           }
+         }
       }]
     });
     mocks.refundFindUnique.mockResolvedValue(null);
     mocks.paymentFindMany.mockResolvedValue([{ id: "payment-1", amountMinor: BigInt(5000), currencyCode: "EUR", status: "SUCCEEDED" }]);
     mocks.refundItemFindMany.mockResolvedValue([]);
     mocks.refundAggregate.mockResolvedValue({ _sum: { amountMinor: null } });
-    mocks.refundCreate.mockResolvedValue({ id: "refund-1", status: "PENDING_MANUAL", amountMinor: BigInt(1500) });
+    mocks.refundCreate.mockResolvedValue({ id: "refund-1", status: "PENDING_MANUAL", amountMinor: BigInt(1350) });
     mocks.refundUpdateMany.mockResolvedValue({ count: 1 });
     mocks.paymentUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreate.mockResolvedValue({});
@@ -61,15 +67,38 @@ describe("manual return refund lifecycle", () => {
 
     const result = await createRefundForReturn({ returnRequestId: "return-1" });
 
-    expect(result).toMatchObject({ id: "refund-1", status: "PENDING_MANUAL", amountMinor: "1500", alreadyApplied: false });
+    expect(result).toMatchObject({ id: "refund-1", status: "PENDING_MANUAL", amountMinor: "1350", alreadyApplied: false });
     expect(mocks.refundCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         orderId: "order-1", paymentId: "payment-1", returnRequestId: "return-1",
         amountMinor: BigInt(1500), idempotencyKey: "return-refund:return-1",
-        items: { create: [{ returnItemId: "return-item-1", quantity: 1, amountMinor: BigInt(1500) }] }
+        items: { create: [{ returnItemId: "return-item-1", quantity: 1, amountMinor: BigInt(1350) }] }
       })
     }));
     expect(mocks.paymentUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("subtracts the vendor coupon allocation before calculating a partial item refund", async () => {
+    const tx = {
+      returnRequest: { findUnique: mocks.returnRequestFindUnique },
+      refund: { findUnique: mocks.refundFindUnique, aggregate: mocks.refundAggregate, create: mocks.refundCreate },
+      payment: { findMany: mocks.paymentFindMany },
+      refundItem: { findMany: mocks.refundItemFindMany },
+      auditLog: { create: mocks.auditCreate },
+      $queryRaw: mocks.queryRaw
+    };
+    transactionWith(tx);
+
+    const result = await createRefundForReturn({ returnRequestId: "return-1" });
+
+    // 3,000 merchandise - 300 coupon = 2,700 net; one of two units = 1,350.
+    expect(result.amountMinor).toBe("1350");
+    expect(mocks.refundCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        amountMinor: BigInt(1350),
+        items: { create: [{ returnItemId: "return-item-1", quantity: 1, amountMinor: BigInt(1350) }] }
+      })
+    }));
   });
 
   it("does not create a refund for an unreceived return", async () => {
