@@ -65,9 +65,20 @@ function specificity<T>(rule: FinancialPolicyRule<T>): number {
   ].filter((value) => value != null).length;
 }
 
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, nested]) => [key, canonicalize(nested)])
+    );
+  }
+  return value;
+}
+
 function stableValue(value: unknown): string {
-  if (value === undefined) return "undefined";
-  return JSON.stringify(value, Object.keys((value && typeof value === "object" && !Array.isArray(value)) ? value as object : {}).sort());
+  return JSON.stringify(canonicalize(value));
 }
 
 /**
@@ -103,11 +114,14 @@ export function resolveFinancialPolicy<T>(
     (rule.classification === "LEGAL" ? 300 : rule.classification === "CONTRACTUAL" ? 200 : 100) + specificity(rule);
   const highestRank = Math.max(...eligible.map(rank));
   const winners = eligible.filter((rule) => rank(rule) === highestRank);
-  const pending = winners.filter((rule) => rule.approval !== "APPROVED");
+  const pending = winners.filter((rule) =>
+    rule.approval !== "APPROVED" ||
+    (rule.classification === "LEGAL" && (!rule.sourceReference?.trim() || !rule.reviewedAt))
+  );
   if (pending.length > 0) {
     return {
       status: "REVIEW_REQUIRED",
-      reason: "The highest-precedence matching policy is not approved; fallback is prohibited.",
+      reason: "The highest-precedence matching policy is not approved or lacks legal review evidence; fallback is prohibited.",
       evaluatedAt,
       candidateRuleIds: pending.map((rule) => rule.id)
     };
