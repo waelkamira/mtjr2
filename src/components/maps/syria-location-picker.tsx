@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import LeafletLocationMap from "@/components/maps/leaflet-location-map";
+import { SellerIcon } from "@/features/seller/seller-navigation";
 import { translate, type Locale } from "@/lib/locale";
 
 type GeoItem = {
@@ -297,7 +298,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setFocus({ latitude: value.latitude, longitude: value.longitude, zoom: 16 });
   }
 
-  const fieldClass = "mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-sm text-[var(--color-ink-900)] outline-none transition focus:border-[var(--color-forest-500)] focus:ring-2 focus:ring-[var(--color-forest-500)]/10 disabled:cursor-not-allowed disabled:opacity-50";
+  const fieldClass = "mt-1.5 w-full rounded-xl border border-[#eee9e4] bg-white px-3.5 py-3 text-sm text-[#454545] shadow-sm outline-none transition placeholder:text-[#918a84] focus:border-[#FF8C1C] focus:ring-4 focus:ring-[#FF8C1C]/10 disabled:cursor-not-allowed disabled:opacity-50";
   const name = (item: GeoItem) => item.nameAr || item.nameEn;
   const kindLabel = (kind?: string | null) => {
     if (!kind) return "";
@@ -306,10 +307,11 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   };
 
   return (
-    <section className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-      <div>
-        <h3 className="font-semibold text-[var(--color-ink-900)]">{translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3>
-        <p className="mt-1 text-xs leading-6 text-[var(--muted)]">{translate(locale, "Choose the administrative area from largest to smallest. The map follows each selection.", "اختر الموقع بالتسلسل الإداري من الأكبر إلى الأصغر، وستنتقل الخريطة تلقائياً مع كل اختيار.")}</p>
+    <section className="space-y-4 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="pin" /></span>
+        <div><h3 className="font-extrabold text-[#454545]">{translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3>
+        <p className="mt-1 text-xs leading-6 text-[#77716c]">{translate(locale, "Choose the administrative area from largest to smallest. The map follows each selection.", "اختر الموقع بالتسلسل الإداري من الأكبر إلى الأصغر، وستنتقل الخريطة تلقائياً مع كل اختيار.")}</p></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block text-sm font-medium">{labels.governorate}
@@ -339,7 +341,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
       </div>
       {districtId && <div className="flex gap-2">
         <input className={fieldClass + " mt-0 min-w-0"} value={localityQuery} onChange={(event) => setLocalityQuery(event.target.value)} placeholder={labels.search} />
-        <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[var(--color-ink-800)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{labels.searchButton}</button>
+        <button type="button" onClick={() => void searchLocalities()} disabled={busy || !localityQuery.trim()} className="shrink-0 rounded-xl bg-[#FF8C1C] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50">{labels.searchButton}</button>
       </div>}
       <label className="block text-sm font-medium">{labels.neighborhood}
         <input className={fieldClass} value={value.neighborhood ?? ""} maxLength={120} onChange={(event) => onChange({ ...value, neighborhood: event.target.value || undefined })} onBlur={focusNeighborhoodOnMap} placeholder={translate(locale, "e.g. Al-Mazzeh, Abu Rummaneh", "مثال: المزة، أبو رمانة")} />
@@ -356,13 +358,13 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
         <label className="block text-sm font-medium" htmlFor="seller-map-place-search">{translate(locale, "Find a place on the map", "ابحث عن موقع على الخريطة")}</label>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input id="seller-map-place-search" className={fieldClass + " mt-0 min-w-0 flex-1"} value={mapSearchQuery} onChange={(event) => { setMapSearchQuery(event.target.value); setMapSearchError(""); setMapSearchResults([]); }} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void searchMapPlaces(); } }} placeholder={labels.mapSearch} maxLength={160} />
-          <button type="button" onClick={() => void searchMapPlaces()} disabled={mapSearchBusy || mapSearchQuery.trim().length < 3} className="rounded-xl bg-[var(--color-ink-800)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{mapSearchBusy ? labels.searching : labels.mapSearchButton}</button>
-          <button type="button" onClick={useCurrentLocation} disabled={mapSearchBusy} className="rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-ink-900)] disabled:opacity-50">{labels.currentLocation}</button>
+          <button type="button" onClick={() => void searchMapPlaces()} disabled={mapSearchBusy || mapSearchQuery.trim().length < 3} className="rounded-xl bg-[#FF8C1C] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50">{mapSearchBusy ? labels.searching : labels.mapSearchButton}</button>
+          <button type="button" onClick={useCurrentLocation} disabled={mapSearchBusy} className="rounded-xl border border-[#eee9e4] bg-white px-4 py-3 text-sm font-semibold text-[#454545] transition hover:border-[#FF8C1C] hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50">{labels.currentLocation}</button>
         </div>
         {mapSearchError && <p role="status" className="text-xs text-amber-700">{mapSearchError}</p>}
         {mapSearchResults.length > 0 && <ul className="max-h-56 divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]" aria-label={translate(locale, "Map search results", "نتائج البحث على الخريطة")}>
           {mapSearchResults.map((result) => <li key={result.id}>
-            <button type="button" onClick={() => selectMapSearchResult(result)} className="w-full px-3 py-3 text-start text-sm transition hover:bg-[var(--surface-muted)] focus:bg-[var(--surface-muted)]">
+            <button type="button" onClick={() => selectMapSearchResult(result)} className="w-full px-3 py-3 text-start text-sm transition hover:bg-[#fff1e8] focus:bg-[#fff1e8]">
               <span className="block font-medium text-[var(--color-ink-900)]">{result.label}</span>
               {result.type && <span className="mt-1 block text-xs text-[var(--muted)]">{kindLabel(result.type)}</span>}
             </button>
