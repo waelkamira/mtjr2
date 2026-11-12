@@ -30,11 +30,15 @@ test("platform admin can inspect immutable ledger activity without financial mut
   await expect(page.getByRole("columnheader", { name: /Debit|مدين/i })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: /Credit|دائن/i })).toBeVisible();
 
-  const ledgerResponse = await page.request.get("/api/admin/finance/ledger?accountId=" + encodeURIComponent(
-    (await page.locator("button").filter({ hasText: "E2E-CASH" }).first().getAttribute("data-account-id")) || ""
-  ));
-  // The UI query above is authoritative; independently verify the endpoint's protected response.
-  expect([200, 400]).toContain(ledgerResponse.status());
+  const accountsResponse = await page.request.get("/api/admin/finance/ledger?q=E2E-CASH");
+  expect(accountsResponse.status()).toBe(200);
+  const accountsBody = await accountsResponse.json() as { accounts: { items: Array<{ id: string }> } };
+  const accountId = accountsBody.accounts.items[0]?.id;
+  expect(accountId).toBeTruthy();
+  const ledgerResponse = await page.request.get("/api/admin/finance/ledger?accountId=" + encodeURIComponent(accountId!));
+  expect(ledgerResponse.status()).toBe(200);
+  const ledgerBody = await ledgerResponse.json() as { activity: { items: Array<{ journalEntry: { description: string } }> } };
+  expect(ledgerBody.activity.items.some((line) => line.journalEntry.description === "E2E ledger sample entry")).toBe(true);
   await expect(page.getByRole("button", { name: /Post journal|Create journal|إنشاء قيد|ترحيل قيد/i })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Refund|Payout|Withdraw|استرداد|تحويل|سحب/i })).toHaveCount(0);
 });
