@@ -471,7 +471,7 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - The geography browser journey selects Damascus governorate, a coordinate-bearing district, subdistrict and locality; it asserts map zoom levels 7, 10, 12 and 15 when coordinates exist, tests mouse-wheel zoom, then enters a seller-supplied neighborhood and asserts zoom 16.
 - The same-head CI run failed in the seller-application unit suite (4/564), not in seller product or geography browser tests. The root cause and regression repair are recorded in BUILD_LOG.md.
 - The application service now checks authenticated email verification before returning registered-business KYC validation details. Registered-business fixtures use a mocked private ImageKit verification response and include required registration fields.
-- Post-repair CI/E2E results remain pending until the new main commit completes. Vercel currently reports a deployment-rate-limit provider failure (retry in 24 hours), distinct from application test/build status.
+- At the time of this historical review, post-repair CI/E2E were still pending and Vercel reported a deployment-rate-limit provider failure (retry in 24 hours). This was a provider-side limit, not an application build failure; subsequent exact-main CI, E2E and Vercel results are recorded below.
 
 
 ## 2026-11-11 — Post-repair seller product and Leaflet verification
@@ -482,3 +482,13 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - Neighbourhood is seller-entered text, not an official OpenSyria administrative level. Zoom 16 focuses the selected locality/pin for manual placement; it does not claim to geocode an unverified neighbourhood centroid.
 - Vercel production deployment for the verified `main` SHA is `READY`; the GitHub Vercel commit status is `success`. The earlier deployment-rate-limit event is historical, not the current state.
 - Coverage boundary: locality and neighbourhood zoom assertions are conditional on a source centroid being present. Do not interpret this as proof that every OpenSyria locality has coordinates.
+
+
+## 2026-11-12 — Seller product media and Syrian Leaflet exact-head coverage
+
+| Surface | Route / UI → API | Data and permission boundary | Verified outcome |
+|---|---|---|---|
+| Seller product create/edit and media gallery | `/seller/products` → seller product and media APIs → Product/ProductMedia/ProductVariant/ProductPrice | Authenticated seller; catalog operations are restricted to the owning store; image uploads are handled through the seller media workflow and catalog responses expose persisted media metadata. | Exact-head Browser E2E verifies district-name persistence, one primary image after creation, replacement of the original image, add/remove of a secondary image, and a fresh catalog GET showing exactly one persisted primary replacement asset. The same journey covers draft edit, moderation approval, seller publication, public product search/detail, and shipping-service persistence. |
+| Syrian product location picker and Leaflet map | `/seller/products` → `GET /api/geography/governorates`, `/districts`, `/subdistricts`, `/localities` → Syria geography reference records | Administrative names and centroids come from the pinned OpenSyria release; the neighbourhood is seller-entered and is not represented as an official administrative record. | Exact-head Browser E2E requires a coordinate-backed Damascus selection path and asserts zoom 7 (governorate), 10 (district), 12 (subdistrict), 15 (locality), increased zoom via mouse wheel, and zoom 16 after neighbourhood-field blur. |
+
+**Exact-head verification:** `main` code/test SHA `fa9012fdccbed41bee5fb359dfa50fb6b0b1921b` — CI passed (115 Vitest files / 598 tests, Prisma validate/migrate/generate, TypeScript, ESLint and production build with 174 static pages); Browser E2E passed **13/13**; CodeQL passed. Vercel production deployment for this exact SHA is `READY`. The dedicated PostgreSQL Integration and Database Baseline checks passed on the immediately preceding parent SHA `17567cb82c1505ea479ab5b36b91fa7033fc8dce`; the current commit changes tests only and contains no schema or migration change.

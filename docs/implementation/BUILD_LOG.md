@@ -4884,4 +4884,17 @@ The platform account policy is now explicit: email verification is not required 
 - After a review succeeds, the page reloads with status/page refs that are synchronously updated by tab and pagination controls. It does not call a stale `load` callback captured before the POST.
 - Added `SellerPayoutMethod.submittedAt` and migration `20261112093000_seller_payout_submission_timestamp`. Re-registration refreshes this timestamp, the admin queue sorts by it, and the UI displays it while preserving `createdAt` as the original row-creation time.
 - Updated the E2E fixture to refresh `submittedAt` whenever its pending generation is reset.
-- Verification of these latest queue refinements is pending on the new branch head; do not treat the earlier 13/13 Browser E2E run as validation of these latest changes.
+- Superseded by exact-main verification on `17567cb82c1505ea479ab5b36b91fa7033fc8dce`: CI, PostgreSQL Integration, Database Baseline, Browser E2E (13/13), and CodeQL all passed. The subsequent seller product-media and strict Leaflet zoom coverage is recorded below.
+
+
+## 2026-11-12 — Seller product-media persistence and strict Leaflet zoom coverage
+
+- Exact application/test head: `fa9012fdccbed41bee5fb359dfa50fb6b0b1921b` on `main`. This commit strengthens Browser E2E assertions only; no application code, schema, migration, secrets, or production settings were changed.
+- The seller product journey now verifies that the selected Syrian district is persisted, initial product media is returned by the seller catalog API as one primary asset, and editing a draft (replace the original image, add a second, then remove it) leaves exactly one persisted primary image using the replacement upload's storage key and URL.
+- The geography journey now requires a coordinate-backed Damascus governorate/district/subdistrict/locality path rather than conditionally skipping missing-centroid zoom checks. It asserts Leaflet zoom levels 7, 10, 12, and 15, confirms mouse-wheel zoom increases the level, and verifies neighbourhood-field blur moves to zoom 16.
+- Neighbourhood remains seller-entered text, not an official OpenSyria administrative level. Zoom 16 focuses the selected locality pin; it does not claim to geocode an unverified neighbourhood centroid.
+- Exact-head CI run `43196405446` passed: Prisma validate/migrate/generate, TypeScript, ESLint, **115 Vitest files / 598 tests**, and production build (174 static pages).
+- Exact-head Browser E2E run `43196405338` passed **13/13**, including the seller product create/edit/media persistence journey and the full coordinate-backed Leaflet zoom/wheel journey.
+- Exact-head CodeQL run `43196405453` passed.
+- Vercel deployment `dpl_4abPskRpS9BJ2gvUeKd3wHE7YD25` reached `READY` for this exact SHA and was assigned the production aliases, including `mtjr2.vercel.app`. The earlier Vercel rate-limit status on parent SHA `17567cb` was a provider-side deployment limit, not an application build failure; the subsequent deployment for this head completed successfully.
+- The dedicated PostgreSQL Integration (`43192299984`) and Database Baseline (`43192299765`) runs passed on parent SHA `17567cb82c1505ea479ab5b36b91fa7033fc8dce`. The `fa9012fd` commit is test-only and makes no database/schema change; the current Browser E2E run also executed the isolated PostgreSQL-backed application journey.
