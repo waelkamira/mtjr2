@@ -16,7 +16,6 @@ export function translate(locale: Locale, english: string, arabic: string): stri
 
 const statusArabic: Record<string, string> = {
   DRAFT: "مسودة", ACTIVE: "نشط", INACTIVE: "غير نشط", PENDING: "قيد الانتظار",
-  IN_PROGRESS: "قيد التنفيذ", SHIPPED: "تم الشحن", RECEIVED: "تم الاستلام", CANCELLED: "ملغى",
   PENDING_PAYMENT: "بانتظار الدفع", AWAITING_PAYMENT: "بانتظار الدفع", PAID: "مدفوع",
   SUCCEEDED: "ناجح", SUCCESS: "ناجح", FAILED: "فاشل", REJECTED: "مرفوض",
   APPROVED: "مقبول", PROCESSING: "قيد المعالجة", SHIPPED: "تم الشحن",
