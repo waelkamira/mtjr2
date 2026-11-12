@@ -45,6 +45,25 @@ describe("commission policy", () => {
     expect(() => calculateCommissionMinor(BigInt(10), 10_001)).toThrow();
   });
 
+  it("preserves the exact net merchandise total for a full discount allocation", () => {
+    const bases = allocateDiscountAcrossLines([
+      { id: "item-1", lineTotalMinor: BigInt(125) },
+      { id: "item-2", lineTotalMinor: BigInt(75) }
+    ], BigInt(200));
+    expect(bases.get("item-1")).toBe(BigInt(0));
+    expect(bases.get("item-2")).toBe(BigInt(0));
+    expect([...bases.values()].reduce((sum, amount) => sum + amount, BigInt(0))).toBe(BigInt(0));
+  });
+
+  it("rejects discounts outside the merchandise subtotal and negative line values", () => {
+    expect(() => allocateDiscountAcrossLines([
+      { id: "item-1", lineTotalMinor: BigInt(100) }
+    ], BigInt(101))).toThrow("within the merchandise subtotal");
+    expect(() => allocateDiscountAcrossLines([
+      { id: "item-1", lineTotalMinor: BigInt(-1) }
+    ], BigInt(0))).toThrow("Line totals cannot be negative");
+  });
+
   it("allocates discounts proportionally with deterministic remainder reconciliation", () => {
     const bases = allocateDiscountAcrossLines([
       { id: "item-b", lineTotalMinor: BigInt(100) },
