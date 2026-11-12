@@ -7,6 +7,7 @@ const marketCodeSchema = z.string().trim().min(2).max(32).regex(/^[a-zA-Z0-9_-]+
 
 export async function getActiveMarketByCode(input: string) {
   const code = marketCodeSchema.parse(input).toUpperCase();
+  if (code !== "SY-SYR") return null;
 
   const market = await prisma.market.findFirst({
     where: {
@@ -45,6 +46,7 @@ export async function getActiveMarketByCode(input: string) {
 export async function listActiveMarkets() {
   const rows = await prisma.market.findMany({
     where: {
+      code: "SY-SYR",
       status: "ACTIVE",
       country: { is: { isActive: true } },
       defaultCurrency: { is: { isActive: true } },
