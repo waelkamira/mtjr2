@@ -60,3 +60,11 @@ Disposable PostgreSQL integration proves accounting invariants, idempotency, rol
 - The route registry and System 31 specification were corrected to distinguish the current read-only ledger from obsolete baseline notes.
 - **Next safe engineering work:** complete exact-HEAD validation of journal/policy changes; then add non-posting read-only diagnostics for ledger integrity only if they can be derived from persisted journal lines without assuming seller allocation policy.
 - **Still blocked:** FIN-01..FIN-12 owner decisions and approved per-currency chart-of-accounts mapping. Until those are explicitly approved, do not add capture/refund journal postings, seller payable/available balances, holds/releases, payout requests, transfers or settlement reconciliation.
+
+## 2026-11-12 — Exact-main validation follow-up
+
+- Current `main` HEAD: `e4655108f8b8943439ce67ffe8d05419cdc1ef49`.
+- GitHub Actions on that exact HEAD: CI passed, Browser E2E passed, and CodeQL Security Analysis passed (all completed on 2026-11-12).
+- The latest Platform PostgreSQL Integration workflow result available in the repository is successful on parent commit `dde66b352dc42bbefac6549fa8fb9da68e00a29b`, not on the exact current HEAD. The parent-to-HEAD change only adjusts two localized E2E assertions, but this is still recorded as parent-commit evidence rather than exact-HEAD PostgreSQL evidence.
+- The current source includes the journal append-only transaction guard and the category-aware fail-closed policy resolver. No new money movement, seller balance, payout, or settlement behavior is enabled by this validation.
+- **Validation boundary:** do not mark the journal migration as exact-HEAD PostgreSQL-verified until the integration workflow is run against the current HEAD. Keep the journal read-only and the financial policy release gate closed.
