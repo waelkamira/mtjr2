@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -112,7 +113,7 @@ export default function SupportTicketPage({ ticketId }: { ticketId: string }) {
       </header>
       <div className="mx-auto max-w-4xl px-3 py-6 sm:px-5 sm:py-10">
         {loading ? <div aria-label={t("Loading ticket", "جارٍ تحميل التذكرة")} className="h-40 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : ticket && <>
-          <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{ticket.ticketNumber} · {ticket.status.replaceAll("_", " ")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{ticket.ticketNumber} · <StatusBadge locale={locale} status={ticket.status} /></p>
           <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{ticket.subject}</h1>
           <div className="mt-6 space-y-3">
             {ticket.messages.map(message => <article key={message.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
