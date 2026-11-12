@@ -107,7 +107,7 @@ No rule may be published as legally approved merely because a platform administr
 
 ## 10. First implementation checkpoint
 
-A pure resolver is now available at `src/server/finance/policy-resolver.ts`. It implements the precedence and fail-closed outcomes above without database writes or journal posting. Legal candidates must be explicitly country-scoped and include both a source reference and review timestamp before they can be selected. Matching pending/rejected rules block fallback at the winning precedence/specificity level. Equal-rank rules with different values return `CONFLICT`.
+A pure resolver is now available at `src/server/finance/policy-resolver.ts`. It implements the precedence and fail-closed outcomes above without database writes or journal posting. Legal candidates must be explicitly country-scoped and include source, reviewer, review timestamp, approver, and approval timestamp before they can be selected. All policy classifications require explicit approver identity and timestamp. Matching pending/rejected rules block fallback at the winning precedence/specificity level. Equal-rank rules with different values return `CONFLICT`.
 
 Focused unit coverage is in `tests/finance/policy-resolver.test.ts`, including legal-over-platform precedence, subdivision specificity, pending-review blocking, equal-rank conflict, effective-date boundaries, invalid country/currency, and unscoped legal rules.
 
