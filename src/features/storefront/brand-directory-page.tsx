@@ -96,16 +96,20 @@ export default function BrandDirectoryPage() {
     // AbortError in the Next.js development overlay.
     let isCurrent = true;
 
-    setLoading(true);
-    setError("");
-
-    fetch("/api/brands?locale=" + locale + "&limit=100")
+    void Promise.resolve()
+      .then(() => {
+        if (!isCurrent) return null;
+        setLoading(true);
+        setError("");
+        return fetch("/api/brands?locale=" + locale + "&limit=100");
+      })
       .then(async (response) => {
+        if (!response) return null;
         if (!response.ok) throw new Error(t("Brands could not be loaded.", "تعذّر تحميل العلامات التجارية."));
         return response.json() as Promise<BrandResponse>;
       })
       .then((result) => {
-        if (!isCurrent) return;
+        if (!isCurrent || !result) return;
         const brands = Array.isArray(result.items) ? result.items : [];
         setItems(brands);
         setTotalBrands(typeof result.pagination?.total === "number" ? result.pagination.total : brands.length);
