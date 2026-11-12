@@ -2701,3 +2701,55 @@ model ProductPropertyDetails {
   updatedAt    DateTime            @updatedAt
   product      Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
+
+/// Stable identity for a financial policy. Policy content lives in immutable versions.
+model FinancialPolicyRule {
+  id          String                       @id @default(cuid())
+  key         String                       @unique @db.VarChar(120)
+  domain      String                       @db.VarChar(64)
+  description String?                      @db.VarChar(500)
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+  versions    FinancialPolicyRuleVersion[]
+
+  @@index([domain, createdAt])
+}
+
+/// Immutable, reviewable policy definition. Runtime consumers must select only
+/// APPROVED versions that are effective for the complete financial context.
+model FinancialPolicyRuleVersion {
+  id                 String             @id @default(cuid())
+  ruleId             String
+  version            Int
+  classification     String             @db.VarChar(24)
+  approvalStatus     String             @default("PENDING_REVIEW") @db.VarChar(24)
+  countryCode        String?            @db.Char(2)
+  subdivisionCode    String?            @db.VarChar(32)
+  marketCode         String?            @db.VarChar(32)
+  currencyCode       String?            @db.Char(3)
+  productClass       String?            @db.VarChar(80)
+  paymentProvider    String?            @db.VarChar(80)
+  sellerId           String?
+  categoryId         String?
+  priority           Int                @default(0)
+  value              Json
+  effectiveFrom      DateTime
+  effectiveUntil     DateTime?
+  sourceReference    String?            @db.VarChar(2048)
+  reviewNotes        String?            @db.VarChar(2000)
+  reviewedAt         DateTime?
+  reviewedById       String?
+  approvedAt         DateTime?
+  approvedById       String?
+  rejectionReason    String?            @db.VarChar(1000)
+  createdById        String?
+  createdAt          DateTime           @default(now())
+  rule               FinancialPolicyRule @relation(fields: [ruleId], references: [id], onDelete: Restrict)
+
+  @@unique([ruleId, version])
+  @@index([approvalStatus, classification, effectiveFrom, effectiveUntil])
+  @@index([countryCode, subdivisionCode, marketCode])
+  @@index([currencyCode, productClass, paymentProvider])
+  @@index([sellerId, categoryId])
+}
+
