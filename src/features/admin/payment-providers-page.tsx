@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -275,7 +276,7 @@ export default function PaymentProvidersPage() {
         <section className="mt-6 space-y-4">
           {loading ? <div className="rounded-2xl border border-[var(--border)] bg-white p-8 text-sm text-[var(--muted)]">{t("Loading providers…", "جارٍ تحميل مزودي الدفع…")}</div> : visibleItems.length === 0 ? <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white p-10 text-center"><h2 className="font-semibold">{t("No provider configurations yet", "لا توجد إعدادات لمزودي الدفع بعد")}</h2><p className="mt-2 text-sm text-[var(--muted)]">{t("Add Stripe or PayPal in test mode first.", "ابدأ بإضافة Stripe أو PayPal في بيئة الاختبار.")}</p></div> : visibleItems.map((item) => <article key={item.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{item.displayName}</h2><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs font-semibold">{item.environment}</span><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">{item.status}</span></div><p className="mt-2 text-xs text-[var(--muted)]">{item.providerKey} · {item.credentialsConfigured ? t("Credentials encrypted", "بيانات الاعتماد مشفرة") : t("Credentials missing", "بيانات الاعتماد غير موجودة")} · {item.credentialFingerprint || "—"}</p></div>
+              <div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{item.displayName}</h2><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs font-semibold">{item.environment}</span><StatusBadge locale={locale} status={item.status} /></div><p className="mt-2 text-xs text-[var(--muted)]">{item.providerKey} · {item.credentialsConfigured ? t("Credentials encrypted", "بيانات الاعتماد مشفرة") : t("Credentials missing", "بيانات الاعتماد غير موجودة")} · {item.credentialFingerprint || "—"}</p></div>
               <div className="flex flex-wrap gap-2">
                 <button type="button" disabled={busyId === item.id} onClick={() => beginEdit(item)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{t("Edit", "تعديل")}</button>
                 <button type="button" disabled={busyId === item.id} onClick={() => void action(item.id, "verify")} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold disabled:opacity-50">{t("Verify", "تحقق")}</button>
