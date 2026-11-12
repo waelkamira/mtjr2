@@ -61,7 +61,6 @@ export default function StorefrontHomePage() {
       const requestedPage = Number(params.get("page") ?? "1");
       setQuery((params.get("q") ?? "").slice(0, 120));
       setDraftQuery((params.get("q") ?? "").slice(0, 120));
-      setMarketId(params.get("marketId") ?? "");
       setCategoryId(params.get("categoryId") ?? "");
       setBrandId(params.get("brandId") ?? "");
       setSort(requestedSort === "name_asc" || requestedSort === "name_desc" ? requestedSort : "newest");
@@ -78,7 +77,6 @@ export default function StorefrontHomePage() {
     if (!urlReady) return;
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    if (marketId) params.set("marketId", marketId);
     if (categoryId) params.set("categoryId", categoryId);
     if (brandId) params.set("brandId", brandId);
     if (sort !== "newest") params.set("sort", sort);
@@ -86,7 +84,7 @@ export default function StorefrontHomePage() {
     const search = params.toString();
     const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`;
     window.history.replaceState(window.history.state, "", nextUrl);
-  }, [urlReady, query, marketId, categoryId, brandId, sort, page]);
+  }, [urlReady, query, categoryId, brandId, sort, page]);
 
   useEffect(() => {
     let active = true;
@@ -106,6 +104,7 @@ export default function StorefrontHomePage() {
     ]).then(([marketResult, categoryResult, brandResult]) => {
       if (!active) return;
       setMarkets(marketResult.items);
+      setMarketId(marketResult.items.find((market) => market.code === "SY-SYR")?.id ?? "");
       setCategories(categoryResult.items);
       setBrands(brandResult.items);
     }).catch((cause: unknown) => {
