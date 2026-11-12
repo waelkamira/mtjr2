@@ -4919,3 +4919,14 @@ The platform account policy is now explicit: email verification is not required 
   inferred; seller payable, reconciliation and withdrawals remain blocked by FIN-01–FIN-12.
 
 - Follow-up hardening: migration also freezes a used ledger account's code, account type, scope and currency; only safe deactivation/label maintenance remains possible. PostgreSQL integration coverage now asserts a used account code cannot be rewritten.
+
+
+## 2026-11-12 — Accounting ledger read-only administration surface
+
+- Added `listLedgerAccounts` with bounded filters, currency normalization, stable ordering and cursor-ready pagination; account activity now returns `Currency.minorUnit` metadata so the UI formats integer minor-unit values without assuming two decimal places.
+- Added `GET /api/admin/finance/ledger`, protected server-side by `requirePlatformManagement`, returning read-only account metadata and selected-account journal lines with private/no-store caching.
+- Added `/admin/finance/ledger` server route with MFA enrollment, MFA verification and step-up redirects; added the General ledger link to the platform-only admin navigation.
+- Added a bilingual read-only UI for account filtering and journal inspection. It intentionally exposes no balance totals, journal posting, reversal, refunds, seller payable, settlement or payout actions.
+- Added focused unit tests for account filters, currency normalization and bounded page sizes. Updated route registry, journey matrix, system 31 specification and Prisma model usage map.
+- Fixed financial policy loading so the effect invokes a pure async data loader and performs React state updates only in Promise callbacks; this addresses the ESLint `react-hooks/set-state-in-effect` failure found in CI.
+- Earlier exact-head evidence: PostgreSQL migration/integration, CodeQL and Browser E2E passed on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; the follow-up CI run on `83fddafc9acca44ac91025c4ab661693baa20e44` passed TypeScript and Browser E2E/CodeQL but caught the effect lint issue. The read-only ledger surface is newly added after those runs; full CI, PostgreSQL and E2E on the final code commit remain required before calling it verified.
