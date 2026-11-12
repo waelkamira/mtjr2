@@ -39,8 +39,9 @@ const createSchema = z.object({
 const actionSchema = z.object({
   action: approvalActionSchema,
   notes: z.string().trim().min(5).max(2000).optional(),
-  sourceReference: z.string().trim().url().max(2048).optional()
-}).strict();
+}).strict().superRefine((data, ctx) => {
+  if (data.action === "REJECT" && !data.notes) ctx.addIssue({ code: "custom", path: ["notes"], message: "A rejection reason is required." });
+});
 
 const idSchema = z.string().trim().min(1).max(128);
 
@@ -178,13 +179,13 @@ export async function transitionFinancialPolicyVersion(versionId: string, input:
     let update: Prisma.FinancialPolicyRuleVersionUpdateInput;
     if (action.action === "REVIEW") {
       if (version.createdById === actor.userId) throw new Error("The policy author cannot review their own policy.");
-      if (version.classification === "LEGAL" && !version.sourceReference && !action.sourceReference) {
+      if (version.reviewedAt) throw new Error("This policy version has already been reviewed.");
+      if (version.classification === "LEGAL" && !version.sourceReference) {
         throw new Error("A legal source reference is required before review.");
       }
       update = {
         reviewedAt: now,
         reviewedById: actor.userId,
-        ...(action.sourceReference ? { sourceReference: action.sourceReference } : {}),
         ...(action.notes ? { reviewNotes: action.notes } : {})
       };
     } else if (action.action === "APPROVE") {
@@ -203,8 +204,8 @@ export async function transitionFinancialPolicyVersion(versionId: string, input:
       update = {
         approvalStatus: "REJECTED",
         rejectionReason: action.notes ?? "Rejected by platform management.",
-        approvedAt: now,
-        approvedById: actor.userId
+        rejectedAt: now,
+        rejectedById: actor.userId
       };
     }
 
