@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, type Locale } from "@/lib/locale";
 
 type PolicyVersion = {
   id: string;
@@ -38,7 +38,7 @@ function localDateTimeValue(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
-function statusLabel(status: PolicyVersion["approvalStatus"], locale: string) {
+function statusLabel(status: PolicyVersion["approvalStatus"], locale: Locale) {
   if (status === "APPROVED") return translate(locale, "Approved", "معتمد");
   if (status === "REJECTED") return translate(locale, "Rejected", "مرفوض");
   return translate(locale, "Pending review", "بانتظار المراجعة");
