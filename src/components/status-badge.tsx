@@ -8,18 +8,18 @@ type StatusBadgeProps = {
 
 const positiveStatuses = new Set([
   "ACTIVE", "APPROVED", "PAID", "SUCCEEDED", "SUCCESS", "COMPLETED",
-  "DELIVERED", "FULFILLED", "RESOLVED", "RECEIVED", "INSPECTED",
+  "DELIVERED", "FULFILLED", "RESOLVED", "RECEIVED", "INSPECTED", "PUBLISHED", "CONFIRMED", "ANSWERED",
   "PICKED_UP", "READY_FOR_PICKUP", "REFUNDED"
 ]);
 const dangerStatuses = new Set([
   "FAILED", "REJECTED", "PROVIDER_FAILED", "SUSPENDED", "CANCELLED",
-  "CANCELED", "VOIDED", "UNRESOLVED"
+  "CANCELED", "VOIDED", "UNRESOLVED", "EXCEPTION", "BLOCKED"
 ]);
 const warningStatuses = new Set([
   "PENDING", "PENDING_PAYMENT", "AWAITING_PAYMENT", "REQUESTED",
   "RETURN_REQUESTED", "UNDER_REVIEW", "ON_HOLD", "REFUND_PENDING",
   "PENDING_MANUAL", "PROCESSING_PROVIDER", "OPEN", "SUBMITTED",
-  "PARTIALLY_FULFILLED", "PARTIALLY_REFUNDED"
+  "PARTIALLY_FULFILLED", "PARTIALLY_REFUNDED", "PENDING_REVIEW", "AWAITING_ANSWER"
 ]);
 const infoStatuses = new Set([
   "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY",
@@ -32,7 +32,7 @@ function toneClass(status: string) {
   if (dangerStatuses.has(normalized)) return "border-rose-200 bg-rose-50 text-rose-800";
   if (warningStatuses.has(normalized)) return "border-amber-200 bg-amber-50 text-amber-900";
   if (infoStatuses.has(normalized)) return "border-sky-200 bg-sky-50 text-sky-800";
-  if (["INACTIVE", "DISABLED", "ARCHIVED", "EXPIRED", "DRAFT"].includes(normalized)) {
+  if (["INACTIVE", "DISABLED", "ARCHIVED", "EXPIRED", "DRAFT", "HIDDEN", "CLOSED"].includes(normalized)) {
     return "border-stone-200 bg-stone-100 text-stone-700";
   }
   return "border-slate-200 bg-slate-50 text-slate-700";
