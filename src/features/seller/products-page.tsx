@@ -164,7 +164,7 @@ export default function SellerProductsPage() {
     Promise.all([
       fetch("/api/seller/stores", { cache: "no-store" }).then((r) => json<Workspace>(r)),
       fetch("/api/markets").then((r) => json<{ items: Market[] }>(r)),
-      fetch("/api/categories?limit=100&includeEmpty=true").then((r) => json<{ items: Category[] }>(r)),
+      fetch(`/api/categories?limit=100&includeEmpty=true&locale=${encodeURIComponent(locale)}`).then((r) => json<{ items: Category[] }>(r)),
       fetch("/api/brands?limit=100").then((r) => json<{ items: Brand[] }>(r))
     ]).then(([workspace, marketResult, categoryResult, brandResult]) => {
       if (!active) return;
@@ -186,7 +186,7 @@ export default function SellerProductsPage() {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load seller catalog.");
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     if (!categoryId) return;
