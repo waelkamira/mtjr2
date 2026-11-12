@@ -121,3 +121,22 @@
 - Stripe and PayPal provider refund execution is now present in System 29 and the `/admin/refunds` route. It is not yet connected to the general ledger.
 - The existing immutable double-entry journal is a posting primitive, not an approved marketplace chart of accounts. No payment-capture journal exists, and account ownership for seller payable, processor clearing, tax, shipping, reserves/holds, and return/refund allocation is not approved.
 - Do not invent debit/credit account mappings or label refunds as financially reconciled. Ledger posting remains blocked until finance policy and per-currency account mappings are approved; after approval, refund postings must be idempotent and use immutable reversals.
+
+
+## 2026-11-12 — Journal posting integrity hardening
+
+- Current main includes the internal posting service `src/server/finance/ledger.ts` and
+  cursor-paginated account activity. This is a foundation, not an exposed admin ledger.
+- Idempotency retries now compare the complete immutable journal payload: source type/id,
+  currency, description, occurrence timestamp, reversal reference and canonical lines.
+  Reusing a key with any changed value is rejected.
+- Migration `20261112130000_journal_append_only_integrity` adds a database-generated
+  `JournalEntry.createdTransactionId`. A BEFORE INSERT trigger rejects JournalLine inserts
+  outside the transaction that created the parent journal. The deferred integrity trigger
+  also rejects inactive accounts, unbalanced lines and currency mismatches.
+- Added focused unit coverage in `tests/finance/ledger.test.ts` and PostgreSQL coverage in
+  `tests/integration/ledger-postgres.integration.test.ts` for post-commit line append and
+  inactive-account bypass attempts.
+- **Not verified yet:** Prisma validation/client generation, TypeScript, Vitest, migration
+  replay and disposable PostgreSQL integration. No payment, refund, seller payable,
+  reserve, settlement or payout workflow is connected. No admin ledger page/API exists.
