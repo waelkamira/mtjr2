@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requirePlatformManagement: vi.fn(),
-  versionFindMany: vi.fn()
+  versionFindMany: vi.fn(),
+  versionFindUnique: vi.fn(),
+  versionUpdate: vi.fn(),
+  auditCreate: vi.fn(),
+  transaction: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
@@ -10,10 +14,18 @@ vi.mock("@/server/identity/permission-guard", () => ({
   requirePlatformManagement: mocks.requirePlatformManagement
 }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { financialPolicyRuleVersion: { findMany: mocks.versionFindMany } }
+  prisma: {
+    financialPolicyRuleVersion: {
+      findMany: mocks.versionFindMany,
+      findUnique: mocks.versionFindUnique,
+      update: mocks.versionUpdate
+    },
+    auditLog: { create: mocks.auditCreate },
+    $transaction: mocks.transaction
+  }
 }));
 
-import { previewFinancialPolicyResolution } from "@/server/admin/financial-policy-management";
+import { previewFinancialPolicyResolution, transitionFinancialPolicyVersion } from "@/server/admin/financial-policy-management";
 
 const now = new Date("2026-11-12T12:00:00.000Z");
 const context = {
@@ -58,6 +70,21 @@ describe("financial policy resolution preview", () => {
     vi.clearAllMocks();
     mocks.requirePlatformManagement.mockResolvedValue({ userId: "admin-1" });
     mocks.versionFindMany.mockResolvedValue([version()]);
+    mocks.versionFindUnique.mockResolvedValue({
+      ...version({ id: "version-to-approve", reviewedAt: new Date("2026-11-10T10:00:00.000Z"), reviewedById: "reviewer-1" }),
+      createdById: "author-1",
+      rule: { key: "SELLER_PAYOUT.HOLD_DAYS", domain: context.domain }
+    });
+    mocks.versionUpdate.mockResolvedValue({
+      id: "version-to-approve", approvalStatus: "APPROVED",
+      reviewedAt: new Date("2026-11-10T10:00:00.000Z"), reviewedById: "reviewer-1",
+      approvedAt: now, approvedById: "approver-1"
+    });
+    mocks.auditCreate.mockResolvedValue({});
+    mocks.transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({
+      financialPolicyRuleVersion: { findUnique: mocks.versionFindUnique, update: mocks.versionUpdate },
+      auditLog: { create: mocks.auditCreate }
+    }));
   });
 
   it("loads effective versions for the requested domain and returns the selected policy", async () => {
