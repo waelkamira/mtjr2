@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
@@ -88,7 +89,7 @@ export default function CustomerReturnsPage() {
       </section>
       <section className="mt-8"><h2 className="text-xl font-semibold">{t("Your return requests", "طلبات الإرجاع")}</h2>
         {loading ? <div className="mt-4 h-32 animate-pulse rounded-2xl bg-[var(--surface-soft)]"/> : center.requests.length ? <div className="mt-4 space-y-3">{center.requests.map((row) => <article key={row.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-5">
-          <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-lavender-600)]">{row.returnNumber} · {row.orderNumber}</p><p className="mt-1 font-semibold">{row.items.map((item) => item.productName + " × " + item.quantity + " (" + item.status.replaceAll("_", " ") + ")").join(", ")}</p></div><span className="h-fit rounded-full bg-[var(--surface-soft)] px-3 py-1 text-xs font-semibold">{row.status.replaceAll("_", " ")}</span></div>
+          <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-lavender-600)]">{row.returnNumber} · {row.orderNumber}</p><p className="mt-1 font-semibold">{row.items.map((item) => item.productName + " × " + item.quantity + " (" + item.status.replaceAll("_", " ") + ")").join(", ")}</p></div><StatusBadge locale={locale} status={row.status} className="h-fit" /></div>
           <p className="mt-2 text-xs text-[var(--muted)]">{row.reasonCode.replaceAll("_", " ")} · {new Date(row.requestedAt).toLocaleString(locale === "ar" ? "ar" : "en")}</p>
           {row.items.filter((item) => item.reviewNote).map((item) => <p key={item.sku} className="mt-2 rounded-xl bg-[var(--surface-soft)] p-3 text-sm">{item.sku}: {item.reviewNote}</p>)}{row.reviewNote && <p className="mt-3 rounded-xl bg-[var(--surface-soft)] p-3 text-sm">{row.reviewNote}</p>}
         </article>)}</div> : <p className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-6 text-sm text-[var(--muted)]">{t("You have not requested a return yet.", "لم تطلب إرجاع أي منتج بعد.")}</p>}
