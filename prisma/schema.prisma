@@ -2287,6 +2287,7 @@ model JournalEntry {
   postedAt       DateTime      @default(now())
   reversalOfId   String?       @unique
   createdAt      DateTime      @default(now())
+  createdTransactionId BigInt  @default(dbgenerated("txid_current()"))
   currency       Currency      @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
   lines          JournalLine[]
   reversalOf     JournalEntry? @relation("JournalEntryReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
