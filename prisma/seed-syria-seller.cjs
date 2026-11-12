@@ -574,7 +574,7 @@ async function seedOrdersAndEngagement(owner, store, market, usd, products) {
 }
 
 
-async function seedSellerCommunications(owner, store, market, usd, products, customers, categories) {
+async function seedSellerCommunications(owner, store, market, usd, products, customers) {
   const now = new Date();
 
   // In-app notifications: no email delivery records are created by demo data.
@@ -694,8 +694,7 @@ async function seedSellerCommunications(owner, store, market, usd, products, cus
       status: "DRAFT", startsAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
       endsAt: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000),
     };
-    if (existing) await prisma.adCampaign.update({ where: { id: existing.id }, data });
-    else await prisma.adCampaign.create({ data });
+    if (!existing) await prisma.adCampaign.create({ data });
   }
 
   return {
@@ -711,7 +710,7 @@ async function main() {
   const { owner, store } = await seedSellerIdentityAndStore();
   const { market, syp, usd, warehouse } = await seedSyriaMarket(store);
   const { products, categories } = await seedCatalog(store, warehouse, market, syp, usd);
-  const { createdOrders, customers } = await seedOrdersAndEngagement(owner, store, market, usd, products);\n  const communications = await seedSellerCommunications(owner, store, market, usd, products, customers, categories);
+  const { createdOrders, customers } = await seedOrdersAndEngagement(owner, store, market, usd, products);\n  const communications = await seedSellerCommunications(owner, store, market, usd, products, customers);
 
   const categoryCounts = [];
   for (const [slug, category] of categories) {
@@ -741,6 +740,9 @@ async function main() {
   if (lowStockCount < 8) throw new Error("Expected low-stock demo variants, found " + lowStockCount + ".");
   if (storeReviewCount < 3 || productReviewCount < 3) throw new Error("Expected store and product review records.");
   if (questionCount < 6) throw new Error("Expected at least 6 product questions.");
+  if (communications.notifications < 5 || communications.conversations < 3 || communications.supportTickets < 3 || communications.draftCampaigns < 2) {
+    throw new Error("Expected demo notifications, store conversations, support tickets, and draft ad campaigns.");
+  }
 
   console.log(JSON.stringify({
     status: "verified", seller: SELLER_EMAIL, store: store.slug, market: "SY-SYR",
