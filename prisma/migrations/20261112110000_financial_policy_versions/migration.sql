@@ -69,7 +69,19 @@ CREATE TABLE "FinancialPolicyRuleVersion" (
   CONSTRAINT "FinancialPolicyRuleVersion_approved_rejection_check"
     CHECK ("approvalStatus" <> 'APPROVED' OR "rejectedAt" IS NULL),
   CONSTRAINT "FinancialPolicyRuleVersion_rejected_approval_check"
-    CHECK ("approvalStatus" <> 'REJECTED' OR "approvedAt" IS NULL)
+    CHECK ("approvalStatus" <> 'REJECTED' OR "approvedAt" IS NULL),
+  CONSTRAINT "FinancialPolicyRuleVersion_legal_source_check"
+    CHECK ("classification" <> 'LEGAL' OR ("sourceReference" IS NOT NULL AND length(trim("sourceReference")) > 0)),
+  CONSTRAINT "FinancialPolicyRuleVersion_legal_review_notes_check"
+    CHECK ("classification" <> 'LEGAL' OR ("reviewNotes" IS NOT NULL AND length(trim("reviewNotes")) > 0)),
+  CONSTRAINT "FinancialPolicyRuleVersion_review_author_separation_check"
+    CHECK ("reviewedById" IS NULL OR "createdById" IS NULL OR "reviewedById" <> "createdById"),
+  CONSTRAINT "FinancialPolicyRuleVersion_approval_author_separation_check"
+    CHECK ("approvalStatus" <> 'APPROVED' OR "createdById" IS NULL OR "approvedById" <> "createdById"),
+  CONSTRAINT "FinancialPolicyRuleVersion_legal_reviewer_approver_separation_check"
+    CHECK ("approvalStatus" <> 'APPROVED' OR "classification" <> 'LEGAL' OR "reviewedById" <> "approvedById"),
+  CONSTRAINT "FinancialPolicyRuleVersion_rejection_reason_check"
+    CHECK ("approvalStatus" <> 'REJECTED' OR length(trim("rejectionReason")) >= 5)
 );
 
 CREATE UNIQUE INDEX "FinancialPolicyRule_key_key"
