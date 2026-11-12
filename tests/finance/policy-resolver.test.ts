@@ -6,7 +6,7 @@ const context = {
   domain: "SELLER_PAYOUT_RELEASE",
   countryCode: "FR",
   subdivisionCode: "GES",
-  marketId: "market-fr",
+  marketCode: "market-fr",
   currencyCode: "EUR",
   productClass: "STANDARD",
   paymentProvider: "BANK_TRANSFER",
@@ -19,6 +19,7 @@ function rule(overrides: Partial<FinancialPolicyRule<{ holdDays: number }>> = {}
     classification: "PLATFORM", approval: "APPROVED", value: { holdDays: 14 },
     effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveUntil: null,
     sourceReference: "https://legal.example/rule", reviewedAt: new Date("2026-01-02T00:00:00.000Z"),
+    reviewedById: "legal-reviewer-1", approvedAt: new Date("2026-01-03T00:00:00.000Z"), approvedById: "finance-admin-1",
     ...overrides
   };
 }
@@ -26,7 +27,7 @@ function rule(overrides: Partial<FinancialPolicyRule<{ holdDays: number }>> = {}
 describe("jurisdiction-aware financial policy resolver", () => {
   it("selects mandatory country law over more narrowly scoped platform defaults", () => {
     const legal = rule({ id: "fr-law", classification: "LEGAL", countryCode: "FR", value: { holdDays: 30 } });
-    const platform = rule({ id: "seller-default", sellerId: "seller-1", marketId: "market-fr", currencyCode: "EUR" });
+    const platform = rule({ id: "seller-default", sellerId: "seller-1", marketCode: "market-fr", currencyCode: "EUR" });
     const result = resolveFinancialPolicy([platform, legal], context, at);
     expect(result.status).toBe("APPLICABLE");
     if (result.status === "APPLICABLE") expect(result.rule.id).toBe("fr-law");
