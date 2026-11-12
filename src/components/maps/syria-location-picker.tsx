@@ -21,8 +21,10 @@ function locationError(cause: unknown, locale: Locale, english: string, arabic: 
 }
 type MapSearchResult = { id: string; label: string; latitude: number; longitude: number; type: string };
 type LocationValue = {
-  city?: string;
+  governorate?: string;
   district?: string;
+  subdistrict?: string;
+  city?: string;
   localityId?: string;
   neighborhood?: string;
   streetAddress?: string;
@@ -31,6 +33,7 @@ type LocationValue = {
 };
 type Props = {
   locale: Locale;
+  title?: string;
   value: LocationValue;
   onChange: (value: LocationValue) => void;
 };
@@ -61,7 +64,7 @@ async function loadAllLevel(level: string, params: Record<string, string> = {}):
   return { ...first, items, pagination: { ...first.pagination, totalPages: 1 } };
 }
 
-export default function SyriaLocationPicker({ locale, value, onChange }: Props) {
+export default function SyriaLocationPicker({ locale, title, value, onChange }: Props) {
   const ar = locale === "ar";
   const [governorates, setGovernorates] = useState<GeoItem[]>([]);
   const [districts, setDistricts] = useState<GeoItem[]>([]);
@@ -159,8 +162,12 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
   async function chooseGovernorate(id: string) {
     const request = ++selectionRequest.current;
     setGovernorateId(id); setDistrictId(""); setSubdistrictId(""); setDistricts([]); setSubdistricts([]); setLocalities([]); 
-    onChange({});
     const item = governorates.find((entry) => entry.id === id);
+    onChange({
+      governorate: item ? name(item) : undefined,
+      district: undefined, subdistrict: undefined, city: undefined, localityId: undefined,
+      neighborhood: undefined, streetAddress: undefined, latitude: undefined, longitude: undefined
+    });
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 7 }); else setFocus(null);
     setError("");
     if (!id) { setBusy(false); return; }
@@ -178,7 +185,13 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const request = ++selectionRequest.current;
     setDistrictId(id); setSubdistrictId(""); setSubdistricts([]); setLocalities([]); 
     const item = districts.find((entry) => entry.id === id);
-    onChange({ district: item ? (item.nameAr || item.nameEn) : undefined });
+    const selectedGovernorate = governorates.find((entry) => entry.id === governorateId);
+    onChange({
+      governorate: selectedGovernorate ? name(selectedGovernorate) : value.governorate,
+      district: item ? name(item) : undefined,
+      subdistrict: undefined, city: undefined, localityId: undefined,
+      neighborhood: undefined, streetAddress: undefined, latitude: undefined, longitude: undefined
+    });
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 10 }); else setFocus(null);
     setError("");
     if (!id) { setBusy(false); return; }
@@ -201,7 +214,14 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     setSubdistrictId(id); setLocalities([]); 
     const item = subdistricts.find((entry) => entry.id === id);
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
-    onChange({ district: selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined });
+    const selectedGovernorate = governorates.find((entry) => entry.id === governorateId);
+    onChange({
+      governorate: selectedGovernorate ? name(selectedGovernorate) : value.governorate,
+      district: selectedDistrict ? name(selectedDistrict) : value.district,
+      subdistrict: item ? name(item) : undefined,
+      city: undefined, localityId: undefined, neighborhood: undefined, streetAddress: undefined,
+      latitude: undefined, longitude: undefined
+    });
     if (item?.latitude != null && item.longitude != null) setFocus({ latitude: item.latitude, longitude: item.longitude, zoom: 12 }); else setFocus(null);
     setError("");
     if (!id) { setBusy(false); return; }
@@ -223,9 +243,13 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     const item = localities.find((entry) => entry.id === id);
     const hasCoordinates = Boolean(item && item.latitude !== null && item.longitude !== null);
     const selectedDistrict = districts.find((entry) => entry.id === districtId);
+    const selectedGovernorate = governorates.find((entry) => entry.id === governorateId);
+    const selectedSubdistrict = subdistricts.find((entry) => entry.id === subdistrictId);
     onChange({
-      city: item ? (item.nameAr || item.nameEn) : undefined,
-      district: selectedDistrict ? (selectedDistrict.nameAr || selectedDistrict.nameEn) : undefined,
+      governorate: selectedGovernorate ? name(selectedGovernorate) : value.governorate,
+      district: selectedDistrict ? name(selectedDistrict) : value.district,
+      subdistrict: selectedSubdistrict ? name(selectedSubdistrict) : undefined,
+      city: item ? name(item) : undefined,
       localityId: id || undefined,
       ...(hasCoordinates ? { latitude: item!.latitude!, longitude: item!.longitude! } : {})
     });
@@ -310,7 +334,7 @@ export default function SyriaLocationPicker({ locale, value, onChange }: Props) 
     <section className="space-y-4 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5">
       <div className="flex items-start gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="pin" /></span>
-        <div><h3 className="font-extrabold text-[#454545]">{translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3>
+        <div><h3 className="font-extrabold text-[#454545]">{title ?? translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3>
         <p className="mt-1 text-xs leading-6 text-[#77716c]">{translate(locale, "Choose the administrative area from largest to smallest. The map follows each selection.", "اختر الموقع بالتسلسل الإداري من الأكبر إلى الأصغر، وستنتقل الخريطة تلقائياً مع كل اختيار.")}</p></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
