@@ -494,7 +494,7 @@ async function seedOrdersAndEngagement(owner, store, market, usd, products) {
         status: "REQUESTED", reasonCode: ["DAMAGED", "NOT_AS_DESCRIBED", "CHANGED_MIND"][index],
         reasonDetails: "طلب إرجاع تجريبي لاختبار المراجعة وسير العمل.",
       },
-      update: { status: "REQUESTED" },
+      update: {},
     });
     await prisma.returnItem.upsert({
       where: { returnRequestId_orderItemId: {
@@ -585,14 +585,16 @@ async function main() {
     if (count < 20) throw new Error("Expected at least 20 active products for " + slug + ", found " + count + ".");
   }
 
-  const [productCount, brandCount, orderCount, returnCount, lowStockCount, storeReviewCount, questionCount] = await Promise.all([
+  const [productCount, brandCount, orderCount, returnCount, lowStockCount, storeReviewCount, productReviewCount, questionCount, inventoryMovementCount] = await Promise.all([
     prisma.product.count({ where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED" } }),
     prisma.brand.count({ where: { status: "ACTIVE" } }),
     prisma.vendorOrder.count({ where: { storeId: store.id, order: { orderNumber: { startsWith: "DEMO-SYR-" } } } }),
     prisma.returnRequest.count({ where: { returnNumber: { startsWith: "DEMO-SYR-RET-" }, status: "REQUESTED" } }),
     prisma.inventory.count({ where: { warehouse: { storeId: store.id }, quantityOnHand: { lte: 5 } } }),
     prisma.storeReview.count({ where: { storeId: store.id } }),
+    prisma.productReview.count({ where: { product: { storeId: store.id } } }),
     prisma.productQuestion.count({ where: { product: { storeId: store.id } } }),
+    prisma.inventoryMovement.count({ where: { inventory: { warehouse: { storeId: store.id } }, referenceType: "SYRIA_SELLER_DEMO_SEED" } }),
   ]);
   console.log(JSON.stringify({
     status: "verified", seller: SELLER_EMAIL, store: store.slug, market: "SY-SYR",
