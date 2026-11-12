@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type SellerReturn = {
@@ -72,7 +72,7 @@ export default function SellerReturnsPage() {
     counts[item.status] = (counts[item.status] ?? 0) + 1;
     return counts;
   }, {} as Record<string, number>)).map(([status, value], index) => ({
-    label: status.replaceAll("_", " ").toLowerCase(), value,
+    label: translateStatus(locale, status), value,
     color: ["bg-amber-500", "bg-sky-500", "bg-emerald-500", "bg-rose-500", "bg-violet-500"][index % 5]
   }));
   const returnReasonRows = Object.entries(items.reduce((counts, item) => {
