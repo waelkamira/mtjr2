@@ -215,7 +215,7 @@ const taxonomy = [
     ["stationery", "Stationery & Journals", "القرطاسية والدفاتر"]
   ]],
   ["office-school", "Office & School Supplies", "مستلزمات المكتب والمدرسة", [
-    ["office-furniture", "Office Furniture", "أثاث المكاتب"],
+    ["office-workspace-furniture", "Office Workspace Furniture", "أثاث مساحات العمل"],
     ["office-electronics", "Office Electronics", "إلكترونيات المكتب"],
     ["paper-products", "Paper & Paper Products", "الورق والمنتجات الورقية"],
     ["writing-supplies", "Writing & Drawing Supplies", "أدوات الكتابة والرسم"],
