@@ -64,7 +64,7 @@ Do not enable seller withdrawal, display an available-to-withdraw amount, or cla
 
 - Existing seller finance overview and commission/refund reports are informational records only.
 - Existing double-entry journal is an internal primitive and is not yet connected to marketplace payment/refund flows.
-- Encrypted seller payout-method management is implemented for owner-managed IBAN beneficiary records only; all new methods remain PENDING_VERIFICATION, and no ownership-verification or transfer path exists.
+- Encrypted seller payout-method management is implemented for owner-managed IBAN beneficiary records only; all new methods remain PENDING_VERIFICATION until a separate Super Admin records manual external evidence and a reason. This manual attestation is not an automated bank ownership check. No withdrawal request, transfer execution or settlement path exists.
 - Seller payable balances, holds, settlement, withdrawal requests and bank/provider reconciliation are not implemented.
 - This decision register does not approve any accounting treatment.
 
