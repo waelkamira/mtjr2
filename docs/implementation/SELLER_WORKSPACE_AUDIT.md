@@ -36,9 +36,14 @@ The review covered every seller route currently present in `src/app/seller`, the
 
 ## Outstanding seller-finance scope
 
-There is no seller payout/withdrawal page or payout-method workflow yet: no `/seller/payouts`, `/seller/transactions`, `/api/seller/payouts`, `/api/seller/payout-methods`, `Payout` or `PayoutMethod` model is present.
+The seller bank-destination page `/seller/payouts` and owner-scoped `/api/seller/payout-methods` routes now exist. This is **beneficiary management only**, not a payout/withdrawal workflow:
 
-This is not a UI-only omission. The accounting journal foundation exists, but it is not connected to captured payments/refunds to calculate seller payables. Settlement timing, reserves/holds, shipping/tax ownership, chargebacks, negative balances and reconciliation policy are not approved. Until those policies are implemented, the UI must not invent an available balance or allow withdrawal requests. The existing finance and commission pages correctly remain read-only and separate recorded figures.
+- Active seller owner can create an IBAN destination, list masked destinations, set a per-currency default and disable a destination. Full account identifiers are encrypted at rest; responses expose only the last four characters.
+- IBAN country prefix and MOD-97 checksum are validated. Local bank account formats remain disabled until country-specific validation exists.
+- New destinations start as `PENDING_VERIFICATION`. The platform admin review page `/admin/seller-payout-methods` records manual external evidence and a reason, requires a separate platform administrator with fresh TOTP step-up, and uses submission-version concurrency protection. This is human attestation, not an automated bank ownership check.
+- No `/api/seller/payouts`, withdrawal request, transfer execution, seller payable balance, settlement or bank/provider reconciliation exists. The `SellerPayoutMethod` model is not a `Payout` model.
+
+The accounting journal foundation exists but is not connected to captured payments/refunds to calculate seller payables. FIN-01 through FIN-12 remain owner decisions: settlement timing, reserves/holds, shipping/tax ownership, chargebacks, negative balances, currency/FX and reconciliation must not be inferred. Until approval and implementation, the UI must not invent an available balance or allow withdrawal requests. The existing finance and commission pages correctly remain read-only and show recorded figures separately.
 
 ## Changes made during this review
 
