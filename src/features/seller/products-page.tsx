@@ -1,10 +1,11 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import { toMinorUnits } from "@/lib/money";
 import { createProductSlug } from "@/lib/product-slug";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
@@ -143,13 +144,7 @@ export default function SellerProductsPage() {
   const editIsRealEstate = (() => { const selected = categoryOptions.find((category) => category.id === editCategoryId); return selected?.slug === "real-estate" || selected?.ancestors.includes("real-estate") === true; })();
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
   const availableMarkets = markets.filter((market) => enabledMarketIds.has(market.id));
-  const productStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      DRAFT: "مسودة", ACTIVE: "نشط", INACTIVE: "غير نشط", ARCHIVED: "مؤرشف",
-      PENDING: "قيد المراجعة", APPROVED: "مقبول", REJECTED: "مرفوض"
-    };
-    return translate(locale, status.toLowerCase().replaceAll("_", " "), labels[status] ?? status.toLowerCase().replaceAll("_", " "));
-  };
+  const productStatusLabel = (status: string) => translateStatus(locale, status);
   const approvalCounts = products.reduce((counts, product) => {
     counts[product.approvalStatus] = (counts[product.approvalStatus] ?? 0) + 1;
     return counts;
@@ -925,7 +920,7 @@ export default function SellerProductsPage() {
             }))} />
           </section>}<label className="mt-4 block text-xs font-medium">{translate(locale, "Search this store catalog", "البحث في كتالوج المتجر")}<input value={search} onChange={event=>setSearch(event.target.value)} maxLength={120} placeholder={translate(locale, "Product name, slug, SKU or barcode", "اسم المنتج أو المعرّف أو SKU أو الباركود")} className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm"/></label>
           {!products.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-5 text-sm text-[var(--muted)]">{search ? translate(locale, "No products match this search.", "لا توجد منتجات تطابق هذا البحث.") : translate(locale, "No products in this store yet.", "لا توجد منتجات في هذا المتجر بعد.")}</p> : <div className="mt-4 divide-y divide-[var(--border)]">{products.map((product) => <article key={product.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-start gap-3">{product.media[0]?.url && <img src={product.media[0].url} alt={product.media[0].altText ?? product.name} className="size-16 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] object-cover" />}<div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs font-semibold text-[var(--color-copper-700)]">PRD-{product.productNumber.padStart(8, "0")}</p><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p>{(product.city || product.district || product.neighborhood || product.streetAddress) && <p className="mt-1 max-w-xl truncate text-xs text-[var(--muted)]">{[product.city, product.district, product.neighborhood, product.streetAddress].filter(Boolean).join(" · ")}</p>}<div className="mt-2 flex flex-wrap gap-2"><span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs">{productStatusLabel(product.status)}</span><span className="rounded-full bg-[var(--color-sage-100)] px-2.5 py-1 text-xs">{productStatusLabel(product.approvalStatus)}</span></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">{translate(locale, "Review:", "ملاحظة المراجعة:")} {product.rejectionReason}</p>}</div></div>
+            <div className="flex min-w-0 items-start gap-3">{product.media[0]?.url && <img src={product.media[0].url} alt={product.media[0].altText ?? product.name} className="size-16 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] object-cover" />}<div className="min-w-0"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-xs font-semibold text-[var(--color-copper-700)]">PRD-{product.productNumber.padStart(8, "0")}</p><p className="mt-1 text-xs text-[var(--muted)]">/{product.slug} · {product.variants.length} {translate(locale, "variants", "متغيرات")}</p>{(product.city || product.district || product.neighborhood || product.streetAddress) && <p className="mt-1 max-w-xl truncate text-xs text-[var(--muted)]">{[product.city, product.district, product.neighborhood, product.streetAddress].filter(Boolean).join(" · ")}</p>}<div className="mt-2 flex flex-wrap gap-2"><StatusBadge locale={locale} status={product.status} /><StatusBadge locale={locale} status={product.approvalStatus} /></div>{product.rejectionReason && <p className="mt-2 text-xs text-red-700">{translate(locale, "Review:", "ملاحظة المراجعة:")} {product.rejectionReason}</p>}</div></div>
             <div className="flex flex-wrap gap-2">
               {product.status === "DRAFT" && <button disabled={busy} onClick={() => { setEditingId(product.id); setEditName(product.name); setEditSlug(product.slug); setEditDescription(product.description ?? ""); setEditContactPhone(product.contactPhone ?? ""); setEditVideoUrl(product.videoUrl ?? "");
                 setEditCategoryId(product.categories[0]?.category.id ?? "");
