@@ -24,12 +24,21 @@ const brandPalettes = [
 ];
 
 function BrandEmblem({ name, logoUrl, palette }: { name: string; logoUrl: string | null; palette: string }) {
-  const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
+  const [logoFailed, setLogoFailed] = useState(false);
+  const initials = name.trim().split(/\\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
+  const hasLogo = Boolean(logoUrl?.trim()) && !logoFailed;
 
   return (
     <span className={"relative grid h-[4.5rem] w-[4.5rem] shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br " + palette + " shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.04]"}>
-      {logoUrl ? (
-        <img src={logoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full bg-white/70 object-contain p-2.5" />
+      {hasLogo ? (
+        <img
+          src={logoUrl!}
+          alt={name + " logo"}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setLogoFailed(true)}
+          className="h-full w-full bg-white/90 object-contain p-2.5"
+        />
       ) : (
         <>
           <svg aria-hidden="true" viewBox="0 0 48 48" className="absolute inset-0 h-full w-full opacity-20" fill="none">
