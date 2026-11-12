@@ -167,7 +167,7 @@ export async function POST(request: Request): Promise<Response> {
   // The hosting ingress must also enforce a hard body limit for chunked requests.
   const declaredLength = request.headers.get("content-length");
   if (declaredLength !== null) {
-    if (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > MAX_FILE_SIZE + 256 * 1024) {
+    if (!/^\d+$/.test(declaredLength) || Number(declaredLength) > MAX_FILE_SIZE + 256 * 1024) {
       return jsonError("Image upload request exceeds the 10 MB limit.", 413);
     }
   }
@@ -264,7 +264,7 @@ export async function DELETE(request: Request): Promise<Response> {
   if (contentTypeRejected) return contentTypeRejected;
 
   const declaredLength = request.headers.get("content-length");
-  if (declaredLength !== null && (!/^\\d+$/.test(declaredLength) || Number(declaredLength) > 16 * 1024)) {
+  if (declaredLength !== null && (!/^\d+$/.test(declaredLength) || Number(declaredLength) > 16 * 1024)) {
     return jsonError("Image deletion request is too large.", 413);
   }
 
