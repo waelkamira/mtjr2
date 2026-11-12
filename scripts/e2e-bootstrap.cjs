@@ -45,6 +45,31 @@ async function main() {
   const seller = await prisma.user.findUnique({ where: { emailNormalized: "electronics@demo.mtjr2.test" }, select: { id: true, sellerProfile: { select: { id: true, status: true } } } });
   if (!seller?.sellerProfile || seller.sellerProfile.status !== "ACTIVE") throw new Error("Demo seller fixture was not seeded.");
   await ensureRole(seller.id, "SELLER");
+  await prisma.sellerPayoutMethod.upsert({
+    where: { id: "e2e-seller-payout-review" },
+    create: {
+      id: "e2e-seller-payout-review",
+      sellerId: seller.sellerProfile.id,
+      type: "IBAN",
+      accountHolderName: "E2E Protected Placeholder",
+      bankName: "E2E Demo Bank",
+      countryCode: "FR",
+      currencyCode: "EUR",
+      encryptedDetails: "e2e-fixture-encrypted-payload",
+      encryptionKeyVersion: 1,
+      accountLast4: "4242",
+      fingerprint: hash("e2e-seller-payout-review-destination"),
+      status: "PENDING_VERIFICATION",
+      isDefault: false
+    },
+    update: {
+      status: "PENDING_VERIFICATION",
+      verifiedAt: null,
+      isDefault: false,
+      bankName: "E2E Demo Bank",
+      accountLast4: "4242"
+    }
+  });
   const store = await prisma.store.findFirst({
     where: { sellerId: seller.sellerProfile.id, status: "ACTIVE" },
     include: { markets: { where: { isEnabled: true }, include: { market: true }, orderBy: { marketId: "asc" } } }
