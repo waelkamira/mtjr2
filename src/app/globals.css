@@ -997,8 +997,8 @@ html body :where([contenteditable="true"] *, [data-text-select="allow"] *) {
   --matjar-line: #eee9e4;
   --matjar-hover-line: #f3b58f;
   --matjar-hover-shadow: 0 4px 12px rgb(255 140 28 / 10%);
-  --matjar-active: #d9f99d;
-  --matjar-active-ink: #365314;
+  --matjar-active: #FF8C1C;
+  --matjar-active-ink: #ffffff;
   --matjar-danger: #dc2626;
   --matjar-danger-hover: #b91c1c;
   --matjar-disabled: #e7e7e7;
@@ -1103,9 +1103,9 @@ button[class*="bg-[var(--color-danger)]"] {
   color: #ffffff !important;
 }
 button[class*="bg-[var(--color-success)]"] {
-  background: var(--matjar-active) !important;
-  border-color: #a3e635 !important;
-  color: var(--matjar-active-ink) !important;
+  background: var(--matjar-action) !important;
+  border-color: var(--matjar-action) !important;
+  color: #ffffff !important;
 }
 button[class*="bg-[var(--color-warning)]"] {
   background: #fef3c7 !important;
@@ -1133,18 +1133,20 @@ button[class*="bg-[#dc2626]"]:hover {
   border-color: var(--matjar-danger-hover) !important;
   color: #ffffff !important;
 }
+/* Green utilities may describe a success badge, but never turn an action button green. */
 button[class*="bg-green-"],
 button[class*="bg-emerald-"],
 button[class*="bg-lime-"] {
-  background: var(--matjar-active) !important;
-  border-color: #a3e635 !important;
-  color: var(--matjar-active-ink) !important;
+  background: var(--matjar-action) !important;
+  border-color: var(--matjar-action) !important;
+  color: #ffffff !important;
 }
 button[class*="bg-green-"]:hover,
 button[class*="bg-emerald-"]:hover,
 button[class*="bg-lime-"]:hover {
-  background: #bef264 !important;
-  color: var(--matjar-active-ink) !important;
+  background: var(--matjar-action-hover) !important;
+  border-color: var(--matjar-action-hover) !important;
+  color: #ffffff !important;
 }
 button[class*="bg-amber-"],
 button[class*="bg-yellow-"] {
@@ -1161,9 +1163,10 @@ button[class*="bg-sky-"] {
 button[data-variant="active"],
 button[aria-pressed="true"],
 button[aria-selected="true"] {
-  background: var(--matjar-active) !important;
-  border-color: #a3e635 !important;
-  color: var(--matjar-active-ink) !important;
+  background: var(--matjar-action) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
 button:disabled,
 button[aria-disabled="true"] {
@@ -1297,9 +1300,10 @@ button[data-variant="danger"] svg { color: #ffffff; }
 
 /* Links rendered as controls follow the same semantic button contract. */
 a[aria-current="page"] {
-  background-color: var(--matjar-active) !important;
-  border-color: #a3e635 !important;
-  color: var(--matjar-active-ink) !important;
+  background-color: var(--matjar-action) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
 a[class*="bg-white"],
 a[class*="bg-[#fff"],
@@ -1444,14 +1448,15 @@ button[data-button-style="link"]:hover:not(:disabled) {
 }
 .seller-dashboard .seller-sidebar nav a[aria-current="page"],
 .seller-dashboard .seller-mobile-navigation__links a[aria-current="page"] {
-  color: var(--seller-active-ink) !important;
-  background: var(--seller-active) !important;
-  border: 1px solid #bef264 !important;
-  box-shadow: inset 3px 0 0 #84cc16 !important;
+  color: #ffffff !important;
+  background: var(--seller-orange) !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 5px 14px rgb(255 140 28 / 22%) !important;
 }
 .seller-dashboard .seller-sidebar nav a[aria-current="page"] span:first-child {
-  color: var(--seller-active-ink) !important;
-  background: rgb(255 255 255 / 68%) !important;
+  color: #ffffff !important;
+  background: rgb(255 255 255 / 15%) !important;
+  border-color: transparent !important;
 }
 .seller-dashboard .seller-sidebar a[href="/seller/advertising"] {
   color: #ffffff !important;
