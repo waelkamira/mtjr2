@@ -4875,3 +4875,13 @@ The platform account policy is now explicit: email verification is not required 
 - Hardened the review UI's MFA recovery, draft restoration, stale-request protection, page correction, and decision-specific pending feedback. Updated the browser journey to assert the actual review API response and toast.
 - Exact head `401cb342d034dd8ad27576dde053ce3454891b7d`: general CI passed (Prisma validate/migrate/generate, typecheck, ESLint, unit tests, production build and route/authorization/UI inventories); PostgreSQL integration passed; Browser E2E passed **13/13**; CodeQL passed. Vercel deployment is intentionally excluded.
 - Seller payable ledger posting, withdrawable balances, withdrawal requests, bank transfer execution and settlement/reconciliation remain blocked pending approved accounting policy and provider integrations.
+
+
+## 2026-11-12 — Payout review queue generation and timestamp corrections
+
+- Removed the artificial 1,000-page limit from the admin queue while keeping page values finite, positive integers whose computed database offset remains a safe integer. Added a route test for page 1001 with 50,001 records.
+- Review drafts now use the composite key `methodId:submissionVersion`, including session-storage recovery and clearing, so evidence/reason text from an earlier submission cannot be reused for a newly registered generation.
+- After a review succeeds, the page triggers a state-driven reload. The next effect reads the current status tab and page, rather than calling a stale `load` callback captured before the POST.
+- Added `SellerPayoutMethod.submittedAt` and migration `20261112093000_seller_payout_submission_timestamp`. Re-registration refreshes this timestamp, the admin queue sorts by it, and the UI displays it while preserving `createdAt` as the original row-creation time.
+- Updated the E2E fixture to refresh `submittedAt` whenever its pending generation is reset.
+- Verification for this documentation-only record is pending on the new branch head; do not treat the earlier 13/13 Browser E2E run as validation of these latest changes.
