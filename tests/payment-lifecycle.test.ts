@@ -231,11 +231,18 @@ describe("payment lifecycle safety", () => {
           }]
         }
       });
-    mocks.txCommissionRuleFindMany.mockResolvedValue([{
-      id: "global-rule", sellerId: null, categoryId: null, rateBasisPoints: 500,
-      effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveUntil: null,
-      isActive: true, deactivatedAt: null
-    }]);
+    mocks.txCommissionRuleFindMany.mockResolvedValue([
+      {
+        id: "global-rule", sellerId: null, categoryId: null, rateBasisPoints: 500,
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveUntil: null,
+        isActive: true, deactivatedAt: null
+      },
+      {
+        id: "category-rule", sellerId: null, categoryId: "category-1", rateBasisPoints: 1_000,
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveUntil: null,
+        isActive: true, deactivatedAt: null
+      }
+    ]);
 
     await expect(processVerifiedPaymentEvent({
       providerKey: "test_provider",
@@ -250,13 +257,13 @@ describe("payment lifecycle safety", () => {
     expect(mocks.txCommissionTransactionCreateMany).toHaveBeenCalledWith({
       data: [expect.objectContaining({
         orderItemId: "item-1",
-        commissionRuleId: "global-rule",
+        commissionRuleId: "category-rule",
         categoryId: "category-1",
         categoryName: "Phones",
-        ruleScopeType: "GLOBAL",
-        rateBasisPoints: 500,
+        ruleScopeType: "CATEGORY",
+        rateBasisPoints: 1_000,
         baseAmountMinor: BigInt("900"),
-        commissionMinor: BigInt("45"),
+        commissionMinor: BigInt("90"),
         currencyCode: "EUR"
       })]
     });
