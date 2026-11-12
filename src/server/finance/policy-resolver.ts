@@ -15,6 +15,7 @@ export type FinancialPolicyContext = {
   productClass?: string | null;
   paymentProvider?: string | null;
   sellerId?: string | null;
+  categoryId?: string | null;
 };
 
 export type FinancialPolicyRule<T = unknown> = {
@@ -31,6 +32,7 @@ export type FinancialPolicyRule<T = unknown> = {
   productClass?: string | null;
   paymentProvider?: string | null;
   sellerId?: string | null;
+  categoryId?: string | null;
   priority?: number;
   effectiveFrom: Date;
   effectiveUntil?: Date | null;
@@ -55,7 +57,8 @@ function matches<T>(rule: FinancialPolicyRule<T>, context: FinancialPolicyContex
     [rule.currencyCode, context.currencyCode],
     [rule.productClass, context.productClass],
     [rule.paymentProvider, context.paymentProvider],
-    [rule.sellerId, context.sellerId]
+    [rule.sellerId, context.sellerId],
+    [rule.categoryId, context.categoryId]
   ];
   return dimensions.every(([configured, actual]) =>
     configured == null || normalize(configured) === normalize(actual)
@@ -65,7 +68,7 @@ function matches<T>(rule: FinancialPolicyRule<T>, context: FinancialPolicyContex
 function specificity<T>(rule: FinancialPolicyRule<T>): number {
   return [
     rule.countryCode, rule.subdivisionCode, rule.marketCode, rule.currencyCode,
-    rule.productClass, rule.paymentProvider, rule.sellerId
+    rule.productClass, rule.paymentProvider, rule.sellerId, rule.categoryId
   ].filter((value) => value != null).length;
 }
 
@@ -155,7 +158,8 @@ export function resolveFinancialPolicy<T>(
       selected.currencyCode && "CURRENCY",
       selected.productClass && "PRODUCT_CLASS",
       selected.paymentProvider && "PAYMENT_PROVIDER",
-      selected.sellerId && "SELLER"
+      selected.sellerId && "SELLER",
+      selected.categoryId && "CATEGORY"
     ].filter(Boolean).join("+") || "GLOBAL",
     evaluatedAt
   };
