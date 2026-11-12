@@ -18,6 +18,7 @@ type Market = {
   currencies: Array<{ currency: { code: string; name: string; minorUnit: number; symbol: string | null } }>;
 };
 type Category = { id: string; name: string; slug: string; children: Category[] };
+type BrandOption = { id: string; name: string; slug: string; logoUrl: string | null };
 type CategoryAttribute = {
   id: string; key: string; label: string; description: string | null;
   valueType: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "MULTI_SELECT";
@@ -69,6 +70,8 @@ export default function SellerProductsPage() {
   const [storeId, setStoreId] = useState("");
   const [markets, setMarkets] = useState<Market[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<BrandOption[]>([]);
+  const [brandId, setBrandId] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [name, setName] = useState("");
@@ -79,8 +82,8 @@ export default function SellerProductsPage() {
     condition: "", warranty: "", countryOfOrigin: ""
   });
   const [customSpecifications, setCustomSpecifications] = useState<Array<{ id: string; name: string; value: string }>>([]);
-  type VariantDraft = { id: string; sku: string; barcode: string; name: string; optionValues: Record<string, string | number | boolean | string[]>; prices: Record<string, { currencyCode: string; amount: string; compareAt: string }> };
-  const [variantRows, setVariantRows] = useState<VariantDraft[]>([{ id: "variant-1", sku: "", barcode: "", name: "", optionValues: {}, prices: {} }]);
+  type VariantDraft = { id: string; sku: string; barcode: string; name: string; weightGrams: string; optionValues: Record<string, string | number | boolean | string[]>; prices: Record<string, { currencyCode: string; amount: string; compareAt: string }> };
+  const [variantRows, setVariantRows] = useState<VariantDraft[]>([{ id: "variant-1", sku: "", barcode: "", name: "", weightGrams: "", optionValues: {}, prices: {} }]);
   type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const uploadedImagesRef = useRef<ProductImageDraft[]>([]);
@@ -167,12 +170,14 @@ export default function SellerProductsPage() {
     Promise.all([
       fetch("/api/seller/stores", { cache: "no-store" }).then((r) => json<Workspace>(r)),
       fetch("/api/markets").then((r) => json<{ items: Market[] }>(r)),
-      fetch(`/api/categories?limit=100&includeEmpty=true&locale=${encodeURIComponent(locale)}`).then((r) => json<{ items: Category[] }>(r))
-    ]).then(([workspace, marketResult, categoryResult]) => {
+      fetch(`/api/categories?limit=100&includeEmpty=true&locale=${encodeURIComponent(locale)}`).then((r) => json<{ items: Category[] }>(r)),
+      fetch(`/api/brands?locale=${encodeURIComponent(locale)}&limit=100`).then((r) => json<{ items: BrandOption[] }>(r)).catch(() => ({ items: [] as BrandOption[] }))
+    ]).then(([workspace, marketResult, categoryResult, brandResult]) => {
       if (!active) return;
       setStores(workspace.stores);
       setMarkets(marketResult.items);
       setCategories(categoryResult.items);
+      setBrands(brandResult.items);
       let preferredStoreId = "";
       try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage can be unavailable in restricted browsers. */ }
       const initialStore = workspace.stores.find((store) => store.id === preferredStoreId) ?? workspace.stores[0];
@@ -466,7 +471,7 @@ export default function SellerProductsPage() {
       const product = await json<{ id: string }>(await fetch("/api/products", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          storeId, name, slug, description, contactPhone: contactPhone || undefined, videoUrl: videoUrl || undefined,
+          storeId, name, slug, description, brandId: brandId || undefined, contactPhone: contactPhone || undefined, videoUrl: videoUrl || undefined,
           specifications: {
             ...Object.fromEntries(Object.entries(basicSpecifications).filter(([, value]) => value.trim()).map(([key, value]) => [key, value.trim()])),
             custom: customSpecifications.filter((item) => item.name.trim() && item.value.trim()).map((item) => ({ name: item.name.trim(), value: item.value.trim() }))
@@ -494,6 +499,7 @@ export default function SellerProductsPage() {
           media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, storageKey: image.storageKey, width: image.width, height: image.height, altText: name, sortOrder: index, isPrimary: index === 0 })),
           variants: variantRows.map((variant) => ({
             sku: variant.sku.trim(),
+            ...(variant.weightGrams.trim() ? { weightGrams: Number(variant.weightGrams) } : {}),
             ...(variant.barcode.trim() ? { barcode: variant.barcode.trim() } : {}),
             ...(variant.name.trim() ? { name: variant.name.trim() } : {}),
             optionValues: Object.fromEntries(Object.entries(variant.optionValues).filter(([, value]) => value !== "" && (!Array.isArray(value) || value.length > 0))),
@@ -503,7 +509,7 @@ export default function SellerProductsPage() {
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
-      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setBasicSpecifications({ model: "", color: "", material: "", weight: "", dimensions: "", condition: "", warranty: "", countryOfOrigin: "" }); setCustomSpecifications([]); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({});
+      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setBrandId(""); setBasicSpecifications({ model: "", color: "", material: "", weight: "", dimensions: "", condition: "", warranty: "", countryOfOrigin: "" }); setCustomSpecifications([]); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", weightGrams: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({});
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -698,8 +704,8 @@ export default function SellerProductsPage() {
     } finally { setBusy(false); }
   }
 
-  const inputClass = "w-full rounded-xl border border-[#eee9e4] bg-white px-3.5 py-3 text-sm text-[#454545] shadow-sm outline-none transition placeholder:text-[#918a84] focus:border-[#FF8C1C] focus:ring-4 focus:ring-[#FF8C1C]/10";
-  return <main className="min-h-screen bg-[#fffaf6] text-[#454545]">
+  const inputClass = "w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-sm text-[var(--foreground)] shadow-sm outline-none transition placeholder:text-[var(--muted)] focus:border-[#FF8C1C] focus:ring-4 focus:ring-[#FF8C1C]/10";
+  return <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
     <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border border-[#eee9e4] bg-[linear-gradient(110deg,#fff6ef_0%,#ffffff_58%,#fff1e8_100%)] p-5 text-[#454545] shadow-[0_12px_28px_rgba(69,69,69,.07)] sm:p-7">
         <div className="flex min-w-0 items-center gap-4">
@@ -710,12 +716,22 @@ export default function SellerProductsPage() {
       </header>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-5 rounded-xl border border-[var(--color-sage-500)] bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
-      {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid gap-6 2xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,.8fr)]">
+      {loading ? <p className="py-12 text-sm text-[var(--muted)]">{translate(locale, "Loading catalog…", "جارٍ تحميل الكتالوج…")}</p> : <div className="mt-8 grid grid-cols-1 gap-6">
         <section id="create-product" className="seller-product-create scroll-mt-24 rounded-2xl border border-[#eee9e4] bg-white p-5 shadow-[0_10px_28px_rgba(69,69,69,.06)] sm:p-7">
           <div className="mb-6 flex flex-wrap items-start justify-between gap-3 border-b border-[#eee9e4] pb-5">
             <div><p className="text-[10px] font-extrabold tracking-[.18em] text-[#a94308]">{translate(locale,"PRODUCT STUDIO","استوديو المنتجات")}</p><h2 className="mt-1 text-xl font-black tracking-tight text-[#454545]">{translate(locale, "Create product draft", "إنشاء مسودة منتج")}</h2><p className="mt-1 max-w-lg text-xs leading-5 text-[#918a84]">{translate(locale,"Build a complete listing with category-aware details, variants, pricing and a polished image gallery.","أنشئ إعلاناً متكاملاً يتضمن خصائص الفئة والمتغيرات والأسعار ومعرض صور احترافياً.")}</p></div>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#eee9e4] bg-[#fffaf6] px-3 py-1.5 text-[10px] font-extrabold text-[#5f5a55]"><SellerIcon name="document" />{translate(locale,"DRAFT WORKFLOW","مسار المسودة")}</span>
           </div>
+          <nav aria-label={translate(locale, "Product creation sections", "أقسام إنشاء المنتج")} className="mb-5 grid grid-cols-2 gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-2 sm:grid-cols-3 xl:grid-cols-6">
+            {[
+              ["product-media", "Photos", "الصور", "media"],
+              ["product-information", "Basics", "البيانات الأساسية", "document"],
+              ["product-category", "Category", "الفئة", "catalog"],
+              ["product-specifications", "Specifications", "المواصفات", "sliders"],
+              ["product-variants", "Variants & prices", "المتغيرات والأسعار", "inventory"],
+              ["product-location", "Location", "الموقع", "store"]
+            ].map(([id, en, ar, icon]) => <a key={id} href={`#${id}`} className="flex min-h-11 items-center gap-2 rounded-xl border border-transparent bg-[var(--surface)] px-3 py-2 text-xs font-bold text-[var(--foreground)] shadow-sm transition hover:border-[#FF8C1C]/50 hover:text-[#c65f08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8C1C]"><SellerIcon name={icon as "media" | "document" | "catalog" | "sliders" | "inventory" | "store"} /><span>{translate(locale, en, ar)}</span></a>)}
+          </nav>
           <label className="mt-5 grid gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><SellerIcon name="store" />{translate(locale, "Store", "المتجر")}</span><select className={inputClass} value={storeId} disabled={busy || uploadingImages} onChange={(e) => {
             const nextId = e.target.value;
             uploadedImages.forEach((image) => {
@@ -733,7 +749,7 @@ export default function SellerProductsPage() {
             setVariantRows((rows) => rows.map((row) => ({ ...row, prices: nextPrices, optionValues: {} })));
           }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name} · STR-{store.storeNumber.padStart(8, "0")}</option>)}</select></label>
           {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="seller-product-form mt-4 grid gap-5">
-            <div
+            <div id="product-media"
               className="seller-product-dropzone grid gap-4 rounded-xl border border-dashed border-[#f3b58f] bg-[#fffaf6] p-4 transition-colors hover:border-[#FF8C1C] sm:p-5"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); void uploadProductImageFiles(Array.from(event.dataTransfer.files)); }}
@@ -777,11 +793,12 @@ export default function SellerProductsPage() {
               </div>}
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
-            <section className="grid gap-4 rounded-xl border border-[#eee9e4] bg-white p-4 sm:p-5">
+            <section id="product-information" className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_24px_rgba(30,57,83,.045)] sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="document" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product information", "معلومات المنتج")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Start with a clear title and a customer-friendly description.", "ابدأ بعنوان واضح ووصف مناسب للعملاء.")}</p></div></div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(createProductSlug(e.target.value)); }} /></label>
                 <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Brand", "العلامة التجارية")}<select className={inputClass} value={brandId} onChange={(event) => setBrandId(event.target.value)}><option value="">{translate(locale, "No brand / Generic product", "بدون علامة تجارية / منتج عام")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select><span className="text-xs text-[var(--muted)]">{translate(locale, "Choose an existing approved brand. Leave blank for unbranded products.", "اختر علامة تجارية معتمدة أو اتركه فارغاً للمنتجات غير المرتبطة بعلامة.")}</span></label>
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={4} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -789,7 +806,7 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
               </div>
             </section>
-            <section className="grid gap-3 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="catalog" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Category", "الفئة")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Choose the most accurate category for your product.", "اختر الفئة الأكثر دقة لمنتجك.")}</p></div></div><label className="grid gap-2 text-sm font-semibold"><select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            <section id="product-category" className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_24px_rgba(30,57,83,.045)] sm:p-6"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="catalog" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Category", "الفئة")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Choose the most accurate category for your product.", "اختر الفئة الأكثر دقة لمنتجك.")}</p></div></div><label className="grid gap-2 text-sm font-semibold"><select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             {categoryId && <section className="grid gap-3 rounded-xl border border-[#eee9e4] bg-[#fffaf6] p-4 sm:p-5">
               <div>
                 <h3 className="text-sm font-semibold">{translate(locale, "Category-specific details", "الخصائص الخاصة بالفئة")}</h3>
@@ -809,7 +826,7 @@ export default function SellerProductsPage() {
                 </div>}
             </section>}
             </section>
-            <section className="grid gap-4 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5">
+            <section id="product-specifications" className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_24px_rgba(30,57,83,.045)] sm:p-6">
               <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="sliders" /></span><div>
                 <h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product specifications", "مواصفات المنتج")}</h3>
                 <p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Add the common details, then add any extra specification your product needs.", "أدخل المواصفات الأساسية ثم أضف أي مواصفات إضافية يحتاجها منتجك.")}</p>
@@ -849,14 +866,15 @@ export default function SellerProductsPage() {
                 </div>}
               </div>
             </section>
-            <section className="grid gap-3 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="inventory" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs leading-5 text-[#77716c]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-xl border border-[#eee9e4] bg-white px-3 py-2 text-xs font-bold text-[#5f5a55] shadow-sm disabled:opacity-40"><SellerIcon name="plus" />{translate(locale, "Add variant", "إضافة متغير")}</button></div>
+            <section id="product-variants" className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_24px_rgba(30,57,83,.045)] sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="inventory" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs leading-5 text-[#77716c]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", weightGrams: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-xl border border-[#eee9e4] bg-white px-3 py-2 text-xs font-bold text-[#5f5a55] shadow-sm disabled:opacity-40"><SellerIcon name="plus" />{translate(locale, "Add variant", "إضافة متغير")}</button></div>
               {variantRows.map((variant, index) => <article key={variant.id} className="grid gap-3 rounded-xl border border-[#eee9e4] bg-[#fffaf6] p-4">
                 <div className="flex items-center justify-between"><p className="text-xs font-extrabold text-[#8a583b]">{translate(locale, "Variant", "المتغير")} {index + 1}</p>{variantRows.length > 1 && <button type="button" onClick={() => setVariantRows((rows) => rows.filter((row) => row.id !== variant.id))} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-700"><SellerIcon name="trash" />{translate(locale, "Remove", "حذف")}</button>}</div>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <label className="grid gap-1 text-xs font-semibold">SKU<input required maxLength={100} className={inputClass} value={variant.sku} onChange={(event) => updateVariant(variant.id, { sku: event.target.value })} placeholder={`MAT-00${index + 1}`} /></label>
                   <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Barcode (optional)", "الباركود (اختياري)")}<input maxLength={100} className={inputClass} value={variant.barcode} onChange={(event) => updateVariant(variant.id, { barcode: event.target.value })} placeholder="EAN / UPC" /></label>
                   <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Variant name (optional)", "اسم المتغير (اختياري)")}<input maxLength={180} className={inputClass} value={variant.name} onChange={(event) => updateVariant(variant.id, { name: event.target.value })} placeholder={translate(locale, "e.g. Blue / Large", "مثال: أزرق / كبير")} /></label>
+                  <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Shipping weight (grams)", "وزن الشحن (غرام)")}<input type="number" min="0" max="1000000" step="1" inputMode="numeric" className={inputClass} value={variant.weightGrams} onChange={(event) => updateVariant(variant.id, { weightGrams: event.target.value })} placeholder="e.g. 350" /></label>
                 </div>
                 <div className="grid gap-3 border-t border-[#eadfd5] pt-3">
                   <p className="text-xs font-extrabold text-[#5f5a55]">{translate(locale, "Market prices for this SKU", "أسعار الأسواق لهذا المتغير")}</p>
@@ -887,8 +905,8 @@ export default function SellerProductsPage() {
               </article>)}
               {!variantSkusValid && <p className="text-xs font-semibold text-amber-800">{translate(locale, "Every variant needs a unique SKU.", "يجب أن يكون لكل متغير رمز SKU فريد.")}</p>}
             </section>
-            <SyriaLocationPicker locale={locale} value={productLocation} onChange={setProductLocation} />
-            {isRealEstate && <fieldset className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
+            <section id="product-location" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_24px_rgba(30,57,83,.045)] sm:p-6"><div className="mb-4"><h3 className="text-sm font-extrabold">{translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Set the actual dispatch or product location to help buyers understand availability.", "حدد موقع المنتج أو نقطة التجهيز الفعلية لمساعدة المشترين على معرفة التوفر.")}</p></div><SyriaLocationPicker locale={locale} value={productLocation} onChange={setProductLocation} /></section>
+            {isRealEstate && <fieldset id="product-property" className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
               <legend className="px-1 text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</legend>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-1 text-sm">{translate(locale, "Property type", "نوع العقار")}<select required className={inputClass} value={propertyType} onChange={(event) => setPropertyType(event.target.value as typeof propertyType)}>
@@ -905,7 +923,7 @@ export default function SellerProductsPage() {
             <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || !variantPricesValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(255,140,28,.18)] transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
-        <section className="rounded-2xl border border-[#eee9e4] bg-white p-5 shadow-[0_10px_28px_rgba(30,57,83,.06)] sm:p-7">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_10px_28px_rgba(30,57,83,.06)] sm:p-7">
           <h2 className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-[#454545]"><SellerIcon name="package" />{translate(locale, "Store catalog", "كتالوج المتجر")}</h2>
           {!loading && products.length > 0 && <section aria-label={translate(locale, "Seller catalog analytics", "تحليلات كتالوج البائع")} className="mt-5 grid gap-4 sm:grid-cols-2">
             <MetricBarChart title={translate(locale, "Product approval pipeline", "مسار اعتماد المنتجات")} description={translate(locale, "Counts reflect the currently loaded product list and active search.", "الأعداد للمنتجات المحمّلة حالياً ونتائج البحث النشط.")} rows={Object.entries(approvalCounts).map(([status, count], index) => ({
