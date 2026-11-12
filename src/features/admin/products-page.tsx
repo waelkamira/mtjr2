@@ -53,7 +53,7 @@ export default function AdminProductsPage() {
 
   async function moderate(product: Product, decision: "approve" | "reject") {
     const reason = reasons[product.id]?.trim() || "";
-    if (decision === "reject" && reason.length < 5) { setError("Enter a rejection reason of at least five characters."); return; }
+    if (decision === "reject" && reason.length < 5) { setError(t("Enter a rejection reason of at least five characters.", "أدخل سببًا للرفض لا يقل عن خمسة أحرف.")); return; }
     if (!window.confirm(`${decision === "approve" ? t("Approve", "موافقة") : t("Reject", "رفض")} “${product.name}”?`)) return;
     setBusy(product.id); setError(""); setMessage("");
     try {
@@ -64,12 +64,12 @@ export default function AdminProductsPage() {
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Product moderation failed.");
-      setMessage(`Product ${decision === "approve" ? "approved" : "rejected"}. Approval alone does not publish the product; the store owner must publish it after satisfying catalog requirements.`);
-      toast.success(decision === "approve" ? "Product approved." : "Product rejected.");
+      setMessage(decision === "approve" ? t("Product approved. Approval alone does not publish it; the store owner must publish after meeting catalog requirements.", "تمت الموافقة على المنتج. الموافقة وحدها لا تنشره؛ يجب على مالك المتجر نشره بعد استيفاء متطلبات الكتالوج.") : t("Product rejected.", "تم رفض المنتج."));
+      toast.success(decision === "approve" ? t("Product approved.", "تمت الموافقة على المنتج.") : t("Product rejected.", "تم رفض المنتج."));
       setReasons((current) => ({ ...current, [product.id]: "" }));
       setRevision((value) => value + 1);
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : "Product moderation failed.";
+      const message = cause instanceof Error ? cause.message : t("Product moderation failed.", "تعذرت مراجعة المنتج.");
       setError(message);
       toast.error(message);
     } finally {
@@ -84,12 +84,12 @@ export default function AdminProductsPage() {
   return <main className="min-h-screen bg-[#f5f6f8] px-4 py-6 sm:px-6 lg:px-9"><div className="mx-auto max-w-[1600px]">
     <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{t("Catalog operations", "إدارة الكتالوج")}</p>
     <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-6"><div><h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{t("Product approvals", "اعتماد المنتجات")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{t("Review draft products submitted by active stores. Approval does not publish a product.", "راجع مسودات المنتجات المقدمة من المتاجر النشطة. الموافقة لا تنشر المنتج تلقائياً.")}</p></div><p className="text-sm text-[var(--muted)]">{items.length} {t("pending", "معلق")} · {visible.length} {t("shown", "معروض")}</p></div>
-    <form onSubmit={search} className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><label className="block text-xs font-medium text-[var(--muted)]">{t("Search pending products, stores, sellers or SKU", "ابحث في المنتجات والمتاجر والبائعين أو رمز المنتج")}<input value={query} onChange={(event) => setQuery(event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100" /></label></form>
+    <form onSubmit={search} className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><label className="block text-xs font-medium text-[var(--muted)]">{t("Search pending products, stores, sellers or SKU", "ابحث في المنتجات والمتاجر والبائعين أو رمز المنتج")}<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100" /></label></form>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
     {message && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{message}</p>}
-    {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : <div className="mt-5 space-y-4">{visible.map((product) => <article key={product.id} className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-[160px_1fr]">
+    {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : <div aria-busy={loading || Boolean(busy)} className="mt-5 space-y-4">{visible.map((product) => <article key={product.id} className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-[160px_1fr]">
       {product.media[0] ? <img src={product.media[0].url} alt={product.media[0].altText || product.name} referrerPolicy="no-referrer" className="h-40 w-full rounded-xl object-cover md:w-40" /> : <div className="flex h-40 items-center justify-center rounded-xl bg-[var(--color-ivory-100)] text-sm text-[var(--muted)] md:w-40">{t("No primary image", "لا توجد صورة رئيسية")}</div>}
-      <div><div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-semibold">{product.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{product.store.name} · {t("Seller", "البائع")} {product.store.seller.displayName || product.store.seller.legalName || product.store.seller.id}</p></div><span className="h-fit rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs">{t("Submitted", "تاريخ التقديم")} {new Date(product.createdAt).toLocaleDateString()}</span></div>
+      <div><div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-semibold">{product.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{product.store.name} · {t("Seller", "البائع")} {product.store.seller.displayName || product.store.seller.legalName || product.store.seller.id}</p></div><span className="h-fit rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs">{t("Submitted", "تاريخ التقديم")} {new Date(product.createdAt).toLocaleDateString(locale === "ar" ? "ar-SY" : "en-GB")}</span></div>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--muted)]">{product.description || t("No description provided.", "لم يتم تقديم وصف.")}</p>
         <div className="mt-3 flex flex-wrap gap-2">{product.variants.map((variant) => <div key={variant.id} className="rounded-lg bg-[var(--color-ivory-100)] px-3 py-2 text-xs"><span className="font-semibold">{variant.sku}</span>{variant.name && ` · ${variant.name}`}<span className="block text-[var(--muted)]">{variant.prices.map((price) => `${price.amountMinor} ${price.currencyCode}`).join(" · ") || t("No price configured", "لم يتم تحديد سعر")}</span></div>)}</div>
         <label className="mt-4 block text-xs font-medium text-[var(--muted)]">{t("Moderation reason (required for rejection)", "سبب الإشراف (مطلوب عند الرفض)")}<input value={reasons[product.id] || ""} onChange={(event) => setReasons((current) => ({ ...current, [product.id]: event.target.value }))} maxLength={2000} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100" /></label>
