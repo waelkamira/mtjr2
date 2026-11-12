@@ -83,4 +83,21 @@ describe("jurisdiction-aware financial policy resolver", () => {
     const unscopedLegal = rule({ id: "invalid-legal", classification: "LEGAL" });
     expect(resolveFinancialPolicy([unscopedLegal], context, at).status).toBe("MISSING_CONFIGURATION");
   });
+  it("matches category-scoped rules and prefers them over otherwise equal country rules", () => {
+    const country = rule({ id: "fr-country", classification: "LEGAL", countryCode: "FR", value: { holdDays: 14 } });
+    const category = rule({ id: "fr-category", classification: "LEGAL", countryCode: "FR", categoryId: "category-electronics", value: { holdDays: 21 } });
+    const categoryContext = { ...context, categoryId: "category-electronics" };
+    const result = resolveFinancialPolicy([country, category], categoryContext, at);
+    expect(result.status).toBe("APPLICABLE");
+    if (result.status === "APPLICABLE") {
+      expect(result.rule.id).toBe("fr-category");
+      expect(result.matchedScope).toContain("CATEGORY");
+    }
+  });
+
+  it("does not match a category-scoped rule when the transaction has no category", () => {
+    const category = rule({ id: "category-only", categoryId: "category-electronics" });
+    expect(resolveFinancialPolicy([category], context, at).status).toBe("MISSING_CONFIGURATION");
+  });
+
 });
