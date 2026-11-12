@@ -232,15 +232,20 @@ test.describe("seller catalog authoring", () => {
     await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
     await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
 
-    // Exercise a partial Syria location: the picker retains a governorate label
-    // before a locality is selected, but the strict product API accepts only
-    // canonical location fields and the locality relation.
+    // Exercise a partial Syria location: selecting a district stores its
+    // display name in the product draft, and that accepted field must survive
+    // strict server-side validation even before a locality is selected.
     const governoratesResponse = await page.request.get("/api/geography/governorates");
     expect(governoratesResponse.status()).toBe(200);
     const governorates = await governoratesResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
     const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
     expect(damascus).toBeTruthy();
     await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
+    const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
+    expect(districtsResponse.status()).toBe(200);
+    const districts = await districtsResponse.json() as { items: Array<{ id: string }> };
+    expect(districts.items.length).toBeGreaterThan(0);
+    await page.getByLabel(/District|المنطقة/i).selectOption(districts.items[0].id);
 
     const priceInputs = page.getByLabel(/Selling price|سعر البيع/i);
     await expect(priceInputs.first()).toBeVisible();
