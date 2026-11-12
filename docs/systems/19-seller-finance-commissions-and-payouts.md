@@ -163,6 +163,17 @@
 - Added `SellerPayoutMethod` and enums `SellerPayoutMethodType` / `SellerPayoutMethodStatus`, with a forward migration. IBAN identifiers, account-holder name and optional routing code are encrypted using AES-256-GCM and a versioned key ring; the database stores a protected placeholder for the holder name and only masked account suffixes for display.
 - Added owner-only `GET/POST /api/seller/payout-methods` and `PATCH/DELETE /api/seller/payout-methods/[methodId]`, plus `/seller/payouts`. Defaults are scoped per seller and currency. Mutations are audited without recording account identifiers or routing data.
 - IBAN validation checks supported country-specific lengths, checksum and selected country prefix. Local bank-account entry remains disabled until country-specific account/routing validation is implemented.
-- Every newly saved method is `PENDING_VERIFICATION`. There is no seller self-verification endpoint, bank ownership verification, payout request, transfer execution or withdrawal API. A default method is only a saved preference; it is not proof of ownership or payout eligibility.
+- Every newly saved method is `PENDING_VERIFICATION`. There is no seller self-verification endpoint or automated bank-ownership provider check. A separate manual administrator review is now available (see 2026-11-12 below); a saved default is not verified until that review succeeds. Payout request, transfer execution and withdrawal APIs remain unimplemented.
 - Verification on the merged PR: PostgreSQL integration, CodeQL and Browser E2E passed. The repository's broad CI still reports the same 17 unrelated baseline failures already present on the immediately preceding main commit; the new payout tests passed in that run.
 - **Financial gate unchanged:** no payable or withdrawable balance may be calculated from commission snapshots. Do not connect the ledger or expose withdrawals until the marketplace accounting policy and per-currency chart of accounts are approved and source-event posting/reversal/reconciliation paths are implemented.
+
+
+## 2026-11-12 — Manual administrator review of seller payout destinations
+
+- Added `/admin/seller-payout-methods` with `GET /api/admin/seller-payout-methods` and `POST /api/admin/seller-payout-methods/[methodId]/review`.
+- Access requires the global `platform:manage` grant and a fresh ten-minute TOTP step-up. The reviewer cannot verify a destination belonging to their own seller profile.
+- The queue returns only masked destination data (bank name, type, last four, country/currency, seller identity and submission version); encrypted account identifiers are never exposed to the admin response.
+- Verify/reject decisions require a non-empty external evidence reference and reason. The UI explicitly states that an administrator must complete the check with the bank or approved provider outside Matjar; this workflow does not contact a bank or move money.
+- Added `SellerPayoutMethod.submissionVersion` with migration `20261112090000_seller_payout_submission_version`. Re-registering a disabled destination increments the generation. The decision command checks the inspected generation and pending state in one conditional database write; audit is written only after that guard succeeds. Stale or concurrent decisions return conflict.
+- Verification on exact PR head `401cb342d034dd8ad27576dde053ce3454891b7d`: general CI, PostgreSQL integration, Browser E2E (13/13) and CodeQL passed.
+- **Financial boundary unchanged:** commission snapshots are not seller payables. There is still no approved payable-balance calculation, withdrawal request, transfer execution, payout provider, or settlement/reconciliation. Do not show a withdrawable balance.
