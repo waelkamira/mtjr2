@@ -80,12 +80,15 @@
   --shadow-clay-glow: var(--shadow-glow);
 
   /* Every standard Tailwind rounded utility resolves to the same md radius. */
+  --radius: var(--radius-control);
+  --radius-xs: var(--radius-control);
   --radius-sm: var(--radius-control);
   --radius-md: var(--radius-control);
   --radius-lg: var(--radius-control);
   --radius-xl: var(--radius-control);
   --radius-2xl: var(--radius-control);
   --radius-3xl: var(--radius-control);
+  --radius-full: var(--radius-control);
   --radius-clay-control: var(--radius-control);
   --radius-clay-card: var(--radius-control);
   --radius-clay-panel: var(--radius-control);
