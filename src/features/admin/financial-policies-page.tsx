@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate, type Locale } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
+import { StatusBadge } from "@/components/status-badge";
 
 type PolicyVersion = {
   id: string;
@@ -36,12 +37,6 @@ const labelClass = "block text-sm font-medium text-[var(--color-ink-800)]";
 
 function localDateTimeValue(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-}
-
-function statusLabel(status: PolicyVersion["approvalStatus"], locale: Locale) {
-  if (status === "APPROVED") return translate(locale, "Approved", "معتمد");
-  if (status === "REJECTED") return translate(locale, "Rejected", "مرفوض");
-  return translate(locale, "Pending review", "بانتظار المراجعة");
 }
 
 export default function FinancialPoliciesPage() {
@@ -257,7 +252,7 @@ export default function FinancialPoliciesPage() {
           <div><h2 className="text-xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Policy versions", "إصدارات السياسات")}</h2><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Review the scope, evidence and approval history of each version.", "راجع النطاق والأدلة وسجل اعتماد كل إصدار.")}</p></div>
           <div className="grid gap-2 sm:grid-cols-3">
             <label className={labelClass}>{translate(locale, "Policy key", "مفتاح السياسة")}<input className={inputClass} value={keyFilter} onChange={(e) => setKeyFilter(e.target.value)} placeholder="SELLER_PAYOUT"/></label>
-            <label className={labelClass}>{translate(locale, "Status", "الحالة")}<select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">{translate(locale, "All statuses", "كل الحالات")}</option><option value="PENDING_REVIEW">PENDING_REVIEW</option><option value="APPROVED">APPROVED</option><option value="REJECTED">REJECTED</option></select></label>
+            <label className={labelClass}>{translate(locale, "Status", "الحالة")}<select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">{translate(locale, "All statuses", "كل الحالات")}</option><option value="PENDING_REVIEW">{translateStatus(locale, "PENDING_REVIEW")}</option><option value="APPROVED">{translateStatus(locale, "APPROVED")}</option><option value="REJECTED">{translateStatus(locale, "REJECTED")}</option></select></label>
             <label className={labelClass}>{translate(locale, "Domain filter", "تصفية المجال")}<input className={inputClass} value={domainFilter} onChange={(e) => setDomainFilter(e.target.value)} placeholder="SELLER_PAYOUT"/></label>
           </div>
         </div>
@@ -266,7 +261,7 @@ export default function FinancialPoliciesPage() {
             {versions.map((version) => <article key={version.id} className="rounded-xl border border-[var(--border)] bg-white p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2"><h3 className="break-all font-semibold text-[var(--color-ink-950)]">{version.rule.key} <span className="text-[var(--muted)]">v{version.version}</span></h3><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${version.approvalStatus === "APPROVED" ? "bg-emerald-100 text-emerald-800" : version.approvalStatus === "REJECTED" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"}`}>{statusLabel(version.approvalStatus, locale)}</span></div>
+                  <div className="flex flex-wrap items-center gap-2"><h3 className="break-all font-semibold text-[var(--color-ink-950)]">{version.rule.key} <span className="text-[var(--muted)]">v{version.version}</span></h3><StatusBadge locale={locale} status={version.approvalStatus} /></div>
                   <p className="mt-1 text-sm text-[var(--muted)]">{version.rule.domain} · {version.classification} · {version.rule.description || translate(locale, "No description", "لا يوجد وصف")}</p>
                   <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{[version.countryCode, version.subdivisionCode, version.marketCode, version.currencyCode, version.productClass, version.paymentProvider, version.sellerId ? "SELLER" : null, version.categoryId ? "CATEGORY" : null].filter(Boolean).join(" / ") || translate(locale, "Global scope", "نطاق عام")} · {translate(locale, "Priority", "الأولوية")}: {version.priority}</p>
                   <p className="mt-1 text-xs text-[var(--muted)]">{new Date(version.effectiveFrom).toLocaleString()} – {version.effectiveUntil ? new Date(version.effectiveUntil).toLocaleString() : translate(locale, "No end date", "بلا تاريخ انتهاء")}</p>
