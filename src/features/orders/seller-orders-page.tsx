@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type VendorOrder = {
@@ -22,16 +22,7 @@ function money(value: string, code: string, unit: number, locale: string) { retu
 export default function SellerOrdersPage() {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
-  const statusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      PENDING_PAYMENT: "بانتظار الدفع", CONFIRMED: "مؤكد", PROCESSING: "قيد التجهيز",
-      READY_TO_SHIP: "جاهز للشحن", SHIPPED: "تم الشحن", IN_TRANSIT: "في الطريق",
-      OUT_FOR_DELIVERY: "خرج للتوصيل", DELIVERED: "تم التوصيل", EXCEPTION: "استثناء",
-      CANCELLED: "ملغى", COMPLETED: "مكتمل"
-    };
-    const english = status.replaceAll("_", " ");
-    return translate(locale, english, labels[status] ?? english);
-  };
+  const statusLabel = (status: string) => translateStatus(locale, status);
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
