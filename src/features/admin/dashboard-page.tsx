@@ -434,6 +434,11 @@ export default function AdminDashboardPage() {
             <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
               <h2 className="text-lg font-semibold text-slate-900">{translate(locale, "Open administrative queues", "قوائم الانتظار الإدارية المفتوحة")}</h2>
               <div className="mt-4 divide-y divide-[var(--border)]">
+                <QueueLink locale={locale} href="/admin/sellers" label="Seller applications" count={dashboard.metrics.pendingSellers} />
+                <QueueLink locale={locale} href="/admin/products" label="Product approvals" count={dashboard.metrics.pendingProducts} />
+                <QueueLink locale={locale} href="/admin/orders" label="Orders awaiting payment" count={dashboard.metrics.pendingOrders} />
+                <QueueLink locale={locale} href="/admin/payments" label="Failed payments" count={dashboard.metrics.failedPayments} />
+                <QueueLink locale={locale} href="/admin/payments" label="Payments awaiting completion" count={dashboard.metrics.pendingPayments} />
                 <QueueLink locale={locale} href="/admin/reviews" label="Product review moderation" count={dashboard.metrics.pendingProductReviews} />
                 <QueueLink locale={locale} href="/admin/store-reviews" label="Store review moderation" count={dashboard.metrics.pendingStoreReviews} />
                 <QueueLink locale={locale} href="/admin/returns" label="Return requests" count={dashboard.metrics.requestedReturns} />
@@ -444,7 +449,7 @@ export default function AdminDashboardPage() {
 
           <section className="mt-8 rounded-2xl border border-[var(--border)] bg-white p-5">
             <h2 className="text-lg font-semibold text-slate-900">{translate(locale, "Recent orders", "الطلبات الأخيرة")}</h2>
-            {dashboard.recentOrders.length ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-2 pr-4 font-medium">{translate(locale, "Order", "الطلب")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Status", "الحالة")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Total", "الإجمالي")}</th><th className="py-2 font-medium">{translate(locale, "Placed", "تاريخ الإنشاء")}</th></tr></thead><tbody>{dashboard.recentOrders.map((order) => <tr key={order.id} className="border-b border-[var(--border)] last:border-0"><td className="py-3 pr-4 font-medium">{order.orderNumber}</td><td className="py-3 pr-4"><StatusBadge locale={locale} status={order.status} /></td><td className="py-3 pr-4">{money(order.totalMinor, order.currencyCode, currencyUnits.get(order.currencyCode) ?? 2)}</td><td className="py-3">{new Date(order.placedAt).toLocaleString()}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No orders match the selected filters.", "لا توجد طلبات تطابق عوامل التصفية المحددة.")}</p>}
+            {dashboard.recentOrders.length ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-2 pr-4 font-medium">{translate(locale, "Order", "الطلب")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Status", "الحالة")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Total", "الإجمالي")}</th><th className="py-2 font-medium">{translate(locale, "Placed", "تاريخ الإنشاء")}</th></tr></thead><tbody>{dashboard.recentOrders.map((order) => <tr key={order.id} className="border-b border-[var(--border)] last:border-0"><td className="py-3 pr-4 font-semibold"><Link href={`/admin/orders/${encodeURIComponent(order.id)}`} className="text-[#C65D0A] underline decoration-orange-200 underline-offset-4 hover:text-[#9A4300]">{order.orderNumber}</Link></td><td className="py-3 pr-4"><StatusBadge locale={locale} status={order.status} /></td><td className="py-3 pr-4">{money(order.totalMinor, order.currencyCode, currencyUnits.get(order.currencyCode) ?? 2)}</td><td className="py-3">{new Date(order.placedAt).toLocaleString()}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No orders match the selected filters.", "لا توجد طلبات تطابق عوامل التصفية المحددة.")}</p>}
           </section>
 
           <section className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5">
@@ -465,7 +470,12 @@ function QueueLink({ locale, href, label, count }: { locale: "ar" | "en"; href: 
     "Product review moderation": "الإشراف على مراجعات المنتجات",
     "Store review moderation": "الإشراف على مراجعات المتاجر",
     "Return requests": "طلبات الإرجاع",
-    "Customer support": "دعم العملاء"
+    "Customer support": "دعم العملاء",
+    "Seller applications": "طلبات انضمام البائعين",
+    "Product approvals": "اعتماد المنتجات",
+    "Orders awaiting payment": "طلبات بانتظار الدفع",
+    "Failed payments": "مدفوعات فاشلة",
+    "Payments awaiting completion": "مدفوعات بانتظار الإكمال"
   };
   return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 font-semibold">{count}</span></Link>;
 }
