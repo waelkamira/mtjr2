@@ -4,6 +4,7 @@ import { AuditActorType, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requirePlatformManagement } from "@/server/identity/permission-guard";
+import { resolveFinancialPolicy, type FinancialPolicyApproval, type FinancialPolicyClassification, type FinancialPolicyContext, type FinancialPolicyRule } from "@/server/finance/policy-resolver";
 
 const classificationSchema = z.enum(["LEGAL", "CONTRACTUAL", "PLATFORM"]);
 const approvalActionSchema = z.enum(["REVIEW", "APPROVE", "REJECT"]);
@@ -235,4 +236,57 @@ export async function transitionFinancialPolicyVersion(versionId: string, input:
     });
     return updated;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+
+const previewContextSchema = z.object({
+  domain: z.string().trim().min(2).max(64).regex(/^[A-Z0-9_]+$/),
+  countryCode: z.string().trim().length(2).toUpperCase(),
+  subdivisionCode: z.string().trim().min(1).max(32).toUpperCase().nullable().optional(),
+  marketCode: z.string().trim().min(1).max(32).toUpperCase().nullable().optional(),
+  currencyCode: z.string().trim().length(3).toUpperCase(),
+  productClass: z.string().trim().min(1).max(80).toUpperCase().nullable().optional(),
+  paymentProvider: z.string().trim().min(1).max(80).toUpperCase().nullable().optional(),
+  sellerId: z.string().trim().min(1).max(128).nullable().optional()
+}).strict();
+
+export async function previewFinancialPolicyResolution(input: unknown, now = new Date()) {
+  const context = previewContextSchema.parse(input);
+  await requirePlatformManagement(now);
+  const rows = await prisma.financialPolicyRuleVersion.findMany({
+    where: {
+      rule: { domain: context.domain },
+      effectiveFrom: { lte: now },
+      OR: [{ effectiveUntil: null }, { effectiveUntil: { gt: now } }]
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+  });
+  const rules: FinancialPolicyRule[] = rows.map((row) => ({
+    id: row.id,
+    version: row.version,
+    domain: context.domain,
+    classification: row.classification as FinancialPolicyClassification,
+    approval: row.approvalStatus as FinancialPolicyApproval,
+    value: row.value,
+    countryCode: row.countryCode,
+    subdivisionCode: row.subdivisionCode,
+    marketCode: row.marketCode,
+    currencyCode: row.currencyCode,
+    productClass: row.productClass,
+    paymentProvider: row.paymentProvider,
+    sellerId: row.sellerId,
+    priority: row.priority,
+    effectiveFrom: row.effectiveFrom,
+    effectiveUntil: row.effectiveUntil,
+    sourceReference: row.sourceReference,
+    reviewedAt: row.reviewedAt,
+    reviewedById: row.reviewedById,
+    approvedAt: row.approvedAt,
+    approvedById: row.approvedById
+  }));
+  return {
+    context: context as FinancialPolicyContext,
+    resolution: resolveFinancialPolicy(rules, context as FinancialPolicyContext, now),
+    candidateCount: rows.length
+  };
 }
