@@ -78,7 +78,7 @@ Before adding or changing a model:
 
 ## 8. Known boundaries and unmapped future domains
 
-This schema snapshot does not yet provide a complete implementation for all 49 systems. Payout and double-entry accounting, payment refunds/disputes, customs/tax compliance, supplier/procurement, loyalty/promotions, invoices, CMS/legal content, feature flags, webhooks/outbox, logistics/carrier integrations, KYC documents, and the separate property/booking domain require their own reviewed data contracts and workflows. Do not invent models or claim these systems are implemented merely because they appear in the 49-system blueprint.
+This schema snapshot does not yet provide a complete implementation for all 49 systems. Seller payout destination management and manual administrator ownership review now exist, but seller payable posting, payout/withdrawal execution and reconciliation remain unimplemented. Payment disputes, customs/tax compliance, supplier/procurement, loyalty/promotions, invoices, CMS/legal content, feature flags, webhooks/outbox, logistics/carrier integrations, KYC documents, and the separate property/booking domain still require their own reviewed data contracts and workflows. Do not invent models or claim these systems are implemented merely because they appear in the 49-system blueprint.
 
 
 ## Seller order preparation — 2026-11-04
@@ -92,3 +92,10 @@ This schema snapshot does not yet provide a complete implementation for all 49 s
 
 
 | `PaymentProviderConfig` | `src/server/admin/payment-providers.ts`; `/admin/payment-providers`; `/api/admin/payment-providers` | Super Admin provider configuration, encrypted credentials, environment/status, supported country/currency/method metadata, verification and soft archive. New Payment records reference the selected configuration and retain an encrypted credential snapshot/key version for historical webhook and PayPal return verification. |
+
+
+## Seller payout destination and administrator review — 2026-11-12
+
+| Prisma model | Primary code ownership | Notes |
+|---|---|---|
+| `SellerPayoutMethod` | `src/server/marketplace/seller-payout-methods.ts`; `/api/seller/payout-methods`; `/api/admin/seller-payout-methods`; `/api/admin/seller-payout-methods/[methodId]/review`; `/seller/payouts`; `/admin/seller-payout-methods` | Seller-owned encrypted IBAN destination, masked suffix, seller/currency default and audited disable. `submissionVersion` is a monotonic generation: re-registering a disabled destination increments it; an administrator review must submit the exact queue generation and the database update atomically checks both generation and `PENDING_VERIFICATION`. Global `platform:manage` permission requires fresh ten-minute TOTP step-up; self-verification is rejected. Admin responses expose masked data only. This is a human attestation recorded with evidence reference/reason, not an automated bank check or transfer. No seller payable balance, withdrawal, payout execution or settlement is implemented. Migration: `20261112090000_seller_payout_submission_version`. |
