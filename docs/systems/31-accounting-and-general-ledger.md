@@ -140,3 +140,15 @@
 - **Not verified yet:** Prisma validation/client generation, TypeScript, Vitest, migration
   replay and disposable PostgreSQL integration. No payment, refund, seller payable,
   reserve, settlement or payout workflow is connected. No admin ledger page/API exists.
+
+
+## 12. تنفيذ دفتر الأستاذ للقراءة فقط — 2026-11-12
+
+الحالة الحالية تتجاوز وصف baseline القديم أعلاه في أساس القيود المحاسبية وواجهة الاستعراض:
+
+- src/server/finance/ledger.ts يوفّر postJournalEntry بقيد مزدوج متوازن، مبالغ بوحدات العملة الصغرى، idempotency كامل للبيانات الثابتة، عكس دقيق، وحسابات نشطة متوافقة العملة. كما يوفر listLedgerAccounts وlistLedgerAccountEntries للقراءة.
+- Migration 20261112130000_journal_append_only_integrity تمنع إضافة أسطر إلى قيد بعد معاملة إنشائه، وتمنع تغيير هوية الحساب بعد استخدامه، وتتحقق من الحسابات النشطة وتوازن القيد وتوافق العملة.
+- أضيفت الصفحة /admin/finance/ledger والـAPI GET /api/admin/finance/ledger. كلاهما محمي بـplatform:manage عبر بوابة MFA/step-up. الشاشة تعرض دليل الحسابات وفلاتر البحث والنوع والعملة والحالة، وأسطر القيود للحساب المحدد فقط.
+- المبالغ المعروضة تستخدم Currency.minorUnit الفعلية. لا تعرض الشاشة رصيداً قابلاً للسحب أو إجماليات دفترية مشتقة، ولا تتيح إنشاء القيود أو تعديلها أو عكسها.
+- لا توجد بعد واجهات ميزان مراجعة أو تسوية أو إقفال فترات، ولا ربط تلقائي بالمدفوعات والاستردادات والعمولات ومستحقات البائعين والسحب. لا تنشئ هذه التدفقات أو قواعد الحسابات قبل اعتماد القرارات والسياسات المالية من مالك المنصة.
+- اختبارات PostgreSQL والـmigrations وCodeQL وBrowser E2E نجحت على commits التأسيس السابقة؛ واجهة القراءة الجديدة واختبارات القائمة تحتاج إلى اجتياز CI وE2E على نفس commit النهائي قبل اعتبارها verified.
