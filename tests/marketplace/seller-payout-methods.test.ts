@@ -112,6 +112,28 @@ describe("seller payout destination security", () => {
     expect(result).not.toHaveProperty("accountIdentifier");
   });
 
+  it("increments the submission version when a disabled destination is re-registered", async () => {
+    mocks.payoutFindUnique.mockResolvedValue({ id: "payout-1", status: "DISABLED" });
+    mocks.payoutUpdate.mockResolvedValue({ ...createdMethod, submissionVersion: 2 });
+
+    const result = await createSellerPayoutMethod({
+      type: "IBAN",
+      accountHolderName: "Example Owner",
+      bankName: "Example Bank",
+      countryCode: "DE",
+      currencyCode: "EUR",
+      accountIdentifier: "DE89 3704 0044 0532 0130 00",
+      isDefault: true
+    });
+
+    expect(result.submissionVersion).toBe(2);
+    expect(mocks.payoutUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "payout-1" },
+      data: expect.objectContaining({ submissionVersion: { increment: 1 }, status: "PENDING_VERIFICATION" })
+    }));
+    expect(mocks.payoutCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects an IBAN whose country prefix does not match the selected bank country", async () => {
     await expect(createSellerPayoutMethod({
       type: "IBAN",
@@ -188,6 +210,13 @@ describe("admin seller bank destination review", () => {
     mocks.requirePlatformManagement.mockResolvedValue({ userId: "owner-1" });
     await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutSelfVerificationError);
     expect(mocks.payoutUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not write an audit decision when the atomic submission-version guard loses a race", async () => {
+    mocks.payoutUpdateMany.mockResolvedValue({ count: 0 });
+
+    await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutVerificationConflictError);
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
 
   it("rejects a stale review after a disabled destination is re-registered", async () => {
