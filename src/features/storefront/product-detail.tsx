@@ -29,7 +29,6 @@ function writeGuestFavorite(productId: string, saved: boolean) {
 }
 
 type Price = { marketId: string; currencyCode: string; amountMinor: string | bigint; compareAtMinor: string | bigint | null; currency: { minorUnit: number } };
-type Market = { id: string; code: string; name: string; defaultCurrency: { code: string } };
 type ProductAttribute = { key: string; name: string; valueType: string; values: unknown[] };
 type VariantAttribute = { key: string; name: string; valueType: string; value: unknown };
 export type ProductDetailInitialSponsored = { campaignId: string; token: string; product: { id: string; slug: string; name: string; description: string | null; brand: { name: string } | null; store: { id: string; name: string; slug: string }; media: Array<{ url: string; altText: string | null; isPrimary: boolean }>; variants: Array<{ prices: Array<{ amountMinor: string; currencyCode: string; currency: { minorUnit: number } }> }> } };
@@ -50,15 +49,14 @@ function formatAttributeValue(value: unknown): string {
   return JSON.stringify(value) ?? "";
 }
 
-export default function ProductDetail({ initialProduct, initialSponsored }: { initialProduct: ProductDetailInitialProduct; initialSponsored: ProductDetailInitialSponsored[] }) {
+export default function ProductDetail({ initialProduct, initialMarketId, initialCurrencyCode, initialSponsored }: { initialProduct: ProductDetailInitialProduct; initialMarketId: string; initialCurrencyCode: string; initialSponsored: ProductDetailInitialSponsored[] }) {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
   const product = initialProduct;
   const [sponsored, setSponsored] = useState<ProductDetailInitialSponsored[]>(initialSponsored);
   const [selectedVariant, setSelectedVariant] = useState(initialProduct.variants[0]?.id ?? "");
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(Math.max(0, initialProduct.media.findIndex((item) => item.isPrimary)));
-  const [markets, setMarkets] = useState<Market[]>([]);
-  const [selectedMarketId, setSelectedMarketId] = useState(initialProduct.variants[0]?.prices[0]?.marketId ?? "");
+  const [selectedMarketId] = useState(initialMarketId || initialProduct.variants[0]?.prices[0]?.marketId || "");
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
@@ -68,17 +66,6 @@ export default function ProductDetail({ initialProduct, initialSponsored }: { in
   const [favoriteError, setFavoriteError] = useState("");
   const [messageBusy, setMessageBusy] = useState(false);
   const [messageError, setMessageError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/markets").then(async (response) => {
-      if (!response.ok) throw new Error(t("Markets unavailable.", "الأسواق غير متاحة."));
-      return response.json() as Promise<{ items: Market[] }>;
-    }).then((result) => {
-      if (active) setMarkets(result.items);
-    }).catch(() => { /* Server-rendered product data remains available if market references are temporarily unavailable. */ });
-    return () => { active = false; };
-  }, [t]);
 
   useEffect(() => {
     let active = true;
@@ -111,14 +98,11 @@ export default function ProductDetail({ initialProduct, initialSponsored }: { in
 
 
   const variant = product.variants.find((item) => item.id === selectedVariant) ?? product.variants[0];
-  const selectedMarketInfo = markets.find((item) => item.id === selectedMarketId);
   const price = variant?.prices.find((item) =>
-    item.marketId === selectedMarketId &&
-    (!selectedMarketInfo || item.currencyCode === selectedMarketInfo.defaultCurrency.code)
-  );
+    item.marketId === selectedMarketId && item.currencyCode === initialCurrencyCode
+  ) ?? variant?.prices.find((item) => item.marketId === selectedMarketId);
   const amount = price ? formatMinorUnits(price.amountMinor, price.currencyCode, price.currency.minorUnit ?? 2, locale) : null;
   const selectedMedia = product.media[selectedMediaIndex] ?? product.media.find((item) => item.isPrimary) ?? product.media[0];
-  const selectedMarket = selectedMarketInfo;
 
   async function contactStore() {
     if (!product) return;
@@ -192,7 +176,6 @@ export default function ProductDetail({ initialProduct, initialSponsored }: { in
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-forest-950)] sm:text-4xl">{product.name}</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">{t("Sold by", "يُباع بواسطة")} <Link href={`/stores/${encodeURIComponent(product.store.slug)}`} className="font-semibold text-[var(--color-forest-800)] underline">{product.store.name}</Link></p>
 
-        {markets.length > 0 && <label className="mt-5 block text-sm font-medium">{t("Delivery market", "سوق التوصيل")}<select aria-label={t("Choose delivery market", "اختر سوق التوصيل")} value={selectedMarketId} onChange={(event) => setSelectedMarketId(event.target.value)} className="mt-2 block w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3"><option value="">{t("Select a market", "اختر سوقًا")}</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.defaultCurrency.code}</option>)}</select></label>}
         <p className="mt-7 text-3xl font-bold tracking-tight text-[var(--color-petrol-900)]">{price && amount !== null ? amount : t("Price unavailable", "السعر غير متاح")}</p>
         {product.description && <p className="mt-7 whitespace-pre-line text-sm leading-7 text-[var(--color-ink-700)]">{product.description}</p>}
         {(product.propertyDetails || product.location || product.contactPhone || product.videoUrl || product.city || product.district) && <section className="mt-7 grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
