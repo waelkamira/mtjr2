@@ -4881,7 +4881,7 @@ The platform account policy is now explicit: email verification is not required 
 
 - Removed the artificial 1,000-page limit from the admin queue while keeping page values finite, positive integers whose computed database offset remains a safe integer. Added a route test for page 1001 with 50,001 records.
 - Review drafts now use the composite key `methodId:submissionVersion`, including session-storage recovery and clearing, so evidence/reason text from an earlier submission cannot be reused for a newly registered generation.
-- After a review succeeds, the page triggers a state-driven reload. The next effect reads the current status tab and page, rather than calling a stale `load` callback captured before the POST.
+- After a review succeeds, the page reloads with status/page refs that are synchronously updated by tab and pagination controls. It does not call a stale `load` callback captured before the POST.
 - Added `SellerPayoutMethod.submittedAt` and migration `20261112093000_seller_payout_submission_timestamp`. Re-registration refreshes this timestamp, the admin queue sorts by it, and the UI displays it while preserving `createdAt` as the original row-creation time.
 - Updated the E2E fixture to refresh `submittedAt` whenever its pending generation is reset.
-- Verification for this documentation-only record is pending on the new branch head; do not treat the earlier 13/13 Browser E2E run as validation of these latest changes.
+- Verification of these latest queue refinements is pending on the new branch head; do not treat the earlier 13/13 Browser E2E run as validation of these latest changes.
