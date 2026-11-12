@@ -1,6 +1,7 @@
 "use client";
 
 import { StatusBadge } from "@/components/status-badge";
+import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -147,7 +148,7 @@ export default function SellerReturnsPage() {
                   {item.reasonDetails && <p className="mt-1 text-sm text-[var(--muted)]">{item.reasonDetails}</p>}
                   <div className="mt-4 divide-y divide-[var(--border)] border-t border-[var(--border)]">
                     {item.items.map((product) => <div key={product.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-                      <div><p className="font-medium">{product.productName}</p><p className="text-xs text-[var(--muted)]">{product.sku} · {translate(locale, product.status, product.status === "REQUESTED" ? "مطلوب" : product.status === "APPROVED" ? "مقبول" : product.status === "REJECTED" ? "مرفوض" : product.status === "RECEIVED" ? "تم الاستلام" : product.status.replaceAll("_", " "))}</p>{product.reviewNote && <p className="mt-1 text-xs text-[var(--muted)]">{product.reviewNote}</p>}</div>
+                      <div><p className="font-medium">{product.productName}</p><p className="text-xs text-[var(--muted)]">{product.sku} · <StatusBadge locale={locale} status={product.status} /></p>{product.reviewNote && <p className="mt-1 text-xs text-[var(--muted)]">{product.reviewNote}</p>}</div>
                       <p className="tabular-nums">{translate(locale, "Return", "الإرجاع")} {product.returnQuantity} / {translate(locale, "ordered", "المطلوب")} {product.orderedQuantity}</p>
                     </div>)}
                   </div>
