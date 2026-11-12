@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { StatusBadge } from "@/components/status-badge";
 
 type PayoutMethod = {
   id: string; type: "IBAN" | "LOCAL_BANK_ACCOUNT"; accountHolderName: string; bankName: string;
@@ -78,12 +79,6 @@ export default function SellerPayoutMethodsPage() {
     } finally { setBusyId(""); }
   }
 
-  const statusLabel = (status: PayoutMethod["status"]) => status === "VERIFIED"
-    ? t("Verified", "تم التحقق")
-    : status === "PENDING_VERIFICATION"
-      ? t("Pending verification", "بانتظار التحقق")
-      : status === "REJECTED" ? t("Rejected", "مرفوض") : t("Disabled", "معطّل");
-
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1120px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <header className="rounded-[30px] border border-white/90 bg-[linear-gradient(115deg,#fff6ef_0%,#f7e9de_48%,#f2edf5_100%)] p-6 text-[#51433a] shadow-[12px_14px_28px_rgba(119,86,62,.08),inset_0_2px_0_white] sm:p-8">
@@ -147,7 +142,7 @@ export default function SellerPayoutMethodsPage() {
               <div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-[#51433a]">{method.bankName}</h3>{method.isDefault && <span className="rounded-full bg-[#e8f4ef] px-2 py-1 text-xs font-bold text-[#356b58]">{t("Default", "افتراضي")}</span>}</div>
               <p className="mt-1 text-sm text-[#687b8b]">{method.accountHolderName} · {method.countryCode} · {method.currencyCode}</p>
               <p className="mt-1 font-mono text-sm text-[#526078]">{method.type === "IBAN" ? "IBAN" : t("Account", "الحساب")} •••• {method.accountLast4}</p>
-              <p className="mt-1 text-xs font-semibold text-[#8a789d]">{statusLabel(method.status)}</p>
+              <div className="mt-2"><StatusBadge locale={locale} status={method.status} /></div>
             </div>
             <div className="flex flex-wrap gap-2">
               {!method.isDefault && <button type="button" disabled={busyId === method.id} onClick={() => void changeMethod(method, "default")} className="rounded-xl border border-[#eadfd5] px-3 py-2 text-xs font-bold text-[#8a583b] disabled:opacity-50">{t("Make default", "تعيين افتراضي")}</button>}
