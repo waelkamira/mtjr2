@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import { StatusBadge } from "@/components/status-badge";
 
 type Row = {
@@ -36,11 +36,21 @@ export default function AdminSupportPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const statusLabel = (value: string) => translate(locale, value, ({
-    OPEN: "مفتوحة", IN_PROGRESS: "قيد المعالجة", WAITING_CUSTOMER: "بانتظار العميل",
-    RESOLVED: "تم الحل", CLOSED: "مغلقة", LOW: "منخفضة", NORMAL: "عادية",
-    HIGH: "مرتفعة", URGENT: "عاجلة"
-  } as Record<string, string>)[value] ?? value.replaceAll("_", " "));
+  const statusLabel = (value: string) => {
+    const labels: Record<string, { en: string; ar: string }> = {
+      OPEN: { en: "Open", ar: "مفتوحة" },
+      IN_PROGRESS: { en: "In progress", ar: "قيد المعالجة" },
+      WAITING_CUSTOMER: { en: "Waiting for customer", ar: "بانتظار العميل" },
+      RESOLVED: { en: "Resolved", ar: "تم الحل" },
+      CLOSED: { en: "Closed", ar: "مغلقة" },
+      LOW: { en: "Low", ar: "منخفضة" },
+      NORMAL: { en: "Normal", ar: "عادية" },
+      HIGH: { en: "High", ar: "مرتفعة" },
+      URGENT: { en: "Urgent", ar: "عاجلة" }
+    };
+    const label = labels[value];
+    return label ? translate(locale, label.en, label.ar) : translateStatus(locale, value);
+  };
 
   async function loadQueue() {
     const response = await fetch("/api/admin/support/tickets", { cache: "no-store" });
