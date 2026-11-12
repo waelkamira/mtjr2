@@ -44,7 +44,7 @@ const statusArabic: Record<string, string> = {
   DISMISSED: "تم إغلاق البلاغ دون إجراء", ACTIONED: "تم اتخاذ إجراء", UPHELD: "تم تأييد القرار",
   RESTORED: "تمت الاستعادة", REVIEWED: "تمت المراجعة", RETRY: "إعادة المحاولة", SENT: "تم الإرسال",
   PENDING_SCAN: "بانتظار الفحص", CLEAN: "اجتاز الفحص", CONFIGURED: "تم الإعداد", VOID: "ملغاة",
-  REFUND_REJECTED: "رُفض رد المبلغ", READY: "جاهز"
+  REFUND_REJECTED: "رُفض رد المبلغ", READY: "جاهز", LOW: "منخفضة", NORMAL: "عادية", HIGH: "مرتفعة", URGENT: "عاجلة"
 };
 
 function humanizeStatus(status: string): string {
