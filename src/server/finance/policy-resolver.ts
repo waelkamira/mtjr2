@@ -10,7 +10,7 @@ export type FinancialPolicyContext = {
   domain: string;
   countryCode: string;
   subdivisionCode?: string | null;
-  marketId?: string | null;
+  marketCode?: string | null;
   currencyCode: string;
   productClass?: string | null;
   paymentProvider?: string | null;
@@ -26,7 +26,7 @@ export type FinancialPolicyRule<T = unknown> = {
   value: T;
   countryCode?: string | null;
   subdivisionCode?: string | null;
-  marketId?: string | null;
+  marketCode?: string | null;
   currencyCode?: string | null;
   productClass?: string | null;
   paymentProvider?: string | null;
@@ -35,6 +35,9 @@ export type FinancialPolicyRule<T = unknown> = {
   effectiveUntil?: Date | null;
   sourceReference?: string | null;
   reviewedAt?: Date | null;
+  reviewedById?: string | null;
+  approvedAt?: Date | null;
+  approvedById?: string | null;
 };
 
 export type FinancialPolicyResolution<T> =
@@ -47,7 +50,7 @@ function matches<T>(rule: FinancialPolicyRule<T>, context: FinancialPolicyContex
   const dimensions: Array<[string | null | undefined, string | null | undefined]> = [
     [rule.countryCode, context.countryCode],
     [rule.subdivisionCode, context.subdivisionCode],
-    [rule.marketId, context.marketId],
+    [rule.marketCode, context.marketCode],
     [rule.currencyCode, context.currencyCode],
     [rule.productClass, context.productClass],
     [rule.paymentProvider, context.paymentProvider],
@@ -60,7 +63,7 @@ function matches<T>(rule: FinancialPolicyRule<T>, context: FinancialPolicyContex
 
 function specificity<T>(rule: FinancialPolicyRule<T>): number {
   return [
-    rule.countryCode, rule.subdivisionCode, rule.marketId, rule.currencyCode,
+    rule.countryCode, rule.subdivisionCode, rule.marketCode, rule.currencyCode,
     rule.productClass, rule.paymentProvider, rule.sellerId
   ].filter((value) => value != null).length;
 }
@@ -116,7 +119,8 @@ export function resolveFinancialPolicy<T>(
   const winners = eligible.filter((rule) => rank(rule) === highestRank);
   const pending = winners.filter((rule) =>
     rule.approval !== "APPROVED" ||
-    (rule.classification === "LEGAL" && (!rule.sourceReference?.trim() || !rule.reviewedAt))
+    !rule.approvedAt || !rule.approvedById?.trim() ||
+    (rule.classification === "LEGAL" && (!rule.sourceReference?.trim() || !rule.reviewedAt || !rule.reviewedById?.trim()))
   );
   if (pending.length > 0) {
     return {
@@ -144,7 +148,7 @@ export function resolveFinancialPolicy<T>(
     matchedScope: [
       selected.countryCode && "COUNTRY",
       selected.subdivisionCode && "SUBDIVISION",
-      selected.marketId && "MARKET",
+      selected.marketCode && "MARKET",
       selected.currencyCode && "CURRENCY",
       selected.productClass && "PRODUCT_CLASS",
       selected.paymentProvider && "PAYMENT_PROVIDER",
