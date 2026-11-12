@@ -37,7 +37,7 @@
 
 ## Existing App Router pages
 
-There are **79 `page.tsx` routes** in the audited source tree: 20 public/auth/commerce routes, 17 account routes, 12 seller routes, and 30 admin routes. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below.
+There are **80 `page.tsx` routes** in the audited source tree: 20 public/auth/commerce routes, 17 account routes, 12 seller routes, and 31 admin routes. All existing pages are `NEEDS_TESTING` unless an identified gap makes them `INCOMPLETE`. “Page source” is the actual route file; feature component is shown where imported. Root layout wraps every route, with the account/admin segment layouts noted below.
 
 ### Public marketplace, cart, checkout, authentication, and legal
 
@@ -130,6 +130,7 @@ The segment layout is `src/app/admin/layout.tsx`: it requires at least one recog
 | Order detail | `/admin/orders/[orderId]` | Yes | `src/app/admin/orders/[orderId]/page.tsx` → `features/admin/order-detail-page.tsx` | Read-only order detail API; Order, VendorOrder and OrderItem snapshots. | NEEDS_TESTING |
 | Payments | `/admin/payments` | Yes | `src/app/admin/payments/page.tsx` → `features/admin/payments-page.tsx` | `payments:read`, bounded read-only payment API; Payment records. | NEEDS_TESTING |
 | Payment detail | `/admin/payments/[paymentId]` | Yes | `src/app/admin/payments/[paymentId]/page.tsx` → `features/admin/payment-detail-page.tsx` | `payments:read`, Payment detail API; no refund workflow claimed. | NEEDS_TESTING |
+| Seller bank verification | `/admin/seller-payout-methods` | Yes | `src/app/admin/seller-payout-methods/page.tsx` → `src/features/admin/seller-payout-review-page.tsx`; `GET /api/admin/seller-payout-methods`, `POST /api/admin/seller-payout-methods/[methodId]/review` | Platform-management permission + MFA/step-up; masked-only listing; evidence reference and reason required; manual review audited; no automated bank verification or payout execution. | NEEDS_TESTING |
 | Product questions | `/admin/questions` | Yes | `src/app/admin/questions/page.tsx` → `features/admin/product-qa-page.tsx` | Admin question/moderation API; ProductQuestion/ProductAnswer data. | NEEDS_TESTING |
 | Question reports | `/admin/questions/reports` | Yes | `src/app/admin/questions/reports/page.tsx` → `features/admin/product-qa-reports-page.tsx` | Question report moderation APIs; ProductQuestionReport data. | NEEDS_TESTING |
 | Returns | `/admin/returns` | Yes | `src/app/admin/returns/page.tsx` → `features/admin/returns-page.tsx` | Admin return review APIs; ReturnRequest/ReturnItem; funds movement is not claimed. | NEEDS_TESTING |
