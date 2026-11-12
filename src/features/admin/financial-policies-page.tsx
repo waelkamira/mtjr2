@@ -75,7 +75,7 @@ export default function FinancialPoliciesPage() {
   const [previewResult, setPreviewResult] = useState<unknown>(null);
   const [previewBusy, setPreviewBusy] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<PolicyVersion[]> => {
     const params = new URLSearchParams();
     if (statusFilter) params.set("approvalStatus", statusFilter);
     if (domainFilter.trim()) params.set("domain", domainFilter.trim().toUpperCase());
@@ -84,13 +84,17 @@ export default function FinancialPoliciesPage() {
     const response = await fetch(`/api/admin/financial-policies?${params.toString()}`, { cache: "no-store" });
     const data = await response.json() as { versions?: PolicyVersion[]; error?: string };
     if (!response.ok) throw new Error(data.error || translate(locale, "Financial policies could not be loaded.", "تعذر تحميل السياسات المالية."));
-    setError("");
-    setVersions(data.versions || []);
+    return data.versions || [];
   }, [domainFilter, keyFilter, locale, statusFilter]);
 
   useEffect(() => {
     let active = true;
-    void load().catch((cause) => {
+    void load().then((nextVersions) => {
+      if (active) {
+        setError("");
+        setVersions(nextVersions);
+      }
+    }).catch((cause) => {
       if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Unable to load financial policies.", "تعذر تحميل السياسات المالية."));
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -134,7 +138,7 @@ export default function FinancialPoliciesPage() {
       setKey(""); setDescription(""); setValueJson('{"enabled": true}');
       setCountryCode(""); setSubdivisionCode(""); setMarketCode(""); setCurrencyCode("");
       setProductClass(""); setPaymentProvider(""); setSellerId(""); setCategoryId(""); setSourceReference(""); setReviewNotes("");
-      await load();
+      setVersions(await load());
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : translate(locale, "Policy version could not be created.", "تعذر إنشاء إصدار السياسة.");
       setError(message); toast.error(message);
