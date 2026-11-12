@@ -15,7 +15,7 @@ export function translate(locale: Locale, english: string, arabic: string): stri
 
 
 const statusArabic: Record<string, string> = {
-  PENDING_VERIFICATION: "بانتظار التحقق", VERIFIED: "تم التحقق", PAUSED: "متوقف مؤقتاً", 
+  PENDING_VERIFICATION: "بانتظار التحقق", VERIFIED: "تم التحقق", PAUSED: "متوقف مؤقتاً", RELEASED: "تم تحرير الحجز", CONVERTED: "تم تحويل الحجز إلى طلب", 
   INITIATING: "جارٍ بدء الدفع", 
   WAITING_CUSTOMER: "بانتظار العميل", 
   DRAFT: "مسودة", ACTIVE: "نشط", INACTIVE: "غير نشط", PENDING: "قيد الانتظار",
