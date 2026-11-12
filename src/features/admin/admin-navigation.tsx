@@ -10,7 +10,7 @@ import {
   ShoppingCart, CreditCard, Building2, Truck, RotateCcw, Banknote,
   Headphones, MessageSquare, Star, HelpCircle, Search, Percent, Coins,
   Scale, BookOpen, Ticket, Megaphone, Shield, Crown, PanelLeftClose,
-  PanelLeftOpen, ChevronDown, Command, X
+  PanelLeftOpen, Command, X
 } from "lucide-react";
 
 type AdminLink = { href: string; label: string; ar: string; icon: typeof LayoutDashboard; platformOnly?: boolean };
@@ -101,7 +101,6 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
           <label className="flex h-10 items-center gap-2 rounded-lg border border-white/10 bg-white/[.06] px-3 text-slate-400 focus-within:border-[#FF8C1C]/70 focus-within:ring-2 focus-within:ring-[#FF8C1C]/15">
             <Search size={15} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={translate(locale, "Find an admin page…", "ابحث عن قسم إداري…")} className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-slate-500" />
-            <kbd className="rounded border border-white/10 px-1 text-[9px] text-slate-500">/</kbd>
           </label>
         </div>
 
