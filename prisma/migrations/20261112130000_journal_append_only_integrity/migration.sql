@@ -68,3 +68,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+
+-- A ledger account's accounting identity cannot be rewritten after it has been used.
+-- Deactivation remains allowed; changing the code, type, scope or currency does not.
+CREATE OR REPLACE FUNCTION prevent_used_ledger_account_identity_change() RETURNS trigger AS $$
+BEGIN
+  IF (
+    NEW."code" IS DISTINCT FROM OLD."code" OR
+    NEW."accountType" IS DISTINCT FROM OLD."accountType" OR
+    NEW."scopeType" IS DISTINCT FROM OLD."scopeType" OR
+    NEW."scopeId" IS DISTINCT FROM OLD."scopeId" OR
+    NEW."currencyCode" IS DISTINCT FROM OLD."currencyCode"
+  ) AND EXISTS (
+    SELECT 1 FROM "JournalLine" WHERE "accountId" = OLD."id"
+  ) THEN
+    RAISE EXCEPTION 'A ledger account identity cannot change after it has been used; deactivate it and create a replacement account.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "LedgerAccount_used_identity_immutable"
+BEFORE UPDATE ON "LedgerAccount"
+FOR EACH ROW EXECUTE FUNCTION prevent_used_ledger_account_identity_change();
