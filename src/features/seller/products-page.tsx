@@ -767,7 +767,7 @@ export default function SellerProductsPage() {
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
             <section className="grid gap-4 rounded-xl border border-[#eee9e4] bg-white p-4 sm:p-5">
-              <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name="document" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product information", "معلومات المنتج")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Start with a clear title and a customer-friendly description.", "ابدأ بعنوان واضح ووصف مناسب للعملاء.")}</p></div></div>
+              <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="document" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product information", "معلومات المنتج")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Start with a clear title and a customer-friendly description.", "ابدأ بعنوان واضح ووصف مناسب للعملاء.")}</p></div></div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
                 <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
@@ -778,8 +778,8 @@ export default function SellerProductsPage() {
               <label className="grid gap-1 text-sm">{translate(locale, "Video URL (HTTPS)", "رابط الفيديو (HTTPS)")}<input type="url" maxLength={2048} placeholder="https://" className={inputClass} value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} /></label>
               </div>
             </section>
-            <label className="grid gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><SellerIcon name="catalog" />{translate(locale, "Category", "الفئة")}</span><select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-            {categoryId && <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
+            <section className="grid gap-3 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="catalog" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Category", "الفئة")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Choose the most accurate category for your product.", "اختر الفئة الأكثر دقة لمنتجك.")}</p></div></div><label className="grid gap-2 text-sm font-semibold"><select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+            {categoryId && <section className="grid gap-3 rounded-xl border border-[#eee9e4] bg-[#fffaf6] p-4 sm:p-5">
               <div>
                 <h3 className="text-sm font-semibold">{translate(locale, "Category-specific details", "الخصائص الخاصة بالفئة")}</h3>
                 <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "These fields are defined by the catalog and validated again on the server.", "هذه الحقول معرّفة في الكتالوج ويعاد التحقق منها في الخادم قبل الحفظ.")}</p>
@@ -797,11 +797,12 @@ export default function SellerProductsPage() {
                   })}
                 </div>}
             </section>}
-            <section className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
-              <div>
-                <h3 className="text-sm font-extrabold">{translate(locale, "Product specifications", "مواصفات المنتج")}</h3>
-                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Add the common details, then add any extra specification your product needs.", "أدخل المواصفات الأساسية ثم أضف أي مواصفات إضافية يحتاجها منتجك.")}</p>
-              </div>
+            </section>
+            <section className="grid gap-4 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5">
+              <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="sliders" /></span><div>
+                <h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product specifications", "مواصفات المنتج")}</h3>
+                <p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Add the common details, then add any extra specification your product needs.", "أدخل المواصفات الأساسية ثم أضف أي مواصفات إضافية يحتاجها منتجك.")}</p>
+              </div></div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {([
                   ["model", "Model", "الموديل", "e.g. Galaxy S24"],
@@ -837,9 +838,9 @@ export default function SellerProductsPage() {
                 </div>}
               </div>
             </section>
-            <section className="grid gap-3 rounded-xl border border-[#eee9e4] bg-white p-4 sm:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#fff1e8] text-[#FF8C1C]"><SellerIcon name="tag" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs leading-5 text-[#718096]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-xl border border-[#eee9e4] bg-white px-3 py-2 text-xs font-bold text-[#5f5a55] shadow-sm disabled:opacity-40"><SellerIcon name="plus" />{translate(locale, "Add variant", "إضافة متغير")}</button></div>
-              {variantRows.map((variant, index) => <article key={variant.id} className="grid gap-3 rounded-2xl border border-white/90 bg-white/65 p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(43,69,88,.05)]">
+            <section className="grid gap-3 rounded-2xl border border-[#eee9e4] bg-white p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="inventory" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product variants / SKUs", "متغيرات المنتج / رموز SKU")}</h3><p className="mt-1 text-xs leading-5 text-[#718096]">{translate(locale, "Add a separate SKU for every size, color or configuration. Set the price separately for every SKU and enabled market.", "أضف رمز SKU مستقلاً لكل مقاس أو لون أو مواصفة. حدد السعر بشكل مستقل لكل SKU ولكل سوق مفعّل.")}</p></div></div><button type="button" disabled={variantRows.length >= 100} onClick={() => setVariantRows((rows) => [...rows, { id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }])} className="rounded-xl border border-[#eee9e4] bg-white px-3 py-2 text-xs font-bold text-[#5f5a55] shadow-sm disabled:opacity-40"><SellerIcon name="plus" />{translate(locale, "Add variant", "إضافة متغير")}</button></div>
+              {variantRows.map((variant, index) => <article key={variant.id} className="grid gap-3 rounded-xl border border-[#eee9e4] bg-[#fffaf6] p-4">
                 <div className="flex items-center justify-between"><p className="text-xs font-extrabold text-[#8a583b]">{translate(locale, "Variant", "المتغير")} {index + 1}</p>{variantRows.length > 1 && <button type="button" onClick={() => setVariantRows((rows) => rows.filter((row) => row.id !== variant.id))} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-700"><SellerIcon name="trash" />{translate(locale, "Remove", "حذف")}</button>}</div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <label className="grid gap-1 text-xs font-semibold">SKU<input required maxLength={100} className={inputClass} value={variant.sku} onChange={(event) => updateVariant(variant.id, { sku: event.target.value })} placeholder={`MAT-00${index + 1}`} /></label>
@@ -874,7 +875,7 @@ export default function SellerProductsPage() {
               </article>)}
               {!variantSkusValid && <p className="text-xs font-semibold text-amber-800">{translate(locale, "Every variant needs a unique SKU.", "يجب أن يكون لكل متغير رمز SKU فريد.")}</p>}
             </section>
-            {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
+            {categoryId && categoryAttributes.some((attribute) => attribute.variantLevel) && <section className="grid gap-3 rounded-xl border border-[#eee9e4] bg-[#fffaf6] p-4 sm:p-5">
               <div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Variant options", "خيارات المتغير")}</h3><p className="mt-1 text-xs text-[#918a84]">{translate(locale, "These values are saved on the SKU variant, such as size or color.", "تُحفظ هذه القيم على متغير رمز SKU، مثل المقاس أو اللون.")}</p></div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
