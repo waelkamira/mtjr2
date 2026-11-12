@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -38,25 +38,34 @@ export default function SellerPayoutReviewPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const loadRequestId = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = ++loadRequestId.current;
     setLoading(true);
     setError("");
     try {
       const params = new URLSearchParams({ status, page: String(page) });
       const response = await fetch("/api/admin/seller-payout-methods?" + params, { cache: "no-store" });
       const result = await response.json() as Listing & { error?: string };
+      if (requestId !== loadRequestId.current) return;
       if (!response.ok) throw new Error(result.error || t("Unable to load bank destinations.", "تعذر تحميل الحسابات البنكية."));
       setData(result);
     } catch (cause) {
+      if (requestId !== loadRequestId.current) return;
       setError(cause instanceof Error ? cause.message : t("Unable to load bank destinations.", "تعذر تحميل الحسابات البنكية."));
       setData(null);
-    } finally { setLoading(false); }
+    } finally {
+      if (requestId === loadRequestId.current) setLoading(false);
+    }
   }, [page, status, t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void load(); }, 0);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      loadRequestId.current += 1;
+    };
   }, [load]);
 
   function updateDraft(id: string, key: keyof Draft, value: string) {
@@ -119,7 +128,7 @@ export default function SellerPayoutReviewPage() {
         </article>;
       })}
     </div>}
-    {data && data.pageCount > 1 && <div className="mt-5 flex items-center justify-between"><p className="text-sm text-[var(--muted)]">{t("Page", "صفحة")} {data.page} / {data.pageCount} · {data.total} {t("records", "سجل")}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Previous", "السابق")}</button><button type="button" disabled={page >= data.pageCount || loading} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Next", "التالي")}</button></div></div>}
+    {data && (data.pageCount > 1 || page > 1) && <div className="mt-5 flex items-center justify-between"><p className="text-sm text-[var(--muted)]">{t("Page", "صفحة")} {data.page} / {data.pageCount} · {data.total} {t("records", "سجل")}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Previous", "السابق")}</button><button type="button" disabled={page >= data.pageCount || loading} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Next", "التالي")}</button></div></div>}
     <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{t("Important: this screen records a human administrator's attestation only. It does not contact banks, independently verify ownership, or initiate seller transfers. Never approve without completing the external check.", "تنبيه: تسجل هذه الصفحة إقراراً من مسؤول بشري فقط. لا تتصل بالبنوك ولا تتحقق آلياً من الملكية ولا تنفذ تحويلات للبائعين. لا توافق قبل إتمام التحقق الخارجي.")}</p>
   </div></main>;
 }
