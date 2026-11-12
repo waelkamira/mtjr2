@@ -51,7 +51,15 @@ CREATE TABLE "FinancialPolicyRuleVersion" (
   CONSTRAINT "FinancialPolicyRuleVersion_classification_check"
     CHECK ("classification" IN ('LEGAL', 'CONTRACTUAL', 'PLATFORM')),
   CONSTRAINT "FinancialPolicyRuleVersion_approval_check"
-    CHECK ("approvalStatus" IN ('PENDING_REVIEW', 'APPROVED', 'REJECTED'))
+    CHECK ("approvalStatus" IN ('PENDING_REVIEW', 'APPROVED', 'REJECTED')),
+  CONSTRAINT "FinancialPolicyRuleVersion_legal_scope_check"
+    CHECK ("classification" <> 'LEGAL' OR "countryCode" IS NOT NULL),
+  CONSTRAINT "FinancialPolicyRuleVersion_approved_metadata_check"
+    CHECK ("approvalStatus" <> 'APPROVED' OR ("approvedAt" IS NOT NULL AND "approvedById" IS NOT NULL)),
+  CONSTRAINT "FinancialPolicyRuleVersion_rejected_metadata_check"
+    CHECK ("approvalStatus" <> 'REJECTED' OR ("rejectedAt" IS NOT NULL AND "rejectedById" IS NOT NULL)),
+  CONSTRAINT "FinancialPolicyRuleVersion_legal_review_check"
+    CHECK ("approvalStatus" <> 'APPROVED' OR "classification" <> 'LEGAL' OR ("reviewedAt" IS NOT NULL AND "reviewedById" IS NOT NULL))
 );
 
 CREATE UNIQUE INDEX "FinancialPolicyRule_key_key"
