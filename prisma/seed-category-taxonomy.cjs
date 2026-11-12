@@ -381,10 +381,25 @@ async function main() {
     }
   }
   const expected = taxonomy.reduce((sum, item) => sum + 1 + item[3].length, 0);
-  const [activeCount, missingTranslations] = await Promise.all([
-    prisma.category.count({ where: { status: "ACTIVE", slug: { in: taxonomy.flatMap(([slug, , , children]) => [slug, ...children.map(([childSlug]) => childSlug)]) } } }),
-    prisma.categoryTranslation.count({ where: { locale: { in: ["ar", "en"] }, category: { slug: { in: taxonomy.flatMap(([slug, , , children]) => [slug, ...children.map(([childSlug]) => childSlug)]) } } })
+  const categorySlugs = taxonomy.flatMap(([slug, , , children]) => [
+    slug,
+    ...children.map(([childSlug]) => childSlug)
   ]);
+  const [activeCount, translationCount] = await Promise.all([
+    prisma.category.count({
+      where: {
+        status: "ACTIVE",
+        slug: { in: categorySlugs }
+      }
+    }),
+    prisma.categoryTranslation.count({
+      where: {
+        locale: { in: ["ar", "en"] },
+        category: { slug: { in: categorySlugs } }
+      }
+    })
+  ]);
+  const missingTranslations = translationCount;
   if (activeCount !== expected || missingTranslations !== expected * 2) {
     throw new Error(`Taxonomy verification failed: expected ${expected} active categories and ${expected * 2} translations; found ${activeCount} and ${missingTranslations}.`);
   }
