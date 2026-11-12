@@ -22,6 +22,24 @@ test.describe("public marketplace journeys", () => {
   test("products, search and category discovery render", async ({ page }) => {
     await page.goto("/products");
     await expect(page.getByRole("heading", { name: /Browse products|تصفّح المنتجات/i })).toBeVisible();
+    await expect(page.locator("main h1").first()).toHaveCSS("user-select", "none");
+    await expect(page.locator("header input").first()).toHaveCSS("user-select", "text");
+    const selectableExceptions = await page.evaluate(() => {
+      const optIn = document.createElement("span");
+      optIn.dataset.textSelect = "allow";
+      optIn.textContent = "Selectable copy";
+      const editable = document.createElement("div");
+      editable.contentEditable = "true";
+      const editableChild = document.createElement("span");
+      editableChild.textContent = "Editable content";
+      editable.append(editableChild);
+      document.body.append(optIn, editable);
+      const values = [getComputedStyle(optIn).userSelect, getComputedStyle(editableChild).userSelect];
+      optIn.remove();
+      editable.remove();
+      return values;
+    });
+    expect(selectableExceptions).toEqual(["text", "text"]);
     const sponsored = page.getByTestId("sponsored-product").first();
     await sponsored.scrollIntoViewIfNeeded();
     await expect(sponsored).toBeVisible();

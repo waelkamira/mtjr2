@@ -607,6 +607,18 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+/* Platform text is non-selectable by default; editable fields and explicit
+   opt-ins remain selectable for normal form editing and accessible workflows. */
+html body :where(*):not(input):not(textarea):not(select):not([contenteditable="true"]):not([data-text-select="allow"]) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+html body :where(input, textarea, select, [contenteditable="true"], [data-text-select="allow"]),
+html body :where([contenteditable="true"] *, [data-text-select="allow"] *) {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
 .seller-dashboard,
 .seller-dashboard > div {
   min-width: 0;
