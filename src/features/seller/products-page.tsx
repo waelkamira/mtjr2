@@ -914,7 +914,7 @@ export default function SellerProductsPage() {
               color: ["bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-sky-500"][index % 4]
             }))} />
             <MetricBarChart title={translate(locale, "Product publication status", "حالة نشر المنتجات")} description={translate(locale, "Counts reflect the currently loaded product list and active search.", "الأعداد للمنتجات المحمّلة حالياً ونتائج البحث النشط.")} rows={Object.entries(publicationCounts).map(([status, count], index) => ({
-              label: status.replaceAll("_", " ").toLowerCase(),
+              label: translateStatus(locale, status),
               value: count,
               color: ["bg-indigo-500", "bg-teal-500", "bg-slate-500", "bg-[var(--orange)]"][index % 4]
             }))} />
