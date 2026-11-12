@@ -302,6 +302,33 @@ test.describe("seller onboarding journey", () => {
   });
 });
 
+test.describe("seller application location", () => {
+  test("selecting Syrian administrative areas composes the seller residence address", async ({ page }) => {
+    await signIn(page, sessions.buyer);
+    await page.goto("/seller");
+    await expect(page.getByRole("heading", { name: /Business location in Syria|موقع النشاط في سوريا/i })).toBeVisible();
+
+    const governoratesResponse = await page.request.get("/api/geography/governorates");
+    expect(governoratesResponse.status()).toBe(200);
+    const governorates = await governoratesResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
+    const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
+    expect(damascus).toBeTruthy();
+
+    const residence = page.getByLabel(/Business address \/ residence|عنوان النشاط أو مكان الإقامة/i);
+    await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
+    await expect(residence).toHaveValue(new RegExp(damascus!.nameAr || damascus!.nameEn));
+
+    const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
+    expect(districtsResponse.status()).toBe(200);
+    const districts = await districtsResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
+    expect(districts.items.length).toBeGreaterThan(0);
+    const district = districts.items[0];
+
+    await page.getByLabel(/District|المنطقة/i).selectOption(district.id);
+    await expect(residence).toHaveValue(new RegExp(district.nameAr || district.nameEn));
+  });
+});
+
 test.describe("seller catalog authoring", () => {
   test("seller can create a draft product and edit it from the catalog", async ({ page }) => {
     await signIn(page, sessions.seller);
