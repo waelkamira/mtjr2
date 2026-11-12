@@ -40,6 +40,9 @@ describe("admin seller payout destination listing", () => {
     expect(query.select.encryptedDetails).toBeUndefined();
     expect(query.select.accountIdentifier).toBeUndefined();
     expect(query.select.accountLast4).toBe(true);
+    expect(query.select.encryptedDetails).toBeUndefined();
+    expect(query.select.seller.select.contactEmail).toBeUndefined();
+    expect(query.select.seller.select.owner.select.id).toBeUndefined();
     expect(query.select.seller.select.owner.select.email).toBe(true);
     expect(response.headers.get("Cache-Control")).toContain("no-store");
   });
