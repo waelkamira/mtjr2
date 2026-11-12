@@ -65,7 +65,7 @@ function version(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe("financial policy resolution preview", () => {
+describe("financial policy administration and resolution preview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requirePlatformManagement.mockResolvedValue({ userId: "admin-1" });
