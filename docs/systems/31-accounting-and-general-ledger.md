@@ -5,7 +5,7 @@
 ## 1. الغرض والحدود
 - **الغرض:** Double-entry accounting for sales, fees, taxes, refunds, chargebacks and payouts.
 - **المتطلبات الأساسية:** balanced journal entries, immutable posted records, reversals instead of destructive edits, period close and audit.
-- **الحالة السابقة الموثقة:** **Schema-only.** Accounting models exist; no application delegate workflow was identified.
+- **الحالة الحالية (2026-11-12):** أساس قيود مزدوجة immutable موجود، وخدمة ترحيل داخلية، وصفحة/API قراءة فقط لدليل الحسابات وحركة الحساب. لا يوجد ربط بمدفوعات السوق أو الاستردادات أو مستحقات البائع أو التسوية والسحب.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
@@ -16,7 +16,7 @@
 
 | Route الهدف | ملف الصفحة في المصدر عند baseline |
 |---|---|
-| `/admin/finance/ledger` | غير موجود بالمسار المتوقع؛ افحص route registry لاحتمال مسار بديل |
+| `/admin/finance/ledger` | `src/app/admin/finance/ledger/page.tsx`؛ صفحة قراءة فقط مع اختيار الحساب وفلاتر العملة/النوع/الحالة وتحميل حركة الحساب على دفعات |
 > فحص الوجود من شجرة commit `a509196e643fc82937eed856b522c0cc5e4dbc2f` فقط. لا يثبت أن الصفحة تعرض أو تعمل. لا تنشئ مساراً بديلاً قبل مراجعة `PAGE_ROUTE_REGISTRY.md`.
 
 ## 3. آلية عمل النظام
@@ -46,9 +46,7 @@
 
 | API | route.ts في baseline |
 |---|---|
-| `/api/admin/finance/accounts` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/admin/finance/journals` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/admin/finance/reports` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
+| `GET /api/admin/finance/ledger` | موجود؛ يتطلب `platform:manage` مع MFA/step-up، ويعرض الحسابات وحركة الحساب المحدد فقط؛ لا توجد عمليات كتابة أو تقارير أرصدة |
 - افحص handler → Zod → permission guard → domain service → repository → Prisma → response.
 - استخرج user/seller/store/actor من الجلسة والعضوية server-side؛ لا تثق بمعرفات scope القادمة من العميل.
 - أخطاء مستقرة: 400/401/403/404/409/422/429/500 دون تسريب أسرار أو معلومات موارد خاصة.
@@ -59,14 +57,14 @@
 
 | Prisma model | وضعه في schema الحالية | القرار |
 |---|---|---|
-| `LedgerAccount` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `JournalEntry` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `JournalLine` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `SellerLedgerEntry` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `CommissionTransaction` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `Payment` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
-| `Refund` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `Payout` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `LedgerAccount` | موجود؛ حساب محدد بعملة ونوع ونطاق GLOBAL/SELLER وحالة active |
+| `JournalEntry` | موجود؛ رأس قيد immutable مع مصدر ومرجع idempotency وعملة ووقت وقوع ومرجع عكس اختياري |
+| `JournalLine` | موجود؛ debit/credit بوحدات minor مع تحقق توازن القيد وتوافق عملة الحساب |
+| `SellerLedgerEntry` | غير موجود؛ لا يُنشأ قبل اعتماد تعريف مستحق البائع وربطه بدفتر الأستاذ |
+| `CommissionTransaction` | موجود؛ snapshot عمولة ثابت لكل OrderItem بعد نجاح الدفع |
+| `Payment` | موجود؛ حالة الدفع ومرجع مزود الدفع؛ لم يُربط بترحيل دفتر الأستاذ |
+| `Refund` | موجود؛ دورة استرداد للمزود مع RefundItem allocations؛ لم يُربط بعكس محاسبي |
+| `Payout` | غير موجود؛ لا يُنشأ قبل اعتماد سياسات المستحق والتسوية والسحب |
 - قبل أي تعديل، افحص `prisma/schema.prisma` وكل migrations و`PRISMA_MODEL_USAGE_MAP.md` والخدمات والـAPI المستهلكة.
 - لا تنشئ model لكل صفحة/زر. أضف نموذجاً فقط لحقيقة دائمة/علاقة/سجل حركة لها lifecycle مستقل غير ممثل حالياً.
 - أي تغيير يجب أن يحدد owner/scope، FK، unique/index/check، onDelete، lifecycle، concurrency، transaction، migration SQL، consumers والاختبارات.
@@ -106,12 +104,13 @@
 - [ ] تحديث route registry وjourney matrix وmodel map وBUILD_LOG.
 - [ ] الحالة: Target / Present / Wired / Verified / Launch-ready.
 
-## 10. نتيجة تدقيق المصدر عند baseline
-- صفحات الهدف المطابقة اسمياً: **0/1**.
-- API المطابق اسمياً: **0/3**.
-- نماذج blueprint الموجودة حرفياً في schema: **1/8**.
-- هذه أرقام وجود أسماء/ملفات فقط وليست أدلة تشغيل أو ربط أو نجاح DB.
-- **الحالة الأولية:** Target / audit required.
+## 10. نتيجة التدقيق الحالية
+- أساس دفتر الأستاذ: موجود؛ `postJournalEntry` يتحقق من توازن القيد ووحدة العملة، ويقارن كامل محتوى القيد عند إعادة idempotency key، ويتحقق من العكس المطابق تماماً.
+- حماية قاعدة البيانات: migration `20261112130000_journal_append_only_integrity` تمنع إضافة JournalLine بعد معاملة إنشاء القيد، وتفرض التوازن والحسابات النشطة وتوافق العملة، وتحمي هوية الحساب بعد استخدامه.
+- واجهة الإدارة: صفحة `/admin/finance/ledger` و`GET /api/admin/finance/ledger` للقراءة فقط، محمية بصلاحية `platform:manage` وMFA/step-up.
+- حدود التنفيذ: لا يوجد chart-of-accounts bootstrap معتمد، ولا payment/refund posting، ولا seller payable أو balances أو holds أو reconciliation أو payout execution.
+- أدلة سابقة: رحلة قراءة دفتر الأستاذ وCI/E2E موثقة على commits محددة في هذا الملف أدناه. تغييرات hardening الأحدث يجب إعادة التحقق منها على HEAD قبل اعتبارها ناجحة.
+- **الحالة:** Internal posting foundation + read-only admin inspection / financial lifecycle incomplete.
 
 ## 11. المراجع
 `COMPLETE_PLATFORM_SYSTEMS_BLUEPRINT.md` · `GLOBAL_PLATFORM_PAGE_AND_CONTROL_SPEC.md` · `PLATFORM_PAGE_SYSTEM_MAP.md` · `PRISMA_MODEL_USAGE_MAP.md` · `PAGE_ROUTE_REGISTRY.md` · `END_TO_END_JOURNEY_MATRIX.md` · `END_TO_END_JOURNEY_STANDARD.md`
