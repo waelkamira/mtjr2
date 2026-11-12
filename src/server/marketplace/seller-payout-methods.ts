@@ -126,7 +126,11 @@ export async function createSellerPayoutMethod(input: unknown) {
       isDefault: makeDefault
     };
     const method = duplicate
-      ? await tx.sellerPayoutMethod.update({ where: { id: duplicate.id }, data: methodData, select: safeSelect })
+      ? await tx.sellerPayoutMethod.update({
+          where: { id: duplicate.id },
+          data: { ...methodData, submissionVersion: { increment: 1 } },
+          select: safeSelect
+        })
       : await tx.sellerPayoutMethod.create({ data: { sellerId: seller.id, ...methodData }, select: safeSelect });
     await tx.auditLog.create({
       data: {
@@ -208,7 +212,7 @@ const payoutVerificationSchema = z.object({
   decision: z.enum(["VERIFIED", "REJECTED"]),
   evidenceReference: z.string().trim().min(6).max(180),
   reason: z.string().trim().min(10).max(500),
-  expectedUpdatedAt: z.string().datetime().transform((value) => new Date(value))
+  expectedSubmissionVersion: z.number().int().positive().max(2147483647)
 }).strict();
 
 export class SellerPayoutVerificationConflictError extends Error {
@@ -232,16 +236,15 @@ export async function reviewSellerPayoutMethod(methodIdInput: string, input: unk
       where: { id: methodId },
       select: {
         id: true, sellerId: true, accountLast4: true, currencyCode: true,
-        status: true, isDefault: true, updatedAt: true, seller: { select: { ownerId: true } }
+        status: true, isDefault: true, submissionVersion: true, seller: { select: { ownerId: true } }
       }
     });
     if (!method || method.status === SellerPayoutMethodStatus.DISABLED) throw new SellerPayoutMethodNotFoundError();
     if (method.seller.ownerId === actor.userId) throw new SellerPayoutSelfVerificationError();
     if (method.status !== SellerPayoutMethodStatus.PENDING_VERIFICATION) throw new SellerPayoutVerificationConflictError();
-    // The admin must attest to the exact submission snapshot they inspected.
-    // updatedAt changes on disable/re-registration, so stale evidence cannot
-    // approve a changed destination even when the same database ID is reused.
-    if (method.updatedAt.getTime() !== decision.expectedUpdatedAt.getTime()) {
+    // Bind the admin decision to the immutable submission generation they inspected.
+    // Re-registering a disabled destination reuses its row ID but increments this version.
+    if (method.submissionVersion !== decision.expectedSubmissionVersion) {
       throw new SellerPayoutVerificationConflictError();
     }
 
@@ -249,7 +252,7 @@ export async function reviewSellerPayoutMethod(methodIdInput: string, input: unk
       where: {
         id: method.id,
         status: SellerPayoutMethodStatus.PENDING_VERIFICATION,
-        updatedAt: decision.expectedUpdatedAt
+        submissionVersion: decision.expectedSubmissionVersion
       },
       data: {
         status: decision.decision,
