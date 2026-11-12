@@ -44,7 +44,7 @@ Every published rule must carry:
 - Stable rule ID and immutable version.
 - Domain and rule key.
 - Jurisdiction: country code and optional subdivision/region.
-- Optional market, currency, product-class, seller, and payment-provider scope.
+- Optional market, currency, product-class, seller, category, and payment-provider scope.
 - Effective-from and effective-until timestamps, with an explicit timezone convention.
 - Value and typed unit (basis points, minor units, calendar days, business days, currency code, boolean, or enumerated value).
 - Mandatory/legal versus contractual versus platform classification.
@@ -211,3 +211,11 @@ metadata instead of replacing the reviewer's notes.
 These database constraints are part of the pending migration and have not been applied
 or exercised against PostgreSQL in this session. Verify them with the migration and
 transactional integration suite before considering the workflow production-ready.
+
+## 17. Category-scope resolver update — 2026-11-12
+
+The pure resolver now accepts `categoryId` in both rule and evaluation context. Category scope participates in exact matching and specificity ranking, and an applicable category rule reports `CATEGORY` in `matchedScope`. A category-scoped rule does not match when the evaluation context has no category.
+
+The administrative preview context schema and Prisma-to-resolver adapter also pass the persisted `categoryId` through to evaluation. Focused tests cover category-over-country specificity and missing-category fail-closed behavior.
+
+This is a resolver/preview correctness improvement only. It does not establish seller payable, refund allocation, tax treatment, or any payout policy. The updated resolver, preview adapter, and tests require exact-HEAD CI/runtime validation before operational reliance.
