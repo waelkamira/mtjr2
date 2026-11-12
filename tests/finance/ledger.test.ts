@@ -4,15 +4,22 @@ const mocks = vi.hoisted(() => ({
   journalFindUnique: vi.fn(),
   journalCreate: vi.fn(),
   accountFindMany: vi.fn(),
+  ledgerAccountFindMany: vi.fn(),
+  ledgerAccountFindUnique: vi.fn(),
+  journalLineFindMany: vi.fn(),
   transaction: vi.fn()
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { $transaction: mocks.transaction }
+  prisma: {
+    $transaction: mocks.transaction,
+    ledgerAccount: { findMany: mocks.ledgerAccountFindMany, findUnique: mocks.ledgerAccountFindUnique },
+    journalLine: { findMany: mocks.journalLineFindMany }
+  }
 }));
 
-import { postJournalEntry } from "@/server/finance/ledger";
+import { listLedgerAccounts, postJournalEntry } from "@/server/finance/ledger";
 
 const occurredAt = new Date("2026-11-12T10:00:00.000Z");
 const baseInput = {
@@ -55,6 +62,7 @@ describe("double-entry journal posting", () => {
       postedAt: new Date("2026-11-12T10:02:00.000Z")
     });
     mocks.accountFindMany.mockResolvedValue([{ id: "cash-eur" }, { id: "sales-eur" }]);
+    mocks.ledgerAccountFindMany.mockResolvedValue([]);
     mocks.transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({
       journalEntry: {
         findUnique: mocks.journalFindUnique,
@@ -151,5 +159,46 @@ describe("double-entry journal posting", () => {
     })).resolves.toMatchObject({ id: "journal-new", alreadyPosted: false });
 
     expect(mocks.journalCreate).toHaveBeenCalled();
+  });
+});
+
+describe("read-only ledger account listing", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.ledgerAccountFindMany.mockResolvedValue([
+      { id: "cash-usd", code: "1000", name: "Cash", accountType: "ASSET", scopeType: "GLOBAL", scopeId: "GLOBAL", currencyCode: "USD", isActive: true, currency: { minorUnit: 2 } }
+    ]);
+  });
+
+  it("applies validated currency, account type and active filters", async () => {
+    const result = await listLedgerAccounts({
+      query: "cash",
+      currencyCode: "usd",
+      accountType: "ASSET",
+      isActive: true,
+      take: 25
+    });
+
+    expect(result.items).toHaveLength(1);
+    expect(mocks.ledgerAccountFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        currencyCode: "USD",
+        accountType: "ASSET",
+        isActive: true,
+        OR: [
+          { code: { contains: "cash", mode: "insensitive" } },
+          { name: { contains: "cash", mode: "insensitive" } },
+          { scopeId: { contains: "cash", mode: "insensitive" } }
+        ]
+      }),
+      take: 26,
+      orderBy: [{ currencyCode: "asc" }, { code: "asc" }, { id: "asc" }]
+    }));
+  });
+
+  it("rejects invalid currency and unbounded page sizes before querying", async () => {
+    await expect(listLedgerAccounts({ currencyCode: "US" })).rejects.toThrow();
+    await expect(listLedgerAccounts({ take: 101 })).rejects.toThrow();
+    expect(mocks.ledgerAccountFindMany).not.toHaveBeenCalled();
   });
 });
