@@ -1,4 +1,5 @@
-import { Prisma, SellerPayoutMethodStatus } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { AuthenticationRequiredError, PermissionDeniedError, requirePlatformManagement } from "@/server/identity/permission-guard";
 import { MfaEnrollmentRequiredError, MfaVerificationRequiredError, StepUpRequiredError } from "@/server/identity/access-errors";
@@ -6,18 +7,22 @@ import { MfaEnrollmentRequiredError, MfaVerificationRequiredError, StepUpRequire
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const querySchema = z.object({
+  status: z.enum(["PENDING_VERIFICATION", "VERIFIED", "REJECTED"]).default("PENDING_VERIFICATION"),
+  page: z.coerce.number().int().finite().min(1).max(1000).default(1)
+}).strict();
+
 export async function GET(request: Request): Promise<Response> {
   try {
     await requirePlatformManagement();
     const url = new URL(request.url);
-    const requestedStatus = url.searchParams.get("status") ?? "PENDING_VERIFICATION";
-    const allowed = ["PENDING_VERIFICATION", "VERIFIED", "REJECTED"];
-    if (!allowed.includes(requestedStatus)) {
-      return Response.json({ error: "Unsupported bank destination status." }, { status: 400, headers: { "Cache-Control": "private, no-store" } });
+    const parsedQuery = querySchema.safeParse(Object.fromEntries(url.searchParams.entries()));
+    if (!parsedQuery.success) {
+      return Response.json({ error: "Unsupported bank destination status or page." }, { status: 400, headers: { "Cache-Control": "private, no-store" } });
     }
-    const page = Math.max(1, Math.min(1000, Number(url.searchParams.get("page") ?? "1") || 1));
+    const { status, page } = parsedQuery.data;
     const take = 50;
-    const where = { status: requestedStatus as SellerPayoutMethodStatus };
+    const where = { status };
     const [items, total] = await prisma.$transaction([
       prisma.sellerPayoutMethod.findMany({
         where,
