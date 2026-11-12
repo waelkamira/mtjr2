@@ -1,7 +1,6 @@
 "use client";
 
 import { StatusBadge } from "@/components/status-badge";
-import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import SyriaLocationPicker from "@/components/maps/syria-location-picker";
