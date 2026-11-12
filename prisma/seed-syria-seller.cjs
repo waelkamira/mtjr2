@@ -648,8 +648,8 @@ async function seedSellerCommunications(owner, store, market, usd, products, cus
   // Support tickets are customer support examples, not real incidents.
   const supportDefinitions = [
     { status: "OPEN", priority: "HIGH", category: "ORDER", subject: "تأخر تحديث حالة طلب تجريبي", customer: customers[3] },
-    { status: "IN_PROGRESS", priority: "NORMAL", category: "PRODUCT", subject: "استفسار حول مواصفات منتج", customer: customers[4] },
-    { status: "WAITING_CUSTOMER", priority: "LOW", category: "OTHER", subject: "طلب توضيح بيانات التوصيل", customer: customers[5] },
+    { status: "IN_PROGRESS", priority: "NORMAL", category: "DELIVERY", subject: "استفسار حول مواصفات منتج", customer: customers[4] },
+    { status: "WAITING_CUSTOMER", priority: "LOW", category: "GENERAL", subject: "طلب توضيح بيانات التوصيل", customer: customers[5] },
   ];
   for (const [index, definition] of supportDefinitions.entries()) {
     const ticketNumber = "DEMO-SYR-SUP-" + String(index + 1).padStart(4, "0");
