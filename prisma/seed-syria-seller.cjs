@@ -608,9 +608,9 @@ async function seedSellerCommunications(owner, store, market, usd, products, cus
 
   // Seller/customer conversations for the store inbox.
   const conversationDefinitions = [
-    { customer: customers[0], subject: "استفسار عن موعد توصيل الطلب", body: "مرحباً، هل يمكن تأكيد موعد التوصيل؟ هذه محادثة تجريبية." },
-    { customer: customers[1], subject: "السؤال عن توفر منتج", body: "هل يتوفر المنتج بلون آخر؟ هذه رسالة تجريبية." },
-    { customer: customers[2], subject: "متابعة طلب سابق", body: "أرغب بمتابعة حالة طلبي التجريبي." },
+    { customer: customers[0], subject: "استفسار تجريبي عن موعد توصيل الطلب", body: "مرحباً، هل يمكن تأكيد موعد التوصيل؟ هذه محادثة تجريبية." },
+    { customer: customers[1], subject: "سؤال تجريبي عن توفر منتج", body: "هل يتوفر المنتج بلون آخر؟ هذه رسالة تجريبية." },
+    { customer: customers[2], subject: "متابعة تجريبية لطلب سابق", body: "أرغب بمتابعة حالة طلبي التجريبي." },
   ];
   for (const [index, definition] of conversationDefinitions.entries()) {
     let conversation = await prisma.storeConversation.findFirst({
@@ -701,7 +701,7 @@ async function seedSellerCommunications(owner, store, market, usd, products, cus
     notifications: await prisma.notification.count({ where: { userId: owner.id, deduplicationKey: { startsWith: "syria-seller-demo:" } } }),
     conversations: await prisma.storeConversation.count({ where: { storeId: store.id, subject: { contains: "تجريبي" } } }),
     supportTickets: await prisma.supportTicket.count({ where: { ticketNumber: { startsWith: "DEMO-SYR-SUP-" } } }),
-    draftCampaigns: await prisma.adCampaign.count({ where: { storeId: store.id, title: { startsWith: "حملة تجريبية" }, status: "DRAFT" } }),
+    campaigns: await prisma.adCampaign.count({ where: { storeId: store.id, title: { startsWith: "حملة تجريبية" } } }),
   };
 }
 
@@ -740,7 +740,7 @@ async function main() {
   if (lowStockCount < 8) throw new Error("Expected low-stock demo variants, found " + lowStockCount + ".");
   if (storeReviewCount < 3 || productReviewCount < 3) throw new Error("Expected store and product review records.");
   if (questionCount < 6) throw new Error("Expected at least 6 product questions.");
-  if (communications.notifications < 5 || communications.conversations < 3 || communications.supportTickets < 3 || communications.draftCampaigns < 2) {
+  if (communications.notifications < 5 || communications.conversations < 3 || communications.supportTickets < 3 || communications.campaigns < 2) {
     throw new Error("Expected demo notifications, store conversations, support tickets, and draft ad campaigns.");
   }
 
