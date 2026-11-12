@@ -399,7 +399,7 @@ export default function AdminDashboardPage() {
             <MetricBarChart variant="donut" title="Order fulfillment pipeline" rows={[
               { label: "Awaiting payment", value: dashboard.metrics.pendingOrders, color: "bg-yellow-500" },
               { label: "Processing", value: dashboard.metrics.processingOrders, color: "bg-blue-500" },
-              { label: "Completed", value: dashboard.metrics.completedOrders, color: "bg-green-500" }
+              { label: "Completed", value: dashboard.metrics.completedOrders, color: "bg-emerald-500" }
             ]} />
             <MetricBarChart variant="donut" title="Moderation workload" rows={[
               { label: "Products awaiting approval", value: dashboard.metrics.pendingProducts, color: "bg-amber-500" },
