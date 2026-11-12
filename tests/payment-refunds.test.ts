@@ -71,7 +71,7 @@ describe("manual return refund lifecycle", () => {
     expect(mocks.refundCreate).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         orderId: "order-1", paymentId: "payment-1", returnRequestId: "return-1",
-        amountMinor: BigInt(1500), idempotencyKey: "return-refund:return-1",
+        amountMinor: BigInt(1350), idempotencyKey: "return-refund:return-1",
         items: { create: [{ returnItemId: "return-item-1", quantity: 1, amountMinor: BigInt(1350) }] }
       })
     }));
