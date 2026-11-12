@@ -79,10 +79,17 @@
   --shadow-clay-floating: var(--shadow-floating);
   --shadow-clay-glow: var(--shadow-glow);
 
+  /* Every standard Tailwind rounded utility resolves to the same md radius. */
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-control);
+  --radius-xl: var(--radius-control);
+  --radius-2xl: var(--radius-control);
+  --radius-3xl: var(--radius-control);
   --radius-clay-control: var(--radius-control);
-  --radius-clay-card: var(--radius-card);
-  --radius-clay-panel: var(--radius-panel);
-  --radius-clay-feature: var(--radius-feature);
+  --radius-clay-card: var(--radius-control);
+  --radius-clay-panel: var(--radius-control);
+  --radius-clay-feature: var(--radius-control);
 
   --font-sans: var(--font-body);
   --font-display: var(--font-heading);
@@ -223,10 +230,11 @@
   --type-display-tracking: -0.035em;
 
   /* Shape, spacing, and dashboard layout */
+  /* One shared corner radius for controls, cards, panels, menus and surfaces. */
   --radius-control: 0.5rem;
-  --radius-card: 0rem;
-  --radius-panel: 1.875rem;
-  --radius-feature: 2.25rem;
+  --radius-card: var(--radius-control);
+  --radius-panel: var(--radius-control);
+  --radius-feature: var(--radius-control);
   --content-max: 1440px;
   --page-gutter: clamp(1rem, 3vw, 2.5rem);
   --dashboard-sidebar-width: 13.75rem;
@@ -252,7 +260,7 @@
   --shadow-glow: 0 8px 22px rgb(255 140 28 / 16%);
 
   /* Standard icon tile shape and sizes; icon glyphs remain supplied by components */
-  --icon-tile-radius: 0.875rem;
+  --icon-tile-radius: var(--radius-control);
   --icon-tile-size-sm: 2.25rem;
   --icon-tile-size-md: 3rem;
   --icon-tile-size-lg: 3.5rem;
