@@ -78,7 +78,7 @@ describe("admin general ledger read API", () => {
       nextCursor: null
     });
 
-    const response = await GET(new Request("https://matjar.test/api/admin/finance/ledger?currencyCode=USD&accountType=ASSET&active=true&accountId=account-1"));
+    const response = await GET(new Request("https://matjar.test/api/admin/finance/ledger?currencyCode=USD&accountType=ASSET&active=true&accountId=account-1&activityCursor=journal-line-0"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -91,7 +91,7 @@ describe("admin general ledger read API", () => {
       take: 50,
       cursor: undefined
     });
-    expect(mocks.listLedgerAccountEntries).toHaveBeenCalledWith({ accountId: "account-1", take: 50 });
+    expect(mocks.listLedgerAccountEntries).toHaveBeenCalledWith({ accountId: "account-1", take: 50, cursor: "journal-line-0" });
     expect(body.activity.account.id).toBe("account-1");
   });
 });
