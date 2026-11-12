@@ -23,6 +23,7 @@ const querySchema = z.object({
   active: z.enum(["true", "false", "all"]).default("all"),
   accountId: z.string().trim().min(1).max(128).optional(),
   cursor: z.string().trim().min(1).max(128).optional(),
+  activityCursor: z.string().trim().min(1).max(128).optional(),
   take: z.coerce.number().int().min(1).max(100).default(50)
 }).strict();
 
@@ -43,7 +44,7 @@ export async function GET(request: Request): Promise<Response> {
       cursor: filters.cursor
     });
     const activity = filters.accountId
-      ? await listLedgerAccountEntries({ accountId: filters.accountId, take: filters.take })
+      ? await listLedgerAccountEntries({ accountId: filters.accountId, take: filters.take, cursor: filters.activityCursor })
       : null;
     return Response.json({ accounts, activity }, {
       headers: { "Cache-Control": "private, no-store" }
