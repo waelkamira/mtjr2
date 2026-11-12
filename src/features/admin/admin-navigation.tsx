@@ -178,10 +178,10 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-stone-900 truncate">لوحة تحكم آمنة</p>
-              <p className="text-[10px] text-stone-500 truncate">صلاحيات محدودة</p>
+              <p className="text-[10px] text-stone-600 truncate">صلاحيات محدودة</p>
             </div>
           </div>
-          <p className="text-[10px] leading-4 text-stone-500">
+          <p className="text-[10px] leading-4 text-stone-600">
             {translate(
               locale,
               "Navigation includes implemented admin areas only. Additional modules will appear as their workflows are built.",

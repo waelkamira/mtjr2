@@ -84,7 +84,7 @@ export function ColumnChart({
             })}
             <line x1="30" x2={width - 4} y1="150" y2="150" stroke="#64748b" />
           </svg>
-          <div className="mt-1 flex justify-between gap-2 text-[10px] text-slate-500">
+          <div className="mt-1 flex justify-between gap-2 text-[10px] text-slate-400">
             <span>{data[0]?.label}</span><span>{data.at(-1)?.label}</span>
           </div>
         </div>
@@ -163,7 +163,7 @@ export function LineAreaChart({
               </g>
             ))}
           </svg>
-          <div className="mt-1 flex justify-between text-[10px] text-slate-500"><span>{data[0]?.label}</span><span>{data.at(-1)?.label}</span></div>
+          <div className="mt-1 flex justify-between text-[10px] text-slate-400"><span>{data[0]?.label}</span><span>{data.at(-1)?.label}</span></div>
         </div>
       ) : <ChartEmpty label={emptyLabel} />}
     </ChartCard>
@@ -366,5 +366,5 @@ export function RadarChart({
 }
 
 function ChartEmpty({ label = "No data available" }: { label?: string }) {
-  return <p className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[.025] text-sm text-slate-500">{label}</p>;
+  return <p className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[.025] text-sm text-slate-400">{label}</p>;
 }
