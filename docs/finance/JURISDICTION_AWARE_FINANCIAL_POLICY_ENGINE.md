@@ -137,3 +137,31 @@ or runtime tests have been completed. The resolver remains disconnected from all
 money-moving paths. New records default to `PENDING_REVIEW`; this persistence layer
 does not publish or activate financial policy by itself.
 
+## 12. Administrative workflow checkpoint
+
+Administrative persistence APIs are now implemented:
+
+- `GET /api/admin/financial-policies` lists version records with key, domain,
+  approval-status filters, and cursor pagination.
+- `POST /api/admin/financial-policies` creates a new immutable-content version in
+  `PENDING_REVIEW`. It validates country, market-country consistency, enabled
+  market currency, seller/category references, effective dates, and scope shape.
+- `PATCH /api/admin/financial-policies/[versionId]` supports `REVIEW`,
+  `APPROVE`, and `REJECT` transitions.
+- All endpoints use the existing `platform:manage` permission guard. Mutations
+  also pass the platform's identity mutation/CSRF request validation.
+- Each create/review/approve/reject action writes an `AuditLog` event in the same
+  database transaction as the policy change.
+- Authors cannot review, approve, or reject their own versions. Legal approval
+  requires a different reviewer and a separate approver. A version can be reviewed
+  only once; a new content change requires a new version.
+- Rejections have their own `rejectedAt` and `rejectedById` metadata. Database
+  constraints require complete approval/rejection evidence and country scope for
+  legal rules.
+
+**Remaining validation:** migration application, Prisma schema validation,
+generated-client/typecheck, route tests, and transactional integration tests have
+not been run in this session. No admin UI has been added yet. The workflow remains
+disconnected from checkout, refunds, commission calculation, ledger posting, and
+payout execution; no money movement is enabled by these endpoints.
+
