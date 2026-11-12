@@ -12,7 +12,11 @@ describe("ledger PostgreSQL integrity", () => {
   });
 
   it("rejects journal-line inserts after the original posting transaction commits", async () => {
-    await prisma.currency.upsert({\n      where: { code: currencyCode },\n      update: {},\n      create: { code: currencyCode, name: "Euro", symbol: "€" }\n    });
+    await prisma.currency.upsert({
+      where: { code: currencyCode },
+      update: {},
+      create: { code: currencyCode, name: "Euro", symbol: "€" }
+    });
     const debitAccount = await prisma.ledgerAccount.create({
       data: {
         code: `TEST-CASH-${suffix}`,
