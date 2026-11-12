@@ -13,6 +13,7 @@ type LedgerAccount = {
   scopeId: string;
   currencyCode: string;
   isActive: boolean;
+  currency: { minorUnit: number };
 };
 type LedgerLine = {
   id: string;
@@ -40,7 +41,7 @@ type LedgerResponse = {
 const accountTypes = ["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"] as const;
 const fieldClass = "min-w-0 rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--color-ink-950)] shadow-sm outline-none focus:border-[var(--color-orange-500)] focus:ring-2 focus:ring-orange-100";
 
-function minorAmount(value: string, currency: string, minorUnit = 2) {
+function minorAmount(value: string, currency: string, minorUnit: number) {
   const amount = BigInt(value);
   const divisor = 10n ** BigInt(minorUnit);
   const whole = amount / divisor;
@@ -173,8 +174,8 @@ export default function AdminLedgerPage() {
                 <tbody>{activity.items.map((line) => <tr key={line.id} className="border-b border-stone-100 align-top">
                   <td className="px-2 py-3"><span className="block font-medium text-[var(--color-ink-950)]">{line.journalEntry.id.slice(0, 12)}</span><span className="mt-1 block text-xs text-[var(--muted)]">{dateLabel(line.journalEntry.postedAt, locale)}</span><span className="mt-1 block text-[11px] text-[var(--muted)]">{line.journalEntry.sourceType} · {line.journalEntry.sourceId}</span></td>
                   <td className="px-2 py-3"><span className="block text-[var(--color-ink-900)]">{line.journalEntry.description}</span>{line.memo ? <span className="mt-1 block text-xs text-[var(--muted)]">{line.memo}</span> : null}{line.journalEntry.reversalOfId ? <span className="mt-1 block text-xs text-amber-800">{translate(locale, "Reversal", "قيد عكسي")}</span> : null}</td>
-                  <td className="whitespace-nowrap px-2 py-3 text-end tabular-nums text-[var(--color-ink-950)]">{line.debitMinor === "0" ? "—" : minorAmount(line.debitMinor, line.journalEntry.currencyCode)}</td>
-                  <td className="whitespace-nowrap px-2 py-3 text-end tabular-nums text-[var(--color-ink-950)]">{line.creditMinor === "0" ? "—" : minorAmount(line.creditMinor, line.journalEntry.currencyCode)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 text-end tabular-nums text-[var(--color-ink-950)]">{line.debitMinor === "0" ? "—" : minorAmount(line.debitMinor, line.journalEntry.currencyCode, activity.account.currency.minorUnit)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 text-end tabular-nums text-[var(--color-ink-950)]">{line.creditMinor === "0" ? "—" : minorAmount(line.creditMinor, line.journalEntry.currencyCode, activity.account.currency.minorUnit)}</td>
                 </tr>)}</tbody>
               </table>
             </div> : null}
