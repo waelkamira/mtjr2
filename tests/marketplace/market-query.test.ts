@@ -24,40 +24,41 @@ const market = (code: string, defaultCode: string, currencyCodes: string[]) => (
 describe("active market reference queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.marketFindMany.mockResolvedValue([market("NL-EU", "EUR", ["EUR", "USD"]), market("US-NA", "USD", ["USD"])]);
+    mocks.marketFindMany.mockResolvedValue([market("SY-SYR", "SYP", ["SYP", "USD"])]);
     mocks.marketFindFirst.mockResolvedValue({
-      id: "market-1", code: "NL-EU", name: "Netherlands",
-      defaultCurrency: { code: "EUR" },
-      currencies: [{ currency: { code: "EUR" } }]
+      id: "market-syria", code: "SY-SYR", name: "Syria",
+      defaultCurrency: { code: "SYP" },
+      currencies: [{ currency: { code: "SYP" } }, { currency: { code: "USD" } }]
     });
   });
 
-  it("lists only markets where the default currency is enabled", async () => {
-    mocks.marketFindMany.mockResolvedValue([market("NL-EU", "EUR", ["EUR"]), market("GB-UK", "GBP", ["EUR"])]);
+  it("lists Syria as the only launch market", async () => {
     const rows = await listActiveMarkets();
     expect(rows).toHaveLength(1);
-    expect(rows[0].code).toBe("NL-EU");
+    expect(rows[0].code).toBe("SY-SYR");
     expect(mocks.marketFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ status: "ACTIVE" }), take: 200
+      where: expect.objectContaining({ code: "SY-SYR", status: "ACTIVE" }), take: 200
     }));
   });
 
-  it("deduplicates currencies and countries across active markets", async () => {
+  it("exposes only Syrian market currencies and country", async () => {
     expect(await listActiveMarketCurrencies()).toEqual([
-      { code: "EUR", name: "EUR", symbol: null, minorUnit: 2 },
+      { code: "SYP", name: "SYP", symbol: null, minorUnit: 2 },
       { code: "USD", name: "USD", symbol: null, minorUnit: 2 }
     ]);
-    expect(await listActiveMarketCountries()).toHaveLength(2);
+    expect(await listActiveMarketCountries()).toHaveLength(1);
   });
 
-  it("normalizes market code and refuses markets with disabled default currency", async () => {
-    await getActiveMarketByCode("nl-eu");
+  it("allows only Syria and refuses a disabled default currency", async () => {
+    expect(await getActiveMarketByCode("nl-eu")).toBeNull();
+    expect(mocks.marketFindFirst).not.toHaveBeenCalled();
+    await getActiveMarketByCode("sy-syr");
     expect(mocks.marketFindFirst).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ code: "NL-EU", status: "ACTIVE" })
+      where: expect.objectContaining({ code: "SY-SYR", status: "ACTIVE" })
     }));
     mocks.marketFindFirst.mockResolvedValue({
-      defaultCurrency: { code: "EUR" }, currencies: [{ currency: { code: "USD" } }]
+      defaultCurrency: { code: "SYP" }, currencies: [{ currency: { code: "USD" } }]
     });
-    expect(await getActiveMarketByCode("NL-EU")).toBeNull();
+    expect(await getActiveMarketByCode("SY-SYR")).toBeNull();
   });
 });
