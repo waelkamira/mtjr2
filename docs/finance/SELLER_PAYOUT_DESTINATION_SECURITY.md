@@ -2,9 +2,9 @@
 
 ## Current scope
 
-Seller owners can save a bank payout destination for future settlement. The current implementation is a secure destination registry only; it does not calculate seller payable balances, initiate transfers, or claim that a bank account is verified.
+Seller owners can save a bank payout destination for future settlement. The implementation is a secure destination registry plus a privileged manual review queue; it does not calculate seller payable balances or initiate transfers.
 
-New records are always created as `PENDING_VERIFICATION`. No seller-facing or public API can set `VERIFIED`. A future verification workflow must be authorized, audited, and backed by a bank/provider ownership check before any payout execution is connected.
+New records are always created as `PENDING_VERIFICATION`. No seller-facing or public API can set `VERIFIED`. Platform administrators can record an out-of-band ownership check with an evidence reference and reason; this is an audited human attestation, not an automated bank/provider verification. Payout execution remains disabled until independent ownership checks and the full settlement controls below are implemented.
 
 ## Data protection
 
