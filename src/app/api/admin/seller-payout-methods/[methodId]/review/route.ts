@@ -24,7 +24,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
     if (error instanceof PermissionDeniedError) return Response.json({ error: "Platform management permission required." }, { status: 403 });
     if (error instanceof SellerPayoutMethodNotFoundError) return Response.json({ error: "Bank destination not found." }, { status: 404 });
     if (error instanceof SellerPayoutSelfVerificationError) return Response.json({ error: "You cannot verify your own seller bank destination." }, { status: 403 });
-    if (error instanceof SellerPayoutVerificationConflictError) return Response.json({ error: "This bank destination has already been reviewed." }, { status: 409 });
+    if (error instanceof SellerPayoutVerificationConflictError) return Response.json({ error: "This bank destination changed or was already reviewed. Refresh the queue and re-check the latest submission before deciding." }, { status: 409 });
     if (error instanceof z.ZodError || error instanceof SyntaxError) return Response.json({ error: "Provide a valid review decision, evidence reference, and reason." }, { status: 400 });
     return Response.json({ error: "Unable to review seller bank destination." }, { status: 500 });
   }
