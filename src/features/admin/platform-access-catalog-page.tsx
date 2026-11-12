@@ -54,7 +54,7 @@ export default function PlatformAccessCatalogPage() {
   ), [catalog, normalizedQuery, locale]);
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
+    <main aria-busy={loading} className="min-h-screen bg-[var(--background)] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <Link href="/admin/control-panel" className="text-sm font-medium text-[var(--color-copper-600)] hover:underline">{translate(locale, "← Platform control panel", "← لوحة التحكم الرئيسية للمنصة")}</Link>
         <header className="mt-4">
@@ -98,7 +98,7 @@ export default function PlatformAccessCatalogPage() {
                 {filteredPermissions.length === 0 ? <p className="col-span-full bg-white p-5 text-center text-sm text-[var(--muted)]">{translate(locale, "No permissions match this search.", "لا توجد صلاحيات تطابق البحث.")}</p> : filteredPermissions.map((permission) => <article key={permission.key} className="bg-white p-4"><code className="text-xs font-semibold text-[var(--color-forest-950)]">{permission.key}</code><p className="mt-1 text-xs text-[var(--muted)]">{permission.description || translate(locale, "No description", "لا يوجد وصف")}</p><p className="mt-2 text-[11px] text-[var(--muted)]">{translate(locale, "Used by", "مستخدمة في")} {permission.roleCount} {translate(locale, "roles", "أدوار")}</p></article>)}
               </div>
             </section>
-            <p className="mt-4 text-xs text-[var(--muted)]">{translate(locale, "Snapshot generated", "تم إنشاء اللقطة")} {new Date(catalog.generatedAt).toLocaleString()}. {translate(locale, "This page is read-only; role mutations are intentionally unavailable here.", "هذه الصفحة للقراءة فقط؛ ولا تتوفر فيها تغييرات الأدوار.")}</p>
+            <p className="mt-4 text-xs text-[var(--muted)]">{translate(locale, "Snapshot generated", "تم إنشاء اللقطة")} {new Date(catalog.generatedAt).toLocaleString(locale)}. {translate(locale, "This page is read-only; role mutations are intentionally unavailable here.", "هذه الصفحة للقراءة فقط؛ ولا تتوفر فيها تغييرات الأدوار.")}</p>
           </>
         )}
       </div>
