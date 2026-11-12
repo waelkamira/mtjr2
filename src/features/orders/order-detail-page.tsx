@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -37,18 +38,6 @@ function money(value: string, code: string, minorUnit: number) {
 export default function OrderDetailPage({ orderId, returnedFromPayment }: { orderId: string; returnedFromPayment: boolean }) {
   const { locale } = useLocale();
   const t = useCallback((english: string, arabic: string) => translate(locale, english, arabic), [locale]);
-  const statusLabel = (status: string) => {
-    const labels: Record<string, [string, string]> = {
-      PENDING_PAYMENT: ["Pending payment", "بانتظار الدفع"], PAID: ["Paid", "مدفوع"],
-      PROCESSING: ["Processing", "قيد التجهيز"], READY_TO_SHIP: ["Ready to ship", "جاهز للشحن"],
-      SHIPPED: ["Shipped", "تم الشحن"], IN_TRANSIT: ["In transit", "في الطريق"],
-      OUT_FOR_DELIVERY: ["Out for delivery", "خرج للتوصيل"], DELIVERED: ["Delivered", "تم التوصيل"],
-      COMPLETED: ["Completed", "مكتمل"], CANCELLED: ["Canceled", "ملغى"],
-      EXCEPTION: ["Exception", "استثناء"], FAILED: ["Failed", "فشل"], REFUNDED: ["Refunded", "تم رد المبلغ"]
-    };
-    const [english, arabic] = labels[status] ?? [status.replaceAll("_", " "), status.replaceAll("_", " ")];
-    return t(english, arabic);
-  };
   const router = useRouter();
    const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,7 +143,7 @@ export default function OrderDetailPage({ orderId, returnedFromPayment }: { orde
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{order.status === "CANCELLED" ? t("This order was canceled", "تم إلغاء هذا الطلب") : order.status === "COMPLETED" ? t("Your order is complete", "اكتمل طلبك") : t("Thank you for your order", "شكرًا لطلبك")}</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">{t("Order", "الطلب")} {order.orderNumber} · {new Date(order.placedAt).toLocaleString(locale)}</p>
         <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-6">
-          <div className="flex flex-wrap justify-between gap-3"><div><p className="text-sm text-[var(--muted)]">{t("Order status", "حالة الطلب")}</p><p className="mt-1 font-semibold">{statusLabel(order.status)}</p></div><div className="text-right"><p className="text-sm text-[var(--muted)]">{t("Total", "الإجمالي")}</p><p className="mt-1 text-2xl font-semibold tabular-nums">{money(order.totalMinor, order.currencyCode, order.currency.minorUnit)}</p></div></div>
+          <div className="flex flex-wrap justify-between gap-3"><div><p className="text-sm text-[var(--muted)]">{t("Order status", "حالة الطلب")}</p><p className="mt-1 font-semibold"><StatusBadge locale={locale} status={order.status} /></p></div><div className="text-right"><p className="text-sm text-[var(--muted)]">{t("Total", "الإجمالي")}</p><p className="mt-1 text-2xl font-semibold tabular-nums">{money(order.totalMinor, order.currencyCode, order.currency.minorUnit)}</p></div></div>
           <div className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm"><div className="flex justify-between"><span className="text-[var(--muted)]">{t("Items", "المنتجات")}</span><strong>{money(order.subtotalMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>{BigInt(order.discountMinor) > BigInt(0) && <div className="flex justify-between"><span className="text-[var(--muted)]">{t("Discount", "الخصم")}{order.couponCode ? ` · ${order.couponCode}` : ""}</span><strong>−{money(order.discountMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>}<div className="flex justify-between"><span className="text-[var(--muted)]">{t("Shipping", "الشحن")}</span><strong>{money(order.shippingMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><div className="flex justify-between"><span className="text-[var(--muted)]">{t("Tax", "الضريبة")} · {order.tax.ruleName} ({(order.tax.rateBasisPoints / 100).toFixed(2)}%)</span><strong>{money(order.taxMinor, order.currencyCode, order.currency.minorUnit)}</strong></div><p className="text-xs text-[var(--muted)]">{order.tax.inclusive ? t("Included in listed prices", "مشمولة في الأسعار المعروضة") : t("Added to subtotal", "تُضاف إلى المجموع الفرعي")}{order.tax.destinationRegion ? ` · ${order.tax.destinationRegion}` : ""}</p></div>
           <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-3 text-sm leading-6 text-[var(--muted)]">{order.status === "PENDING_PAYMENT" ? t("Your order has been recorded. Payment is pending; fulfillment remains locked until the provider verifies payment.", "تم تسجيل طلبك. الدفع قيد الانتظار، وسيظل التنفيذ متوقفًا حتى يتحقق مزود الخدمة من الدفع.") : order.status === "CANCELLED" ? t("This order was canceled before payment. Its stock was restored and any coupon redemption was released.", "أُلغي هذا الطلب قبل الدفع. أُعيد مخزونه وأُلغي استخدام أي قسيمة.") : t("Payment has been confirmed for this order.", "تم تأكيد الدفع لهذا الطلب.")}</p>
         </div>
@@ -167,21 +156,21 @@ export default function OrderDetailPage({ orderId, returnedFromPayment }: { orde
         <section className="mt-6 rounded-3xl border border-[var(--border)] bg-white p-6">
           <h2 className="font-semibold text-[var(--color-forest-950)]">{t("Order timeline", "الجدول الزمني للطلب")}</h2>
           <ol className="mt-4 space-y-4">{order.statusHistory.map((event, index) => <li key={`${event.status}-${event.createdAt}-${index}`} className="border-l-2 border-[var(--color-sage-300)] pl-4">
-            <p className="text-sm font-semibold">{statusLabel(event.status)}</p>
+            <p className="text-sm font-semibold"><StatusBadge locale={locale} status={event.status} /></p>
             <p className="mt-1 text-xs text-[var(--muted)]">{new Date(event.createdAt).toLocaleString(locale)}{event.note ? ` · ${event.note}` : ""}</p>
           </li>)}</ol>
         </section>
 
         <section className="mt-6 space-y-4">{order.vendorOrders.map((vendor) => <article key={vendor.id} className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-[var(--muted)]">{t("Seller order", "طلب البائع")}</p><h2 className="mt-1 text-lg font-semibold">{vendor.store.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{vendor.shippingServiceName}{vendor.minDeliveryDays != null ? ` · ${vendor.minDeliveryDays}–${vendor.maxDeliveryDays ?? vendor.minDeliveryDays} ${t("days", "أيام")}` : ""}</p></div><p className="text-sm font-semibold">{statusLabel(vendor.status)}</p></div>
+          <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-[var(--muted)]">{t("Seller order", "طلب البائع")}</p><h2 className="mt-1 text-lg font-semibold">{vendor.store.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{vendor.shippingServiceName}{vendor.minDeliveryDays != null ? ` · ${vendor.minDeliveryDays}–${vendor.maxDeliveryDays ?? vendor.minDeliveryDays} ${t("days", "أيام")}` : ""}</p></div><p className="text-sm font-semibold"><StatusBadge locale={locale} status={vendor.status} /></p></div>
           <div className="mt-4 divide-y divide-[var(--border)]">{vendor.items.map((item) => <div key={item.id} className="flex justify-between gap-4 py-3"><div><p className="font-medium">{item.productName}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.sku}{item.variantName ? ` · ${item.variantName}` : ""} · {t("Qty", "الكمية")} {item.quantity}</p></div><p className="font-semibold tabular-nums">{money(item.lineTotalMinor, order.currencyCode, order.currency.minorUnit)}</p></div>)}</div>
-          <ol className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">{vendor.statusHistory.map((event, index) => <li key={`${event.status}-${event.createdAt}-${index}`} className="text-xs text-[var(--muted)]"><strong className="text-[var(--color-forest-900)]">{statusLabel(event.status)}</strong> · {new Date(event.createdAt).toLocaleString(locale)}{event.note ? ` · ${event.note}` : ""}</li>)}</ol>
+          <ol className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">{vendor.statusHistory.map((event, index) => <li key={`${event.status}-${event.createdAt}-${index}`} className="text-xs text-[var(--muted)]"><strong className="text-[var(--color-forest-900)]"><StatusBadge locale={locale} status={event.status} /></strong> · {new Date(event.createdAt).toLocaleString(locale)}{event.note ? ` · ${event.note}` : ""}</li>)}</ol>
           {vendor.shipment && <section className="mt-4 rounded-2xl bg-[var(--color-ivory-100)] p-4">
             <h3 className="text-sm font-semibold">{t("Shipment tracking", "تتبع الشحنة")} · {vendor.shipment.carrierName}</h3>
-            <p className="mt-1 text-sm">{vendor.shipment.trackingNumber} · {statusLabel(vendor.shipment.status)}</p>
+            <p className="mt-1 text-sm">{vendor.shipment.trackingNumber} · <StatusBadge locale={locale} status={vendor.shipment.status} /></p>
             <p className="mt-2 text-xs text-[var(--muted)]">{t("Tracking details were entered by the seller; live carrier updates are not connected.", "أدخل البائع تفاصيل التتبع؛ تحديثات شركة الشحن المباشرة غير متصلة.")}</p>
             {vendor.shipment.trackingUrl && <a href={vendor.shipment.trackingUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex text-sm font-medium text-[var(--color-copper-700)] underline">{t("Open carrier tracking", "فتح تتبع شركة الشحن")}</a>}
-            <ol className="mt-3 space-y-2">{vendor.shipment.events.map((event, index) => <li key={`${event.status}-${event.occurredAt}-${index}`} className="text-xs text-[var(--muted)]"><strong className="text-[var(--color-forest-900)]">{statusLabel(event.status)}</strong> · {new Date(event.occurredAt).toLocaleString(locale)}{event.location ? ` · ${event.location}` : ""}{event.description ? ` · ${event.description}` : ""}</li>)}</ol>
+            <ol className="mt-3 space-y-2">{vendor.shipment.events.map((event, index) => <li key={`${event.status}-${event.occurredAt}-${index}`} className="text-xs text-[var(--muted)]"><strong className="text-[var(--color-forest-900)]"><StatusBadge locale={locale} status={event.status} /></strong> · {new Date(event.occurredAt).toLocaleString(locale)}{event.location ? ` · ${event.location}` : ""}{event.description ? ` · ${event.description}` : ""}</li>)}</ol>
           </section>}
           <div className="mt-4 flex justify-between border-t border-[var(--border)] pt-4 text-sm"><span className="text-[var(--muted)]">{t("Seller order total", "إجمالي طلب البائع")}</span><strong>{money(vendor.totalMinor, order.currencyCode, order.currency.minorUnit)}</strong></div>
           {vendor.status === "DELIVERED" && <Link href="/account/returns" className="mt-4 inline-flex rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold">{t("Request a return", "طلب إرجاع")}</Link>}{vendor.status === "DELIVERED" && <StoreReviewForm storeId={vendor.store.id} vendorOrderId={vendor.id} storeName={vendor.store.name} />}

@@ -27,7 +27,11 @@ const statusArabic: Record<string, string> = {
   EXPIRED: "منتهي الصلاحية", SUSPENDED: "موقوف", DISABLED: "معطل", OPEN: "مفتوح",
   CLOSED: "مغلق", RESOLVED: "تم الحل", UNRESOLVED: "لم يتم الحل", UNDER_REVIEW: "قيد المراجعة",
   SUBMITTED: "تم التقديم", ON_HOLD: "معلق", PARTIALLY_FULFILLED: "منفذ جزئياً",
-  FULFILLED: "تم التنفيذ", REFUND_PENDING: "رد المبلغ قيد الانتظار", VOIDED: "ملغي"
+  FULFILLED: "تم التنفيذ", REFUND_PENDING: "رد المبلغ قيد الانتظار", VOIDED: "ملغي",
+  PUBLISHED: "منشور", HIDDEN: "مخفي", ARCHIVED: "مؤرشف", CONFIRMED: "مؤكد",
+  READY_TO_SHIP: "جاهز للشحن", EXCEPTION: "استثناء", ANSWERED: "تمت الإجابة",
+  AWAITING_ANSWER: "بانتظار الإجابة", PENDING_REVIEW: "قيد المراجعة",
+  INVITED: "مدعو", REVOKED: "ملغى", LOCKED: "مقفل", BLOCKED: "محظور", ENABLED: "مفعّل"
 };
 
 function humanizeStatus(status: string): string {

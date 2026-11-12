@@ -48,9 +48,9 @@ export function allocateDiscountAcrossLines(
   lines: readonly { id: string; lineTotalMinor: bigint }[],
   discountMinor: bigint
 ): Map<string, bigint> {
+  if (lines.some((line) => line.lineTotalMinor < BigInt(0))) throw new Error("Line totals cannot be negative.");
   const subtotal = lines.reduce((total, line) => total + line.lineTotalMinor, BigInt(0));
   if (discountMinor < BigInt(0) || discountMinor > subtotal) throw new Error("Discount must be within the merchandise subtotal.");
-  if (lines.some((line) => line.lineTotalMinor < BigInt(0))) throw new Error("Line totals cannot be negative.");
   if (subtotal === BigInt(0) && discountMinor !== BigInt(0)) throw new Error("A discount cannot be allocated across a zero-value order.");
 
   const allocations = lines.map((line) => {

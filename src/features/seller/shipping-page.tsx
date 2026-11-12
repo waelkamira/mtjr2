@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -196,7 +197,7 @@ export default function SellerShippingPage() {
               <article key={rate.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-clay)]">
                 <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold text-[var(--color-ink-950)]">{rate.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">{rate.market.name} · {rate.market.code} · {rate.currencyCode}</p></div><strong className="text-lg tabular-nums">{formatMinorUnits(rate.amountMinor, rate.currencyCode, rate.currency.minorUnit, locale)}</strong></div>
                 {rate.description && <p className="mt-2 text-sm text-[var(--color-ink-600)]">{rate.description}</p>}
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--muted)]"><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.destinationRegion || translate(locale, "All destinations", "كل الوجهات")}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "أيام")}</span><span className={`rounded-full px-3 py-1 ${rate.isActive ? "bg-[var(--color-mint-100)] text-[var(--color-mint-800)]" : "bg-[var(--surface-soft)]"}`}>{rate.isActive ? translate(locale, "Active", "نشطة") : translate(locale, "Inactive", "متوقفة")}</span></div>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--muted)]"><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.destinationRegion || translate(locale, "All destinations", "كل الوجهات")}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{rate.minDeliveryDays ?? "—"}–{rate.maxDeliveryDays ?? "—"} {translate(locale, "days", "أيام")}</span><StatusBadge locale={locale} status={rate.isActive ? "ACTIVE" : "INACTIVE"} /></div>
                 <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => startEdit(rate)} className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-bold hover:bg-[var(--surface-soft)]">{translate(locale, "Edit service", "تعديل الخدمة")}</button>{rate.isActive && <button type="button" onClick={() => void deactivateRate(rate)} disabled={saving} className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 disabled:opacity-50">{translate(locale, "Pause service", "إيقاف الخدمة")}</button>}</div>
               </article>
             )) : <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center text-sm text-[var(--muted)]">{translate(locale, "No shipping services yet. Add your first service.", "لا توجد خدمات شحن بعد. أضف خدمتك الأولى.")}</div>}

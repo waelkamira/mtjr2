@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -140,13 +141,13 @@ export default function SellerReturnsPage() {
                 <article key={key} className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-clay-raised p-6">
                   <div className="flex flex-wrap justify-between gap-3">
                     <div><p className="text-xs text-[var(--muted)]">{item.returnNumber} · {translate(locale, "Order", "الطلب")} {item.orderNumber}</p><h2 className="mt-1 text-lg font-semibold">{item.storeName}</h2></div>
-                    <div className="text-right"><p className="font-semibold">{translate(locale, item.status, item.status === "REQUESTED" ? "مطلوب" : item.status === "APPROVED" ? "مقبول" : item.status === "REJECTED" ? "مرفوض" : item.status === "RECEIVED" ? "تم الاستلام" : item.status.replaceAll("_", " "))}</p><p className="mt-1 text-xs text-[var(--muted)]">{new Date(item.requestedAt).toLocaleString()}</p></div>
+                    <div className="text-right"><p className="font-semibold"><StatusBadge locale={locale} status={item.status} /></p><p className="mt-1 text-xs text-[var(--muted)]">{new Date(item.requestedAt).toLocaleString()}</p></div>
                   </div>
                   <p className="mt-4 text-sm"><span className="font-medium">{translate(locale, "Reason:", "السبب:")}</span> {translate(locale, item.reasonCode, item.reasonCode === "DAMAGED" ? "تالف" : item.reasonCode === "DEFECTIVE" ? "معيب" : item.reasonCode === "WRONG_ITEM" ? "منتج غير صحيح" : item.reasonCode === "NOT_AS_DESCRIBED" ? "لا يطابق الوصف" : item.reasonCode === "CHANGED_MIND" ? "تغيير الرأي" : item.reasonCode.replaceAll("_", " "))}</p>
                   {item.reasonDetails && <p className="mt-1 text-sm text-[var(--muted)]">{item.reasonDetails}</p>}
                   <div className="mt-4 divide-y divide-[var(--border)] border-t border-[var(--border)]">
                     {item.items.map((product) => <div key={product.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-                      <div><p className="font-medium">{product.productName}</p><p className="text-xs text-[var(--muted)]">{product.sku} · {translate(locale, product.status, product.status === "REQUESTED" ? "مطلوب" : product.status === "APPROVED" ? "مقبول" : product.status === "REJECTED" ? "مرفوض" : product.status === "RECEIVED" ? "تم الاستلام" : product.status.replaceAll("_", " "))}</p>{product.reviewNote && <p className="mt-1 text-xs text-[var(--muted)]">{product.reviewNote}</p>}</div>
+                      <div><p className="font-medium">{product.productName}</p><p className="text-xs text-[var(--muted)]">{product.sku} · <StatusBadge locale={locale} status={product.status} /></p>{product.reviewNote && <p className="mt-1 text-xs text-[var(--muted)]">{product.reviewNote}</p>}</div>
                       <p className="tabular-nums">{translate(locale, "Return", "الإرجاع")} {product.returnQuantity} / {translate(locale, "ordered", "المطلوب")} {product.orderedQuantity}</p>
                     </div>)}
                   </div>

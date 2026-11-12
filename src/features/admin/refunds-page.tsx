@@ -1,8 +1,9 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/locale-provider";
-import { translate, translateStatus } from "@/lib/locale";
+import { translate } from "@/lib/locale";
 import Link from "next/link";
 
 type Candidate = {
@@ -152,7 +153,7 @@ export default function AdminRefundsPage() {
           <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">{t("Refund ledger", "سجل عمليات رد الأموال")}</h2><span className="text-xs text-[var(--muted)]">{refunds.length} {t("record(s)", "سجل")}</span></div>
           {!refunds.length ? <p className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted)]">{t("No refund records yet.", "لا توجد سجلات لرد الأموال بعد.")}</p> : <div className="mt-4 space-y-4">
             {refunds.map((refund) => <article key={refund.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
-              <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{refund.returnNumber} · Order {refund.orderNumber}</p><p className="mt-1 font-semibold">{refund.amountDisplay}</p></div><div className="text-right"><p className="text-sm font-semibold">{translateStatus(locale, refund.status)}</p><p className="text-xs text-[var(--muted)]">{t("Payment:", "الدفع:")} {translateStatus(locale, refund.paymentStatus)} · {t("Provider:", "المزود:")} {refund.provider}</p></div></div>
+              <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{refund.returnNumber} · Order {refund.orderNumber}</p><p className="mt-1 font-semibold">{refund.amountDisplay}</p></div><div className="text-right"><p className="text-sm font-semibold"><StatusBadge locale={locale} status={refund.status} /></p><p className="text-xs text-[var(--muted)]">{t("Payment:", "الدفع:")} <StatusBadge locale={locale} status={refund.paymentStatus} /> · {t("Provider:", "المزود:")} {refund.provider}</p></div></div>
               <ul className="mt-3 space-y-1 text-sm text-[var(--muted)]">{refund.items.map((item) => <li key={item.sku}>{item.productName} · {item.sku} × {item.quantity}</li>)}</ul>
               {refund.status === "PENDING_MANUAL" || refund.status === "PROVIDER_FAILED" ? <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4">
                 <p className="text-sm text-[var(--muted)]">{refund.status === "PROVIDER_FAILED" ? t("The provider did not confirm this attempt. Refresh a returned provider reference; if no reference exists, a retry reuses the same key within the provider retention window.", "لم يؤكد المزود هذه المحاولة. حدّث حالة المرجع الموجود؛ وإذا لم يصل مرجع، ستستخدم إعادة المحاولة المفتاح نفسه ضمن فترة الاحتفاظ به لدى المزود.") : t("Submit this refund to the same provider that captured the original payment. The request uses a stable idempotency key.", "أرسل رد المبلغ إلى المزود نفسه الذي استلم الدفعة الأصلية. يستخدم الطلب مفتاحاً ثابتاً لمنع التكرار.")}</p>

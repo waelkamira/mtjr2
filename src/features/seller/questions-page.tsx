@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -137,10 +138,10 @@ export default function SellerQuestionsPage() {
         {items.map((item) => <article key={item.id} className="rounded-3xl border border-[#eee9e4] bg-white p-5 shadow-[0_8px_24px_rgba(119,86,62,.06)] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0"><p className="text-xs text-[var(--muted)]">{item.product.store.name} · {item.product.name}</p><h2 className="mt-2 font-semibold text-[var(--color-ink-950)]">{t("Q:", "س:")} {item.question}</h2><p className="mt-1 text-xs text-[var(--muted)]">{t("Asked by", "طرح السؤال")} {item.author} · {new Date(item.createdAt).toLocaleDateString(locale === "ar" ? "ar" : "en-GB")}</p></div>
-            <span className="rounded-full bg-[#f5eee7] px-3 py-1.5 text-xs font-semibold text-[#5f5a55]">{statusLabel(item.status)}</span>
+            <span className="rounded-full bg-[#f5eee7] px-3 py-1.5 text-xs font-semibold text-[#5f5a55]"><StatusBadge locale={locale} status={item.status} /></span>
           </div>
           {item.answers.map((entry) => <div key={entry.id} className="mt-4 rounded-2xl border border-[#eee9e4] bg-[#fffaf6] p-4">
-            <p className="text-sm font-medium text-[#454545]">{t("Answer", "الإجابة")} · {statusLabel(entry.status)}</p>
+            <p className="text-sm font-medium text-[#454545]">{t("Answer", "الإجابة")} · <StatusBadge locale={locale} status={entry.status} /></p>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#475569]">{entry.body}</p>
             <div className="mt-3 flex flex-wrap gap-4">
               <button type="button" onClick={() => { setEditing(entry.id); setAnswerDrafts((current) => ({ ...current, [entry.id]: entry.body })); }} className="text-xs font-semibold text-[#a94308] underline underline-offset-4">{t("Edit answer", "تعديل الإجابة")}</button>

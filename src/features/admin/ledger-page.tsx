@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -168,7 +169,7 @@ export default function AdminLedgerPage() {
                 return <button type="button" key={account.id} onClick={() => { setLoading(true); setActivityCursor(""); setSelectedAccountId(account.id); }} className={`w-full rounded-xl border p-3 text-start transition-colors ${chosen ? "border-orange-400 bg-orange-50 shadow-sm" : "border-stone-200 bg-white hover:border-orange-300 hover:bg-orange-50/40"}`}>
                   <span className="flex items-center justify-between gap-2">
                     <span className="font-semibold text-sm text-[var(--color-ink-950)]">{account.code}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${account.isActive ? "bg-lime-100 text-lime-900" : "bg-stone-100 text-stone-600"}`}>{account.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</span>
+                    <StatusBadge locale={locale} status={account.isActive ? "ACTIVE" : "INACTIVE"} />
                   </span>
                   <span className="mt-1 block text-sm text-[var(--color-ink-800)]">{account.name}</span>
                   <span className="mt-2 flex flex-wrap gap-2 text-[11px] text-[var(--muted)]"><span>{account.accountType}</span><span>·</span><span>{account.currencyCode}</span><span>·</span><span>{account.scopeType}: {account.scopeId}</span></span>

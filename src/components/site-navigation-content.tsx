@@ -345,7 +345,7 @@
 //       <div className="hidden border-t border-gray-50 md:block">
 //         <div className="mx-auto flex max-w-[1440px] items-center gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
 //           {[...publicLinks, ...(account ? signedInLinks : [])].map((link) => {
-//             const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+//             const isActive = isNavigationActive(pathname, link.href);
 //             return (
 //               <Link
 //                 key={link.href}
@@ -445,7 +445,7 @@
 //               {/* Main Links List */}
 //               <div className="space-y-0.5 border-t border-gray-100 pt-3">
 //                 {mobileLinks.map((link) => {
-//                   const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+//                   const isActive = isNavigationActive(pathname, link.href);
 //                   return (
 //                     <Link
 //                       key={link.href}
@@ -576,6 +576,10 @@ function localizedNavigationLabel(locale: Locale, label: string) {
 
 function navigationIconFor(label: string): NavigationIconName {
   return navigationLabels[label]?.icon ?? "document";
+}
+
+function isNavigationActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
 }
 
 function initials(name: string) {
@@ -833,22 +837,22 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
       <div className="hidden border-t border-stone-100 md:block">
         <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
           {[...publicLinks, ...(account ? signedInLinks : [])].map((link) => {
-            const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+            const isActive = isNavigationActive(pathname, link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`group bg-lime-500 relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 $z{
+                className={`group relative flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none ${
                   isActive
-                    ? " bg-orange-500 text-white shadow-md "
-                    : " text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                    ? "border-transparent bg-orange-500 text-white shadow-[0_5px_14px_rgba(249,115,22,0.24)] hover:bg-orange-500 hover:text-white"
+                    : "border-transparent bg-white text-stone-800 hover:border-orange-200 hover:bg-white hover:text-stone-950 hover:shadow-[0_4px_12px_rgba(249,115,22,0.10)]"
                 }`}
               >
                 <NavigationIcon 
                   name={navigationIconFor(link.label)} 
                   className={`h-4 w-4 transition-colors ${
-                    isActive ? "text-white" : "text-stone-400 group-hover:text-orange-500"
+                    isActive ? "text-white" : "text-stone-700 group-hover:text-orange-500"
                   }`} 
                 />
                 <span>{localizedNavigationLabel(locale, link.label)}</span>
@@ -917,12 +921,12 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       key={action.href}
                       href={action.href}
                       onClick={() => setMobileOpen(false)}
-                      className="flex flex-col items-center justify-center gap-2 rounded-xl border border-stone-100 bg-white p-3 text-center transition hover:border-orange-200 hover:bg-orange-50"
+                      className={`group flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition ${isNavigationActive(pathname, action.href) ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20" : "border-stone-100 bg-white text-stone-700 hover:border-orange-200 hover:bg-orange-50"}`}
                     >
-                      <span className="grid size-8 place-items-center rounded-lg bg-stone-50 text-stone-600 transition hover:bg-orange-100 hover:text-orange-600">
+                      <span className={`grid size-8 place-items-center rounded-lg transition ${isNavigationActive(pathname, action.href) ? "bg-white/15 text-white" : "bg-stone-50 text-stone-700 group-hover:bg-orange-100 group-hover:text-orange-600"}`}>
                         <NavigationIcon name={action.icon} className="h-5 w-5" />
                       </span>
-                      <span className="text-[10px] font-medium text-stone-600">
+                      <span className={`text-[10px] font-medium ${isNavigationActive(pathname, action.href) ? "text-white" : "text-stone-700"}`}>
                         {localizedNavigationLabel(locale, action.label)}
                       </span>
                     </Link>
@@ -933,7 +937,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
               {/* قائمة الروابط الرئيسية */}
               <div className="space-y-0.5 border-t border-stone-100 pt-3">
                 {mobileLinks.map((link) => {
-                  const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+                  const isActive = isNavigationActive(pathname, link.href);
                   return (
                     <Link
                       key={link.href}
@@ -941,14 +945,14 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       onClick={() => setMobileOpen(false)}
                       className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-300 ${
                         isActive
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25"
-                          : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                          ? "border border-transparent bg-orange-500 text-white shadow-[0_5px_14px_rgba(249,115,22,0.22)]"
+                          : "border border-transparent bg-white text-stone-800 hover:border-orange-200 hover:bg-white hover:text-stone-950 hover:shadow-[0_4px_12px_rgba(249,115,22,0.10)]"
                       }`}
                     >
                       <NavigationIcon 
                         name={navigationIconFor(link.label)} 
                         className={`h-4 w-4 transition-colors ${
-                          isActive ? "text-white" : "text-stone-400 group-hover:text-orange-500"
+                          isActive ? "text-white" : "text-stone-700 group-hover:text-orange-500"
                         }`} 
                       />
                       <span>{localizedNavigationLabel(locale, link.label)}</span>
