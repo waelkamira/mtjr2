@@ -4,6 +4,7 @@ import ProductDetail from "@/features/storefront/product-detail";
 import { listSponsoredCampaigns } from "@/server/advertising/delivery";
 import { getDiscoverableProduct } from "@/server/catalog/discovery";
 import { getPreferredLocale } from "@/server/locale";
+import { getActiveMarketByCode } from "@/server/marketplace/market-query";
 import { translate } from "@/lib/locale";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
@@ -49,7 +50,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getDiscoverableProduct(slug, locale);
   if (!product) notFound();
 
-  const marketId = product.variants.flatMap((variant) => variant.prices).find((price) => price.marketId)?.marketId;
+  const launchMarket = await getActiveMarketByCode("SY-SYR");
+  const marketId = launchMarket?.id ?? product.variants.flatMap((variant) => variant.prices).find((price) => price.marketId)?.marketId;
   let sponsored: Awaited<ReturnType<typeof listSponsoredCampaigns>> = [];
   if (marketId) {
     try {
@@ -60,6 +62,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
   return <ProductDetail
     initialProduct={product}
+    initialMarketId={launchMarket?.id ?? ""}
+    initialCurrencyCode={launchMarket?.defaultCurrency.code ?? "SYP"}
     initialSponsored={sponsored.filter((item) => item.product.id !== product.id)}
   />;
 }
