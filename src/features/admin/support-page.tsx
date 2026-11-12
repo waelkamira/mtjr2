@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { StatusBadge } from "@/components/status-badge";
 
 type Row = {
   id: string; ticketNumber: string; subject: string; category: string; status: string;
@@ -142,7 +143,7 @@ export default function AdminSupportPage() {
               {items.map((item) => <button key={item.id} onClick={() => setSelected(item.id)} className={`w-full rounded-2xl border p-4 text-left ${selected === item.id ? "border-[var(--color-lavender-600)] bg-[var(--surface)]" : "border-[var(--border)] bg-[var(--surface)]/60"}`}>
                 <div className="flex justify-between gap-2"><span className="text-xs font-semibold text-[var(--color-lavender-600)]">{item.ticketNumber}</span><span className="text-xs">{statusLabel(item.priority)}</span></div>
                 <p className="mt-2 font-semibold">{item.subject}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">{item.customer} · {statusLabel(item.status)}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{item.customer} · <StatusBadge locale={locale} status={item.status} /></p>
                 {item.resolutionBreachedAt && <p className="mt-2 text-xs font-semibold text-red-700">{translate(locale, "Resolution SLA breached", "تم تجاوز مهلة الحل")}</p>}
               </button>)}
               {!items.length && <p className="rounded-2xl bg-[var(--surface)] p-5 text-sm text-[var(--muted)]">{translate(locale, "No support tickets.", "لا توجد تذاكر دعم.")}</p>}
