@@ -59,3 +59,15 @@ The accounting journal foundation exists but is not connected to captured paymen
 ## Verification boundary
 
 Per the current instruction, no tests, builds, typechecks, browser journeys, or database imports were run. The OpenSyria geography import and Prisma migrations must be applied to the same PostgreSQL database used by the app before the updated location selector can display the new source data.
+
+
+## Finance and payout scope correction — 2026-11-12
+
+The earlier outstanding-finance paragraph was historical and is superseded by the implementation described above:
+
+- `/seller/payouts` is present for active seller owners and manages encrypted IBAN beneficiary records only. It does not create payout requests or transfer money.
+- `/admin/seller-payout-methods` provides a separate manual evidence/reason review with Super Admin permission and fresh TOTP step-up; this is not an automated bank ownership check.
+- `/seller/finance` and `/seller/commissions` remain read-only and explicitly do not calculate payable or withdrawable balances.
+- `/admin/finance/ledger` is now a read-only platform-admin page for chart-of-account and cursor-paginated journal-line inspection; it is not connected to payment/refund/seller payable events.
+- Exact code SHA `c4ec8375bcd5bd1f161eaa8aa28b7569aaa712e0` passed CI, TypeScript, ESLint, full unit suite, production build, Browser E2E (14/14) and CodeQL. The dedicated Super Admin ledger browser journey is included. The seller payout destination page itself is not part of that 14-test browser run and should retain its own route-level verification status.
+- FIN-01 through FIN-12 in `docs/finance/SELLER_PAYOUT_POLICY_DECISIONS.md` remain unapproved. No seller payable balance, withdrawal request, transfer execution or settlement/reconciliation is enabled.
