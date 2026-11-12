@@ -143,7 +143,7 @@ export default function AdminSupportPage() {
           <span className="text-sm text-[var(--muted)]">{translate(locale, "Platform administration", "إدارة المنصة")}</span>
         </div>
       </header>
-      <div className="mx-auto max-w-7xl px-5 py-8">
+      <div className="mx-auto max-w-[1600px] px-5 py-8">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{translate(locale, "Customer operations", "عمليات العملاء")}</p>
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Support desk", "مكتب الدعم")}</h1>
         {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
