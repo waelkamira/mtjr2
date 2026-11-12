@@ -688,7 +688,11 @@ export default function SellerProductsPage() {
   async function publish(id: string) {
     setBusy(true); setError(""); setMessage("");
     try {
-      await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, { method: "POST" }));
+      await json(await fetch(`/api/products/${encodeURIComponent(id)}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      }));
       setMessage(translate(locale, "Product published.", "تم نشر المنتج."));
       toast.success(translate(locale, "Product published", "تم نشر المنتج"));
       await loadProducts(storeId, search);
