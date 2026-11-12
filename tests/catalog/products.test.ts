@@ -102,6 +102,26 @@ describe("product lifecycle", () => {
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
+  it("persists localized SEO metadata, a selected brand and variant shipping weight", async () => {
+    await createDraftProduct({
+      storeId: "store-1", name: "Travel Mug", slug: "travel-mug",
+      locale: "ar", seoTitle: "كوب حراري للسفر", seoDescription: "كوب حراري يحافظ على المشروبات ساخنة وباردة.",
+      brandId: "brand-1",
+      variants: [{
+        sku: "MUG-BLK", weightGrams: 350,
+        prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "2499" }]
+      }]
+    });
+    const data = mocks.productCreate.mock.calls[0][0].data;
+    expect(data.brandId).toBe("brand-1");
+    expect(data.translations.create).toMatchObject({
+      locale: "ar", name: "Travel Mug",
+      seoTitle: "كوب حراري للسفر",
+      seoDescription: "كوب حراري يحافظ على المشروبات ساخنة وباردة."
+    });
+    expect(data.variants.create[0].weightGrams).toBe(350);
+  });
+
   it("creates multiple distinct SKU variants with their own required category options", async () => {
     mocks.categoryAttributeFindMany.mockResolvedValue([{
       attributeDefinitionId: "attribute-size",
