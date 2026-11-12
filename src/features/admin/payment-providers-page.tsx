@@ -209,11 +209,11 @@ export default function PaymentProvidersPage() {
 
   return (
     <main className="min-h-screen bg-[var(--background)] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1600px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Platform finance", "مالية المنصة")}</p>
-            <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{t("Payment providers", "مزودو الدفع")}</h1>
+            <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{t("Platform finance", "مالية المنصة")}</p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{t("Payment providers", "مزودو الدفع")}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{t("Configure supported payment adapters, verify credentials, manage test/live records and archive safely. Secrets are encrypted at rest and never returned to this page.", "أضف إعدادات بوابات الدفع المدعومة وتحقق من بياناتها وأدر بيئتي الاختبار والإنتاج وأرشفها بأمان. تُشفّر الأسرار في قاعدة البيانات ولا تُعاد إلى هذه الصفحة.")}</p>
           </div>
           <button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">{showForm ? t("Close form", "إغلاق النموذج") : t("Add provider", "إضافة مزود دفع")}</button>
@@ -225,7 +225,7 @@ export default function PaymentProvidersPage() {
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
 
-        {showForm && <section className="mt-6 rounded-2xl border border-[var(--border)] bg-white p-5 lg:p-6">
+        {showForm && <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:p-6">
           <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{t("New provider configuration", "إعداد مزود دفع جديد")}</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm font-medium">{t("Provider", "المزود")}
@@ -255,7 +255,7 @@ export default function PaymentProvidersPage() {
           <div className="mt-5 flex flex-wrap gap-3"><button type="button" disabled={saving} onClick={() => void create()} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving ? t("Saving…", "جارٍ الحفظ…") : t("Save encrypted configuration", "حفظ الإعدادات المشفرة")}</button><button type="button" onClick={() => { setDraft(emptyDraft); setShowForm(false); }} className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold">{t("Cancel", "إلغاء")}</button></div>
         </section>}
 
-        <section className="mt-6 rounded-2xl border border-[var(--border)] bg-white p-5">
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="max-w-3xl">
               <h2 className="font-semibold">{t("Credential encryption key rotation", "تدوير مفاتيح تشفير بيانات الاعتماد")}</h2>
@@ -274,7 +274,7 @@ export default function PaymentProvidersPage() {
         </section>
 
         <section className="mt-6 space-y-4">
-          {loading ? <div className="rounded-2xl border border-[var(--border)] bg-white p-8 text-sm text-[var(--muted)]">{t("Loading providers…", "جارٍ تحميل مزودي الدفع…")}</div> : visibleItems.length === 0 ? <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white p-10 text-center"><h2 className="font-semibold">{t("No provider configurations yet", "لا توجد إعدادات لمزودي الدفع بعد")}</h2><p className="mt-2 text-sm text-[var(--muted)]">{t("Add Stripe or PayPal in test mode first.", "ابدأ بإضافة Stripe أو PayPal في بيئة الاختبار.")}</p></div> : visibleItems.map((item) => <article key={item.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
+          {loading ? <div className="rounded-2xl border border-[var(--border)] bg-white p-8 text-sm text-[var(--muted)]">{t("Loading providers…", "جارٍ تحميل مزودي الدفع…")}</div> : visibleItems.length === 0 ? <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white p-10 text-center"><h2 className="font-semibold">{t("No provider configurations yet", "لا توجد إعدادات لمزودي الدفع بعد")}</h2><p className="mt-2 text-sm text-[var(--muted)]">{t("Add Stripe or PayPal in test mode first.", "ابدأ بإضافة Stripe أو PayPal في بيئة الاختبار.")}</p></div> : visibleItems.map((item) => <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{item.displayName}</h2><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs font-semibold">{translate(locale, item.environment, item.environment === "TEST" ? "اختبار" : "مباشر")}</span><StatusBadge locale={locale} status={item.status} /></div><p className="mt-2 text-xs text-[var(--muted)]">{item.providerKey} · {item.credentialsConfigured ? t("Credentials encrypted", "بيانات الاعتماد مشفرة") : t("Credentials missing", "بيانات الاعتماد غير موجودة")} · {item.credentialFingerprint || "—"}</p></div>
               <div className="flex flex-wrap gap-2">
