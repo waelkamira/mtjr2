@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -32,9 +32,17 @@ export default function AdminSupportPage() {
   const [internal, setInternal] = useState(false);
   const [status, setStatus] = useState("OPEN");
   const [priority, setPriority] = useState("NORMAL");
+  const [queueQuery, setQueueQuery] = useState("");
+  const [queueStatus, setQueueStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const visibleItems = useMemo(() => items.filter((item) => {
+    const needle = queueQuery.trim().toLocaleLowerCase();
+    const matchesQuery = !needle || [item.ticketNumber, item.subject, item.customer, item.assignee || ""].some((value) => value.toLocaleLowerCase().includes(needle));
+    return matchesQuery && (!queueStatus || item.status === queueStatus);
+  }), [items, queueQuery, queueStatus]);
 
   const statusLabel = (value: string) => {
     const labels: Record<string, { en: string; ar: string }> = {
@@ -148,15 +156,16 @@ export default function AdminSupportPage() {
         <h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Support desk", "مكتب الدعم")}</h1>
         {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
         {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--surface-soft)]" /> : (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
-            <aside className="space-y-2">
-              {items.map((item) => <button key={item.id} onClick={() => setSelected(item.id)} className={`w-full rounded-2xl border p-4 text-left ${selected === item.id ? "border-[#FF8C1C] bg-orange-50/70 shadow-sm" : "border-[var(--border)] bg-[var(--surface)]/60 hover:border-[#FF8C1C]/50"}`}>
+          <div aria-busy={loading || busy} className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
+            <aside className="space-y-3">
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3"><label className="block text-xs font-semibold text-[var(--muted)]">{translate(locale, "Search tickets", "البحث في التذاكر")}<input type="search" value={queueQuery} onChange={(event) => setQueueQuery(event.target.value)} placeholder={translate(locale, "Ticket, subject, customer or assignee", "رقم التذكرة أو الموضوع أو العميل أو المسؤول")} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100" /></label><label className="mt-2 block text-xs font-semibold text-[var(--muted)]">{translate(locale, "Filter by status", "تصفية حسب الحالة")}<select value={queueStatus} onChange={(event) => setQueueStatus(event.target.value)} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[#FF8C1C]"><option value="">{translate(locale, "All statuses", "كل الحالات")}</option>{ticketStatuses.map((value) => <option key={value} value={value}>{statusLabel(value)}</option>)}</select></label><p className="mt-2 text-xs text-[var(--muted)]">{visibleItems.length} {translate(locale, "of", "من")} {items.length} {translate(locale, "tickets", "تذكرة")}</p></div>
+              {visibleItems.map((item) => <button key={item.id} onClick={() => setSelected(item.id)} className={`w-full rounded-2xl border p-4 text-left ${selected === item.id ? "border-[#FF8C1C] bg-orange-50/70 shadow-sm" : "border-[var(--border)] bg-[var(--surface)]/60 hover:border-[#FF8C1C]/50"}`}>
                 <div className="flex justify-between gap-2"><span className="text-xs font-semibold text-[var(--color-lavender-600)]">{item.ticketNumber}</span><span className="text-xs">{statusLabel(item.priority)}</span></div>
                 <p className="mt-2 font-semibold">{item.subject}</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">{item.customer} · <StatusBadge locale={locale} status={item.status} /></p>
                 {item.resolutionBreachedAt && <p className="mt-2 text-xs font-semibold text-red-700">{translate(locale, "Resolution SLA breached", "تم تجاوز مهلة الحل")}</p>}
               </button>)}
-              {!items.length && <p className="rounded-2xl bg-[var(--surface)] p-5 text-sm text-[var(--muted)]">{translate(locale, "No support tickets.", "لا توجد تذاكر دعم.")}</p>}
+              {!visibleItems.length && <p className="rounded-2xl bg-[var(--surface)] p-5 text-sm text-[var(--muted)]">{items.length ? translate(locale, "No tickets match these filters.", "لا توجد تذاكر تطابق عوامل التصفية.") : translate(locale, "No support tickets.", "لا توجد تذاكر دعم.")}</p>}
             </aside>
             <section>{ticket && <>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
@@ -167,19 +176,19 @@ export default function AdminSupportPage() {
                     <select aria-label={translate(locale, "Priority", "الأولوية")} value={priority} onChange={(event) => { setPriority(event.target.value); void patch({ priority: event.target.value }); }} className="rounded-lg border p-2 text-sm">{priorities.map((value) => <option key={value} value={value}>{statusLabel(value)}</option>)}</select>
                   </div>
                 </div>
-                <p className="mt-3 text-xs text-[var(--muted)]">{translate(locale, "First response due:", "موعد الرد الأول:")} {ticket.firstResponseDueAt ? new Date(ticket.firstResponseDueAt).toLocaleString() : "—"} · {translate(locale, "Resolution due:", "موعد الحل:")} {ticket.resolutionDueAt ? new Date(ticket.resolutionDueAt).toLocaleString() : "—"}</p>
-                {(ticket.firstResponseBreachedAt || ticket.resolutionBreachedAt) && <p className="mt-2 text-xs font-semibold text-red-700">{translate(locale, "SLA breach recorded", "تم تسجيل تجاوز اتفاقية مستوى الخدمة")}{ticket.escalatedAt ? ` · ${translate(locale, "Escalated", "تم التصعيد")} ${new Date(ticket.escalatedAt).toLocaleString()}` : ""}</p>}
+                <p className="mt-3 text-xs text-[var(--muted)]">{translate(locale, "First response due:", "موعد الرد الأول:")} {ticket.firstResponseDueAt ? new Date(ticket.firstResponseDueAt).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB") : "—"} · {translate(locale, "Resolution due:", "موعد الحل:")} {ticket.resolutionDueAt ? new Date(ticket.resolutionDueAt).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB") : "—"}</p>
+                {(ticket.firstResponseBreachedAt || ticket.resolutionBreachedAt) && <p className="mt-2 text-xs font-semibold text-red-700">{translate(locale, "SLA breach recorded", "تم تسجيل تجاوز اتفاقية مستوى الخدمة")}{ticket.escalatedAt ? ` · ${translate(locale, "Escalated", "تم التصعيد")} ${new Date(ticket.escalatedAt).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB")}` : ""}</p>}
                 <button disabled={busy} onClick={() => void patch({ assignToMe: true })} className="mt-3 rounded-lg border px-3 py-2 text-xs font-semibold">{translate(locale, "Assign to me", "إسناد إليّ")}</button>
                 <span className="ml-3 text-xs text-[var(--muted)]">{items.find((item) => item.id === selected)?.assignee || translate(locale, "Unassigned", "غير مسندة")}</span>
               </div>
               <div className="mt-4 space-y-3">{ticket.messages.map((message) => <article key={message.id} className={`rounded-2xl border p-5 ${message.internal ? "border-dashed border-[var(--color-lavender-600)] bg-[var(--surface-soft)]" : "border-[var(--border)] bg-[var(--surface)]"}`}>
-                <div className="flex justify-between gap-3"><span className="text-sm font-semibold">{message.author}{message.internal ? ` · ${translate(locale, "Internal note", "ملاحظة داخلية")}` : ""}</span><time className="text-xs text-[var(--muted)]">{new Date(message.createdAt).toLocaleString()}</time></div>
+                <div className="flex justify-between gap-3"><span className="text-sm font-semibold">{message.author}{message.internal ? ` · ${translate(locale, "Internal note", "ملاحظة داخلية")}` : ""}</span><time className="text-xs text-[var(--muted)]">{new Date(message.createdAt).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB")}</time></div>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{message.body}</p>
               </article>)}</div>
               <form onSubmit={reply} className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
                 <label className="block text-sm font-semibold">{translate(locale, "Reply or internal note", "رد أو ملاحظة داخلية")}<textarea required minLength={2} maxLength={8000} rows={4} value={body} onChange={(event) => setBody(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[#FF8C1C] focus:outline-none focus:ring-2 focus:ring-orange-200" /></label>
                 <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[#FF8C1C]" checked={internal} onChange={(event) => setInternal(event.target.checked)} /> {translate(locale, "Internal note (not visible to customer)", "ملاحظة داخلية (لا تظهر للعميل)")}</label>
-                <button disabled={busy} className="mt-3 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : internal ? translate(locale, "Add internal note", "إضافة ملاحظة داخلية") : translate(locale, "Send reply", "إرسال الرد")}</button>
+                <button disabled={busy} className="mt-3 rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#E9780B] disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : internal ? translate(locale, "Add internal note", "إضافة ملاحظة داخلية") : translate(locale, "Send reply", "إرسال الرد")}</button>
               </form>
             </>}</section>
           </div>
