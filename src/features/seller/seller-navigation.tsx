@@ -207,22 +207,22 @@ export default function SellerNavigation() {
 
         {/* Store selector card */}
         <div className="relative mx-4 mt-5 shrink-0">
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-3.5 shadow-[0_8px_24px_rgba(0,0,0,.3)] backdrop-blur-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-violet-500/5" />
+          <div className="relative overflow-hidden rounded-2xl border border-[#eee9e4] bg-white p-3.5 shadow-[0_8px_22px_rgba(69,69,69,.08)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#fff6ef]/70 via-transparent to-[#fff1e8]/60" />
             <div className="relative flex items-center gap-3">
-              <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-orange-600/10 text-lg font-black text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,.1)]">
+              <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-[#f6d8c5] bg-[#fff1e8] text-lg font-black text-[#FF8C1C] shadow-[inset_0_1px_0_white]">
                 {store?.logoUrl ? (
                   <img src={store.logoUrl} alt="" className="size-full object-cover" />
                 ) : (
                   (store?.name ?? "M").trim().slice(0, 1).toLocaleUpperCase()
                 )}
-                <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10" />
+                <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-[#f6d8c5]/70" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-white">
+                <span className="block truncate text-sm font-bold text-[#454545]">
                   {store?.name ?? translate(locale, "Your business", "أعمالك التجارية")}
                 </span>
-                <span className="mt-1 flex items-center gap-1.5 text-[11px] text-white/55">
+                <span className="mt-1 flex items-center gap-1.5 text-[11px] text-[#777777]">
                   <span className="inline-block size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.6)]" />
                   <span className="truncate font-mono">
                     {store ? `/${store.slug}` : translate(locale, "Active workspace", "مساحة نشطة")}
@@ -231,7 +231,7 @@ export default function SellerNavigation() {
               </span>
               <button
                 type="button"
-                className="grid size-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-300"
+                className="grid size-8 shrink-0 place-items-center rounded-lg border border-[#eee9e4] bg-[#fffaf6] text-[#777777] transition hover:border-[#f6d8c5] hover:bg-[#fff1e8] hover:text-[#FF8C1C]"
                 aria-label={translate(locale, "Switch store", "تبديل المتجر")}
               >
                 <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -300,10 +300,10 @@ export default function SellerNavigation() {
 
         {/* Promotional card */}
         <div className="relative mx-4 mb-3 shrink-0">
-          <div className="relative overflow-hidden rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-rose-500/10 p-4 shadow-[0_8px_24px_rgba(251,146,60,.15)] backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-2xl border border-[#f6d8c5] bg-gradient-to-br from-[#fff6ef] via-white to-[#fff1e8] p-4 shadow-[0_8px_22px_rgba(69,69,69,.07)]">
             {/* Decorative shimmer */}
-            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-400/20 blur-2xl" />
-            <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-rose-500/20 blur-2xl" />
+            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[#f6d8c5]/35 blur-2xl" />
+            <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-[#fff1e8]/80 blur-2xl" />
 
             <div className="relative">
               <div className="flex items-center gap-2">
@@ -312,14 +312,14 @@ export default function SellerNavigation() {
                     <path d="m12 3 2.7 5.6 6.2.9-4.5 4.4 1.1 6.2-5.5-2.9-5.5 2.9 1.1-6.2-4.5-4.4 6.2-.9L12 3Z" />
                   </svg>
                 </span>
-                <span className="text-[9px] font-bold uppercase tracking-[.25em] text-amber-300/80">
+                <span className="text-[9px] font-bold uppercase tracking-[.25em] text-[#a65b26]">
                   {translate(locale, "Premium", "مميز")}
                 </span>
               </div>
-              <p className="mt-3 text-sm font-bold text-white">
+              <p className="mt-3 text-sm font-bold text-[#454545]">
                 {translate(locale, "Grow your store", "طوّر متجرك")}
               </p>
-              <p className="mt-1 text-[11px] leading-5 text-white/60">
+              <p className="mt-1 text-[11px] leading-5 text-[#777777]">
                 {translate(locale, "Reach more customers with targeted campaigns.", "صل إلى عملاء أكثر عبر الحملات الموجّهة.")}
               </p>
               <Link
