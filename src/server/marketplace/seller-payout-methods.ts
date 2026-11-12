@@ -41,7 +41,7 @@ async function requireSellerOwner() {
 const safeSelect = {
   id: true, type: true, accountHolderName: true, bankName: true, countryCode: true,
   currencyCode: true, accountLast4: true, status: true, isDefault: true,
-  verifiedAt: true, createdAt: true, updatedAt: true
+  submissionVersion: true, verifiedAt: true, createdAt: true, updatedAt: true
 } as const;
 
 /** Lists only the authenticated seller owner's non-disabled, masked payout destinations. */
