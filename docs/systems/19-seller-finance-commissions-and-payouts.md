@@ -191,8 +191,9 @@
 ## 2026-11-12 — Ledger primitive hardening boundary
 
 - The internal double-entry posting primitive is present and has been hardened for full
-  payload idempotency, exact reversals, same-transaction journal-line creation and active
-  same-currency accounts at database commit.
+  payload idempotency, exact reversals, same-transaction journal-line creation active
+  same-currency accounts at database commit, and immutable identity fields for accounts
+  already referenced by posted journal lines.
 - Focused unit and PostgreSQL integration tests have been added; they have not yet been run.
 - This does not create seller payables or balances. No payment capture, commission, refund,
   chargeback, reserve, settlement or payout source event is connected to the journal.
