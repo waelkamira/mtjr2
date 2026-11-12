@@ -1747,3 +1747,23 @@ html body :is(input, textarea, [contenteditable="true"], [contenteditable=""], [
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* Main navigation: selected links are solid brand orange with white content.
+   Suppress the global selected-state outline/ring so the active tab stays clean. */
+.site-navigation-header a[aria-current="page"] {
+  background-color: #FF8C1C !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.site-navigation-header a[aria-current="page"]:hover,
+.site-navigation-header a[aria-current="page"]:focus-visible {
+  background-color: #FF8C1C !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.site-navigation-header a[aria-current="page"] :is(span, svg) {
+  color: #ffffff !important;
+}
