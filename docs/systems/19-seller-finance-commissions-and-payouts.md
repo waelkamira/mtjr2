@@ -6,21 +6,21 @@
 - **الغرض:** Transparent seller balance, fees, commissions, settlement statements and payout requests.
 - **المتطلبات الأساسية:** immutable ledger, double-entry postings, fees/taxes/refunds, holds, available vs pending balance, payout eligibility and reconciliation.
 - **الحالة عند تدقيق baseline:** **Schema-only.** Finance models existed; audit found no direct model delegates or complete seller finance workflow.
-- **الحالة الحالية على main (2026-11-09):** CommissionRule وإدارة قواعد العمولة وCommissionTransaction snapshots عند نجاح الدفع الموثق موجودة. صفحة `/seller/commissions` تعرض snapshots واستردادات مكتملة حسب المتجر والعملة، وصفحة `/seller/finance` تعرض ملخصاً للقراءة فقط. لا يوجد بعد دفتر أستاذ مزدوج، أو أرصدة مستحقة/معلقة، أو حجوزات/تسويات، أو وسائل سحب وطلبات دفع، أو reconciliation.
+- **الحالة الحالية على main (2026-11-12):** قواعد العمولات ولقطات `CommissionTransaction` وتقارير `/seller/commissions` وملخص `/seller/finance` للقراءة فقط موجودة. توجد بنية دفتر أستاذ مزدوجة immutable (`LedgerAccount`, `JournalEntry`, `JournalLine`) مع `postJournalEntry` وقراءة قيود الحسابات، لكنها غير متصلة بمصادر الدفع/الاسترداد. توجد إدارة مستفيد التحويل للبائع عبر `/seller/payouts` وواجهات `GET/POST/PATCH/DELETE /api/seller/payout-methods` مع تشفير AES-256-GCM والتحقق من IBAN وحالة `PENDING_VERIFICATION`. أمر المراجعة الإدارية `POST /api/admin/seller-payout-methods/[methodId]/review` موجود، ومساحة القائمة/المراجعة الإدارية قيد التحقق في PR #135. لا توجد بعد أرصدة بائع مستحقة أو متاحة للسحب، ولا حجوزات أو تسوية أو طلبات سحب أو تنفيذ تحويل أو reconciliation.
 - **مالك المجال:** يحدد من خريطة الأنظمة؛ واجهات الإدارة تراقب وتضبط السياسة، وخدمة المجال هنا وحدها تملك قواعد الانتقال والكتابة.
 - **داخل النطاق:** دورة حياة البيانات والعمليات والصفحات وواجهات API الخاصة بهذا النظام.
 - **خارج النطاق:** وظائف الأنظمة الأخرى؛ تُستهلك عبر عقود وخدمات موثقة ولا يعاد بناء منطقها أو جداولها.
 - **قاعدة عدم التداخل:** مصدر واحد لكل حقيقة تجارية، ومالك واحد لكل state transition، وعدم إنشاء صفحة أو جدول مكرر لمجرد وجود زر جديد.
 
 ## 2. الصفحات ومكانها
-**صفحات الهدف:** `/seller/finance`, `/seller/transactions`, `/seller/payouts`, payout method and statement detail.
+**الصفحات الموجودة:** `/seller/finance`, `/seller/commissions`, `/seller/payouts`. صفحة `/admin/seller-payout-methods` قيد الإضافة والتحقق في PR #135. `/seller/transactions` وبيان المستحقات التفصيلي ما زالا أهدافاً مستقبلية وليسا صفحات مكتملة.
 
 | Route الهدف | ملف الصفحة في المصدر عند baseline |
 |---|---|
-| `/seller/finance` | غير موجود بالمسار المتوقع؛ افحص route registry لاحتمال مسار بديل |
-| `/seller/transactions` | غير موجود بالمسار المتوقع؛ افحص route registry لاحتمال مسار بديل |
-| `/seller/payouts` | غير موجود بالمسار المتوقع؛ افحص route registry لاحتمال مسار بديل |
-> فحص الوجود من شجرة commit `a509196e643fc82937eed856b522c0cc5e4dbc2f` فقط. لا يثبت أن الصفحة تعرض أو تعمل. لا تنشئ مساراً بديلاً قبل مراجعة `PAGE_ROUTE_REGISTRY.md`.
+| `/seller/finance` | `src/app/seller/finance/page.tsx` → `src/features/seller/finance-overview-page.tsx`؛ ملخص قراءة فقط |
+| `/seller/commissions` | `src/app/seller/commissions/page.tsx` → `src/features/seller/commissions-page.tsx`؛ كشوف عمولات واستردادات منفصلة حسب العملة |
+| `/seller/payouts` | `src/app/seller/payouts/page.tsx`؛ إدارة مستفيد التحويل فقط، لا سحب ولا تحويل |
+| `/admin/seller-payout-methods` | صفحة المراجعة الإدارية في PR #135؛ غير مدمجة/غير متحققة بعد |
 
 ## 3. آلية عمل النظام
 1. **نقطة الدخول:** صفحة/لوحة الجمهور الصحيح، مع رابط تنقل واضح وصلاحية مناسبة.
@@ -45,14 +45,15 @@
 | إعادة المحاولة | retry | same idempotency key | actor/resource/intent match | idempotent command | unique key | لا يتكرر الأثر |
 
 ## 5. واجهات API والخدمات
-**واجهات API المستهدفة:** `/api/seller/finance/summary`, `/api/seller/transactions`, `/api/seller/payouts`, `/api/seller/payout-methods`.
+**واجهات API الموجودة/المخططة:** `/api/seller/commissions`, `/api/seller/payout-methods`, `/api/seller/payout-methods/[methodId]`, `/api/admin/seller-payout-methods` (PR #135 pending), `/api/admin/seller-payout-methods/[methodId]/review`. مسارات `/api/seller/finance/summary`, `/api/seller/transactions`, `/api/seller/payouts` ليست عقوداً موجودة حالياً.
 
 | API | route.ts في baseline |
 |---|---|
-| `/api/seller/finance/summary` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/seller/transactions` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/seller/payouts` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
-| `/api/seller/payout-methods` | لم يُعثر على ملف مطابق؛ راجع مسار API البديل قبل الإضافة |
+| `/api/seller/commissions` | موجود؛ تقارير `CommissionTransaction` و`RefundItem` scoped للمتجر |
+| `/api/seller/payout-methods` | `GET/POST` موجود؛ بيانات مقنّعة/مشفرّة، مالك البائع فقط |
+| `/api/seller/payout-methods/[methodId]` | `PATCH/DELETE` موجود؛ تعديل الافتراضي وتعطيل مستفيد مملوك للبائع |
+| `/api/admin/seller-payout-methods` | إضافة GET للقائمة المقنّعة في PR #135؛ تحققها pending |
+| `/api/admin/seller-payout-methods/[methodId]/review` | POST موجود؛ قرار يدوي مع MFA/step-up ومرجع إثبات وسبب وتدقيق |
 - افحص handler → Zod → permission guard → domain service → repository → Prisma → response.
 - استخرج user/seller/store/actor من الجلسة والعضوية server-side؛ لا تثق بمعرفات scope القادمة من العميل.
 - أخطاء مستقرة: 400/401/403/404/409/422/429/500 دون تسريب أسرار أو معلومات موارد خاصة.
@@ -63,14 +64,14 @@
 
 | Prisma model | وضعه في schema الحالية | القرار |
 |---|---|---|
-| `SellerLedgerEntry` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `LedgerAccount` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `JournalEntry` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `JournalLine` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `SellerLedgerEntry` | غير موجود؛ لا تنشئه تلقائياً؛ استخدم القيود المزدوجة الموجودة ما لم تثبت فجوة حقيقية |
+| `LedgerAccount` | موجود؛ حسابات scoped وعملة محددة، لا تحتوي على رصيد قابل للتعديل |
+| `JournalEntry` | موجود؛ قيد immutable مع مفتاح idempotency ومصدر وعملة |
+| `JournalLine` | موجود؛ مدين/دائن minor units مع تحقق DB من التوازن وتطابق العملة |
 | `CommissionRule` | موجود؛ قواعد فعالة زمنياً بنطاق البائع/الفئة وتُدار من Super Admin |
 | `CommissionTransaction` | موجود؛ snapshot ثابت لكل عنصر طلب عند نجاح الدفع الموثق، مع unique على orderItemId |
-| `PayoutMethod` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
-| `Payout` | غير موجود؛ لا تنشئه تلقائياً قبل إثبات فجوة بيانات دائمة |
+| `SellerPayoutMethod` | موجود؛ مستفيد مشفر ومقنّع، IBAN فقط حالياً، verification منفصل عن التسجيل |
+| `Payout` | غير موجود؛ لا تنشئه قبل اعتماد سياسة السحب والحجوزات والتسوية ومصدر التحويل |
 | `Payment` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
 | `Refund` | موجود؛ طلب استرداد يدوي مرتبط بطلب الدفع والمرتجع، مع RefundItem allocations وإتمام يدوي موثق |
 | `Currency` | موجود؛ أعد استخدامه وافحص العلاقات والقيود والمستهلكين |
@@ -129,7 +130,7 @@
 - The seller commission statement now includes completed refund item allocations attributable to the selected store, derived from RefundItem → ReturnItem → OrderItem → VendorOrder.
 - Multi-store refunds are attributed by item to the correct store rather than assigning the full order refund to each seller.
 - Per-currency all-time refund totals are database-aggregated; the visible detail list is limited to the latest 100 completed allocations. CSV export includes the aggregates and visible detail rows.
-- These refund amounts are shown separately and are not currently netted against commissions or represented as seller payout balances. Seller accounting ledger, holds, settlement and withdrawals remain unimplemented.
+- These refund amounts are shown separately and are not currently netted against commissions or represented as seller payout balances. The double-entry journal foundation exists, but seller payable posting, holds, settlement and withdrawals remain unimplemented.
 
 
 ## Seller financial overview page (implemented in source 2026-11-09)
@@ -154,15 +155,15 @@
 - Added Prisma models `LedgerAccount`, `JournalEntry`, `JournalLine` and enum `LedgerAccountType`, with currency-specific accounts and optional GLOBAL/SELLER scope metadata.
 - Added migration `20261109200000_seller_double_entry_ledger`. It creates the journal tables, foreign keys and indexes; debit/credit lines must be positive on exactly one side. Deferred database constraint triggers enforce at least two lines, equal debit/credit totals, and account currency matching the journal currency at transaction commit.
 - Journal entries and lines are database append-only. Corrections must use a separate reversal entry. `postJournalEntry` validates balanced integer minor units, active same-currency accounts, idempotency-key reuse, and exact inverse lines for reversals; it posts all lines in a serializable transaction.
-- `listLedgerAccountEntries` provides cursor-paginated immutable account activity. This is a low-level internal primitive only; no seller balance, payout, withdrawal, or API is exposed yet.
+- `listLedgerAccountEntries` provides cursor-paginated immutable account activity. This is a low-level internal primitive only; no seller payable balance, payout request, withdrawal or transfer API is exposed. The separate payout-destination registry APIs are not a payout execution path.
 - **Intentionally not connected to commission/payment/refund flows:** seller payable recognition timing, shipment/delivery/return-window policy, tax/shipping ownership, chargebacks, clearing accounts and negative-balance handling are not approved. No financial balance is calculated from the new tables until those policies and account mappings are agreed and implemented.
-- Required next: define chart-of-accounts codes and currency bootstrap; approve the marketplace accounting policy; then add source-specific journal posting for captured payment, seller payable release, refunds and chargebacks with idempotent source keys and immutable reversals. Only after that build seller statements and payout methods/requests.
+- Required next: define chart-of-accounts codes and currency bootstrap; approve the marketplace accounting policy; then add source-specific journal posting for captured payment, seller payable release, refunds and chargebacks with idempotent source keys and immutable reversals. Only after that build seller payable statements, withdrawal requests and transfer/reconciliation workflows. Payout destination management already exists separately.
 
 
 ## 2026-11-10 — Encrypted seller payout methods (merged to main)
 - Added `SellerPayoutMethod` and enums `SellerPayoutMethodType` / `SellerPayoutMethodStatus`, with a forward migration. IBAN identifiers, account-holder name and optional routing code are encrypted using AES-256-GCM and a versioned key ring; the database stores a protected placeholder for the holder name and only masked account suffixes for display.
 - Added owner-only `GET/POST /api/seller/payout-methods` and `PATCH/DELETE /api/seller/payout-methods/[methodId]`, plus `/seller/payouts`. Defaults are scoped per seller and currency. Mutations are audited without recording account identifiers or routing data.
 - IBAN validation checks supported country-specific lengths, checksum and selected country prefix. Local bank-account entry remains disabled until country-specific account/routing validation is implemented.
-- Every newly saved method is `PENDING_VERIFICATION`. There is no seller self-verification endpoint, bank ownership verification, payout request, transfer execution or withdrawal API. A default method is only a saved preference; it is not proof of ownership or payout eligibility.
-- Verification on the merged PR: PostgreSQL integration, CodeQL and Browser E2E passed. The repository's broad CI still reports the same 17 unrelated baseline failures already present on the immediately preceding main commit; the new payout tests passed in that run.
+- Every newly saved method is `PENDING_VERIFICATION`. There is no seller self-verification endpoint, automated bank ownership verification, payout request, transfer execution or withdrawal API. A manual administrator review command was added separately on main. A default method is only a saved preference; it is not proof of ownership or payout eligibility.
+- Verification on the merged PR: PostgreSQL integration, CodeQL and Browser E2E passed. The administrator review command has source-level tests; the dedicated listing/review workspace is pending PR #135 checks.
 - **Financial gate unchanged:** no payable or withdrawable balance may be calculated from commission snapshots. Do not connect the ledger or expose withdrawals until the marketplace accounting policy and per-currency chart of accounts are approved and source-event posting/reversal/reconciliation paths are implemented.
