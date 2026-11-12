@@ -212,7 +212,7 @@ export default function SecurityPage() {
                 <button disabled={mfaBusy} className={mfaButtonClass}>{mfaBusy ? t("Please wait…", "يرجى الانتظار…") : t("Verify and continue", "تحقق وتابع")}</button>
               </form>
             )}
-            {mfaStatus?.enabled && mfaStatus.verified && !recoveryCodes.length && <p className="mt-4 text-sm font-medium text-green-800">{t("Authenticator protection is enabled.", "حماية تطبيق المصادقة مفعّلة.")}</p>}
+            {mfaStatus?.enabled && mfaStatus.verified && !recoveryCodes.length && <p className="mt-4 text-sm font-medium text-emerald-800">{t("Authenticator protection is enabled.", "حماية تطبيق المصادقة مفعّلة.")}</p>}
             {recoveryCodes.length > 0 && (
               <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
                 <p className="text-sm font-semibold text-amber-950">{t("Save these recovery codes now. Each code works once; they cannot be shown again.", "احفظ رموز الاسترداد الآن. يُستخدم كل رمز مرة واحدة ولا يمكن عرضها مجددًا.")}</p>
