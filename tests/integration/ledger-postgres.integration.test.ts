@@ -55,6 +55,11 @@ describe("ledger PostgreSQL integrity", () => {
     await expect(prisma.journalLine.count({
       where: { journalEntryId: posted.id }
     })).resolves.toBe(2);
+
+    await expect(prisma.ledgerAccount.update({
+      where: { id: debitAccount.id },
+      data: { code: `REWRITTEN-${suffix}` }
+    })).rejects.toThrow(/identity cannot change after it has been used/i);
   });
 
   it("rejects direct posting against an inactive account at database commit", async () => {
