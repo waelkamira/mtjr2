@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -32,6 +33,7 @@ const emptyDraft: Draft = { evidenceReference: "", reason: "" };
 
 export default function SellerPayoutReviewPage() {
   const { locale } = useLocale();
+  const router = useRouter();
   const t = useCallback((en: string, ar: string) => translate(locale, en, ar), [locale]);
   const [status, setStatus] = useState("PENDING_VERIFICATION");
   const [page, setPage] = useState(1);
@@ -40,7 +42,6 @@ export default function SellerPayoutReviewPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<{ id: string; decision: "VERIFIED" | "REJECTED" } | null>(null);
   const [error, setError] = useState("");
-  const [refreshCounter, setRefreshCounter] = useState(0);
   const loadRequestId = useRef(0);
   const draftsRef = useRef<Record<string, Draft>>({});
   const draftStorageKey = "seller-payout-review-draft";
@@ -51,23 +52,31 @@ export default function SellerPayoutReviewPage() {
     } catch {
       // Continue to MFA even when browser storage is unavailable.
     }
-    window.location.assign("/mfa/verify?returnTo=%2Fadmin%2Fseller-payout-methods");
-  }, []);
+    router.replace("/mfa/verify?returnTo=%2Fadmin%2Fseller-payout-methods");
+  }, [router]);
 
   useEffect(() => {
+    let timer: number | undefined;
+    let cancelled = false;
     try {
       const stored = window.sessionStorage.getItem(draftStorageKey);
       if (stored) {
         const parsed = JSON.parse(stored) as Record<string, Draft>;
         if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
           draftsRef.current = parsed;
-          setDrafts(parsed);
+          timer = window.setTimeout(() => {
+            if (!cancelled) setDrafts(parsed);
+          }, 0);
         }
         window.sessionStorage.removeItem(draftStorageKey);
       }
     } catch {
       try { window.sessionStorage.removeItem(draftStorageKey); } catch { /* Ignore unavailable storage. */ }
     }
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
   }, []);
 
   const load = useCallback(async () => {
@@ -97,7 +106,7 @@ export default function SellerPayoutReviewPage() {
     } finally {
       if (requestId === loadRequestId.current) setLoading(false);
     }
-  }, [page, status, t, refreshCounter, redirectForStepUp]);
+  }, [page, status, t, redirectForStepUp]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void load(); }, 0);
@@ -144,7 +153,7 @@ export default function SellerPayoutReviewPage() {
         return next;
       });
       toast.success(t("Bank account review saved and audited.", "تم حفظ مراجعة الحساب البنكي وتسجيلها في سجل التدقيق."));
-      setRefreshCounter((value) => value + 1);
+      await load();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("Bank account review failed.", "تعذرت مراجعة الحساب البنكي.");
       setError(message); toast.error(message);
