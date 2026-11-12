@@ -326,47 +326,28 @@ html body .site-navigation-header button:hover {
   box-shadow: var(--shadow-clay-hover);
 }
 
-html body .site-navigation-header button:is(
-  [aria-current="page"],
+/* Selected controls use the same solid orange treatment as the
+   primary navigation, without an extra outline or decorative shadow. */
+html body :is(button, [role="button"], [role="tab"]):is(
   [aria-pressed="true"],
   [aria-selected="true"],
-  [aria-expanded="true"],
   [data-state="active"],
   [data-state="checked"],
   [data-state="selected"]
 ) {
-  border: 2px solid var(--color-orange);
+  background-color: var(--matjar-action) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
-
-/* Do not globally recolor hover text: dark and light surfaces require
-   component-specific contrasting foreground colors. */
-
-:is(
+html body :is(button, [role="button"], [role="tab"]):is(
   [aria-pressed="true"],
   [aria-selected="true"],
-  [aria-current="page"],
   [data-state="active"],
   [data-state="checked"],
-  [data-state="selected"],
-  [class~="border-[var(--color-lavender-600)]"],
-  [class~="border-[var(--color-orange)]"]
-) {
-  border: 2px solid var(--color-orange);
-  box-shadow: 0 0 0 3px rgb(255 140 28 / 16%);
-}
-
-:is(
-  [aria-pressed="true"],
-  [aria-selected="true"],
-  [aria-current="page"],
-  [data-state="active"],
-  [data-state="checked"],
-  [data-state="selected"],
-  [class~="border-[var(--color-lavender-600)]"],
-  [class~="border-[var(--color-orange)]"]
-) {
-  border: 2px solid var(--color-orange);
-  box-shadow: 0 0 0 3px rgb(255 140 28 / 16%);
+  [data-state="selected"]
+) :is(span, svg) {
+  color: #ffffff !important;
 }
 
 button[class~="bg-[var(--color-orange)]"],
