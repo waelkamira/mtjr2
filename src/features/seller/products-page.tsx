@@ -764,7 +764,13 @@ export default function SellerProductsPage() {
             setMarketPrices(nextPrices);
             setVariantRows((rows) => rows.map((row) => ({ ...row, prices: nextPrices, optionValues: {} })));
           }}>{stores.map((store) => <option key={store.id} value={store.id}>{store.name} · STR-{store.storeNumber.padStart(8, "0")}</option>)}</select></label>
-          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} className="seller-product-form mt-4 grid gap-5">
+          {!stores.length ? <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm">{translate(locale, "Create a store and activate its markets before adding products.", "أنشئ متجرًا وفعّل أسواقه قبل إضافة المنتجات.")}</p> : <form onSubmit={createProduct} onInvalid={(event) => {
+            const field = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+            const fieldLabel = field.labels?.[0]?.innerText?.replace(/\\s+/g, " ").trim();
+            setError(translate(locale,
+              `Please complete the required field: ${fieldLabel || field.name || "required information"}.`,
+              `يرجى تعبئة الحقل الإجباري: ${fieldLabel || field.name || "المعلومات المطلوبة"}.`));
+          }} className="seller-product-form mt-4 grid gap-5">
             <div id="product-media"
               className="seller-product-dropzone grid gap-4 rounded-xl border border-dashed border-[#f3b58f] bg-[#fffaf6] p-4 transition-colors hover:border-[#FF8C1C] sm:p-5"
               onDragOver={(event) => event.preventDefault()}
@@ -937,7 +943,7 @@ export default function SellerProductsPage() {
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input required type="number" min="0.01" max="999999999" step="0.01" className={inputClass} value={floorArea} onChange={(event) => setFloorArea(event.target.value)} /></label>
               </div>
             </fieldset>}
-            <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || !variantPricesValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(255,140,28,.18)] transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <button disabled={busy || loadingCategoryAttributes || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(255,140,28,.18)] transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_10px_28px_rgba(30,57,83,.06)] sm:p-7">
