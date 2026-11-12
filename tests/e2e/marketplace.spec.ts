@@ -187,6 +187,121 @@ test.describe("seller journey", () => {
   });
 });
 
+test.describe("seller onboarding journey", () => {
+  test("verified customer applies, admin approves, and seller creates exactly one store", async ({ page }) => {
+    const stamp = Date.now().toString();
+    await signIn(page, sessions.sellerApplicant);
+    // Establish the same-origin page before using relative fetch URLs.
+    await page.goto("/");
+
+    const application = await page.evaluate(async (stamp) => {
+      const response = await fetch("/api/seller/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          legalName: `E2E Seller Applicant ${stamp}`,
+          displayName: `E2E Applicant ${stamp}`,
+          contactName: "E2E Contact",
+          contactEmail: "e2e-seller-applicant@mtjr2.test",
+          phoneNumber: "+33123456789",
+          residence: "Strasbourg, France",
+          businessType: "INDIVIDUAL",
+          sellingCategories: "Home and lifestyle",
+          intendedProducts: "Household products with documented sourcing and fulfilment plans for this isolated test.",
+          latitude: 48.5734,
+          longitude: 7.7521
+        })
+      });
+      return { status: response.status, body: await response.json() };
+    }, stamp);
+    expect(application.status, JSON.stringify(application.body)).toBe(201);
+    expect(application.body).toMatchObject({ status: "PENDING", alreadySubmitted: false });
+
+    const applicationReplay = await page.evaluate(async (stamp) => {
+      const response = await fetch("/api/seller/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          legalName: `E2E Seller Applicant ${stamp}`,
+          displayName: `E2E Applicant ${stamp}`,
+          contactName: "E2E Contact",
+          contactEmail: "e2e-seller-applicant@mtjr2.test",
+          phoneNumber: "+33123456789",
+          residence: "Strasbourg, France",
+          businessType: "INDIVIDUAL",
+          sellingCategories: "Home and lifestyle",
+          intendedProducts: "Household products with documented sourcing and fulfilment plans for this isolated test.",
+          latitude: 48.5734,
+          longitude: 7.7521
+        })
+      });
+      return { status: response.status, body: await response.json() };
+    }, stamp);
+    expect(applicationReplay.status).toBe(200);
+    expect(applicationReplay.body).toMatchObject({ alreadySubmitted: true });
+
+    const sellerId = (application.body as { sellerId: string }).sellerId;
+    expect(sellerId).toBeTruthy();
+
+    await signIn(page, sessions.admin);
+    const approval = await page.evaluate(async (sellerId) => {
+      const response = await fetch(`/api/admin/sellers/${encodeURIComponent(sellerId)}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision: "APPROVE" })
+      });
+      return { status: response.status, body: await response.json() };
+    }, sellerId);
+    expect(approval.status, JSON.stringify(approval.body)).toBe(200);
+    expect(approval.body).toMatchObject({ sellerId, status: "ACTIVE" });
+
+    await signIn(page, sessions.sellerApplicant);
+    const marketsResponse = await page.request.get("/api/markets");
+    expect(marketsResponse.status()).toBe(200);
+    const markets = await marketsResponse.json() as { items: Array<{ id: string }> };
+    expect(markets.items.length).toBeGreaterThan(0);
+    const marketId = markets.items[0].id;
+    const storeInput = {
+      name: `E2E Applicant Store ${stamp}`,
+      slug: `e2e-applicant-store-${stamp}`,
+      marketIds: [marketId]
+    };
+
+    const createStore = () => page.evaluate(async (input) => {
+      const response = await fetch("/api/seller/stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input)
+      });
+      return { status: response.status, body: await response.json() };
+    }, storeInput);
+
+    const createdStore = await createStore();
+    expect(createdStore.status, JSON.stringify(createdStore.body)).toBe(201);
+    expect(createdStore.body).toMatchObject({ name: storeInput.name, slug: storeInput.slug, status: "DRAFT", alreadyCreated: false });
+
+    const replayedStore = await createStore();
+    expect(replayedStore.status, JSON.stringify(replayedStore.body)).toBe(200);
+    expect(replayedStore.body).toMatchObject({ id: (createdStore.body as { id: string }).id, alreadyCreated: true });
+
+    const secondStore = await page.evaluate(async (input) => {
+      const response = await fetch("/api/seller/stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input)
+      });
+      return { status: response.status, body: await response.json() };
+    }, { ...storeInput, name: `Second E2E Store ${stamp}`, slug: `e2e-second-store-${stamp}` });
+    expect(secondStore.status).toBe(400);
+    expect((secondStore.body as { error?: string }).error).toMatch(/only one store/i);
+
+    const workspace = await page.request.get("/api/seller/stores");
+    expect(workspace.status()).toBe(200);
+    const workspaceBody = await workspace.json() as { stores: Array<{ id: string; name: string }> };
+    expect(workspaceBody.stores.filter((store) => store.id === (createdStore.body as { id: string }).id)).toHaveLength(1);
+  });
+});
+
 test.describe("seller application location", () => {
   test("selecting Syrian administrative areas composes the seller residence address", async ({ page }) => {
     await signIn(page, sessions.buyer);
