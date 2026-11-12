@@ -1,7 +1,6 @@
 "use client";
 
 import { StatusBadge } from "@/components/status-badge";
-import { StatusBadge } from "@/components/status-badge";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
