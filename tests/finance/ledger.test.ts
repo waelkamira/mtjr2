@@ -96,7 +96,13 @@ describe("double-entry journal posting", () => {
     ["description", { description: "Different description" }],
     ["occurredAt", { occurredAt: new Date("2026-11-12T10:00:01.000Z") }],
     ["reversal reference", { reversalOfId: "original-journal" }],
-    ["source reference", { sourceId: "different-payment" }]
+    ["source reference", { sourceId: "different-payment" }],
+    ["line allocation", {
+      lines: [
+        { accountId: "cash-eur", debitMinor: "11000", memo: "Provider clearing" },
+        { accountId: "sales-eur", creditMinor: "11000", memo: "Gross sales" }
+      ]
+    }]
   ])("rejects an idempotency-key retry with a changed %s", async (_field, changed) => {
     mocks.journalFindUnique.mockResolvedValue(existingEntry());
 
