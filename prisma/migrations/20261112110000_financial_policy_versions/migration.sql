@@ -59,7 +59,17 @@ CREATE TABLE "FinancialPolicyRuleVersion" (
   CONSTRAINT "FinancialPolicyRuleVersion_rejected_metadata_check"
     CHECK ("approvalStatus" <> 'REJECTED' OR ("rejectedAt" IS NOT NULL AND "rejectedById" IS NOT NULL)),
   CONSTRAINT "FinancialPolicyRuleVersion_legal_review_check"
-    CHECK ("approvalStatus" <> 'APPROVED' OR "classification" <> 'LEGAL' OR ("reviewedAt" IS NOT NULL AND "reviewedById" IS NOT NULL))
+    CHECK ("approvalStatus" <> 'APPROVED' OR "classification" <> 'LEGAL' OR ("reviewedAt" IS NOT NULL AND "reviewedById" IS NOT NULL)),
+  CONSTRAINT "FinancialPolicyRuleVersion_review_metadata_pair_check"
+    CHECK (("reviewedAt" IS NULL) = ("reviewedById" IS NULL)),
+  CONSTRAINT "FinancialPolicyRuleVersion_decision_exclusivity_check"
+    CHECK (NOT ("approvedAt" IS NOT NULL AND "rejectedAt" IS NOT NULL)),
+  CONSTRAINT "FinancialPolicyRuleVersion_pending_metadata_check"
+    CHECK ("approvalStatus" <> 'PENDING_REVIEW' OR ("approvedAt" IS NULL AND "rejectedAt" IS NULL)),
+  CONSTRAINT "FinancialPolicyRuleVersion_approved_rejection_check"
+    CHECK ("approvalStatus" <> 'APPROVED' OR "rejectedAt" IS NULL),
+  CONSTRAINT "FinancialPolicyRuleVersion_rejected_approval_check"
+    CHECK ("approvalStatus" <> 'REJECTED' OR "approvedAt" IS NULL)
 );
 
 CREATE UNIQUE INDEX "FinancialPolicyRule_key_key"
@@ -94,7 +104,8 @@ BEGIN
     NEW."approvedById" IS DISTINCT FROM OLD."approvedById" OR
     NEW."rejectedAt" IS DISTINCT FROM OLD."rejectedAt" OR
     NEW."rejectedById" IS DISTINCT FROM OLD."rejectedById" OR
-    NEW."rejectionReason" IS DISTINCT FROM OLD."rejectionReason"
+    NEW."rejectionReason" IS DISTINCT FROM OLD."rejectionReason" OR
+    NEW."reviewNotes" IS DISTINCT FROM OLD."reviewNotes"
   ) THEN
     RAISE EXCEPTION 'Financial policy decisions are terminal; create a new version to change policy status';
   END IF;
