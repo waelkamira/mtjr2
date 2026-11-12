@@ -1,6 +1,7 @@
 "use client";
 
 import { StatusBadge } from "@/components/status-badge";
+import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import SyriaLocationPicker from "@/components/maps/syria-location-picker";
@@ -857,7 +858,7 @@ export default function SellerWorkspacePage() {
                     <span className="shrink-0 text-[#918a84]">{translate(locale, "Active store", "المتجر النشط")}</span>
                     {(workspace?.stores.length ?? 0) > 1 ? <select aria-label={translate(locale, "Choose active store", "اختر المتجر النشط")} value={selectedStoreId} onChange={(event) => { setSelectedStoreId(event.target.value); try { localStorage.setItem("mtjr.activeStoreId", event.target.value); window.dispatchEvent(new Event("mtjr:active-store-changed")); } catch { /* Storage can be unavailable in restricted browsers. */ } }} className="max-w-[190px] bg-transparent font-extrabold text-[#454545] outline-none">{(workspace?.stores ?? []).map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select> : <span className="truncate">{selectedStore.name}</span>}
                   </label>
-                  <span className="text-xs font-semibold text-[#918a84]">{selectedStore.status}</span>
+                  <StatusBadge locale={locale} status={selectedStore.status} />
                 </div>}
                 {selectedStore && (selectedStore.publicPhone || selectedStore.publicAddress) && (
                   <div className="mt-3 flex flex-wrap gap-2">
