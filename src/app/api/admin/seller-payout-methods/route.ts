@@ -19,7 +19,7 @@ export async function GET(request: Request): Promise<Response> {
       page: url.searchParams.get("page") ?? undefined
     });
     if (!query.success) {
-      return Response.json({ error: "Unsupported bank destination status." }, { status: 400, headers: { "Cache-Control": "private, no-store" } });
+      return Response.json({ error: "Invalid bank destination status or page." }, { status: 400, headers: { "Cache-Control": "private, no-store" } });
     }
     const { status: requestedStatus, page } = query.data;
     const take = 50;
