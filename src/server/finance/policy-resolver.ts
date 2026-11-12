@@ -48,6 +48,8 @@ export type FinancialPolicyResolution<T> =
   | { status: "MISSING_CONFIGURATION" | "REVIEW_REQUIRED" | "CONFLICT" | "UNSUPPORTED"; reason: string; evaluatedAt: Date; candidateRuleIds: string[] };
 
 const normalize = (value?: string | null) => value?.trim().toUpperCase() || null;
+const matchesOpaqueId = (configured?: string | null, actual?: string | null) =>
+  configured == null || (actual != null && configured.trim() === actual.trim());
 
 function matches<T>(rule: FinancialPolicyRule<T>, context: FinancialPolicyContext): boolean {
   const dimensions: Array<[string | null | undefined, string | null | undefined]> = [
@@ -56,13 +58,12 @@ function matches<T>(rule: FinancialPolicyRule<T>, context: FinancialPolicyContex
     [rule.marketCode, context.marketCode],
     [rule.currencyCode, context.currencyCode],
     [rule.productClass, context.productClass],
-    [rule.paymentProvider, context.paymentProvider],
-    [rule.sellerId, context.sellerId],
-    [rule.categoryId, context.categoryId]
+    [rule.paymentProvider, context.paymentProvider]
   ];
   return dimensions.every(([configured, actual]) =>
     configured == null || normalize(configured) === normalize(actual)
-  );
+  ) && matchesOpaqueId(rule.sellerId, context.sellerId)
+    && matchesOpaqueId(rule.categoryId, context.categoryId);
 }
 
 function specificity<T>(rule: FinancialPolicyRule<T>): number {
