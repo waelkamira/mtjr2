@@ -57,13 +57,13 @@ export default function MetricBarChart({ title, rows, description, variant = "ba
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-sm font-bold tracking-tight text-[#344d60]">{translate(locale, title, title)}</h3>
-          {description && <p className="mt-1 text-xs leading-5 text-[#829aa7]">{translate(locale, description, description)}</p>}
+          {description && <p className="mt-1 text-xs leading-5 text-[#526477]">{translate(locale, description, description)}</p>}
         </div>
         <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-gradient-to-br from-[#8fc9c8] to-[#5d9fb5] shadow-[0_0_0_4px_rgba(89,157,174,.14)]" />
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-5 rounded-2xl bg-white/55 p-5 text-xs text-slate-400">{translate(locale, "No analytics data is available for this view yet.", "لا تتوفر بيانات إحصائية لهذا العرض حتى الآن.")}</p>
+        <p className="mt-5 rounded-2xl bg-white/55 p-5 text-xs text-[#526477]">{translate(locale, "No analytics data is available for this view yet.", "لا تتوفر بيانات إحصائية لهذا العرض حتى الآن.")}</p>
       ) : <>
         {variant === "donut" && <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row">
           <div className="relative h-44 w-44 shrink-0">
