@@ -23,7 +23,7 @@ test("platform admin can inspect immutable ledger activity without financial mut
   await expect(page.getByText(/E2E-CASH/)).toBeVisible();
 
   await page.getByRole("button", { name: /E2E-CASH/ }).click();
-  await expect(page.getByText("E2E Cash Account")).toBeVisible();
+  await expect(page.getByText("E2E Cash Account").first()).toBeVisible();
   await expect(page.getByText("E2E ledger sample entry")).toBeVisible();
   await expect(page.getByText("E2E sample debit")).toBeVisible();
   await expect(page.getByText("E2E_LEDGER")).toBeVisible();
