@@ -22,7 +22,8 @@
     "db:seed-akaar-attributes": "node scripts/seed-akaar-category-attributes.mjs",
     "prebuild": "prisma generate",
     "db:seed:all": "npm run db:seed && npm run db:seed:categories && npm run db:sync-syria-geography",
-    "db:seed:categories": "node prisma/seed-category-taxonomy.cjs"
+    "db:seed:categories": "node prisma/seed-category-taxonomy.cjs",
+    "db:seed:syria-seller": "node prisma/seed-syria-seller.cjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",
