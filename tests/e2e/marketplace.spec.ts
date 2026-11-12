@@ -347,6 +347,33 @@ test.describe("seller application location", () => {
   });
 });
 
+test.describe("seller store image previews", () => {
+  test("renders only safe HTTPS logo and banner preview URLs", async ({ page }) => {
+    await signIn(page, sessions.seller);
+    await page.goto("/seller");
+    await page.getByRole("button", { name: /Edit store profile|تعديل ملف المتجر/i }).click();
+
+    const logoUrl = page.getByLabel(/Store logo image URL|رابط شعار المتجر/i);
+    const logoPreview = page.getByAltText(/Store logo preview|معاينة شعار المتجر/i);
+
+    await logoUrl.fill("http://example.com/logo.png");
+    await expect(logoPreview).toHaveCount(0);
+
+    await logoUrl.fill("https://user:password@example.com/logo.png");
+    await expect(logoPreview).toHaveCount(0);
+
+    await logoUrl.fill("https://images.unsplash.com/photo-1523275335684-37898b6baf30");
+    await expect(logoPreview).toBeVisible();
+
+    const bannerUrl = page.getByLabel(/Store banner image URL|رابط غلاف المتجر/i);
+    const bannerPreview = page.getByAltText(/Store banner preview|معاينة غلاف المتجر/i);
+    await bannerUrl.fill("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>");
+    await expect(bannerPreview).toHaveCount(0);
+    await bannerUrl.fill("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee");
+    await expect(bannerPreview).toBeVisible();
+  });
+});
+
 test.describe("admin seller payout verification", () => {
   test("admin verifies a masked payout destination with external evidence and an audit record", async ({ page }) => {
     await signIn(page, sessions.admin);
