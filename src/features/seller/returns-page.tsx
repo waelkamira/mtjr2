@@ -75,11 +75,19 @@ export default function SellerReturnsPage() {
     label: translateStatus(locale, status), value,
     color: ["bg-amber-500", "bg-sky-500", "bg-emerald-500", "bg-rose-500", "bg-violet-500"][index % 5]
   }));
+  const returnReasonLabel = (reason: string) => {
+    const labels: Record<string, string> = {
+      DAMAGED: "تالف", DEFECTIVE: "معيب", WRONG_ITEM: "منتج غير صحيح",
+      NOT_AS_DESCRIBED: "لا يطابق الوصف", CHANGED_MIND: "تغيير الرأي", OTHER: "سبب آخر"
+    };
+    const english = reason.toLowerCase().replaceAll("_", " ");
+    return translate(locale, english, labels[reason] ?? english);
+  };
   const returnReasonRows = Object.entries(items.reduce((counts, item) => {
     counts[item.reasonCode] = (counts[item.reasonCode] ?? 0) + 1;
     return counts;
   }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([reason, value], index) => ({
-    label: reason.replaceAll("_", " ").toLowerCase(), value,
+    label: returnReasonLabel(reason), value,
     color: ["bg-fuchsia-500", "bg-[var(--orange)]", "bg-cyan-500", "bg-indigo-500", "bg-teal-500", "bg-pink-500"][index]
   }));
   async function decide(item: SellerReturn, status: "APPROVED" | "REJECTED") {
@@ -143,7 +151,7 @@ export default function SellerReturnsPage() {
                     <div><p className="text-xs text-[var(--muted)]">{item.returnNumber} · {translate(locale, "Order", "الطلب")} {item.orderNumber}</p><h2 className="mt-1 text-lg font-semibold">{item.storeName}</h2></div>
                     <div className="text-right"><p className="font-semibold"><StatusBadge locale={locale} status={item.status} /></p><p className="mt-1 text-xs text-[var(--muted)]">{new Date(item.requestedAt).toLocaleString()}</p></div>
                   </div>
-                  <p className="mt-4 text-sm"><span className="font-medium">{translate(locale, "Reason:", "السبب:")}</span> {translate(locale, item.reasonCode, item.reasonCode === "DAMAGED" ? "تالف" : item.reasonCode === "DEFECTIVE" ? "معيب" : item.reasonCode === "WRONG_ITEM" ? "منتج غير صحيح" : item.reasonCode === "NOT_AS_DESCRIBED" ? "لا يطابق الوصف" : item.reasonCode === "CHANGED_MIND" ? "تغيير الرأي" : item.reasonCode.replaceAll("_", " "))}</p>
+                  <p className="mt-4 text-sm"><span className="font-medium">{translate(locale, "Reason:", "السبب:")}</span> {returnReasonLabel(item.reasonCode)}</p>
                   {item.reasonDetails && <p className="mt-1 text-sm text-[var(--muted)]">{item.reasonDetails}</p>}
                   <div className="mt-4 divide-y divide-[var(--border)] border-t border-[var(--border)]">
                     {item.items.map((product) => <div key={product.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
