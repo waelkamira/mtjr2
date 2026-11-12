@@ -875,6 +875,8 @@ html body :where([contenteditable="true"] *, [data-text-select="allow"] *) {
   [class~="bg-orange-500"],
   [class~="bg-orange-600"]
 ) {
+  background-color: #FF8C1C !important;
+  border-color: transparent !important;
   color: #ffffff !important;
 }
 
@@ -901,6 +903,8 @@ html body :where([contenteditable="true"] *, [data-text-select="allow"] *) {
   [class~="hover:bg-orange-500"],
   [class~="hover:bg-orange-600"]
 ):hover {
+  background-color: #F57C00 !important;
+  border-color: transparent !important;
   color: #ffffff !important;
 }
 :is(button, a, [role="button"], [role="tab"], [role="menuitem"]):not([data-contrast="custom"]):is(
