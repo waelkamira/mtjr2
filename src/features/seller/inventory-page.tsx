@@ -1,7 +1,6 @@
 "use client";
 
 import { StatusBadge } from "@/components/status-badge";
-import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
