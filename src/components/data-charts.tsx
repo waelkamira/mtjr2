@@ -153,7 +153,7 @@ export function LineAreaChart({
       {data.length ? (
         <div className="overflow-x-auto">
           <svg role="img" aria-label={title} viewBox={`0 0 ${width} 170`} className="h-44 w-full min-w-[480px]" preserveAspectRatio="none">
-            {[0, 1, 2, 3].map((lineIndex) => <line key={lineIndex} x1="26" x2={width - 8} y1={25 + lineIndex * 40} y2={25 + lineIndex * 40} stroke="#34445d" strokeDasharray="3 4" />)}
+            {[0, 1, 2, 3].map((lineIndex) => <line key={lineIndex} x1="26" x2={width - 8} y1={25 + lineIndex * 40} y2={25 + lineIndex * 40} stroke="#e7e7e7" strokeDasharray="3 4" />)}
             {area && <path d={areaPath} fill="#8B5CF6" opacity=".2" />}
             <polyline points={line} fill="none" stroke="#38BDF8" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
             {points.map(({ x, y, item }, index) => (
@@ -163,7 +163,7 @@ export function LineAreaChart({
               </g>
             ))}
           </svg>
-          <div className="mt-1 flex justify-between text-[10px] text-slate-400"><span>{data[0]?.label}</span><span>{data.at(-1)?.label}</span></div>
+          <div className="mt-1 flex justify-between text-[10px] text-[#777777]"><span>{data[0]?.label}</span><span>{data.at(-1)?.label}</span></div>
         </div>
       ) : <ChartEmpty label={emptyLabel} />}
     </ChartCard>
@@ -206,7 +206,7 @@ export function PieChart({
             {segments.map((segment) => <g key={segment.label}><title>{`${segment.label}: ${segment.value} (${segment.percent}%)`}</title><path d={segment.path} fill={segment.color} stroke="white" strokeWidth="2" /></g>)}
             <circle cx="100" cy="100" r="44" fill="#ffffff" />
             <text x="100" y="96" textAnchor="middle" className="fill-[#777777] text-[10px]">{total}</text>
-            <text x="100" y="112" textAnchor="middle" className="fill-white text-[9px]">{title}</text>
+            <text x="100" y="112" textAnchor="middle" className="fill-[#454545] text-[9px]">{title}</text>
           </svg>
           <ul className="min-w-[140px] space-y-2 text-xs">
             {segments.map((segment) => <li key={segment.label} className="flex items-center justify-between gap-4"><span className="flex min-w-0 items-center gap-2"><i className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: segment.color }} /><span className="truncate">{segment.label}</span></span><span className="font-semibold tabular-nums">{segment.percent}%</span></li>)}
@@ -268,9 +268,9 @@ export function ScatterPlot({
     <ChartCard title={title} description={description}>
       {data.length ? (
         <svg role="img" aria-label={title} viewBox="0 0 400 220" className="h-52 w-full">
-          {[0, 1, 2, 3].map((line) => <g key={line}><line x1="38" x2="390" y1={20 + line * 50} y2={20 + line * 50} stroke="#34445d" strokeDasharray="3 4" /><line x1={38 + line * 88} x2={38 + line * 88} y1="20" y2="170" stroke="#34445d" /></g>)}
-          <line x1="38" x2="390" y1="170" y2="170" stroke="#64748b" />
-          <line x1="38" x2="38" y1="20" y2="170" stroke="#64748b" />
+          {[0, 1, 2, 3].map((line) => <g key={line}><line x1="38" x2="390" y1={20 + line * 50} y2={20 + line * 50} stroke="#e7e7e7" strokeDasharray="3 4" /><line x1={38 + line * 88} x2={38 + line * 88} y1="20" y2="170" stroke="#e7e7e7" /></g>)}
+          <line x1="38" x2="390" y1="170" y2="170" stroke="#b8b8b8" />
+          <line x1="38" x2="38" y1="20" y2="170" stroke="#b8b8b8" />
           {xLabel && <text x="214" y="207" textAnchor="middle" className="fill-[var(--muted)] text-[9px]">{xLabel}</text>}
           {yLabel && <text x="10" y="95" textAnchor="middle" transform="rotate(-90 10 95)" className="fill-[var(--muted)] text-[9px]">{yLabel}</text>}
           {data.map((point, index) => {
@@ -351,7 +351,7 @@ export function RadarChart({
       {data.length >= 3 ? (
         <div className="flex flex-wrap items-center justify-center gap-4">
           <svg role="img" aria-label={title} viewBox="0 0 200 200" className="h-48 w-48">
-            {[.25, .5, .75, 1].map((scale) => <polygon key={scale} points={data.map((_, index) => `${center + radius * scale * Math.cos(angleFor(index))},${center + radius * scale * Math.sin(angleFor(index))}`).join(" ")} fill="none" stroke="#34445d" />)}
+            {[.25, .5, .75, 1].map((scale) => <polygon key={scale} points={data.map((_, index) => `${center + radius * scale * Math.cos(angleFor(index))},${center + radius * scale * Math.sin(angleFor(index))}`).join(" ")} fill="none" stroke="#e7e7e7" />)}
             <polygon points={points} fill="#8B5CF6" fillOpacity=".22" stroke="#38BDF8" strokeWidth="2.5" />
             {data.map((item, index) => {
               const angle = angleFor(index);
@@ -366,5 +366,5 @@ export function RadarChart({
 }
 
 function ChartEmpty({ label = "No data available" }: { label?: string }) {
-  return <p className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[.025] text-sm text-slate-400">{label}</p>;
+  return <p className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#d9d9d9] bg-[#fafafa] text-sm text-[#777777]">{label}</p>;
 }
