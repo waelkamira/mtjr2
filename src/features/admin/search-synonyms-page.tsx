@@ -126,7 +126,7 @@ export default function AdminSearchSynonymsPage() {
           <h2 className="text-lg font-semibold">{t("Configured mappings", "المرادفات المهيأة")}</h2>
           {loading ? <p className="py-5 text-sm text-[var(--muted)]" role="status">{t("Loading mappings…", "جارٍ تحميل المرادفات…")}</p> : items.length ? (
             <div className="mt-4 divide-y divide-[var(--border)]">{items.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0">
-              <div><p className="font-semibold">{item.term} ↔ {item.synonym}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.locale} · <StatusBadge locale={locale} status={item.isActive ? "ACTIVE" : "INACTIVE"} /></p></div>
+              <div><p className="font-semibold">{item.term} ↔ {item.synonym}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.locale} · <StatusBadge locale={uiLocale} status={item.isActive ? "ACTIVE" : "INACTIVE"} /></p></div>
               <div className="flex gap-2"><button type="button" disabled={busyId === item.id} onClick={() => void setActive(item, !item.isActive)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-50">{item.isActive ? t("Deactivate", "تعطيل") : t("Activate", "تفعيل")}</button><button type="button" disabled={busyId === item.id} onClick={() => void remove(item)} className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50">{t("Delete", "حذف")}</button></div>
             </article>)}</div>
           ) : !error ? <p className="py-5 text-sm text-[var(--muted)]">{t("No synonym mappings configured.", "لم تتم إضافة مرادفات بعد.")}</p> : null}
