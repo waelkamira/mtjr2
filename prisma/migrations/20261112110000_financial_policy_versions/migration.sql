@@ -86,6 +86,26 @@ BEGIN
     RAISE EXCEPTION 'Financial policy versions cannot be deleted';
   END IF;
 
+  IF OLD."approvalStatus" <> 'PENDING_REVIEW' AND (
+    NEW."approvalStatus" IS DISTINCT FROM OLD."approvalStatus" OR
+    NEW."reviewedAt" IS DISTINCT FROM OLD."reviewedAt" OR
+    NEW."reviewedById" IS DISTINCT FROM OLD."reviewedById" OR
+    NEW."approvedAt" IS DISTINCT FROM OLD."approvedAt" OR
+    NEW."approvedById" IS DISTINCT FROM OLD."approvedById" OR
+    NEW."rejectedAt" IS DISTINCT FROM OLD."rejectedAt" OR
+    NEW."rejectedById" IS DISTINCT FROM OLD."rejectedById" OR
+    NEW."rejectionReason" IS DISTINCT FROM OLD."rejectionReason"
+  ) THEN
+    RAISE EXCEPTION 'Financial policy decisions are terminal; create a new version to change policy status';
+  END IF;
+
+  IF OLD."reviewedAt" IS NOT NULL AND (
+    NEW."reviewedAt" IS DISTINCT FROM OLD."reviewedAt" OR
+    NEW."reviewedById" IS DISTINCT FROM OLD."reviewedById"
+  ) THEN
+    RAISE EXCEPTION 'Financial policy review evidence cannot be overwritten';
+  END IF;
+
   IF ROW(
     NEW."ruleId", NEW."version", NEW."classification", NEW."countryCode",
     NEW."subdivisionCode", NEW."marketCode", NEW."currencyCode",
