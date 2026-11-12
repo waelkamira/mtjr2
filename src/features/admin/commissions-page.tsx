@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { formatMinorUnits } from "@/lib/money";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -215,7 +216,7 @@ export default function CommissionsPage() {
               <tbody>{rules.map((rule) => <tr key={rule.id} className="border-b border-[var(--border)] last:border-0">
                 <td className="py-3 pr-4 font-medium">{scopeLabel(locale, rule)}</td><td className="py-3 pr-4">{(rule.rateBasisPoints / 100).toFixed(2)}%</td>
                 <td className="py-3 pr-4">{new Date(rule.effectiveFrom).toLocaleString()} – {rule.effectiveUntil ? new Date(rule.effectiveUntil).toLocaleString() : translate(locale, "No end", "بلا تاريخ انتهاء")}</td>
-                <td className="py-3 pr-4">{rule.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</td>
+                <td className="py-3 pr-4"><StatusBadge locale={locale} status={rule.isActive ? "ACTIVE" : "INACTIVE"} /></td>
                 <td className="py-3">{rule.isActive && <button disabled={busy !== ""} onClick={() => void deactivate(rule)} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50">{busy === rule.id ? translate(locale, "Updating…", "جارٍ التحديث…") : translate(locale, "Deactivate", "إلغاء التفعيل")}</button>}</td>
               </tr>)}</tbody>
             </table>
