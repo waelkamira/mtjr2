@@ -667,6 +667,7 @@ model SellerPayoutMethod {
   encryptionKeyVersion Int
   accountLast4         String                   @db.VarChar(4)
   fingerprint          String                   @db.VarChar(64)
+  submissionVersion    Int                      @default(1)
   status               SellerPayoutMethodStatus @default(PENDING_VERIFICATION)
   isDefault            Boolean                  @default(false)
   verifiedAt           DateTime?
