@@ -190,3 +190,11 @@ review required, conflict, and unsupported context without fallback values.
 This is an administrative diagnostic only. It is not connected to checkout, refunds,
 commission posting, journal entries, seller payable, or payout execution. Runtime,
 PostgreSQL, and browser verification remain outstanding.
+
+## 15. Preview safety test checkpoint — 2026-11-12
+
+Focused tests have been added for the Prisma-to-resolver preview adapter: approved
+selection, pending legal rule blocking a platform fallback, permission denial before
+database access, and malformed country/currency context. These tests are committed
+but have not been executed in this session. They do not replace PostgreSQL transaction
+and migration tests.
