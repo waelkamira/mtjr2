@@ -839,16 +839,16 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 key={link.href}
                 href={link.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`group bg-lime-500 relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 $z{
+                className={`group relative flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none ${
                   isActive
-                    ? " bg-orange-500 text-white shadow-md "
-                    : " text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                    ? "border-transparent bg-orange-500 text-white shadow-[0_5px_14px_rgba(249,115,22,0.24)] hover:bg-orange-500 hover:text-white"
+                    : "border-transparent bg-white text-stone-800 hover:border-orange-200 hover:bg-white hover:text-stone-950 hover:shadow-[0_4px_12px_rgba(249,115,22,0.10)]"
                 }`}
               >
                 <NavigationIcon 
                   name={navigationIconFor(link.label)} 
                   className={`h-4 w-4 transition-colors ${
-                    isActive ? "text-white" : "text-stone-400 group-hover:text-orange-500"
+                    isActive ? "text-white" : "text-stone-700 group-hover:text-orange-500"
                   }`} 
                 />
                 <span>{localizedNavigationLabel(locale, link.label)}</span>
@@ -941,8 +941,8 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       onClick={() => setMobileOpen(false)}
                       className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-300 ${
                         isActive
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25"
-                          : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                          ? "border border-transparent bg-orange-500 text-white shadow-[0_5px_14px_rgba(249,115,22,0.22)]"
+                          : "border border-transparent bg-white text-stone-800 hover:border-orange-200 hover:bg-white hover:text-stone-950 hover:shadow-[0_4px_12px_rgba(249,115,22,0.10)]"
                       }`}
                     >
                       <NavigationIcon 
