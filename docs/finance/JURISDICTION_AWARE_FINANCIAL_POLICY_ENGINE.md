@@ -177,3 +177,16 @@ The UI is a management surface only. It does not publish money-moving permission
 connect the resolver to checkout/refunds/commissions/ledger/payouts, or imply that a
 policy is legally valid. Source-level implementation has not yet been verified by
 local build, generated Prisma client, PostgreSQL migration, or browser testing.
+
+## 14. Read-only resolver preview checkpoint — 2026-11-12
+
+A Super Admin-only preview adapter now loads currently effective policy versions for
+a requested domain and passes the transaction context to the pure resolver. It is
+exposed through `POST /api/admin/financial-policies/preview` and the administrative
+page accepts a JSON evaluation context and displays the complete resolution result.
+The endpoint is read-only and returns blocked outcomes such as missing configuration,
+review required, conflict, and unsupported context without fallback values.
+
+This is an administrative diagnostic only. It is not connected to checkout, refunds,
+commission posting, journal entries, seller payable, or payout execution. Runtime,
+PostgreSQL, and browser verification remain outstanding.
