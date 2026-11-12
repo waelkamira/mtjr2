@@ -21,8 +21,7 @@ type PayoutMethod = {
     displayName: string | null;
     legalName: string | null;
     contactName: string | null;
-    contactEmail: string | null;
-    owner: { id: string; email: string; displayName: string | null };
+    owner: { email: string; displayName: string | null };
   };
 };
 type Listing = { items: PayoutMethod[]; page: number; pageCount: number; total: number };
@@ -103,7 +102,7 @@ export default function SellerPayoutReviewPage() {
         const draft = drafts[item.id] ?? emptyDraft;
         const sellerName = item.seller.displayName || item.seller.legalName || item.seller.contactName || t("Unnamed seller", "بائع بلا اسم");
         return <article key={item.id} className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs text-[var(--muted)]">{t("Seller", "البائع")} · {item.sellerId}</p><h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">{sellerName}</h2><p className="mt-1 text-sm text-[var(--muted)]">{item.seller.owner.displayName || item.seller.owner.email} · {item.seller.owner.email}</p></div><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs font-semibold">{item.status}</span></div>
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs text-[var(--muted)]">{t("Seller", "البائع")} · {item.sellerId}</p><h2 className="mt-1 text-lg font-semibold text-[var(--color-forest-950)]">{sellerName}</h2><p className="mt-1 text-sm text-[var(--muted)]">{item.seller.owner.displayName ? `${item.seller.owner.displayName} · ${item.seller.owner.email}` : item.seller.owner.email}</p></div><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 text-xs font-semibold">{item.status}</span></div>
           <div className="mt-4 grid gap-3 rounded-xl bg-[var(--color-ivory-100)] p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div><p className="text-xs text-[var(--muted)]">{t("Bank", "البنك")}</p><p className="mt-1 font-semibold">{item.bankName}</p></div>
             <div><p className="text-xs text-[var(--muted)]">{t("Account type", "نوع الحساب")}</p><p className="mt-1 font-semibold">{item.type}</p></div>
