@@ -43,7 +43,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: { product: { findUnique: mocks.productFindUnique }, store: { findFirst: mocks.storeFindFirst }, storeMediaAsset: { deleteMany: mocks.storeMediaAssetDeleteMany }, $transaction: mocks.transaction }
 }));
 
-import { createDraftProduct, publishProduct, rejectProduct, updateDraftProduct } from "@/server/catalog/products";
+import { approveProduct, createDraftProduct, publishProduct, rejectProduct, updateDraftProduct } from "@/server/catalog/products";
 
 describe("product lifecycle", () => {
   beforeEach(() => {
@@ -378,6 +378,68 @@ describe("product lifecycle", () => {
     expect(result).toMatchObject({ productId: "product-1", status: "ACTIVE" });
     expect(mocks.requireCurrentSession).toHaveBeenCalledOnce();
     expect(mocks.productUpdateMany).toHaveBeenCalledOnce();
+  });
+
+  it("approves only a pending draft and records the reviewer audit event", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING"
+    });
+
+    const result = await approveProduct("product-1");
+
+    expect(result).toEqual({ productId: "product-1", approvalStatus: "APPROVED" });
+    expect(mocks.requirePermission).toHaveBeenCalledWith({ permissionKey: "users:manage", now: expect.any(Date) });
+    expect(mocks.productUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "product-1", status: "DRAFT", approvalStatus: "PENDING" },
+      data: expect.objectContaining({ approvalStatus: "APPROVED" })
+    }));
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("does not approve a product that is already reviewed or published", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "ACTIVE", approvalStatus: "APPROVED"
+    });
+
+    await expect(approveProduct("product-1")).rejects.toThrow(/only pending draft products/i);
+    expect(mocks.productUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
+  });
+
+  it("refuses to publish a pending product even when its store and listing data are otherwise valid", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "PENDING",
+      store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] },
+      variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }],
+      media: [{ id: "media-1" }]
+    });
+
+    await expect(publishProduct("product-1")).rejects.toThrow(/only approved draft products/i);
+    expect(mocks.productUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses to publish when a primary image or active variant is missing", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED",
+      store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] },
+      variants: [],
+      media: []
+    });
+
+    await expect(publishProduct("product-1")).rejects.toThrow(/active variant and a primary image/i);
+    expect(mocks.productUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses to publish when any active variant lacks a valid price in an enabled market", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED",
+      store: { status: "ACTIVE", seller: { status: "ACTIVE" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] },
+      variants: [{ id: "variant-1", prices: [] }],
+      media: [{ id: "media-1" }]
+    });
+
+    await expect(publishProduct("product-1")).rejects.toThrow(/every active variant needs a price/i);
+    expect(mocks.productUpdateMany).not.toHaveBeenCalled();
   });
 
   it("denies a different seller even when that seller has a global catalog role", async () => {
