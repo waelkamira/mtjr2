@@ -191,17 +191,19 @@ test.describe("seller catalog authoring", () => {
   test("seller can create a draft product and edit it from the catalog", async ({ page }) => {
     await signIn(page, sessions.seller);
     await page.setViewportSize({ width: 1440, height: 900 });
+    let uploadSequence = 0;
     await page.route("**/api/seller/products/media", async (route) => {
+      uploadSequence += 1;
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           success: true,
           data: {
-            url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+            url: `https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixid=e2e-${uploadSequence}`,
             provider: "imgur",
             mimeType: "image/png",
-            storageKey: "imgur:e2e-product-image",
+            storageKey: `imgur:e2e-product-image-${uploadSequence}`,
             width: 800,
             height: 800
           }
@@ -280,6 +282,23 @@ test.describe("seller catalog authoring", () => {
     await expect(editForm).toBeVisible();
     await editForm.locator("input").nth(0).fill(updatedName);
     await editForm.locator("input").nth(1).fill(`e2e-seller-draft-updated-${stamp}`);
+
+    // Replace the original image, add a second image, then remove it again.
+    // The saved gallery must retain one valid cover image and unlink the old asset.
+    const imageFiles = editForm.locator('input[type="file"][accept^="image/jpeg"]');
+    await imageFiles.nth(1).setInputFiles({
+      name: "e2e-replacement.png", mimeType: "image/png",
+      buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
+    });
+    await expect(editForm.getByText(/Image replaced successfully|تم استبدال الصورة بنجاح/i)).toBeVisible({ timeout: 15000 });
+    await imageFiles.nth(0).setInputFiles([{
+      name: "e2e-secondary.png", mimeType: "image/png",
+      buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
+    }]);
+    await expect(editForm.getByRole("button", { name: /Remove image|حذف الصورة/i })).toHaveCount(2, { timeout: 15000 });
+    await editForm.getByRole("button", { name: /Remove image|حذف الصورة/i }).last().click();
+    await expect(editForm.getByRole("button", { name: /Remove image|حذف الصورة/i })).toHaveCount(1);
+
     await editForm.getByRole("button", { name: /Save changes|حفظ التغييرات/i }).click();
     await expect(page.getByRole("status")).toContainText(/Draft product updated|تم تحديث مسودة المنتج/i, { timeout: 20000 });
 
