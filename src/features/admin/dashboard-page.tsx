@@ -236,7 +236,7 @@ function MetricCard({
       </div>
     </div>
   );
-  const className = "group block min-h-40 rounded-3xl border border-white/80 bg-gradient-to-br from-white to-orange-50/50 p-4 shadow-[0_8px_28px_rgba(15,23,42,.045)] transition hover:-translate-y-0.5 hover:shadow-lg";
+  const className = "group block min-h-40 rounded-3xl border border-gray-200 bg-gradient-to-br from-white to-orange-50/50 p-4 shadow-[0_8px_28px_rgba(15,23,42,.045)] transition hover:-translate-y-0.5 hover:shadow-lg";
   return href
     ? <Link href={href} className={`${className} transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-copper-600)]`}>{content}</Link>
     : <div className={className}>{content}</div>;
