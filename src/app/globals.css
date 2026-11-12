@@ -1229,10 +1229,10 @@ button[data-variant="danger"] svg { color: #ffffff; }
 }
 .seller-dashboard .seller-sidebar-nav a[aria-current="page"],
 .seller-dashboard .seller-mobile-navigation a[aria-current="page"] {
-  background: var(--matjar-active) !important;
-  border-color: #a3e635 !important;
-  color: var(--matjar-active-ink) !important;
-  box-shadow: inset 3px 0 0 #84cc16, 0 3px 8px rgb(101 163 13 / 9%) !important;
+  background: var(--seller-orange) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 5px 14px rgb(255 140 28 / 22%) !important;
 }
 .seller-dashboard .seller-sidebar-nav a:not([aria-current="page"]),
 .seller-dashboard .seller-mobile-navigation a:not([aria-current="page"]) {
@@ -1254,8 +1254,8 @@ button[data-variant="danger"] svg { color: #ffffff; }
 }
 .seller-dashboard .seller-sidebar-nav a[aria-current="page"] span.grid,
 .seller-dashboard .seller-mobile-navigation a[aria-current="page"] svg {
-  background: transparent !important;
-  color: var(--matjar-active-ink) !important;
+  background: rgb(255 255 255 / 15%) !important;
+  color: #ffffff !important;
   border-color: transparent !important;
 }
 .seller-dashboard .seller-mobile-navigation a:not([aria-current="page"]) svg {
@@ -1397,8 +1397,8 @@ button[data-button-style="link"]:hover:not(:disabled) {
   --seller-line: #eee9e4;
   --seller-orange: #FF8C1C;
   --seller-orange-hover: #E8750B;
-  --seller-active: #d9f99d;
-  --seller-active-ink: #365314;
+  --seller-active: #FF8C1C;
+  --seller-active-ink: #ffffff;
   background: var(--seller-canvas) !important;
   color: var(--seller-ink) !important;
 }
