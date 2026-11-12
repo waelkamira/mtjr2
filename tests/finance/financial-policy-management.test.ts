@@ -159,6 +159,7 @@ describe("financial policy administration and resolution preview", () => {
 
   it("rejects malformed currency and country context before querying the database", async () => {
     await expect(previewFinancialPolicyResolution({ ...context, currencyCode: "EURO" }, now)).rejects.toThrow();
+    await expect(previewFinancialPolicyResolution({ ...context, countryCode: "FRA" }, now)).rejects.toThrow();
     expect(mocks.versionFindMany).not.toHaveBeenCalled();
   });
 });
