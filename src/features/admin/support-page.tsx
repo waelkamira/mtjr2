@@ -150,7 +150,7 @@ export default function AdminSupportPage() {
         {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--surface-soft)]" /> : (
           <div className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
             <aside className="space-y-2">
-              {items.map((item) => <button key={item.id} onClick={() => setSelected(item.id)} className={`w-full rounded-2xl border p-4 text-left ${selected === item.id ? "border-[var(--color-lavender-600)] bg-[var(--surface)]" : "border-[var(--border)] bg-[var(--surface)]/60"}`}>
+              {items.map((item) => <button key={item.id} onClick={() => setSelected(item.id)} className={`w-full rounded-2xl border p-4 text-left ${selected === item.id ? "border-[#FF8C1C] bg-orange-50/70 shadow-sm" : "border-[var(--border)] bg-[var(--surface)]/60 hover:border-[#FF8C1C]/50"}`}>
                 <div className="flex justify-between gap-2"><span className="text-xs font-semibold text-[var(--color-lavender-600)]">{item.ticketNumber}</span><span className="text-xs">{statusLabel(item.priority)}</span></div>
                 <p className="mt-2 font-semibold">{item.subject}</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">{item.customer} · <StatusBadge locale={locale} status={item.status} /></p>
@@ -163,7 +163,7 @@ export default function AdminSupportPage() {
                 <div className="flex flex-wrap justify-between gap-3">
                   <div><p className="text-xs text-[var(--color-lavender-600)]">{ticket.ticketNumber} · {ticket.customer.email}</p><h2 className="mt-1 text-xl font-semibold">{ticket.subject}</h2></div>
                   <div className="flex gap-2">
-                    <select aria-label={translate(locale, "Status", "الحالة")} value={status} onChange={(event) => { setStatus(event.target.value); void patch({ status: event.target.value }); }} className="rounded-lg border p-2 text-sm">{ticketStatuses.map((value) => <option key={value} value={value}>{statusLabel(value)}</option>)}</select>
+                    <select aria-label={translate(locale, "Status", "الحالة")} value={status} onChange={(event) => { setStatus(event.target.value); void patch({ status: event.target.value }); }} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[#FF8C1C] focus:outline-none focus:ring-2 focus:ring-orange-200">{ticketStatuses.map((value) => <option key={value} value={value}>{statusLabel(value)}</option>)}</select>
                     <select aria-label={translate(locale, "Priority", "الأولوية")} value={priority} onChange={(event) => { setPriority(event.target.value); void patch({ priority: event.target.value }); }} className="rounded-lg border p-2 text-sm">{priorities.map((value) => <option key={value} value={value}>{statusLabel(value)}</option>)}</select>
                   </div>
                 </div>
@@ -177,8 +177,8 @@ export default function AdminSupportPage() {
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{message.body}</p>
               </article>)}</div>
               <form onSubmit={reply} className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                <label className="block text-sm font-semibold">{translate(locale, "Reply or internal note", "رد أو ملاحظة داخلية")}<textarea required minLength={2} maxLength={8000} rows={4} value={body} onChange={(event) => setBody(event.target.value)} className="mt-2 w-full rounded-xl border p-3" /></label>
-                <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" checked={internal} onChange={(event) => setInternal(event.target.checked)} /> {translate(locale, "Internal note (not visible to customer)", "ملاحظة داخلية (لا تظهر للعميل)")}</label>
+                <label className="block text-sm font-semibold">{translate(locale, "Reply or internal note", "رد أو ملاحظة داخلية")}<textarea required minLength={2} maxLength={8000} rows={4} value={body} onChange={(event) => setBody(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[#FF8C1C] focus:outline-none focus:ring-2 focus:ring-orange-200" /></label>
+                <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[#FF8C1C]" checked={internal} onChange={(event) => setInternal(event.target.checked)} /> {translate(locale, "Internal note (not visible to customer)", "ملاحظة داخلية (لا تظهر للعميل)")}</label>
                 <button disabled={busy} className="mt-3 rounded-xl bg-[var(--color-ink-800)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : internal ? translate(locale, "Add internal note", "إضافة ملاحظة داخلية") : translate(locale, "Send reply", "إرسال الرد")}</button>
               </form>
             </>}</section>
