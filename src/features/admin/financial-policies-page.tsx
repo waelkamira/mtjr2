@@ -49,6 +49,7 @@ export default function FinancialPoliciesPage() {
   const [versions, setVersions] = useState<PolicyVersion[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [domainFilter, setDomainFilter] = useState("");
+  const [keyFilter, setKeyFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -62,6 +63,8 @@ export default function FinancialPoliciesPage() {
   const [currencyCode, setCurrencyCode] = useState("");
   const [productClass, setProductClass] = useState("");
   const [paymentProvider, setPaymentProvider] = useState("");
+  const [sellerId, setSellerId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [priority, setPriority] = useState("0");
   const [valueJson, setValueJson] = useState('{"enabled": true}');
   const [effectiveFrom, setEffectiveFrom] = useState(() => localDateTimeValue(new Date()));
@@ -73,12 +76,13 @@ export default function FinancialPoliciesPage() {
     const params = new URLSearchParams();
     if (statusFilter) params.set("approvalStatus", statusFilter);
     if (domainFilter.trim()) params.set("domain", domainFilter.trim().toUpperCase());
+    if (keyFilter.trim()) params.set("key", keyFilter.trim().toUpperCase());
     params.set("limit", "50");
     const response = await fetch(`/api/admin/financial-policies?${params.toString()}`, { cache: "no-store" });
     const data = await response.json() as { versions?: PolicyVersion[]; error?: string };
     if (!response.ok) throw new Error(data.error || translate(locale, "Financial policies could not be loaded.", "تعذر تحميل السياسات المالية."));
     setVersions(data.versions || []);
-  }, [domainFilter, locale, statusFilter]);
+  }, [domainFilter, keyFilter, locale, statusFilter]);
 
   useEffect(() => {
     let active = true;
@@ -110,6 +114,8 @@ export default function FinancialPoliciesPage() {
           currencyCode: currencyCode.trim() || null,
           productClass: productClass.trim() || null,
           paymentProvider: paymentProvider.trim() || null,
+          sellerId: sellerId.trim() || null,
+          categoryId: categoryId.trim() || null,
           priority: Number(priority),
           value,
           effectiveFrom: new Date(effectiveFrom).toISOString(),
@@ -123,7 +129,7 @@ export default function FinancialPoliciesPage() {
       toast.success(translate(locale, "Policy version created as pending review.", "تم إنشاء إصدار السياسة بانتظار المراجعة."));
       setKey(""); setDescription(""); setValueJson('{"enabled": true}');
       setCountryCode(""); setSubdivisionCode(""); setMarketCode(""); setCurrencyCode("");
-      setProductClass(""); setPaymentProvider(""); setSourceReference(""); setReviewNotes("");
+      setProductClass(""); setPaymentProvider(""); setSellerId(""); setCategoryId(""); setSourceReference(""); setReviewNotes("");
       await load();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : translate(locale, "Policy version could not be created.", "تعذر إنشاء إصدار السياسة.");
@@ -194,6 +200,8 @@ export default function FinancialPoliciesPage() {
           <label className={labelClass}>{translate(locale, "Currency code", "رمز العملة")}<input className={inputClass} value={currencyCode} onChange={(e) => setCurrencyCode(e.target.value.toUpperCase())} maxLength={3} placeholder="USD"/></label>
           <label className={labelClass}>{translate(locale, "Product class", "فئة المنتج")}<input className={inputClass} value={productClass} onChange={(e) => setProductClass(e.target.value.toUpperCase())} maxLength={80}/></label>
           <label className={labelClass}>{translate(locale, "Payment provider", "مزود الدفع")}<input className={inputClass} value={paymentProvider} onChange={(e) => setPaymentProvider(e.target.value.toUpperCase())} maxLength={80}/></label>
+          <label className={labelClass}>{translate(locale, "Seller ID (optional)", "معرّف البائع (اختياري)")}<input className={inputClass} value={sellerId} onChange={(e) => setSellerId(e.target.value)} maxLength={128}/></label>
+          <label className={labelClass}>{translate(locale, "Category ID (optional)", "معرّف الفئة (اختياري)")}<input className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)} maxLength={128}/></label>
           <label className={labelClass}>{translate(locale, "Priority", "الأولوية")}<input className={inputClass} type="number" value={priority} onChange={(e) => setPriority(e.target.value)} min={-100000} max={100000}/></label>
           <label className={labelClass}>{translate(locale, "Effective from", "ساري من")}<input className={inputClass} type="datetime-local" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} required/></label>
           <label className={labelClass}>{translate(locale, "Effective until", "ساري حتى")}<input className={inputClass} type="datetime-local" value={effectiveUntil} onChange={(e) => setEffectiveUntil(e.target.value)}/></label>
@@ -207,7 +215,8 @@ export default function FinancialPoliciesPage() {
       <section className="mt-7 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-clay-raised sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div><h2 className="text-xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Policy versions", "إصدارات السياسات")}</h2><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Review the scope, evidence and approval history of each version.", "راجع النطاق والأدلة وسجل اعتماد كل إصدار.")}</p></div>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <label className={labelClass}>{translate(locale, "Policy key", "مفتاح السياسة")}<input className={inputClass} value={keyFilter} onChange={(e) => setKeyFilter(e.target.value)} placeholder="SELLER_PAYOUT"/></label>
             <label className={labelClass}>{translate(locale, "Status", "الحالة")}<select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">{translate(locale, "All statuses", "كل الحالات")}</option><option value="PENDING_REVIEW">PENDING_REVIEW</option><option value="APPROVED">APPROVED</option><option value="REJECTED">REJECTED</option></select></label>
             <label className={labelClass}>{translate(locale, "Domain filter", "تصفية المجال")}<input className={inputClass} value={domainFilter} onChange={(e) => setDomainFilter(e.target.value)} placeholder="SELLER_PAYOUT"/></label>
           </div>
