@@ -58,12 +58,15 @@ export async function postJournalEntry(input: JournalInput) {
       include: { lines: { orderBy: { lineNumber: "asc" } } }
     });
     if (existing) {
-      const sameSource = existing.sourceType === data.sourceType
+      const sameImmutableHeader = existing.sourceType === data.sourceType
         && existing.sourceId === data.sourceId
-        && existing.currencyCode.trim() === data.currencyCode;
+        && existing.currencyCode.trim() === data.currencyCode
+        && existing.description === data.description
+        && existing.occurredAt.getTime() === data.occurredAt.getTime()
+        && (existing.reversalOfId ?? null) === (data.reversalOfId ?? null);
       const existingLines = canonicalLines(existing.lines);
       const requestedLines = canonicalLines(lines.map((line) => ({ ...line, memo: line.memo })));
-      if (!sameSource || JSON.stringify(existingLines) !== JSON.stringify(requestedLines)) {
+      if (!sameImmutableHeader || JSON.stringify(existingLines) !== JSON.stringify(requestedLines)) {
         throw new Error("Idempotency key was already used for a different journal entry.");
       }
       return { id: existing.id, postedAt: existing.postedAt, alreadyPosted: true };
