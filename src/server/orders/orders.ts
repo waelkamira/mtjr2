@@ -148,6 +148,7 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
                   select: {
                     categories: {
                       where: { isPrimary: true },
+                      orderBy: [{ sortOrder: "asc" }, { categoryId: "asc" }],
                       select: { categoryId: true, category: { select: { name: true } } },
                       take: 1
                     }
