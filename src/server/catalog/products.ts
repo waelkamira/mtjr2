@@ -21,8 +21,11 @@ const priceSchema = z.object({
 const createSchema = z.object({
   storeId: z.string().trim().min(1),
   name: z.string().trim().min(2).max(180),
+  locale: z.string().trim().min(2).max(16).optional(),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180),
   description: z.string().trim().max(12000).optional(),
+  seoTitle: z.string().trim().max(180).optional(),
+  seoDescription: z.string().trim().max(320).optional(),
   specifications: z.object({
     model: z.string().trim().max(160).optional(),
     color: z.string().trim().max(160).optional(),
@@ -243,6 +246,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         streetAddress: data.streetAddress,
         latitude: data.latitude,
         longitude: data.longitude,
+        translations: { create: { locale: data.locale ?? "ar", name: data.name, description: data.description, seoTitle: data.seoTitle, seoDescription: data.seoDescription } },
         categories: { create: categoryIds.map((categoryId, index) => ({ categoryId, isPrimary: index === 0, sortOrder: index })) },
         attributes: { create: data.attributes.map((item) => ({
           attributeDefinitionId: item.attributeDefinitionId,
