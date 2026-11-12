@@ -863,6 +863,7 @@ model Product {
   slug                String                @db.VarChar(180)
   name                String
   description         String?
+  specifications      Json?
   city                String?               @db.VarChar(120)
   district            String?               @db.VarChar(120)
   streetAddress       String?               @db.VarChar(500)
