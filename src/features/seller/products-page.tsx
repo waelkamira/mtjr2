@@ -461,6 +461,18 @@ export default function SellerProductsPage() {
       setError(translate(locale, "Add at least one successfully uploaded product image before saving.", "أضف صورة واحدة على الأقل وارفعها بنجاح قبل حفظ المنتج."));
       return;
     }
+    if (!requiredAttributesComplete) {
+      setError(translate(locale, "Complete all required category attributes before continuing.", "يرجى تعبئة جميع خصائص الفئة الإلزامية قبل المتابعة."));
+      return;
+    }
+    if (!requiredVariantAttributesComplete) {
+      setError(translate(locale, "Complete all required options for every product variant.", "يرجى تعبئة جميع الخيارات الإلزامية لكل متغير من متغيرات المنتج."));
+      return;
+    }
+    if (!variantSkusValid) {
+      setError(translate(locale, "Every variant must have a unique SKU. Complete the highlighted SKU fields.", "يجب إدخال رمز SKU فريد لكل متغير. يرجى تعبئة حقول SKU المطلوبة."));
+      return;
+    }
     if (isRealEstate && (productLocation.latitude == null || productLocation.longitude == null || !floorArea || Number(floorArea) <= 0)) {
       setError(translate(locale, "Real-estate listings need a map location and a positive floor area.", "تحتاج الإعلانات العقارية إلى موقع على الخريطة ومساحة موجبة."));
       return;
@@ -943,7 +955,7 @@ export default function SellerProductsPage() {
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input required type="number" min="0.01" max="999999999" step="0.01" className={inputClass} value={floorArea} onChange={(event) => setFloorArea(event.target.value)} /></label>
               </div>
             </fieldset>}
-            <button disabled={busy || loadingCategoryAttributes || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(255,140,28,.18)] transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
+            <button disabled={busy || loadingCategoryAttributes || uploadingImages || !storeId || !availableMarkets.length} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(255,140,28,.18)] transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_10px_28px_rgba(30,57,83,.06)] sm:p-7">
