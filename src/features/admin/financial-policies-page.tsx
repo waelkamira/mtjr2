@@ -71,6 +71,9 @@ export default function FinancialPoliciesPage() {
   const [effectiveUntil, setEffectiveUntil] = useState("");
   const [sourceReference, setSourceReference] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
+  const [previewJson, setPreviewJson] = useState("{\"domain\":\"SELLER_PAYOUT\",\"countryCode\":\"SY\",\"currencyCode\":\"SYP\"}");
+  const [previewResult, setPreviewResult] = useState<unknown>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
@@ -135,6 +138,27 @@ export default function FinancialPoliciesPage() {
       const message = cause instanceof Error ? cause.message : translate(locale, "Policy version could not be created.", "تعذر إنشاء إصدار السياسة.");
       setError(message); toast.error(message);
     } finally { setBusy(""); }
+  }
+
+
+  async function previewResolution(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPreviewBusy(true); setError(""); setPreviewResult(null);
+    try {
+      let context: unknown;
+      try { context = JSON.parse(previewJson); } catch { throw new Error(translate(locale, "Preview context must be valid JSON.", "يجب أن يكون سياق المعاينة بصيغة JSON صحيحة.")); }
+      const response = await fetch("/api/admin/financial-policies/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(context)
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error || translate(locale, "Policy preview failed.", "فشلت معاينة السياسة."));
+      setPreviewResult(data);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : translate(locale, "Policy preview failed.", "فشلت معاينة السياسة.");
+      setError(message); toast.error(message);
+    } finally { setPreviewBusy(false); }
   }
 
   async function transition(version: PolicyVersion, action: "REVIEW" | "APPROVE" | "REJECT") {
@@ -210,6 +234,17 @@ export default function FinancialPoliciesPage() {
           <label className={`${labelClass} sm:col-span-2 lg:col-span-3`}>{translate(locale, "Review notes (required for legal rules)", "ملاحظات المراجعة (مطلوبة للقواعد القانونية)")}<textarea className={`${inputClass} min-h-20`} value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} maxLength={2000}/></label>
           <div className="sm:col-span-2 lg:col-span-3"><button type="submit" disabled={busy !== ""} className="rounded-xl bg-[#FF8C1C] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50">{busy === "create" ? translate(locale, "Creating…", "جارٍ الإنشاء…") : translate(locale, "Create pending version", "إنشاء إصدار بانتظار المراجعة")}</button></div>
         </form>
+      </section>
+
+
+      <section className="mt-7 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-clay-raised sm:p-6">
+        <h2 className="text-xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Read-only policy resolution preview", "معاينة قراءة فقط لاختيار السياسة")}</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Test which approved rule wins for a transaction context. This preview never writes to the ledger or moves money.", "اختبر القاعدة المعتمدة التي تنطبق على سياق معاملة. لا تكتب هذه المعاينة في دفتر الأستاذ ولا تحرك الأموال.")}</p>
+        <form onSubmit={previewResolution} className="mt-4">
+          <label className={labelClass}>{translate(locale, "Evaluation context (JSON)", "سياق التقييم (JSON)")}<textarea className={inputClass + " min-h-28 font-mono"} value={previewJson} onChange={(e) => setPreviewJson(e.target.value)} spellCheck={false}/></label>
+          <button type="submit" disabled={previewBusy} className="mt-3 rounded-xl border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-ink-950)] hover:border-orange-300 disabled:opacity-50">{previewBusy ? translate(locale, "Evaluating…", "جارٍ التقييم…") : translate(locale, "Evaluate policy", "تقييم السياسة")}</button>
+        </form>
+        {previewResult !== null && <pre className="mt-4 max-h-80 overflow-auto rounded-xl bg-stone-50 p-4 text-xs leading-5 text-stone-800">{JSON.stringify(previewResult, null, 2)}</pre>}
       </section>
 
       <section className="mt-7 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-clay-raised sm:p-6">
