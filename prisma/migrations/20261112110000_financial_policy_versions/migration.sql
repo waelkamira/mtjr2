@@ -78,6 +78,8 @@ CREATE TABLE "FinancialPolicyRuleVersion" (
     CHECK ("reviewedById" IS NULL OR "createdById" IS NULL OR "reviewedById" <> "createdById"),
   CONSTRAINT "FinancialPolicyRuleVersion_approval_author_separation_check"
     CHECK ("approvalStatus" <> 'APPROVED' OR "createdById" IS NULL OR "approvedById" <> "createdById"),
+  CONSTRAINT "FinancialPolicyRuleVersion_rejection_author_separation_check"
+    CHECK ("approvalStatus" <> 'REJECTED' OR "createdById" IS NULL OR "rejectedById" <> "createdById"),
   CONSTRAINT "FinancialPolicyRuleVersion_legal_reviewer_approver_separation_check"
     CHECK ("approvalStatus" <> 'APPROVED' OR "classification" <> 'LEGAL' OR "reviewedById" <> "approvedById"),
   CONSTRAINT "FinancialPolicyRuleVersion_rejection_reason_check"
