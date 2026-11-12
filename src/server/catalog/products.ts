@@ -74,6 +74,7 @@ const createSchema = z.object({
     sku: z.string().trim().min(1).max(100),
     barcode: z.string().trim().min(1).max(100).optional(),
     name: z.string().trim().max(180).optional(),
+    weightGrams: z.number().int().min(0).max(1000000).optional(),
     optionValues: z.record(z.string(), z.unknown()).optional(),
     prices: z.array(priceSchema).min(1).max(20)
   })).min(1).max(100)
@@ -254,7 +255,7 @@ export async function createDraftProduct(input: CreateProductInput, now = new Da
         } } : undefined,
         variants: {
           create: data.variants.map((variant) => ({
-            sku: variant.sku, barcode: variant.barcode, name: variant.name,
+            sku: variant.sku, barcode: variant.barcode, name: variant.name, weightGrams: variant.weightGrams,
             optionValues: variant.optionValues as Prisma.InputJsonValue | undefined,
             attributes: {
               create: Object.entries(variant.optionValues ?? {}).map(([key, value]) => {
