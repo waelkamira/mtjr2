@@ -33,7 +33,7 @@ export default function AdminTaxRatesPage() {
       json(await fetch("/api/admin/tax-rates", { cache: "no-store" }))
     ]);
     return {
-      markets: (marketData.markets || []) as Market[],
+      markets: ((marketData.markets || []) as Market[]).filter((market) => market.code.toUpperCase() === "SY"),
       rates: (rateData.rates || []) as TaxRate[]
     };
 
