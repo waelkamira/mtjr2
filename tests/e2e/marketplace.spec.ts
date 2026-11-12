@@ -467,9 +467,10 @@ test.describe("seller catalog authoring", () => {
     await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
     const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
     expect(districtsResponse.status()).toBe(200);
-    const districts = await districtsResponse.json() as { items: Array<{ id: string }> };
+    const districts = await districtsResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
     expect(districts.items.length).toBeGreaterThan(0);
-    await page.getByLabel(/District|المنطقة/i).selectOption(districts.items[0].id);
+    const selectedDraftDistrict = districts.items[0];
+    await page.getByLabel(/District|المنطقة/i).selectOption(selectedDraftDistrict.id);
 
     const priceInputs = page.getByLabel(/Selling price|سعر البيع/i);
     await expect(priceInputs.first()).toBeVisible();
@@ -493,10 +494,16 @@ test.describe("seller catalog authoring", () => {
 
     const catalogResponse = await page.request.get(`/api/seller/products?storeId=${encodeURIComponent(storeId!)}`);
     expect(catalogResponse.status()).toBe(200);
-    const catalog = await catalogResponse.json() as { items: Array<{ id: string; name: string; status: string }> };
+    const catalog = await catalogResponse.json() as { items: Array<{
+      id: string; name: string; status: string; district: string | null;
+      media: Array<{ url: string; storageKey: string; isPrimary: boolean; sortOrder: number }>;
+    }> };
     const created = catalog.items.find((item) => item.name === productName);
     expect(created).toBeTruthy();
     expect(created!.status).toBe("DRAFT");
+    expect(created!.district).toBe(selectedDraftDistrict.nameAr ?? selectedDraftDistrict.nameEn);
+    expect(created!.media).toHaveLength(1);
+    expect(created!.media[0]).toMatchObject({ storageKey: "imgur:e2e-product-image-1", isPrimary: true });
 
     const productCard = page.locator("article").filter({ hasText: productName }).first();
     await productCard.getByRole("button", { name: /Edit draft|تعديل المسودة/i }).click();
@@ -526,8 +533,16 @@ test.describe("seller catalog authoring", () => {
 
     const updatedCatalogResponse = await page.request.get(`/api/seller/products?storeId=${encodeURIComponent(storeId!)}`);
     expect(updatedCatalogResponse.status()).toBe(200);
-    const updatedCatalog = await updatedCatalogResponse.json() as { items: Array<{ id: string; name: string; status: string }> };
-    expect(updatedCatalog.items.some((item) => item.id === created!.id && item.name === updatedName && item.status === "DRAFT")).toBe(true);
+    const updatedCatalog = await updatedCatalogResponse.json() as { items: Array<{
+      id: string; name: string; status: string;
+      media: Array<{ url: string; storageKey: string; isPrimary: boolean; sortOrder: number }>;
+    }> };
+    const updatedProduct = updatedCatalog.items.find((item) => item.id === created!.id);
+    expect(updatedProduct).toMatchObject({ name: updatedName, status: "DRAFT" });
+    expect(updatedProduct!.media).toHaveLength(1);
+    expect(updatedProduct!.media[0].storageKey).toBe("imgur:e2e-product-image-2");
+    expect(updatedProduct!.media[0].url).toContain("ixid=e2e-2");
+    expect(updatedProduct!.media[0].isPrimary).toBe(true);
 
     // Moderation and publication are separate, role-gated transitions:
     // an admin approves the edited draft, then its owning seller publishes it.
@@ -616,9 +631,9 @@ test.describe("seller catalog authoring", () => {
     const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
     expect(damascus).toBeTruthy();
     await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
-    if (damascus!.latitude !== null && damascus!.longitude !== null) {
-      await expect(map).toHaveAttribute("data-map-zoom", "7", { timeout: 10000 });
-    }
+    expect(damascus!.latitude).not.toBeNull();
+    expect(damascus!.longitude).not.toBeNull();
+    await expect(map).toHaveAttribute("data-map-zoom", "7", { timeout: 10000 });
 
     const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
     expect(districtsResponse.status()).toBe(200);
@@ -626,9 +641,9 @@ test.describe("seller catalog authoring", () => {
     expect(districts.items.length).toBeGreaterThan(0);
     const selectedDistrict = districts.items.find((item) => item.latitude !== null && item.longitude !== null) ?? districts.items[0];
     await page.getByLabel(/District|المنطقة/i).selectOption(selectedDistrict.id);
-    if (selectedDistrict.latitude !== null && selectedDistrict.longitude !== null) {
-      await expect(map).toHaveAttribute("data-map-zoom", "10", { timeout: 10000 });
-    }
+    expect(selectedDistrict.latitude).not.toBeNull();
+    expect(selectedDistrict.longitude).not.toBeNull();
+    await expect(map).toHaveAttribute("data-map-zoom", "10", { timeout: 10000 });
 
     const subdistrictsResponse = await page.request.get(`/api/geography/subdistricts?districtId=${encodeURIComponent(selectedDistrict.id)}`);
     expect(subdistrictsResponse.status()).toBe(200);
@@ -652,14 +667,14 @@ test.describe("seller catalog authoring", () => {
     }
     expect(selectedSubdistrictId).toBeTruthy();
     expect(selectedLocalityId).toBeTruthy();
+    expect(selectedSubdistrictHasCoordinates).toBe(true);
+    expect(selectedLocalityHasCoordinates).toBe(true);
     await page.getByLabel(/Subdistrict|الناحية/i).selectOption(selectedSubdistrictId);
-    if (selectedSubdistrictHasCoordinates) {
-      await expect(map).toHaveAttribute("data-map-zoom", "12", { timeout: 10000 });
-    }
+    await expect(map).toHaveAttribute("data-map-zoom", "12", { timeout: 10000 });
     await expect(page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i)).toBeEnabled();
     await page.getByLabel(/City \/ town \/ village|المدينة \/ البلدة \/ القرية/i).selectOption(selectedLocalityId);
     await expect(map).toHaveClass(/leaflet-container/, { timeout: 15000 });
-    if (selectedLocalityHasCoordinates) await expect(map).toHaveAttribute("data-map-zoom", "15", { timeout: 10000 });
+    await expect(map).toHaveAttribute("data-map-zoom", "15", { timeout: 10000 });
 
     const zoomBeforeWheel = Number(await map.getAttribute("data-map-zoom"));
     await map.hover();
@@ -669,12 +684,10 @@ test.describe("seller catalog authoring", () => {
     // Neighbourhoods are currently seller-entered (not an official OpenSyria
     // administrative level); leaving the field zooms to the selected locality
     // pin so the seller can place it more precisely.
-    if (selectedLocalityHasCoordinates) {
-      const neighborhood = page.getByLabel(/Neighbourhood \(local name\)|الحي \(الاسم المحلي\)/i);
-      await neighborhood.fill("Al-Mazzeh");
-      await neighborhood.blur();
-      await expect(map).toHaveAttribute("data-map-zoom", "16", { timeout: 10000 });
-    }
+    const neighborhood = page.getByLabel(/Neighbourhood \(local name\)|الحي \(الاسم المحلي\)/i);
+    await neighborhood.fill("Al-Mazzeh");
+    await neighborhood.blur();
+    await expect(map).toHaveAttribute("data-map-zoom", "16", { timeout: 10000 });
   });
 });
 
