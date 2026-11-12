@@ -48,7 +48,6 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
   const brandId = params.brandId?.trim() || undefined;
   const storeId = params.storeId?.trim() || undefined;
   const marketId = params.marketId?.trim() || undefined;
-  const currencyCode = marketId ? params.currencyCode?.trim().toUpperCase() || undefined : undefined;
   const minPrice = params.minPrice?.trim() || undefined;
   const maxPrice = params.maxPrice?.trim() || undefined;
   const inStock = params.inStock === "true";
@@ -64,6 +63,11 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
   ]);
   const sponsored = await listSponsoredCampaigns({ marketId: marketId ?? markets[0]?.id, categoryId, brandId, query: q, limit: 4 });
   const selectedMarket = markets.find((market) => market.id === marketId);
+  // Price ranges are meaningful only within one market and currency. When a
+  // market is selected, use its configured default currency unless overridden.
+  const currencyCode = marketId
+    ? params.currencyCode?.trim().toUpperCase() || selectedMarket?.defaultCurrency.code
+    : undefined;
   const selectedCurrency = selectedMarket?.currencies.find(({ currency }) => currency.code === currencyCode)?.currency;
   const filters = {
     ...(categoryId ? { categoryId } : {}),
@@ -84,18 +88,71 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
       <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--color-lavender-600)]">{t("Marketplace discovery", "استكشاف السوق")}</p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl text-[var(--color-lavender-950)]">{heading}</h1>
       <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">{description}</p>
-      <form action={action} method="get" className="mt-7 grid gap-3 clay-surface rounded-[1.5rem] border-white/80 bg-[var(--surface)] p-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="grid gap-1 text-xs font-medium sm:col-span-2">{t("Keywords", "كلمات البحث")}<input name="q" maxLength={120} defaultValue={q} placeholder={t("Name, SKU, barcode, brand or store", "الاسم أو SKU أو الرمز الشريطي أو العلامة التجارية أو المتجر")} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm" /></label>
-        <label className="grid gap-1 text-xs font-medium">{t("Category", "الفئة")}<select name="categoryId" defaultValue={categoryId ?? ""} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm"><option value="">{t("All categories", "كل الفئات")}</option>{categoryOptions(categories.items).map((item) => <option key={item.id} value={item.id}>{item.name} ({categoryCounts.get(item.id) ?? 0})</option>)}</select></label>
-        <label className="grid gap-1 text-xs font-medium">{t("Brand", "العلامة التجارية")}<select name="brandId" defaultValue={brandId ?? ""} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm"><option value="">{t("All brands", "كل العلامات التجارية")}</option>{brands.items.map((item) => <option key={item.id} value={item.id}>{item.name} ({brandCounts.get(item.id) ?? 0})</option>)}</select></label>
-        <label className="grid gap-1 text-xs font-medium">{t("Store / vendor", "المتجر / البائع")}<select name="storeId" defaultValue={storeId ?? ""} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm"><option value="">{t("All stores", "كل المتاجر")}</option>{stores.items.map((item) => <option key={item.id} value={item.id}>{item.name}{item.sellerDisplayName ? ` — ${item.sellerDisplayName}` : ""}</option>)}</select></label>
-        <label className="grid gap-1 text-xs font-medium">{t("Market", "السوق")}<select name="marketId" defaultValue={marketId ?? ""} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm"><option value="">{t("All active markets", "كل الأسواق النشطة")}</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.country.name}</option>)}</select></label>
-        <label className="grid gap-1 text-xs font-medium">{t("Currency", "العملة")}<select name="currencyCode" defaultValue={currencyCode ?? ""} disabled={!selectedMarket} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm disabled:bg-gray-100"><option value="">{t("All enabled currencies", "كل العملات المفعّلة")}</option>{selectedMarket?.currencies.map(({ currency }) => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select></label>
-        <label className="grid gap-1 text-xs font-medium">{t("Minimum price", "أقل سعر")}<input name="minPrice" type="number" min="0" step={selectedCurrency ? 1 / (10 ** selectedCurrency.minorUnit) : "any"} defaultValue={minPrice} disabled={!selectedCurrency} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm disabled:bg-gray-100" /></label>
-        <label className="grid gap-1 text-xs font-medium">{t("Maximum price", "أعلى سعر")}<input name="maxPrice" type="number" min="0" step={selectedCurrency ? 1 / (10 ** selectedCurrency.minorUnit) : "any"} defaultValue={maxPrice} disabled={!selectedCurrency} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm disabled:bg-gray-100" /></label>
-        <label className="flex items-center gap-2 text-xs font-medium"><input type="checkbox" name="inStock" value="true" defaultChecked={inStock} /> {t("In stock only", "المتوفر في المخزون فقط")} ({result.facets.inStockCount})</label>
-        <label className="grid gap-1 text-xs font-medium">{t("Sort by", "ترتيب حسب")}<select name="sort" defaultValue={sort} className="clay-surface-inset rounded-xl border-white/70 bg-[var(--color-lavender-50)] px-3 py-2.5 text-sm"><option value="relevance" disabled={!q}>{t("Relevance", "الصلة")}</option><option value="newest">{t("Newest", "الأحدث")}</option><option value="name_asc">{t("Name: A to Z", "الاسم: أ إلى ي")}</option><option value="name_desc">{t("Name: Z to A", "الاسم: ي إلى أ")}</option></select></label>
-        <div className="flex flex-wrap items-end gap-2"><button type="submit" className="rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white">{t("Apply filters", "تطبيق عوامل التصفية")}</button><a href={action} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm">{t("Clear", "مسح")}</a></div>
+      <form action={action} method="get" className="mt-7 overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-white shadow-[0_12px_36px_rgba(62,47,92,0.08)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--color-lavender-50)]/70 px-4 py-4 sm:px-6">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--color-lavender-950)]">{t("Refine your search", "تصفية نتائج البحث")}</h2>
+            <p className="mt-1 text-xs text-[var(--muted)]">{t("Combine filters to find exactly what you need.", "اجمع عوامل التصفية للوصول إلى ما تبحث عنه.")}</p>
+          </div>
+          <span className="rounded-full border border-[var(--border)] bg-white px-3 py-1 text-[11px] font-semibold text-[var(--color-lavender-700)]">{t("Filters", "الفلاتر")}</span>
+        </div>
+
+        <div className="grid gap-x-4 gap-y-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)] sm:col-span-2">
+            {t("Keywords", "كلمات البحث")}
+            <input name="q" maxLength={120} defaultValue={q} placeholder={t("Name, SKU, barcode, brand or store", "الاسم أو SKU أو الرمز الشريطي أو العلامة التجارية أو المتجر")} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3.5 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition placeholder:text-[var(--muted)] hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100" />
+          </label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
+            {t("Category", "الفئة")}
+            <select name="categoryId" defaultValue={categoryId ?? ""} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100"><option value="">{t("All categories", "كل الفئات")}</option>{categoryOptions(categories.items).map((item) => <option key={item.id} value={item.id}>{item.name} ({categoryCounts.get(item.id) ?? 0})</option>)}</select>
+          </label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
+            {t("Brand", "العلامة التجارية")}
+            <select name="brandId" defaultValue={brandId ?? ""} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100"><option value="">{t("All brands", "كل العلامات التجارية")}</option>{brands.items.map((item) => <option key={item.id} value={item.id}>{item.name} ({brandCounts.get(item.id) ?? 0})</option>)}</select>
+          </label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
+            {t("Store / vendor", "المتجر / البائع")}
+            <select name="storeId" defaultValue={storeId ?? ""} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100"><option value="">{t("All stores", "كل المتاجر")}</option>{stores.items.map((item) => <option key={item.id} value={item.id}>{item.name}{item.sellerDisplayName ? ` — ${item.sellerDisplayName}` : ""}</option>)}</select>
+          </label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
+            {t("Market", "السوق")}
+            <select name="marketId" defaultValue={marketId ?? ""} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100"><option value="">{t("All active markets", "كل الأسواق النشطة")}</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.country.name}</option>)}</select>
+          </label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
+            {t("Currency", "العملة")}
+            <select name="currencyCode" defaultValue={currencyCode ?? ""} disabled={!selectedMarket} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500"><option value="">{t("Default currency", "العملة الافتراضية")}</option>{selectedMarket?.currencies.map(({ currency }) => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select>
+          </label>
+
+          <div className="grid min-w-0 gap-1.5 sm:col-span-2">
+            <p className="text-xs font-semibold text-[var(--color-ink-800)]">{t("Price range", "نطاق السعر")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="grid min-w-0 gap-1 text-[11px] font-medium text-[var(--muted)]">
+                {t("Minimum", "أقل سعر")}
+                <input name="minPrice" type="number" min="0" step={selectedCurrency ? 1 / (10 ** selectedCurrency.minorUnit) : "any"} defaultValue={minPrice} disabled={!selectedCurrency} placeholder="0" className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition placeholder:text-[var(--muted)] hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500" />
+              </label>
+              <label className="grid min-w-0 gap-1 text-[11px] font-medium text-[var(--muted)]">
+                {t("Maximum", "أعلى سعر")}
+                <input name="maxPrice" type="number" min="0" step={selectedCurrency ? 1 / (10 ** selectedCurrency.minorUnit) : "any"} defaultValue={maxPrice} disabled={!selectedCurrency} placeholder="—" className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition placeholder:text-[var(--muted)] hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500" />
+              </label>
+            </div>
+            {!selectedCurrency ? <p className="text-[11px] leading-5 text-[var(--muted)]">{t("Choose a market to enable price filtering in its currency.", "اختر السوق لتفعيل تصفية الأسعار بعملته.")}</p> : <p className="text-[11px] text-[var(--muted)]">{t("Prices in", "الأسعار بعملة")} {selectedCurrency.code}</p>}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-1">
+            <label className="flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--color-lavender-50)]/60 px-3 text-xs font-semibold text-[var(--color-ink-800)]">
+              <input type="checkbox" name="inStock" value="true" defaultChecked={inStock} className="size-4 accent-[var(--action)]" />
+              {t("In stock only", "المتوفر في المخزون فقط")} ({result.facets.inStockCount})
+            </label>
+          </div>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
+            {t("Sort by", "ترتيب حسب")}
+            <select name="sort" defaultValue={sort} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100"><option value="relevance" disabled={!q}>{t("Relevance", "الصلة")}</option><option value="newest">{t("Newest", "الأحدث")}</option><option value="name_asc">{t("Name: A to Z", "الاسم: أ إلى ي")}</option><option value="name_desc">{t("Name: Z to A", "الاسم: ي إلى أ")}</option></select>
+          </label>
+          <div className="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-1">
+            <button type="submit" className="h-11 rounded-xl bg-[var(--action)] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--action-hover)] focus:outline-none focus:ring-2 focus:ring-orange-200">{t("Apply filters", "تطبيق الفلاتر")}</button>
+            <a href={action} className="inline-flex h-11 items-center rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--color-ink-800)] transition hover:border-[var(--action)] hover:text-[var(--action)]">{t("Clear all", "مسح الكل")}</a>
+          </div>
+        </div>
       </form>
       <div className="mt-7 flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted)]"><span>{result.pagination.total} {t("matching products", "منتج مطابق")}</span>{q && <span>{t("Query:", "البحث:")} “{q}” · {t("Sorted by", "مرتبة حسب")} {sort === "relevance" ? t("relevance", "الصلة") : sort.replace("_", " ")}</span>}</div>
       <CatalogListControls action={action} query={q} page={result.pagination.page} totalPages={result.pagination.totalPages} params={filters} sort={sort} locale={locale} />
