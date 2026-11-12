@@ -62,7 +62,7 @@ function BrandCard({ brand, index, locale }: { brand: Brand; index: number; loca
         </span>
       </div>
       <div className="mt-5 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-600">{translate(locale, "Featured label", "علامة تجارية")}</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-600">{translate(locale, "Brand", "علامة تجارية")}</p>
         <h2 className="mt-1 truncate text-base font-extrabold tracking-tight text-stone-900 transition-colors group-hover:text-orange-700">{brand.name}</h2>
         <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-stone-500">
           {description || translate(locale, "Explore products from this brand.", "اكتشف منتجات هذه العلامة التجارية.")}
