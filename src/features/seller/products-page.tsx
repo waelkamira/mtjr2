@@ -784,20 +784,23 @@ export default function SellerProductsPage() {
               `يرجى تعبئة الحقل الإجباري: ${fieldLabel || field.name || "المعلومات المطلوبة"}.`));
           }} className="seller-product-form mt-4 grid gap-5">
             <div id="product-media"
-              className="seller-product-dropzone grid gap-4 rounded-xl border border-dashed border-[#f3b58f] bg-[#fffaf6] p-4 transition-colors hover:border-[#FF8C1C] sm:p-5"
+              className="seller-product-dropzone grid min-h-[300px] content-center justify-items-center gap-4 rounded-xl border-2 border-dashed border-[#FF8C1C] bg-[#fffefa] px-5 py-8 text-center transition-colors hover:bg-[#fffaf4] focus-within:ring-4 focus-within:ring-[#FF8C1C]/10"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); void uploadProductImageFiles(Array.from(event.dataTransfer.files)); }}
               aria-label={translate(locale, "Product image upload area", "منطقة رفع صور المنتج")}
             >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <SellerIcon name="media" />
-                  <p className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product image gallery", "معرض صور المنتج")}</p>
+              <div className="grid size-[60px] place-items-center rounded-xl bg-[#fff2c7] text-[#e8750b]" aria-hidden="true">
+                <SellerIcon name="media" />
+              </div>
+              <div className="grid max-w-2xl justify-items-center gap-1">
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <p className="text-base font-semibold text-[#77716c]">{translate(locale, "Product image gallery", "معرض صور المنتج")}</p>
                   <span className="rounded-full bg-[#fff1e8] px-2.5 py-1 text-[10px] font-bold text-[#a94308]">{uploadedImages.length}/10</span>
                 </div>
-                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each). The first image is the storefront cover. Imgur Client IDs rotate in order, then ImageKit and Cloudinary are used as fallbacks.", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة). الصورة الأولى هي غلاف المتجر. يتم تدوير معرفات Imgur بالترتيب ثم استخدام ImageKit وCloudinary كبدائل.")}</p>
+                <p className="text-sm leading-6 text-[#918a84]">{translate(locale, "Drag images here or browse. Add up to 10 JPG, PNG, WebP, GIF or AVIF files (10 MB each).", "اسحب الصور هنا أو اخترها. أضف حتى ١٠ صور بصيغ JPG أو PNG أو WebP أو GIF أو AVIF (١٠ ميغابايت للصورة).")}</p>
+                <p className="text-xs leading-5 text-[#a39b94]">{translate(locale, "The first image will be used as the storefront cover.", "ستُستخدم الصورة الأولى غلافاً للمنتج في المتجر.")}</p>
               </div>
-              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-[#eee9e4] bg-white px-4 py-2.5 text-sm font-bold text-[#454545] shadow-sm transition hover:border-[#FF8C1C] hover:-translate-y-0.5">
+              <label className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#dfe4eb] bg-white px-5 py-2.5 text-sm font-semibold text-[#34445b] shadow-[0_2px_5px_rgba(30,41,59,.10)] transition hover:border-[#FF8C1C] hover:bg-[#fffaf4]">
                 <SellerIcon name="media" />
                 {uploadingImages ? translate(locale, "Uploading images…", "جارٍ رفع الصور…") : translate(locale, "Choose images", "اختيار الصور")}
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple disabled={!storeId || uploadingImages || uploadedImages.length >= 10} onChange={uploadProductImages} className="sr-only" />
