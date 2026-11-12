@@ -9,6 +9,7 @@ import CheckoutTaxSummary from "@/features/checkout/checkout-tax-summary";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { StatusBadge } from "@/components/status-badge";
 import { toast } from "sonner";
 
 type Quote = {
@@ -130,7 +131,7 @@ export default function CheckoutReviewPage() {
               <p className="text-sm font-semibold text-[var(--color-ink-950)]">{t("Quote summary", "ملخص عرض السعر")}</p>
               <div className="mt-5 flex justify-between gap-3 text-sm"><span className="text-[var(--muted)]">{t("Items subtotal", "المجموع الفرعي للمنتجات")}</span><span className="font-semibold tabular-nums">{money(quote.subtotalMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>
               {BigInt(quote.discountMinor) > BigInt(0) && <div className="mt-3 flex justify-between gap-3 text-sm"><span>{t("Coupon", "القسيمة")}{quote.couponCode ? ` · ${quote.couponCode}` : ""}</span><span className="font-semibold tabular-nums">−{money(quote.discountMinor, quote.currency.code, quote.currency.minorUnit)}</span></div>}
-              <div className="mt-4 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">{t("Reservation status", "حالة الحجز")}</p><p className={`mt-1 font-semibold ${quote.status === "ACTIVE" ? "text-[var(--color-forest-900)]" : "text-[var(--color-danger)]"}`}>{quote.status}</p><p className="mt-2 text-xs leading-5 text-[var(--muted)]">{quote.status === "ACTIVE" ? t(`Stock held until ${new Date(quote.expiresAt).toLocaleString()}.`, `المخزون محجوز حتى ${new Date(quote.expiresAt).toLocaleString()}.`) : t("This quote is no longer holding inventory. Return to your cart to create a fresh quote.", "لم يعد هذا العرض يحجز المخزون. عُد إلى سلتك لإنشاء عرض جديد.")}</p></div>
+              <div className="mt-4 border-t border-[var(--border)] pt-4"><p className="text-xs text-[var(--muted)]">{t("Reservation status", "حالة الحجز")}</p><div className="mt-1"><StatusBadge locale={locale} status={quote.status} /></div><p className="mt-2 text-xs leading-5 text-[var(--muted)]">{quote.status === "ACTIVE" ? t(`Stock held until ${new Date(quote.expiresAt).toLocaleString()}.`, `المخزون محجوز حتى ${new Date(quote.expiresAt).toLocaleString()}.`) : t("This quote is no longer holding inventory. Return to your cart to create a fresh quote.", "لم يعد هذا العرض يحجز المخزون. عُد إلى سلتك لإنشاء عرض جديد.")}</p></div>
               <button type="button" disabled={busy || quote.status !== "ACTIVE"} onClick={() => void releaseQuote()} className="mt-6 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--color-forest-900)] disabled:opacity-50">{busy ? t("Releasing…", "جارٍ الإلغاء…") : t("Release reservation", "إلغاء الحجز")}</button>
               <p className="mt-4 text-xs leading-5 text-[var(--muted)]">{t("No order has been created and no payment has been taken.", "لم يُنشأ أي طلب ولم يتم تحصيل أي مبلغ.")}</p>
             </aside>
