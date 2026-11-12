@@ -407,7 +407,7 @@ Policy localization/versioning, market/currency controls, seller-specific notifi
 |---|---|---|
 | Deep pagination | The queue accepts every page whose 50-row offset is a safe integer; page 1001 is covered by a route test using 50,001 total records | `GET /api/admin/seller-payout-methods`; route test asserts `skip: 50000` and `pageCount: 1001` |
 | Evidence draft isolation | Drafts use `methodId:submissionVersion` for reads, edits, clears and session recovery | A newer submission generation cannot reuse an older evidence reference or reason |
-| Filter changes during review | Successful POST increments a refresh state; the list effect reloads with the currently selected filter and page instead of invoking a captured callback | Request sequencing still guards superseded GET responses |
+| Filter changes during review | Successful POST reloads using status/page refs synchronously updated by the filter and pagination controls, instead of invoking a stale callback | Request sequencing still guards superseded GET responses |
 | Submission date accuracy | `submittedAt` updates for every re-registration; admin list sorts/displays it; `createdAt` remains the original row creation timestamp | Migration `20261112093000_seller_payout_submission_timestamp`; domain and route tests cover timestamp update and queue ordering |
 
 **Verification boundary:** These latest queue refinements are committed but their exact-head CI, PostgreSQL, Browser E2E and CodeQL checks are pending. Previous passing checks apply to the earlier reviewed head only.
