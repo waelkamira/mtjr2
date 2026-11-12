@@ -288,6 +288,31 @@ test.describe("seller catalog authoring", () => {
     const updatedCatalog = await updatedCatalogResponse.json() as { items: Array<{ id: string; name: string; status: string }> };
     expect(updatedCatalog.items.some((item) => item.id === created!.id && item.name === updatedName && item.status === "DRAFT")).toBe(true);
 
+    // Moderation and publication are separate, role-gated transitions:
+    // an admin approves the edited draft, then its owning seller publishes it.
+    await signIn(page, sessions.admin);
+    const approvalResponse = await page.request.post(`/api/admin/products/${encodeURIComponent(created!.id)}/approve`);
+    expect(approvalResponse.status()).toBe(200);
+    expect(await approvalResponse.json()).toMatchObject({ productId: created!.id, approvalStatus: "APPROVED" });
+
+    await signIn(page, sessions.seller);
+    const publishResponse = await page.request.post(`/api/products/${encodeURIComponent(created!.id)}/publish`);
+    expect(publishResponse.status()).toBe(200);
+    expect(await publishResponse.json()).toMatchObject({ productId: created!.id, status: "ACTIVE" });
+
+    const publicProductResponse = await page.request.get(`/api/products/${encodeURIComponent(`e2e-seller-draft-updated-${stamp}`)}?locale=en`);
+    expect(publicProductResponse.status()).toBe(200);
+    const publicProduct = await publicProductResponse.json() as { id: string; name: string; slug: string };
+    expect(publicProduct).toMatchObject({ id: created!.id, name: updatedName, slug: `e2e-seller-draft-updated-${stamp}` });
+
+    const publicSearchResponse = await page.request.get(`/api/products?q=${encodeURIComponent(updatedName)}`);
+    expect(publicSearchResponse.status()).toBe(200);
+    const publicSearch = await publicSearchResponse.json() as { items: Array<{ id: string }> };
+    expect(publicSearch.items.some((item) => item.id === created!.id)).toBe(true);
+
+    await page.goto(`/products/${encodeURIComponent(publicProduct.slug)}`);
+    await expect(page.getByRole("heading", { name: updatedName })).toBeVisible({ timeout: 15000 });
+
     // The seller workspace must persist edits to an existing shipping service.
     await page.goto("/seller");
     await expect(page.getByRole("heading", { name: /Shipping services|خدمات الشحن/i })).toBeVisible();
