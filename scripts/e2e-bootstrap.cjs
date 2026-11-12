@@ -139,7 +139,9 @@ async function main() {
     customer: await sessionFor(customer.id, false),
     unauthorizedCustomer: await sessionFor(unauthorizedCustomer.id, false),
     buyer: await sessionFor(buyer.id, false),
-    sellerApplicant: await sessionFor(sellerApplicant.id, false),
+    // Seller permissions require MFA; pre-enroll the applicant fixture so
+    // the same session can exercise post-approval store creation.
+    sellerApplicant: await sessionFor(sellerApplicant.id, true),
     seller: await sessionFor(seller.id, true),
     admin: await sessionFor(admin.id, true, true),
     adminReviewer: await sessionFor(adminReviewer.id, true, true),
