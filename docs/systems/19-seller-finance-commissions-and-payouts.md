@@ -199,3 +199,14 @@
   chargeback, reserve, settlement or payout source event is connected to the journal.
 - FIN-01 through FIN-12 remain owner decisions. Do not infer accounting treatment or enable
   withdrawals from the existence of the journal tables.
+
+
+## 2026-11-12 — Current finance boundary and read-only ledger administration
+
+- `/seller/finance` is implemented as a read-only per-store/per-currency view of recorded commission-covered sales, platform commissions and completed refunds. It does not compute seller payable or withdrawable balances.
+- `/seller/commissions` remains an immutable commission/refund statement with separate refund allocations and CSV export; refund totals are not netted into a seller balance.
+- `/seller/payouts` and `/api/seller/payout-methods` implement owner-only encrypted IBAN beneficiary management (create, masked list, per-currency default, disable). New records remain pending until the separate manual review workflow. Local account formats remain disabled pending country-specific validation.
+- `/admin/seller-payout-methods` provides manual external-evidence attestation by a different Super Admin with fresh TOTP step-up. It does not call a bank, verify ownership automatically, or execute a transfer.
+- `/admin/finance/ledger` and `GET /api/admin/finance/ledger` now provide platform-admin-only, read-only account and cursor-paginated journal-line inspection. This does not connect the journal to seller finance or payment/refund events.
+- Exact code SHA `c4ec8375bcd5bd1f161eaa8aa28b7569aaa712e0` passed CI, full unit suite, production build, Browser E2E (14/14) and CodeQL. The PostgreSQL append-only migration/integration suite passed on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; no schema or migration changes were made in the later ledger read-surface/pagination work.
+- **Still blocked by owner decisions FIN-01 through FIN-12:** chart-of-accounts mapping, payment capture posting, seller payable recognition, holds/reserves, shipping/tax ownership, refund/chargeback reversal allocation, negative balances, FX, payout rail/fees, seller eligibility, settlement cadence, withdrawal reservation, transfer confirmation and reconciliation. Do not infer these rules or enable withdrawals.
