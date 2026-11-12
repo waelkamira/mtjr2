@@ -191,6 +191,8 @@ test.describe("seller onboarding journey", () => {
   test("verified customer applies, admin approves, and seller creates exactly one store", async ({ page }) => {
     const stamp = Date.now().toString();
     await signIn(page, sessions.sellerApplicant);
+    // Establish the same-origin page before using relative fetch URLs.
+    await page.goto("/");
 
     const application = await page.evaluate(async (stamp) => {
       const response = await fetch("/api/seller/applications", {
