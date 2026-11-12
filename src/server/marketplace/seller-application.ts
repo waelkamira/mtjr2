@@ -249,7 +249,9 @@ export async function createSellerStore(input: z.input<typeof storeSchema>, now 
       sellerId = seller.id;
 
       // Serialize store creation per seller even when two requests arrive at once.
-      await tx.$queryRaw(Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${seller.id}, 0))`);
+      // Project a supported scalar value: pg_advisory_xact_lock returns void,
+      // which Prisma cannot deserialize from a raw query result.
+      await tx.$queryRaw(Prisma.sql`SELECT 1 AS locked FROM (SELECT pg_advisory_xact_lock(hashtextextended(${seller.id}, 0))) AS advisory_lock`);
       const ownedStore = await tx.store.findFirst({
         where: { sellerId: seller.id },
         select: {
