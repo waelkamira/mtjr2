@@ -206,6 +206,6 @@ describe("admin seller bank destination review", () => {
       status: "VERIFIED", isDefault: true, submissionVersion: 1, seller: { ownerId: "owner-1" }
     });
     await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutVerificationConflictError);
-    expect(mocks.payoutUpdate).not.toHaveBeenCalled();
+    expect(mocks.payoutUpdateMany).not.toHaveBeenCalled();
   });
 });
