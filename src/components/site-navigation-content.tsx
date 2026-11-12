@@ -700,7 +700,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-200/60 bg-white/95 shadow-sm backdrop-blur-xl">
+    <header className="site-navigation-header sticky top-0 z-50 border-b border-stone-200/60 bg-white/95 shadow-sm backdrop-blur-xl">
       {/* خط علوي متدرج */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-400/40 to-transparent" />
 
