@@ -5,6 +5,11 @@ import {
   requirePlatformManagement
 } from "@/server/identity/permission-guard";
 import {
+  MfaEnrollmentRequiredError,
+  MfaVerificationRequiredError,
+  StepUpRequiredError
+} from "@/server/identity/access-errors";
+import {
   listLedgerAccountEntries,
   listLedgerAccounts
 } from "@/server/finance/ledger";
@@ -49,6 +54,9 @@ export async function GET(request: Request): Promise<Response> {
     }
     if (error instanceof PermissionDeniedError) {
       return Response.json({ error: "Permission denied." }, { status: 403 });
+    }
+    if (error instanceof MfaEnrollmentRequiredError || error instanceof MfaVerificationRequiredError || error instanceof StepUpRequiredError) {
+      return Response.json({ error: "Complete the required MFA verification to access the accounting ledger." }, { status: 428 });
     }
     if (error instanceof z.ZodError) {
       return Response.json({ error: "Invalid ledger filters." }, { status: 400 });
