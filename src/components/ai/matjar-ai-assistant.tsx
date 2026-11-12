@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
+import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 
 type Product = {
@@ -112,7 +113,7 @@ export default function MatjarAIAssistant() {
                 {item.returns?.map((request) => (
                   <div key={request.returnNumber} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--color-butter-50)] p-3 text-xs text-[var(--color-ink-800)]">
                     <div className="flex items-center justify-between gap-2 font-bold">
-                      <span>{request.returnNumber}</span><span>{request.status}</span>
+                      <span>{request.returnNumber}</span><StatusBadge locale={locale} status={request.status} />
                     </div>
                     <p className="mt-1">{t("Order:", "الطلب:")} {request.orderNumber}</p>
                     <p className="mt-1">{request.items.map((item) => item.productName + " × " + item.quantity).join("، ")}</p>
@@ -122,7 +123,7 @@ export default function MatjarAIAssistant() {
                 {item.supportTickets?.map((ticket) => (
                   <Link key={ticket.ticketNumber} href={`/account/support/${encodeURIComponent(ticket.id)}`} className="mt-3 block rounded-xl border border-[var(--border)] bg-[var(--color-lavender-50)] p-3 text-xs text-[var(--color-ink-800)] hover:bg-[var(--color-lavender-100)]">
                     <div className="flex items-center justify-between gap-2 font-bold">
-                      <span>{ticket.ticketNumber}</span><span>{ticket.status}</span>
+                      <span>{ticket.ticketNumber}</span><StatusBadge locale={locale} status={ticket.status} />
                     </div>
                     <p className="mt-1 font-semibold">{ticket.subject}</p>
                     <p className="mt-1 text-[var(--muted)]">{ticket.messageCount} {t("messages", "رسالة")} · {new Date(ticket.updatedAt).toLocaleDateString()}</p>
@@ -132,12 +133,12 @@ export default function MatjarAIAssistant() {
                 {item.orders?.map((order) => (
                   <div key={order.orderNumber} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--color-mint-50)] p-3 text-xs text-[var(--color-ink-800)]">
                     <div className="flex items-center justify-between gap-2 font-bold">
-                      <span>{order.orderNumber}</span><span>{order.status}</span>
+                      <span>{order.orderNumber}</span><StatusBadge locale={locale} status={order.status} />
                     </div>
                     <p className="mt-1">{order.total} {order.currencyCode} · {new Date(order.placedAt).toLocaleDateString()}</p>
                     {order.shipments.map((shipment, shipmentIndex) => (
                       <div key={shipmentIndex} className="mt-2 border-t border-[var(--border)] pt-2">
-                        <p>{shipment.store}: {shipment.status}</p>
+                        <p className="flex flex-wrap items-center gap-2">{shipment.store}: <StatusBadge locale={locale} status={shipment.status} /></p>
                         {shipment.trackingUrl && <a href={shipment.trackingUrl} target="_blank" rel="noreferrer" className="font-semibold underline">{t("Track shipment", t("Track shipment", "تتبع الشحنة"))}</a>}
                       </div>
                     ))}
