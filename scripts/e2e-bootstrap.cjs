@@ -53,7 +53,7 @@ async function main() {
   const market = store.markets[0].market;
   const payoutCountry = await prisma.country.findUnique({
     where: { id: market.countryId },
-    select: { code: true }
+    select: { iso2: true }
   });
   if (!payoutCountry) throw new Error("Demo seller market country is missing.");
 
@@ -67,7 +67,7 @@ async function main() {
       type: "IBAN",
       accountHolderName: "E2E Protected Placeholder",
       bankName: "E2E Demo Bank",
-      countryCode: payoutCountry.code,
+      countryCode: payoutCountry.iso2,
       currencyCode: market.defaultCurrencyCode,
       encryptedDetails: "e2e-fixture-encrypted-payload",
       encryptionKeyVersion: 1,
@@ -83,7 +83,7 @@ async function main() {
       isDefault: false,
       bankName: "E2E Demo Bank",
       accountLast4: "4242",
-      countryCode: payoutCountry.code,
+      countryCode: payoutCountry.iso2,
       currencyCode: market.defaultCurrencyCode
     }
   });
