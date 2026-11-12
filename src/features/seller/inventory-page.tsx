@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Warehouse = { id: string; code: string; name: string; isActive: boolean };
@@ -415,11 +415,7 @@ export default function SellerInventoryPage() {
     const english = type.toLowerCase().replaceAll("_", " ");
     return translate(locale, english, labels[type] ?? english);
   };
-  const transferStatusLabel = (status: string) => {
-    const labels: Record<string, string> = { DRAFT: "مسودة", SHIPPED: "تم الشحن", RECEIVED: "تم الاستلام", CANCELLED: "ملغى" };
-    const english = status.toLowerCase().replaceAll("_", " ");
-    return translate(locale, english, labels[status] ?? english);
-  };
+  const transferStatusLabel = (status: string) => translateStatus(locale, status);
   return <main className="min-h-screen bg-transparent">
     
     <div className="mx-auto max-w-[1440px] px-3 py-5 sm:px-5 sm:py-8">
