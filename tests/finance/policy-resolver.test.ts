@@ -66,6 +66,11 @@ describe("jurisdiction-aware financial policy resolver", () => {
     expect(resolveFinancialPolicy([rule()], { ...context, currencyCode: "EURO" }, at).status).toBe("UNSUPPORTED");
   });
 
+  it("blocks an approved-looking rule without an approving actor and timestamp", () => {
+    const incomplete = rule({ id: "approval-metadata-missing", approvedAt: null, approvedById: null });
+    expect(resolveFinancialPolicy([incomplete], context, at).status).toBe("REVIEW_REQUIRED");
+  });
+
   it("requires legal source evidence and an explicit country scope", () => {
     const unscopedLegal = rule({ id: "invalid-legal", classification: "LEGAL" });
     expect(resolveFinancialPolicy([unscopedLegal], context, at).status).toBe("MISSING_CONFIGURATION");
