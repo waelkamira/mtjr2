@@ -4898,3 +4898,22 @@ The platform account policy is now explicit: email verification is not required 
 - Exact-head CodeQL run `43196405453` passed.
 - Vercel deployment `dpl_4abPskRpS9BJ2gvUeKd3wHE7YD25` reached `READY` for this exact SHA and was assigned the production aliases, including `mtjr2.vercel.app`. The earlier Vercel rate-limit status on parent SHA `17567cb` was a provider-side deployment limit, not an application build failure; the subsequent deployment for this head completed successfully.
 - The dedicated PostgreSQL Integration (`43192299984`) and Database Baseline (`43192299765`) runs passed on parent SHA `17567cb82c1505ea479ab5b36b91fa7033fc8dce`. The `fa9012fd` commit is test-only and makes no database/schema change; the current Browser E2E run also executed the isolated PostgreSQL-backed application journey.
+
+
+## 2026-11-12 — Double-entry ledger integrity hardening
+
+- Updated `src/server/finance/ledger.ts`: an idempotency-key retry must match source,
+  currency, description, occurrence timestamp, reversal reference and canonical journal
+  lines; changed payloads are rejected rather than silently treated as already posted.
+- Updated `prisma/schema.prisma` with database-generated `JournalEntry.createdTransactionId`.
+- Added migration `20261112130000_journal_append_only_integrity`: PostgreSQL rejects
+  JournalLine inserts outside the journal-creation transaction and rejects inactive
+  accounts in deferred journal integrity checks.
+- Added `tests/finance/ledger.test.ts` (balanced posting, identical retry, changed payload,
+  imbalance, account validation and exact reversal) and
+  `tests/integration/ledger-postgres.integration.test.ts` (post-commit append rejection and
+  inactive-account bypass rejection).
+- Commit implementation files are on `main`; **no local or CI verification was run in
+  this session**. Prisma validate/generate, typecheck, lint, focused Vitest, migration replay
+  and PostgreSQL integration remain required. No account mappings or money-flow wiring were
+  inferred; seller payable, reconciliation and withdrawals remain blocked by FIN-01–FIN-12.
