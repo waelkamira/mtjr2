@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ type ReturnRow = { id: string; returnNumber: string; orderNumber: string; custom
 export default function AdminReturnsPage() {
   const { locale } = useLocale();
   const t = (english: string, arabic: string) => translate(locale, english, arabic);
-  const reasonLabel = (reason: string) => ({ DEFECTIVE: t("Defective", "معيب"), DAMAGED: t("Damaged", "تالف"), WRONG_ITEM: t("Wrong item", "منتج خاطئ"), NOT_AS_DESCRIBED: t("Not as described", "غير مطابق للوصف"), OTHER: t("Other", "سبب آخر") }[reason] || reason.replaceAll("_", " "));
+  const reasonLabel = (reason: string) => ({ DEFECTIVE: t("Defective", "معيب"), DAMAGED: t("Damaged", "تالف"), WRONG_ITEM: t("Wrong item", "منتج خاطئ"), NOT_AS_DESCRIBED: t("Not as described", "غير مطابق للوصف"), CHANGED_MIND: t("Changed my mind", "تغيير الرأي"), OTHER: t("Other", "سبب آخر") }[reason] || translateStatus(locale, reason));
   const [items, setItems] = useState<ReturnRow[]>([]);
   const [selected, setSelected] = useState("");
   const [note, setNote] = useState("");
@@ -21,7 +21,7 @@ export default function AdminReturnsPage() {
   async function load() {
     const response = await fetch("/api/admin/returns", { cache: "no-store" });
     const data = await response.json() as { items?: ReturnRow[]; error?: string };
-    if (!response.ok) throw new Error(data.error || "Return queue unavailable.");
+    if (!response.ok) throw new Error(data.error || t("Return queue unavailable.", "قائمة طلبات الإرجاع غير متاحة."));
     setItems(data.items || []);
     if (!selected && data.items?.[0]) setSelected(data.items[0].id);
   }
@@ -29,7 +29,7 @@ export default function AdminReturnsPage() {
     const data = await response.json() as { items?: ReturnRow[]; error?: string };
     if (!response.ok) throw new Error(data.error || "Return queue unavailable.");
     if (live) { setItems(data.items || []); if (data.items?.[0]) setSelected(data.items[0].id); }
-  }).catch((cause) => { if (live) setError(cause instanceof Error ? cause.message : "Return queue unavailable."); }).finally(() => { if (live) setLoading(false); }); return () => { live = false; }; }, []);
+  }).catch((cause) => { if (live) setError(cause instanceof Error ? cause.message : t("Return queue unavailable.", "قائمة طلبات الإرجاع غير متاحة.")); }).finally(() => { if (live) setLoading(false); }); return () => { live = false; }; }, []);
   const row = items.find((item) => item.id === selected);
   async function update(status: "APPROVED" | "REJECTED") {
     if (!selected) return;
@@ -37,10 +37,10 @@ export default function AdminReturnsPage() {
     try {
       const response = await fetch("/api/admin/returns/" + encodeURIComponent(selected), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, note }) });
       const data = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(data.error || "Return update failed.");
+      if (!response.ok) throw new Error(data.error || t("Return update failed.", "تعذّر تحديث طلب الإرجاع."));
       setNote(""); await load();
-      toast.success(status === "APPROVED" ? "Return approved." : "Return rejected.");
-    } catch (cause) { const message = cause instanceof Error ? cause.message : "Return update failed."; setError(message); toast.error(message); }
+      toast.success(status === "APPROVED" ? t("Return approved.", "تمت الموافقة على الإرجاع.") : t("Return rejected.", "تم رفض طلب الإرجاع."));
+    } catch (cause) { const message = cause instanceof Error ? cause.message : t("Return update failed.", "تعذّر تحديث طلب الإرجاع."); setError(message); toast.error(message); }
     finally { setBusy(false); }
   }
   return <main className="min-h-screen bg-[var(--background)]">
