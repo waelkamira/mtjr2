@@ -165,7 +165,7 @@ export default function SellerCommissionsPage() {
 
         {data && !loading && <>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-            <div><h2 className="text-lg font-extrabold text-[#454545]">{data.store.name}</h2><p className="mt-1 text-xs text-[#918a84]">{t("Loaded", "تم تحميل")} {data.transactions.length} {t("commission detail rows", "سجل تفصيلي للعمولات")}</p></div>
+            <div><h2 className="text-lg font-extrabold text-[#454545]">{data.store.name}</h2><p className="mt-1 text-xs text-[#625b55]">{t("Loaded", "تم تحميل")} {data.transactions.length} {t("commission detail rows", "سجل تفصيلي للعمولات")}</p></div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-[#eee9e4] bg-white px-3 py-1.5 text-xs font-bold text-[#5f5a55]">{data.transactions.length} {t("detail rows", "تفصيل")}</span>
               <button type="button" onClick={() => downloadCommissionCsv(data)} className="rounded-xl border border-white bg-white px-4 py-2 text-xs font-extrabold text-[#454545] shadow-[0_3px_8px_rgba(119,86,62,.05)] transition hover:bg-white">{t("Export CSV", "تصدير CSV")}</button>
@@ -176,7 +176,7 @@ export default function SellerCommissionsPage() {
             {data.totals.map((total) => <section key={total.currencyCode} className="rounded-[24px] border border-[#eee9e4] bg-white p-5 shadow-[8px_10px_20px_rgba(119,86,62,.06),inset_0_2px_0_white,inset_0_-3px_7px_rgba(119,86,62,.04)]">
               <p className="text-xs font-bold text-[#a94308]">{t("All-time recorded order item base", "إجمالي قيمة عناصر الطلب المسجلة")} · {total.currencyCode}</p>
               <p className="mt-2 text-2xl font-black tabular-nums text-[#454545]">{formatMinor(total.baseAmountMinor, total.currencyCode, total.minorUnit, locale)}</p>
-              <div className="mt-4 flex items-end justify-between gap-3 border-t border-[#eee9e4] pt-3"><div><p className="text-[11px] text-[#918a84]">{t("All-time recorded platform commission", "إجمالي عمولة المنصة المسجلة")}</p><p className="mt-1 text-lg font-extrabold text-[#5f5a55]">{formatMinor(total.commissionMinor, total.currencyCode, total.minorUnit, locale)}</p></div><p className="text-xs font-semibold text-[#918a84]">{total.transactionCount} {t("items", "عنصر")}</p></div>
+              <div className="mt-4 flex items-end justify-between gap-3 border-t border-[#eee9e4] pt-3"><div><p className="text-[11px] text-[#625b55]">{t("All-time recorded platform commission", "إجمالي عمولة المنصة المسجلة")}</p><p className="mt-1 text-lg font-extrabold text-[#5f5a55]">{formatMinor(total.commissionMinor, total.currencyCode, total.minorUnit, locale)}</p></div><p className="text-xs font-semibold text-[#625b55]">{total.transactionCount} {t("items", "عنصر")}</p></div>
             </section>)}
           </div>}
 
@@ -203,17 +203,17 @@ export default function SellerCommissionsPage() {
           </section>}
 
           <section className="mt-6 overflow-hidden rounded-[24px] border border-[#eee9e4] bg-white shadow-[10px_12px_24px_rgba(119,86,62,.06),inset_0_2px_0_white]">
-            <div className="border-b border-[#eee9e4] p-5"><h2 className="font-extrabold text-[#454545]">{t("Commission history", "سجل العمولات")}</h2><p className="mt-1 text-xs text-[#918a84]">{t("The immutable rate and amount snapshot recorded for each order item.", "لقطة النسبة والمبلغ المحفوظة لكل عنصر طلب.")}</p></div>
-            {data.transactions.length === 0 ? <p className="p-10 text-center text-sm text-[#918a84]">{t("No commission snapshots have been recorded for this store yet.", "لم تُسجل أي لقطات عمولة لهذا المتجر بعد.")}</p> : <div className="overflow-x-auto">
+            <div className="border-b border-[#eee9e4] p-5"><h2 className="font-extrabold text-[#454545]">{t("Commission history", "سجل العمولات")}</h2><p className="mt-1 text-xs text-[#625b55]">{t("The immutable rate and amount snapshot recorded for each order item.", "لقطة النسبة والمبلغ المحفوظة لكل عنصر طلب.")}</p></div>
+            {data.transactions.length === 0 ? <p className="p-10 text-center text-sm text-[#625b55]">{t("No commission snapshots have been recorded for this store yet.", "لم تُسجل أي لقطات عمولة لهذا المتجر بعد.")}</p> : <div className="overflow-x-auto">
               <table className="w-full min-w-[1050px] text-left text-sm">
-                <thead className="bg-white/55 text-[11px] font-bold uppercase tracking-wide text-[#918a84]"><tr>
+                <thead className="bg-white/55 text-[11px] font-bold uppercase tracking-wide text-[#625b55]"><tr>
                   <th className="px-4 py-3">{t("Date", "التاريخ")}</th><th className="px-4 py-3">{t("Order", "الطلب")}</th><th className="px-4 py-3">{t("Product", "المنتج")}</th><th className="px-4 py-3">{t("Category", "الفئة")}</th><th className="px-4 py-3">{t("Qty", "الكمية")}</th><th className="px-4 py-3">{t("Rate", "النسبة")}</th><th className="px-4 py-3">{t("Base", "الأساس")}</th><th className="px-4 py-3">{t("Commission", "العمولة")}</th><th className="px-4 py-3">{t("Order status", "حالة الطلب")}</th>
                 </tr></thead>
                 <tbody className="divide-y divide-white/80">
                   {data.transactions.map((item) => <tr key={item.id} className="align-top hover:bg-white/35">
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[#918a84]">{new Date(item.createdAt).toLocaleDateString(locale)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[#625b55]">{new Date(item.createdAt).toLocaleDateString(locale)}</td>
                     <td className="px-4 py-3 font-bold text-[#454545]">{item.orderNumber}</td>
-                    <td className="px-4 py-3"><p className="font-semibold text-[#454545]">{item.productName}</p><p className="mt-1 text-[11px] text-[#918a84]">{item.sku}</p></td>
+                    <td className="px-4 py-3"><p className="font-semibold text-[#454545]">{item.productName}</p><p className="mt-1 text-[11px] text-[#625b55]">{item.sku}</p></td>
                     <td className="px-4 py-3 text-xs text-[#77716c]">{item.categoryName || "—"}</td>
                     <td className="px-4 py-3 tabular-nums">{item.quantity}</td>
                     <td className="px-4 py-3 tabular-nums">{(item.rateBasisPoints / 100).toFixed(2)}%</td>
@@ -230,7 +230,7 @@ export default function SellerCommissionsPage() {
               </button>
             </div>}
           </section>
-          <p className="mt-4 rounded-xl border border-[#e6d7ca] bg-white/55 p-4 text-xs leading-5 text-[#918a84]">{t("Totals aggregate every commission snapshot currently recorded for this store, grouped by currency. The table loads commission details in pages of 100. These figures are not seller net balances or withdrawable funds; refunds are now shown separately; adjustments, holds, seller ledger balances and payouts are not yet represented.", "تجمع الإجماليات كل لقطات العمولات المسجلة حالياً لهذا المتجر حسب العملة، ويحمّل الجدول التفاصيل على صفحات من 100 سجل. هذه الأرقام ليست صافي مستحقات البائع أو أموالاً قابلة للسحب؛ ولا تزال التسويات والمبالغ المحجوزة وأرصدة دفتر البائع والدفعات غير ممثلة في دفتر محاسبي متكامل.")}</p>
+          <p className="mt-4 rounded-xl border border-[#e6d7ca] bg-white/55 p-4 text-xs leading-5 text-[#625b55]">{t("Totals aggregate every commission snapshot currently recorded for this store, grouped by currency. The table loads commission details in pages of 100. These figures are not seller net balances or withdrawable funds; refunds are now shown separately; adjustments, holds, seller ledger balances and payouts are not yet represented.", "تجمع الإجماليات كل لقطات العمولات المسجلة حالياً لهذا المتجر حسب العملة، ويحمّل الجدول التفاصيل على صفحات من 100 سجل. هذه الأرقام ليست صافي مستحقات البائع أو أموالاً قابلة للسحب؛ ولا تزال التسويات والمبالغ المحجوزة وأرصدة دفتر البائع والدفعات غير ممثلة في دفتر محاسبي متكامل.")}</p>
         </>}
       </div>
     </main>
