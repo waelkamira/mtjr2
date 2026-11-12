@@ -579,23 +579,23 @@ async function seedSellerCommunications(owner, store, market, usd, products, cus
 
   // In-app notifications: no email delivery records are created by demo data.
   const notificationRows = [
-    ["ORDER_RECEIVED", "طلب جديد بانتظار المعالجة", "لديك طلب تجريبي جديد يحتاج إلى مراجعة.", "VendorOrder", "DEMO-SYR-00001"],
-    ["RETURN_REQUESTED", "طلب إرجاع جديد", "يوجد طلب إرجاع تجريبي بانتظار المراجعة.", "ReturnRequest", "DEMO-SYR-RET-0001"],
-    ["LOW_STOCK", "تنبيه مخزون منخفض", "أحد المنتجات التجريبية وصل إلى حد إعادة الطلب.", "Inventory", "RAMOND-SY-LOW-STOCK"],
-    ["PRODUCT_QUESTION", "سؤال جديد عن منتج", "يوجد سؤال تجريبي جديد من أحد العملاء.", "ProductQuestion", "RAMOND-SY-QUESTION"],
-    ["STORE_REVIEW", "تقييم جديد للمتجر", "تمت إضافة تقييم تجريبي إلى متجرك.", "StoreReview", "RAMOND-SY-REVIEW"],
+    ["ORDER_RECEIVED", "طلب جديد بانتظار المعالجة", "لديك طلب تجريبي جديد يحتاج إلى مراجعة."],
+    ["RETURN_REQUESTED", "طلب إرجاع جديد", "يوجد طلب إرجاع تجريبي بانتظار المراجعة."],
+    ["LOW_STOCK", "تنبيه مخزون منخفض", "أحد المنتجات التجريبية وصل إلى حد إعادة الطلب."],
+    ["PRODUCT_QUESTION", "سؤال جديد عن منتج", "يوجد سؤال تجريبي جديد من أحد العملاء."],
+    ["STORE_REVIEW", "تقييم جديد للمتجر", "تمت إضافة تقييم تجريبي إلى متجرك."],
   ];
   for (let index = 0; index < notificationRows.length; index += 1) {
-    const [type, title, message, resourceType, resourceId] = notificationRows[index];
+    const [type, title, message] = notificationRows[index];
     const key = "syria-seller-demo:notification:" + String(index + 1).padStart(3, "0");
     await prisma.notification.upsert({
       where: { deduplicationKey: key },
       create: {
-        userId: owner.id, type, title, message, resourceType, resourceId,
+        userId: owner.id, type, title, message,
         deduplicationKey: key,
         readAt: index === 0 ? null : new Date(now.getTime() - index * 60 * 60 * 1000),
       },
-      update: { title, message, resourceType, resourceId },
+      update: { title, message },
     });
   }
   for (const type of ["ORDER", "INVENTORY", "RETURNS", "REVIEWS", "QUESTIONS", "MESSAGES", "SYSTEM"]) {
