@@ -25,7 +25,7 @@ const brandPalettes = [
 
 function BrandEmblem({ name, logoUrl, palette }: { name: string; logoUrl: string | null; palette: string }) {
   const [logoFailed, setLogoFailed] = useState(false);
-  const initials = name.trim().split(/\\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
+  const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
   const hasLogo = Boolean(logoUrl?.trim()) && !logoFailed;
 
   return (
