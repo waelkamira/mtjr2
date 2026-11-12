@@ -28,7 +28,7 @@ export default function MfaStepUpPage({ overlay = false }: { overlay?: boolean }
       });
       const result = await response.json() as { error?: string; verified?: boolean };
       if (!response.ok || !result.verified) throw new Error(result.error || t("Verification failed.", "فشل التحقق."));
-      if (!overlay) router.replace(returnTo);
+      router.replace(returnTo);
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("Unable to verify your authenticator code.", "تعذّر التحقق من رمز المصادقة."));
