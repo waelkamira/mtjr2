@@ -51,7 +51,7 @@ No inert buttons, fake data presented as live, optimistic success without persis
 | 28 | Central order operations | Phase 2 partial: read-only order search/detail, customer and monetary snapshots, payment attempts, vendor splits and tracking/status history | `/admin/orders`, `/admin/orders/[orderId]`; `GET /api/admin/orders`, `GET /api/admin/orders/[orderId]` | `users:manage`; validated bounded pagination/status filters; does not expose provider references or unsupported financial/fulfillment actions | `tests/admin/orders.test.ts` (3 tests); typecheck and targeted ESLint pass. No PostgreSQL/browser journey | Payment/refund/dispute operations, exception queue, controlled intervention workflows and lifecycle verification remain future work |
 | 29 | Payment administration | Phase 3 partial: read-only payment transaction and webhook operations workspace | `/admin/payments`, `/admin/payments/[paymentId]`; `GET /api/admin/payments`, `GET /api/admin/payments/[paymentId]` | `payments:read`; bounded search/status/provider pagination and separate status/currency aggregates; no provider references, checkout URLs or raw payloads returned | `tests/admin/payments.test.ts` (3 tests); typecheck and targeted ESLint pass. No PostgreSQL/browser journey; no payment provider configured. | Refunds, chargebacks, reconciliation, settlement and payouts remain unsupported; inspection-only |
 | 30 | Commission management | Super Admin rules and applied snapshots; `/admin/commissions` | `/api/admin/commission-rules`, `/api/admin/commission-rules/[ruleId]`, `/api/admin/commissions`; payment success webhook integration | `platform:manage`; versioned effective periods; seller+category → seller → category → global; net item merchandise after discount excludes shipping/tax; no rule means zero; immutable snapshots per order item | Policy tests (4), management-service tests (3), and payment lifecycle tests (5) pass; schema/migration/typecheck/lint/build pass. No end-to-end payment-success DB journey yet. | Rule configuration and transaction inspection implemented; no seller ledger, payout, refund reversal or reconciliation |
-| 31 | Accounting and general ledger | Not audited | Not mapped | Not audited | Not audited | Not verified |
+| 31 | Accounting and general ledger | Internal posting primitive: `src/server/finance/ledger.ts`; no admin ledger page or API | `postJournalEntry`, `listLedgerAccountEntries`; no public route/API | `LedgerAccount`, `JournalEntry`, `JournalLine`; `createdTransactionId` binds initial lines to entry-creation transaction | Unit tests cover payload idempotency, balancing, account validation and exact reversals; PostgreSQL integration tests cover append-only and inactive-account database guards. Both test suites and migration are pending execution. | Foundation only; no chart-of-accounts bootstrap, payment/refund posting, seller payable, balances, reconciliation or payout workflow |
 | 32 | Payout administration | Manual seller bank-destination review implemented | `/admin/seller-payout-methods`; `GET /api/admin/seller-payout-methods`; `POST /api/admin/seller-payout-methods/[methodId]/review` | Global `platform:manage` + fresh TOTP step-up; self-verification blocked; masked-only queue; evidence reference + reason; atomic `submissionVersion` and pending-state guard; current-generation `submittedAt`; AuditLog | Exact-head general CI, PostgreSQL integration, Browser E2E (13/13) and CodeQL passed on `401cb342d034dd8ad27576dde053ce3454891b7d` | Manual attestation only. No payable balance, withdrawal request, transfer execution or settlement/reconciliation. |
 | 33 | Returns, refunds and disputes administration | `/admin/returns` | Admin return queue/review APIs and UI | ReturnRequest, ReturnItem, AuditLog | CI + PostgreSQL passed on merged implementation; admin browser journey pending | Implemented / unverified; workflow-only, no funds movement |
 
@@ -411,3 +411,18 @@ Policy localization/versioning, market/currency controls, seller-specific notifi
 | Submission date accuracy | `submittedAt` updates for every re-registration; admin list sorts/displays it; `createdAt` remains the original row creation timestamp | Migration `20261112093000_seller_payout_submission_timestamp`; domain and route tests cover timestamp update and queue ordering |
 
 **Verification boundary:** These latest queue refinements are committed but their exact-head CI, PostgreSQL, Browser E2E and CodeQL checks are pending. Previous passing checks apply to the earlier reviewed head only.
+
+
+## Accounting journal integrity checkpoint — 2026-11-12
+
+- Strengthened idempotent retry matching: the same key must now match source, currency,
+  description, occurrence timestamp, reversal reference and canonical journal lines.
+- Added `createdTransactionId` and migration `20261112130000_journal_append_only_integrity`.
+  Journal lines may only be inserted in the transaction that creates their journal entry;
+  later append attempts are rejected by PostgreSQL, even if a caller bypasses the service.
+- The deferred database integrity trigger now also rejects inactive accounts as well as
+  currency mismatches and unbalanced entries.
+- Added `tests/finance/ledger.test.ts` and
+  `tests/integration/ledger-postgres.integration.test.ts`.
+- Verification is pending: Prisma validate/generate, typecheck, focused Vitest, migration
+  replay, and the PostgreSQL integration suite have not been run on this commit.
