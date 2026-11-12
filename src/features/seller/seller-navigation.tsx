@@ -12,7 +12,7 @@ export type SellerIconName =
   | "questions" | "reviews" | "ads" | "team" | "notifications" | "shipping"
   | "finance" | "user" | "business" | "catalog" | "pin" | "globe"
   | "document" | "shield" | "media" | "tag" | "store" | "plus" | "edit"
-  | "trash" | "check" | "close" | "warehouse" | "refresh" | "arrow-up" | "arrow-down";
+  | "trash" | "check" | "close" | "warehouse" | "refresh" | "arrow-up" | "arrow-down" | "sliders";
 
 type Tone = "lavender" | "mint" | "peach" | "butter" | "blush" | "sky";
 
@@ -94,6 +94,7 @@ export function SellerIcon({ name }: { name: SellerIconName }) {
       {name === "shield" && <><path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" /><path d="m9 12 2 2 4-4" /></>}
       {name === "media" && <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9" r="1.5" /><path d="m4 17 5-5 4 4 3-3 4 4" /></>}
       {name === "tag" && <><path d="M20 13 13 20 4 11V4h7z" /><circle cx="8" cy="8" r="1" /></>}
+      {name === "sliders" && <><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h9M17 18h3" /><circle cx="15" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="15" cy="18" r="2" /></>}
       {name === "store" && <><path d="M4 10v10h16V10M3 10l2-6h14l2 6" /><path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M9 20v-6h6v6" /></>}
       {name === "plus" && <><path d="M12 5v14M5 12h14" /></>}
       {name === "edit" && <><path d="m4 16.5-.8 4.3 4.3-.8L19 8.5 15.5 5 4 16.5Z" /><path d="m13.8 6.7 3.5 3.5" /></>}
