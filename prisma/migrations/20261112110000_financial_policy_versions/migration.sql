@@ -124,7 +124,8 @@ BEGIN
 
   IF OLD."reviewedAt" IS NOT NULL AND (
     NEW."reviewedAt" IS DISTINCT FROM OLD."reviewedAt" OR
-    NEW."reviewedById" IS DISTINCT FROM OLD."reviewedById"
+    NEW."reviewedById" IS DISTINCT FROM OLD."reviewedById" OR
+    NEW."reviewNotes" IS DISTINCT FROM OLD."reviewNotes"
   ) THEN
     RAISE EXCEPTION 'Financial policy review evidence cannot be overwritten';
   END IF;
