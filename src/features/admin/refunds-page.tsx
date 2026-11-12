@@ -129,18 +129,18 @@ export default function AdminRefundsPage() {
         <nav className="flex gap-4 text-sm"><Link href="/admin/returns">{t("Returns", "المرتجعات")}</Link><Link href="/admin">{t("Administration", "الإدارة")}</Link></nav>
       </div>
     </header>
-    <div className="mx-auto max-w-7xl px-5 py-8">
-      <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Finance operations", "العمليات المالية")}</p>
-      <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{t("Refunds", "رد الأموال")}</h1>
+    <div className="mx-auto max-w-[1600px] px-5 py-8">
+      <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{t("Finance operations", "العمليات المالية")}</p>
+      <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{t("Refunds", "رد الأموال")}</h1>
       <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--muted)]">{t("Only physically received return items can enter the refund queue. A second finance operator must execute the provider refund or confirm an external refund requested by another operator. Stripe and PayPal status is reconciled before payment status changes.", "تدخل المنتجات المستلمة فعلياً فقط في قائمة رد الأموال. يجب أن ينفذ رد الأموال أو يؤكد الرد الخارجي موظف مالي مختلف عن منشئ الطلب. تتم مطابقة حالة Stripe أو PayPal قبل تغيير حالة الدفع.")}</p>
-      <p className="mt-4 rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">{t("Amounts below cover returned merchandise only. Shipping and tax are not automatically refunded or allocated; review them separately before processing an external refund.", "المبالغ أدناه تخص المنتجات المرتجعة فقط. لا تُرد تكاليف الشحن والضرائب تلقائياً؛ راجعها بشكل منفصل قبل تنفيذ رد خارجي.")}</p>
+      <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm text-sm text-[var(--muted)]">{t("Amounts below cover returned merchandise only. Shipping and tax are not automatically refunded or allocated; review them separately before processing an external refund.", "المبالغ أدناه تخص المنتجات المرتجعة فقط. لا تُرد تكاليف الشحن والضرائب تلقائياً؛ راجعها بشكل منفصل قبل تنفيذ رد خارجي.")}</p>
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
-      {notice && <p role="status" className="mt-5 rounded-xl border border-[var(--border)] bg-white p-4 text-sm">{notice}</p>}
+      {notice && <p role="status" className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm text-sm">{notice}</p>}
       {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : <>
         <section className="mt-8">
           <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">{t("Received returns eligible for refund", "المرتجعات المستلمة المؤهلة لرد الأموال")}</h2><span className="text-xs text-[var(--muted)]">{candidates.length} {t("candidate(s)", "حالة مرشحة")}</span></div>
-          {!candidates.length ? <p className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted)]">{t("No received returns are waiting for a refund request.", "لا توجد مرتجعات مستلمة بانتظار طلب رد الأموال.")}</p> : <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {candidates.map((candidate) => <article key={candidate.returnRequestId} className="rounded-2xl border border-[var(--border)] bg-white p-5">
+          {!candidates.length ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm text-sm text-[var(--muted)]">{t("No received returns are waiting for a refund request.", "لا توجد مرتجعات مستلمة بانتظار طلب رد الأموال.")}</p> : <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            {candidates.map((candidate) => <article key={candidate.returnRequestId} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-semibold text-[var(--color-copper-600)]">{candidate.returnNumber}</p><p className="text-sm font-semibold">{candidate.amountDisplay}</p></div>
               <p className="mt-2 font-semibold">{t("Order", "الطلب")} {candidate.orderNumber}</p><p className="mt-1 text-xs text-[var(--muted)]">{t("Payment provider:", "مزود الدفع:")} {candidate.provider || t("Unavailable", "غير متاح")}</p>
               <ul className="mt-3 space-y-1 text-sm text-[var(--muted)]">{candidate.items.map((item) => <li key={item.sku}>{item.productName} · {item.sku} × {item.quantity}</li>)}</ul>
@@ -151,8 +151,8 @@ export default function AdminRefundsPage() {
         </section>
         <section className="mt-10">
           <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">{t("Refund ledger", "سجل عمليات رد الأموال")}</h2><span className="text-xs text-[var(--muted)]">{refunds.length} {t("record(s)", "سجل")}</span></div>
-          {!refunds.length ? <p className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted)]">{t("No refund records yet.", "لا توجد سجلات لرد الأموال بعد.")}</p> : <div className="mt-4 space-y-4">
-            {refunds.map((refund) => <article key={refund.id} className="rounded-2xl border border-[var(--border)] bg-white p-5">
+          {!refunds.length ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm text-sm text-[var(--muted)]">{t("No refund records yet.", "لا توجد سجلات لرد الأموال بعد.")}</p> : <div className="mt-4 space-y-4">
+            {refunds.map((refund) => <article key={refund.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-wrap justify-between gap-2"><div><p className="text-xs font-semibold text-[var(--color-copper-600)]">{refund.returnNumber} · Order {refund.orderNumber}</p><p className="mt-1 font-semibold">{refund.amountDisplay}</p></div><div className="text-right"><p className="text-sm font-semibold"><StatusBadge locale={locale} status={refund.status} /></p><p className="text-xs text-[var(--muted)]">{t("Payment:", "الدفع:")} <StatusBadge locale={locale} status={refund.paymentStatus} /> · {t("Provider:", "المزود:")} {refund.provider}</p></div></div>
               <ul className="mt-3 space-y-1 text-sm text-[var(--muted)]">{refund.items.map((item) => <li key={item.sku}>{item.productName} · {item.sku} × {item.quantity}</li>)}</ul>
               {refund.status === "PENDING_MANUAL" || refund.status === "PROVIDER_FAILED" ? <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4">
