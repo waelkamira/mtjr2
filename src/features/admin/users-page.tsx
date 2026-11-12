@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 
 type UserRow = {
   id: string;
@@ -74,7 +74,7 @@ export default function AdminUsersPage() {
         </div>
         <form onSubmit={search} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 sm:grid-cols-[1fr_220px_auto]">
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Search by name, email or exact user ID", "ابحث بالاسم أو البريد الإلكتروني أو معرّف المستخدم الكامل")}<input value={draftQuery} onChange={(event) => setDraftQuery(event.target.value)} maxLength={120} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
-          <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Account status", "حالة الحساب")}<select value={filters.status} onChange={(event) => setStatus(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">{translate(locale, "All statuses", "جميع الحالات")}</option>{statuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+          <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Account status", "حالة الحساب")}<select value={filters.status} onChange={(event) => setStatus(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">{translate(locale, "All statuses", "جميع الحالات")}</option>{statuses.map((status) => <option key={status} value={status}>{translateStatus(locale, status)}</option>)}</select></label>
           <button disabled={loading} className="self-end rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{translate(locale, "Search", "بحث")}</button>
         </form>
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
