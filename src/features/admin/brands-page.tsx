@@ -15,8 +15,11 @@ type Brand = {
 type BrandForm = Omit<Brand, "id" | "productCount" | "updatedAt">;
 
 function BrandLogo({ name, logoUrl, size = "large" }: { name: string; logoUrl: string | null; size?: "small" | "large" }) {
+  return <BrandLogoImage key={logoUrl || "no-logo"} name={name} logoUrl={logoUrl} size={size} />;
+}
+
+function BrandLogoImage({ name, logoUrl, size }: { name: string; logoUrl: string | null; size: "small" | "large" }) {
   const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [logoUrl]);
   const dimensions = size === "small" ? "h-12 w-12 rounded-xl" : "h-20 w-20 rounded-2xl";
   const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
   if (logoUrl && !failed) return <img src={logoUrl} alt={name + " logo"} onError={() => setFailed(true)} className={`${dimensions} shrink-0 border border-stone-200 bg-white object-contain p-1`} />;
