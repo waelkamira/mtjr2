@@ -44,6 +44,7 @@ const links = [
   { href: "/admin/orders", label: "Orders", ar: "الطلبات", icon: ShoppingCart },
   { href: "/admin/payments", label: "Payments", ar: "المدفوعات", icon: CreditCard },
   { href: "/admin/payment-providers", label: "Payment providers", ar: "مزودو الدفع", icon: Building2, platformOnly: true },
+  { href: "/admin/seller-payout-methods", label: "Seller payout verification", ar: "التحقق من حسابات البائعين", icon: Building2, platformOnly: true },
   { href: "/admin/logistics", label: "Shipments", ar: "الشحنات", icon: Truck },
   { href: "/admin/returns", label: "Returns", ar: "المرتجعات", icon: RotateCcw },
   { href: "/admin/refunds", label: "Refunds", ar: "استرداد المدفوعات", icon: Banknote },
