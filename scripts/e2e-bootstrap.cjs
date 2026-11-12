@@ -78,6 +78,7 @@ async function main() {
     },
     update: {
       status: "PENDING_VERIFICATION",
+      submissionVersion: { increment: 1 },
       verifiedAt: null,
       isDefault: false,
       bankName: "E2E Demo Bank",
