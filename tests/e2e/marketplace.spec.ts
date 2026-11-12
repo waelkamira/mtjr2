@@ -290,7 +290,7 @@ test.describe("seller catalog authoring", () => {
       name: "e2e-replacement.png", mimeType: "image/png",
       buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
     });
-    await expect(editForm.getByText(/Image replaced successfully|تم استبدال الصورة بنجاح/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Image replaced successfully|تم استبدال الصورة بنجاح/i)).toBeVisible({ timeout: 15000 });
     await imageFiles.nth(0).setInputFiles([{
       name: "e2e-secondary.png", mimeType: "image/png",
       buffer: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])
