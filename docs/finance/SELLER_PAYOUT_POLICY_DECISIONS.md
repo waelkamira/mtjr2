@@ -67,3 +67,8 @@ Do not enable seller withdrawal, display an available-to-withdraw amount, or cla
 - Encrypted seller payout-method management is implemented for owner-managed IBAN beneficiary records only; all new methods remain PENDING_VERIFICATION, and no ownership-verification or transfer path exists.
 - Seller payable balances, holds, settlement, withdrawal requests and bank/provider reconciliation are not implemented.
 - This decision register does not approve any accounting treatment.
+
+
+## Jurisdiction-aware policy design
+
+The cross-domain rule-selection design, scope precedence, immutable rule-version requirements, and fail-closed evaluation outcomes are documented in [JURISDICTION_AWARE_FINANCIAL_POLICY_ENGINE.md](./JURISDICTION_AWARE_FINANCIAL_POLICY_ENGINE.md). This design does not approve any FIN-01 through FIN-12 accounting or payout decision.
