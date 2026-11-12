@@ -49,4 +49,12 @@ A privileged manual review command is now implemented at `POST /api/admin/seller
 - Stores the evidence reference and reason in the audit metadata, never the account identifier or encrypted payload.
 - A rejection clears the default flag. A successful manual review records `verifiedAt`.
 
-This endpoint records an administrator's attestation after an out-of-band check with the bank or an approved verification provider. It does **not** contact a bank, validate account ownership automatically, initiate a payout, or make a seller balance withdrawable. The admin review UI submits the exact queue `submissionVersion` with every decision. `submittedAt` records the time of the current submission generation; re-registering a disabled destination updates it and moves the destination to the top of the review queue. Do not review a destination as verified without independently confirming ownership through an approved channel.
+This endpoint records an administrator's attestation after an out-of-band check with the bank or an approved verification provider. It does **not** contact a bank, validate account ownership automatically, initiate a payout, or make a seller balance withdrawable. The admin review UI submits the exact queue `submissionVersion` with every decision. `submittedAt` records the time of the current submission generation; re-registering a disabled destination updates it and moves the destination to the top of the review queue. The original `createdAt` remains unchanged. Do not review a destination as verified without independently confirming ownership through an approved channel.
+
+
+## Queue pagination and resubmission evidence
+
+- The admin queue uses `submittedAt` for the current submission label and descending queue order. `createdAt` remains the original database-row creation time.
+- Re-registering a disabled destination increments `submissionVersion` and writes a new `submittedAt` value in the same transaction.
+- The browser keeps evidence/reason drafts under the composite key `methodId:submissionVersion`; it does not carry evidence from a prior generation into a re-registered destination.
+- Pagination accepts all positive finite integer pages for which the 50-row offset remains a safe integer; the UI's reported page count is therefore reachable.
