@@ -78,7 +78,7 @@ function canonicalize(value: unknown): unknown {
 }
 
 function stableValue(value: unknown): string {
-  return JSON.stringify(canonicalize(value));
+  return JSON.stringify(canonicalize(value)) ?? "undefined";
 }
 
 /**
