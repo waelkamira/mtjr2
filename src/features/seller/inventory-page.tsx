@@ -447,7 +447,7 @@ export default function SellerInventoryPage() {
             ...row, color: ["bg-indigo-500", "bg-violet-500", "bg-cyan-500", "bg-teal-500", "bg-[var(--orange)]", "bg-fuchsia-500", "bg-blue-500", "bg-lime-500"][index]
           }))} />
           <MetricBarChart title={translate(locale, "Internal transfer pipeline", "حركة التحويلات الداخلية")} rows={Object.entries(transferStatuses).map(([status, value], index) => ({
-            label: status.replaceAll("_", " ").toLowerCase(), value,
+            label: translate(locale, status.replaceAll("_", " ").toLowerCase(), status.replaceAll("_", " ")), value,
             color: ["bg-sky-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500"][index % 5]
           }))} />
         </section>
