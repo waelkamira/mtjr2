@@ -198,3 +198,16 @@ selection, pending legal rule blocking a platform fallback, permission denial be
 database access, and malformed country/currency context. These tests are committed
 but have not been executed in this session. They do not replace PostgreSQL transaction
 and migration tests.
+
+## 16. Decision-evidence hardening — 2026-11-12
+
+The not-yet-applied migration now adds PostgreSQL checks for legal source/review-note
+evidence, substantive rejection reasons, author/reviewer separation, author/approver
+separation, author/rejector separation, and distinct legal reviewer/approver identities.
+The immutability trigger also prevents review notes from being overwritten after a
+review decision. The approval service records optional approval notes in the audit
+metadata instead of replacing the reviewer's notes.
+
+These database constraints are part of the pending migration and have not been applied
+or exercised against PostgreSQL in this session. Verify them with the migration and
+transactional integration suite before considering the workflow production-ready.
