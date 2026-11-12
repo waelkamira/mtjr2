@@ -54,14 +54,7 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
   const sort = params.sort === "newest" || params.sort === "name_asc" || params.sort === "name_desc"
     ? params.sort
     : q ? "relevance" : "newest";
-  const [result, categories, brands, stores, markets] = await Promise.all([
-    listDiscoverableProducts({ q: q || undefined, page, limit: 24, categoryId, brandId, storeId, marketId, currencyCode, minPrice, maxPrice, inStock: String(inStock), sort, locale }),
-    listActiveCategoryTree({ page: 1, limit: 100, locale }),
-    listActiveBrands({ page: 1, limit: 100, locale }),
-    listDiscoverableStores({ page: 1, limit: 100 }),
-    listActiveMarkets()
-  ]);
-  const sponsored = await listSponsoredCampaigns({ marketId: marketId ?? markets[0]?.id, categoryId, brandId, query: q, limit: 4 });
+  const markets = await listActiveMarkets();
   const selectedMarket = markets.find((market) => market.id === marketId);
   // Price ranges are meaningful only within one market and currency. When a
   // market is selected, use its configured default currency unless overridden.
@@ -69,6 +62,13 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
     ? params.currencyCode?.trim().toUpperCase() || selectedMarket?.defaultCurrency.code
     : undefined;
   const selectedCurrency = selectedMarket?.currencies.find(({ currency }) => currency.code === currencyCode)?.currency;
+  const [result, categories, brands, stores] = await Promise.all([
+    listDiscoverableProducts({ q: q || undefined, page, limit: 24, categoryId, brandId, storeId, marketId, currencyCode, minPrice, maxPrice, inStock: String(inStock), sort, locale }),
+    listActiveCategoryTree({ page: 1, limit: 100, locale }),
+    listActiveBrands({ page: 1, limit: 100, locale }),
+    listDiscoverableStores({ page: 1, limit: 100 })
+  ]);
+  const sponsored = await listSponsoredCampaigns({ marketId: marketId ?? markets[0]?.id, categoryId, brandId, query: q, limit: 4 });
   const filters = {
     ...(categoryId ? { categoryId } : {}),
     ...(brandId ? { brandId } : {}),
