@@ -41,7 +41,7 @@ async function requireSellerOwner() {
 const safeSelect = {
   id: true, type: true, accountHolderName: true, bankName: true, countryCode: true,
   currencyCode: true, accountLast4: true, status: true, isDefault: true,
-  submissionVersion: true, verifiedAt: true, createdAt: true, updatedAt: true
+  submissionVersion: true, verifiedAt: true, createdAt: true, submittedAt: true, updatedAt: true
 } as const;
 
 /** Lists only the authenticated seller owner's non-disabled, masked payout destinations. */
@@ -49,7 +49,7 @@ export async function listSellerPayoutMethods() {
   const { seller } = await requireSellerOwner();
   const methods = await prisma.sellerPayoutMethod.findMany({
     where: { sellerId: seller.id, status: { not: SellerPayoutMethodStatus.DISABLED } },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ isDefault: "desc" }, { submittedAt: "desc" }],
     select: { ...safeSelect, encryptedDetails: true, encryptionKeyVersion: true }
   });
   return methods.map(({ encryptedDetails, encryptionKeyVersion, ...method }) => {
@@ -123,6 +123,7 @@ export async function createSellerPayoutMethod(input: unknown) {
       fingerprint,
       status: SellerPayoutMethodStatus.PENDING_VERIFICATION,
       verifiedAt: null,
+      submittedAt: new Date(),
       isDefault: makeDefault
     };
     const method = duplicate
