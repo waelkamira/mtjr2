@@ -38,11 +38,11 @@ function ChartCard({
   children: ReactNode;
 }) {
   return (
-    <section className="seller-chart-card min-w-0 overflow-hidden rounded-[1.7rem] border border-white/[.09] bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,.16),transparent_45%),linear-gradient(145deg,#172338_0%,#11192a_58%,#151d31_100%)] p-5 shadow-[0_18px_38px_rgba(2,8,23,.28),inset_0_1px_0_rgba(255,255,255,.07)] transition duration-200 hover:-translate-y-0.5 hover:border-white/[.16]">
+    <section className="seller-chart-card min-w-0 overflow-hidden rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-[0_8px_22px_rgba(69,69,69,.06)] transition duration-200 hover:-translate-y-0.5 hover:border-[#d5d5d5] hover:shadow-[0_12px_28px_rgba(69,69,69,.09)]">
       <div className="mb-4">
         <div aria-hidden="true" className="mb-3 h-1.5 w-16 rounded-full bg-[linear-gradient(90deg,#FF8C1C_0%,#8B5CF6_35%,#38BDF8_68%,#34D399_100%)] shadow-[0_0_18px_rgba(56,189,248,.25)]" />
-        <h2 className="text-base font-extrabold text-white">{title}</h2>
-        {description && <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p>}
+        <h2 className="text-base font-extrabold text-[#454545]">{title}</h2>
+        {description && <p className="mt-1 text-xs leading-5 text-[#777777]">{description}</p>}
       </div>
       {children}
     </section>
@@ -69,7 +69,7 @@ export function ColumnChart({
           <svg role="img" aria-label={title} viewBox={`0 0 ${width} 190`} className="h-48 w-full min-w-[480px]" preserveAspectRatio="none">
             {[0, 1, 2, 3].map((line) => {
               const y = 12 + line * 42;
-              return <line key={line} x1="30" x2={width - 4} y1={y} y2={y} stroke="#34445d" strokeDasharray="3 4" />;
+              return <line key={line} x1="30" x2={width - 4} y1={y} y2={y} stroke="#e7e7e7" strokeDasharray="3 4" />;
             })}
             {data.map((item, index) => {
               const barWidth = Math.max(4, Math.min(20, (width - 45) / data.length - 4));
@@ -82,9 +82,9 @@ export function ColumnChart({
                 </g>
               );
             })}
-            <line x1="30" x2={width - 4} y1="150" y2="150" stroke="#64748b" />
+            <line x1="30" x2={width - 4} y1="150" y2="150" stroke="#b8b8b8" />
           </svg>
-          <div className="mt-1 flex justify-between gap-2 text-[10px] text-slate-400">
+          <div className="mt-1 flex justify-between gap-2 text-[10px] text-[#777777]">
             <span>{data[0]?.label}</span><span>{data.at(-1)?.label}</span>
           </div>
         </div>
@@ -111,11 +111,11 @@ export function HorizontalBarChart({
         <div className="space-y-3" role="list" aria-label={title}>
           {data.map((item, index) => (
             <div key={`${item.label}-${index}`} role="listitem" className="grid grid-cols-[minmax(5rem,1fr)_2fr_auto] items-center gap-3 text-xs">
-              <span className="truncate text-slate-400" title={item.label}>{item.label}</span>
-              <div className="h-3 overflow-hidden rounded-full border border-white/[.05] bg-white/[.06]">
+              <span className="truncate text-[#777777]" title={item.label}>{item.label}</span>
+              <div className="h-3 overflow-hidden rounded-full border border-[#e8e8e8] bg-[#f5f5f5]">
                 <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, (item.value / max) * 100)}%`, backgroundColor: item.color ?? chartColor(index) }} />
               </div>
-              <span className="min-w-8 text-end font-semibold tabular-nums text-white">{item.value}</span>
+              <span className="min-w-8 text-end font-semibold tabular-nums text-[#454545]">{item.value}</span>
             </div>
           ))}
         </div>
@@ -204,8 +204,8 @@ export function PieChart({
         <div className="flex flex-wrap items-center justify-center gap-5">
           <svg role="img" aria-label={title} viewBox="0 0 200 200" className="h-44 w-44 shrink-0">
             {segments.map((segment) => <g key={segment.label}><title>{`${segment.label}: ${segment.value} (${segment.percent}%)`}</title><path d={segment.path} fill={segment.color} stroke="white" strokeWidth="2" /></g>)}
-            <circle cx="100" cy="100" r="44" fill="#172338" />
-            <text x="100" y="96" textAnchor="middle" className="fill-slate-400 text-[10px]">{total}</text>
+            <circle cx="100" cy="100" r="44" fill="#ffffff" />
+            <text x="100" y="96" textAnchor="middle" className="fill-[#777777] text-[10px]">{total}</text>
             <text x="100" y="112" textAnchor="middle" className="fill-white text-[9px]">{title}</text>
           </svg>
           <ul className="min-w-[140px] space-y-2 text-xs">
