@@ -345,7 +345,7 @@
 //       <div className="hidden border-t border-gray-50 md:block">
 //         <div className="mx-auto flex max-w-[1440px] items-center gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
 //           {[...publicLinks, ...(account ? signedInLinks : [])].map((link) => {
-//             const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+//             const isActive = isNavigationActive(pathname, link.href);
 //             return (
 //               <Link
 //                 key={link.href}
@@ -445,7 +445,7 @@
 //               {/* Main Links List */}
 //               <div className="space-y-0.5 border-t border-gray-100 pt-3">
 //                 {mobileLinks.map((link) => {
-//                   const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+//                   const isActive = isNavigationActive(pathname, link.href);
 //                   return (
 //                     <Link
 //                       key={link.href}
@@ -576,6 +576,10 @@ function localizedNavigationLabel(locale: Locale, label: string) {
 
 function navigationIconFor(label: string): NavigationIconName {
   return navigationLabels[label]?.icon ?? "document";
+}
+
+function isNavigationActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
 }
 
 function initials(name: string) {
@@ -833,7 +837,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
       <div className="hidden border-t border-stone-100 md:block">
         <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
           {[...publicLinks, ...(account ? signedInLinks : [])].map((link) => {
-            const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+            const isActive = isNavigationActive(pathname, link.href);
             return (
               <Link
                 key={link.href}
@@ -917,12 +921,12 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       key={action.href}
                       href={action.href}
                       onClick={() => setMobileOpen(false)}
-                      className="flex flex-col items-center justify-center gap-2 rounded-xl border border-stone-100 bg-white p-3 text-center transition hover:border-orange-200 hover:bg-orange-50"
+                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition ${isNavigationActive(pathname, action.href) ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20" : "border-stone-100 bg-white text-stone-700 hover:border-orange-200 hover:bg-orange-50"}`}
                     >
-                      <span className="grid size-8 place-items-center rounded-lg bg-stone-50 text-stone-600 transition hover:bg-orange-100 hover:text-orange-600">
+                      <span className={`grid size-8 place-items-center rounded-lg transition ${isNavigationActive(pathname, action.href) ? "bg-white/15 text-white" : "bg-stone-50 text-stone-700 group-hover:bg-orange-100 group-hover:text-orange-600"}`}>
                         <NavigationIcon name={action.icon} className="h-5 w-5" />
                       </span>
-                      <span className="text-[10px] font-medium text-stone-600">
+                      <span className={`text-[10px] font-medium ${isNavigationActive(pathname, action.href) ? "text-white" : "text-stone-700"}`}>
                         {localizedNavigationLabel(locale, action.label)}
                       </span>
                     </Link>
@@ -933,7 +937,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
               {/* قائمة الروابط الرئيسية */}
               <div className="space-y-0.5 border-t border-stone-100 pt-3">
                 {mobileLinks.map((link) => {
-                  const isActive = link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(link.href + "/");
+                  const isActive = isNavigationActive(pathname, link.href);
                   return (
                     <Link
                       key={link.href}
@@ -948,7 +952,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       <NavigationIcon 
                         name={navigationIconFor(link.label)} 
                         className={`h-4 w-4 transition-colors ${
-                          isActive ? "text-white" : "text-stone-400 group-hover:text-orange-500"
+                          isActive ? "text-white" : "text-stone-700 group-hover:text-orange-500"
                         }`} 
                       />
                       <span>{localizedNavigationLabel(locale, link.label)}</span>
