@@ -483,7 +483,18 @@ export default function SellerProductsPage() {
               ? []
               : [{ attributeDefinitionId: attribute.id, value }];
           }),
-          ...productLocation,
+          // Send only fields accepted by the strict product API schema.
+          // The picker also keeps governorate/subdistrict labels in UI state;
+          // localityId resolves those canonical administrative relations in the database.
+          ...{
+            city: productLocation.city,
+            district: productLocation.district,
+            localityId: productLocation.localityId,
+            neighborhood: productLocation.neighborhood,
+            streetAddress: productLocation.streetAddress,
+            latitude: productLocation.latitude,
+            longitude: productLocation.longitude
+          },
           media: uploadedImages.filter((image) => image.status === "ready").map((image, index) => ({ url: image.url, mimeType: image.mimeType, storageKey: image.storageKey, width: image.width, height: image.height, altText: name, sortOrder: index, isPrimary: index === 0 })),
           variants: variantRows.map((variant) => ({
             sku: variant.sku.trim(),
