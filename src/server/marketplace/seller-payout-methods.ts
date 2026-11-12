@@ -216,7 +216,7 @@ const payoutVerificationSchema = z.object({
 }).strict();
 
 export class SellerPayoutVerificationConflictError extends Error {
-  constructor() { super("Only pending bank destinations can be reviewed."); this.name = "SellerPayoutVerificationConflictError"; }
+  constructor() { super("This bank destination changed or was already reviewed. Refresh the queue and re-check the latest submission before deciding."); this.name = "SellerPayoutVerificationConflictError"; }
 }
 
 export class SellerPayoutSelfVerificationError extends Error {
