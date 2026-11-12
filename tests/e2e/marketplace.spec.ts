@@ -40,6 +40,24 @@ test.describe("public marketplace journeys", () => {
       return values;
     });
     expect(selectableExceptions).toEqual(["text", "text"]);
+    await expect(page.locator("main h1").first()).toHaveCSS("user-select", "none");
+    await expect(page.locator("header input").first()).toHaveCSS("user-select", "text");
+    const selectableExceptions = await page.evaluate(() => {
+      const optIn = document.createElement("span");
+      optIn.dataset.textSelect = "allow";
+      optIn.textContent = "Selectable copy";
+      const editable = document.createElement("div");
+      editable.contentEditable = "true";
+      const editableChild = document.createElement("span");
+      editableChild.textContent = "Editable content";
+      editable.append(editableChild);
+      document.body.append(optIn, editable);
+      const values = [getComputedStyle(optIn).userSelect, getComputedStyle(editableChild).userSelect];
+      optIn.remove();
+      editable.remove();
+      return values;
+    });
+    expect(selectableExceptions).toEqual(["text", "text"]);
     const sponsored = page.getByTestId("sponsored-product").first();
     await sponsored.scrollIntoViewIfNeeded();
     await expect(sponsored).toBeVisible();
@@ -317,6 +335,33 @@ test.describe("seller onboarding journey", () => {
     expect(workspace.status()).toBe(200);
     const workspaceBody = await workspace.json() as { stores: Array<{ id: string; name: string }> };
     expect(workspaceBody.stores.filter((store) => store.id === (createdStore.body as { id: string }).id)).toHaveLength(1);
+  });
+});
+
+test.describe("seller application location", () => {
+  test("selecting Syrian administrative areas composes the seller residence address", async ({ page }) => {
+    await signIn(page, sessions.buyer);
+    await page.goto("/seller");
+    await expect(page.getByRole("heading", { name: /Business location in Syria|موقع النشاط في سوريا/i })).toBeVisible();
+
+    const governoratesResponse = await page.request.get("/api/geography/governorates");
+    expect(governoratesResponse.status()).toBe(200);
+    const governorates = await governoratesResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
+    const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
+    expect(damascus).toBeTruthy();
+
+    const residence = page.getByLabel(/Business address \/ residence|عنوان النشاط أو مكان الإقامة/i);
+    await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
+    await expect(residence).toHaveValue(new RegExp(damascus!.nameAr || damascus!.nameEn));
+
+    const districtsResponse = await page.request.get(`/api/geography/districts?governorateId=${encodeURIComponent(damascus!.id)}`);
+    expect(districtsResponse.status()).toBe(200);
+    const districts = await districtsResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
+    expect(districts.items.length).toBeGreaterThan(0);
+    const district = districts.items[0];
+
+    await page.getByLabel(/District|المنطقة/i).selectOption(district.id);
+    await expect(residence).toHaveValue(new RegExp(district.nameAr || district.nameEn));
   });
 });
 
