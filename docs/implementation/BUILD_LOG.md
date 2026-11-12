@@ -4958,3 +4958,12 @@ The platform account policy is now explicit: email verification is not required 
 - Final exact code SHA `bcc70bdcb673e4bdee3ca5f985063a7edbd8558b`: CI `43219336171` PASS (Prisma validate/migrate/generate, TypeScript, ESLint, full Vitest suite and production build); Browser E2E `43219336213` PASS (**14/14**, including the dedicated ledger journey); CodeQL `43219336054` PASS.
 - PostgreSQL Integration `43211941124` PASS on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; application schema and migrations were unchanged in this read-only UI/API and E2E-fixture work. CI also reapplied all migrations to fresh PostgreSQL on the final code SHA.
 - Accounting scope remains deliberately limited to immutable posting primitives and read-only account/journal inspection. Payment capture, refunds, commission allocation, seller payable balances, withdrawal, settlement, trial balance and period close are not enabled pending owner-approved financial rules.
+
+
+### Ledger activity pagination — 2026-11-12
+
+- Added `activityCursor` to the protected ledger API and wired it to the existing cursor-paginated `listLedgerAccountEntries` service.
+- The admin ledger page now exposes a Load older entries control and appends subsequent journal lines without discarding the current account's previously loaded lines. Selecting another account resets the activity cursor.
+- Extended API route tests to assert the activity cursor is forwarded to the service.
+- Exact code SHA `c4ec8375bcd5bd1f161eaa8aa28b7569aaa712e0`: CI `43220137156` PASS (Prisma validate/migrate/generate, typecheck, lint, full Vitest suite, production build); Browser E2E `43220137098` PASS (14/14, including the dedicated Super Admin ledger inspection); CodeQL `43220137226` PASS.
+- PostgreSQL Integration `43211941124` PASS on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; no schema/migration changes in this pagination increment.
