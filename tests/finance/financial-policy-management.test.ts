@@ -146,6 +146,17 @@ describe("financial policy resolution preview", () => {
     expect(mocks.auditCreate.mock.calls[0][0].data.metadata.notes).toBe("Approval evidence recorded.");
   });
 
+  it("rejects approval by the same person who reviewed a legal policy", async () => {
+    mocks.requirePlatformManagement.mockResolvedValue({ userId: "reviewer-1" });
+
+    await expect(transitionFinancialPolicyVersion("version-to-approve", {
+      action: "APPROVE"
+    }, now)).rejects.toThrow("Legal policy approval requires a separate completed review.");
+
+    expect(mocks.versionUpdate).not.toHaveBeenCalled();
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed currency and country context before querying the database", async () => {
     await expect(previewFinancialPolicyResolution({ ...context, currencyCode: "EURO" }, now)).rejects.toThrow();
     expect(mocks.versionFindMany).not.toHaveBeenCalled();
