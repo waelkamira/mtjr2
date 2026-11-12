@@ -2,7 +2,7 @@
 
 import { StatusBadge } from "@/components/status-badge";
 import { formatMinorUnits } from "@/lib/money";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -67,6 +67,11 @@ export default function CommissionsPage() {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [transactionQuery, setTransactionQuery] = useState("");
+  const visibleTransactions = useMemo(() => transactions.filter((item) => {
+    const needle = transactionQuery.trim().toLocaleLowerCase();
+    return !needle || [item.order.orderNumber, item.store.name, item.sellerName, item.categoryName || "", item.ruleScopeType].some((value) => value.toLocaleLowerCase().includes(needle));
+  }), [transactions, transactionQuery]);
 
   const load = useCallback(async () => {
     setError("");
@@ -202,7 +207,7 @@ export default function CommissionsPage() {
             <input type="datetime-local" value={effectiveUntil} onChange={(event) => setEffectiveUntil(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2"/>
           </label>
           <div className="flex items-end lg:col-span-3">
-            <button disabled={busy !== ""} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === "create" ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save rule", "حفظ القاعدة")}</button>
+            <button disabled={busy !== ""} className="rounded-xl bg-[#FF8C1C] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#E9780B] disabled:opacity-50">{busy === "create" ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Save rule", "حفظ القاعدة")}</button>
           </div>
         </form>
       </section>
@@ -215,7 +220,7 @@ export default function CommissionsPage() {
               <thead><tr className="border-b border-[var(--border)] text-xs uppercase text-[var(--muted)]"><th className="py-3 pr-4">{translate(locale, "Scope", "النطاق")}</th><th className="py-3 pr-4">{translate(locale, "Rate", "المعدل")}</th><th className="py-3 pr-4">{translate(locale, "Effective period", "فترة السريان")}</th><th className="py-3 pr-4">{translate(locale, "Status", "الحالة")}</th><th className="py-3">{translate(locale, "Action", "الإجراء")}</th></tr></thead>
               <tbody>{rules.map((rule) => <tr key={rule.id} className="border-b border-slate-100 last:border-0 transition-colors hover:bg-orange-50/40">
                 <td className="py-3 pr-4 font-medium">{scopeLabel(locale, rule)}</td><td className="py-3 pr-4">{(rule.rateBasisPoints / 100).toFixed(2)}%</td>
-                <td className="py-3 pr-4">{new Date(rule.effectiveFrom).toLocaleString()} – {rule.effectiveUntil ? new Date(rule.effectiveUntil).toLocaleString() : translate(locale, "No end", "بلا تاريخ انتهاء")}</td>
+                <td className="py-3 pr-4">{new Date(rule.effectiveFrom).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB")} – {rule.effectiveUntil ? new Date(rule.effectiveUntil).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB") : translate(locale, "No end", "بلا تاريخ انتهاء")}</td>
                 <td className="py-3 pr-4"><StatusBadge locale={locale} status={rule.isActive ? "ACTIVE" : "INACTIVE"} /></td>
                 <td className="py-3">{rule.isActive && <button disabled={busy !== ""} onClick={() => void deactivate(rule)} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50">{busy === rule.id ? translate(locale, "Updating…", "جارٍ التحديث…") : translate(locale, "Deactivate", "إلغاء التفعيل")}</button>}</td>
               </tr>)}</tbody>
@@ -226,13 +231,14 @@ export default function CommissionsPage() {
 
       <section className="mt-7 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-clay-raised">
         <h2 className="text-lg font-semibold">{translate(locale, "Recent immutable commission snapshots", "سجلات العمولات الحديثة الثابتة")}</h2>
-        {loading ? <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "Loading transactions…", "جارٍ تحميل المعاملات…")}</p> : transactions.length === 0 ? <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No payment-success commission snapshots yet.", "لا توجد سجلات عمولات لمدفوعات ناجحة بعد.")}</p> : (
+        <label className="mt-3 block max-w-xl text-xs font-semibold text-[var(--muted)]">{translate(locale, "Search commission snapshots", "البحث في سجلات العمولات")}<input type="search" value={transactionQuery} onChange={(event) => setTransactionQuery(event.target.value)} placeholder={translate(locale, "Order, seller, store or category", "الطلب أو البائع أو المتجر أو الفئة")} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100"/></label>
+        {loading ? <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "Loading transactions…", "جارٍ تحميل المعاملات…")}</p> : visibleTransactions.length === 0 ? <p className="mt-4 text-sm text-[var(--muted)]">{transactions.length ? translate(locale, "No commission snapshots match this search.", "لا توجد سجلات عمولات تطابق البحث.") : translate(locale, "No payment-success commission snapshots yet.", "لا توجد سجلات عمولات لمدفوعات ناجحة بعد.")}</p> : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead><tr className="border-b border-[var(--border)] text-xs uppercase text-[var(--muted)]"><th className="py-3 pr-4">{translate(locale, "Order", "الطلب")}</th><th className="py-3 pr-4">{translate(locale, "Seller / store", "البائع / المتجر")}</th><th className="py-3 pr-4">{translate(locale, "Category", "الفئة")}</th><th className="py-3 pr-4">{translate(locale, "Base", "الأساس")}</th><th className="py-3 pr-4">{translate(locale, "Rate", "المعدل")}</th><th className="py-3 pr-4">{translate(locale, "Commission", "العمولة")}</th><th className="py-3">{translate(locale, "Recorded", "تاريخ التسجيل")}</th></tr></thead>
-              <tbody>{transactions.map((item) => <tr key={item.id} className="border-b border-slate-100 last:border-0 transition-colors hover:bg-orange-50/40">
+              <tbody>{visibleTransactions.map((item) => <tr key={item.id} className="border-b border-slate-100 last:border-0 transition-colors hover:bg-orange-50/40">
                 <td className="py-3 pr-4">{item.order.orderNumber}</td><td className="py-3 pr-4">{item.sellerName} / {item.store.name}</td><td className="py-3 pr-4">{item.categoryName || translate(locale, "Uncategorized", "غير مصنف")}</td>
-                <td className="py-3 pr-4">{formatMinorAmount(item.baseAmountMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3 pr-4">{(item.rateBasisPoints / 100).toFixed(2)}% ({item.ruleScopeType})</td><td className="py-3 pr-4">{formatMinorAmount(item.commissionMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3">{new Date(item.createdAt).toLocaleString()}</td>
+                <td className="py-3 pr-4">{formatMinorAmount(item.baseAmountMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3 pr-4">{(item.rateBasisPoints / 100).toFixed(2)}% ({item.ruleScopeType})</td><td className="py-3 pr-4">{formatMinorAmount(item.commissionMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3">{new Date(item.createdAt).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB")}</td>
               </tr>)}</tbody>
             </table>
           </div>
