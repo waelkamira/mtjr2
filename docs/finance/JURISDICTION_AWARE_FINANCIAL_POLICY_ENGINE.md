@@ -112,3 +112,28 @@ A pure resolver is now available at `src/server/finance/policy-resolver.ts`. It 
 Focused unit coverage is in `tests/finance/policy-resolver.test.ts`, including legal-over-platform precedence, subdivision specificity, pending-review blocking, equal-rank conflict, effective-date boundaries, invalid country/currency, and unscoped legal rules.
 
 **Boundary:** this first resolver is not yet wired into checkout, refund, commission, ledger, or payout flows. It has not been runtime-tested in this change session. Do not treat its existence as approval to enable any money movement. Before persistence/integration, add schema-backed rule versioning and verify resolver semantics against the jurisdiction model and legal review workflow.
+
+## 11. Persistence checkpoint
+
+The first persistence layer is now present in `prisma/schema.prisma` and migration
+`20261112110000_financial_policy_versions`:
+
+- `FinancialPolicyRule` stores the stable key and domain.
+- `FinancialPolicyRuleVersion` stores versioned classification, approval state,
+  jurisdiction/market/currency/product/provider/seller/category scope, JSON value,
+  effective window, source reference, and review/approval metadata.
+- Version content is protected in PostgreSQL: changing its financial meaning requires
+  a new version, and deleting a version is rejected. Review/approval metadata remains
+  mutable so a pending version can pass through the review workflow.
+- The existing `AuditLog` is the platform-wide audit event store; policy write and
+  approval services must write corresponding audit records in the same transaction.
+- Country, market, and currency scope is stored as normalized codes rather than creating
+  duplicate geography/currency master data. Existing `MarketTaxRate` and
+  `CommissionRule` remain intact; no parallel tax or commission tables were created.
+
+**Not yet complete:** no repository/service layer, authorization workflow, audit-writing
+service, resolver-to-Prisma adapter, migration execution, Prisma validation, typecheck,
+or runtime tests have been completed. The resolver remains disconnected from all
+money-moving paths. New records default to `PENDING_REVIEW`; this persistence layer
+does not publish or activate financial policy by itself.
+
