@@ -37,13 +37,16 @@ export default async function AdminControlPanelRoute() {
             <Link href="/admin/control-panel/access-catalog" className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-[#D96500]">
               {translate(locale, "Roles & permissions", "الأدوار والصلاحيات")}
             </Link>
-            <Link href="/admin/control-panel/privilege-requests" className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--color-forest-950)] hover:bg-[var(--color-ivory-100)]">
+            <Link href="/admin/control-panel/privilege-requests" className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-[#D96500]">
               {translate(locale, "Privilege approvals", "الموافقة على الامتيازات")}
             </Link>
-            <Link href="/admin/payment-providers" className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--color-forest-950)] hover:bg-[var(--color-ivory-100)]">\n              {translate(locale, "Payment providers", "مزودو الدفع")}\n            </Link>\n            <Link href="/admin/control-panel/ai-assistant" className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--color-forest-950)] hover:bg-[var(--color-ivory-100)]">
+            <Link href="/admin/payment-providers" className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-[#D96500]">
+              {translate(locale, "Payment providers", "مزودو الدفع")}
+            </Link>
+            <Link href="/admin/control-panel/ai-assistant" className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-[#D96500]">
               {translate(locale, "AI assistant", "المساعد الذكي")}
             </Link>
-            <Link href="/admin/control-panel/audit-log" className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--color-forest-950)] hover:bg-[var(--color-ivory-100)]">
+            <Link href="/admin/control-panel/audit-log" className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-[#D96500]">
               {translate(locale, "Platform audit log", "سجل تدقيق المنصة")}
             </Link>
           </div>
