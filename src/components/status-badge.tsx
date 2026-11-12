@@ -10,7 +10,7 @@ const positiveStatuses = new Set([
   "ACTIVE", "APPROVED", "PAID", "SUCCEEDED", "SUCCESS", "COMPLETED",
   "DELIVERED", "FULFILLED", "RESOLVED", "RECEIVED", "INSPECTED",
   "PUBLISHED", "CONFIRMED", "ANSWERED", "PICKED_UP", "READY_FOR_PICKUP",
-  "REFUNDED", "ENABLED", "VERIFIED", "ACCEPTED", "SETTLED", "READY"
+  "REFUNDED", "ENABLED", "VERIFIED", "ACCEPTED", "SETTLED", "READY", "CONVERTED"
 ]);
 
 const dangerStatuses = new Set([
@@ -35,7 +35,7 @@ const infoStatuses = new Set([
 
 const neutralStatuses = new Set([
   "INACTIVE", "DISABLED", "ARCHIVED", "EXPIRED", "DRAFT", "HIDDEN",
-  "CLOSED", "REVOKED", "DISCONNECTED", "NOT_STARTED"
+  "CLOSED", "REVOKED", "DISCONNECTED", "NOT_STARTED", "RELEASED"
 ]);
 
 function toneClass(status: string) {
