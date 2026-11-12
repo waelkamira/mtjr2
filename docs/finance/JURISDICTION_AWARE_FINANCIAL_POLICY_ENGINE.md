@@ -195,7 +195,7 @@ PostgreSQL, and browser verification remain outstanding.
 
 Focused tests have been added for the Prisma-to-resolver preview adapter: approved
 selection, pending legal rule blocking a platform fallback, permission denial before
-database access, and malformed country/currency context. These tests are committed
+database access, malformed country/currency context, and preservation of reviewer notes when a separate approver records an approval. These tests are committed
 but have not been executed in this session. They do not replace PostgreSQL transaction
 and migration tests.
 
