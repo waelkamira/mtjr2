@@ -31,7 +31,13 @@ const statusArabic: Record<string, string> = {
   PUBLISHED: "منشور", HIDDEN: "مخفي", ARCHIVED: "مؤرشف", CONFIRMED: "مؤكد",
   READY_TO_SHIP: "جاهز للشحن", EXCEPTION: "استثناء", ANSWERED: "تمت الإجابة",
   AWAITING_ANSWER: "بانتظار الإجابة", PENDING_REVIEW: "قيد المراجعة",
-  INVITED: "مدعو", REVOKED: "ملغى", LOCKED: "مقفل", BLOCKED: "محظور", ENABLED: "مفعّل"
+  INVITED: "مدعو", REVOKED: "ملغى", LOCKED: "مقفل", BLOCKED: "محظور", ENABLED: "مفعّل",
+  BANNED: "محظور نهائياً", DECLINED: "مرفوض", DISPUTED: "متنازع عليه", SETTLED: "تمت التسوية",
+  ACCEPTED: "مقبول", DELETED: "محذوف", DISCONNECTED: "غير متصل", NOT_STARTED: "لم يبدأ",
+  IN_PROGRESS: "قيد التنفيذ", PACKING: "قيد التجهيز", PAYMENT_FAILED: "فشل الدفع",
+  PAYMENT_REVIEW: "مراجعة الدفع", REQUIRES_ACTION: "يتطلب إجراءً", DUE: "مستحق",
+  AWAITING_APPROVAL: "بانتظار الموافقة", PENDING_APPROVAL: "بانتظار الموافقة",
+  REFUND_REJECTED: "رُفض رد المبلغ", READY: "جاهز"
 };
 
 function humanizeStatus(status: string): string {
