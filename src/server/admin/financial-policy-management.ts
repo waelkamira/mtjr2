@@ -246,7 +246,8 @@ const previewContextSchema = z.object({
   currencyCode: z.string().trim().length(3).toUpperCase(),
   productClass: z.string().trim().min(1).max(80).toUpperCase().nullable().optional(),
   paymentProvider: z.string().trim().min(1).max(80).toUpperCase().nullable().optional(),
-  sellerId: z.string().trim().min(1).max(128).nullable().optional()
+  sellerId: z.string().trim().min(1).max(128).nullable().optional(),
+  categoryId: z.string().trim().min(1).max(128).nullable().optional()
 }).strict();
 
 export async function previewFinancialPolicyResolution(input: unknown, now = new Date()) {
@@ -274,6 +275,7 @@ export async function previewFinancialPolicyResolution(input: unknown, now = new
     productClass: row.productClass,
     paymentProvider: row.paymentProvider,
     sellerId: row.sellerId,
+    categoryId: row.categoryId,
     priority: row.priority,
     effectiveFrom: row.effectiveFrom,
     effectiveUntil: row.effectiveUntil,
