@@ -9,7 +9,8 @@ This seed populates the seller account `ramondm4@gmail.com` with clearly marked,
 - The seller account must already exist. The script will not create a passwordless owner account.
 - Demo customers use `@mtjr2.test` addresses.
 - Demo orders use the `DEMO-SYR-` prefix and demo return numbers use `DEMO-SYR-RET-`.
-- No payment, refund, payout, commission, or ledger entries are created.
+- No payment, refund, payout, commission, advertising spend, or ledger entries are created.
+- Existing seller-managed support statuses, message history, notification read states, and campaign edits are preserved when rerunning the seed.
 - Demo shipping addresses, phone numbers, tracking references, and policies are placeholders. Replace them before treating the store as operational.
 - Re-running the script is designed to reuse the seeded catalog and existing demo records.
 
@@ -50,6 +51,8 @@ The exchange-rate value is a configurable reference for demo prices, not a live 
 - 3 pending return requests.
 - Low-stock variants and initial inventory movements.
 - Store and product reviews, product questions and seller answers.
+- Store inbox conversations and replies, support tickets with mixed statuses and messages, in-app notifications and preferences.
+- Two editable draft ad campaigns with zero fabricated impressions, clicks, spend, invoices, or ad-ledger entries.
 - One local warehouse and a configurable local shipping rate.
 
 All records are intended for local development and dashboard interaction, not real customer transactions.
