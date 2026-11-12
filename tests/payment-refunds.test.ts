@@ -101,6 +101,54 @@ describe("manual return refund lifecycle", () => {
     }));
   });
 
+  it("subtracts previously committed quantities and net value across separate return requests", async () => {
+    mocks.refundItemFindMany.mockResolvedValue([{
+      quantity: 1,
+      amountMinor: BigInt(1350),
+      returnItem: { orderItemId: "order-item-1" }
+    }]);
+    transactionWith({
+      returnRequest: { findUnique: mocks.returnRequestFindUnique },
+      refund: { findUnique: mocks.refundFindUnique, aggregate: mocks.refundAggregate, create: mocks.refundCreate },
+      payment: { findMany: mocks.paymentFindMany },
+      refundItem: { findMany: mocks.refundItemFindMany },
+      auditLog: { create: mocks.auditCreate },
+      $queryRaw: mocks.queryRaw
+    });
+
+    const result = await createRefundForReturn({ returnRequestId: "return-1" });
+
+    // The first unit already consumed 1,350 of the 2,700 net line value.
+    // The second (final) unit may consume only the remaining 1,350.
+    expect(result.amountMinor).toBe("1350");
+    expect(mocks.refundCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        amountMinor: BigInt(1350),
+        items: { create: [{ returnItemId: "return-item-1", quantity: 1, amountMinor: BigInt(1350) }] }
+      })
+    }));
+  });
+
+  it("rejects a return quantity already fully reserved by an earlier refund", async () => {
+    mocks.refundItemFindMany.mockResolvedValue([{
+      quantity: 2,
+      amountMinor: BigInt(2700),
+      returnItem: { orderItemId: "order-item-1" }
+    }]);
+    transactionWith({
+      returnRequest: { findUnique: mocks.returnRequestFindUnique },
+      refund: { findUnique: mocks.refundFindUnique, aggregate: mocks.refundAggregate, create: mocks.refundCreate },
+      payment: { findMany: mocks.paymentFindMany },
+      refundItem: { findMany: mocks.refundItemFindMany },
+      auditLog: { create: mocks.auditCreate },
+      $queryRaw: mocks.queryRaw
+    });
+
+    await expect(createRefundForReturn({ returnRequestId: "return-1" }))
+      .rejects.toThrow("no refundable merchandise balance remaining");
+    expect(mocks.refundCreate).not.toHaveBeenCalled();
+  });
+
   it("does not create a refund for an unreceived return", async () => {
     mocks.returnRequestFindUnique.mockResolvedValue({ id: "return-1", status: "APPROVED", orderId: "order-1" });
     transactionWith({
