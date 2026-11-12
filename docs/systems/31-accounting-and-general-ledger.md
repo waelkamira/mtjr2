@@ -136,7 +136,7 @@
   also rejects inactive accounts, unbalanced lines and currency mismatches.
 - Added focused unit coverage in `tests/finance/ledger.test.ts` and PostgreSQL coverage in
   `tests/integration/ledger-postgres.integration.test.ts` for post-commit line append and
-  inactive-account bypass attempts.
+  inactive-account bypass attempts and used-account identity rewrites.
 - **Not verified yet:** Prisma validation/client generation, TypeScript, Vitest, migration
   replay and disposable PostgreSQL integration. No payment, refund, seller payable,
   reserve, settlement or payout workflow is connected. No admin ledger page/API exists.
