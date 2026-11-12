@@ -483,9 +483,9 @@ export default function SellerProductsPage() {
               ? []
               : [{ attributeDefinitionId: attribute.id, value }];
           }),
-          // Send only fields accepted by the strict product API schema.
-          // The picker also keeps governorate/subdistrict labels in UI state;
-          // localityId resolves those canonical administrative relations in the database.
+          // Keep the API payload aligned with the strict server schema.
+          // The picker stores canonical locality IDs and seller-entered location details;
+          // the server resolves administrative relations from localityId.
           ...{
             city: productLocation.city,
             district: productLocation.district,
