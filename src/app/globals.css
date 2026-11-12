@@ -1337,9 +1337,9 @@ a[class*="bg-orange-"]:hover {
   color: #ffffff !important;
 }
 a[class*="bg-[var(--color-success)]"] {
-  background: var(--matjar-active) !important;
-  border-color: #a3e635 !important;
-  color: var(--matjar-active-ink) !important;
+  background: var(--matjar-action) !important;
+  border-color: var(--matjar-action) !important;
+  color: #ffffff !important;
 }
 a[class*="bg-[var(--color-danger)]"] {
   background: var(--matjar-danger) !important;
