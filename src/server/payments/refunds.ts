@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { PermissionDeniedError, requirePermission } from "@/server/identity/permission-guard";
 import { getPaymentProviderRuntimeSnapshot } from "@/server/admin/payment-providers";
+import { allocateDiscountAcrossLines } from "@/server/admin/commission-policy";
 import { paypalPaymentProvider } from "@/server/payments/providers/paypal";
 import { stripePaymentProvider } from "@/server/payments/providers/stripe";
 
@@ -16,6 +17,31 @@ const completeSchema = z.object({
 
 const refundablePaymentStatuses = [PaymentStatus.SUCCEEDED, PaymentStatus.PARTIALLY_REFUNDED];
 const committedRefundStatuses = [RefundStatus.PENDING_MANUAL, RefundStatus.PROCESSING_PROVIDER, RefundStatus.PROVIDER_FAILED, RefundStatus.COMPLETED];
+
+type RefundVendorOrderSnapshot = {
+  id: string;
+  subtotalMinor: bigint;
+  discountMinor: bigint;
+  items: Array<{ id: string; lineTotalMinor: bigint }>;
+};
+
+/** Reuses checkout's deterministic vendor-level discount allocation for refund bases. */
+function buildNetMerchandiseBases(vendorOrders: Iterable<RefundVendorOrderSnapshot>) {
+  const bases = new Map<string, bigint>();
+  for (const vendorOrder of vendorOrders) {
+    const itemSubtotal = vendorOrder.items.reduce((sum, item) => sum + item.lineTotalMinor, BigInt(0));
+    if (itemSubtotal !== vendorOrder.subtotalMinor) {
+      throw new Error("Vendor order item totals do not match the saved merchandise subtotal.");
+    }
+    for (const [itemId, amount] of allocateDiscountAcrossLines(
+      vendorOrder.items,
+      vendorOrder.discountMinor
+    )) {
+      bases.set(itemId, amount);
+    }
+  }
+  return bases;
+}
 
 function displayAmount(amountMinor: bigint, currencyCode: string, minorUnit: number) {
   const scale = BigInt(10) ** BigInt(minorUnit);
@@ -45,7 +71,20 @@ export async function listRefundOperations(now = new Date()) {
         },
         items: {
           where: { status: ReturnItemStatus.RECEIVED },
-          select: { quantity: true, orderItem: { select: { id: true, productName: true, sku: true, quantity: true, lineTotalMinor: true } } }
+          select: {
+            quantity: true,
+            orderItem: {
+              select: {
+                id: true, productName: true, sku: true, quantity: true,
+                vendorOrder: {
+                  select: {
+                    id: true, subtotalMinor: true, discountMinor: true,
+                    items: { select: { id: true, lineTotalMinor: true } }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }),
@@ -62,6 +101,11 @@ export async function listRefundOperations(now = new Date()) {
     })
   ]);
 
+  const vendorOrderSnapshots = new Map<string, RefundVendorOrderSnapshot>();
+  for (const request of requests) {
+    for (const item of request.items) vendorOrderSnapshots.set(item.orderItem.vendorOrder.id, item.orderItem.vendorOrder);
+  }
+  const netMerchandiseBases = buildNetMerchandiseBases(vendorOrderSnapshots.values());
   const orderItemIds = [...new Set(requests.flatMap((request) => request.items.map((item) => item.orderItem.id)))];
   const paymentIds = [...new Set(requests.flatMap((request) => request.order.payments.map((payment) => payment.id)))];
   const [previousAllocations, committedRefunds] = await Promise.all([
@@ -88,12 +132,16 @@ export async function listRefundOperations(now = new Date()) {
     candidates: requests.map((request) => {
       const allocationsValid = request.items.every((item) => {
         const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
-        return item.quantity <= item.orderItem.quantity - previous.quantity && item.orderItem.lineTotalMinor > previous.amountMinor;
+        const netLineAmount = netMerchandiseBases.get(item.orderItem.id);
+        return netLineAmount !== undefined &&
+          item.quantity <= item.orderItem.quantity - previous.quantity &&
+          netLineAmount > previous.amountMinor;
       });
       const amountMinor = request.items.reduce((sum, item) => {
         const previous = allocationByOrderItem.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
         const remainingQuantity = item.orderItem.quantity - previous.quantity;
-        const remainingAmount = item.orderItem.lineTotalMinor - previous.amountMinor;
+        const netLineAmount = netMerchandiseBases.get(item.orderItem.id) ?? BigInt(0);
+        const remainingAmount = netLineAmount - previous.amountMinor;
         if (remainingQuantity <= 0 || item.quantity > remainingQuantity) return sum;
         const lineAmount = item.quantity === remainingQuantity ? remainingAmount : (remainingAmount * BigInt(item.quantity)) / BigInt(remainingQuantity);
         return sum + lineAmount;
@@ -151,7 +199,17 @@ export async function createRefundForReturn(input: unknown, now = new Date()) {
           where: { status: ReturnItemStatus.RECEIVED },
           select: {
             id: true, quantity: true,
-            orderItem: { select: { id: true, quantity: true, lineTotalMinor: true, productName: true, sku: true } }
+            orderItem: {
+               select: {
+                 id: true, quantity: true, productName: true, sku: true,
+                 vendorOrder: {
+                   select: {
+                     id: true, subtotalMinor: true, discountMinor: true,
+                     items: { select: { id: true, lineTotalMinor: true } }
+                   }
+                 }
+               }
+             }
           }
         }
       }
@@ -174,6 +232,10 @@ export async function createRefundForReturn(input: unknown, now = new Date()) {
     const payment = payments[0];
     if (payment.currencyCode !== request.order.currencyCode) throw new Error("Payment and order currencies do not match.");
 
+    const vendorOrderSnapshots = new Map<string, RefundVendorOrderSnapshot>();
+    for (const item of request.items) vendorOrderSnapshots.set(item.orderItem.vendorOrder.id, item.orderItem.vendorOrder);
+    const netMerchandiseBases = buildNetMerchandiseBases(vendorOrderSnapshots.values());
+
     const orderItemIds = [...new Set(request.items.map((item) => item.orderItem.id))];
     const previousAllocations = await tx.refundItem.findMany({
       where: {
@@ -193,7 +255,9 @@ export async function createRefundForReturn(input: unknown, now = new Date()) {
     const refundLines = request.items.map((item) => {
       const previous = allocated.get(item.orderItem.id) ?? { quantity: 0, amountMinor: BigInt(0) };
       const remainingQuantity = item.orderItem.quantity - previous.quantity;
-      const remainingAmount = item.orderItem.lineTotalMinor - previous.amountMinor;
+      const netLineAmount = netMerchandiseBases.get(item.orderItem.id);
+      if (netLineAmount === undefined) throw new Error("Refund merchandise allocation is incomplete.");
+      const remainingAmount = netLineAmount - previous.amountMinor;
       if (item.quantity > remainingQuantity || remainingQuantity <= 0 || remainingAmount <= 0) {
         throw new Error("The return line has no refundable merchandise balance remaining.");
       }
