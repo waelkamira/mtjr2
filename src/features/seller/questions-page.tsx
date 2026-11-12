@@ -141,7 +141,7 @@ export default function SellerQuestionsPage() {
             <span className="rounded-full bg-[#f5eee7] px-3 py-1.5 text-xs font-semibold text-[#5f5a55]"><StatusBadge locale={locale} status={item.status} /></span>
           </div>
           {item.answers.map((entry) => <div key={entry.id} className="mt-4 rounded-2xl border border-[#eee9e4] bg-[#fffaf6] p-4">
-            <p className="text-sm font-medium text-[#454545]">{t("Answer", "الإجابة")} · {statusLabel(entry.status)}</p>
+            <p className="text-sm font-medium text-[#454545]">{t("Answer", "الإجابة")} · <StatusBadge locale={locale} status={entry.status} /></p>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#475569]">{entry.body}</p>
             <div className="mt-3 flex flex-wrap gap-4">
               <button type="button" onClick={() => { setEditing(entry.id); setAnswerDrafts((current) => ({ ...current, [entry.id]: entry.body })); }} className="text-xs font-semibold text-[#a94308] underline underline-offset-4">{t("Edit answer", "تعديل الإجابة")}</button>
