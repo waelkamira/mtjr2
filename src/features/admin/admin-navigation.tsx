@@ -166,20 +166,30 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
         </div>
 
         <div className={`border-b border-slate-100 px-3 py-4 ${collapsed ? "lg:hidden" : ""}`}>
-          <label className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-slate-400 transition focus-within:border-orange-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-orange-50">
+          <div className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-slate-400 transition focus-within:border-orange-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-orange-50">
             <Search size={15} className="shrink-0" />
+            <label className="sr-only" htmlFor="admin-navigation-search">
+              {translate(locale, "Find an admin page", "ابحث عن قسم إداري")}
+            </label>
             <input
+              id="admin-navigation-search"
+              type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={translate(locale, "Find an admin page…", "ابحث عن قسم إداري…")}
               className="min-w-0 flex-1 bg-transparent text-xs text-slate-800 outline-none placeholder:text-slate-400"
             />
             {query && (
-              <button type="button" onClick={() => setQuery("")} className="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700" aria-label={translate(locale, "Clear search", "مسح البحث")}>
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200"
+                aria-label={translate(locale, "Clear search", "مسح البحث")}
+              >
                 <X size={13} />
               </button>
             )}
-          </label>
+          </div>
         </div>
 
         <nav
