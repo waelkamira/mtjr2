@@ -1165,7 +1165,7 @@ button svg { flex: 0 0 auto; color: currentColor; }
 button[data-variant="primary"] svg,
 button[data-variant="danger"] svg { color: #ffffff; }
 
-/* Seller panels use neutral white surfaces; preserve purpose-built dark charts. */
+/* Seller panels and analytics cards share the platform's neutral white surface. */
 .seller-dashboard :is(section, form, article, div)[class*="bg-[linear-gradient"]:not(.seller-chart-card):not(.clay-surface):not([class*="pointer-events-none"]) {
   background: #ffffff !important;
   border-color: var(--matjar-line) !important;
