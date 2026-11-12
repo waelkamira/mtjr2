@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
 import { toMinorUnits } from "@/lib/money";
+import { createProductSlug } from "@/lib/product-slug";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 import SyriaLocationPicker from "@/components/maps/syria-location-picker";
 import { SellerIcon } from "@/features/seller/seller-navigation";
@@ -784,7 +785,7 @@ export default function SellerProductsPage() {
             <section className="grid gap-4 rounded-xl border border-[#eee9e4] bg-white p-4 sm:p-5">
               <div className="flex items-start gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff1e8] text-[#e8750b]"><SellerIcon name="document" /></span><div><h3 className="text-sm font-extrabold text-[#454545]">{translate(locale, "Product information", "معلومات المنتج")}</h3><p className="mt-1 text-xs text-[#77716c]">{translate(locale, "Start with a clear title and a customer-friendly description.", "ابدأ بعنوان واضح ووصف مناسب للعملاء.")}</p></div></div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} /></label>
+                <label className="grid gap-1 text-sm">{translate(locale, "Product name", "اسم المنتج")}<input required minLength={2} maxLength={180} className={inputClass} value={name} onChange={(e) => { setName(e.target.value); setSlug(createProductSlug(e.target.value)); }} /></label>
                 <label className="grid gap-1 text-sm">{translate(locale, "URL slug", "معرّف الرابط")}<input required pattern="[a-z0-9]+(-[a-z0-9]+)*" className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} /></label>
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Description", "الوصف")}<textarea maxLength={12000} rows={4} className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
               </div>
