@@ -25,7 +25,8 @@ export default function PlatformAccessCatalogPage() {
   const { locale } = useLocale();
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);\n  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -42,6 +43,16 @@ export default function PlatformAccessCatalogPage() {
     return () => { active = false; };
   }, []);
 
+  const normalizedQuery = query.trim().toLocaleLowerCase(locale);
+  const filteredRoles = useMemo(() => (catalog?.roles || []).filter((role) =>
+    !normalizedQuery || [role.name, role.key, role.description || "", ...role.permissions.map((permission) => permission.key)]
+      .some((value) => value.toLocaleLowerCase(locale).includes(normalizedQuery))
+  ), [catalog, normalizedQuery, locale]);
+  const filteredPermissions = useMemo(() => (catalog?.permissions || []).filter((permission) =>
+    !normalizedQuery || [permission.key, permission.description || ""]
+      .some((value) => value.toLocaleLowerCase(locale).includes(normalizedQuery))
+  ), [catalog, normalizedQuery, locale]);
+
   return (
     <main className="min-h-screen bg-[var(--background)] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -52,7 +63,9 @@ export default function PlatformAccessCatalogPage() {
           <p className="mt-2 max-w-3xl text-sm text-[var(--muted)]">{translate(locale, "Read-only inventory of platform roles, permission grants and current assignment counts. Changes remain disabled until a separately audited approval workflow is implemented.", "عرض للقراءة فقط لأدوار المنصة ومنح الصلاحيات وأعداد التعيينات الحالية. تظل التغييرات معطلة حتى تنفيذ إجراء موافقة يخضع لتدقيق مستقل.")}</p>
         </header>
 
-        {catalog && <div className="mt-6 rounded-xl border border-[var(--border)] bg-white p-4"><label className="block text-xs font-semibold text-[var(--muted)]">{translate(locale, "Search roles and permissions", "ابحث في الأدوار والصلاحيات")}<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={translate(locale, "Search by role, permission key or description…", "ابحث باسم الدور أو مفتاح الصلاحية أو الوصف…")} className="mt-2 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-slate-400 focus:border-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-50" /></label><p className="mt-2 text-xs text-[var(--muted)]">{filteredRoles.length} {translate(locale, "roles shown", "أدوار معروضة")} · {filteredPermissions.length} {translate(locale, "permissions shown", "صلاحيات معروضة")}</p></div>}\n\n        {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
+        {catalog && <div className="mt-6 rounded-xl border border-[var(--border)] bg-white p-4"><label className="block text-xs font-semibold text-[var(--muted)]">{translate(locale, "Search roles and permissions", "ابحث في الأدوار والصلاحيات")}<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={translate(locale, "Search by role, permission key or description…", "ابحث باسم الدور أو مفتاح الصلاحية أو الوصف…")} className="mt-2 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-slate-400 focus:border-orange-300 focus:outline-none focus:ring-4 focus:ring-orange-50" /></label><p className="mt-2 text-xs text-[var(--muted)]">{filteredRoles.length} {translate(locale, "roles shown", "أدوار معروضة")} · {filteredPermissions.length} {translate(locale, "permissions shown", "صلاحيات معروضة")}</p></div>}
+
+        {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {loading && <p role="status" className="mt-6 rounded-xl border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted)]">{translate(locale, "Loading access catalogue…", "جارٍ تحميل كتالوج الصلاحيات…")}</p>}
         {catalog && (
           <>
