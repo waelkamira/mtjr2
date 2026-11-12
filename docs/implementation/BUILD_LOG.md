@@ -4940,3 +4940,11 @@ The platform account policy is now explicit: email verification is not required 
 - PostgreSQL Integration `43211941124`: PASS on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; no Prisma schema or migration changed after that integration run. The exact-head CI on `ab66e65` also reapplied migrations to a fresh disposable PostgreSQL database.
 - The full unit suite initially exposed two financial-policy transition tests whose fixture status was `APPROVED` even though the transition requires `PENDING_REVIEW`; corrected the fixture and confirmed the full suite passes on this exact code commit.
 - The read-only ledger route and UI are build/type/lint verified and covered by the general browser suite; no dedicated authenticated admin ledger browser journey or API permission-route test exists yet. Do not claim that specific journey verified.
+
+
+### Ledger API authorization regression coverage — 2026-11-12
+
+- Added `tests/api/admin-ledger-route.test.ts`: verifies 401 for unauthenticated requests, 403 for missing platform permission, 428 for MFA step-up, 400 for malformed filters, and 200/private-no-store for a successful read.
+- Final code verification SHA: `05852fcc7ccee23aa86a98629b3f3d7f26f22bcd` — CI `43217249164` PASS (Prisma validate/migrate/generate, TypeScript, ESLint, full Vitest suite and production build); Browser E2E `43217248814` PASS; CodeQL `43217248910` PASS.
+- PostgreSQL Integration `43211941124` PASS on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; no schema or migration changed in the ledger UI/API work after that run. CI on the final code SHA reapplied migrations against disposable PostgreSQL.
+- Remaining coverage gap: no dedicated signed-in platform-admin browser journey opens `/admin/finance/ledger`, selects an account and verifies rendered journal lines. Keep the route at partially verified until that journey exists.
