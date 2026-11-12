@@ -186,3 +186,15 @@
 - Post-review refresh uses status/page refs synchronously updated by tab and pagination controls, so it reads the current selection even if the administrator changes filters while a decision is pending.
 - Added `submittedAt` to `SellerPayoutMethod`. New and re-registered submissions set a fresh timestamp; the queue sorts and labels by this field while `createdAt` continues to represent original row creation. Migration: `20261112093000_seller_payout_submission_timestamp`.
 - Latest refinements are awaiting exact-head CI, PostgreSQL integration, Browser E2E and CodeQL.
+
+
+## 2026-11-12 — Ledger primitive hardening boundary
+
+- The internal double-entry posting primitive is present and has been hardened for full
+  payload idempotency, exact reversals, same-transaction journal-line creation and active
+  same-currency accounts at database commit.
+- Focused unit and PostgreSQL integration tests have been added; they have not yet been run.
+- This does not create seller payables or balances. No payment capture, commission, refund,
+  chargeback, reserve, settlement or payout source event is connected to the journal.
+- FIN-01 through FIN-12 remain owner decisions. Do not infer accounting treatment or enable
+  withdrawals from the existence of the journal tables.
