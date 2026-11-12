@@ -31,6 +31,7 @@ export type FinancialPolicyRule<T = unknown> = {
   productClass?: string | null;
   paymentProvider?: string | null;
   sellerId?: string | null;
+  priority?: number;
   effectiveFrom: Date;
   effectiveUntil?: Date | null;
   sourceReference?: string | null;
@@ -116,7 +117,9 @@ export function resolveFinancialPolicy<T>(
   const rank = (rule: FinancialPolicyRule<T>) =>
     (rule.classification === "LEGAL" ? 300 : rule.classification === "CONTRACTUAL" ? 200 : 100) + specificity(rule);
   const highestRank = Math.max(...eligible.map(rank));
-  const winners = eligible.filter((rule) => rank(rule) === highestRank);
+  const highestRankCandidates = eligible.filter((rule) => rank(rule) === highestRank);
+  const highestPriority = Math.max(...highestRankCandidates.map((rule) => rule.priority ?? 0));
+  const winners = highestRankCandidates.filter((rule) => (rule.priority ?? 0) === highestPriority);
   const pending = winners.filter((rule) =>
     rule.approval !== "APPROVED" ||
     !rule.approvedAt || !rule.approvedById?.trim() ||
