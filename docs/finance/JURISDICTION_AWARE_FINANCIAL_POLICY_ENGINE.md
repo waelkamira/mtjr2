@@ -21,7 +21,7 @@ Evaluate applicable policy candidates in this order, from most specific to least
 5. **Seller agreement / risk rule** — only where contractually and legally permitted.
 6. **Platform default** — applies only to non-legal operational choices where no higher-priority rule exists.
 
-A lower layer may make a rule stricter only when allowed by law and contract. It may not weaken or replace a mandatory legal rule. If two mandatory rules conflict or the engine cannot determine which applies, return a blocked/needs-review result; do not guess.
+Within the same classification, the most specific matching scope wins; explicit numeric priority breaks ties only between rules with the same classification and specificity. Equal-priority incompatible values block as a conflict. A lower layer may make a rule stricter only when allowed by law and contract. It may not weaken or replace a mandatory legal rule. If two mandatory rules conflict or the engine cannot determine which applies, return a blocked/needs-review result; do not guess.
 
 ## 3. Policy domains
 
