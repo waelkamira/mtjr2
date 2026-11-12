@@ -4948,3 +4948,13 @@ The platform account policy is now explicit: email verification is not required 
 - Final code verification SHA: `05852fcc7ccee23aa86a98629b3f3d7f26f22bcd` — CI `43217249164` PASS (Prisma validate/migrate/generate, TypeScript, ESLint, full Vitest suite and production build); Browser E2E `43217248814` PASS; CodeQL `43217248910` PASS.
 - PostgreSQL Integration `43211941124` PASS on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; no schema or migration changed in the ledger UI/API work after that run. CI on the final code SHA reapplied migrations against disposable PostgreSQL.
 - Remaining coverage gap: no dedicated signed-in platform-admin browser journey opens `/admin/finance/ledger`, selects an account and verifies rendered journal lines. Keep the route at partially verified until that journey exists.
+
+
+### Dedicated Super Admin ledger browser journey — 2026-11-12
+
+- E2E bootstrap now creates two isolated currency-scoped ledger accounts and one balanced journal entry in the disposable PostgreSQL database, without changing production chart-of-accounts policy or application schema.
+- Added `tests/e2e/admin-ledger.spec.ts`. A seeded Super Admin session with MFA and step-up opens `/admin/finance/ledger`, selects E2E-CASH, reads the seeded journal description/debit/credit lines, independently verifies the protected API response, and confirms that posting/refund/payout controls are absent.
+- The first browser attempt exposed only a Playwright strict-locator ambiguity (the account name appears in both the account list and selected-account header); the test now selects the first matching label. No application defect was found.
+- Final exact code SHA `bcc70bdcb673e4bdee3ca5f985063a7edbd8558b`: CI `43219336171` PASS (Prisma validate/migrate/generate, TypeScript, ESLint, full Vitest suite and production build); Browser E2E `43219336213` PASS (**14/14**, including the dedicated ledger journey); CodeQL `43219336054` PASS.
+- PostgreSQL Integration `43211941124` PASS on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; application schema and migrations were unchanged in this read-only UI/API and E2E-fixture work. CI also reapplied all migrations to fresh PostgreSQL on the final code SHA.
+- Accounting scope remains deliberately limited to immutable posting primitives and read-only account/journal inspection. Payment capture, refunds, commission allocation, seller payable balances, withdrawal, settlement, trial balance and period close are not enabled pending owner-approved financial rules.
