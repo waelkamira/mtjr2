@@ -40,6 +40,8 @@ describe("admin seller payout destination listing", () => {
     expect(query.select.encryptedDetails).toBeUndefined();
     expect(query.select.accountIdentifier).toBeUndefined();
     expect(query.select.accountLast4).toBe(true);
+    expect(query.select.submittedAt).toBe(true);
+    expect(query.orderBy).toEqual([{ submittedAt: "desc" }, { id: "asc" }]);
     expect(query.select.seller.select.owner.select.email).toBe(true);
     expect(response.headers.get("Cache-Control")).toContain("no-store");
   });
@@ -50,10 +52,18 @@ describe("admin seller payout destination listing", () => {
     expect(mocks.findMany).not.toHaveBeenCalled();
   });
 
-  it.each(["1.5", "Infinity", "1001"])("rejects invalid page value %s", async (page) => {
+  it.each(["1.5", "Infinity", "0"])("rejects invalid page value %s", async (page) => {
     const response = await GET(new Request(`https://matjar.test/api/admin/seller-payout-methods?page=${page}`));
     expect(response.status).toBe(400);
     expect(mocks.findMany).not.toHaveBeenCalled();
+  });
+
+  it("allows page 1001 when the queue contains more than 50,000 destinations", async () => {
+    mocks.count.mockResolvedValue(50001);
+    const response = await GET(new Request("https://matjar.test/api/admin/seller-payout-methods?page=1001"));
+    expect(response.status).toBe(200);
+    expect(mocks.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 50000, take: 50 }));
+    await expect(response.json()).resolves.toMatchObject({ page: 1001, pageCount: 1001, total: 50001 });
   });
 
   it("returns authentication and permission failures safely", async () => {
