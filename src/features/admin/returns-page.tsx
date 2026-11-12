@@ -45,7 +45,7 @@ export default function AdminReturnsPage() {
   }
   return <main className="min-h-screen bg-[var(--background)]">
     <header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5"><div className="mx-auto flex max-w-7xl justify-between"><Link href="/" className="text-xl font-semibold text-[var(--color-ink-950)]">mtjr<span className="text-[var(--color-lavender-600)]">.</span></Link><span className="text-sm text-[var(--muted)]">{t("Platform administration", "إدارة المنصة")}</span></div></header>
-    <div className="mx-auto max-w-7xl px-5 py-8"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Customer operations", "عمليات العملاء")}</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Return requests", "طلبات الإرجاع")}</h1>
+    <div className="mx-auto max-w-[1600px] px-5 py-8"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-lavender-600)]">{t("Customer operations", "عمليات العملاء")}</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-ink-950)]">{t("Return requests", "طلبات الإرجاع")}</h1>
       <p className="mt-2 text-sm text-[var(--muted)]">{t("Review return eligibility. Physical receipt is recorded by the seller against a warehouse and held in inventory quarantine; it does not initiate a refund.", "راجع أهلية الإرجاع. يسجل البائع الاستلام الفعلي في مستودع وتُحفظ المنتجات في منطقة الحجر بالمخزون؛ ولا يؤدي ذلك إلى بدء رد الأموال.")}</p>
       {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
       {loading ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--surface-soft)]"/> : <div className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
