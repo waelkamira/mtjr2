@@ -74,6 +74,11 @@ export default function SellerProductsPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
+  const [basicSpecifications, setBasicSpecifications] = useState({
+    model: "", color: "", material: "", weight: "", dimensions: "",
+    condition: "", warranty: "", countryOfOrigin: ""
+  });
+  const [customSpecifications, setCustomSpecifications] = useState<Array<{ id: string; name: string; value: string }>>([]);
   type VariantDraft = { id: string; sku: string; barcode: string; name: string; optionValues: Record<string, string | number | boolean | string[]>; prices: Record<string, { currencyCode: string; amount: string; compareAt: string }> };
   const [variantRows, setVariantRows] = useState<VariantDraft[]>([{ id: "variant-1", sku: "", barcode: "", name: "", optionValues: {}, prices: {} }]);
   type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
@@ -466,6 +471,10 @@ export default function SellerProductsPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           storeId, name, slug, description, contactPhone: contactPhone || undefined, videoUrl: videoUrl || undefined, ...(brandId ? { brandId } : {}),
+          specifications: {
+            ...Object.fromEntries(Object.entries(basicSpecifications).filter(([, value]) => value.trim()).map(([key, value]) => [key, value.trim()])),
+            custom: customSpecifications.filter((item) => item.name.trim() && item.value.trim()).map((item) => ({ name: item.name.trim(), value: item.value.trim() }))
+          },
           ...(isRealEstate ? { propertyDetails: { propertyType, listingType, bedrooms: bedrooms === "" ? null : Number(bedrooms), bathrooms: bathrooms === "" ? null : Number(bathrooms), floorArea } } : {}),
           categoryIds: categoryId ? [categoryId] : [],
           attributes: categoryAttributes.filter((attribute) => !attribute.variantLevel).flatMap((attribute) => {
@@ -487,7 +496,7 @@ export default function SellerProductsPage() {
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
-      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
+      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setBasicSpecifications({ model: "", color: "", material: "", weight: "", dimensions: "", condition: "", warranty: "", countryOfOrigin: "" }); setCustomSpecifications([]); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -806,6 +815,46 @@ export default function SellerProductsPage() {
               </div>}
               {!uploadedImages.length && <p className="text-xs text-[var(--muted)]">{translate(locale, "No images selected. Add a primary image to continue.", "لم يتم اختيار صور بعد. أضف صورة رئيسية للمتابعة.")}</p>}
             </div>
+            <section className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+              <div>
+                <h3 className="text-sm font-extrabold">{translate(locale, "Product specifications", "مواصفات المنتج")}</h3>
+                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Add the common details, then add any extra specification your product needs.", "أدخل المواصفات الأساسية ثم أضف أي مواصفات إضافية يحتاجها منتجك.")}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {([
+                  ["model", "Model", "الموديل", "e.g. Galaxy S24"],
+                  ["color", "Color", "اللون", "e.g. Black"],
+                  ["material", "Material", "المادة", "e.g. Aluminum"],
+                  ["weight", "Weight", "الوزن", "e.g. 180 g"],
+                  ["dimensions", "Dimensions", "الأبعاد", "e.g. 15 × 7 × 0.8 cm"],
+                  ["condition", "Condition", "الحالة", "New / Used"],
+                  ["warranty", "Warranty", "الضمان", "e.g. 12 months"],
+                  ["countryOfOrigin", "Country of origin", "بلد المنشأ", "e.g. Japan"]
+                ] as const).map(([key, en, ar, placeholder]) => (
+                  <label key={key} className="grid gap-1 text-sm font-semibold">
+                    {translate(locale, en, ar)}
+                    <input className={inputClass} value={basicSpecifications[key]} onChange={(event) => setBasicSpecifications((current) => ({ ...current, [key]: event.target.value }))} placeholder={translate(locale, placeholder, "أدخل القيمة")} maxLength={160} />
+                  </label>
+                ))}
+              </div>
+              <div className="grid gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div><h4 className="text-sm font-bold">{translate(locale, "Additional specifications", "مواصفات إضافية")}</h4><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Examples: RAM — 8 GB, Internal storage — 256 GB, Battery — 5000 mAh.", "أمثلة: ذاكرة RAM — 8 GB، الذاكرة الداخلية — 256 GB، البطارية — 5000 mAh.")}</p></div>
+                  <button type="button" onClick={() => setCustomSpecifications((items) => [...items, { id: crypto.randomUUID(), name: "", value: "" }])} className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm font-bold text-black transition hover:border-[#FF8C1C] hover:shadow-sm">
+                    <SellerIcon name="plus" />{translate(locale, "Add field", "إضافة حقل")}
+                  </button>
+                </div>
+                {customSpecifications.length > 0 && <div className="grid gap-3">
+                  {customSpecifications.map((item, index) => (
+                    <div key={item.id} className="grid gap-2 rounded-xl border border-[var(--border)] bg-white p-3 sm:grid-cols-[1fr_1fr_auto]">
+                      <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Field name", "اسم الحقل")}<input className={inputClass} value={item.name} maxLength={80} placeholder={translate(locale, "e.g. RAM", "مثلاً: RAM")} onChange={(event) => setCustomSpecifications((items) => items.map((entry) => entry.id === item.id ? { ...entry, name: event.target.value } : entry))} /></label>
+                      <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Value", "القيمة")}<input className={inputClass} value={item.value} maxLength={240} placeholder={translate(locale, "e.g. 8 GB", "مثلاً: 8 GB")} onChange={(event) => setCustomSpecifications((items) => items.map((entry) => entry.id === item.id ? { ...entry, value: event.target.value } : entry))} /></label>
+                      <button type="button" aria-label={translate(locale, "Remove field", "حذف الحقل")} onClick={() => setCustomSpecifications((items) => items.filter((entry) => entry.id !== item.id))} className="self-end rounded-lg border border-red-200 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50">{translate(locale, "Remove", "حذف")}</button>
+                    </div>
+                  ))}
+                </div>}
+              </div>
+            </section>
             <label className="grid gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><SellerIcon name="catalog" />{translate(locale, "Category", "الفئة")}</span><select className={inputClass} value={categoryId} onChange={(e) => { const nextCategoryId = e.target.value; setCategoryId(nextCategoryId); setCategoryAttributes([]); setAttributeValues({}); setVariantRows((rows) => rows.map((row) => ({ ...row, optionValues: {} }))); setLoadingCategoryAttributes(Boolean(nextCategoryId)); }}><option value="">{translate(locale, "Choose a category", "اختر الفئة")}</option>{categoryOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
             {categoryId && <section className="grid gap-3 rounded-xl border border-[#e1e8f0] bg-white p-4 sm:p-5">
               <div>
