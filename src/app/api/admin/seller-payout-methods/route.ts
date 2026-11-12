@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 const querySchema = z.object({
   status: z.enum(["PENDING_VERIFICATION", "VERIFIED", "REJECTED"]).default("PENDING_VERIFICATION"),
-  page: z.coerce.number().int().finite().min(1).max(Math.floor(Number.MAX_SAFE_INTEGER / 50)).default(1)
+  page: z.coerce.number().int().finite().min(1).max(Math.floor(Number.MAX_SAFE_INTEGER / 50) + 1).default(1)
 }).strict();
 
 export async function GET(request: Request): Promise<Response> {
