@@ -51,6 +51,43 @@ async function main() {
   });
   if (!store?.markets.length) throw new Error("Demo seller store has no enabled market.");
   const market = store.markets[0].market;
+  const payoutCountry = await prisma.country.findUnique({
+    where: { id: market.countryId },
+    select: { iso2: true }
+  });
+  if (!payoutCountry) throw new Error("Demo seller market country is missing.");
+
+  // Reuse the seeded market's default currency so the payout fixture always
+  // satisfies the SellerPayoutMethod -> Currency foreign key.
+  await prisma.sellerPayoutMethod.upsert({
+    where: { id: "e2e-seller-payout-review" },
+    create: {
+      id: "e2e-seller-payout-review",
+      sellerId: seller.sellerProfile.id,
+      type: "IBAN",
+      accountHolderName: "E2E Protected Placeholder",
+      bankName: "E2E Demo Bank",
+      countryCode: payoutCountry.iso2,
+      currencyCode: market.defaultCurrencyCode,
+      encryptedDetails: "e2e-fixture-encrypted-payload",
+      encryptionKeyVersion: 1,
+      accountLast4: "4242",
+      fingerprint: hash("e2e-seller-payout-review-destination"),
+      status: "PENDING_VERIFICATION",
+      isDefault: false
+    },
+    update: {
+      status: "PENDING_VERIFICATION",
+      submissionVersion: { increment: 1 },
+      submittedAt: new Date(),
+      verifiedAt: null,
+      isDefault: false,
+      bankName: "E2E Demo Bank",
+      accountLast4: "4242",
+      countryCode: payoutCountry.iso2,
+      currencyCode: market.defaultCurrencyCode
+    }
+  });
   const product = await prisma.product.findFirst({
     where: { storeId: store.id, status: "ACTIVE", approvalStatus: "APPROVED", categories: { some: {} }, variants: { some: { isActive: true, prices: { some: { marketId: market.id, currencyCode: market.defaultCurrencyCode } } } } },
     select: { id: true, slug: true, categories: { take: 1, select: { category: { select: { slug: true } } } } }

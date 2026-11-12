@@ -667,6 +667,8 @@ model SellerPayoutMethod {
   encryptionKeyVersion Int
   accountLast4         String                   @db.VarChar(4)
   fingerprint          String                   @db.VarChar(64)
+  submissionVersion    Int                      @default(1)
+  submittedAt          DateTime                 @default(now())
   status               SellerPayoutMethodStatus @default(PENDING_VERIFICATION)
   isDefault            Boolean                  @default(false)
   verifiedAt           DateTime?
@@ -677,6 +679,7 @@ model SellerPayoutMethod {
 
   @@unique([sellerId, currencyCode, fingerprint])
   @@index([sellerId, currencyCode, status, isDefault])
+  @@index([status, submittedAt])
 }
 
 model Store {

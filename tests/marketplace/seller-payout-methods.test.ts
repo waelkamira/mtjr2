@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   countryFindUnique: vi.fn(),
   currencyFindUnique: vi.fn(),
   payoutFindUnique: vi.fn(),
+  payoutFindUniqueOrThrow: vi.fn(),
   payoutCount: vi.fn(),
   payoutUpdateMany: vi.fn(),
   payoutCreate: vi.fn(),
@@ -39,8 +40,8 @@ import { createSellerPayoutMethod, reviewSellerPayoutMethod, SellerPayoutSelfVer
 const createdMethod = {
   id: "payout-1", type: "IBAN", accountHolderName: "Example Owner", bankName: "Example Bank",
   countryCode: "DE", currencyCode: "EUR", accountLast4: "3000",
-  status: "PENDING_VERIFICATION", isDefault: true, verifiedAt: null,
-  createdAt: new Date("2026-11-10T00:00:00.000Z"), updatedAt: new Date("2026-11-10T00:00:00.000Z")
+  status: "PENDING_VERIFICATION", isDefault: true, verifiedAt: null, submissionVersion: 1,
+  submittedAt: new Date("2026-11-10T00:00:00.000Z"), createdAt: new Date("2026-11-10T00:00:00.000Z"), updatedAt: new Date("2026-11-10T00:00:00.000Z")
 };
 
 describe("seller payout destination security", () => {
@@ -56,6 +57,7 @@ describe("seller payout destination security", () => {
     mocks.payoutUpdateMany.mockResolvedValue({ count: 0 });
     mocks.payoutCreate.mockResolvedValue(createdMethod);
     mocks.payoutUpdate.mockResolvedValue(createdMethod);
+    mocks.payoutFindUniqueOrThrow.mockResolvedValue({ ...createdMethod, status: "VERIFIED", verifiedAt: new Date() });
     mocks.auditCreate.mockResolvedValue({ id: "audit-1" });
     mocks.encrypt.mockReturnValue({ encryptedDetails: "v1.nonce.tag.ciphertext", keyVersion: 1 });
     mocks.fingerprint.mockReturnValue("f".repeat(64));
@@ -110,6 +112,28 @@ describe("seller payout destination security", () => {
     expect(result).not.toHaveProperty("accountIdentifier");
   });
 
+  it("increments the submission version when a disabled destination is re-registered", async () => {
+    mocks.payoutFindUnique.mockResolvedValue({ id: "payout-1", status: "DISABLED" });
+    mocks.payoutUpdate.mockResolvedValue({ ...createdMethod, submissionVersion: 2, submittedAt: new Date("2026-11-12T10:00:00.000Z") });
+
+    const result = await createSellerPayoutMethod({
+      type: "IBAN",
+      accountHolderName: "Example Owner",
+      bankName: "Example Bank",
+      countryCode: "DE",
+      currencyCode: "EUR",
+      accountIdentifier: "DE89 3704 0044 0532 0130 00",
+      isDefault: true
+    });
+
+    expect(result.submissionVersion).toBe(2);
+    expect(mocks.payoutUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "payout-1" },
+      data: expect.objectContaining({ submissionVersion: { increment: 1 }, submittedAt: expect.any(Date), status: "PENDING_VERIFICATION" })
+    }));
+    expect(mocks.payoutCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects an IBAN whose country prefix does not match the selected bank country", async () => {
     await expect(createSellerPayoutMethod({
       type: "IBAN",
@@ -147,11 +171,16 @@ describe("admin seller bank destination review", () => {
     mocks.requirePlatformManagement.mockResolvedValue({ userId: "admin-1" });
     mocks.payoutFindUnique.mockResolvedValue({
       id: "payout-1", sellerId: "seller-1", accountLast4: "3000", currencyCode: "EUR",
-      status: "PENDING_VERIFICATION", isDefault: true, seller: { ownerId: "owner-1" }
+      status: "PENDING_VERIFICATION", isDefault: true, submissionVersion: 1, seller: { ownerId: "owner-1" }
     });
-    mocks.payoutUpdate.mockResolvedValue({ ...createdMethod, status: "VERIFIED", verifiedAt: new Date() });
+    mocks.payoutUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.payoutFindUniqueOrThrow.mockResolvedValue({ ...createdMethod, status: "VERIFIED", verifiedAt: new Date() });
     mocks.transaction.mockImplementation((callback: (tx: unknown) => unknown) => callback({
-      sellerPayoutMethod: { findUnique: mocks.payoutFindUnique, update: mocks.payoutUpdate },
+      sellerPayoutMethod: {
+        findUnique: mocks.payoutFindUnique,
+        updateMany: mocks.payoutUpdateMany,
+        findUniqueOrThrow: mocks.payoutFindUniqueOrThrow
+      },
       auditLog: { create: mocks.auditCreate }
     }));
   });
@@ -159,15 +188,16 @@ describe("admin seller bank destination review", () => {
   const reviewInput = {
     decision: "VERIFIED",
     evidenceReference: "BANK-CALL-CASE-2026-001",
-    reason: "Account ownership confirmed through the bank's official verification channel."
+    reason: "Account ownership confirmed through the bank's official verification channel.",
+    expectedSubmissionVersion: 1
   };
 
   it("records an audited verification decision without exposing account details", async () => {
     const result = await reviewSellerPayoutMethod("payout-1", reviewInput);
     expect(result.status).toBe("VERIFIED");
     expect(mocks.requirePlatformManagement).toHaveBeenCalledOnce();
-    expect(mocks.payoutUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: "payout-1" },
+    expect(mocks.payoutUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "payout-1", status: "PENDING_VERIFICATION", submissionVersion: 1 },
       data: expect.objectContaining({ status: "VERIFIED", verifiedAt: expect.any(Date) })
     }));
     const audit = mocks.auditCreate.mock.calls[0][0].data;
@@ -179,15 +209,32 @@ describe("admin seller bank destination review", () => {
   it("prevents a seller from reviewing their own bank destination", async () => {
     mocks.requirePlatformManagement.mockResolvedValue({ userId: "owner-1" });
     await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutSelfVerificationError);
-    expect(mocks.payoutUpdate).not.toHaveBeenCalled();
+    expect(mocks.payoutUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not write an audit decision when the atomic submission-version guard loses a race", async () => {
+    mocks.payoutUpdateMany.mockResolvedValue({ count: 0 });
+
+    await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutVerificationConflictError);
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a stale review after a disabled destination is re-registered", async () => {
+    mocks.payoutFindUnique.mockResolvedValue({
+      id: "payout-1", sellerId: "seller-1", accountLast4: "3000", currencyCode: "EUR",
+      status: "PENDING_VERIFICATION", isDefault: true, submissionVersion: 2,
+      seller: { ownerId: "owner-1" }
+    });
+    await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutVerificationConflictError);
+    expect(mocks.payoutUpdateMany).not.toHaveBeenCalled();
   });
 
   it("prevents a second review of an already reviewed destination", async () => {
     mocks.payoutFindUnique.mockResolvedValue({
       id: "payout-1", sellerId: "seller-1", accountLast4: "3000", currencyCode: "EUR",
-      status: "VERIFIED", isDefault: true, seller: { ownerId: "owner-1" }
+      status: "VERIFIED", isDefault: true, submissionVersion: 1, seller: { ownerId: "owner-1" }
     });
     await expect(reviewSellerPayoutMethod("payout-1", reviewInput)).rejects.toBeInstanceOf(SellerPayoutVerificationConflictError);
-    expect(mocks.payoutUpdate).not.toHaveBeenCalled();
+    expect(mocks.payoutUpdateMany).not.toHaveBeenCalled();
   });
 });

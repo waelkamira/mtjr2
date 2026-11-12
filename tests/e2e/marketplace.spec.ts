@@ -374,6 +374,41 @@ test.describe("seller store image previews", () => {
   });
 });
 
+test.describe("admin seller payout verification", () => {
+  test("admin verifies a masked payout destination with external evidence and an audit record", async ({ page }) => {
+    await signIn(page, sessions.admin);
+    await page.goto("/admin/seller-payout-methods");
+    await expect(page.getByRole("heading", { name: /Seller bank verification|التحقق من الحسابات البنكية للبائعين/i })).toBeVisible();
+
+    const pendingCard = page.locator("article").filter({ hasText: "E2E Demo Bank" }).first();
+    await expect(pendingCard).toBeVisible();
+    await expect(pendingCard.getByText("•••• 4242")).toBeVisible();
+    await pendingCard.getByLabel(/External evidence reference|مرجع الإثبات الخارجي/i).fill("BANK-CHECK-E2E-2026");
+    await pendingCard.getByLabel(/Review reason|سبب المراجعة/i).fill("Bank ownership independently confirmed for this isolated E2E test.");
+
+    const reviewResponsePromise = page.waitForResponse((response) =>
+      response.url().endsWith("/api/admin/seller-payout-methods/e2e-seller-payout-review/review") &&
+      response.request().method() === "POST"
+    );
+    page.once("dialog", (dialog) => dialog.accept());
+    await pendingCard.getByRole("button", { name: /Confirm verified|تأكيد التحقق/i }).click();
+    const reviewResponse = await reviewResponsePromise;
+    const reviewBody = await reviewResponse.json() as { error?: string; method?: { status: string } };
+    expect(reviewResponse.status(), JSON.stringify(reviewBody)).toBe(200);
+    expect(reviewBody.method?.status).toBe("VERIFIED");
+    await expect(page.locator("[data-sonner-toast]").filter({
+      hasText: /Bank account review saved and audited|تم حفظ مراجعة الحساب البنكي وتسجيلها في سجل التدقيق/i
+    })).toBeVisible();
+    await expect(page.locator("article").filter({ hasText: "E2E Demo Bank" })).toHaveCount(0);
+
+    await page.getByRole("button", { name: /Verified|تم التحقق/i }).click();
+    const verifiedCard = page.locator("article").filter({ hasText: "E2E Demo Bank" }).first();
+    await expect(verifiedCard).toBeVisible();
+    await expect(verifiedCard.getByText(/VERIFIED/)).toBeVisible();
+    await expect(verifiedCard.getByText(/Verified at|تاريخ التحقق/i)).toBeVisible();
+  });
+});
+
 test.describe("seller catalog authoring", () => {
   test("seller can create a draft product and edit it from the catalog", async ({ page }) => {
     await signIn(page, sessions.seller);

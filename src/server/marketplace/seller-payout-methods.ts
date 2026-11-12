@@ -41,7 +41,7 @@ async function requireSellerOwner() {
 const safeSelect = {
   id: true, type: true, accountHolderName: true, bankName: true, countryCode: true,
   currencyCode: true, accountLast4: true, status: true, isDefault: true,
-  verifiedAt: true, createdAt: true, updatedAt: true
+  submissionVersion: true, verifiedAt: true, createdAt: true, submittedAt: true, updatedAt: true
 } as const;
 
 /** Lists only the authenticated seller owner's non-disabled, masked payout destinations. */
@@ -49,7 +49,7 @@ export async function listSellerPayoutMethods() {
   const { seller } = await requireSellerOwner();
   const methods = await prisma.sellerPayoutMethod.findMany({
     where: { sellerId: seller.id, status: { not: SellerPayoutMethodStatus.DISABLED } },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ isDefault: "desc" }, { submittedAt: "desc" }],
     select: { ...safeSelect, encryptedDetails: true, encryptionKeyVersion: true }
   });
   return methods.map(({ encryptedDetails, encryptionKeyVersion, ...method }) => {
@@ -123,10 +123,15 @@ export async function createSellerPayoutMethod(input: unknown) {
       fingerprint,
       status: SellerPayoutMethodStatus.PENDING_VERIFICATION,
       verifiedAt: null,
+      submittedAt: new Date(),
       isDefault: makeDefault
     };
     const method = duplicate
-      ? await tx.sellerPayoutMethod.update({ where: { id: duplicate.id }, data: methodData, select: safeSelect })
+      ? await tx.sellerPayoutMethod.update({
+          where: { id: duplicate.id },
+          data: { ...methodData, submissionVersion: { increment: 1 } },
+          select: safeSelect
+        })
       : await tx.sellerPayoutMethod.create({ data: { sellerId: seller.id, ...methodData }, select: safeSelect });
     await tx.auditLog.create({
       data: {
@@ -207,11 +212,12 @@ export async function disableSellerPayoutMethod(methodIdInput: string) {
 const payoutVerificationSchema = z.object({
   decision: z.enum(["VERIFIED", "REJECTED"]),
   evidenceReference: z.string().trim().min(6).max(180),
-  reason: z.string().trim().min(10).max(500)
+  reason: z.string().trim().min(10).max(500),
+  expectedSubmissionVersion: z.number().int().positive().max(2147483647)
 }).strict();
 
 export class SellerPayoutVerificationConflictError extends Error {
-  constructor() { super("Only pending bank destinations can be reviewed."); this.name = "SellerPayoutVerificationConflictError"; }
+  constructor() { super("This bank destination changed or was already reviewed. Refresh the queue and re-check the latest submission before deciding."); this.name = "SellerPayoutVerificationConflictError"; }
 }
 
 export class SellerPayoutSelfVerificationError extends Error {
@@ -231,20 +237,33 @@ export async function reviewSellerPayoutMethod(methodIdInput: string, input: unk
       where: { id: methodId },
       select: {
         id: true, sellerId: true, accountLast4: true, currencyCode: true,
-        status: true, isDefault: true, seller: { select: { ownerId: true } }
+        status: true, isDefault: true, submissionVersion: true, seller: { select: { ownerId: true } }
       }
     });
     if (!method || method.status === SellerPayoutMethodStatus.DISABLED) throw new SellerPayoutMethodNotFoundError();
     if (method.seller.ownerId === actor.userId) throw new SellerPayoutSelfVerificationError();
     if (method.status !== SellerPayoutMethodStatus.PENDING_VERIFICATION) throw new SellerPayoutVerificationConflictError();
+    // Bind the admin decision to the immutable submission generation they inspected.
+    // Re-registering a disabled destination reuses its row ID but increments this version.
+    if (method.submissionVersion !== decision.expectedSubmissionVersion) {
+      throw new SellerPayoutVerificationConflictError();
+    }
 
-    const updated = await tx.sellerPayoutMethod.update({
-      where: { id: method.id },
+    const write = await tx.sellerPayoutMethod.updateMany({
+      where: {
+        id: method.id,
+        status: SellerPayoutMethodStatus.PENDING_VERIFICATION,
+        submissionVersion: decision.expectedSubmissionVersion
+      },
       data: {
         status: decision.decision,
         verifiedAt: decision.decision === "VERIFIED" ? new Date() : null,
         ...(decision.decision === "REJECTED" ? { isDefault: false } : {})
-      },
+      }
+    });
+    if (write.count !== 1) throw new SellerPayoutVerificationConflictError();
+    const updated = await tx.sellerPayoutMethod.findUniqueOrThrow({
+      where: { id: method.id },
       select: safeSelect
     });
     await tx.auditLog.create({

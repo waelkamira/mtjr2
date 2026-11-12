@@ -4864,3 +4864,24 @@ The platform account policy is now explicit: email verification is not required 
 - Applied the matching light treatment to mobile navigation while retaining the existing links, route matching, store context, and responsive horizontal mobile layout.
 
 **Verification boundary:** Source-level implementation only; no local build, typecheck, or browser visual validation was run. The mobile and desktop layouts still need a visual pass at narrow and wide viewport sizes.
+
+
+## 2026-11-12 — Seller payout destination review hardening
+
+- Added `SellerPayoutMethod.submissionVersion` and migration `20261112090000_seller_payout_submission_version`. Re-registering a disabled destination increments the generation even when its database row ID is reused.
+- The administrator review queue returns the generation; every verify/reject command must submit the exact generation. The domain service performs an atomic `updateMany` guarded by both `PENDING_VERIFICATION` and `submissionVersion`, and only then records the audit event.
+- Admin review is restricted to global `platform:manage` with fresh TOTP step-up. Self-verification is prohibited. Only masked bank details are returned; decisions require an external evidence reference and reason. This screen records a human attestation only and does not contact banks or initiate transfers.
+- Fixed the E2E fixture to use the seeded market's default currency and the actual `Country.iso2` field. Added domain tests for disabled-destination re-registration version increments, stale review rejection, and atomic-write race conflicts.
+- Hardened the review UI's MFA recovery, draft restoration, stale-request protection, page correction, and decision-specific pending feedback. Updated the browser journey to assert the actual review API response and toast.
+- Exact head `401cb342d034dd8ad27576dde053ce3454891b7d`: general CI passed (Prisma validate/migrate/generate, typecheck, ESLint, unit tests, production build and route/authorization/UI inventories); PostgreSQL integration passed; Browser E2E passed **13/13**; CodeQL passed. Vercel deployment is intentionally excluded.
+- Seller payable ledger posting, withdrawable balances, withdrawal requests, bank transfer execution and settlement/reconciliation remain blocked pending approved accounting policy and provider integrations.
+
+
+## 2026-11-12 — Payout review queue generation and timestamp corrections
+
+- Removed the artificial 1,000-page limit from the admin queue while keeping page values finite, positive integers whose computed database offset remains a safe integer. Added a route test for page 1001 with 50,001 records.
+- Review drafts now use the composite key `methodId:submissionVersion`, including session-storage recovery and clearing, so evidence/reason text from an earlier submission cannot be reused for a newly registered generation.
+- After a review succeeds, the page reloads with status/page refs that are synchronously updated by tab and pagination controls. It does not call a stale `load` callback captured before the POST.
+- Added `SellerPayoutMethod.submittedAt` and migration `20261112093000_seller_payout_submission_timestamp`. Re-registration refreshes this timestamp, the admin queue sorts by it, and the UI displays it while preserving `createdAt` as the original row-creation time.
+- Updated the E2E fixture to refresh `submittedAt` whenever its pending generation is reset.
+- Verification of these latest queue refinements is pending on the new branch head; do not treat the earlier 13/13 Browser E2E run as validation of these latest changes.
