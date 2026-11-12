@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 
 type OrderRow = {
   id: string;
@@ -73,7 +73,7 @@ export default function AdminOrdersPage() {
     <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "Orders", "الطلبات")}</h1><p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Inspect order snapshots, payment status, vendor splits, and shipment history. State changes are not enabled here.", "استعرض ملخصات الطلبات وحالة الدفع وتقسيمات البائعين وسجل الشحن. تغيير الحالات غير متاح هنا.")}</p></div><p className="text-sm text-[var(--muted)]">{data?.total ?? 0} {translate(locale, "matching orders", "طلب مطابق")}</p></div>
     <form onSubmit={search} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-white p-4 sm:grid-cols-[1fr_240px_auto]">
       <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Search order number, ID, customer email or store", "ابحث برقم الطلب أو المعرّف أو بريد العميل أو المتجر")}<input value={draftQuery} onChange={(event) => setDraftQuery(event.target.value)} maxLength={120} className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]" /></label>
-      <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Order status", "حالة الطلب")}<select value={status} onChange={(event) => { setLoading(true); setStatus(event.target.value); setPage(1); }} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">{translate(locale, "All statuses", "جميع الحالات")}</option>{statuses.map((item) => <option key={item}>{item}</option>)}</select></label>
+      <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Order status", "حالة الطلب")}<select value={status} onChange={(event) => { setLoading(true); setStatus(event.target.value); setPage(1); }} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)]"><option value="">{translate(locale, "All statuses", "جميع الحالات")}</option>{statuses.map((item) => <option key={item} value={item}>{translateStatus(locale, item)}</option>)}</select></label>
       <button disabled={loading} className="self-end rounded-xl bg-[var(--color-forest-900)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{translate(locale, "Search", "بحث")}</button>
     </form>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
