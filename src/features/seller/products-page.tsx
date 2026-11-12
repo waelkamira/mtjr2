@@ -964,7 +964,7 @@ export default function SellerProductsPage() {
               </div>
             </fieldset>}
             {editVariantRows.length > 0 && <fieldset className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-              <legend className="px-1 text-sm font-semibold">{translate(locale, "SKU market prices", "أسعار المتغيرات حسب السوق")}</legend>
+              <legend className="px-1 text-sm font-semibold">{translate(locale, "SKU prices · Syria", "أسعار المتغيرات · سوريا")}</legend>
               {editVariantRows.map((variant) => <div key={variant.id} className="grid gap-3 rounded-xl border border-white bg-white/70 p-3">
                 <p className="text-xs font-extrabold text-[#8a583b]">{variant.sku}{variant.name ? " · " + variant.name : ""}</p>
                 {availableMarkets.map((market) => {
@@ -978,7 +978,7 @@ export default function SellerProductsPage() {
                   </div>;
                 })}
               </div>)}
-              {!editVariantPricesValid && <p className="text-xs text-amber-800">{translate(locale, "Enter a valid price for every SKU and enabled market. Compare-at prices cannot be lower than selling prices.", "أدخل سعراً صالحاً لكل متغير وسوق مفعّل. لا يجوز أن يكون السعر قبل الخصم أقل من سعر البيع.")}</p>}
+              {!editVariantPricesValid && <p className="text-xs text-amber-800">{translate(locale, "Enter a valid price for every SKU. Compare-at prices cannot be lower than selling prices.", "أدخل سعراً صالحاً لكل متغير. لا يجوز أن يكون السعر قبل الخصم أقل من سعر البيع.")}</p>}
             </fieldset>}
             <SyriaLocationPicker locale={locale} value={editProductLocation} onChange={setEditProductLocation} />
             <section className="grid gap-3 rounded-2xl border border-white/80 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-3 shadow-[inset_0_1px_0_white,0_4px_10px_rgba(119,86,62,.04)]" aria-label={translate(locale, "Product image gallery", "معرض صور المنتج")}>
