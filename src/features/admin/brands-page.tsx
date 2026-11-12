@@ -1,7 +1,7 @@
 "use client";
 
 import { StatusBadge } from "@/components/status-badge";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -34,6 +34,8 @@ export default function AdminBrandsPage() {
   const [form, setForm] = useState<BrandForm>(emptyForm);
   const [editingId, setEditingId] = useState("");
   const [archiveReason, setArchiveReason] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,12 @@ export default function AdminBrandsPage() {
     });
     return () => { active = false; };
   }, [revision]);
+
+  const visibleItems = useMemo(() => items.filter((item) => {
+    const needle = searchQuery.trim().toLocaleLowerCase();
+    const matchesQuery = !needle || [item.name, item.slug, item.id, item.websiteUrl || ""].some((value) => value.toLocaleLowerCase().includes(needle));
+    return matchesQuery && (!statusFilter || item.status === statusFilter);
+  }), [items, searchQuery, statusFilter]);
 
   function reset() { setEditingId(""); setForm(emptyForm); }
   function edit(item: Brand) {
@@ -112,8 +120,8 @@ export default function AdminBrandsPage() {
       <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-3"><button disabled={busy} className="rounded-xl bg-[#FF8C1C] px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-orange-500/20 transition hover:bg-[#F57C00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, editingId ? "Save changes" : "Create brand", editingId ? "حفظ التعديلات" : "إنشاء العلامة")}</button>{editingId && <button type="button" disabled={busy} onClick={reset} className="rounded-xl border border-[var(--border)] px-5 py-2.5 text-sm">{translate(locale, "Cancel", "إلغاء")}</button>}</div>
     </form>
     <section className="mt-7 overflow-hidden rounded-2xl border border-[var(--border)] bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] p-5"><h2 className="text-lg font-semibold">{translate(locale, "Brands", "العلامات التجارية")}</h2><span className="text-xs text-[var(--muted)]">{items.length} {translate(locale, "records", "سجلات")}</span></div>
-      {loading ? <p role="status" className="p-6 text-sm text-[var(--muted)]">{translate(locale, "Loading brands…", "جارٍ تحميل العلامات…")}</p> : items.length === 0 ? <p className="p-6 text-sm text-[var(--muted)]">{translate(locale, "No brands found.", "لا توجد علامات تجارية.")}</p> : <div className="divide-y divide-[var(--border)]">{items.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 p-5"><div className="flex min-w-0 items-center gap-3"><BrandLogo name={item.name} logoUrl={item.logoUrl} size="small" /><div className="min-w-0"><h3 className="font-semibold text-stone-950">{item.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">{item.slug} · <StatusBadge locale={locale} status={item.status} /> · {item.productCount} {translate(locale, "products", "منتج")}</p>{item.websiteUrl && <a href={item.websiteUrl} target="_blank" rel="noreferrer" className="mt-1 block truncate text-xs text-orange-700">{item.websiteUrl}</a>}</div></div><div className="flex flex-wrap items-center gap-2"><button type="button" disabled={busy} onClick={() => edit(item)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit", "تعديل")}</button>{item.status !== "ARCHIVED" && <button type="button" disabled={busy} onClick={() => void archive(item)} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">{translate(locale, "Archive", "أرشفة")}</button>}</div></article>)}</div>}
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--border)] p-5"><div><h2 className="text-lg font-semibold">{translate(locale, "Brands", "العلامات التجارية")}</h2><span className="text-xs text-[var(--muted)]">{items.length} {translate(locale, "records", "سجلات")} · {visibleItems.length} {translate(locale, "shown", "معروض")}</span></div><div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[minmax(220px,1fr)_160px]"><label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Search brands", "البحث في العلامات التجارية")}<input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100" /></label><label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Status", "الحالة")}<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100"><option value="">{translate(locale, "All statuses", "كل الحالات")}</option><option value="DRAFT">{translateStatus(locale, "DRAFT")}</option><option value="ACTIVE">{translateStatus(locale, "ACTIVE")}</option><option value="ARCHIVED">{translateStatus(locale, "ARCHIVED")}</option></select></label></div></div>
+      {loading ? <p role="status" className="p-6 text-sm text-[var(--muted)]">{translate(locale, "Loading brands…", "جارٍ تحميل العلامات…")}</p> : visibleItems.length === 0 ? <p className="p-6 text-sm text-[var(--muted)]">{items.length ? translate(locale, "No brands match these filters.", "لا توجد علامات تجارية تطابق عوامل التصفية.") : translate(locale, "No brands found.", "لا توجد علامات تجارية.")}</p> : <div className="divide-y divide-[var(--border)]">{visibleItems.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 p-5"><div className="flex min-w-0 items-center gap-3"><BrandLogo name={item.name} logoUrl={item.logoUrl} size="small" /><div className="min-w-0"><h3 className="font-semibold text-stone-950">{item.name}</h3><p className="mt-1 text-xs text-[var(--muted)]">{item.slug} · <StatusBadge locale={locale} status={item.status} /> · {item.productCount} {translate(locale, "products", "منتج")} · {translate(locale, "Updated", "آخر تحديث")} {new Date(item.updatedAt).toLocaleDateString(locale === "ar" ? "ar-SY" : "en-GB")}</p>{item.websiteUrl && <a href={item.websiteUrl} target="_blank" rel="noreferrer" className="mt-1 block truncate text-xs text-orange-700">{item.websiteUrl}</a>}</div></div><div className="flex flex-wrap items-center gap-2"><button type="button" disabled={busy} onClick={() => edit(item)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit", "تعديل")}</button>{item.status !== "ARCHIVED" && <button type="button" disabled={busy} onClick={() => void archive(item)} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">{translate(locale, "Archive", "أرشفة")}</button>}</div></article>)}</div>}
       <div className="border-t border-[var(--border)] p-4"><label className="block text-xs text-[var(--muted)]">{translate(locale, "Archive reason", "سبب الأرشفة")}<input value={archiveReason} onChange={(e) => setArchiveReason(e.target.value)} maxLength={500} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100" placeholder={translate(locale, "Required before archiving", "مطلوب قبل الأرشفة")} /></label></div>
     </section>
   </div></main>;
