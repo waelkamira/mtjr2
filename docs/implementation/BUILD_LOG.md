@@ -4930,3 +4930,13 @@ The platform account policy is now explicit: email verification is not required 
 - Added focused unit tests for account filters, currency normalization and bounded page sizes. Updated route registry, journey matrix, system 31 specification and Prisma model usage map.
 - Fixed financial policy loading so the effect invokes a pure async data loader and performs React state updates only in Promise callbacks; this addresses the ESLint `react-hooks/set-state-in-effect` failure found in CI.
 - Earlier exact-head evidence: PostgreSQL migration/integration, CodeQL and Browser E2E passed on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; the follow-up CI run on `83fddafc9acca44ac91025c4ab661693baa20e44` passed TypeScript and Browser E2E/CodeQL but caught the effect lint issue. The read-only ledger surface is newly added after those runs; full CI, PostgreSQL and E2E on the final code commit remain required before calling it verified.
+
+
+### Exact-head verification — `ab66e65a66b293c3f063a7fb9ff6ea01a075a77b`
+
+- CI `43216237801`: PASS — Prisma validate, disposable PostgreSQL migrations, Prisma generate, TypeScript, ESLint, full Vitest suite and production build.
+- Browser E2E `43216237664`: PASS — production build/start and Playwright browser suite.
+- CodeQL `43216237745`: PASS.
+- PostgreSQL Integration `43211941124`: PASS on `e81a6efaab6b03a324a0e21aaf256f9a6d28c7c1`; no Prisma schema or migration changed after that integration run. The exact-head CI on `ab66e65` also reapplied migrations to a fresh disposable PostgreSQL database.
+- The full unit suite initially exposed two financial-policy transition tests whose fixture status was `APPROVED` even though the transition requires `PENDING_REVIEW`; corrected the fixture and confirmed the full suite passes on this exact code commit.
+- The read-only ledger route and UI are build/type/lint verified and covered by the general browser suite; no dedicated authenticated admin ledger browser journey or API permission-route test exists yet. Do not claim that specific journey verified.
