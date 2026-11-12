@@ -183,6 +183,6 @@
 
 - Queue pagination no longer rejects page 1001 when the reported result set has 50,001 or more records; the page bound preserves safe integer offsets.
 - Evidence/reason drafts are keyed by both payout-method ID and `submissionVersion`, including session-storage restoration. Re-registering a destination cannot inherit the evidence draft from an earlier generation.
-- Post-review refresh is state-driven and reads the currently selected status tab/page, even if the administrator changes filters while a decision is pending.
+- Post-review refresh uses status/page refs synchronously updated by tab and pagination controls, so it reads the current selection even if the administrator changes filters while a decision is pending.
 - Added `submittedAt` to `SellerPayoutMethod`. New and re-registered submissions set a fresh timestamp; the queue sorts and labels by this field while `createdAt` continues to represent original row creation. Migration: `20261112093000_seller_payout_submission_timestamp`.
 - Latest refinements are awaiting exact-head CI, PostgreSQL integration, Browser E2E and CodeQL.
