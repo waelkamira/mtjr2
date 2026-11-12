@@ -12,7 +12,7 @@ type Brand = {
   description: string | null;
   logoUrl: string | null;
 };
-type BrandResponse = { items: Brand[] };
+type BrandResponse = { items: Brand[]; pagination?: { total?: number } };
 
 const brandPalettes = [
   "from-orange-100 via-amber-50 to-white text-orange-700",
@@ -78,17 +78,19 @@ export default function BrandDirectoryPage() {
   const [items, setItems] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [totalBrands, setTotalBrands] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setError("");
     fetch("/api/brands?locale=" + locale + "&limit=100", { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error(t("Brands could not be loaded.", "تعذّر تحميل العلامات التجارية."));
         return response.json() as Promise<BrandResponse>;
       })
-      .then((result) => setItems(Array.isArray(result.items) ? result.items : []))
+      .then((result) => {
+        setItems(Array.isArray(result.items) ? result.items : []);
+        setTotalBrands(typeof result.pagination?.total === "number" ? result.pagination.total : (Array.isArray(result.items) ? result.items.length : 0));
+      })
       .catch((cause: unknown) => {
         if (cause instanceof Error && cause.name === "AbortError") return;
         setError(cause instanceof Error ? cause.message : t("Brands are unavailable.", "العلامات التجارية غير متاحة."));
@@ -119,7 +121,7 @@ export default function BrandDirectoryPage() {
         {!loading && !error && items.length > 0 && (
           <div className="relative mt-6 inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/85 px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-sm">
             <span className="h-2 w-2 rounded-full bg-lime-500 shadow-[0_0_0_3px_rgba(132,204,22,0.14)]" />
-            {items.length} {t("active brands", "علامة تجارية متاحة")}
+            {totalBrands} {t("active brands", "علامة تجارية متاحة")}
           </div>
         )}
       </section>
