@@ -161,7 +161,19 @@ Administrative persistence APIs are now implemented:
 
 **Remaining validation:** migration application, Prisma schema validation,
 generated-client/typecheck, route tests, and transactional integration tests have
-not been run in this session. No admin UI has been added yet. The workflow remains
+not been run in this session. The workflow remains
 disconnected from checkout, refunds, commission calculation, ledger posting, and
 payout execution; no money movement is enabled by these endpoints.
 
+
+## 13. Administrative UI checkpoint — 2026-11-12
+
+The protected `/admin/financial-policies` page is now present in the App Router and
+shared admin navigation. It provides version creation, status/domain filters, scope
+and JSON-value inspection, and explicit review/approve/reject actions. The route
+requires `platform:manage` and follows the existing MFA/step-up redirect behavior.
+
+The UI is a management surface only. It does not publish money-moving permissions,
+connect the resolver to checkout/refunds/commissions/ledger/payouts, or imply that a
+policy is legally valid. Source-level implementation has not yet been verified by
+local build, generated Prisma client, PostgreSQL migration, or browser testing.
