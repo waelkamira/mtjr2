@@ -81,7 +81,7 @@ CREATE TABLE "FinancialPolicyRuleVersion" (
   CONSTRAINT "FinancialPolicyRuleVersion_legal_reviewer_approver_separation_check"
     CHECK ("approvalStatus" <> 'APPROVED' OR "classification" <> 'LEGAL' OR "reviewedById" <> "approvedById"),
   CONSTRAINT "FinancialPolicyRuleVersion_rejection_reason_check"
-    CHECK ("approvalStatus" <> 'REJECTED' OR length(trim("rejectionReason")) >= 5)
+    CHECK ("approvalStatus" <> 'REJECTED' OR ("rejectionReason" IS NOT NULL AND length(trim("rejectionReason")) >= 5))
 );
 
 CREATE UNIQUE INDEX "FinancialPolicyRule_key_key"
