@@ -15,6 +15,9 @@ export function translate(locale: Locale, english: string, arabic: string): stri
 
 
 const statusArabic: Record<string, string> = {
+  PENDING_VERIFICATION: "بانتظار التحقق", 
+  INITIATING: "جارٍ بدء الدفع", 
+  WAITING_CUSTOMER: "بانتظار العميل", 
   DRAFT: "مسودة", ACTIVE: "نشط", INACTIVE: "غير نشط", PENDING: "قيد الانتظار",
   PENDING_PAYMENT: "بانتظار الدفع", AWAITING_PAYMENT: "بانتظار الدفع", PAID: "مدفوع",
   SUCCEEDED: "ناجح", SUCCESS: "ناجح", FAILED: "فاشل", REJECTED: "مرفوض",
