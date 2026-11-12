@@ -77,7 +77,17 @@ async function seedSellerIdentityAndStore() {
       data: {
         name: "Ramond Syria Store", status: "ACTIVE",
         description: store.description || "متجر راموند — منتجات متنوعة للسوق السورية",
+        publicPhone: store.publicPhone || "+963 11 000 0000",
+        publicAddress: store.publicAddress || "Damascus, Syria",
+        shippingContactName: store.shippingContactName || "Ramond",
+        shippingPhone: store.shippingPhone || "+963 11 000 0000",
+        shippingAddressLine1: store.shippingAddressLine1 || "Demo fulfillment address",
+        shippingCity: store.shippingCity || "Damascus",
+        shippingRegion: store.shippingRegion || "Damascus Governorate",
         shippingCountryCode: "SY",
+        shippingInstructions: store.shippingInstructions || "بيانات شحن تجريبية؛ يرجى استبدالها بعنوان المتجر الفعلي.",
+        shippingPolicy: store.shippingPolicy || "بيانات سياسة شحن تجريبية قابلة للتعديل من لوحة البائع.",
+        returnsPolicy: store.returnsPolicy || "بيانات سياسة إرجاع تجريبية قابلة للتعديل من لوحة البائع.",
       },
     });
   }
@@ -373,27 +383,36 @@ async function seedOrdersAndEngagement(owner, store, market, usd, products) {
     const subtotalMinor = unitAmountMinor * BigInt(quantity);
     const shippingMinor = 300n * 100n;
     const totalMinor = subtotalMinor + shippingMinor;
-    const cart = await prisma.cart.create({
+    const cart = await prisma.cart.findFirst({
+      where: { userId: customer.id, marketId: market.id, currencyCode: usd.code, status: "ACTIVE" },
+    }) || await prisma.cart.create({
       data: { userId: customer.id, marketId: market.id, currencyCode: usd.code, status: "ACTIVE" },
     });
-    await prisma.cartItem.create({
-      data: { cartId: cart.id, variantId: productEntry.variant.id, quantity },
+    await prisma.cartItem.upsert({
+      where: { cartId_variantId: { cartId: cart.id, variantId: productEntry.variant.id } },
+      create: { cartId: cart.id, variantId: productEntry.variant.id, quantity },
+      update: { quantity },
     });
-    const quote = await prisma.checkoutQuote.create({
-      data: {
+    const quoteKey = "syria-demo-quote-" + String(i + 1).padStart(4, "0");
+    const quote = await prisma.checkoutQuote.upsert({
+      where: { idempotencyKey: quoteKey },
+      create: {
         cartId: cart.id, userId: customer.id, marketId: market.id,
         currencyCode: usd.code, status: "ACTIVE", subtotalMinor,
-        idempotencyKey: "syria-demo-quote-" + String(i + 1).padStart(4, "0"),
+        idempotencyKey: quoteKey,
         expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
       },
+      update: { subtotalMinor, status: "ACTIVE" },
     });
-    await prisma.checkoutQuoteLine.create({
-      data: {
+    await prisma.checkoutQuoteLine.upsert({
+      where: { quoteId_variantId: { quoteId: quote.id, variantId: productEntry.variant.id } },
+      create: {
         quoteId: quote.id, variantId: productEntry.variant.id, storeId: store.id,
         productName: productEntry.product.name, storeName: store.name,
         sku: productEntry.sku, variantName: "Standard", quantity,
         unitAmountMinor, lineTotalMinor: subtotalMinor,
       },
+      update: { productName: productEntry.product.name, quantity, unitAmountMinor, lineTotalMinor: subtotalMinor },
     });
     const [orderStatus, vendorStatus] = orderStates[i];
     const placedAt = new Date(now.getTime() - (i + 1) * 24 * 60 * 60 * 1000);
