@@ -47,7 +47,7 @@ describe("admin seller payout destination review route", () => {
       decision: "VERIFIED",
       evidenceReference: "BANK-CHECK-2026-001",
       reason: "Account ownership independently confirmed.",
-      expectedUpdatedAt: "2026-11-12T08:00:00.000Z"
+      expectedSubmissionVersion: 1
     };
     const response = await POST(request(input), context);
 
