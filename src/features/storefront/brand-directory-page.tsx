@@ -57,7 +57,7 @@ function BrandCard({ brand, index, locale }: { brand: Brand; index: number; loca
         <BrandEmblem name={brand.name} logoUrl={brand.logoUrl} palette={palette} />
         <span className="grid h-9 w-9 place-items-center rounded-full border border-stone-200 bg-white text-stone-500 shadow-sm transition group-hover:border-orange-200 group-hover:bg-orange-500 group-hover:text-white">
           <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-            <path d={locale === "ar" ? "M4 10h11M10 5l5 5-5 5" : "M5 10h11M11 5l5 5-5 5"} />
+            <path d={locale === "ar" ? "M16 10H5m5-5-5 5 5 5" : "M5 10h11m-5-5 5 5-5 5"} />
           </svg>
         </span>
       </div>
