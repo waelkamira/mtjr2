@@ -404,7 +404,7 @@ test.describe("admin seller payout verification", () => {
     await page.getByRole("button", { name: /Verified|تم التحقق/i }).click();
     const verifiedCard = page.locator("article").filter({ hasText: "E2E Demo Bank" }).first();
     await expect(verifiedCard).toBeVisible();
-    await expect(verifiedCard.getByText(/VERIFIED/)).toBeVisible();
+    await expect(verifiedCard.getByText(/Verified|تم التحقق/i)).toBeVisible();
     await expect(verifiedCard.getByText(/Verified at|تاريخ التحقق/i)).toBeVisible();
   });
 });
@@ -739,7 +739,7 @@ test.describe("Super Admin journey", () => {
     await page.goto("/admin/control-panel/privilege-requests");
     await page.getByRole("button", { name: /Approve & grant access|الموافقة ومنح الصلاحية/i }).first().click();
     await expect(page.getByRole("status")).toContainText(/Request approved|تمت الموافقة على الطلب ومنح صلاحية الوصول إلى المنصة/i);
-    await expect(page.getByText("APPROVED").first()).toBeVisible();
+    await expect(page.getByText(/Approved|تمت الموافقة/i).first()).toBeVisible();
 
     const auditResponse = await page.request.get("/api/admin/control-panel/audit-log?action=platform.privilege_request.created");
     expect(auditResponse.status()).toBe(200);
