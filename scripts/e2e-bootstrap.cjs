@@ -51,6 +51,45 @@ async function main() {
   });
   if (!store?.markets.length) throw new Error("Demo seller store has no enabled market.");
   const market = store.markets[0].market;
+
+  // Isolated balanced journal fixture for the platform-admin read-only ledger journey.
+  const ledgerCash = await prisma.ledgerAccount.upsert({
+    where: { scopeType_scopeId_code_currencyCode: {
+      scopeType: "GLOBAL", scopeId: "GLOBAL", code: "E2E-CASH", currencyCode: market.defaultCurrencyCode
+    } },
+    create: {
+      code: "E2E-CASH", name: "E2E Cash Account", accountType: "ASSET",
+      scopeType: "GLOBAL", scopeId: "GLOBAL", currencyCode: market.defaultCurrencyCode, isActive: true
+    },
+    update: { isActive: true }
+  });
+  const ledgerClearing = await prisma.ledgerAccount.upsert({
+    where: { scopeType_scopeId_code_currencyCode: {
+      scopeType: "GLOBAL", scopeId: "GLOBAL", code: "E2E-CLEARING", currencyCode: market.defaultCurrencyCode
+    } },
+    create: {
+      code: "E2E-CLEARING", name: "E2E Clearing Account", accountType: "LIABILITY",
+      scopeType: "GLOBAL", scopeId: "GLOBAL", currencyCode: market.defaultCurrencyCode, isActive: true
+    },
+    update: { isActive: true }
+  });
+  const ledgerJournal = await prisma.journalEntry.findUnique({ where: { idempotencyKey: "e2e-ledger-read-only" }, select: { id: true } });
+  if (!ledgerJournal) {
+    await prisma.journalEntry.create({
+      data: {
+        idempotencyKey: "e2e-ledger-read-only",
+        sourceType: "E2E_LEDGER",
+        sourceId: "ledger-read-only-fixture",
+        currencyCode: market.defaultCurrencyCode,
+        description: "E2E ledger sample entry",
+        occurredAt: now,
+        lines: { create: [
+          { accountId: ledgerCash.id, lineNumber: 1, debitMinor: 12345n, creditMinor: 0n, memo: "E2E sample debit" },
+          { accountId: ledgerClearing.id, lineNumber: 2, debitMinor: 0n, creditMinor: 12345n, memo: "E2E sample credit" }
+        ] }
+      }
+    });
+  }
   const payoutCountry = await prisma.country.findUnique({
     where: { id: market.countryId },
     select: { iso2: true }
