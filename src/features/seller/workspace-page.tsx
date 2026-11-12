@@ -86,6 +86,16 @@ async function readJson<T>(response: Response): Promise<T> {
   return body as T;
 }
 
+function safeStoreImagePreviewUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== "https:" || url.username || url.password) return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
 async function loadStoreInventory(storeId: string): Promise<InventoryRow[]> {
   const rows: InventoryRow[] = [];
   const seenCursors = new Set<string>();
@@ -764,6 +774,9 @@ export default function SellerWorkspacePage() {
     { id: "seller-application-step-online", label: translate(locale, "Online profile", "الحضور الرقمي"), icon: "globe" as const }
   ];
 
+  const previewBannerUrl = safeStoreImagePreviewUrl(editingStoreBannerUrl);
+  const previewLogoUrl = safeStoreImagePreviewUrl(editingStoreLogoUrl);
+
     if (!loading && workspace?.seller?.status === "PENDING") {
     const application = workspace.seller;
     return (
@@ -1321,8 +1334,8 @@ export default function SellerWorkspacePage() {
                       <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Store logo image URL", "رابط شعار المتجر")}<input type="url" maxLength={2048} value={editingStoreLogoUrl} onChange={(event) => setEditingStoreLogoUrl(event.target.value)} placeholder="https://…" className="rounded-xl border border-white bg-white/80 px-3 py-2.5 text-sm font-normal text-[#46516b]" /></label>
                       <label className="grid gap-1 text-xs font-semibold">{translate(locale, "Store banner image URL", "رابط غلاف المتجر")}<input type="url" maxLength={2048} value={editingStoreBannerUrl} onChange={(event) => setEditingStoreBannerUrl(event.target.value)} placeholder="https://…" className="rounded-xl border border-white bg-white/80 px-3 py-2.5 text-sm font-normal text-[#46516b]" /></label>
                       {(editingStoreLogoUrl.trim() || editingStoreBannerUrl.trim()) && <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
-                        {editingStoreBannerUrl.trim() && <div className="overflow-hidden rounded-xl border border-white bg-white/60"><p className="px-3 py-2 text-[10px] font-bold text-[#918a84]">{translate(locale, "Banner preview", "معاينة الغلاف")}</p><img src={editingStoreBannerUrl} alt={translate(locale, "Store banner preview", "معاينة غلاف المتجر")} referrerPolicy="no-referrer" className="h-28 w-full object-cover" /></div>}
-                        {editingStoreLogoUrl.trim() && <div className="flex items-center gap-3 rounded-xl border border-white bg-white/60 p-3"><img src={editingStoreLogoUrl} alt={translate(locale, "Store logo preview", "معاينة شعار المتجر")} referrerPolicy="no-referrer" className="h-16 w-16 rounded-xl object-cover" /><span className="text-xs font-semibold text-[#454545]">{translate(locale, "Logo preview", "معاينة الشعار")}</span></div>}
+                        {previewBannerUrl && <div className="overflow-hidden rounded-xl border border-white bg-white/60"><p className="px-3 py-2 text-[10px] font-bold text-[#918a84]">{translate(locale, "Banner preview", "معاينة الغلاف")}</p><img src={previewBannerUrl} alt={translate(locale, "Store banner preview", "معاينة غلاف المتجر")} referrerPolicy="no-referrer" className="h-28 w-full object-cover" /></div>}
+                        {previewLogoUrl && <div className="flex items-center gap-3 rounded-xl border border-white bg-white/60 p-3"><img src={previewLogoUrl} alt={translate(locale, "Store logo preview", "معاينة شعار المتجر")} referrerPolicy="no-referrer" className="h-16 w-16 rounded-xl object-cover" /><span className="text-xs font-semibold text-[#454545]">{translate(locale, "Logo preview", "معاينة الشعار")}</span></div>}
                       </div>}
                       <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
                         <label className="grid gap-2 rounded-2xl border border-white bg-white/65 p-3 text-xs font-bold text-[#46516b]">{translate(locale, "Upload store logo", "رفع شعار المتجر")}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={Boolean(storeMediaUploading)} onChange={(event) => uploadStoreImage(event, "logo")} className="block w-full text-xs file:me-3 file:rounded-full file:border-0 file:bg-[#d8e9ee] file:px-3 file:py-2 file:font-bold file:text-[#454545]" />{storeMediaUploading === "logo" && <span className="text-[#77716c]">{translate(locale, "Uploading logo…", "جارٍ رفع الشعار…")}</span>}<button type="button" onClick={() => { setEditingStoreLogoUrl(""); setEditingStoreLogoStorageKey(""); setStoreLogoDeleteToken(""); }} className="justify-self-start text-[11px] font-bold text-[#89546a] underline">{translate(locale, "Remove logo from store profile", "إزالة الشعار من ملف المتجر")}</button></label>
