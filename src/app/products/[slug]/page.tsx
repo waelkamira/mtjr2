@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) notFound();
 
   const launchMarket = await getActiveMarketByCode("SY-SYR");
-  const marketId = launchMarket?.id ?? product.variants.flatMap((variant) => variant.prices).find((price) => price.marketId)?.marketId;
+  const marketId = launchMarket?.id;
   let sponsored: Awaited<ReturnType<typeof listSponsoredCampaigns>> = [];
   if (marketId) {
     try {
