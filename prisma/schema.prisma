@@ -2742,6 +2742,8 @@ model FinancialPolicyRuleVersion {
   approvedAt         DateTime?
   approvedById       String?
   rejectionReason    String?            @db.VarChar(1000)
+  rejectedAt         DateTime?
+  rejectedById       String?
   createdById        String?
   createdAt          DateTime           @default(now())
   rule               FinancialPolicyRule @relation(fields: [ruleId], references: [id], onDelete: Restrict)
