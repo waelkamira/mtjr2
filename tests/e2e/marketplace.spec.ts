@@ -319,6 +319,10 @@ test.describe("seller catalog authoring", () => {
     expect(approvalResult.status).toBe(200);
     expect(approvalResult.body).toMatchObject({ productId: created!.id, approvalStatus: "APPROVED" });
 
+    // Approval alone must not expose an unpublished draft to public discovery.
+    const approvedButUnpublished = await page.request.get(`/api/products/${encodeURIComponent(`e2e-seller-draft-updated-${stamp}`)}?locale=en`);
+    expect(approvedButUnpublished.status()).toBe(404);
+
     await signIn(page, sessions.seller);
     await page.goto("/seller/products");
     const approvedProductCard = page.locator("article").filter({ hasText: updatedName }).first();
