@@ -194,7 +194,7 @@ export default function AdminUserDetailPage({ userId }: { userId: string }) {
       <Link href="/admin/users" className="text-sm font-semibold text-[var(--color-copper-600)] underline">← {translate(locale, "Users", "المستخدمون")}</Link>
       <header className="mt-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Account administration", "إدارة الحساب")}</p><h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{user.displayName || user.email}</h1><p className="mt-1 text-sm text-[var(--muted)]">{user.email} · {user.id}</p></div><StatusBadge locale={locale} status={user.status} /></header>
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
-      {message && <p role="status" className="mt-4 rounded-xl bg-green-50 p-4 text-sm text-green-800">{message}</p>}
+      {message && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{message}</p>}
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Info label={translate(locale, "Last sign-in", "آخر تسجيل دخول")} value={user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : translate(locale, "Never", "أبدًا")} />
         <Info label={translate(locale, "Account created", "تاريخ إنشاء الحساب")} value={new Date(user.createdAt).toLocaleString()} />
