@@ -158,8 +158,9 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
             type="button"
             onClick={() => setCollapsed((value) => !value)}
             className="hidden rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-[#E8750A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 lg:block"
-            aria-label={translate(locale, "Collapse sidebar", "طي القائمة")}
-            title={translate(locale, "Collapse sidebar", "طي القائمة")}
+            aria-label={translate(locale, collapsed ? "Expand sidebar" : "Collapse sidebar", collapsed ? "توسيع القائمة" : "طي القائمة")}
+            aria-expanded={!collapsed}
+            title={translate(locale, collapsed ? "Expand sidebar" : "Collapse sidebar", collapsed ? "توسيع القائمة" : "طي القائمة")}
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           </button>
