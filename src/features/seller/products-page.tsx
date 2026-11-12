@@ -863,6 +863,7 @@ export default function SellerProductsPage() {
                   })}
                 </div>
                 {categoryAttributes.filter((attribute) => attribute.variantLevel).length > 0 && <div className="grid gap-3 border-t border-[#eadfd5] pt-3 sm:grid-cols-2">
+                  <p className="flex items-center gap-2 text-xs font-extrabold text-[#5f5a55] sm:col-span-2"><SellerIcon name="tag" />{translate(locale, "Variant options", "خيارات المتغير")}</p>
                   {categoryAttributes.filter((attribute) => attribute.variantLevel).map((attribute) => {
                     const current = variant.optionValues[attribute.key];
                     const label = <span>{attribute.label}{attribute.required && <span className="ms-1 text-red-600">*</span>}</span>;
