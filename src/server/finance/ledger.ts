@@ -154,3 +154,51 @@ export async function listLedgerAccountEntries(input: {
     nextCursor: hasMore ? items[items.length - 1]?.id ?? null : null
   };
 }
+
+
+/** Lists ledger accounts for an authorized administrative read-only view. */
+export async function listLedgerAccounts(input: {
+  query?: string;
+  currencyCode?: string;
+  accountType?: "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
+  isActive?: boolean;
+  take?: number;
+  cursor?: string;
+}) {
+  const schema = z.object({
+    query: z.string().trim().max(120).optional(),
+    currencyCode: z.string().trim().length(3).transform((value) => value.toUpperCase()).optional(),
+    accountType: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]).optional(),
+    isActive: z.boolean().optional(),
+    take: z.number().int().min(1).max(100).default(100),
+    cursor: z.string().trim().min(1).max(128).optional()
+  }).strict();
+  const data = schema.parse(input);
+  const rows = await prisma.ledgerAccount.findMany({
+    where: {
+      ...(data.currencyCode ? { currencyCode: data.currencyCode } : {}),
+      ...(data.accountType ? { accountType: data.accountType } : {}),
+      ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+      ...(data.query ? {
+        OR: [
+          { code: { contains: data.query, mode: "insensitive" } },
+          { name: { contains: data.query, mode: "insensitive" } },
+          { scopeId: { contains: data.query, mode: "insensitive" } }
+        ]
+      } : {})
+    },
+    take: data.take + 1,
+    ...(data.cursor ? { cursor: { id: data.cursor }, skip: 1 } : {}),
+    orderBy: [{ currencyCode: "asc" }, { code: "asc" }, { id: "asc" }],
+    select: {
+      id: true, code: true, name: true, accountType: true,
+      scopeType: true, scopeId: true, currencyCode: true, isActive: true
+    }
+  });
+  const hasMore = rows.length > data.take;
+  const items = rows.slice(0, data.take);
+  return {
+    items,
+    nextCursor: hasMore ? items[items.length - 1]?.id ?? null : null
+  };
+}
