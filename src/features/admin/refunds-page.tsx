@@ -51,7 +51,7 @@ export default function AdminRefundsPage() {
   const visibleCandidates = useMemo(() => candidates.filter((item) => {
     const needle = query.trim().toLocaleLowerCase();
     const matchesQuery = !needle || [item.returnNumber, item.orderNumber, item.provider || ""].some((value) => value.toLocaleLowerCase().includes(needle));
-    return matchesQuery && (!statusFilter || (statusFilter === "ELIGIBLE" ? item.eligible : !item.eligible));
+    return matchesQuery && (!statusFilter || (statusFilter === "ELIGIBLE" ? item.eligible : statusFilter === "INELIGIBLE" ? !item.eligible : true));
   }), [candidates, query, statusFilter]);
   const visibleRefunds = useMemo(() => refunds.filter((item) => {
     const needle = query.trim().toLocaleLowerCase();
