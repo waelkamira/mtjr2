@@ -18,6 +18,7 @@ function rule(overrides: Partial<FinancialPolicyRule<{ holdDays: number }>> = {}
     id: "platform-default", version: 1, domain: context.domain,
     classification: "PLATFORM", approval: "APPROVED", value: { holdDays: 14 },
     effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveUntil: null,
+    sourceReference: "https://legal.example/rule", reviewedAt: new Date("2026-01-02T00:00:00.000Z"),
     ...overrides
   };
 }
@@ -64,7 +65,7 @@ describe("jurisdiction-aware financial policy resolver", () => {
     expect(resolveFinancialPolicy([rule()], { ...context, currencyCode: "EURO" }, at).status).toBe("UNSUPPORTED");
   });
 
-  it("does not apply a legal rule that is not explicitly country-scoped", () => {
+  it("requires legal source evidence and an explicit country scope", () => {
     const unscopedLegal = rule({ id: "invalid-legal", classification: "LEGAL" });
     expect(resolveFinancialPolicy([unscopedLegal], context, at).status).toBe("MISSING_CONFIGURATION");
   });
