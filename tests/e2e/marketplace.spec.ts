@@ -301,14 +301,11 @@ test.describe("seller catalog authoring", () => {
     expect(approvalResult.body).toMatchObject({ productId: created!.id, approvalStatus: "APPROVED" });
 
     await signIn(page, sessions.seller);
-    const publishResult = await page.evaluate(async (productId) => {
-      const response = await fetch(`/api/products/${encodeURIComponent(productId)}/publish`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
-      });
-      return { status: response.status, body: await response.json() };
-    }, created!.id);
-    expect(publishResult.status).toBe(200);
-    expect(publishResult.body).toMatchObject({ productId: created!.id, status: "ACTIVE" });
+    await page.goto("/seller/products");
+    const approvedProductCard = page.locator("article").filter({ hasText: updatedName }).first();
+    await expect(approvedProductCard.getByRole("button", { name: /Publish|نشر/i })).toBeVisible();
+    await approvedProductCard.getByRole("button", { name: /Publish|نشر/i }).click();
+    await expect(page.getByRole("status")).toContainText(/Product published|تم نشر المنتج/i, { timeout: 20000 });
 
     const publicProductResponse = await page.request.get(`/api/products/${encodeURIComponent(`e2e-seller-draft-updated-${stamp}`)}?locale=en`);
     expect(publicProductResponse.status()).toBe(200);
