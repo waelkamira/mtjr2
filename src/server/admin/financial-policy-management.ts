@@ -230,7 +230,7 @@ export async function transitionFinancialPolicyVersion(versionId: string, input:
       data: auditData(actor.userId, `finance.policy_version.${action.action.toLowerCase()}`, id, {
         key: version.rule.key, domain: version.rule.domain, action: action.action,
         previousStatus: version.approvalStatus, nextStatus: updated.approvalStatus,
-        notes: action.notes ?? null, sourceReferenceProvided: Boolean(action.sourceReference)
+        notes: action.notes ?? null, sourceReferencePresent: Boolean(version.sourceReference)
       }, now)
     });
     return updated;
