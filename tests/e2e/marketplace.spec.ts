@@ -216,6 +216,30 @@ test.describe("seller onboarding journey", () => {
     }, stamp);
     expect(application.status, JSON.stringify(application.body)).toBe(201);
     expect(application.body).toMatchObject({ status: "PENDING", alreadySubmitted: false });
+
+    const applicationReplay = await page.evaluate(async (stamp) => {
+      const response = await fetch("/api/seller/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          legalName: `E2E Seller Applicant ${stamp}`,
+          displayName: `E2E Applicant ${stamp}`,
+          contactName: "E2E Contact",
+          contactEmail: "e2e-seller-applicant@mtjr2.test",
+          phoneNumber: "+33123456789",
+          residence: "Strasbourg, France",
+          businessType: "INDIVIDUAL",
+          sellingCategories: "Home and lifestyle",
+          intendedProducts: "Household products with documented sourcing and fulfilment plans for this isolated test.",
+          latitude: 48.5734,
+          longitude: 7.7521
+        })
+      });
+      return { status: response.status, body: await response.json() };
+    }, stamp);
+    expect(applicationReplay.status).toBe(200);
+    expect(applicationReplay.body).toMatchObject({ alreadySubmitted: true });
+
     const sellerId = (application.body as { sellerId: string }).sellerId;
     expect(sellerId).toBeTruthy();
 
