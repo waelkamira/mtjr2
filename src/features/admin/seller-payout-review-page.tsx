@@ -17,7 +17,7 @@ type PayoutMethod = {
   isDefault: boolean;
   verifiedAt: string | null;
   createdAt: string;
-  updatedAt: string;
+  submissionVersion: number;
   seller: {
     displayName: string | null;
     legalName: string | null;
@@ -129,7 +129,7 @@ export default function SellerPayoutReviewPage() {
       const response = await fetch("/api/admin/seller-payout-methods/" + encodeURIComponent(item.id) + "/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decision, evidenceReference, reason, expectedUpdatedAt: item.updatedAt }),
+        body: JSON.stringify({ decision, evidenceReference, reason, expectedSubmissionVersion: item.submissionVersion }),
         cache: "no-store"
       });
       if (response.status === 428) {
