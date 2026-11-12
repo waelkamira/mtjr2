@@ -40,6 +40,10 @@ const statusArabic: Record<string, string> = {
   IN_PROGRESS: "قيد التنفيذ", PACKING: "قيد التجهيز", PAYMENT_FAILED: "فشل الدفع",
   PAYMENT_REVIEW: "مراجعة الدفع", REQUIRES_ACTION: "يتطلب إجراءً", DUE: "مستحق",
   AWAITING_APPROVAL: "بانتظار الموافقة", PENDING_APPROVAL: "بانتظار الموافقة",
+  CONSUMED: "تم الاستهلاك", MERGED: "تم الدمج", CHECKED_OUT: "تم إتمام الشراء", ABANDONED: "متروك",
+  DISMISSED: "تم إغلاق البلاغ دون إجراء", ACTIONED: "تم اتخاذ إجراء", UPHELD: "تم تأييد القرار",
+  RESTORED: "تمت الاستعادة", REVIEWED: "تمت المراجعة", RETRY: "إعادة المحاولة", SENT: "تم الإرسال",
+  PENDING_SCAN: "بانتظار الفحص", CLEAN: "اجتاز الفحص", CONFIGURED: "تم الإعداد", VOID: "ملغاة",
   REFUND_REJECTED: "رُفض رد المبلغ", READY: "جاهز"
 };
 
