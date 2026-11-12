@@ -37,6 +37,8 @@ CREATE TABLE "FinancialPolicyRuleVersion" (
   "approvedAt" TIMESTAMP(3),
   "approvedById" TEXT,
   "rejectionReason" VARCHAR(1000),
+  "rejectedAt" TIMESTAMP(3),
+  "rejectedById" TEXT,
   "createdById" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "FinancialPolicyRuleVersion_pkey" PRIMARY KEY ("id"),
