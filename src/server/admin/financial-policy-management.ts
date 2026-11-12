@@ -110,12 +110,12 @@ export async function createFinancialPolicyVersion(input: unknown, now = new Dat
       if (!country) throw new Error("Country code is not configured.");
     }
     if (data.marketCode) {
-      const market = await tx.market.findUnique({ where: { code: data.marketCode }, select: { code: true, country: { select: { iso2: true } } } });
+      const market = await tx.market.findUnique({ where: { code: data.marketCode }, select: { id: true, code: true, country: { select: { iso2: true } } } });
       if (!market) throw new Error("Market code is not configured.");
       if (data.countryCode && market.country.iso2 !== data.countryCode) throw new Error("Market does not belong to the selected country.");
       if (data.currencyCode) {
         const marketCurrency = await tx.marketCurrency.findUnique({
-          where: { marketId_currencyCode: { marketId: market.code ? (await tx.market.findUniqueOrThrow({ where: { code: market.code }, select: { id: true } })).id : "", currencyCode: data.currencyCode } },
+          where: { marketId_currencyCode: { marketId: market.id, currencyCode: data.currencyCode } },
           select: { isEnabled: true }
         });
         if (!marketCurrency?.isEnabled) throw new Error("Currency is not enabled for the selected market.");
