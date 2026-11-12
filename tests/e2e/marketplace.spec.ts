@@ -232,6 +232,16 @@ test.describe("seller catalog authoring", () => {
     await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
     await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
 
+    // Exercise a partial Syria location: the picker retains a governorate label
+    // before a locality is selected, but the strict product API accepts only
+    // canonical location fields and the locality relation.
+    const governoratesResponse = await page.request.get("/api/geography/governorates");
+    expect(governoratesResponse.status()).toBe(200);
+    const governorates = await governoratesResponse.json() as { items: Array<{ id: string; nameAr: string | null; nameEn: string }> };
+    const damascus = governorates.items.find((item) => item.nameAr === "دمشق" || item.nameEn.toLowerCase() === "damascus");
+    expect(damascus).toBeTruthy();
+    await page.getByLabel(/Governorate|المحافظة/i).selectOption(damascus!.id);
+
     const priceInputs = page.getByLabel(/Selling price|سعر البيع/i);
     await expect(priceInputs.first()).toBeVisible();
     for (let index = 0; index < await priceInputs.count(); index += 1) {
