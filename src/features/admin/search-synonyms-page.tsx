@@ -4,7 +4,6 @@ import { StatusBadge } from "@/components/status-badge";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
-import Link from "next/link";
 import { toast } from "sonner";
 
 type Synonym = { id: string; locale: string; term: string; synonym: string; isActive: boolean };
@@ -56,8 +55,8 @@ export default function AdminSearchSynonymsPage() {
       }));
       setTerm("");
       setSynonym("");
-      setMessage("Synonym mapping created.");
-      toast.success("Synonym mapping created.");
+      setMessage(t("Synonym mapping created.", "تمت إضافة المرادف."));
+      toast.success(t("Synonym mapping created.", "تمت إضافة المرادف."));
       await load();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Unable to create synonym mapping."; setError(message); toast.error(message);
@@ -77,8 +76,8 @@ export default function AdminSearchSynonymsPage() {
         body: JSON.stringify({ isActive })
       }));
       await load();
-      setMessage(isActive ? "Synonym mapping activated." : "Synonym mapping deactivated.");
-      toast.success(isActive ? "Synonym mapping activated." : "Synonym mapping deactivated.");
+      setMessage(isActive ? t("Synonym mapping activated.", "تم تفعيل المرادف.") : t("Synonym mapping deactivated.", "تم تعطيل المرادف."));
+      toast.success(isActive ? t("Synonym mapping activated.", "تم تفعيل المرادف.") : t("Synonym mapping deactivated.", "تم تعطيل المرادف."));
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Unable to update synonym mapping."; setError(message); toast.error(message);
     } finally {
@@ -93,8 +92,8 @@ export default function AdminSearchSynonymsPage() {
     try {
       await readJson(await fetch(`/api/admin/search-synonyms/${encodeURIComponent(item.id)}`, { method: "DELETE" }));
       await load();
-      setMessage("Synonym mapping deleted.");
-      toast.success("Synonym mapping deleted.");
+      setMessage(t("Synonym mapping deleted.", "تم حذف المرادف."));
+      toast.success(t("Synonym mapping deleted.", "تم حذف المرادف."));
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Unable to delete synonym mapping."; setError(message); toast.error(message);
     } finally {
@@ -103,26 +102,20 @@ export default function AdminSearchSynonymsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-[var(--border)] bg-white px-5 py-5">
-        <div className="mx-auto flex max-w-5xl justify-between">
-          <Link href="/" className="text-xl font-semibold text-[var(--color-forest-950)]">mtjr<span className="text-[var(--color-copper-600)]">.</span></Link>
-          <nav className="flex gap-4 text-sm"><Link href="/admin/review">{t("Admin", "الإدارة")}</Link><Link href="/admin/tax-rates">{t("Tax rules", "قواعد الضرائب")}</Link></nav>
-        </div>
-      </header>
-      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-5 sm:py-10">
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{t("Platform administration", "إدارة المنصة")}</p>
-        <h1 className="mt-2 text-3xl font-semibold text-[var(--color-forest-950)]">{t("Search synonyms", "مرادفات البحث")}</h1>
+    <main dir={uiLocale === "ar" ? "rtl" : "ltr"} className="mx-auto min-h-screen w-full max-w-[1600px] bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <p className="text-sm font-semibold text-[var(--color-orange-600)]">{t("Catalog & discovery", "الكتالوج والاكتشاف")}</p>
+        <h1 className="mt-1 text-3xl font-bold text-[var(--color-ink-950)]">{t("Search synonyms", "مرادفات البحث")}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{t("Manage locale-specific equivalent search terms. Active mappings expand public product searches and autocomplete; terms are matched case-insensitively.", "أدر مصطلحات البحث المكافئة لكل لغة. توسّع المطابقات النشطة نتائج البحث العام واقتراحات الإكمال التلقائي، وتتم مطابقة المصطلحات دون تمييز حالة الأحرف.")}</p>
         {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
         {message && <p role="status" className="mt-5 rounded-xl bg-[var(--color-sage-100)] p-3 text-sm">{message}</p>}
-        <form onSubmit={create} className="mt-7 grid gap-4 rounded-3xl border border-[var(--border)] bg-white p-6 sm:grid-cols-3">
-          <label className="grid gap-2 text-sm">{t("Locale", "اللغة")}<input required minLength={2} maxLength={16} pattern="[A-Za-z0-9-]+" value={locale} onChange={(event) => setLocale(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
+        <form onSubmit={create} className="mt-7 grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-clay-raised sm:grid-cols-3">
+          <label className="grid gap-2 text-sm">{t("Locale", "اللغة")}<input required minLength={2} maxLength={16} pattern="[A-Za-z0-9-]+" value={locale} onChange={(event) => setLocale(event.target.value)} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--color-ink-950)] shadow-sm outline-none focus:border-[var(--color-orange-500)] focus:ring-2 focus:ring-orange-100" /></label>
           <label className="grid gap-2 text-sm">{t("Search term", "مصطلح البحث")}<input required minLength={2} maxLength={160} value={term} onChange={(event) => setTerm(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
           <label className="grid gap-2 text-sm">{t("Synonym", "المرادف")}<input required minLength={2} maxLength={160} value={synonym} onChange={(event) => setSynonym(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
-          <button disabled={busy} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 sm:col-span-3">{busy ? "Saving…" : "Add synonym mapping"}</button>
+          <button disabled={busy} className="rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 sm:col-span-3">{busy ? t("Saving…", "جارٍ الحفظ…") : t("Add synonym mapping", "إضافة مرادف")}</button>
         </form>
-        <section className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-6">
+        <section className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <h2 className="text-lg font-semibold">{t("Configured mappings", "المرادفات المهيأة")}</h2>
           {loading ? <p className="py-5 text-sm text-[var(--muted)]" role="status">{t("Loading mappings…", "جارٍ تحميل المرادفات…")}</p> : items.length ? (
             <div className="mt-4 divide-y divide-[var(--border)]">{items.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0">
