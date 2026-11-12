@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
-import { translate } from "@/lib/locale";
+import { translate, translateStatus } from "@/lib/locale";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Profile = { id: string; email: string; displayName: string | null; status: string; createdAt: string };
@@ -153,7 +153,7 @@ export default function ProfilePage() {
             </div>
             <div className=" grid gap-4 md:grid-cols-2">
               <MetricBarChart variant="donut" title="Orders by status" rows={analytics.orderStatuses.map((row, index) => ({
-                label: row.status.replaceAll("_", " ").toLowerCase(),
+                label: translateStatus(locale, row.status),
                 value: row.count,
                 color: orderColors[index % orderColors.length]
               }))} />
