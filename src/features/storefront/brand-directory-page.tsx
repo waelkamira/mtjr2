@@ -90,24 +90,37 @@ export default function BrandDirectoryPage() {
   const [totalBrands, setTotalBrands] = useState(0);
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/brands?locale=" + locale + "&limit=100", { signal: controller.signal })
+    // Ignore stale responses when the locale changes or the page unmounts.
+    // Avoid aborting the request during React Strict Mode cleanup: some
+    // fetch/runtime combinations surface that cancellation as an uncaught
+    // AbortError in the Next.js development overlay.
+    let isCurrent = true;
+
+    setLoading(true);
+    setError("");
+
+    fetch("/api/brands?locale=" + locale + "&limit=100")
       .then(async (response) => {
         if (!response.ok) throw new Error(t("Brands could not be loaded.", "تعذّر تحميل العلامات التجارية."));
         return response.json() as Promise<BrandResponse>;
       })
       .then((result) => {
-        setItems(Array.isArray(result.items) ? result.items : []);
-        setTotalBrands(typeof result.pagination?.total === "number" ? result.pagination.total : (Array.isArray(result.items) ? result.items.length : 0));
+        if (!isCurrent) return;
+        const brands = Array.isArray(result.items) ? result.items : [];
+        setItems(brands);
+        setTotalBrands(typeof result.pagination?.total === "number" ? result.pagination.total : brands.length);
       })
       .catch((cause: unknown) => {
-        if (cause instanceof Error && cause.name === "AbortError") return;
+        if (!isCurrent) return;
         setError(cause instanceof Error ? cause.message : t("Brands are unavailable.", "العلامات التجارية غير متاحة."));
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (isCurrent) setLoading(false);
       });
-    return () => controller.abort();
+
+    return () => {
+      isCurrent = false;
+    };
   }, [locale, t]);
 
   return (
