@@ -56,7 +56,7 @@ export default function ProductDetail({ initialProduct, initialMarketId, initial
   const [sponsored, setSponsored] = useState<ProductDetailInitialSponsored[]>(initialSponsored);
   const [selectedVariant, setSelectedVariant] = useState(initialProduct.variants[0]?.id ?? "");
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(Math.max(0, initialProduct.media.findIndex((item) => item.isPrimary)));
-  const [selectedMarketId] = useState(initialMarketId || initialProduct.variants[0]?.prices[0]?.marketId || "");
+  const [selectedMarketId] = useState(initialMarketId);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
