@@ -573,12 +573,145 @@ async function seedOrdersAndEngagement(owner, store, market, usd, products) {
   return { createdOrders, customers };
 }
 
+
+async function seedSellerCommunications(owner, store, market, usd, products, customers, categories) {
+  const now = new Date();
+
+  // In-app notifications: no email delivery records are created by demo data.
+  const notificationRows = [
+    ["ORDER_RECEIVED", "طلب جديد بانتظار المعالجة", "لديك طلب تجريبي جديد يحتاج إلى مراجعة.", "VendorOrder", "DEMO-SYR-00001"],
+    ["RETURN_REQUESTED", "طلب إرجاع جديد", "يوجد طلب إرجاع تجريبي بانتظار المراجعة.", "ReturnRequest", "DEMO-SYR-RET-0001"],
+    ["LOW_STOCK", "تنبيه مخزون منخفض", "أحد المنتجات التجريبية وصل إلى حد إعادة الطلب.", "Inventory", "RAMOND-SY-LOW-STOCK"],
+    ["PRODUCT_QUESTION", "سؤال جديد عن منتج", "يوجد سؤال تجريبي جديد من أحد العملاء.", "ProductQuestion", "RAMOND-SY-QUESTION"],
+    ["STORE_REVIEW", "تقييم جديد للمتجر", "تمت إضافة تقييم تجريبي إلى متجرك.", "StoreReview", "RAMOND-SY-REVIEW"],
+  ];
+  for (let index = 0; index < notificationRows.length; index += 1) {
+    const [type, title, message, resourceType, resourceId] = notificationRows[index];
+    const key = "syria-seller-demo:notification:" + String(index + 1).padStart(3, "0");
+    await prisma.notification.upsert({
+      where: { deduplicationKey: key },
+      create: {
+        userId: owner.id, type, title, message, resourceType, resourceId,
+        deduplicationKey: key,
+        readAt: index === 0 ? null : new Date(now.getTime() - index * 60 * 60 * 1000),
+      },
+      update: { title, message, resourceType, resourceId },
+    });
+  }
+  for (const type of ["ORDER", "INVENTORY", "RETURNS", "REVIEWS", "QUESTIONS", "MESSAGES", "SYSTEM"]) {
+    await prisma.notificationPreference.upsert({
+      where: { userId_type: { userId: owner.id, type } },
+      create: { userId: owner.id, type, inAppEnabled: true, emailEnabled: false },
+      update: { inAppEnabled: true },
+    });
+  }
+
+  // Seller/customer conversations for the store inbox.
+  const conversationDefinitions = [
+    { customer: customers[0], subject: "استفسار عن موعد توصيل الطلب", body: "مرحباً، هل يمكن تأكيد موعد التوصيل؟ هذه محادثة تجريبية." },
+    { customer: customers[1], subject: "السؤال عن توفر منتج", body: "هل يتوفر المنتج بلون آخر؟ هذه رسالة تجريبية." },
+    { customer: customers[2], subject: "متابعة طلب سابق", body: "أرغب بمتابعة حالة طلبي التجريبي." },
+  ];
+  for (const [index, definition] of conversationDefinitions.entries()) {
+    let conversation = await prisma.storeConversation.findFirst({
+      where: { customerId: definition.customer.id, storeId: store.id, subject: definition.subject },
+    });
+    if (!conversation) {
+      conversation = await prisma.storeConversation.create({
+        data: {
+          customerId: definition.customer.id, storeId: store.id, subject: definition.subject,
+          lastMessageAt: new Date(now.getTime() - index * 45 * 60 * 1000),
+        },
+      });
+    }
+    const customerMessage = await prisma.storeMessage.findFirst({
+      where: { conversationId: conversation.id, senderId: definition.customer.id, body: definition.body },
+    });
+    if (!customerMessage) {
+      await prisma.storeMessage.create({
+        data: { conversationId: conversation.id, senderId: definition.customer.id, body: definition.body },
+      });
+    }
+    if (index !== 1) {
+      const reply = "أهلاً بك، شكراً لتواصلك مع متجر راموند. هذه إجابة تجريبية يمكنك تعديلها.";
+      const sellerMessage = await prisma.storeMessage.findFirst({
+        where: { conversationId: conversation.id, senderId: owner.id, body: reply },
+      });
+      if (!sellerMessage) {
+        await prisma.storeMessage.create({
+          data: { conversationId: conversation.id, senderId: owner.id, body: reply },
+        });
+      }
+    }
+  }
+
+  // Support tickets are customer support examples, not real incidents.
+  const supportDefinitions = [
+    { status: "OPEN", priority: "HIGH", category: "ORDER", subject: "تأخر تحديث حالة طلب تجريبي", customer: customers[3] },
+    { status: "IN_PROGRESS", priority: "NORMAL", category: "PRODUCT", subject: "استفسار حول مواصفات منتج", customer: customers[4] },
+    { status: "WAITING_CUSTOMER", priority: "LOW", category: "OTHER", subject: "طلب توضيح بيانات التوصيل", customer: customers[5] },
+  ];
+  for (const [index, definition] of supportDefinitions.entries()) {
+    const ticketNumber = "DEMO-SYR-SUP-" + String(index + 1).padStart(4, "0");
+    let ticket = await prisma.supportTicket.findUnique({ where: { ticketNumber } });
+    if (!ticket) {
+      ticket = await prisma.supportTicket.create({
+        data: {
+          ticketNumber, customerId: definition.customer.id, assignedToId: owner.id,
+          subject: definition.subject, category: definition.category,
+          status: definition.status, priority: definition.priority,
+          lastMessageAt: new Date(now.getTime() - index * 2 * 60 * 60 * 1000),
+        },
+      });
+    }
+    const customerBody = "مرحباً، أحتاج إلى المساعدة بخصوص هذا الموضوع. هذه تذكرة دعم تجريبية.";
+    if (!(await prisma.supportMessage.findFirst({ where: { ticketId: ticket.id, senderId: definition.customer.id, body: customerBody } }))) {
+      await prisma.supportMessage.create({ data: { ticketId: ticket.id, senderId: definition.customer.id, body: customerBody } });
+    }
+    if (definition.status !== "OPEN") {
+      const reply = "تم استلام طلبك، ويجري التعامل معه ضمن بيانات الدعم التجريبية.";
+      if (!(await prisma.supportMessage.findFirst({ where: { ticketId: ticket.id, senderId: owner.id, body: reply } }))) {
+        await prisma.supportMessage.create({ data: { ticketId: ticket.id, senderId: owner.id, body: reply } });
+      }
+    }
+  }
+
+  // Draft campaigns are editable examples only. No impressions, clicks, spend,
+  // invoices, payment records, or advertising ledger entries are fabricated.
+  const campaignProducts = products.slice(0, 2);
+  for (const [index, entry] of campaignProducts.entries()) {
+    const title = index === 0 ? "حملة تجريبية — إبراز المنتجات" : "حملة تجريبية — عروض المتجر";
+    const existing = await prisma.adCampaign.findFirst({
+      where: { storeId: store.id, title },
+    });
+    const data = {
+      storeId: store.id, productId: entry.product.id, createdById: owner.id,
+      marketId: market.id, currencyCode: usd.code,
+      targetCategoryId: entry.category.id, targetKeywords: ["سوريا", "متجر راموند", "عرض تجريبي"],
+      budgetMinor: 2500n * 100n, dailyBudgetMinor: 250n * 100n, cpcBidMinor: 10n * 100n,
+      spentMinor: 0n, impressionCount: 0n, clickCount: 0n,
+      title, message: "مسودة تجريبية قابلة للتعديل قبل الإرسال للمراجعة.",
+      status: "DRAFT", startsAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+      endsAt: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000),
+    };
+    if (existing) await prisma.adCampaign.update({ where: { id: existing.id }, data });
+    else await prisma.adCampaign.create({ data });
+  }
+
+  return {
+    notifications: await prisma.notification.count({ where: { userId: owner.id, deduplicationKey: { startsWith: "syria-seller-demo:" } } }),
+    conversations: await prisma.storeConversation.count({ where: { storeId: store.id, subject: { contains: "تجريبي" } } }),
+    supportTickets: await prisma.supportTicket.count({ where: { ticketNumber: { startsWith: "DEMO-SYR-SUP-" } } }),
+    draftCampaigns: await prisma.adCampaign.count({ where: { storeId: store.id, title: { startsWith: "حملة تجريبية" }, status: "DRAFT" } }),
+  };
+}
+
 async function main() {
   assertSafeTarget();
   const { owner, store } = await seedSellerIdentityAndStore();
   const { market, syp, usd, warehouse } = await seedSyriaMarket(store);
   const { products, categories } = await seedCatalog(store, warehouse, market, syp, usd);
-  const { createdOrders } = await seedOrdersAndEngagement(owner, store, market, usd, products);
+  const { createdOrders, customers } = await seedOrdersAndEngagement(owner, store, market, usd, products);\n  const communications = await seedSellerCommunications(owner, store, market, usd, products, customers, categories);
 
   const categoryCounts = [];
   for (const [slug, category] of categories) {
@@ -615,7 +748,7 @@ async function main() {
     activeBrands: brandCount, activeProducts: productCount, productsPerCategory: categoryCounts,
     demoOrders: orderCount, pendingReturns: returnCount, lowStockVariants: lowStockCount,
     storeReviews: storeReviewCount, productQuestions: questionCount,
-    demoOrderRecordsCreatedThisRun: createdOrders.length,
+    demoOrderRecordsCreatedThisRun: createdOrders.length,\n    communications,
     note: "All DEMO-SYR orders, customers, reviews, questions and shipping records are test data. No payment, refund, payout or ledger records were created.",
   }, null, 2));
 }
