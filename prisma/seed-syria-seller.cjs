@@ -138,6 +138,10 @@ async function seedSyriaMarket(store) {
     create: { storeId: store.id, marketId: market.id, isEnabled: true },
     update: { isEnabled: true },
   });
+  await prisma.storeMarket.updateMany({
+    where: { storeId: store.id, marketId: { not: market.id } },
+    data: { isEnabled: false },
+  });
   const warehouse = await prisma.warehouse.upsert({
     where: { storeId_code: { storeId: store.id, code: "RAMOND-MAIN" } },
     create: { storeId: store.id, code: "RAMOND-MAIN", name: "مستودع راموند الرئيسي — دمشق", isActive: true },
@@ -370,7 +374,10 @@ async function seedOrdersAndEngagement(owner, store, market, usd, products) {
       include: { vendorOrders: { include: { items: true } } },
     });
     if (existing) {
-      if (existing.vendorOrders[0]) createdOrders.push({
+      if (!existing.vendorOrders[0] || !existing.vendorOrders[0].items[0]) {
+        throw new Error("Existing demo order " + orderNumber + " is incomplete. Review it before rerunning the seed.");
+      }
+      createdOrders.push({
         order: existing, vendorOrder: existing.vendorOrders[0],
         item: existing.vendorOrders[0].items[0], customer: customers[i],
       });
@@ -596,6 +603,12 @@ async function main() {
     prisma.productQuestion.count({ where: { product: { storeId: store.id } } }),
     prisma.inventoryMovement.count({ where: { inventory: { warehouse: { storeId: store.id } }, referenceType: "SYRIA_SELLER_DEMO_SEED" } }),
   ]);
+  if (orderCount !== 10) throw new Error("Expected 10 demo orders for the seller, found " + orderCount + ".");
+  if (returnCount !== 3) throw new Error("Expected 3 pending demo returns, found " + returnCount + ".");
+  if (lowStockCount < 8) throw new Error("Expected low-stock demo variants, found " + lowStockCount + ".");
+  if (storeReviewCount < 3 || productReviewCount < 3) throw new Error("Expected store and product review records.");
+  if (questionCount < 6) throw new Error("Expected at least 6 product questions.");
+
   console.log(JSON.stringify({
     status: "verified", seller: SELLER_EMAIL, store: store.slug, market: "SY-SYR",
     exchangeRateUsed: "1 USD = " + USD_TO_SYP + " SYP (seed reference only)",
