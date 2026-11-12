@@ -71,7 +71,7 @@ describe("financial policy administration and resolution preview", () => {
     mocks.requirePlatformManagement.mockResolvedValue({ userId: "admin-1" });
     mocks.versionFindMany.mockResolvedValue([version()]);
     mocks.versionFindUnique.mockResolvedValue({
-      ...version({ id: "version-to-approve", reviewedAt: new Date("2026-11-10T10:00:00.000Z"), reviewedById: "reviewer-1" }),
+      ...version({ id: "version-to-approve", approvalStatus: "PENDING_REVIEW", reviewedAt: new Date("2026-11-10T10:00:00.000Z"), reviewedById: "reviewer-1" }),
       createdById: "author-1",
       rule: { key: "SELLER_PAYOUT.HOLD_DAYS", domain: context.domain }
     });
