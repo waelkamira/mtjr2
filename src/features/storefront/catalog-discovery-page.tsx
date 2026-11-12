@@ -1,7 +1,7 @@
 import { listDiscoverableProducts } from "@/server/catalog/discovery";
 import { listActiveBrands, listActiveCategoryTree } from "@/server/catalog/taxonomy";
 import { listDiscoverableStores } from "@/server/marketplace/public-stores";
-import { listActiveMarkets } from "@/server/marketplace/market-query";
+import { getActiveMarketByCode } from "@/server/marketplace/market-query";
 import CatalogProductGrid from "@/features/storefront/catalog-product-grid";
 import CatalogListControls from "@/features/storefront/catalog-list-controls";
 import { getPreferredLocale } from "@/server/locale";
@@ -47,19 +47,22 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
   const categoryId = params.categoryId?.trim() || undefined;
   const brandId = params.brandId?.trim() || undefined;
   const storeId = params.storeId?.trim() || undefined;
-  const marketId = params.marketId?.trim() || undefined;
+
   const minPrice = params.minPrice?.trim() || undefined;
   const maxPrice = params.maxPrice?.trim() || undefined;
   const inStock = params.inStock === "true";
   const sort = params.sort === "newest" || params.sort === "name_asc" || params.sort === "name_desc"
     ? params.sort
     : q ? "relevance" : "newest";
-  const markets = await listActiveMarkets();
-  const selectedMarket = markets.find((market) => market.id === marketId);
-  // Price ranges are meaningful only within one market and currency. When a
-  // market is selected, use its configured default currency unless overridden.
-  const currencyCode = marketId
-    ? params.currencyCode?.trim().toUpperCase() || selectedMarket?.defaultCurrency.code
+  // Matjar currently serves Syria only. Resolve the Syrian market centrally;
+  // customers no longer need to choose a market before filtering prices.
+  const selectedMarket = await getActiveMarketByCode("SY-SYR");
+  const marketId = selectedMarket?.id;
+  const requestedCurrencyCode = params.currencyCode?.trim().toUpperCase();
+  const currencyCode = selectedMarket
+    ? (selectedMarket.currencies.some(({ currency }) => currency.code === requestedCurrencyCode)
+        ? requestedCurrencyCode
+        : selectedMarket.defaultCurrency.code)
     : undefined;
   const selectedCurrency = selectedMarket?.currencies.find(({ currency }) => currency.code === currencyCode)?.currency;
   const [result, categories, brands, stores] = await Promise.all([
@@ -68,7 +71,7 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
     listActiveBrands({ page: 1, limit: 100, locale }),
     listDiscoverableStores({ page: 1, limit: 100 })
   ]);
-  const sponsored = await listSponsoredCampaigns({ marketId: marketId ?? markets[0]?.id, categoryId, brandId, query: q, limit: 4 });
+  const sponsored = await listSponsoredCampaigns({ marketId, categoryId, brandId, query: q, limit: 4 });
   const filters = {
     ...(categoryId ? { categoryId } : {}),
     ...(brandId ? { brandId } : {}),
@@ -114,13 +117,10 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
             {t("Store / vendor", "المتجر / البائع")}
             <select name="storeId" defaultValue={storeId ?? ""} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100"><option value="">{t("All stores", "كل المتاجر")}</option>{stores.items.map((item) => <option key={item.id} value={item.id}>{item.name}{item.sellerDisplayName ? ` — ${item.sellerDisplayName}` : ""}</option>)}</select>
           </label>
-          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
-            {t("Market", "السوق")}
-            <select name="marketId" defaultValue={marketId ?? ""} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100"><option value="">{t("All active markets", "كل الأسواق النشطة")}</option>{markets.map((market) => <option key={market.id} value={market.id}>{market.name} · {market.country.name}</option>)}</select>
-          </label>
+          {marketId ? <input type="hidden" name="marketId" value={marketId} /> : null}
           <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-[var(--color-ink-800)]">
             {t("Currency", "العملة")}
-            <select name="currencyCode" defaultValue={currencyCode ?? ""} disabled={!selectedMarket} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500"><option value="">{t("Default currency", "العملة الافتراضية")}</option>{selectedMarket?.currencies.map(({ currency }) => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select>
+            <select name="currencyCode" defaultValue={currencyCode ?? ""} disabled={!selectedCurrency} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500"><option value="">{t("Default currency", "العملة الافتراضية")}</option>{selectedMarket?.currencies.map(({ currency }) => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select>
           </label>
 
           <div className="grid min-w-0 gap-1.5 sm:col-span-2">
@@ -135,7 +135,7 @@ export default async function CatalogDiscoveryPage({ searchParams, action, headi
                 <input name="maxPrice" type="number" min="0" step={selectedCurrency ? 1 / (10 ** selectedCurrency.minorUnit) : "any"} defaultValue={maxPrice} disabled={!selectedCurrency} placeholder="—" className="h-11 min-w-0 rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-normal text-[var(--color-ink-950)] shadow-sm outline-none transition placeholder:text-[var(--muted)] hover:border-[var(--color-lavender-300)] focus:border-[var(--action)] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500" />
               </label>
             </div>
-            {!selectedCurrency ? <p className="text-[11px] leading-5 text-[var(--muted)]">{t("Choose a market to enable price filtering in its currency.", "اختر السوق لتفعيل تصفية الأسعار بعملته.")}</p> : <p className="text-[11px] text-[var(--muted)]">{t("Prices in", "الأسعار بعملة")} {selectedCurrency.code}</p>}
+            {!selectedCurrency ? <p className="text-[11px] leading-5 text-[var(--muted)]">{t("Price filtering is available in the Syrian market currency.", "تصفية الأسعار متاحة بعملة السوق السورية.")}</p> : <p className="text-[11px] text-[var(--muted)]">{t("Prices in", "الأسعار بعملة")} {selectedCurrency.code}</p>}
           </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-1">
