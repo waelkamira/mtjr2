@@ -50,6 +50,12 @@ describe("admin seller payout destination listing", () => {
     expect(mocks.findMany).not.toHaveBeenCalled();
   });
 
+  it("rejects invalid page values without querying the database", async () => {
+    const response = await GET(new Request("https://matjar.test/api/admin/seller-payout-methods?page=1.5"));
+    expect(response.status).toBe(400);
+    expect(mocks.findMany).not.toHaveBeenCalled();
+  });
+
   it("returns authentication and permission failures safely", async () => {
     mocks.requirePlatformManagement.mockRejectedValueOnce(new AuthenticationRequiredError());
     const unauthenticated = await GET(new Request("https://matjar.test/api/admin/seller-payout-methods"));
