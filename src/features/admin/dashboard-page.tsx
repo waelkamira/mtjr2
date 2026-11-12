@@ -230,7 +230,7 @@ function MetricCard({
     <div className="flex h-full flex-col">
       <span aria-hidden="true" className="mb-3 h-1 w-9 rounded-full" style={{ backgroundColor: color }} />
       <p className="text-sm text-[var(--muted)]">{translatedLabel}</p>
-      <p className="mt-2 text-2xl font-semibold text-[var(--color-forest-950)]">{value}</p>
+      <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
       {detail && <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{translate(locale, detail, details[detail] || detail)}</p>}
       <div role="img" aria-label={`${chartDescription} Chart type: ${chartType}.`} className="mt-auto pt-3">
         <MetricChart data={chartData} color={color} type={chartType} />
@@ -239,7 +239,7 @@ function MetricCard({
   );
   const className = "group block min-h-40 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,.035)] transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_12px_28px_rgba(15,23,42,.07)]";
   return href
-    ? <Link href={href} className={`${className} transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-copper-600)]`}>{content}</Link>
+    ? <Link href={href} className={`${className} transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF8C1C]`}>{content}</Link>
     : <div className={className}>{content}</div>;
 }
 
@@ -333,7 +333,7 @@ export default function AdminDashboardPage() {
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Currency", "العملة")}<select value={filters.currencyCode} onChange={(event) => updateFilter("currencyCode", event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100"><option value="">{translate(locale, "All currencies", "جميع العملات")}</option>{dashboard?.filters.currencies.map((currency) => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select></label>
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Seller", "البائع")}<select value={filters.sellerId} onChange={(event) => updateFilter("sellerId", event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100"><option value="">{translate(locale, "All sellers", "جميع البائعين")}</option>{dashboard?.filters.sellers.map((seller) => <option key={seller.id} value={seller.id}>{seller.name}</option>)}</select></label>
           <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Store", "المتجر")}<select value={filters.storeId} onChange={(event) => updateFilter("storeId", event.target.value)} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100"><option value="">{translate(locale, "All stores", "جميع المتاجر")}</option>{stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></label>
-          <button type="submit" disabled={loading} className="rounded-lg bg-[#202936] px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-60 lg:col-start-6">{translate(locale, "Apply filters", "تطبيق عوامل التصفية")}</button>
+          <button type="submit" disabled={loading} className="rounded-lg bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#F0780B] disabled:opacity-60 lg:col-start-6">{translate(locale, "Apply filters", "تطبيق عوامل التصفية")}</button>
         </form>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
@@ -427,12 +427,12 @@ export default function AdminDashboardPage() {
 
           <section className="mt-8 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
             <div className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_10px_34px_rgba(15,23,42,.05)]">
-              <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{translate(locale, "Daily orders", "الطلبات اليومية")}</h2><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Number of orders placed; canceled orders are excluded from the bars.", "عدد الطلبات المقدمة؛ لا تشمل الأعمدة الطلبات الملغاة.")}</p></div><span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span></div>
+              <div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-lg font-semibold text-slate-900">{translate(locale, "Daily orders", "الطلبات اليومية")}</h2><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Number of orders placed; canceled orders are excluded from the bars.", "عدد الطلبات المقدمة؛ لا تشمل الأعمدة الطلبات الملغاة.")}</p></div><span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span></div>
               <div className="mt-4"><MetricBarChart title="Daily order trend" variant="area" rows={dashboard.dailyOrders.map((day) => ({ label: day.day.slice(5), value: day.count, color: "bg-[var(--orange)]" }))} /></div>
               <div className="mt-2 flex justify-between text-[10px] text-[var(--muted)]"><span>{dashboard.dailyOrders[0]?.day}</span><span>{dashboard.dailyOrders.at(-1)?.day}</span></div>
             </div>
             <div className="rounded-2xl border border-[var(--border)] bg-white p-5">
-              <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{translate(locale, "Open administrative queues", "قوائم الانتظار الإدارية المفتوحة")}</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{translate(locale, "Open administrative queues", "قوائم الانتظار الإدارية المفتوحة")}</h2>
               <div className="mt-4 divide-y divide-[var(--border)]">
                 <QueueLink locale={locale} href="/admin/reviews" label="Product review moderation" count={dashboard.metrics.pendingProductReviews} />
                 <QueueLink locale={locale} href="/admin/store-reviews" label="Store review moderation" count={dashboard.metrics.pendingStoreReviews} />
@@ -443,7 +443,7 @@ export default function AdminDashboardPage() {
           </section>
 
           <section className="mt-8 rounded-2xl border border-[var(--border)] bg-white p-5">
-            <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{translate(locale, "Recent orders", "الطلبات الأخيرة")}</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{translate(locale, "Recent orders", "الطلبات الأخيرة")}</h2>
             {dashboard.recentOrders.length ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="py-2 pr-4 font-medium">{translate(locale, "Order", "الطلب")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Status", "الحالة")}</th><th className="py-2 pr-4 font-medium">{translate(locale, "Total", "الإجمالي")}</th><th className="py-2 font-medium">{translate(locale, "Placed", "تاريخ الإنشاء")}</th></tr></thead><tbody>{dashboard.recentOrders.map((order) => <tr key={order.id} className="border-b border-[var(--border)] last:border-0"><td className="py-3 pr-4 font-medium">{order.orderNumber}</td><td className="py-3 pr-4"><StatusBadge locale={locale} status={order.status} /></td><td className="py-3 pr-4">{money(order.totalMinor, order.currencyCode, currencyUnits.get(order.currencyCode) ?? 2)}</td><td className="py-3">{new Date(order.placedAt).toLocaleString()}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "No orders match the selected filters.", "لا توجد طلبات تطابق عوامل التصفية المحددة.")}</p>}
           </section>
 
@@ -467,5 +467,5 @@ function QueueLink({ locale, href, label, count }: { locale: "ar" | "en"; href: 
     "Return requests": "طلبات الإرجاع",
     "Customer support": "دعم العملاء"
   };
-  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[var(--color-copper-600)]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 font-semibold">{count}</span></Link>;
+  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 font-semibold">{count}</span></Link>;
 }
