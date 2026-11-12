@@ -22,7 +22,7 @@ const createSchema = z.object({
   sellerId: z.string().trim().min(1).max(128).nullable().optional(),
   categoryId: z.string().trim().min(1).max(128).nullable().optional(),
   priority: z.number().int().min(-100000).max(100000).default(0),
-  value: z.unknown(),
+  value: z.record(z.string(), z.unknown()),
   effectiveFrom: z.string().datetime(),
   effectiveUntil: z.string().datetime().nullable().optional(),
   sourceReference: z.string().trim().url().max(2048).nullable().optional(),
@@ -30,6 +30,9 @@ const createSchema = z.object({
 }).strict().superRefine((data, ctx) => {
   if (data.effectiveUntil && new Date(data.effectiveUntil) <= new Date(data.effectiveFrom)) {
     ctx.addIssue({ code: "custom", path: ["effectiveUntil"], message: "Effective end must be after effective start." });
+  }
+  if (data.subdivisionCode && !data.countryCode) {
+    ctx.addIssue({ code: "custom", path: ["countryCode"], message: "A subdivision scope requires a country." });
   }
   if (data.classification === "LEGAL" && !data.countryCode) {
     ctx.addIssue({ code: "custom", path: ["countryCode"], message: "Legal policies must be scoped to a country." });
@@ -71,8 +74,10 @@ export async function listFinancialPolicyVersions(input: unknown = {}, now = new
 
   const rows = await prisma.financialPolicyRuleVersion.findMany({
     where: {
-      ...(query.domain ? { rule: { domain: query.domain } } : {}),
-      ...(query.key ? { rule: { key: query.key } } : {}),
+      ...((query.domain || query.key) ? { rule: { AND: [
+        ...(query.domain ? [{ domain: query.domain }] : []),
+        ...(query.key ? [{ key: query.key }] : [])
+      ] } } : {}),
       ...(query.approvalStatus ? { approvalStatus: query.approvalStatus } : {})
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -108,6 +113,13 @@ export async function createFinancialPolicyVersion(input: unknown, now = new Dat
       const market = await tx.market.findUnique({ where: { code: data.marketCode }, select: { code: true, country: { select: { iso2: true } } } });
       if (!market) throw new Error("Market code is not configured.");
       if (data.countryCode && market.country.iso2 !== data.countryCode) throw new Error("Market does not belong to the selected country.");
+      if (data.currencyCode) {
+        const marketCurrency = await tx.marketCurrency.findUnique({
+          where: { marketId_currencyCode: { marketId: market.code ? (await tx.market.findUniqueOrThrow({ where: { code: market.code }, select: { id: true } })).id : "", currencyCode: data.currencyCode } },
+          select: { isEnabled: true }
+        });
+        if (!marketCurrency?.isEnabled) throw new Error("Currency is not enabled for the selected market.");
+      }
     }
     if (data.currencyCode) {
       const currency = await tx.currency.findUnique({ where: { code: data.currencyCode }, select: { code: true } });
