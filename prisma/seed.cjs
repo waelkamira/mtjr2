@@ -613,11 +613,15 @@ async function main() {
   console.log(`Identity seed verified: ${roleCount} system roles, ${permissionCount} permissions, ${assignmentCount} role-permission links.`);
 }
 
-main()
-  .catch((error) => {
-    console.error("Seed failed.", error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+module.exports = { prisma, demoCategories, demoSubcategories, demoBrands, image, upsertTranslation };
+
+if (require.main === module) {
+  main()
+    .catch((error) => {
+      console.error("Seed failed.", error);
+      process.exitCode = 1;
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
