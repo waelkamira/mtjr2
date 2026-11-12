@@ -61,6 +61,7 @@ export default function AdminLedgerPage() {
   const [accountType, setAccountType] = useState("");
   const [active, setActive] = useState("all");
   const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [activityCursor, setActivityCursor] = useState("");
   const [data, setData] = useState<LedgerResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -72,16 +73,31 @@ export default function AdminLedgerPage() {
     if (currencyCode.trim()) params.set("currencyCode", currencyCode.trim().toUpperCase());
     if (accountType) params.set("accountType", accountType);
     if (selectedAccountId) params.set("accountId", selectedAccountId);
+    if (activityCursor) params.set("activityCursor", activityCursor);
     void Promise.resolve().then(async () => {
       try {
         const response = await fetch(`/api/admin/finance/ledger?${params.toString()}`, { cache: "no-store" });
         const result = await response.json() as LedgerResponse;
         if (!response.ok) throw new Error(result.error || translate(locale, "The ledger could not be loaded.", "تعذر تحميل دفتر الأستاذ."));
         if (current) {
-          setData(result);
+          setData((previous) => {
+            const appendActivity = Boolean(activityCursor && selectedAccountId && previous?.activity?.account.id === selectedAccountId && result.activity);
+            return {
+              ...result,
+              activity: appendActivity && result.activity
+                ? { ...result.activity, items: [...(previous?.activity?.items ?? []), ...result.activity.items] }
+                : result.activity
+            };
+          });
           setError("");
-          if (!selectedAccountId && result.accounts.items[0]) setSelectedAccountId(result.accounts.items[0].id);
-          if (selectedAccountId && !result.accounts.items.some((account) => account.id === selectedAccountId)) setSelectedAccountId("");
+          if (!selectedAccountId && result.accounts.items[0]) {
+            setActivityCursor("");
+            setSelectedAccountId(result.accounts.items[0].id);
+          }
+          if (selectedAccountId && !result.accounts.items.some((account) => account.id === selectedAccountId)) {
+            setActivityCursor("");
+            setSelectedAccountId("");
+          }
         }
       } catch (cause) {
         if (current) setError(cause instanceof Error ? cause.message : translate(locale, "The ledger could not be loaded.", "تعذر تحميل دفتر الأستاذ."));
@@ -90,7 +106,7 @@ export default function AdminLedgerPage() {
       }
     });
     return () => { current = false; };
-  }, [active, accountType, currencyCode, locale, query, selectedAccountId]);
+  }, [active, accountType, activityCursor, currencyCode, locale, query, selectedAccountId]);
 
   const accounts = data?.accounts.items ?? [];
   const activity = data?.activity;
@@ -149,7 +165,7 @@ export default function AdminLedgerPage() {
             <div className="mt-3 space-y-2">
               {accounts.map((account) => {
                 const chosen = selectedAccountId === account.id;
-                return <button type="button" key={account.id} onClick={() => { setLoading(true); setSelectedAccountId(account.id); }} className={`w-full rounded-xl border p-3 text-start transition-colors ${chosen ? "border-orange-400 bg-orange-50 shadow-sm" : "border-stone-200 bg-white hover:border-orange-300 hover:bg-orange-50/40"}`}>
+                return <button type="button" key={account.id} onClick={() => { setLoading(true); setActivityCursor(""); setSelectedAccountId(account.id); }} className={`w-full rounded-xl border p-3 text-start transition-colors ${chosen ? "border-orange-400 bg-orange-50 shadow-sm" : "border-stone-200 bg-white hover:border-orange-300 hover:bg-orange-50/40"}`}>
                   <span className="flex items-center justify-between gap-2">
                     <span className="font-semibold text-sm text-[var(--color-ink-950)]">{account.code}</span>
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${account.isActive ? "bg-lime-100 text-lime-900" : "bg-stone-100 text-stone-600"}`}>{account.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "غير نشط")}</span>
@@ -179,7 +195,7 @@ export default function AdminLedgerPage() {
                 </tr>)}</tbody>
               </table>
             </div> : null}
-            {activity?.nextCursor ? <p className="mt-3 text-xs text-[var(--muted)]">{translate(locale, "More entries exist; pagination will be added after the first operational review.", "توجد قيود إضافية؛ ستضاف الصفحات بعد المراجعة التشغيلية الأولى.")}</p> : null}
+            {activity?.nextCursor ? <div className="mt-4 flex justify-center"><button type="button" onClick={() => { setLoading(true); setActivityCursor(activity.nextCursor || ""); }} className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-ink-900)] transition hover:border-orange-300 hover:bg-orange-50">{translate(locale, "Load older entries", "تحميل القيود الأقدم")}</button></div> : null}
           </section>
         </div>
       </div>
