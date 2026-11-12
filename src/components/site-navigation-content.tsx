@@ -845,7 +845,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                 aria-current={isActive ? "page" : undefined}
                 className={`group relative flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none ${
                   isActive
-                    ? "border-transparent bg-orange-500 text-white shadow-[0_5px_14px_rgba(249,115,22,0.24)] hover:bg-orange-500 hover:text-white"
+                    ? "border-transparent bg-[#FF8C1C] text-white shadow-[0_5px_14px_rgba(255,140,28,0.22)] hover:bg-[#FF8C1C] hover:text-white"
                     : "border-transparent bg-white text-stone-800 hover:border-orange-200 hover:bg-white hover:text-stone-950 hover:shadow-[0_4px_12px_rgba(249,115,22,0.10)]"
                 }`}
               >
@@ -921,7 +921,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       key={action.href}
                       href={action.href}
                       onClick={() => setMobileOpen(false)}
-                      className={`group flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition ${isNavigationActive(pathname, action.href) ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20" : "border-stone-100 bg-white text-stone-700 hover:border-orange-200 hover:bg-orange-50"}`}
+                      className={`group flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition ${isNavigationActive(pathname, action.href) ? "border-[#FF8C1C] bg-[#FF8C1C] text-white shadow-md shadow-orange-500/20" : "border-stone-100 bg-white text-stone-700 hover:border-orange-200 hover:bg-orange-50"}`}
                     >
                       <span className={`grid size-8 place-items-center rounded-lg transition ${isNavigationActive(pathname, action.href) ? "bg-white/15 text-white" : "bg-stone-50 text-stone-700 group-hover:bg-orange-100 group-hover:text-orange-600"}`}>
                         <NavigationIcon name={action.icon} className="h-5 w-5" />
@@ -945,7 +945,7 @@ export default function SiteNavigationContent({ account }: { account: AccountSum
                       onClick={() => setMobileOpen(false)}
                       className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-300 ${
                         isActive
-                          ? "border border-transparent bg-orange-500 text-white shadow-[0_5px_14px_rgba(249,115,22,0.22)]"
+                          ? "border border-transparent bg-[#FF8C1C] text-white shadow-[0_5px_14px_rgba(255,140,28,0.22)]"
                           : "border border-transparent bg-white text-stone-800 hover:border-orange-200 hover:bg-white hover:text-stone-950 hover:shadow-[0_4px_12px_rgba(249,115,22,0.10)]"
                       }`}
                     >
