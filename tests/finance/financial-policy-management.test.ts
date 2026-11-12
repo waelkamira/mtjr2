@@ -128,6 +128,24 @@ describe("financial policy resolution preview", () => {
     expect(mocks.versionFindMany).not.toHaveBeenCalled();
   });
 
+  it("keeps review notes immutable when a separate approver approves a legal policy", async () => {
+    mocks.requirePlatformManagement.mockResolvedValue({ userId: "approver-1" });
+
+    await transitionFinancialPolicyVersion("version-to-approve", {
+      action: "APPROVE",
+      notes: "Approval evidence recorded."
+    }, now);
+
+    const updateCall = mocks.versionUpdate.mock.calls[0][0];
+    expect(updateCall.data).toEqual({
+      approvalStatus: "APPROVED",
+      approvedAt: now,
+      approvedById: "approver-1"
+    });
+    expect(updateCall.data).not.toHaveProperty("reviewNotes");
+    expect(mocks.auditCreate.mock.calls[0][0].data.metadata.notes).toBe("Approval evidence recorded.");
+  });
+
   it("rejects malformed currency and country context before querying the database", async () => {
     await expect(previewFinancialPolicyResolution({ ...context, currencyCode: "EURO" }, now)).rejects.toThrow();
     expect(mocks.versionFindMany).not.toHaveBeenCalled();
