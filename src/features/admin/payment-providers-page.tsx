@@ -208,7 +208,7 @@ export default function PaymentProvidersPage() {
   const visibleItems = items.filter((item) => item.status !== "ARCHIVED");
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
+    <main dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto min-h-screen w-full max-w-[1600px] bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1600px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -216,7 +216,7 @@ export default function PaymentProvidersPage() {
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{t("Payment providers", "مزودو الدفع")}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{t("Configure supported payment adapters, verify credentials, manage test/live records and archive safely. Secrets are encrypted at rest and never returned to this page.", "أضف إعدادات بوابات الدفع المدعومة وتحقق من بياناتها وأدر بيئتي الاختبار والإنتاج وأرشفها بأمان. تُشفّر الأسرار في قاعدة البيانات ولا تُعاد إلى هذه الصفحة.")}</p>
           </div>
-          <button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-xl bg-[var(--color-forest-900)] px-5 py-3 text-sm font-semibold text-white">{showForm ? t("Close form", "إغلاق النموذج") : t("Add provider", "إضافة مزود دفع")}</button>
+          <button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white">{showForm ? t("Close form", "إغلاق النموذج") : t("Add provider", "إضافة مزود دفع")}</button>
         </div>
 
         <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--foreground)]">
