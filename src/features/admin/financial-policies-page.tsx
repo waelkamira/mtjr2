@@ -76,6 +76,7 @@ export default function FinancialPoliciesPage() {
   const [previewBusy, setPreviewBusy] = useState(false);
 
   const load = useCallback(async () => {
+    setError("");
     const params = new URLSearchParams();
     if (statusFilter) params.set("approvalStatus", statusFilter);
     if (domainFilter.trim()) params.set("domain", domainFilter.trim().toUpperCase());
@@ -229,9 +230,9 @@ export default function FinancialPoliciesPage() {
           <label className={labelClass}>{translate(locale, "Priority", "الأولوية")}<input className={inputClass} type="number" value={priority} onChange={(e) => setPriority(e.target.value)} min={-100000} max={100000}/></label>
           <label className={labelClass}>{translate(locale, "Effective from", "ساري من")}<input className={inputClass} type="datetime-local" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} required/></label>
           <label className={labelClass}>{translate(locale, "Effective until", "ساري حتى")}<input className={inputClass} type="datetime-local" value={effectiveUntil} onChange={(e) => setEffectiveUntil(e.target.value)}/></label>
-          <label className={`${labelClass} sm:col-span-2 lg:col-span-3`}>{translate(locale, "Source reference URL (required for legal rules)", "رابط المصدر (مطلوب للقواعد القانونية)")}<input className={inputClass} type="url" value={sourceReference} onChange={(e) => setSourceReference(e.target.value)} placeholder="https://..."/></label>
+          <label className={`${labelClass} sm:col-span-2 lg:col-span-3`}>{translate(locale, "Source reference URL (required for legal rules)", "رابط المصدر (مطلوب للقواعد القانونية)")}<input className={inputClass} type="url" value={sourceReference} onChange={(e) => setSourceReference(e.target.value)} required={classification === "LEGAL"} placeholder="https://..."/></label>
           <label className={`${labelClass} sm:col-span-2 lg:col-span-3`}>{translate(locale, "Value (JSON object)", "القيمة (كائن JSON)")}<textarea className={`${inputClass} min-h-28 font-mono`} value={valueJson} onChange={(e) => setValueJson(e.target.value)} required spellCheck={false}/></label>
-          <label className={`${labelClass} sm:col-span-2 lg:col-span-3`}>{translate(locale, "Review notes (required for legal rules)", "ملاحظات المراجعة (مطلوبة للقواعد القانونية)")}<textarea className={`${inputClass} min-h-20`} value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} maxLength={2000}/></label>
+          <label className={`${labelClass} sm:col-span-2 lg:col-span-3`}>{translate(locale, "Review notes (required for legal rules)", "ملاحظات المراجعة (مطلوبة للقواعد القانونية)")}<textarea className={`${inputClass} min-h-20`} value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} required={classification === "LEGAL"} minLength={classification === "LEGAL" ? 1 : undefined} maxLength={2000}/></label>
           <div className="sm:col-span-2 lg:col-span-3"><button type="submit" disabled={busy !== ""} className="rounded-xl bg-[#FF8C1C] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50">{busy === "create" ? translate(locale, "Creating…", "جارٍ الإنشاء…") : translate(locale, "Create pending version", "إنشاء إصدار بانتظار المراجعة")}</button></div>
         </form>
       </section>
