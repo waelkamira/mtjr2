@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate, translateStatus } from "@/lib/locale";
+import { StatusBadge } from "@/components/status-badge";
 import MetricBarChart from "@/components/analytics/metric-bar-chart";
 
 type Profile = { id: string; email: string; displayName: string | null; status: string; createdAt: string };
@@ -118,7 +119,7 @@ export default function ProfilePage() {
                 <input className="mt-2 w-full rounded-xl border border-white/[0.07] px-4 py-3 text-sm text-black/55 shadow-inner outline-none" value={profile.email} readOnly />
               </label>
               <div className="flex flex-wrap items-center justify-between gap-3 md:col-span-2">
-                <span className="text-xs text-black/40">{t("Account status:", "حالة الحساب:")} <strong className="font-semibold text-emerald-300">{profile.status}</strong></span>
+                <span className="text-xs text-black/40">{t("Account status:", "حالة الحساب:")} <StatusBadge locale={locale} status={profile.status} /></span>
                 <button disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-bold text-[#17120c] shadow-[0_7px_20px_rgba(251,146,60,.22)] transition hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">
                   {busy ? t("Saving…", "جارٍ الحفظ…") : t("Save changes", "حفظ التغييرات")}
                 </button>
