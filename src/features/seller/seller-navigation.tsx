@@ -146,15 +146,20 @@ export default function SellerNavigation() {
     };
   }, []);
 
+  // Select only the most specific matching route so parent and child
+  // navigation entries cannot appear active at the same time.
+  const activeHref = groups
+    .flatMap((group) => group.links)
+    .filter((link) => pathname === link.href || pathname.startsWith(`${link.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+
   // Group links by their parent group for the sidebar (with section titles)
   const groupedNav = groups.map((group) => ({
     ...group,
-    renderedLinks: group.links.map((link) => {
-      const active = link.href === "/seller"
-        ? pathname === "/seller"
-        : pathname === link.href || pathname.startsWith(`${link.href}/`);
-      return { ...link, active };
-    })
+    renderedLinks: group.links.map((link) => ({
+      ...link,
+      active: activeHref === link.href
+    }))
   }));
 
   return (
