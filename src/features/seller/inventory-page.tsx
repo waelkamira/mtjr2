@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge } from "@/components/status-badge";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
@@ -467,7 +468,7 @@ export default function SellerInventoryPage() {
           <section className="rounded-[1.8rem] border border-white/85 bg-[linear-gradient(145deg,#fffaf6,#f5eee7)] p-4 sm:p-6 shadow-[0_14px_30px_rgba(119,86,62,.08),inset_0_2px_0_white,inset_0_-2px_6px_rgba(119,86,62,.035)] lg:col-span-3">
             <h2 className="text-lg font-semibold">{translate(locale, "Warehouse management", "إدارة المستودعات")}</h2>
             <div className="mt-3 grid gap-3 md:grid-cols-2">{allWarehouses.map((warehouse) => <article key={warehouse.id} className="rounded-2xl border border-white/80 bg-white/65 p-4">
-              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{warehouse.name}</p><p className="text-xs text-[var(--muted)]">{warehouse.code}</p></div><span className={warehouse.isActive ? "rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-800" : "rounded-full bg-slate-200 px-2 py-1 text-xs"}>{warehouse.isActive ? translate(locale, "Active", "نشط") : translate(locale, "Inactive", "معطل")}</span></div>
+              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{warehouse.name}</p><p className="text-xs text-[var(--muted)]">{warehouse.code}</p></div><StatusBadge locale={locale} status={warehouse.isActive ? "ACTIVE" : "INACTIVE"} /></div>
               <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={busy} onClick={() => { setEditingWarehouseId(warehouse.id); setEditingWarehouseCode(warehouse.code); setEditingWarehouseName(warehouse.name); }} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{translate(locale, "Edit details", "تعديل البيانات")}</button><button type="button" disabled={busy} onClick={() => void toggleWarehouse(warehouse)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">{warehouse.isActive ? translate(locale, "Deactivate", "تعطيل") : translate(locale, "Reactivate", "إعادة التفعيل")}</button></div>
             </article>)}</div>
             {editingWarehouseId && <form onSubmit={saveWarehouse} className="mt-4 grid gap-3 rounded-2xl border border-[var(--border)] bg-white/60 p-4 sm:grid-cols-2 xl:grid-cols-3">
