@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -37,31 +37,81 @@ export default function SellerPayoutReviewPage() {
   const [data, setData] = useState<Listing | null>(null);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState("");
+  const [busy, setBusy] = useState<{ id: string; decision: "VERIFIED" | "REJECTED" } | null>(null);
   const [error, setError] = useState("");
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  const loadRequestId = useRef(0);
+  const draftsRef = useRef<Record<string, Draft>>({});
+  const draftStorageKey = "seller-payout-review-draft";
+
+  const redirectForStepUp = useCallback(() => {
+    try {
+      window.sessionStorage.setItem(draftStorageKey, JSON.stringify(draftsRef.current));
+    } catch {
+      // Continue to MFA even when browser storage is unavailable.
+    }
+    window.location.assign("/mfa/verify?returnTo=%2Fadmin%2Fseller-payout-methods");
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = window.sessionStorage.getItem(draftStorageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Record<string, Draft>;
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          draftsRef.current = parsed;
+          setDrafts(parsed);
+        }
+        window.sessionStorage.removeItem(draftStorageKey);
+      }
+    } catch {
+      try { window.sessionStorage.removeItem(draftStorageKey); } catch { /* Ignore unavailable storage. */ }
+    }
+  }, []);
 
   const load = useCallback(async () => {
+    const requestId = ++loadRequestId.current;
     setLoading(true);
     setError("");
     try {
       const params = new URLSearchParams({ status, page: String(page) });
       const response = await fetch("/api/admin/seller-payout-methods?" + params, { cache: "no-store" });
+      if (requestId !== loadRequestId.current) return;
+      if (response.status === 428) {
+        redirectForStepUp();
+        return;
+      }
       const result = await response.json() as Listing & { error?: string };
+      if (requestId !== loadRequestId.current) return;
       if (!response.ok) throw new Error(result.error || t("Unable to load bank destinations.", "تعذر تحميل الحسابات البنكية."));
+      if (page > result.pageCount) {
+        setPage(Math.max(1, result.pageCount));
+        return;
+      }
       setData(result);
     } catch (cause) {
+      if (requestId !== loadRequestId.current) return;
       setError(cause instanceof Error ? cause.message : t("Unable to load bank destinations.", "تعذر تحميل الحسابات البنكية."));
       setData(null);
-    } finally { setLoading(false); }
-  }, [page, status, t]);
+    } finally {
+      if (requestId === loadRequestId.current) setLoading(false);
+    }
+  }, [page, status, t, refreshCounter, redirectForStepUp]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void load(); }, 0);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      loadRequestId.current += 1;
+    };
   }, [load]);
 
   function updateDraft(id: string, key: keyof Draft, value: string) {
-    setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? emptyDraft), [key]: value } }));
+    setDrafts((current) => {
+      const next = { ...current, [id]: { ...(current[id] ?? emptyDraft), [key]: value } };
+      draftsRef.current = next;
+      return next;
+    });
   }
 
   async function review(item: PayoutMethod, decision: "VERIFIED" | "REJECTED") {
@@ -73,7 +123,7 @@ export default function SellerPayoutReviewPage() {
       setError(message); toast.error(message); return;
     }
     if (!window.confirm(t(decision === "VERIFIED" ? "Confirm that the bank account was independently verified outside this platform?" : "Confirm rejection of this bank account?", decision === "VERIFIED" ? "هل تؤكد التحقق المستقل من الحساب البنكي عبر جهة خارج المنصة؟" : "هل تؤكد رفض هذا الحساب البنكي؟"))) return;
-    setBusy(item.id); setError("");
+    setBusy({ id: item.id, decision }); setError("");
     try {
       const response = await fetch("/api/admin/seller-payout-methods/" + encodeURIComponent(item.id) + "/review", {
         method: "POST",
@@ -81,15 +131,23 @@ export default function SellerPayoutReviewPage() {
         body: JSON.stringify({ decision, evidenceReference, reason }),
         cache: "no-store"
       });
+      if (response.status === 428) {
+        redirectForStepUp();
+        return;
+      }
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || t("Bank account review failed.", "تعذرت مراجعة الحساب البنكي."));
-      setDrafts((current) => ({ ...current, [item.id]: emptyDraft }));
+      setDrafts((current) => {
+        const next = { ...current, [item.id]: emptyDraft };
+        draftsRef.current = next;
+        return next;
+      });
       toast.success(t("Bank account review saved and audited.", "تم حفظ مراجعة الحساب البنكي وتسجيلها في سجل التدقيق."));
-      await load();
+      setRefreshCounter((value) => value + 1);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("Bank account review failed.", "تعذرت مراجعة الحساب البنكي.");
       setError(message); toast.error(message);
-    } finally { setBusy(""); }
+    } finally { setBusy(null); }
   }
 
   const inputClass = "mt-1 w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--foreground)]";
@@ -114,13 +172,13 @@ export default function SellerPayoutReviewPage() {
           {item.status === "PENDING_VERIFICATION" && <div className="mt-5 grid gap-3 lg:grid-cols-2">
             <label className="text-xs font-semibold text-[var(--muted)]">{t("External evidence reference", "مرجع الإثبات الخارجي")}<input value={draft.evidenceReference} onChange={(event) => updateDraft(item.id, "evidenceReference", event.target.value)} maxLength={180} className={inputClass} placeholder={t("Bank case / verification ticket", "رقم حالة البنك / تذكرة التحقق")} /></label>
             <label className="text-xs font-semibold text-[var(--muted)]">{t("Review reason", "سبب المراجعة")}<textarea value={draft.reason} onChange={(event) => updateDraft(item.id, "reason", event.target.value)} minLength={10} maxLength={500} rows={2} className={inputClass} placeholder={t("Record what was checked and the outcome", "سجّل ما تم التحقق منه والنتيجة")} /></label>
-            <div className="flex flex-wrap gap-2 lg:col-span-2"><button type="button" disabled={Boolean(busy)} onClick={() => void review(item, "VERIFIED")} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === item.id ? t("Saving…", "جارٍ الحفظ…") : t("Confirm verified", "تأكيد التحقق")}</button><button type="button" disabled={Boolean(busy)} onClick={() => void review(item, "REJECTED")} className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-800 disabled:opacity-50">{t("Reject account", "رفض الحساب")}</button></div>
+            <div className="flex flex-wrap gap-2 lg:col-span-2"><button type="button" disabled={Boolean(busy)} onClick={() => void review(item, "VERIFIED")} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy?.id === item.id && busy.decision === "VERIFIED" ? t("Saving…", "جارٍ الحفظ…") : t("Confirm verified", "تأكيد التحقق")}</button><button type="button" disabled={Boolean(busy)} onClick={() => void review(item, "REJECTED")} className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-800 disabled:opacity-50">{busy?.id === item.id && busy.decision === "REJECTED" ? t("Saving…", "جارٍ الحفظ…") : t("Reject account", "رفض الحساب")}</button></div>
           </div>}
           {item.status !== "PENDING_VERIFICATION" && item.verifiedAt && <p className="mt-4 text-xs text-[var(--muted)]">{t("Verified at", "تاريخ التحقق")}: {new Date(item.verifiedAt).toLocaleString(locale)}</p>}
         </article>;
       })}
     </div>}
-    {data && data.pageCount > 1 && <div className="mt-5 flex items-center justify-between"><p className="text-sm text-[var(--muted)]">{t("Page", "صفحة")} {data.page} / {data.pageCount} · {data.total} {t("records", "سجل")}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Previous", "السابق")}</button><button type="button" disabled={page >= data.pageCount || loading} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Next", "التالي")}</button></div></div>}
+    {data && (data.pageCount > 1 || page > 1) && <div className="mt-5 flex items-center justify-between"><p className="text-sm text-[var(--muted)]">{t("Page", "صفحة")} {data.page} / {data.pageCount} · {data.total} {t("records", "سجل")}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Previous", "السابق")}</button><button type="button" disabled={page >= data.pageCount || loading} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-40">{t("Next", "التالي")}</button></div></div>}
     <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{t("Important: this screen records a human administrator's attestation only. It does not contact banks, independently verify ownership, or initiate seller transfers. Never approve without completing the external check.", "تنبيه: تسجل هذه الصفحة إقراراً من مسؤول بشري فقط. لا تتصل بالبنوك ولا تتحقق آلياً من الملكية ولا تنفذ تحويلات للبائعين. لا توافق قبل إتمام التحقق الخارجي.")}</p>
   </div></main>;
 }
