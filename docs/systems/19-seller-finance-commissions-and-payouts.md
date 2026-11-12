@@ -177,3 +177,12 @@
 - Added `SellerPayoutMethod.submissionVersion` with migration `20261112090000_seller_payout_submission_version`. Re-registering a disabled destination increments the generation. The decision command checks the inspected generation and pending state in one conditional database write; audit is written only after that guard succeeds. Stale or concurrent decisions return conflict.
 - Verification on exact PR head `401cb342d034dd8ad27576dde053ce3454891b7d`: general CI, PostgreSQL integration, Browser E2E (13/13) and CodeQL passed.
 - **Financial boundary unchanged:** commission snapshots are not seller payables. There is still no approved payable-balance calculation, withdrawal request, transfer execution, payout provider, or settlement/reconciliation. Do not show a withdrawable balance.
+
+
+## 2026-11-12 — Review queue generation and submission timestamp refinements
+
+- Queue pagination no longer rejects page 1001 when the reported result set has 50,001 or more records; the page bound preserves safe integer offsets.
+- Evidence/reason drafts are keyed by both payout-method ID and `submissionVersion`, including session-storage restoration. Re-registering a destination cannot inherit the evidence draft from an earlier generation.
+- Post-review refresh is state-driven and reads the currently selected status tab/page, even if the administrator changes filters while a decision is pending.
+- Added `submittedAt` to `SellerPayoutMethod`. New and re-registered submissions set a fresh timestamp; the queue sorts and labels by this field while `createdAt` continues to represent original row creation. Migration: `20261112093000_seller_payout_submission_timestamp`.
+- Latest refinements are awaiting exact-head CI, PostgreSQL integration, Browser E2E and CodeQL.
