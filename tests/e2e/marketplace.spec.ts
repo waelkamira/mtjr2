@@ -291,14 +291,24 @@ test.describe("seller catalog authoring", () => {
     // Moderation and publication are separate, role-gated transitions:
     // an admin approves the edited draft, then its owning seller publishes it.
     await signIn(page, sessions.admin);
-    const approvalResponse = await page.request.post(`/api/admin/products/${encodeURIComponent(created!.id)}/approve`);
-    expect(approvalResponse.status()).toBe(200);
-    expect(await approvalResponse.json()).toMatchObject({ productId: created!.id, approvalStatus: "APPROVED" });
+    const approvalResult = await page.evaluate(async (productId) => {
+      const response = await fetch(`/api/admin/products/${encodeURIComponent(productId)}/approve`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
+      });
+      return { status: response.status, body: await response.json() };
+    }, created!.id);
+    expect(approvalResult.status).toBe(200);
+    expect(approvalResult.body).toMatchObject({ productId: created!.id, approvalStatus: "APPROVED" });
 
     await signIn(page, sessions.seller);
-    const publishResponse = await page.request.post(`/api/products/${encodeURIComponent(created!.id)}/publish`);
-    expect(publishResponse.status()).toBe(200);
-    expect(await publishResponse.json()).toMatchObject({ productId: created!.id, status: "ACTIVE" });
+    const publishResult = await page.evaluate(async (productId) => {
+      const response = await fetch(`/api/products/${encodeURIComponent(productId)}/publish`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
+      });
+      return { status: response.status, body: await response.json() };
+    }, created!.id);
+    expect(publishResult.status).toBe(200);
+    expect(publishResult.body).toMatchObject({ productId: created!.id, status: "ACTIVE" });
 
     const publicProductResponse = await page.request.get(`/api/products/${encodeURIComponent(`e2e-seller-draft-updated-${stamp}`)}?locale=en`);
     expect(publicProductResponse.status()).toBe(200);
