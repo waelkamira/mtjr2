@@ -18,7 +18,7 @@ function BrandLogo({ name, logoUrl, size = "large" }: { name: string; logoUrl: s
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [logoUrl]);
   const dimensions = size === "small" ? "h-12 w-12 rounded-xl" : "h-20 w-20 rounded-2xl";
-  const initials = name.trim().split(/\\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
+  const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
   if (logoUrl && !failed) return <img src={logoUrl} alt={name + " logo"} onError={() => setFailed(true)} className={`${dimensions} shrink-0 border border-stone-200 bg-white object-contain p-1`} />;
   return <div aria-label={name + " logo placeholder"} className={`${dimensions} grid shrink-0 place-items-center border border-orange-100 bg-gradient-to-br from-orange-50 to-amber-100 font-black text-orange-700 shadow-inner ${size === "small" ? "text-sm" : "text-2xl"}`}>{initials || "?"}</div>;
 }
