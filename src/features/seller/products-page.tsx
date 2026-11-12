@@ -16,7 +16,6 @@ type Market = {
   currencies: Array<{ currency: { code: string; name: string; minorUnit: number; symbol: string | null } }>;
 };
 type Category = { id: string; name: string; slug: string; children: Category[] };
-type Brand = { id: string; name: string };
 type CategoryAttribute = {
   id: string; key: string; label: string; description: string | null;
   valueType: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "MULTI_SELECT";
@@ -68,7 +67,6 @@ export default function SellerProductsPage() {
   const [storeId, setStoreId] = useState("");
   const [markets, setMarkets] = useState<Market[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [name, setName] = useState("");
@@ -100,7 +98,6 @@ export default function SellerProductsPage() {
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [floorArea, setFloorArea] = useState("");
-  const [brandId, setBrandId] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -136,6 +133,11 @@ export default function SellerProductsPage() {
   }, []);
 
   const categoryOptions = useMemo(() => flatten(categories), [categories]);
+  const currencyLabel = (code: string, fallbackName: string) => code === "SYP"
+    ? translate(locale, "Syrian Pound", "الليرة السورية")
+    : code === "USD"
+      ? translate(locale, "US Dollar", "الدولار الأمريكي")
+      : fallbackName;
   const isRealEstate = (() => { const selected = categoryOptions.find((category) => category.id === categoryId); return selected?.slug === "real-estate" || selected?.ancestors.includes("real-estate") === true; })();
   const editIsRealEstate = (() => { const selected = categoryOptions.find((category) => category.id === editCategoryId); return selected?.slug === "real-estate" || selected?.ancestors.includes("real-estate") === true; })();
   const enabledMarketIds = useMemo(() => new Set(stores.find((store) => store.id === storeId)?.markets.map((entry) => entry.market.id) ?? []), [stores, storeId]);
@@ -169,14 +171,12 @@ export default function SellerProductsPage() {
     Promise.all([
       fetch("/api/seller/stores", { cache: "no-store" }).then((r) => json<Workspace>(r)),
       fetch("/api/markets").then((r) => json<{ items: Market[] }>(r)),
-      fetch(`/api/categories?limit=100&includeEmpty=true&locale=${encodeURIComponent(locale)}`).then((r) => json<{ items: Category[] }>(r)),
-      fetch("/api/brands?limit=100").then((r) => json<{ items: Brand[] }>(r))
-    ]).then(([workspace, marketResult, categoryResult, brandResult]) => {
+      fetch(`/api/categories?limit=100&includeEmpty=true&locale=${encodeURIComponent(locale)}`).then((r) => json<{ items: Category[] }>(r))
+    ]).then(([workspace, marketResult, categoryResult]) => {
       if (!active) return;
       setStores(workspace.stores);
       setMarkets(marketResult.items);
       setCategories(categoryResult.items);
-      setBrands(brandResult.items);
       let preferredStoreId = "";
       try { preferredStoreId = localStorage.getItem("mtjr.activeStoreId") ?? ""; } catch { /* Storage can be unavailable in restricted browsers. */ }
       const initialStore = workspace.stores.find((store) => store.id === preferredStoreId) ?? workspace.stores[0];
@@ -470,7 +470,7 @@ export default function SellerProductsPage() {
       const product = await json<{ id: string }>(await fetch("/api/products", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          storeId, name, slug, description, contactPhone: contactPhone || undefined, videoUrl: videoUrl || undefined, ...(brandId ? { brandId } : {}),
+          storeId, name, slug, description, contactPhone: contactPhone || undefined, videoUrl: videoUrl || undefined,
           specifications: {
             ...Object.fromEntries(Object.entries(basicSpecifications).filter(([, value]) => value.trim()).map(([key, value]) => [key, value.trim()])),
             custom: customSpecifications.filter((item) => item.name.trim() && item.value.trim()).map((item) => ({ name: item.name.trim(), value: item.value.trim() }))
@@ -496,7 +496,7 @@ export default function SellerProductsPage() {
       }));
       setMessage(`${translate(locale, "Draft product created", "تم إنشاء مسودة المنتج")} (${product.id}). ${translate(locale, "It is awaiting platform review.", "بانتظار مراجعة المنصة.")}`);
       toast.success(translate(locale, "Product created", "تم إنشاء المنتج"), { description: translate(locale, "Your draft is awaiting platform review.", "المسودة بانتظار مراجعة المنصة.") });
-      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setBasicSpecifications({ model: "", color: "", material: "", weight: "", dimensions: "", condition: "", warranty: "", countryOfOrigin: "" }); setCustomSpecifications([]); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({}); setBrandId("");
+      uploadedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl)); setName(""); setSlug(""); setDescription(""); setBasicSpecifications({ model: "", color: "", material: "", weight: "", dimensions: "", condition: "", warranty: "", countryOfOrigin: "" }); setCustomSpecifications([]); setVariantRows([{ id: crypto.randomUUID(), sku: "", barcode: "", name: "", optionValues: {}, prices: Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }])) }]); setUploadedImages([]); setMarketPrices(Object.fromEntries(availableMarkets.map((market) => [market.id, { currencyCode: market.defaultCurrency.code, amount: "", compareAt: "" }]))); setCategoryId(""); setCategoryAttributes([]); setAttributeValues({}); setProductLocation({});
       await loadProducts(storeId, search);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : translate(locale, "Product could not be created.", "تعذر إنشاء المنتج."));
@@ -752,7 +752,7 @@ export default function SellerProductsPage() {
                     const currency = currencies.find((item) => item.code === price.currencyCode) ?? market.defaultCurrency;
                     return <div key={market.id} className="grid gap-2 rounded-xl border border-[#eee9e4] bg-[#fffaf6] p-3">
                       <p className="text-xs font-bold">{market.name}</p>
-                      <label className="grid gap-1 text-xs">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={price.currencyCode} onChange={(event) => updateVariantPrice(variant.id, market.id, { currencyCode: event.target.value, amount: "", compareAt: "" })}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {item.name}</option>)}</select></label>
+                      <label className="grid gap-1 text-xs">{translate(locale, "Currency", "العملة")}<select required className={inputClass} value={price.currencyCode} onChange={(event) => updateVariantPrice(variant.id, market.id, { currencyCode: event.target.value, amount: "", compareAt: "" })}>{currencies.map((item) => <option key={item.code} value={item.code}>{item.code} · {currencyLabel(item.code, item.name)}</option>)}</select></label>
                       <label className="grid gap-1 text-xs">{translate(locale, "Selling price", "سعر البيع")} ({currency.code})<input required inputMode="decimal" type="text" className={inputClass} value={price.amount} onChange={(event) => updateVariantPrice(variant.id, market.id, { amount: event.target.value })} placeholder={currency.minorUnit === 0 ? "1299" : "1299.00"} /><span className="text-[11px] text-[#918a84]">{translate(locale, "Enter the full customer-facing amount. Decimal places allowed", "أدخل المبلغ الكامل الذي سيظهر للعميل. عدد المنازل العشرية المسموح")} {currency.minorUnit}</span></label>
                       <label className="grid gap-1 text-xs">{translate(locale, "Compare-at price (optional)", "السعر قبل الخصم (اختياري)")} ({currency.code})<input inputMode="decimal" type="text" className={inputClass} value={price.compareAt} onChange={(event) => updateVariantPrice(variant.id, market.id, { compareAt: event.target.value })} placeholder={translate(locale, "Original price", "السعر الأصلي")} /></label>
                     </div>;
@@ -902,7 +902,6 @@ export default function SellerProductsPage() {
                 <label className="grid gap-1 text-sm sm:col-span-2">{translate(locale, "Floor area (m²)", "المساحة (م²)")}<input required type="number" min="0.01" max="999999999" step="0.01" className={inputClass} value={floorArea} onChange={(event) => setFloorArea(event.target.value)} /></label>
               </div>
             </fieldset>}
-            <label className="grid gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><SellerIcon name="tag" />{translate(locale, "Brand", "العلامة التجارية")}</span><select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">{translate(locale, "No brand", "بلا علامة تجارية")}</option>{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label>
             <button disabled={busy || loadingCategoryAttributes || !requiredAttributesComplete || !requiredVariantAttributesComplete || !variantSkusValid || !variantPricesValid || uploadingImages || !uploadedImages.length || uploadedImages.some((image) => image.status !== "ready") || !storeId || !availableMarkets.length} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(255,140,28,.18)] transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50"><SellerIcon name="document" />{busy ? translate(locale, "Saving…", "جارٍ الحفظ…") : translate(locale, "Create draft product", "إنشاء مسودة منتج")}</button>
           </form>}
         </section>
