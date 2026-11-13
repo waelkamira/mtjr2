@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { translate } from "@/lib/locale";
@@ -92,6 +92,19 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isArabic = locale === "ar";
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
 
   const visibleGroups = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -215,7 +228,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
                       onClick={closeMobile}
                       title={collapsed ? label : undefined}
                       aria-current={active ? "page" : undefined}
-                      className={`group relative flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active ? "border-orange-100 bg-orange-50 text-[#D96500]" : "border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]"}`}
+                      className={`group relative flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active ? "border-[#FFD7B0] bg-[#FFF2E5] text-[#963F08] shadow-[inset_0_0_0_1px_rgba(255,140,28,0.06)]" : "border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]"}`}
                     >
                       {active && <span className={`absolute inset-y-2 w-[3px] rounded-full bg-[#FF8C1C] ${isArabic ? "right-0" : "left-0"}`} />}
                       <Icon size={17} strokeWidth={active ? 2.3 : 1.9} className={`shrink-0 transition-colors ${active ? "text-[#F0780B]" : "text-[var(--muted)] group-hover:text-[#E8750A]"}`} />
@@ -236,7 +249,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
 
         <div className={`border-t border-[var(--border)] p-3 ${collapsed ? "lg:px-2" : ""}`}>
           <div className={`flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-3 ${collapsed ? "lg:justify-center lg:p-2" : ""}`}>
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-orange-50 text-[#D96500] ring-1 ring-orange-100">
               <Shield size={17} />
             </span>
             <span className={collapsed ? "lg:hidden" : "min-w-0"}>
