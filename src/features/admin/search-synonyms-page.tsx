@@ -26,6 +26,7 @@ export default function AdminSearchSynonymsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     const data = await readJson(await fetch("/api/admin/search-synonyms", { cache: "no-store" }));
@@ -115,14 +116,15 @@ export default function AdminSearchSynonymsPage() {
           <label className="grid gap-2 text-sm">{t("Synonym", "المرادف")}<input required minLength={2} maxLength={160} value={synonym} onChange={(event) => setSynonym(event.target.value)} className="rounded-xl border border-[var(--border)] p-3" /></label>
           <button disabled={busy} className="rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 sm:col-span-3">{busy ? t("Saving…", "جارٍ الحفظ…") : t("Add synonym mapping", "إضافة مرادف")}</button>
         </form>
-        <section className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-          <h2 className="text-lg font-semibold">{t("Configured mappings", "المرادفات المهيأة")}</h2>
+        <section aria-busy={loading || busy || !!busyId} className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">{t("Configured mappings", "المرادفات المهيأة")} ({items.length})</h2><button type="button" onClick={() => { setLoading(true); void load().catch((cause) => setError(cause instanceof Error ? cause.message : t("Unable to load synonym mappings.", "تعذّر تحميل المرادفات."))).finally(() => setLoading(false)); }} disabled={loading || busy || !!busyId} className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold disabled:opacity-50">{t("Refresh", "تحديث")}</button></div>
+          <label className="mt-4 block"><span className="sr-only">{t("Search mappings", "البحث في المرادفات")}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Search term, synonym or language…", "ابحث عن مصطلح أو مرادف أو لغة…")} className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--color-ink-950)] outline-none focus:border-[var(--color-orange-500)] focus:ring-2 focus:ring-orange-100" /></label>
           {loading ? <p className="py-5 text-sm text-[var(--muted)]" role="status">{t("Loading mappings…", "جارٍ تحميل المرادفات…")}</p> : items.length ? (
             <div className="mt-4 divide-y divide-[var(--border)]">{items.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0">
               <div><p className="font-semibold">{item.term} ↔ {item.synonym}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.locale} · <StatusBadge locale={uiLocale} status={item.isActive ? "ACTIVE" : "INACTIVE"} /></p></div>
               <div className="flex gap-2"><button type="button" disabled={busyId === item.id} onClick={() => void setActive(item, !item.isActive)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm disabled:opacity-50">{item.isActive ? t("Deactivate", "تعطيل") : t("Activate", "تفعيل")}</button><button type="button" disabled={busyId === item.id} onClick={() => void remove(item)} className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50">{t("Delete", "حذف")}</button></div>
             </article>)}</div>
-          ) : !error ? <p className="py-5 text-sm text-[var(--muted)]">{t("No synonym mappings configured.", "لم تتم إضافة مرادفات بعد.")}</p> : null}
+          ) : !error ? <p className="py-5 text-sm text-[var(--muted)]">{query.trim() ? t("No mappings match your search.", "لا توجد مرادفات تطابق البحث.") : t("No synonym mappings configured.", "لم تتم إضافة مرادفات بعد.")}</p> : null}
         </section>
       </div>
     </main>
