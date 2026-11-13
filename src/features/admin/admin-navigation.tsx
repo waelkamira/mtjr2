@@ -23,7 +23,7 @@ type AdminLink = {
 
 const linkPermissions: Record<string, string[]> = {
   "/admin/dashboard": ["users:read", "users:manage", "store:read", "store:manage", "catalog:read", "catalog:manage", "orders:read", "orders:manage", "payments:read", "payments:refund", "support:read", "support:manage", "returns:manage", "reviews:manage", "ads:moderate", "platform:manage"],
-  "/admin/users": ["users:read", "users:manage"], "/admin/sellers": ["store:read", "store:manage"],
+  "/admin/users": ["users:manage"], "/admin/sellers": ["users:manage"],
   "/admin/products": ["catalog:manage"], "/admin/product-management": ["catalog:read", "catalog:manage"],
   "/admin/categories": ["catalog:manage"], "/admin/brands": ["catalog:manage"],
   "/admin/orders": ["orders:read", "orders:manage"], "/admin/payments": ["payments:read", "payments:refund"],
