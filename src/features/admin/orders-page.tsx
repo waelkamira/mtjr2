@@ -41,6 +41,8 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError("");
     const params = new URLSearchParams({ page: String(page), limit: "25" });
     if (query) params.set("q", query);
     if (status) params.set("status", status);
