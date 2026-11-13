@@ -180,7 +180,7 @@ export default function AdminNavigation({ canManagePlatform = false, permissions
       >
         <div className="flex min-h-[76px] items-center justify-between border-b border-[var(--border)] px-4">
           <Link
-            href="/admin/dashboard"
+            href={visibleGroups.flatMap((group) => group.links)[0]?.href ?? pathname}
             onClick={closeMobile}
             className={`flex min-w-0 items-center gap-3 ${collapsed ? "lg:mx-auto" : ""}`}
           >
