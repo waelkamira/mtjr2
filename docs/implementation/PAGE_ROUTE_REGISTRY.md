@@ -521,3 +521,11 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - `/admin/finance/ledger` displays those totals for the selected account, formatted with the account currency's stored `minorUnit` precision. The UI labels them as all-time posted debits/credits; it does not calculate or imply withdrawable balance, profit, recognized revenue, seller payable or settlement balance.
 - No schema/migration or posting behavior changed. Service commit `124c3a618bdf42c78eef0b071e0063a9ee9006dd`; UI commit `ef91ffd40eea57be9dba92c7cc5e86b2961a4179`.
 - Verification boundary: both source files were re-fetched from `main`; Prisma generation/typecheck, database aggregate execution, API tests, browser rendering and full build remain unverified.
+
+## 2026-11-13 — Admin sidebar interaction and finance release gates
+
+- Admin navigation keeps the existing route groups and permission-based visibility. Active links now use a clearer orange selected treatment; the protected-workspace icon no longer uses a green success color that could be mistaken for a workflow status.
+- The mobile drawer closes after route navigation and supports Escape dismissal. Existing RTL/LTR positioning, collapsed desktop mode, nested-route active matching and platform-only visibility are retained.
+- Finance review reconfirmed that seller payable posting, holds, withdrawals, transfer execution and reconciliation are not implemented. The seller payout destination is only a beneficiary record with manual verification; no balance or payout action may be inferred from it.
+- The FIN-01..FIN-12 payout policy decision register remains blocked pending explicit owner approval. No payout schema, API or withdrawable-balance UI was added.
+- Verification boundary: navigation and route registry were updated on `main` and re-fetched. No local typecheck, lint, automated test, build or browser accessibility/visual run was performed for this change.
