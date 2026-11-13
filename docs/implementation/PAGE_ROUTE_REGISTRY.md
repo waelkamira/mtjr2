@@ -647,6 +647,7 @@ The following route and UI permission corrections are now present on `main`. The
 | `/admin/returns` | `returns:manage` | Entire page gated | Route now checks the returns permission; return service checks remain authoritative. |
 | `/admin/payments` | `payments:read` | Read-only payment page gated | Matches the payment list/detail service, which requires `payments:read`; refund actions remain on the separately gated refunds surface. |
 | `/admin/questions`, `/admin/review`, `/admin/reviews`, `/admin/search-synonyms`, `/admin/sellers`, `/admin/store-reviews` | `users:manage` | Entire pages gated | Route-level gates added to match the existing domain permission policy. |
+| `/admin/users` | `users:manage` | Entire page gated | Route-level gate added; fine-grained role assignment and anonymization remain governed by their dedicated permissions in the service layer. |
 | `/admin/support` | `support:manage` | Entire page gated | Route-level gate added to match the support service. |
 | `/admin/tax-rates` | `users:manage` | Entire page gated | Existing client page retained in `src/features/admin/tax-rates-page.tsx`; route now applies the server permission gate. |
 
