@@ -128,7 +128,7 @@ export default function AdminCategoriesPage() {
     }
   }
 
-  return <main className="min-h-screen bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-9"><div className="mx-auto max-w-[1600px]">
+  return <main aria-busy={loading || busy} className="min-h-screen bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-9"><div className="mx-auto max-w-[1600px]">
     <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{translate(locale, "Catalog operations", "عمليات الكتالوج")}</p>
     <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">{translate(locale, "Category management", "إدارة الفئات")}</h1>
     <div className="mt-3 flex justify-end"><button type="button" disabled={loading || busy} onClick={() => { setLoading(true); setError(""); setRevision((value) => value + 1); }} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50">{translate(locale, "Refresh", "تحديث")}</button></div>
