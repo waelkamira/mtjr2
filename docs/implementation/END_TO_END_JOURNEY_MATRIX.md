@@ -426,3 +426,16 @@ Policy localization/versioning, market/currency controls, seller-specific notifi
   `tests/integration/ledger-postgres.integration.test.ts`.
 - Verification is pending: Prisma validate/generate, typecheck, focused Vitest, migration
   replay, and the PostgreSQL integration suite have not been run on this commit.
+
+
+## Seller warehouse stock count and reconciliation — 2026-11-13
+
+| Actor action | UI → API → persistence | Integrity rules | Verification boundary |
+|---|---|---|---|
+| Open physical count | `/seller/inventory` → stock-count API → `createStockCount` → StockCountSession + StockCountLine | Captures the warehouse inventory row IDs, expected on-hand quantity and `updatedAt` version in one serializable transaction; records an audit event | Source implementation and focused tests present; live PostgreSQL/browser journey pending |
+| Record a counted line | Stock count detail → `recordStockCountLine` → StockCountLine | Only an in-progress session and a line belonging to that session may be edited; records counted quantity, note and timestamp | Focused service test present; concurrent PostgreSQL verification pending |
+| Reconcile count | Complete count → `completeStockCount` → Inventory + InventoryMovement + StockCountSession + AuditLog | Requires every line counted; rejects stale inventory snapshots; refuses a count below reserved stock; changes only `quantityOnHand`, preserving reserved and quarantined balances; writes one deterministic adjustment movement per changed line; all changes commit or roll back together | Regression coverage includes stale snapshot, reserved-stock floor, quarantined/reserved balance preservation and replay; test execution and PostgreSQL verification pending |
+| Cancel count | Cancel count → `cancelStockCount` → StockCountSession + AuditLog | Only an in-progress count can be canceled; cancellation never changes inventory | Focused service test present; runtime verification pending |
+| Ship and receive transfer | Transfer actions → `shipStockTransfer` / `receiveStockTransfer` → StockTransfer + Inventory + InventoryMovement | State transitions are guarded; source stock availability excludes reserved/quarantined quantities; shipment and receipt run serializably and produce outbound/inbound movements | Receipt regression test added; test execution and PostgreSQL verification pending |
+
+**Operational boundary:** A physical count is a reconciliation of the on-hand balance, not a way to erase order reservations or quarantine balances. Inventory changed after the count snapshot must be recounted rather than force-adjusted.
