@@ -9,7 +9,7 @@ import {
   PermissionDeniedError
 } from "@/server/identity/current-session";
 import { requireAnyPermission } from "@/server/identity/permission-guard";
-import { userHasPermission } from "@/server/identity/permission-repository";
+import { userHasPermission, getUserAuthorizationGrants } from "@/server/identity/permission-repository";
 import { StepUpRequiredError } from "@/server/identity/access-errors";
 
 const ADMIN_AREA_PERMISSIONS = [
@@ -37,10 +37,15 @@ const ADMIN_AREA_PERMISSIONS = [
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   let canManagePlatform = false;
+  let navigationPermissions: string[] = [];
   try {
     const session = await requireAnyPermission(
       ADMIN_AREA_PERMISSIONS.map((permissionKey) => ({ permissionKey }))
     );
+    const grants = await getUserAuthorizationGrants(session.userId);
+    navigationPermissions = [...new Set(grants
+      .filter((grant) => grant.scopeType === "GLOBAL" && grant.scopeId === "GLOBAL")
+      .map((grant) => grant.permissionKey))];
     canManagePlatform = await userHasPermission(session.userId, { permissionKey: "platform:manage" });
   } catch (error) {
     if (error instanceof MfaEnrollmentRequiredError) {
@@ -67,7 +72,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="admin-dashboard min-h-screen min-w-0 bg-[var(--background)] lg:flex">
-      <AdminNavigation canManagePlatform={canManagePlatform} />
+      <AdminNavigation canManagePlatform={canManagePlatform} permissions={navigationPermissions} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
