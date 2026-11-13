@@ -22,16 +22,16 @@ type AdminLink = {
 };
 
 const linkPermissions: Record<string, string[]> = {
-  "/admin/dashboard": ["users:read", "users:manage", "store:read", "store:manage", "catalog:read", "catalog:manage", "orders:read", "orders:manage", "payments:read", "payments:refund", "support:read", "support:manage", "returns:manage", "reviews:manage", "ads:moderate", "platform:manage"],
+  "/admin/dashboard": ["users:manage", "payments:read", "catalog:read", "returns:manage", "platform:manage"],
   "/admin/users": ["users:manage"], "/admin/sellers": ["users:manage"],
-  "/admin/products": ["catalog:manage"], "/admin/product-management": ["catalog:read", "catalog:manage"],
-  "/admin/categories": ["catalog:manage"], "/admin/brands": ["catalog:manage"],
-  "/admin/orders": ["orders:read", "orders:manage"], "/admin/payments": ["payments:read", "payments:refund"],
+  "/admin/products": ["catalog:read"], "/admin/product-management": ["catalog:read", "catalog:manage"],
+  "/admin/categories": ["catalog:read"], "/admin/brands": ["catalog:read"],
+  "/admin/orders": ["users:manage"], "/admin/payments": ["payments:read", "payments:refund"],
   "/admin/logistics": ["orders:manage"], "/admin/returns": ["returns:manage"], "/admin/refunds": ["payments:refund"],
-  "/admin/commissions": ["payments:read"], "/admin/tax-rates": ["platform:manage"], "/admin/coupons": ["catalog:manage"],
+  "/admin/commissions": ["platform:manage"], "/admin/tax-rates": ["platform:manage"], "/admin/coupons": ["catalog:manage"],
   "/admin/advertising": ["ads:moderate"], "/admin/search-synonyms": ["catalog:manage"],
   "/admin/support": ["support:read", "support:manage"], "/admin/reviews": ["reviews:manage"],
-  "/admin/store-reviews": ["reviews:manage"], "/admin/questions": ["catalog:manage"],
+  "/admin/store-reviews": ["reviews:manage"], "/admin/questions": ["users:manage"],
   "/admin/questions/reports": ["users:manage"], "/admin/review": ["reviews:manage"],
   "/admin/payment-providers": ["platform:manage"], "/admin/seller-payout-methods": ["platform:manage"],
   "/admin/financial-policies": ["platform:manage"], "/admin/finance/ledger": ["platform:manage"],
