@@ -618,3 +618,12 @@ Additional verified corrections from the same audit:
 | `/admin/payment-providers` | `src/server/admin/payment-providers.ts` requires platform management plus the dedicated `payment.providers.manage` permission | `platform:manage` is the navigation gate; service-level provider permission remains independently enforced |
 
 The tax-rate and reported-review sidebar mappings were corrected. The dedicated payment-provider permission is intentionally not added to the sidebar map as a replacement for `platform:manage`; the service requires both checks, while the layout gate still controls platform-wide navigation.
+
+
+## Dashboard permission-aware navigation audit — 2026-11-13
+
+The dashboard API service (`src/server/admin/dashboard.ts`) requires `users:manage`. The dashboard route now enforces the same permission server-side and passes only active GLOBAL permission keys to its client view. The sidebar dashboard entry was narrowed to `users:manage` rather than advertising access based on unrelated read permissions.
+
+Dashboard shortcuts and metric cards now use the caller's effective GLOBAL grants to decide whether each destination should be clickable. Priority actions and the open-queue list omit destinations the operator cannot access. This avoids presenting a dashboard link that leads directly to a forbidden API-backed screen. The sidebar brand link also resolves to the first visible permitted navigation destination instead of always pointing at the dashboard.
+
+This remains UI-level affordance filtering only. Every destination API/service must retain its own authoritative server-side guard. Store-scoped grants are deliberately not promoted to global dashboard navigation.
