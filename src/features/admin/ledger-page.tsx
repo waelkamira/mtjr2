@@ -66,6 +66,7 @@ export default function AdminLedgerPage() {
   const [data, setData] = useState<LedgerResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let current = true;
@@ -107,7 +108,7 @@ export default function AdminLedgerPage() {
       }
     });
     return () => { current = false; };
-  }, [active, accountType, activityCursor, currencyCode, locale, query, selectedAccountId]);
+  }, [active, accountType, activityCursor, currencyCode, locale, query, refreshKey, selectedAccountId]);
 
   const accounts = data?.accounts.items ?? [];
   const activity = data?.activity;
@@ -121,7 +122,7 @@ export default function AdminLedgerPage() {
             <h1 className="text-3xl font-semibold text-[var(--foreground)]">{translate(locale, "General ledger", "دفتر الأستاذ العام")}</h1>
             <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Read-only view of posted accounts and immutable journal activity.", "عرض للقراءة فقط للحسابات والقيود المحاسبية المنشورة غير القابلة للتعديل.")}</p>
           </div>
-          <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)]">{translate(locale, "Read only", "قراءة فقط")}</span>
+          <div className="flex items-center gap-2"><span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)]">{translate(locale, "Read only", "قراءة فقط")}</span><button type="button" onClick={() => { setError(""); setLoading(true); setRefreshKey((value) => value + 1); }} disabled={loading} className="rounded-xl bg-[#FF8C1C] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50">{loading ? translate(locale, "Refreshing…", "جارٍ التحديث…") : translate(locale, "Refresh", "تحديث")}</button></div>
         </div>
 
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
