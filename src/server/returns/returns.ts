@@ -170,7 +170,7 @@ export async function listReturnRequestsForAdmin(now = new Date()) {
     include: {
       order: { select: { orderNumber: true } },
       customer: { select: { id: true, displayName: true, email: true } },
-      items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true } } } }
+      items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true, vendorOrder: { select: { store: { select: { name: true } } } } } } } }
     }
   });
   return rows.map((row) => ({
