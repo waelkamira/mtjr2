@@ -99,6 +99,15 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
 
   useEffect(() => {
     if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMobileOpen(false);
     };
@@ -133,6 +142,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
         className={`fixed bottom-4 z-50 grid size-12 place-items-center rounded-full bg-[#FF8C1C] text-white shadow-lg shadow-orange-900/20 transition hover:bg-[#F0780B] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 lg:hidden ${isArabic ? "left-4" : "right-4"}`}
         aria-label={translate(locale, "Toggle admin navigation", "فتح قائمة الإدارة")}
         aria-expanded={mobileOpen}
+        aria-controls="admin-sidebar"
       >
         {mobileOpen ? <X size={20} /> : <Command size={20} />}
       </button>
@@ -147,6 +157,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
       )}
 
       <aside
+        id="admin-sidebar"
         dir={isArabic ? "rtl" : "ltr"}
         className={`admin-sidebar fixed inset-y-0 z-40 flex h-dvh w-[min(88vw,296px)] flex-col border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] shadow-xl transition-[width,transform] duration-200 lg:sticky lg:top-0 lg:z-20 lg:translate-x-0 lg:shadow-none ${isArabic ? "right-0 border-l" : "left-0 border-r"} ${mobileOpen ? "translate-x-0" : isArabic ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"} ${collapsed ? "lg:w-[82px]" : "lg:w-[280px]"}`}
       >
