@@ -42,7 +42,7 @@ describe("admin bulk product archival", () => {
       { id: "p1", status: "ACTIVE", storeId: "s1" },
       { id: "p2", status: "DRAFT", storeId: "s1" }
     ]);
-    mocks.productUpdateMany.mockResolvedValue({ count: 2 });
+    mocks.productUpdateMany.mockResolvedValue({ count: 1 });
     mocks.auditCreateMany.mockResolvedValue({ count: 2 });
     mocks.categoryFindUnique.mockResolvedValue({ id: "parent-1", parentId: null, status: "ACTIVE" });
     mocks.categoryCount.mockResolvedValue(0);
@@ -77,8 +77,12 @@ describe("admin bulk product archival", () => {
     }, now);
 
     expect(mocks.requirePermission).toHaveBeenCalledWith({ permissionKey: "catalog:manage", now });
-    expect(mocks.productUpdateMany).toHaveBeenCalledWith({
-      where: { id: { in: ["p1", "p2"] }, status: { not: "ARCHIVED" } },
+    expect(mocks.productUpdateMany).toHaveBeenNthCalledWith(1, {
+      where: { id: "p1", status: { not: "ARCHIVED" } },
+      data: { status: "ARCHIVED" }
+    });
+    expect(mocks.productUpdateMany).toHaveBeenNthCalledWith(2, {
+      where: { id: "p2", status: { not: "ARCHIVED" } },
       data: { status: "ARCHIVED" }
     });
     expect(mocks.auditCreateMany).toHaveBeenCalledWith({
@@ -92,6 +96,25 @@ describe("admin bulk product archival", () => {
       ])
     });
     expect(result).toEqual({ archived: 2 });
+  });
+
+  it("audits only products whose archive transition actually won a concurrent update", async () => {
+    mocks.productUpdateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
+
+    const result = await archiveAdminProducts({
+      productIds: ["p1", "p2"],
+      reason: "Policy violation confirmed"
+    });
+
+    expect(result).toEqual({ archived: 1 });
+    expect(mocks.auditCreateMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({
+        action: "catalog.product.archived",
+        resourceId: "p1"
+      })]
+    });
   });
 
   it("rejects a scoped action that matches more than 500 products", async () => {
