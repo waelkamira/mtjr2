@@ -14,6 +14,8 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) return Response.json({ error: "Authentication required." }, { status: 401 });
     if (error instanceof PermissionDeniedError) return Response.json({ error: "Permission denied." }, { status: 403 });
-    return Response.json({ error: error instanceof Error ? error.message : "Return request could not be updated." }, { status: 400 });
+    const message = error instanceof Error ? error.message : "Return request could not be updated.";
+    const status = /not found/i.test(message) ? 404 : /only pending|changed|no pending return items/i.test(message) ? 409 : 400;
+    return Response.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
   }
 }
