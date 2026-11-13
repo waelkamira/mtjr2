@@ -439,3 +439,14 @@ Policy localization/versioning, market/currency controls, seller-specific notifi
 | Ship and receive transfer | Transfer actions → `shipStockTransfer` / `receiveStockTransfer` → StockTransfer + Inventory + InventoryMovement | State transitions are guarded; source stock availability excludes reserved/quarantined quantities; shipment and receipt run serializably and produce outbound/inbound movements | Receipt regression test added; test execution and PostgreSQL verification pending |
 
 **Operational boundary:** A physical count is a reconciliation of the on-hand balance, not a way to erase order reservations or quarantine balances. Inventory changed after the count snapshot must be recounted rather than force-adjusted.
+
+## Focused operations review — 2026-11-13
+
+The following source-level boundaries were rechecked on `main`; these are not full journey-completion claims:
+
+- **Orders:** admin list/detail are read-only and expose persisted order/vendor-order histories, payment snapshots and shipment details. No generic admin status mutation was added.
+- **Payments:** list/detail are read-only under `payments:read`; totals remain partitioned by status and currency.
+- **Logistics:** admin screens display saved shipments and manually entered events only. Carrier APIs, labels and automated delivery updates are not implemented.
+- **Returns:** the existing admin review remains a platform-wide decision on all pending items in one parent ReturnRequest. The UI now names the store for each item and clearly states the cross-store scope. Audit metadata records `decisionScope=PLATFORM_WIDE_RETURN_REQUEST` and the exact affected item count. Stale/non-pending transitions return HTTP 409. This is explicitly a compatibility workflow, not a substitute for the designed per-vendor `VendorReturn` / `VendorReturnItem` lifecycle and backfill.
+- **Refunds:** only physically received items are candidates; request creation is unique per return request and bounded by remaining captured-payment and merchandise-item balances. Execution or manual confirmation requires an operator different from the requester. Provider results are reconciled before payment status changes. Shipping/tax refunds and general-ledger reversal are not yet connected.
+- **Outstanding evidence:** no live provider sandbox, disposable-PostgreSQL transaction/concurrency test, browser multi-store return journey, TypeScript check, lint or production build was run in this review.
