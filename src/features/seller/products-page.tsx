@@ -662,6 +662,7 @@ export default function SellerProductsPage() {
       await json(await fetch(`/api/products/${encodeURIComponent(editingId)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          locale,
           name: editName, slug: editSlug, description: editDescription,
           city: editProductLocation.city ?? null, district: editProductLocation.district ?? null,
           localityId: editProductLocation.localityId ?? null,

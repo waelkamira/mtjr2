@@ -369,6 +369,7 @@ export async function publishProduct(productId: string, now = new Date()) {
 
 const updateProductSchema = z.object({
   name: z.string().trim().min(2).max(180).optional(),
+  locale: z.enum(["ar", "en"]).optional(),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180).optional(),
   description: z.string().trim().max(12000).nullable().optional(),
   city: z.string().trim().min(1).max(120).nullable().optional(),
@@ -419,7 +420,7 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
   const result = await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
       where: { id },
-      select: { id: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, variants: { where: { isActive: true }, select: { id: true } }, store: { select: { status: true, seller: { select: { ownerId: true, status: true } }, markets: { where: { isEnabled: true, market: { status: "ACTIVE", country: { isActive: true } } }, select: { marketId: true } } } } }
+      select: { id: true, name: true, description: true, storeId: true, status: true, latitude: true, longitude: true, localityId: true, neighborhood: true, propertyDetails: { select: { productId: true } }, categories: { select: { category: { select: { id: true, slug: true, parentId: true } } } }, variants: { where: { isActive: true }, select: { id: true } }, store: { select: { status: true, seller: { select: { ownerId: true, status: true } }, markets: { where: { isEnabled: true, market: { status: "ACTIVE", country: { isActive: true } } }, select: { marketId: true } } } } }
     });
     if (!current || current.status !== CatalogEntityStatus.DRAFT) throw new Error("Only draft products can be edited.");
     if (current.store.seller.status !== "ACTIVE" || current.store.status === "SUSPENDED" || current.store.status === "CLOSED") {
@@ -515,6 +516,22 @@ export async function updateDraftProduct(productId: string, input: UpdateProduct
       }
     });
     if (changed.count !== 1) throw new Error("Product could not be updated.");
+    if (data.name !== undefined || data.description !== undefined) {
+      const locale = data.locale ?? "ar";
+      await tx.productTranslation.upsert({
+        where: { productId_locale: { productId: id, locale } },
+        create: {
+          productId: id,
+          locale,
+          name: data.name ?? current.name,
+          description: data.description === undefined ? current.description : data.description
+        },
+        update: {
+          ...(data.name !== undefined ? { name: data.name } : {}),
+          ...(data.description !== undefined ? { description: data.description } : {})
+        }
+      });
+    }
     if (categoryIds !== undefined) {
       await tx.productCategory.deleteMany({ where: { productId: id } });
       if (categoryIds.length) await tx.productCategory.createMany({

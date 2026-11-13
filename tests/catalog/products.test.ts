@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   categoryDeleteMany: vi.fn(),
   categoryCreateMany: vi.fn(),
   productUpdateMany: vi.fn(),
+  productTranslationUpsert: vi.fn(),
   productPropertyDetailsUpsert: vi.fn(),
   productPropertyDetailsDeleteMany: vi.fn(),
   productMediaFindMany: vi.fn(),
@@ -68,6 +69,7 @@ describe("product lifecycle", () => {
     mocks.productFindUnique.mockResolvedValue({ storeId: "store-1", store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] } });
     mocks.productFindUniqueTx.mockResolvedValue({ id: "product-1", storeId: "store-1", status: "DRAFT", approvalStatus: "APPROVED", latitude: null, longitude: null, categories: [{ category: { slug: "general" } }], store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }, variants: [{ id: "variant-1", prices: [{ marketId: "market-1", currencyCode: "EUR" }] }], media: [{ id: "media-1" }] });
     mocks.productUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.productTranslationUpsert.mockResolvedValue({});
     mocks.productMediaFindMany.mockResolvedValue([]);
     mocks.deleteProductImage.mockResolvedValue("deleted");
     mocks.auditCreate.mockResolvedValue({});
@@ -79,6 +81,7 @@ describe("product lifecycle", () => {
       syriaLocality: { findUnique: mocks.localityFindUnique },
       market: { findMany: mocks.marketFindMany },
       productCategory: { deleteMany: mocks.categoryDeleteMany, createMany: mocks.categoryCreateMany },
+      productTranslation: { upsert: mocks.productTranslationUpsert },
       productPropertyDetails: { upsert: mocks.productPropertyDetailsUpsert, deleteMany: mocks.productPropertyDetailsDeleteMany },
       productMedia: { findMany: mocks.productMediaFindMany, deleteMany: mocks.productMediaDeleteMany, createMany: mocks.productMediaCreateMany },
       product: {
@@ -492,6 +495,23 @@ describe("product lifecycle", () => {
     expect(mocks.categoryDeleteMany).toHaveBeenCalledOnce();
     expect(mocks.categoryCreateMany).toHaveBeenCalledOnce();
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
+  });
+
+  it("updates the localized product title and description for the editing locale", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT", name: "Old mug", description: "Old description",
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1", market: { currencies: [{ currencyCode: "EUR" }] } }] }
+    });
+
+    await updateDraftProduct("product-1", {
+      locale: "ar", name: "Updated mug", description: "Updated description"
+    });
+
+    expect(mocks.productTranslationUpsert).toHaveBeenCalledWith({
+      where: { productId_locale: { productId: "product-1", locale: "ar" } },
+      create: { productId: "product-1", locale: "ar", name: "Updated mug", description: "Updated description" },
+      update: { name: "Updated mug", description: "Updated description" }
+    });
   });
 
   it("validates and persists locality and neighbourhood changes when editing a draft", async () => {
