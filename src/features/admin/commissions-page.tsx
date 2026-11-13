@@ -183,17 +183,17 @@ export default function CommissionsPage() {
         <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Precedence: seller + category, seller, category, then global. Without a matching rule, the saved rate is 0%.", "ترتيب الأولوية: البائع والفئة، ثم البائع، ثم الفئة، ثم القاعدة العامة. عند عدم وجود قاعدة مطابقة، يكون المعدل المحفوظ 0٪.")}</p>
         <form onSubmit={createRule} className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <label className="text-sm font-medium">{translate(locale, "Rule scope", "نطاق القاعدة")}
-            <select value={scope} onChange={(event) => setScope(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2">
+            <select value={scope} onChange={(event) => setScope(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
               <option value="GLOBAL">{translate(locale, "Global", "عام")}</option><option value="SELLER">{translate(locale, "Seller", "البائع")}</option><option value="CATEGORY">{translate(locale, "Category", "الفئة")}</option><option value="SELLER_CATEGORY">{translate(locale, "Seller + category", "البائع والفئة")}</option>
             </select>
           </label>
           {needsSeller && <label className="text-sm font-medium">{translate(locale, "Seller", "البائع")}
-            <select value={sellerId} onChange={(event) => setSellerId(event.target.value)} required className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2">
+            <select value={sellerId} onChange={(event) => setSellerId(event.target.value)} required className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
               <option value="">{translate(locale, "Select seller", "اختر بائعًا")}</option>{sellers.map((seller) => <option key={seller.id} value={seller.id}>{seller.name}</option>)}
             </select>
           </label>}
           {needsCategory && <label className="text-sm font-medium">{translate(locale, "Category", "الفئة")}
-            <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)} required className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2">
+            <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)} required className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
               <option value="">{translate(locale, "Select category", "اختر فئة")}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
             </select>
           </label>}
@@ -218,7 +218,7 @@ export default function CommissionsPage() {
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead><tr className="border-b border-[var(--border)] text-xs uppercase text-[var(--muted)]"><th className="py-3 pr-4">{translate(locale, "Scope", "النطاق")}</th><th className="py-3 pr-4">{translate(locale, "Rate", "المعدل")}</th><th className="py-3 pr-4">{translate(locale, "Effective period", "فترة السريان")}</th><th className="py-3 pr-4">{translate(locale, "Status", "الحالة")}</th><th className="py-3">{translate(locale, "Action", "الإجراء")}</th></tr></thead>
-              <tbody>{rules.map((rule) => <tr key={rule.id} className="border-b border-slate-100 last:border-0 transition-colors hover:bg-orange-50/40">
+              <tbody>{rules.map((rule) => <tr key={rule.id} className="border-b border-[var(--border)] last:border-0 transition-colors hover:bg-orange-50/40">
                 <td className="py-3 pr-4 font-medium">{scopeLabel(locale, rule)}</td><td className="py-3 pr-4">{(rule.rateBasisPoints / 100).toFixed(2)}%</td>
                 <td className="py-3 pr-4">{new Date(rule.effectiveFrom).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB")} – {rule.effectiveUntil ? new Date(rule.effectiveUntil).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB") : translate(locale, "No end", "بلا تاريخ انتهاء")}</td>
                 <td className="py-3 pr-4"><StatusBadge locale={locale} status={rule.isActive ? "ACTIVE" : "INACTIVE"} /></td>
@@ -231,12 +231,12 @@ export default function CommissionsPage() {
 
       <section className="mt-7 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-clay-raised">
         <h2 className="text-lg font-semibold">{translate(locale, "Recent immutable commission snapshots", "سجلات العمولات الحديثة الثابتة")}</h2>
-        <label className="mt-3 block max-w-xl text-xs font-semibold text-[var(--muted)]">{translate(locale, "Search commission snapshots", "البحث في سجلات العمولات")}<input type="search" value={transactionQuery} onChange={(event) => setTransactionQuery(event.target.value)} placeholder={translate(locale, "Order, seller, store or category", "الطلب أو البائع أو المتجر أو الفئة")} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100"/></label>
+        <label className="mt-3 block max-w-xl text-xs font-semibold text-[var(--muted)]">{translate(locale, "Search commission snapshots", "البحث في سجلات العمولات")}<input type="search" value={transactionQuery} onChange={(event) => setTransactionQuery(event.target.value)} placeholder={translate(locale, "Order, seller, store or category", "الطلب أو البائع أو المتجر أو الفئة")} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100"/></label>
         {loading ? <p className="mt-4 text-sm text-[var(--muted)]">{translate(locale, "Loading transactions…", "جارٍ تحميل المعاملات…")}</p> : visibleTransactions.length === 0 ? <p className="mt-4 text-sm text-[var(--muted)]">{transactions.length ? translate(locale, "No commission snapshots match this search.", "لا توجد سجلات عمولات تطابق البحث.") : translate(locale, "No payment-success commission snapshots yet.", "لا توجد سجلات عمولات لمدفوعات ناجحة بعد.")}</p> : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead><tr className="border-b border-[var(--border)] text-xs uppercase text-[var(--muted)]"><th className="py-3 pr-4">{translate(locale, "Order", "الطلب")}</th><th className="py-3 pr-4">{translate(locale, "Seller / store", "البائع / المتجر")}</th><th className="py-3 pr-4">{translate(locale, "Category", "الفئة")}</th><th className="py-3 pr-4">{translate(locale, "Base", "الأساس")}</th><th className="py-3 pr-4">{translate(locale, "Rate", "المعدل")}</th><th className="py-3 pr-4">{translate(locale, "Commission", "العمولة")}</th><th className="py-3">{translate(locale, "Recorded", "تاريخ التسجيل")}</th></tr></thead>
-              <tbody>{visibleTransactions.map((item) => <tr key={item.id} className="border-b border-slate-100 last:border-0 transition-colors hover:bg-orange-50/40">
+              <tbody>{visibleTransactions.map((item) => <tr key={item.id} className="border-b border-[var(--border)] last:border-0 transition-colors hover:bg-orange-50/40">
                 <td className="py-3 pr-4">{item.order.orderNumber}</td><td className="py-3 pr-4">{item.sellerName} / {item.store.name}</td><td className="py-3 pr-4">{item.categoryName || translate(locale, "Uncategorized", "غير مصنف")}</td>
                 <td className="py-3 pr-4">{formatMinorAmount(item.baseAmountMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3 pr-4">{(item.rateBasisPoints / 100).toFixed(2)}% ({item.ruleScopeType})</td><td className="py-3 pr-4">{formatMinorAmount(item.commissionMinor, item.currencyCode, item.currencyMinorUnit)}</td><td className="py-3">{new Date(item.createdAt).toLocaleString(locale === "ar" ? "ar-SY" : "en-GB")}</td>
               </tr>)}</tbody>
