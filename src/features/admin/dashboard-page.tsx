@@ -323,7 +323,7 @@ export default function AdminDashboardPage() {
             <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{translate(locale, "MATJAR · OPERATIONS CENTER", "متجر · مركز العمليات")}</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">{translate(locale, "Platform overview", "نظرة عامة على المنصة")}</h1>
           </div>
-          <div className="flex flex-wrap items-center gap-3"><p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{translate(locale, "Live data from PostgreSQL · transaction filters are applied consistently and currency totals are never combined", "بيانات مباشرة من PostgreSQL · تطبق عوامل تصفية المعاملات باتساق ولا يتم جمع إجماليات العملات المختلفة")}</p><button type="button" disabled={loading} onClick={() => void load(filters)} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] transition hover:border-[#FF8C1C] hover:text-[#C65D0A] disabled:opacity-50">{translate(locale, "Refresh", "تحديث")}</button></div>
+          <div className="flex flex-wrap items-center gap-3"><p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{translate(locale, "Live PostgreSQL data · order and payment metrics follow the selected filters; platform-wide queues and entity totals remain global, while new-user counts follow the selected dates", "بيانات مباشرة من PostgreSQL · تطبق عوامل تصفية المعاملات باتساق ولا يتم جمع إجماليات العملات المختلفة")}</p><button type="button" disabled={loading} onClick={() => void load(filters)} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] transition hover:border-[#FF8C1C] hover:text-[#C65D0A] disabled:opacity-50">{translate(locale, "Refresh", "تحديث")}</button></div>
         </div>
 
         <form onSubmit={submitFilters} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-6">
@@ -370,7 +370,15 @@ export default function AdminDashboardPage() {
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {loading && !dashboard ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--surface-soft)]" /> : dashboard && <>
-          <section aria-label="Marketplace metrics" className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+          <section aria-label={translate(locale, "Selected-period commerce activity", "نشاط التجارة خلال الفترة المحددة")} className="mt-6">
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-[var(--foreground)]">{translate(locale, "Commerce activity", "نشاط التجارة")}</h2>
+                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Orders and payments within the selected date, country, currency, seller and store filters. Monetary totals stay separated by currency.", "الطلبات والمدفوعات ضمن فلاتر التاريخ والدولة والعملة والبائع والمتجر المحددة. تبقى الإجماليات المالية منفصلة حسب العملة.")}</p>
+              </div>
+              <span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
             <MetricCard locale={locale} label="Total orders" value={dashboard.metrics.totalOrders} href="/admin/orders" detail={`${dashboard.metrics.previousPeriodOrders} in the previous equivalent period`} chartData={dashboard.metricSamples.totalOrders} chartType="area" color={metricCardColors[0]} />
             <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} href="/admin/orders" chartData={dashboard.metricSamples.pendingOrders} chartType="line" color={metricCardColors[1]} />
             <MetricCard locale={locale} label="Orders being processed" value={dashboard.metrics.processingOrders} href="/admin/orders" chartData={dashboard.metricSamples.processingOrders} chartType="bar" color={metricCardColors[2]} />
@@ -379,6 +387,15 @@ export default function AdminDashboardPage() {
             <MetricCard locale={locale} label="Successful payments" value={dashboard.metrics.successfulPayments} href="/admin/payments" detail={dashboard.metrics.successfulPaymentAmountByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2)).join(" · ") || "No successful payments in this range"} chartData={dashboard.metricSamples.successfulPayments} chartType="line" color={metricCardColors[5]} />
             <MetricCard locale={locale} label="Failed payments" value={dashboard.metrics.failedPayments} href="/admin/payments" chartData={dashboard.metricSamples.failedPayments} chartType="bar" color={metricCardColors[6]} />
             <MetricCard locale={locale} label="Payments awaiting completion" value={dashboard.metrics.pendingPayments} href="/admin/payments" chartData={dashboard.metricSamples.pendingPayments} chartType="area" color={metricCardColors[7]} />
+            </div>
+          </section>
+
+          <section aria-label={translate(locale, "Platform-wide overview", "نظرة عامة على المنصة")} className="mt-7">
+            <div className="mb-3">
+              <h2 className="text-base font-bold text-[var(--foreground)]">{translate(locale, "Platform-wide overview", "نظرة عامة على المنصة")}</h2>
+              <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Current platform totals and open moderation/support queues are not narrowed by the transaction filters. New user accounts use the selected date range.", "إجماليات المنصة الحالية وقوائم الإشراف والدعم المفتوحة لا تتأثر بفلاتر المعاملات. عدد حسابات المستخدمين الجديدة يتبع النطاق الزمني المحدد.")}</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
             <MetricCard locale={locale} label="Active users" value={dashboard.metrics.activeUsers} href="/admin/users" chartData={dashboard.metricSamples.activeUsers} chartType="area" color={metricCardColors[8]} />
             <MetricCard locale={locale} label="New user accounts" value={dashboard.metrics.newUsers} href="/admin/users" detail="Created within the selected date range." chartData={dashboard.metricSamples.newUsers} chartType="bar" color={metricCardColors[9]} />
             <MetricCard locale={locale} label="Active sellers" value={dashboard.metrics.activeSellers} href="/admin/sellers" chartData={dashboard.metricSamples.activeSellers} chartType="donut" color={metricCardColors[10]} />
@@ -391,6 +408,7 @@ export default function AdminDashboardPage() {
             <MetricCard locale={locale} label="Store reviews awaiting moderation" value={dashboard.metrics.pendingStoreReviews} href="/admin/store-reviews" chartData={dashboard.metricSamples.pendingStoreReviews} chartType="bar" color={metricCardColors[17]} />
             <MetricCard locale={locale} label="Return requests" value={dashboard.metrics.requestedReturns} href="/admin/returns" chartData={dashboard.metricSamples.requestedReturns} chartType="line" color={metricCardColors[18]} />
             <MetricCard locale={locale} label="Open support tickets" value={dashboard.metrics.openSupportTickets} href="/admin/support" chartData={dashboard.metricSamples.openSupportTickets} chartType="area" color={metricCardColors[19]} />
+            </div>
           </section>
 
           <section aria-label="Metric distributions" className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
