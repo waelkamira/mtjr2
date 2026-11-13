@@ -170,6 +170,7 @@ export async function adjustInventory(input: unknown, now = new Date()) {
       data: {
         inventoryId: inventory.id, type: InventoryMovementType.ADJUSTMENT,
         quantityDelta: data.quantityDelta, idempotencyKey: data.idempotencyKey,
+        referenceType: "MANUAL_ADJUSTMENT", referenceId: data.idempotencyKey,
         note: data.note, createdById: actor.userId
       },
       select: { id: true }
@@ -180,7 +181,7 @@ export async function adjustInventory(input: unknown, now = new Date()) {
       occurredAt: now, metadata: { delta: data.quantityDelta, movementId: movement.id }
     }});
     return { movementId: movement.id, inventoryId: inventory.id, alreadyApplied: false };
-  });
+  }, { isolationLevel: "Serializable" });
 }
 
 export async function createStockTransfer(input: unknown, now = new Date()) {
