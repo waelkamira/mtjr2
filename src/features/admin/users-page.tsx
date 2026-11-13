@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <main aria-busy={loading || Boolean(busy)} className="min-h-screen bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-9">
+    <main aria-busy={loading} className="min-h-screen bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-9">
       <div className="mx-auto max-w-[1600px]">
         <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{translate(locale, "Identity administration", "إدارة الهوية")}</p>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-6">
