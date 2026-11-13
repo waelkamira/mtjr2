@@ -574,3 +574,11 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - Spot checks confirmed route entry files exist for dashboard, product management, brands, commissions, tax rates, coupons, search synonyms, store reviews, users, sellers, products, orders, payments, returns, refunds, support, advertising, question reports, review queue, logistics, financial policies and the super-admin control panel surfaces.
 - The registry still identifies the following administrative routes as not audited or missing implementation: market/currency administration, shipping/carrier configuration, role/permission management, standalone audit log, settings, feature flags, webhooks and integrations. These are intentionally not added as active sidebar links until their real page/API/service boundaries exist.
 - Source commit: `65e296e0ad3f573cf95a3f8879bad9619fa0f9b3`. Re-fetch inspection completed. No typecheck, build, browser, or accessibility automation was run for this small UI change.
+
+
+## Admin navigation authorization audit (2026-11-13)
+
+- The admin shell continues to require an authenticated, MFA-compliant session and at least one global admin-area permission. Navigation visibility is now derived server-side from the authenticated user's unexpired `GLOBAL/GLOBAL` permission grants; browser-provided roles or permission claims are not accepted.
+- Each registered admin link is filtered by its configured permission-key allowlist. Platform-control links additionally require `platform:manage`. People and seller administration links are aligned with the current `users:manage` guard in `src/server/admin/users.ts` and `src/server/admin/sellers.ts`.
+- This is a navigation usability boundary only. Server-side service/API authorization remains authoritative. The per-route allowlists still require a complete route-to-service audit before the admin navigation can be considered fully permission-audited; unknown/unmapped links fail closed and are not shown.
+- Source changes committed to `main`: `31c9ff7`, `92b5566`, `5a7bcd7`. Build, runtime session matrix, and browser verification have not yet been run for these changes.
