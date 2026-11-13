@@ -10,12 +10,15 @@ const mocks = vi.hoisted(() => ({
   orderFindUniqueOrThrow: vi.fn(),
   quoteFindFirst: vi.fn(),
   quoteUpdate: vi.fn(),
+  quoteUpdateMany: vi.fn(),
   cartUpdate: vi.fn(),
+  cartUpdateMany: vi.fn(),
   couponRedemptionCount: vi.fn(),
   couponRedemptionCreate: vi.fn(),
   reservationFindMany: vi.fn(),
   inventoryUpdateMany: vi.fn(),
   reservationUpdate: vi.fn(),
+  reservationUpdateMany: vi.fn(),
   inventoryMovementCreate: vi.fn(),
   vendorOrderCreate: vi.fn(),
   storeFindUniqueOrThrow: vi.fn(),
@@ -25,11 +28,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const tx = {
-  checkoutQuote: { findFirst: mocks.quoteFindFirst, update: mocks.quoteUpdate },
-  cart: { update: mocks.cartUpdate },
+  checkoutQuote: { findFirst: mocks.quoteFindFirst, update: mocks.quoteUpdate, updateMany: mocks.quoteUpdateMany },
+  cart: { update: mocks.cartUpdate, updateMany: mocks.cartUpdateMany },
   order: { create: mocks.orderCreate, findUniqueOrThrow: mocks.orderFindUniqueOrThrow },
   couponRedemption: { count: mocks.couponRedemptionCount, create: mocks.couponRedemptionCreate },
-  inventoryReservation: { findMany: mocks.reservationFindMany, update: mocks.reservationUpdate },
+  inventoryReservation: { findMany: mocks.reservationFindMany, update: mocks.reservationUpdate, updateMany: mocks.reservationUpdateMany },
   inventory: { updateMany: mocks.inventoryUpdateMany },
   inventoryMovement: { create: mocks.inventoryMovementCreate },
   vendorOrder: { create: mocks.vendorOrderCreate },
@@ -96,6 +99,9 @@ describe("checkout order placement", () => {
       { id: "reservation-2", quantity: 1, inventory: { id: "inventory-2", variantId: "variant-2" } }
     ]);
     mocks.inventoryUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.reservationUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.quoteUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.cartUpdateMany.mockResolvedValue({ count: 1 });
     mocks.storeFindUniqueOrThrow.mockResolvedValue({ name: "Store", seller: { ownerId: "seller-1" } });
     mocks.orderFindUniqueOrThrow.mockResolvedValue({
       id: "order-1", orderNumber: "MTJ-ORDER-1", status: "PENDING_PAYMENT", currencyCode: "EUR",
@@ -132,6 +138,31 @@ describe("checkout order placement", () => {
     );
     expect(vendorDiscount).toBe(BigInt(3000));
     expect(mocks.inventoryMovementCreate).toHaveBeenCalledTimes(2);
+    expect(mocks.reservationUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "reservation-1", status: "ACTIVE", expiresAt: { gt: expect.any(Date) } },
+      data: { status: "CONSUMED", consumedAt: expect.any(Date) }
+    }));
+    expect(mocks.quoteUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "quote-1", status: "ACTIVE", expiresAt: { gt: expect.any(Date) } },
+      data: { status: "CONVERTED" }
+    }));
+    expect(mocks.cartUpdateMany).toHaveBeenCalledWith({
+      where: { id: "cart-1", status: "ACTIVE" },
+      data: { status: "CHECKED_OUT" }
+    });
+
+  });
+
+  it("rolls back order placement if a reservation was released before it could be consumed", async () => {
+    mocks.reservationUpdateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
+
+    await expect(placeOrderFromCheckoutQuote("", "quote-1"))
+      .rejects.toThrow("reservation expired or was released");
+
+    expect(mocks.quoteUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.cartUpdateMany).not.toHaveBeenCalled();
   });
 
   it("does not place an order when the coupon limit is exhausted", async () => {
