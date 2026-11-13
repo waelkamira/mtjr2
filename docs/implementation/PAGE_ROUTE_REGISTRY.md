@@ -605,3 +605,16 @@ The following sidebar keys were checked against the actual server domain service
 Corrections applied to `src/features/admin/admin-navigation.tsx`: logistics, support, product reviews, store reviews, coupons, and search synonyms. Advertising and question reports already matched their verified service guards.
 
 **Remaining gaps:** this is not a full permission audit. The page routes and mutation endpoints for commissions, refunds, tax rates, payment providers, seller payout methods, financial policies, ledger, reports, question moderation, and the super-admin control panel still need route-to-service tracing. Do not infer that `platform:manage` is correct for each of those pages merely because it is a platform-level screen. The layout currently passes only GLOBAL grants to the sidebar; scoped grants intentionally do not satisfy permission checks without a trusted resource scope, so store-scoped seller permissions should not automatically expose platform-wide admin navigation.
+
+
+Additional verified corrections from the same audit:
+
+| Admin route | Verified guard | Sidebar permission |
+|---|---|---|
+| `/admin/tax-rates` | `src/server/tax/tax.ts` checks `users:manage` for tax-rule administration | `users:manage` |
+| `/admin/review` | `src/server/reviews/product-reviews.ts` requires `users:manage` for the reported-review queue | `users:manage` |
+| `/admin/commissions` | Page and `src/server/admin/commission-management.ts` require `platform:manage` | `platform:manage` |
+| `/admin/financial-policies` | Page and `src/server/admin/financial-policy-management.ts` require `platform:manage` | `platform:manage` |
+| `/admin/payment-providers` | `src/server/admin/payment-providers.ts` requires platform management plus the dedicated `payment.providers.manage` permission | `platform:manage` is the navigation gate; service-level provider permission remains independently enforced |
+
+The tax-rate and reported-review sidebar mappings were corrected. The dedicated payment-provider permission is intentionally not added to the sidebar map as a replacement for `platform:manage`; the service requires both checks, while the layout gate still controls platform-wide navigation.
