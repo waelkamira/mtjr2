@@ -214,7 +214,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
                       onClick={closeMobile}
                       title={collapsed ? label : undefined}
                       aria-current={active ? "page" : undefined}
-                      className={`group relative flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active ? "border-orange-100 bg-orange-50 text-[#D96500]" : "border-transparent text-slate-600 hover:border-slate-100 hover:bg-slate-50 hover:text-[var(--foreground)]"}`}
+                      className={`group relative flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active ? "border-orange-100 bg-orange-50 text-[#D96500]" : "border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]"}`}
                     >
                       {active && <span className={`absolute inset-y-2 w-[3px] rounded-full bg-[#FF8C1C] ${isArabic ? "right-0" : "left-0"}`} />}
                       <Icon size={17} strokeWidth={active ? 2.3 : 1.9} className={`shrink-0 transition-colors ${active ? "text-[#F0780B]" : "text-[var(--muted)] group-hover:text-[#E8750A]"}`} />
@@ -239,7 +239,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
               <Shield size={17} />
             </span>
             <span className={collapsed ? "lg:hidden" : "min-w-0"}>
-              <span className="block text-xs font-bold text-slate-700">
+              <span className="block text-xs font-bold text-[var(--foreground)]">
                 {translate(locale, "Protected workspace", "مساحة عمل محمية")}
               </span>
               <span className="mt-0.5 block text-[10px] text-[var(--muted)]">
