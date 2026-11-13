@@ -48,6 +48,7 @@ export default function AdminReviewsPage() {
     setReports(reportData.items || []);
     setAppeals(appealData.items || []);
   }, [locale]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the queue state before the locale-scoped async reload
   useEffect(() => {
     let active = true;
     setLoading(true);
