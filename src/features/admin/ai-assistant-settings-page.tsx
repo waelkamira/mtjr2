@@ -94,7 +94,7 @@ export default function AiAssistantSettingsPage() {
           <section className="rounded-2xl border border-[var(--border)] bg-white p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{t("Runtime status", "حالة التشغيل")}</h2>
+                <h2 className="text-lg font-semibold text-[var(--color-ink-950)]">{t("Runtime status", "حالة التشغيل")}</h2>
                 <p className="mt-1 text-sm text-[var(--muted)]">{settings.effectiveEnabled ? t("The assistant is enabled by all required switches.", "المساعد مفعّل بعد اجتياز جميع مفاتيح التشغيل.") : t("The assistant is currently disabled.", "المساعد معطّل حاليًا.")}</p>
               </div>
               <span className={settings.effectiveEnabled ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800" : "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"}>{settings.effectiveEnabled ? t("Enabled", "مفعّل") : t("Disabled", "معطّل")}</span>
@@ -104,7 +104,7 @@ export default function AiAssistantSettingsPage() {
                 <p className="text-xs text-[var(--muted)]">{t("Deployment master switch", "مفتاح بيئة التشغيل")}</p>
                 <p className="mt-1 font-semibold">{settings.environmentEnabled ? t("Enabled", "مفعّل") : t("Disabled", "معطّل")}</p>
               </div>
-              <div className="rounded-xl bg-[var(--color-ivory-100)] p-4">
+              <div className="rounded-xl bg-[var(--surface-soft)] p-4">
                 <p className="text-xs text-[var(--muted)]">{t("Groq API key", "مفتاح Groq API")}</p>
                 <p className="mt-1 font-semibold">{settings.providerKeyConfigured ? t("Configured · value hidden", "مُعدّ · القيمة مخفية") : t("Not configured", "غير مُعدّ")}</p>
               </div>
@@ -112,7 +112,7 @@ export default function AiAssistantSettingsPage() {
           </section>
 
           <section className="rounded-2xl border border-[var(--border)] bg-white p-6">
-            <h2 className="text-lg font-semibold text-[var(--color-forest-950)]">{t("Assistant configuration", "إعدادات المساعد")}</h2>
+            <h2 className="text-lg font-semibold text-[var(--color-ink-950)]">{t("Assistant configuration", "إعدادات المساعد")}</h2>
             <label className="mt-5 flex items-start justify-between gap-4">
               <span>
                 <span className="block text-sm font-semibold">{t("Enable customer assistant", "تفعيل مساعد العملاء")}</span>
