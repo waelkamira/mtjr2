@@ -35,7 +35,12 @@ type LedgerLine = {
 };
 type LedgerResponse = {
   accounts: { items: LedgerAccount[]; nextCursor: string | null };
-  activity: { account: LedgerAccount; items: LedgerLine[]; nextCursor: string | null } | null;
+  activity: {
+    account: LedgerAccount;
+    totals: { debitMinor: string; creditMinor: string; lineCount: number };
+    items: LedgerLine[];
+    nextCursor: string | null;
+  } | null;
   error?: string;
 };
 
@@ -184,6 +189,20 @@ export default function AdminLedgerPage() {
             {activity ? <div className="mt-2 rounded-xl bg-stone-50 p-3">
               <p className="font-semibold text-sm text-[var(--color-ink-950)]">{activity.account.code} · {activity.account.name}</p>
               <p className="mt-1 text-xs text-[var(--muted)]">{activity.account.currencyCode} · {activity.account.accountType} · {activity.account.scopeType}: {activity.account.scopeId}</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+                  <p className="text-[11px] text-[var(--muted)]">{translate(locale, "Posted debits · all time", "إجمالي المدين المنشور")}</p>
+                  <p className="mt-1 text-sm font-bold tabular-nums text-[var(--foreground)]">{minorAmount(activity.totals.debitMinor, activity.account.currencyCode, activity.account.currency.minorUnit)}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+                  <p className="text-[11px] text-[var(--muted)]">{translate(locale, "Posted credits · all time", "إجمالي الدائن المنشور")}</p>
+                  <p className="mt-1 text-sm font-bold tabular-nums text-[var(--foreground)]">{minorAmount(activity.totals.creditMinor, activity.account.currencyCode, activity.account.currency.minorUnit)}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+                  <p className="text-[11px] text-[var(--muted)]">{translate(locale, "Journal lines", "أسطر القيود")}</p>
+                  <p className="mt-1 text-sm font-bold tabular-nums text-[var(--foreground)]">{activity.totals.lineCount.toLocaleString(locale === "ar" ? "ar" : "en")}</p>
+                </div>
+              </div>
             </div> : <p className="py-8 text-center text-sm text-[var(--muted)]">{translate(locale, "Select an account to inspect its journal lines.", "اختر حساباً لاستعراض أسطر قيوده.")}</p>}
             {activity && activity.items.length === 0 ? <p className="py-8 text-center text-sm text-[var(--muted)]">{translate(locale, "No posted journal lines for this account.", "لا توجد أسطر قيود منشورة لهذا الحساب.")}</p> : null}
             {activity?.items.length ? <div className="mt-3 overflow-x-auto">
