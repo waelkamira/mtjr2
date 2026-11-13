@@ -556,3 +556,12 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 | Syrian product location picker and Leaflet map | `/seller/products` → geography governorate/district/subdistrict/locality APIs → Leaflet | Administrative names/centroids come from the pinned OpenSyria release. Neighbourhood remains seller-entered text, not an official administrative record. | Exact-head Browser E2E requires a coordinate-backed Damascus path and verifies zoom 7/10/12/15, mouse-wheel zoom increase, and zoom 16 after neighbourhood-field blur. |
 
 **Exact-head verification:** `main` code SHA `aed7c278b8893b4121c9aebdcdec673d613516f3` — CI [43402319119](https://github.com/waelkamira/mtjr2/actions/runs/43402319119) PASS (120 Vitest files / 645 tests, Prisma validate/migrate/generate, TypeScript, ESLint with 0 errors, production build / 180 static pages); Browser E2E [43402319145](https://github.com/waelkamira/mtjr2/actions/runs/43402319145) PASS (14/14); PostgreSQL Integration [43402319018](https://github.com/waelkamira/mtjr2/actions/runs/43402319018) PASS (4 files / 11 tests); CodeQL [43402319123](https://github.com/waelkamira/mtjr2/actions/runs/43402319123) PASS. Vercel production deployment `dpl_Brn6N9Lo3UVTnTSav3bjQNeq4Ehg` is `READY`.
+
+
+## 2026-11-13 — Admin dashboard metric-scope clarification
+
+| Surface | Route / UI → API | Data scope | Status |
+|---|---|---|---|
+| Admin dashboard commerce metrics | `/admin/dashboard` → `GET /api/admin/dashboard` → `getAdminDashboard` → PostgreSQL Order and Payment aggregates | Order metrics use selected date, country, currency, seller and store filters. Payment counts and amounts are associated with orders placed in that selected range (not payment-created timestamps). Currency amounts remain separated by currency. | UI now separates selected-period commerce activity from platform-wide entity totals and open moderation/support queues. New-user counts use the selected date range; active user/seller/store and catalog/review/return/support counts remain global snapshots. Source re-fetched after commit; no build, database or browser verification performed for this clarification. |
+
+**Implementation commits:** `4e13f3f1041d31f99b98e3b6614c84a59d4342cf`, `59db01f20d6587468d0b2191bb8c5cd80698fb`. These commits clarify dashboard presentation and filter semantics; they do not add accounting revenue, payout, refund, dispute or operational-health metrics.
