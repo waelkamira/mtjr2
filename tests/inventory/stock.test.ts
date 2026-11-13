@@ -318,7 +318,12 @@ describe("seller inventory operations", () => {
       where: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 2 },
       data: { quantityOnHand: { increment: 5 } }
     }));
-    expect(mocks.inventoryMovementCreate).toHaveBeenCalledOnce();
+    expect(mocks.inventoryMovementCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        type: "ADJUSTMENT", quantityDelta: 5, referenceType: "MANUAL_ADJUSTMENT",
+        referenceId: "adjustment-key-0002", idempotencyKey: "adjustment-key-0002"
+      })
+    }));
     expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
