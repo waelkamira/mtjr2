@@ -39,15 +39,17 @@ async function releaseQuoteReservations(tx: Prisma.TransactionClient, quoteId: s
       data: { quantityReserved: { decrement: reservation.quantity } }
     });
     if (changed.count !== 1) throw new Error("Inventory reservation reconciliation is required.");
-    await tx.inventoryReservation.update({
-      where: { id: reservation.id },
+    const released = await tx.inventoryReservation.updateMany({
+      where: { id: reservation.id, status: InventoryReservationStatus.ACTIVE },
       data: { status: status === CheckoutQuoteStatus.EXPIRED ? InventoryReservationStatus.EXPIRED : InventoryReservationStatus.RELEASED, releasedAt: now }
     });
+    if (released.count !== 1) throw new Error("Inventory reservation changed concurrently; retry checkout reconciliation.");
   }
-  await tx.checkoutQuote.updateMany({
+  const changedQuote = await tx.checkoutQuote.updateMany({
     where: { id: quoteId, status: CheckoutQuoteStatus.ACTIVE },
     data: { status }
   });
+  if (changedQuote.count !== 1) throw new Error("Checkout quote changed concurrently; retry checkout reconciliation.");
 }
 
 async function expireReservations(tx: Prisma.TransactionClient, now: Date) {
