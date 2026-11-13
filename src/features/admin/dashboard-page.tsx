@@ -72,6 +72,23 @@ type Dashboard = {
 
 type Filters = { from: string; to: string; countryCode: string; currencyCode: string; sellerId: string; storeId: string };
 
+const dashboardRoutePermissions: Record<string, string[]> = {
+  "/admin/orders": ["users:manage"],
+  "/admin/payments": ["payments:read", "payments:refund"],
+  "/admin/users": ["users:manage"],
+  "/admin/sellers": ["users:manage"],
+  "/admin/product-management": ["catalog:read", "catalog:manage"],
+  "/admin/products": ["catalog:read"],
+  "/admin/reviews": ["users:manage"],
+  "/admin/store-reviews": ["users:manage"],
+  "/admin/returns": ["returns:manage"],
+  "/admin/support": ["support:manage"]
+};
+
+function canOpenDashboardRoute(permissions: string[], href: string) {
+  return (dashboardRoutePermissions[href] || []).some((permission) => permissions.includes(permission));
+}
+
 const metricCardColors = Array.from({ length: 20 }, (_, index) => chartColor(index));
 
 function defaultFilters(): Filters {
@@ -244,7 +261,7 @@ function MetricCard({
 }
 
 
-export default function AdminDashboardPage() {
+export default function AdminDashboardPage({ permissions = [] }: { permissions?: string[] }) {\n  const routeHref = (href: string) => canOpenDashboardRoute(permissions, href) ? href : undefined;
   const { locale } = useLocale();
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -379,14 +396,14 @@ export default function AdminDashboardPage() {
               <span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-            <MetricCard locale={locale} label="Total orders" value={dashboard.metrics.totalOrders} href="/admin/orders" detail={`${dashboard.metrics.previousPeriodOrders} in the previous equivalent period`} chartData={dashboard.metricSamples.totalOrders} chartType="area" color={metricCardColors[0]} />
-            <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} href="/admin/orders" chartData={dashboard.metricSamples.pendingOrders} chartType="line" color={metricCardColors[1]} />
-            <MetricCard locale={locale} label="Orders being processed" value={dashboard.metrics.processingOrders} href="/admin/orders" chartData={dashboard.metricSamples.processingOrders} chartType="bar" color={metricCardColors[2]} />
-            <MetricCard locale={locale} label="Fulfilled or completed orders" value={dashboard.metrics.completedOrders} href="/admin/orders" chartData={dashboard.metricSamples.completedOrders} chartType="donut" color={metricCardColors[3]} />
+            <MetricCard locale={locale} label="Total orders" value={dashboard.metrics.totalOrders} href={routeHref("/admin/orders")} detail={`${dashboard.metrics.previousPeriodOrders} in the previous equivalent period`} chartData={dashboard.metricSamples.totalOrders} chartType="area" color={metricCardColors[0]} />
+            <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} href={routeHref("/admin/orders")} chartData={dashboard.metricSamples.pendingOrders} chartType="line" color={metricCardColors[1]} />
+            <MetricCard locale={locale} label="Orders being processed" value={dashboard.metrics.processingOrders} href={routeHref("/admin/orders")} chartData={dashboard.metricSamples.processingOrders} chartType="bar" color={metricCardColors[2]} />
+            <MetricCard locale={locale} label="Fulfilled or completed orders" value={dashboard.metrics.completedOrders} href={routeHref("/admin/orders")} chartData={dashboard.metricSamples.completedOrders} chartType="donut" color={metricCardColors[3]} />
             <MetricCard locale={locale} label="Gross order value" value={dashboard.metrics.grossOrderValueByCurrency.length ? dashboard.metrics.grossOrderValueByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2)).join(" · ") : "—"} detail="Placed orders excluding cancellations; includes orders not yet paid." chartData={dashboard.metricSamples.grossOrderValue} chartType="donut" color={metricCardColors[4]} />
-            <MetricCard locale={locale} label="Successful payments" value={dashboard.metrics.successfulPayments} href="/admin/payments" detail={dashboard.metrics.successfulPaymentAmountByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2)).join(" · ") || "No successful payments in this range"} chartData={dashboard.metricSamples.successfulPayments} chartType="line" color={metricCardColors[5]} />
-            <MetricCard locale={locale} label="Failed payments" value={dashboard.metrics.failedPayments} href="/admin/payments" chartData={dashboard.metricSamples.failedPayments} chartType="bar" color={metricCardColors[6]} />
-            <MetricCard locale={locale} label="Payments awaiting completion" value={dashboard.metrics.pendingPayments} href="/admin/payments" chartData={dashboard.metricSamples.pendingPayments} chartType="area" color={metricCardColors[7]} />
+            <MetricCard locale={locale} label="Successful payments" value={dashboard.metrics.successfulPayments} href={routeHref("/admin/payments")} detail={dashboard.metrics.successfulPaymentAmountByCurrency.map((row) => money(row.amountMinor, row.currencyCode, currencyUnits.get(row.currencyCode) ?? 2)).join(" · ") || "No successful payments in this range"} chartData={dashboard.metricSamples.successfulPayments} chartType="line" color={metricCardColors[5]} />
+            <MetricCard locale={locale} label="Failed payments" value={dashboard.metrics.failedPayments} href={routeHref("/admin/payments")} chartData={dashboard.metricSamples.failedPayments} chartType="bar" color={metricCardColors[6]} />
+            <MetricCard locale={locale} label="Payments awaiting completion" value={dashboard.metrics.pendingPayments} href={routeHref("/admin/payments")} chartData={dashboard.metricSamples.pendingPayments} chartType="area" color={metricCardColors[7]} />
             </div>
           </section>
 
@@ -396,18 +413,18 @@ export default function AdminDashboardPage() {
               <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Current platform totals and open moderation/support queues are not narrowed by the transaction filters. New user accounts use the selected date range.", "إجماليات المنصة الحالية وقوائم الإشراف والدعم المفتوحة لا تتأثر بفلاتر المعاملات. عدد حسابات المستخدمين الجديدة يتبع النطاق الزمني المحدد.")}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-            <MetricCard locale={locale} label="Active users" value={dashboard.metrics.activeUsers} href="/admin/users" chartData={dashboard.metricSamples.activeUsers} chartType="area" color={metricCardColors[8]} />
-            <MetricCard locale={locale} label="New user accounts" value={dashboard.metrics.newUsers} href="/admin/users" detail="Created within the selected date range." chartData={dashboard.metricSamples.newUsers} chartType="bar" color={metricCardColors[9]} />
-            <MetricCard locale={locale} label="Active sellers" value={dashboard.metrics.activeSellers} href="/admin/sellers" chartData={dashboard.metricSamples.activeSellers} chartType="donut" color={metricCardColors[10]} />
-            <MetricCard locale={locale} label="Pending seller applications" value={dashboard.metrics.pendingSellers} href="/admin/sellers" chartData={dashboard.metricSamples.pendingSellers} chartType="line" color={metricCardColors[11]} />
-            <MetricCard locale={locale} label="Active stores" value={dashboard.metrics.activeStores} href="/admin/sellers" chartData={dashboard.metricSamples.activeStores} chartType="area" color={metricCardColors[12]} />
-            <MetricCard locale={locale} label="Suspended stores" value={dashboard.metrics.suspendedStores} href="/admin/sellers" chartData={dashboard.metricSamples.suspendedStores} chartType="bar" color={metricCardColors[13]} />
-            <MetricCard locale={locale} label="Total products" value={dashboard.metrics.totalProducts} href="/admin/product-management" chartData={dashboard.metricSamples.totalProducts} chartType="bar" color={metricCardColors[14]} />
-            <MetricCard locale={locale} label="Products awaiting approval" value={dashboard.metrics.pendingProducts} href="/admin/products" chartData={dashboard.metricSamples.pendingProducts} chartType="line" color={metricCardColors[15]} />
-            <MetricCard locale={locale} label="Product reviews awaiting moderation" value={dashboard.metrics.pendingProductReviews} href="/admin/reviews" chartData={dashboard.metricSamples.pendingProductReviews} chartType="donut" color={metricCardColors[16]} />
-            <MetricCard locale={locale} label="Store reviews awaiting moderation" value={dashboard.metrics.pendingStoreReviews} href="/admin/store-reviews" chartData={dashboard.metricSamples.pendingStoreReviews} chartType="bar" color={metricCardColors[17]} />
-            <MetricCard locale={locale} label="Return requests" value={dashboard.metrics.requestedReturns} href="/admin/returns" chartData={dashboard.metricSamples.requestedReturns} chartType="line" color={metricCardColors[18]} />
-            <MetricCard locale={locale} label="Open support tickets" value={dashboard.metrics.openSupportTickets} href="/admin/support" chartData={dashboard.metricSamples.openSupportTickets} chartType="area" color={metricCardColors[19]} />
+            <MetricCard locale={locale} label="Active users" value={dashboard.metrics.activeUsers} href={routeHref("/admin/users")} chartData={dashboard.metricSamples.activeUsers} chartType="area" color={metricCardColors[8]} />
+            <MetricCard locale={locale} label="New user accounts" value={dashboard.metrics.newUsers} href={routeHref("/admin/users")} detail="Created within the selected date range." chartData={dashboard.metricSamples.newUsers} chartType="bar" color={metricCardColors[9]} />
+            <MetricCard locale={locale} label="Active sellers" value={dashboard.metrics.activeSellers} href={routeHref("/admin/sellers")} chartData={dashboard.metricSamples.activeSellers} chartType="donut" color={metricCardColors[10]} />
+            <MetricCard locale={locale} label="Pending seller applications" value={dashboard.metrics.pendingSellers} href={routeHref("/admin/sellers")} chartData={dashboard.metricSamples.pendingSellers} chartType="line" color={metricCardColors[11]} />
+            <MetricCard locale={locale} label="Active stores" value={dashboard.metrics.activeStores} href={routeHref("/admin/sellers")} chartData={dashboard.metricSamples.activeStores} chartType="area" color={metricCardColors[12]} />
+            <MetricCard locale={locale} label="Suspended stores" value={dashboard.metrics.suspendedStores} href={routeHref("/admin/sellers")} chartData={dashboard.metricSamples.suspendedStores} chartType="bar" color={metricCardColors[13]} />
+            <MetricCard locale={locale} label="Total products" value={dashboard.metrics.totalProducts} href={routeHref("/admin/product-management")} chartData={dashboard.metricSamples.totalProducts} chartType="bar" color={metricCardColors[14]} />
+            <MetricCard locale={locale} label="Products awaiting approval" value={dashboard.metrics.pendingProducts} href={routeHref("/admin/products")} chartData={dashboard.metricSamples.pendingProducts} chartType="line" color={metricCardColors[15]} />
+            <MetricCard locale={locale} label="Product reviews awaiting moderation" value={dashboard.metrics.pendingProductReviews} href={routeHref("/admin/reviews")} chartData={dashboard.metricSamples.pendingProductReviews} chartType="donut" color={metricCardColors[16]} />
+            <MetricCard locale={locale} label="Store reviews awaiting moderation" value={dashboard.metrics.pendingStoreReviews} href={routeHref("/admin/store-reviews")} chartData={dashboard.metricSamples.pendingStoreReviews} chartType="bar" color={metricCardColors[17]} />
+            <MetricCard locale={locale} label="Return requests" value={dashboard.metrics.requestedReturns} href={routeHref("/admin/returns")} chartData={dashboard.metricSamples.requestedReturns} chartType="line" color={metricCardColors[18]} />
+            <MetricCard locale={locale} label="Open support tickets" value={dashboard.metrics.openSupportTickets} href={routeHref("/admin/support")} chartData={dashboard.metricSamples.openSupportTickets} chartType="area" color={metricCardColors[19]} />
             </div>
           </section>
 
@@ -484,15 +501,15 @@ export default function AdminDashboardPage() {
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
               <h2 className="text-lg font-semibold text-[var(--foreground)]">{translate(locale, "Open administrative queues", "قوائم الانتظار الإدارية المفتوحة")}</h2>
               <div className="mt-4 divide-y divide-[var(--border)]">
-                <QueueLink locale={locale} href="/admin/sellers" label="Seller applications" count={dashboard.metrics.pendingSellers} />
-                <QueueLink locale={locale} href="/admin/products" label="Product approvals" count={dashboard.metrics.pendingProducts} />
-                <QueueLink locale={locale} href="/admin/orders" label="Orders awaiting payment" count={dashboard.metrics.pendingOrders} />
-                <QueueLink locale={locale} href="/admin/payments" label="Failed payments" count={dashboard.metrics.failedPayments} />
-                <QueueLink locale={locale} href="/admin/payments" label="Payments awaiting completion" count={dashboard.metrics.pendingPayments} />
-                <QueueLink locale={locale} href="/admin/reviews" label="Product review moderation" count={dashboard.metrics.pendingProductReviews} />
-                <QueueLink locale={locale} href="/admin/store-reviews" label="Store review moderation" count={dashboard.metrics.pendingStoreReviews} />
-                <QueueLink locale={locale} href="/admin/returns" label="Return requests" count={dashboard.metrics.requestedReturns} />
-                <QueueLink locale={locale} href="/admin/support" label="Customer support" count={dashboard.metrics.openSupportTickets} />
+                <QueueLink locale={locale} href={routeHref("/admin/sellers")} label="Seller applications" count={dashboard.metrics.pendingSellers} />
+                <QueueLink locale={locale} href={routeHref("/admin/products")} label="Product approvals" count={dashboard.metrics.pendingProducts} />
+                <QueueLink locale={locale} href={routeHref("/admin/orders")} label="Orders awaiting payment" count={dashboard.metrics.pendingOrders} />
+                <QueueLink locale={locale} href={routeHref("/admin/payments")} label="Failed payments" count={dashboard.metrics.failedPayments} />
+                <QueueLink locale={locale} href={routeHref("/admin/payments")} label="Payments awaiting completion" count={dashboard.metrics.pendingPayments} />
+                <QueueLink locale={locale} href={routeHref("/admin/reviews")} label="Product review moderation" count={dashboard.metrics.pendingProductReviews} />
+                <QueueLink locale={locale} href={routeHref("/admin/store-reviews")} label="Store review moderation" count={dashboard.metrics.pendingStoreReviews} />
+                <QueueLink locale={locale} href={routeHref("/admin/returns")} label="Return requests" count={dashboard.metrics.requestedReturns} />
+                <QueueLink locale={locale} href={routeHref("/admin/support")} label="Customer support" count={dashboard.metrics.openSupportTickets} />
               </div>
             </div>
           </section>
@@ -515,7 +532,7 @@ export default function AdminDashboardPage() {
   );
 }
 
-function QueueLink({ locale, href, label, count }: { locale: "ar" | "en"; href: string; label: string; count: number }) {
+function QueueLink({ locale, permissions, href, label, count }: { locale: "ar" | "en"; permissions: string[]; href: string; label: string; count: number }) {
   const labels: Record<string, string> = {
     "Product review moderation": "الإشراف على مراجعات المنتجات",
     "Store review moderation": "الإشراف على مراجعات المتاجر",
@@ -527,5 +544,5 @@ function QueueLink({ locale, href, label, count }: { locale: "ar" | "en"; href: 
     "Failed payments": "مدفوعات فاشلة",
     "Payments awaiting completion": "مدفوعات بانتظار الإكمال"
   };
-  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 font-semibold">{count}</span></Link>;
+  if (!canOpenDashboardRoute(permissions, href)) return null;\n  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 font-semibold">{count}</span></Link>;
 }
