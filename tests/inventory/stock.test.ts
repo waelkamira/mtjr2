@@ -166,13 +166,28 @@ describe("seller inventory operations", () => {
       id: "count-1", storeId: "store-1", status: "IN_PROGRESS", note: null,
       warehouse: { id: "warehouse-1", storeId: "store-1", isActive: true, store: { status: "ACTIVE", seller: { ownerId: "owner-1", status: "ACTIVE" } } },
       lines: [{ id: "line-1", inventoryId: "inventory-1", expectedQuantity: 10, expectedUpdatedAt: updatedAt, countedQuantity: 8, note: null,
-        inventory: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 0, updatedAt } }]
+        inventory: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 3, updatedAt } }]
     });
     mocks.inventoryUpdateMany.mockResolvedValue({ count: 1 });
     await expect(completeStockCount("count-1")).resolves.toMatchObject({ status: "COMPLETED", adjustedLines: 1, totalVariance: -2 });
     expect(mocks.inventoryUpdateMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: "inventory-1", quantityOnHand: 10, quantityReserved: { lte: 8 } }), data: { quantityOnHand: 8 } }));
+    expect(mocks.inventoryUpdateMany.mock.calls[0][0].data).not.toHaveProperty("quantityQuarantined");
+    expect(mocks.inventoryUpdateMany.mock.calls[0][0].data).not.toHaveProperty("quantityReserved");
     expect(mocks.inventoryMovementCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ type: "ADJUSTMENT", quantityDelta: -2, referenceType: "STOCK_COUNT", idempotencyKey: "stock-count:count-1:line-1" }) }));
     expect(mocks.stockCountSessionUpdateMany).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a physical count below already reserved stock", async () => {
+    const updatedAt = new Date("2026-11-09T10:00:00Z");
+    mocks.stockCountSessionFindUnique.mockResolvedValue({
+      id: "count-reserved", storeId: "store-1", status: "IN_PROGRESS",
+      warehouse: { id: "warehouse-1", storeId: "store-1", isActive: true, store: { status: "ACTIVE", seller: { ownerId: "owner-1", status: "ACTIVE" } } },
+      lines: [{ id: "line-reserved", inventoryId: "inventory-1", expectedQuantity: 10, expectedUpdatedAt: updatedAt, countedQuantity: 1, note: null,
+        inventory: { id: "inventory-1", quantityOnHand: 10, quantityReserved: 2, quantityQuarantined: 4, updatedAt } }]
+    });
+    await expect(completeStockCount("count-reserved")).rejects.toThrow("lower than the quantity already reserved");
+    expect(mocks.inventoryUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.inventoryMovementCreate).not.toHaveBeenCalled();
   });
 
   it("returns an authorized completed count replay without applying stock twice", async () => {
