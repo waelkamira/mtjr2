@@ -204,28 +204,28 @@ export default function PaymentProvidersPage() {
     } finally { setBusyId(""); }
   }
 
-  const inputClass = "mt-1 w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--foreground)]";
+  const inputClass = "mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)]";
   const visibleItems = items.filter((item) => item.status !== "ARCHIVED");
 
   return (
-    <main dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto min-h-screen w-full max-w-[1600px] bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-8">
+    <main aria-busy={loading || saving || busyId !== "" || rotationBusy} dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto min-h-screen w-full max-w-[1600px] bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1600px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{t("Platform finance", "مالية المنصة")}</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{t("Payment providers", "مزودو الدفع")}</h1>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">{t("Payment providers", "مزودو الدفع")}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{t("Configure supported payment adapters, verify credentials, manage test/live records and archive safely. Secrets are encrypted at rest and never returned to this page.", "أضف إعدادات بوابات الدفع المدعومة وتحقق من بياناتها وأدر بيئتي الاختبار والإنتاج وأرشفها بأمان. تُشفّر الأسرار في قاعدة البيانات ولا تُعاد إلى هذه الصفحة.")}</p>
           </div>
-          <button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white">{showForm ? t("Close form", "إغلاق النموذج") : t("Add provider", "إضافة مزود دفع")}</button>
+          <div className="flex flex-wrap gap-2"><button type="button" onClick={() => { setLoading(true); setError(""); void load(); }} disabled={loading || saving || Boolean(busyId)} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] disabled:opacity-50">{loading ? t("Refreshing…", "جارٍ التحديث…") : t("Refresh", "تحديث")}</button><button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white">{showForm ? t("Close form", "إغلاق النموذج") : t("Add provider", "إضافة مزود دفع")}</button></div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--color-ivory-100)] p-4 text-sm leading-6 text-[var(--foreground)]">
+        <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm leading-6 text-[var(--foreground)]">
           {t("Active database configurations now drive new checkout sessions for their selected TEST/LIVE environment, supported countries and currencies. Each payment retains an encrypted credential snapshot so later credential rotation or provider disablement does not break verification of its existing webhook events.", "تتحكم الإعدادات النشطة المخزنة في قاعدة البيانات الآن بعمليات الدفع الجديدة وفق بيئة TEST/LIVE والدول والعملات المدعومة. يحتفظ كل دفع بنسخة مشفرة من بيانات الاعتماد حتى لا يؤدي تدوير المفاتيح أو تعطيل المزود إلى تعطيل التحقق من إشعارات المدفوعات القائمة.")}
         </div>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
 
-        {showForm && <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:p-6">
+        {showForm && <section className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm lg:p-6">
           <h2 className="text-lg font-semibold text-[var(--color-ink-950)]">{t("New provider configuration", "إعداد مزود دفع جديد")}</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm font-medium">{t("Provider", "المزود")}
@@ -255,7 +255,7 @@ export default function PaymentProvidersPage() {
           <div className="mt-5 flex flex-wrap gap-3"><button type="button" disabled={saving} onClick={() => void create()} className="rounded-xl bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving ? t("Saving…", "جارٍ الحفظ…") : t("Save encrypted configuration", "حفظ الإعدادات المشفرة")}</button><button type="button" onClick={() => { setDraft(emptyDraft); setShowForm(false); }} className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold">{t("Cancel", "إلغاء")}</button></div>
         </section>}
 
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="max-w-3xl">
               <h2 className="font-semibold">{t("Credential encryption key rotation", "تدوير مفاتيح تشفير بيانات الاعتماد")}</h2>
