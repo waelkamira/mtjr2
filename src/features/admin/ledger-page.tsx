@@ -40,7 +40,7 @@ type LedgerResponse = {
 };
 
 const accountTypes = ["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"] as const;
-const fieldClass = "min-w-0 rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--color-ink-950)] shadow-sm outline-none focus:border-[var(--color-orange-500)] focus:ring-2 focus:ring-orange-100";
+const fieldClass = "min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)] shadow-sm outline-none focus:border-[var(--color-orange-500)] focus:ring-2 focus:ring-orange-100";
 
 function minorAmount(value: string, currency: string, minorUnit: number) {
   const amount = BigInt(value);
@@ -113,23 +113,23 @@ export default function AdminLedgerPage() {
   const activity = data?.activity;
 
   return (
-    <main className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
+    <main aria-busy={loading} className="min-h-screen px-3 py-5 sm:px-5 sm:py-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--color-copper-600)]">{translate(locale, "Finance · Accounting", "المالية · المحاسبة")}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-semibold text-[var(--color-forest-950)]">{translate(locale, "General ledger", "دفتر الأستاذ العام")}</h1>
+            <h1 className="text-3xl font-semibold text-[var(--foreground)]">{translate(locale, "General ledger", "دفتر الأستاذ العام")}</h1>
             <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Read-only view of posted accounts and immutable journal activity.", "عرض للقراءة فقط للحسابات والقيود المحاسبية المنشورة غير القابلة للتعديل.")}</p>
           </div>
-          <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700">{translate(locale, "Read only", "قراءة فقط")}</span>
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)]">{translate(locale, "Read only", "قراءة فقط")}</span>
         </div>
 
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
           {translate(locale, "This screen does not calculate withdrawable balances or initiate postings, refunds, settlements, or payouts. Account totals are intentionally omitted until the approved accounting and settlement policies define their meaning.", "هذه الشاشة لا تحسب أرصدة قابلة للسحب ولا تنفذ قيوداً أو استردادات أو تسويات أو تحويلات. تم إخفاء إجماليات الحسابات إلى أن تحدد السياسات المحاسبية والتسوية المعتمدة معناها.")}
         </div>
 
-        <section className="mt-5 rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm sm:p-5">
-          <h2 className="text-base font-semibold text-[var(--color-forest-950)]">{translate(locale, "Account filters", "تصفية الحسابات")}</h2>
+        <section className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:p-5">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">{translate(locale, "Account filters", "تصفية الحسابات")}</h2>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <label className="text-xs font-medium text-[var(--muted)]">{translate(locale, "Search code, name or scope", "بحث بالرمز أو الاسم أو النطاق")}
               <input className={`mt-1 w-full ${fieldClass}`} value={query} onChange={(event) => { setLoading(true); setQuery(event.target.value); }} placeholder={translate(locale, "Search accounts", "ابحث عن حساب")} />
@@ -156,9 +156,9 @@ export default function AdminLedgerPage() {
         {error ? <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div> : null}
 
         <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.7fr)]">
-          <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm">
+          <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-[var(--color-forest-950)]">{translate(locale, "Chart of accounts", "دليل الحسابات")}</h2>
+              <h2 className="font-semibold text-[var(--foreground)]">{translate(locale, "Chart of accounts", "دليل الحسابات")}</h2>
               <span className="text-xs text-[var(--muted)]">{accounts.length}</span>
             </div>
             {loading && !data ? <p className="py-8 text-center text-sm text-[var(--muted)]">{translate(locale, "Loading accounts…", "جارٍ تحميل الحسابات…")}</p> : null}
@@ -166,7 +166,7 @@ export default function AdminLedgerPage() {
             <div className="mt-3 space-y-2">
               {accounts.map((account) => {
                 const chosen = selectedAccountId === account.id;
-                return <button type="button" key={account.id} onClick={() => { setLoading(true); setActivityCursor(""); setSelectedAccountId(account.id); }} className={`w-full rounded-xl border p-3 text-start transition-colors ${chosen ? "border-orange-400 bg-orange-50 shadow-sm" : "border-stone-200 bg-white hover:border-orange-300 hover:bg-orange-50/40"}`}>
+                return <button type="button" key={account.id} onClick={() => { setLoading(true); setActivityCursor(""); setSelectedAccountId(account.id); }} className={`w-full rounded-xl border p-3 text-start transition-colors ${chosen ? "border-orange-400 bg-orange-50 shadow-sm" : "border-[var(--border)] bg-[var(--surface)] hover:border-orange-300 hover:bg-orange-50/40"}`}>
                   <span className="flex items-center justify-between gap-2">
                     <span className="font-semibold text-sm text-[var(--color-ink-950)]">{account.code}</span>
                     <StatusBadge locale={locale} status={account.isActive ? "ACTIVE" : "INACTIVE"} />
@@ -178,8 +178,8 @@ export default function AdminLedgerPage() {
             </div>
           </section>
 
-          <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm sm:p-5">
-            <h2 className="font-semibold text-[var(--color-forest-950)]">{translate(locale, "Posted journal activity", "حركة القيود المنشورة")}</h2>
+          <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:p-5">
+            <h2 className="font-semibold text-[var(--foreground)]">{translate(locale, "Posted journal activity", "حركة القيود المنشورة")}</h2>
             {activity ? <div className="mt-2 rounded-xl bg-stone-50 p-3">
               <p className="font-semibold text-sm text-[var(--color-ink-950)]">{activity.account.code} · {activity.account.name}</p>
               <p className="mt-1 text-xs text-[var(--muted)]">{activity.account.currencyCode} · {activity.account.accountType} · {activity.account.scopeType}: {activity.account.scopeId}</p>
@@ -187,7 +187,7 @@ export default function AdminLedgerPage() {
             {activity && activity.items.length === 0 ? <p className="py-8 text-center text-sm text-[var(--muted)]">{translate(locale, "No posted journal lines for this account.", "لا توجد أسطر قيود منشورة لهذا الحساب.")}</p> : null}
             {activity?.items.length ? <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-[680px] text-sm">
-                <thead><tr className="border-b border-stone-200 text-xs text-[var(--muted)]"><th className="px-2 py-3 text-start font-medium">{translate(locale, "Journal / date", "القيد / التاريخ")}</th><th className="px-2 py-3 text-start font-medium">{translate(locale, "Description", "الوصف")}</th><th className="px-2 py-3 text-end font-medium">{translate(locale, "Debit", "مدين")}</th><th className="px-2 py-3 text-end font-medium">{translate(locale, "Credit", "دائن")}</th></tr></thead>
+                <thead><tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]"><th className="px-2 py-3 text-start font-medium">{translate(locale, "Journal / date", "القيد / التاريخ")}</th><th className="px-2 py-3 text-start font-medium">{translate(locale, "Description", "الوصف")}</th><th className="px-2 py-3 text-end font-medium">{translate(locale, "Debit", "مدين")}</th><th className="px-2 py-3 text-end font-medium">{translate(locale, "Credit", "دائن")}</th></tr></thead>
                 <tbody>{activity.items.map((line) => <tr key={line.id} className="border-b border-stone-100 align-top">
                   <td className="px-2 py-3"><span className="block font-medium text-[var(--color-ink-950)]">{line.journalEntry.id.slice(0, 12)}</span><span className="mt-1 block text-xs text-[var(--muted)]">{dateLabel(line.journalEntry.postedAt, locale)}</span><span className="mt-1 block text-[11px] text-[var(--muted)]">{line.journalEntry.sourceType} · {line.journalEntry.sourceId}</span></td>
                   <td className="px-2 py-3"><span className="block text-[var(--color-ink-900)]">{line.journalEntry.description}</span>{line.memo ? <span className="mt-1 block text-xs text-[var(--muted)]">{line.memo}</span> : null}{line.journalEntry.reversalOfId ? <span className="mt-1 block text-xs text-amber-800">{translate(locale, "Reversal", "قيد عكسي")}</span> : null}</td>
@@ -196,7 +196,7 @@ export default function AdminLedgerPage() {
                 </tr>)}</tbody>
               </table>
             </div> : null}
-            {activity?.nextCursor ? <div className="mt-4 flex justify-center"><button type="button" onClick={() => { setLoading(true); setActivityCursor(activity.nextCursor || ""); }} className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-ink-900)] transition hover:border-orange-300 hover:bg-orange-50">{translate(locale, "Load older entries", "تحميل القيود الأقدم")}</button></div> : null}
+            {activity?.nextCursor ? <div className="mt-4 flex justify-center"><button type="button" onClick={() => { setLoading(true); setActivityCursor(activity.nextCursor || ""); }} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--color-ink-900)] transition hover:border-orange-300 hover:bg-orange-50">{translate(locale, "Load older entries", "تحميل القيود الأقدم")}</button></div> : null}
           </section>
         </div>
       </div>
