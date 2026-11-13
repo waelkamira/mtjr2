@@ -627,3 +627,39 @@ The dashboard API service (`src/server/admin/dashboard.ts`) requires `users:mana
 Dashboard shortcuts and metric cards now use the caller's effective GLOBAL grants to decide whether each destination should be clickable. Priority actions and the open-queue list omit destinations the operator cannot access. This avoids presenting a dashboard link that leads directly to a forbidden API-backed screen. The sidebar brand link also resolves to the first visible permitted navigation destination instead of always pointing at the dashboard.
 
 This remains UI-level affordance filtering only. Every destination API/service must retain its own authoritative server-side guard. Store-scoped grants are deliberately not promoted to global dashboard navigation.
+
+
+## Admin permission and mutation-visibility audit — 2026-11-13
+
+The following route and UI permission corrections are now present on `main`. These are code-level findings; they are **not** a claim of completed browser or production verification.
+
+| Route | Read/access gate | Mutation visibility | Enforcement evidence / remaining verification |
+|---|---|---|---|
+| `/admin/products` | Admin shell + catalog read API | Approval/rejection reason and buttons render only with global `catalog:manage` | Server route resolves the verified session and computes the manage grant; moderation APIs still enforce `catalog:manage`. |
+| `/admin/product-management` | Admin shell + `catalog:read` list API | Bulk selection, archive forms, and scoped archive actions render only with `catalog:manage` | Route passes the server-computed permission to the client page; archive service remains authoritative. |
+| `/admin/categories` | Admin shell + `catalog:read` list API | Create/edit form, edit/archive actions, and archive-reason input render only with `catalog:manage` | Route passes the server-computed permission; category save/archive services require `catalog:manage`. |
+| `/admin/brands` | Admin shell + `catalog:read` list API | Create/edit form, edit/archive actions, and archive-reason input render only with `catalog:manage` | Route passes the server-computed permission; brand save/archive services require `catalog:manage`. |
+| `/admin/advertising` | `ads:moderate` | Entire moderation page is route-gated | Previously lacked a route-level gate; now resolves the verified session and returns not-found without the permission. Campaign service also checks `ads:moderate`. |
+| `/admin/coupons` | `users:manage` | Entire page gated | Route now checks permission before rendering; API/domain checks remain authoritative. |
+| `/admin/logistics` | `users:manage` | Entire page gated | Route now checks permission before rendering; API/domain checks remain authoritative. |
+| `/admin/orders` | `users:manage` | Entire page gated | Matches the existing order-list service permission. |
+| `/admin/refunds` | `payments:refund` | Entire page gated | Route now checks the refund permission; refund service checks remain authoritative. |
+| `/admin/returns` | `returns:manage` | Entire page gated | Route now checks the returns permission; return service checks remain authoritative. |
+| `/admin/payments` | `payments:read` | Read-only payment page gated | Matches the payment list/detail service, which requires `payments:read`; refund actions remain on the separately gated refunds surface. |
+| `/admin/questions`, `/admin/review`, `/admin/reviews`, `/admin/search-synonyms`, `/admin/sellers`, `/admin/store-reviews` | `users:manage` | Entire pages gated | Route-level gates added to match the existing domain permission policy. |
+| `/admin/support` | `support:manage` | Entire page gated | Route-level gate added to match the support service. |
+| `/admin/tax-rates` | `users:manage` | Entire page gated | Existing client page retained in `src/features/admin/tax-rates-page.tsx`; route now applies the server permission gate. |
+
+### Verified by source inspection
+
+- Catalog list services continue to use `catalog:read`; catalog writes and moderation continue to use `catalog:manage`.
+- The UI no longer offers catalog mutation controls to read-only catalog users on product approvals, product archive management, categories, or brands.
+- Route checks derive identity from the verified server session. No client-provided user ID or permission claim is trusted.
+- Finance commission and financial-policy pages already require platform management at the server route and service layers; payment-provider and seller-payout-method routes also retain their platform-management gate.
+- The admin layout remains the shared authentication/MFA boundary and the sidebar remains permission-filtered.
+
+### Not yet verified
+
+- No local TypeScript/build result or browser session with read-only versus manage-role accounts has been run in this pass.
+- Remaining admin pages and every individual action still need an end-to-end role matrix review; a route gate is not a substitute for service-level authorization.
+- The existing Syria-only tax-rate UI is preserved; this audit did not reintroduce a market selector or change market scope.
