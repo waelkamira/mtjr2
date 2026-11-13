@@ -44,6 +44,8 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError("");
     const params = new URLSearchParams({ page: String(page), limit: "25" });
     if (query) params.set("q", query);
     if (provider) params.set("provider", provider);
