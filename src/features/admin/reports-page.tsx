@@ -67,9 +67,9 @@ export default function AdminReportsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [locale]);
 
-  useEffect(() => { void load(monthAgo, today); }, []);
+  useEffect(() => { void load(monthAgo, today); }, [load, monthAgo, today]);
 
   const cards = data ? [
     [translate(locale, "Total orders", "إجمالي الطلبات"), data.metrics.totalOrders],
