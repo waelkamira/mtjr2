@@ -501,15 +501,15 @@ export default function AdminDashboardPage({ permissions = [] }: { permissions?:
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
               <h2 className="text-lg font-semibold text-[var(--foreground)]">{translate(locale, "Open administrative queues", "قوائم الانتظار الإدارية المفتوحة")}</h2>
               <div className="mt-4 divide-y divide-[var(--border)]">
-                <QueueLink locale={locale} href={routeHref("/admin/sellers")} label="Seller applications" count={dashboard.metrics.pendingSellers} />
-                <QueueLink locale={locale} href={routeHref("/admin/products")} label="Product approvals" count={dashboard.metrics.pendingProducts} />
-                <QueueLink locale={locale} href={routeHref("/admin/orders")} label="Orders awaiting payment" count={dashboard.metrics.pendingOrders} />
-                <QueueLink locale={locale} href={routeHref("/admin/payments")} label="Failed payments" count={dashboard.metrics.failedPayments} />
-                <QueueLink locale={locale} href={routeHref("/admin/payments")} label="Payments awaiting completion" count={dashboard.metrics.pendingPayments} />
-                <QueueLink locale={locale} href={routeHref("/admin/reviews")} label="Product review moderation" count={dashboard.metrics.pendingProductReviews} />
-                <QueueLink locale={locale} href={routeHref("/admin/store-reviews")} label="Store review moderation" count={dashboard.metrics.pendingStoreReviews} />
-                <QueueLink locale={locale} href={routeHref("/admin/returns")} label="Return requests" count={dashboard.metrics.requestedReturns} />
-                <QueueLink locale={locale} href={routeHref("/admin/support")} label="Customer support" count={dashboard.metrics.openSupportTickets} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/sellers")} label="Seller applications" count={dashboard.metrics.pendingSellers} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/products")} label="Product approvals" count={dashboard.metrics.pendingProducts} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/orders")} label="Orders awaiting payment" count={dashboard.metrics.pendingOrders} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/payments")} label="Failed payments" count={dashboard.metrics.failedPayments} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/payments")} label="Payments awaiting completion" count={dashboard.metrics.pendingPayments} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/reviews")} label="Product review moderation" count={dashboard.metrics.pendingProductReviews} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/store-reviews")} label="Store review moderation" count={dashboard.metrics.pendingStoreReviews} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/returns")} label="Return requests" count={dashboard.metrics.requestedReturns} />
+                <QueueLink locale={locale} permissions={permissions} href={routeHref("/admin/support")} label="Customer support" count={dashboard.metrics.openSupportTickets} />
               </div>
             </div>
           </section>
@@ -532,7 +532,7 @@ export default function AdminDashboardPage({ permissions = [] }: { permissions?:
   );
 }
 
-function QueueLink({ locale, permissions, href, label, count }: { locale: "ar" | "en"; permissions: string[]; href: string; label: string; count: number }) {
+function QueueLink({ locale, permissions, href, label, count }: { locale: "ar" | "en"; permissions: string[]; href?: string; label: string; count: number }) {
   const labels: Record<string, string> = {
     "Product review moderation": "الإشراف على مراجعات المنتجات",
     "Store review moderation": "الإشراف على مراجعات المتاجر",
@@ -544,5 +544,5 @@ function QueueLink({ locale, permissions, href, label, count }: { locale: "ar" |
     "Failed payments": "مدفوعات فاشلة",
     "Payments awaiting completion": "مدفوعات بانتظار الإكمال"
   };
-  if (!canOpenDashboardRoute(permissions, href)) return null;\n  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 font-semibold">{count}</span></Link>;
+  if (!href || !canOpenDashboardRoute(permissions, href)) return null;\n  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 font-semibold">{count}</span></Link>;
 }
