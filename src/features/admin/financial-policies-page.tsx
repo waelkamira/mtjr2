@@ -271,7 +271,7 @@ export default function FinancialPoliciesPage() {
                 {version.approvalStatus === "PENDING_REVIEW" && <div className="flex shrink-0 flex-wrap gap-2">
                   {!version.reviewedAt && <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "REVIEW")} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] hover:border-orange-300 disabled:opacity-50">{translate(locale, "Review", "مراجعة")}</button>}
                   <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "APPROVE")} className="rounded-lg bg-[#FF8C1C] px-3 py-2 text-xs font-semibold text-white hover:bg-[#E8750B] disabled:opacity-50">{translate(locale, "Approve", "اعتماد")}</button>
-                  <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "REJECT")} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">{translate(locale, "Reject", "رفض")}</button>
+                  <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "REJECT")} className="rounded-lg border border-red-200 bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">{translate(locale, "Reject", "رفض")}</button>
                 </div>}
               </div>
             </article>)}
