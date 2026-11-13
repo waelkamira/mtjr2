@@ -45,7 +45,7 @@ export async function getMyReturnCenter(now = new Date()) {
       take: 100,
       include: {
         order: { select: { orderNumber: true } },
-        items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true } } } },
+        items: { include: { orderItem: { select: { productName: true, sku: true, quantity: true, vendorOrder: { select: { store: { select: { name: true } } } } } } } },
         refund: { select: { status: true, amountMinor: true, currencyCode: true, currency: { select: { minorUnit: true } } } }
       }
     }),
@@ -178,7 +178,7 @@ export async function listReturnRequestsForAdmin(now = new Date()) {
     customer: row.customer.displayName || row.customer.email, customerEmail: row.customer.email,
     status: row.status, reasonCode: row.reasonCode, reasonDetails: row.reasonDetails, reviewNote: row.reviewNote,
     requestedAt: row.requestedAt.toISOString(), reviewedAt: row.reviewedAt?.toISOString() ?? null,
-    items: row.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, orderedQuantity: item.orderItem.quantity, quantity: item.quantity }))
+    items: row.items.map((item) => ({ productName: item.orderItem.productName, sku: item.orderItem.sku, storeName: item.orderItem.vendorOrder.store.name, orderedQuantity: item.orderItem.quantity, quantity: item.quantity }))
   }));
 }
 
@@ -202,9 +202,15 @@ export async function reviewReturnRequest(returnId: string, input: unknown, now 
     if (updatedItems.count === 0) throw new Error("There are no pending return items to review.");
     await tx.auditLog.create({
       data: {
-        actorType: AuditActorType.USER, actorId: actor.userId, action: "returns.status_changed",
+        actorType: AuditActorType.USER, actorId: actor.userId, action: "returns.platform_wide_review_decision",
         resource: "return_request", resourceId: current.id, scopeType: "RETURN_REQUEST", scopeId: current.id,
-        occurredAt: now, metadata: { from: current.status, to: data.status, note: data.note || null }
+        occurredAt: now, metadata: {
+          decisionScope: "PLATFORM_WIDE_RETURN_REQUEST",
+          from: current.status,
+          to: data.status,
+          affectedItemCount: updatedItems.count,
+          note: data.note || null
+        }
       }
     });
     return { id: current.id, status: data.status };
