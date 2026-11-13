@@ -585,3 +585,23 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 
 
 - Follow-up route-to-service comparison (2026-11-13): corrected the visible-link allowlists for `/admin/users`, `/admin/sellers`, and `/admin/orders` to match the current `users:manage` guards in `src/server/admin/users.ts`, `sellers.ts`, and `orders.ts`. Product approval, category, and brand read pages now use `catalog:read`, matching `src/server/admin/catalog-management.ts`; mutations remain separately guarded by `catalog:manage`. The commissions and product-Q&A links were tightened rather than left visible under an unverified permission. The remaining finance, marketing, moderation, logistics and control-panel links still need their exact page/API/service guard traced before this audit can close.
+
+
+## Admin navigation permission audit — 2026-11-13 (continued)
+
+The following sidebar keys were checked against the actual server domain services reached by their admin API routes. The sidebar is a convenience filter only; the API/service guards remain authoritative.
+
+| Admin route | Verified service guard | Sidebar permission |
+|---|---|---|
+| `/admin/logistics` | `src/server/admin/logistics.ts` requires `users:manage` for shipment listing and updates | `users:manage` |
+| `/admin/support` | `src/server/support/tickets.ts` requires `support:manage` for the admin support queue and mutations | `support:manage` |
+| `/admin/reviews` | `src/server/reviews/product-reviews.ts` requires `users:manage` for admin product-review moderation | `users:manage` |
+| `/admin/store-reviews` | `src/server/reviews/product-reviews.ts` uses `users:manage` for the admin store-review queue; store-scoped seller operations are separate | `users:manage` |
+| `/admin/coupons` | `src/server/checkout/coupons.ts` requires `users:manage` for list/create/update operations | `users:manage` |
+| `/admin/search-synonyms` | `src/server/search/synonyms.ts` requires `users:manage` for list/create/update/delete operations | `users:manage` |
+| `/admin/advertising` | `src/server/advertising/campaigns.ts` requires `ads:moderate` for platform moderation | `ads:moderate` |
+| `/admin/questions/reports` | `src/server/catalog/product-qa-governance.ts` requires `users:manage` for the admin reports queue | `users:manage` |
+
+Corrections applied to `src/features/admin/admin-navigation.tsx`: logistics, support, product reviews, store reviews, coupons, and search synonyms. Advertising and question reports already matched their verified service guards.
+
+**Remaining gaps:** this is not a full permission audit. The page routes and mutation endpoints for commissions, refunds, tax rates, payment providers, seller payout methods, financial policies, ledger, reports, question moderation, and the super-admin control panel still need route-to-service tracing. Do not infer that `platform:manage` is correct for each of those pages merely because it is a platform-level screen. The layout currently passes only GLOBAL grants to the sidebar; scoped grants intentionally do not satisfy permission checks without a trusted resource scope, so store-scoped seller permissions should not automatically expose platform-wide admin navigation.
