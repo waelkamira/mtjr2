@@ -47,6 +47,8 @@ export default function AdminSellersPage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError("");
     const params = new URLSearchParams({ page: String(page), limit: "25" });
     if (query.trim()) params.set("q", query.trim());
     if (status) params.set("status", status);
