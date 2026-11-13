@@ -372,7 +372,7 @@ export default function AdminDashboardPage({ permissions = [] }: { permissions?:
                 { href: "/admin/returns", label: translate(locale, "Requested returns", "طلبات الإرجاع"), count: dashboard.metrics.requestedReturns, tone: "red" },
                 { href: "/admin/reviews", label: translate(locale, "Product reviews", "مراجعات المنتجات"), count: dashboard.metrics.pendingProductReviews, tone: "blue" },
                 { href: "/admin/store-reviews", label: translate(locale, "Store reviews", "مراجعات المتاجر"), count: dashboard.metrics.pendingStoreReviews, tone: "blue" }
-              ].map((item) => (
+              ].filter((item) => canOpenDashboardRoute(permissions, item.href)).map((item) => (
                 <Link key={item.href} href={item.href} className="group flex min-h-[88px] items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 transition hover:-translate-y-0.5 hover:border-orange-200 hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF8C1C]">
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-[var(--foreground)] group-hover:text-[#C65D0A]">{item.label}</span>
