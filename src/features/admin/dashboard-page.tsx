@@ -374,7 +374,7 @@ export default function AdminDashboardPage() {
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
               <div>
                 <h2 className="text-base font-bold text-[var(--foreground)]">{translate(locale, "Commerce activity", "نشاط التجارة")}</h2>
-                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Orders and payments within the selected date, country, currency, seller and store filters. Monetary totals stay separated by currency.", "الطلبات والمدفوعات ضمن فلاتر التاريخ والدولة والعملة والبائع والمتجر المحددة. تبقى الإجماليات المالية منفصلة حسب العملة.")}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Orders placed within the selected date range and matching country, currency, seller and store filters; payment metrics belong to those orders. Monetary totals stay separated by currency.", "الطلبات المنشأة ضمن النطاق الزمني والمطابقة لفلاتر الدولة والعملة والبائع والمتجر؛ مؤشرات الدفع تخص تلك الطلبات. تبقى الإجماليات المالية منفصلة حسب العملة.")}</p>
               </div>
               <span className="text-xs text-[var(--muted)]">{dashboard.filters.from} — {dashboard.filters.to}</span>
             </div>
