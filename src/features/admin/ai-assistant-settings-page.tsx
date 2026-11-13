@@ -47,9 +47,7 @@ export default function AiAssistantSettingsPage() {
   }, [fetchSettings, t]);
 
   useEffect(() => {
-    let active = true;
-    void load().finally(() => { if (!active) return; });
-    return () => { active = false; };
+    void load();
   }, [load]);
 
   async function save() {
@@ -91,7 +89,7 @@ export default function AiAssistantSettingsPage() {
         {notice && <p role="status" className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">{notice}</p>}
 
         {settings && !loading && <div aria-busy={loading || saving} className="mt-8 space-y-6">
-          <section className="rounded-2xl border border-[var(--border)] bg-white p-6">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold text-[var(--color-ink-950)]">{t("Runtime status", "حالة التشغيل")}</h2>
@@ -111,7 +109,7 @@ export default function AiAssistantSettingsPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-[var(--border)] bg-white p-6">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <h2 className="text-lg font-semibold text-[var(--color-ink-950)]">{t("Assistant configuration", "إعدادات المساعد")}</h2>
             <label className="mt-5 flex items-start justify-between gap-4">
               <span>
