@@ -529,3 +529,10 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - Finance review reconfirmed that seller payable posting, holds, withdrawals, transfer execution and reconciliation are not implemented. The seller payout destination is only a beneficiary record with manual verification; no balance or payout action may be inferred from it.
 - The FIN-01..FIN-12 payout policy decision register remains blocked pending explicit owner approval. No payout schema, API or withdrawable-balance UI was added.
 - Verification boundary: navigation and route registry were updated on `main` and re-fetched. No local typecheck, lint, automated test, build or browser accessibility/visual run was performed for this change.
+
+## 2026-11-13 — Admin navigation route and mobile behavior review
+
+- Compared all 33 configured admin sidebar destinations against the recursive `src/app/admin/**/page.tsx` route tree on `main`: every configured destination has an exact route. The unlisted `/admin` root is a redirect to `/admin/dashboard`; parameterized order, payment, shipment and user detail routes remain intentionally reachable from their parent lists.
+- Mobile drawer now exposes its controlled region through `aria-controls`, prevents background document scrolling while open, restores the previous body overflow value on close, closes on Escape, backdrop click and route selection.
+- Existing server-side route guards remain the authorization boundary; hiding platform-only links in the client navigation is presentation only and does not replace API/page permission checks.
+- Verification boundary: route-tree comparison and source re-fetch completed. No browser focus-trap/keyboard audit, responsive screenshot review, typecheck, lint, tests or build was run.
