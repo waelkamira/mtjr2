@@ -132,6 +132,11 @@ export async function listLedgerAccountEntries(input: {
     select: { id: true, code: true, name: true, accountType: true, scopeType: true, scopeId: true, currencyCode: true, isActive: true, currency: { select: { minorUnit: true } } }
   });
   if (!account) throw new Error("Ledger account not found.");
+  const totals = await prisma.journalLine.aggregate({
+    where: { accountId },
+    _sum: { debitMinor: true, creditMinor: true },
+    _count: { _all: true }
+  });
   const rows = await prisma.journalLine.findMany({
     where: { accountId },
     take: take + 1,
@@ -146,6 +151,11 @@ export async function listLedgerAccountEntries(input: {
   const items = rows.slice(0, take);
   return {
     account,
+    totals: {
+      debitMinor: (totals._sum.debitMinor ?? 0n).toString(),
+      creditMinor: (totals._sum.creditMinor ?? 0n).toString(),
+      lineCount: totals._count._all
+    },
     items: items.map((line) => ({
       ...line,
       debitMinor: line.debitMinor.toString(),
