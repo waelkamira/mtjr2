@@ -22,7 +22,7 @@ function BrandLogoImage({ name, logoUrl, size }: { name: string; logoUrl: string
   const [failed, setFailed] = useState(false);
   const dimensions = size === "small" ? "h-12 w-12 rounded-xl" : "h-20 w-20 rounded-2xl";
   const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase();
-  if (logoUrl && !failed) return <img src={logoUrl} alt={name + " logo"} onError={() => setFailed(true)} className={`${dimensions} shrink-0 border border-stone-200 bg-[var(--surface)] object-contain p-1`} />;
+  if (logoUrl && !failed) return <img src={logoUrl} alt={name + " logo"} onError={() => setFailed(true)} className={`${dimensions} shrink-0 border border-[var(--border)] bg-[var(--surface)] object-contain p-1`} />;
   return <div aria-label={name + " logo placeholder"} className={`${dimensions} grid shrink-0 place-items-center border border-orange-100 bg-gradient-to-br from-orange-50 to-amber-100 font-black text-orange-700 shadow-inner ${size === "small" ? "text-sm" : "text-2xl"}`}>{initials || "?"}</div>;
 }
 
@@ -104,9 +104,10 @@ export default function AdminBrandsPage() {
     } finally { setBusy(false); }
   }
 
-  return <main className="min-h-screen bg-[#f5f6f8] px-4 py-6 sm:px-6 lg:px-9"><div className="mx-auto max-w-[1600px]">
+  return <main className="min-h-screen bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-9"><div className="mx-auto max-w-[1600px]">
     <p className="text-xs font-semibold uppercase tracking-[.18em] text-orange-700">{translate(locale, "Catalog operations", "عمليات الكتالوج")}</p>
-    <h1 className="mt-2 text-3xl font-semibold text-stone-950">{translate(locale, "Brand management", "إدارة العلامات التجارية")}</h1>
+    <h1 className="mt-2 text-3xl font-semibold text-[var(--foreground)]">{translate(locale, "Brand management", "إدارة العلامات التجارية")}</h1>
+    <div className="mt-3 flex justify-end"><button type="button" disabled={loading || busy} onClick={() => { setLoading(true); setError(""); setRevision((value) => value + 1); }} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50">{translate(locale, "Refresh", "تحديث")}</button></div>
     <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">{translate(locale, "Create and maintain brand identities, public visibility and product associations. Only ACTIVE brands appear in the public directory; drafts and archived brands remain visible here for management. Archiving preserves historical product references.", "أنشئ العلامات التجارية وأدر هويتها وظهورها العام وارتباطاتها بالمنتجات. تظهر العلامات النشطة فقط في الدليل العام، بينما تبقى المسودات والعلامات المؤرشفة هنا للإدارة. وتحافظ الأرشفة على مراجع المنتجات التاريخية.")}</p>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}
     <form onSubmit={(event) => void save(event)} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm md:grid-cols-2 xl:grid-cols-3">
