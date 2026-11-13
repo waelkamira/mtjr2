@@ -75,6 +75,7 @@ const groups: Array<{ label: string; ar: string; links: AdminLink[] }> = [
       { href: "/admin/seller-payout-methods", label: "Seller payout verification", ar: "التحقق من حسابات البائعين", icon: Building2, platformOnly: true },
       { href: "/admin/financial-policies", label: "Financial policies", ar: "السياسات المالية", icon: Scale, platformOnly: true },
       { href: "/admin/finance/ledger", label: "General ledger", ar: "دفتر الأستاذ", icon: BookOpen, platformOnly: true },
+      { href: "/admin/reports", label: "Reports", ar: "التقارير", icon: FileText, platformOnly: true },
       { href: "/admin/control-panel", label: "Super Admin", ar: "إدارة المنصة", icon: Crown, platformOnly: true },
       { href: "/admin/control-panel/access-catalog", label: "Access catalog", ar: "دليل الصلاحيات", icon: KeyRound, platformOnly: true },
       { href: "/admin/control-panel/audit-log", label: "Audit log", ar: "سجل التدقيق", icon: ClipboardList, platformOnly: true },
