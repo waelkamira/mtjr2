@@ -22,7 +22,7 @@ type AdminLink = {
 };
 
 const linkPermissions: Record<string, string[]> = {
-  "/admin/dashboard": ["users:manage", "payments:read", "catalog:read", "returns:manage", "platform:manage"],
+  "/admin/dashboard": ["users:manage"],
   "/admin/users": ["users:manage"], "/admin/sellers": ["users:manage"],
   "/admin/products": ["catalog:read"], "/admin/product-management": ["catalog:read", "catalog:manage"],
   "/admin/categories": ["catalog:read"], "/admin/brands": ["catalog:read"],
