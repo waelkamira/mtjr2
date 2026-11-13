@@ -337,7 +337,7 @@ export default function AdminDashboardPage() {
         </form>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
-        {loading && !dashboard ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--color-ivory-100)]" /> : dashboard && <>
+        {loading && !dashboard ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--surface-soft)]" /> : dashboard && <>
           <section aria-label="Marketplace metrics" className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
             <MetricCard locale={locale} label="Total orders" value={dashboard.metrics.totalOrders} href="/admin/orders" detail={`${dashboard.metrics.previousPeriodOrders} in the previous equivalent period`} chartData={dashboard.metricSamples.totalOrders} chartType="area" color={metricCardColors[0]} />
             <MetricCard locale={locale} label="Orders awaiting payment" value={dashboard.metrics.pendingOrders} href="/admin/orders" chartData={dashboard.metricSamples.pendingOrders} chartType="line" color={metricCardColors[1]} />
@@ -477,5 +477,5 @@ function QueueLink({ locale, href, label, count }: { locale: "ar" | "en"; href: 
     "Failed payments": "مدفوعات فاشلة",
     "Payments awaiting completion": "مدفوعات بانتظار الإكمال"
   };
-  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--color-ivory-100)] px-3 py-1 font-semibold">{count}</span></Link>;
+  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 font-semibold">{count}</span></Link>;
 }
