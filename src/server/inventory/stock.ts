@@ -264,7 +264,7 @@ export async function shipStockTransfer(transferId: string, now = new Date()) {
       occurredAt: now, metadata: { itemCount: transfer.items.length }
     }});
     return { transferId: id, status: StockTransferStatus.SHIPPED };
-  });
+  }, { isolationLevel: "Serializable" });
 }
 
 export async function receiveStockTransfer(transferId: string, now = new Date()) {
@@ -296,7 +296,7 @@ export async function receiveStockTransfer(transferId: string, now = new Date())
       occurredAt: now, metadata: { itemCount: transfer.items.length }
     }});
     return { transferId: id, status: StockTransferStatus.RECEIVED };
-  });
+  }, { isolationLevel: "Serializable" });
 }
 
 
