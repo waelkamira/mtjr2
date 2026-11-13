@@ -21,7 +21,7 @@ function formatMinorAmount(amountMinor: string, minorUnit: number) {
   return `${whole}.${fraction}`;
 }
 
-export default function AdminProductsPage() {
+export default function AdminProductsPage({ canManageCatalog }: { canManageCatalog: boolean }) {
   const { locale } = useLocale();
   const t = (english: string, arabic: string) => translate(locale, english, arabic);
   const [items, setItems] = useState<Product[]>([]);
@@ -101,8 +101,11 @@ export default function AdminProductsPage() {
       <div><div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-semibold">{product.name}</h2><p className="mt-1 text-xs text-[var(--muted)]">{product.store.name} · {t("Seller", "البائع")} {product.store.seller.displayName || product.store.seller.legalName || product.store.seller.id}</p></div><span className="h-fit rounded-full bg-[var(--surface-soft)] px-3 py-1 text-xs">{t("Submitted", "تاريخ التقديم")} {new Date(product.createdAt).toLocaleDateString(locale === "ar" ? "ar-SY" : "en-GB")}</span></div>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--muted)]">{product.description || t("No description provided.", "لم يتم تقديم وصف.")}</p>
         <div className="mt-3 flex flex-wrap gap-2">{product.variants.map((variant) => <div key={variant.id} className="rounded-lg bg-[var(--surface-soft)] px-3 py-2 text-xs"><span className="font-semibold">{variant.sku}</span>{variant.name && ` · ${variant.name}`}<span className="block text-[var(--muted)]">{variant.prices.map((price) => `${formatMinorAmount(price.amountMinor, price.currency.minorUnit)} ${price.currencyCode}`).join(" · ") || t("No price configured", "لم يتم تحديد سعر")}</span></div>)}</div>
+        {canManageCatalog ? <>
         <label className="mt-4 block text-xs font-medium text-[var(--muted)]">{t("Moderation reason (required for rejection)", "سبب الإشراف (مطلوب عند الرفض)")}<input disabled={Boolean(busy)} value={reasons[product.id] || ""} onChange={(event) => setReasons((current) => ({ ...current, [product.id]: event.target.value }))} maxLength={2000} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)] outline-none transition focus:border-[#FF8C1C] focus:ring-2 focus:ring-orange-100" /></label>
         <div className="mt-4 flex gap-2"><button type="button" disabled={Boolean(busy)} onClick={() => void moderate(product, "approve")} className="rounded-xl bg-[#FF8C1C] px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-orange-500/20 transition hover:bg-[#F57C00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">{t("Approve", "موافقة")}</button><button type="button" disabled={Boolean(busy)} onClick={() => void moderate(product, "reject")} className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-50">{t("Reject", "رفض")}</button></div>
+      
+        </> : <p className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-xs text-[var(--muted)]">{t("Read-only access: catalog management permission is required to approve or reject products.", "صلاحية قراءة فقط: يلزم امتلاك صلاحية إدارة الكتالوج للموافقة على المنتجات أو رفضها.")}</p>}
       </div>
     </article>)}{!visible.length && !error && <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center text-sm text-[var(--muted)]">{items.length ? t("No pending products match this search.", "لا توجد منتجات معلقة تطابق البحث.") : t("No products are awaiting approval.", "لا توجد منتجات بانتظار الموافقة.")}</div>}</div>}
   </div></main>;
