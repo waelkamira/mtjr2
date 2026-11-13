@@ -149,7 +149,7 @@ const categorySchema = z.object({
   description: z.string().trim().max(2000).nullable().optional(),
   imageUrl: z.string().trim().url().max(2048).nullable().optional(),
   parentId: z.string().trim().min(1).max(128).nullable().optional(),
-  status: z.nativeEnum(CatalogEntityStatus),
+  status: z.enum([CatalogEntityStatus.DRAFT, CatalogEntityStatus.ACTIVE]),
   sortOrder: z.number().int().min(-10_000).max(10_000)
 }).strict();
 
@@ -299,7 +299,7 @@ const brandSchema = z.object({
   description: z.string().trim().max(2000).nullable().optional(),
   logoUrl: z.string().trim().url().max(2048).nullable().optional(),
   websiteUrl: z.string().trim().url().max(2048).nullable().optional(),
-  status: z.nativeEnum(CatalogEntityStatus)
+  status: z.enum([CatalogEntityStatus.DRAFT, CatalogEntityStatus.ACTIVE])
 }).strict();
 
 export async function listAdminBrands(now = new Date()) {
