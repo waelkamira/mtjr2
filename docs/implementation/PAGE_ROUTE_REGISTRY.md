@@ -645,7 +645,7 @@ The following route and UI permission corrections are now present on `main`. The
 | `/admin/orders` | `users:manage` | Entire page gated | Matches the existing order-list service permission. |
 | `/admin/refunds` | `payments:refund` | Entire page gated | Route now checks the refund permission; refund service checks remain authoritative. |
 | `/admin/returns` | `returns:manage` | Entire page gated | Route now checks the returns permission; return service checks remain authoritative. |
-| `/admin/payments` | `payments:read` | Read-only payment page gated | Matches the payment list/detail service, which requires `payments:read`; refund actions remain on the separately gated refunds surface. |
+| `/admin/payments` | `payments:read` or `payments:refund` | Read-only payment page gated | List/detail services now allow either permission so refund-only operators can inspect payment records; refund mutations remain separately gated by `payments:refund`. |
 | `/admin/questions`, `/admin/review`, `/admin/reviews`, `/admin/search-synonyms`, `/admin/sellers`, `/admin/store-reviews` | `users:manage` | Entire pages gated | Route-level gates added to match the existing domain permission policy. |
 | `/admin/users` | `users:manage` | Entire page gated | Route-level gate added; fine-grained role assignment and anonymization remain governed by their dedicated permissions in the service layer. |
 | `/admin/support` | `support:manage` | Entire page gated | Route-level gate added to match the support service. |
