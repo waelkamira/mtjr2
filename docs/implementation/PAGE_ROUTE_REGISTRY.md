@@ -495,3 +495,11 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 | Syrian product location picker and Leaflet map | `/seller/products` → `GET /api/geography/governorates`, `/districts`, `/subdistricts`, `/localities` → Syria geography reference records | Administrative names and centroids come from the pinned OpenSyria release; the neighbourhood is seller-entered and is not represented as an official administrative record. | Exact-head Browser E2E requires a coordinate-backed Damascus selection path and asserts zoom 7 (governorate), 10 (district), 12 (subdistrict), 15 (locality), increased zoom via mouse wheel, and zoom 16 after neighbourhood-field blur. |
 
 **Exact-head verification:** `main` code/test SHA `fa9012fdccbed41bee5fb359dfa50fb6b0b1921b` — CI passed (115 Vitest files / 598 tests, Prisma validate/migrate/generate, TypeScript, ESLint and production build with 174 static pages); Browser E2E passed **13/13**; CodeQL passed. Vercel production deployment for this exact SHA is `READY`. The dedicated PostgreSQL Integration and Database Baseline checks passed on the immediately preceding parent SHA `17567cb82c1505ea479ab5b36b91fa7033fc8dce`; the current commit changes tests only and contains no schema or migration change.
+
+## 2026-11-13 — Admin command-center implementation kickoff
+
+- `/admin/dashboard` now places a compact **Priority actions** panel immediately below the global filters. It links directly to seller applications, product approvals, failed payments and open support tickets, and shows the corresponding live queue counts from the existing protected dashboard API.
+- The panel is additive: it reuses existing queue metrics and routes, adds no duplicate business logic, and does not claim unavailable finance, payout or infrastructure-health metrics.
+- Source commit: `37a4d886bd41adbd4ff1d259f944f475c2a1aa57`.
+- Verification boundary: GitHub source update only. No local typecheck, lint, tests, production build, database run or browser visual/interaction check was performed in this session.
+- Next command-center gaps remain: validated financial KPIs backed by posted ledger entries, seller payable/settlement workflow, operational integration health, role-aware actionable alerts, and end-to-end verification of admin work queues.
