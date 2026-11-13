@@ -182,6 +182,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
             className="hidden rounded-lg p-2 text-[var(--muted)] transition hover:bg-orange-50 hover:text-[#E8750A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 lg:block"
             aria-label={translate(locale, collapsed ? "Expand sidebar" : "Collapse sidebar", collapsed ? "توسيع القائمة" : "طي القائمة")}
             aria-expanded={!collapsed}
+            aria-controls="admin-navigation-links"
             title={translate(locale, collapsed ? "Expand sidebar" : "Collapse sidebar", collapsed ? "توسيع القائمة" : "طي القائمة")}
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
@@ -216,6 +217,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
         </div>
 
         <nav
+          id="admin-navigation-links"
           aria-label={translate(locale, "Administration", "الإدارة")}
           className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 py-5"
         >
@@ -235,6 +237,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
                       href={link.href}
                       onClick={closeMobile}
                       title={collapsed ? label : undefined}
+                      aria-label={collapsed ? label : undefined}
                       aria-current={active ? "page" : undefined}
                       className={`group relative flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 ${collapsed ? "lg:justify-center lg:px-0" : ""} ${active ? "border-[#FFD7B0] bg-[#FFF2E5] text-[#963F08] shadow-[inset_0_0_0_1px_rgba(255,140,28,0.06)]" : "border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]"}`}
                     >
