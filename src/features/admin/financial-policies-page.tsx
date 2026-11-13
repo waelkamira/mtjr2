@@ -32,7 +32,7 @@ type PolicyVersion = {
   rule: { key: string; domain: string; description: string | null };
 };
 
-const inputClass = "mt-1 block w-full min-w-0 rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--color-ink-950)] shadow-sm outline-none focus:border-[var(--color-orange-500)] focus:ring-2 focus:ring-orange-100";
+const inputClass = "mt-1 block w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)] shadow-sm outline-none focus:border-[var(--color-orange-500)] focus:ring-2 focus:ring-orange-100";
 const labelClass = "block text-sm font-medium text-[var(--color-ink-800)]";
 
 function localDateTimeValue(date: Date) {
@@ -191,13 +191,14 @@ export default function FinancialPoliciesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8" dir={locale === "ar" ? "rtl" : "ltr"}>
-      <header className="mb-7">
+    <main aria-busy={loading || busy !== "" || previewBusy} className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8" dir={locale === "ar" ? "rtl" : "ltr"}>
+      <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <p className="text-sm font-semibold text-[var(--color-orange-600)]">{translate(locale, "Platform finance", "الشؤون المالية للمنصة")}</p>
         <h1 className="mt-1 text-3xl font-bold text-[var(--color-ink-950)]">{translate(locale, "Financial policy governance", "حوكمة السياسات المالية")}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
           {translate(locale, "Create versioned rules for jurisdiction, market, currency, product and payment contexts. Every new version starts pending review. Approval does not activate money movement.", "أنشئ قواعد ذات إصدارات حسب الدولة والسوق والعملة والمنتج ووسيلة الدفع. يبدأ كل إصدار جديد بانتظار المراجعة. الاعتماد لا يفعّل حركة الأموال.")}
         </p>
+        <button type="button" onClick={() => { setLoading(true); setError(""); void load().then(setVersions).catch((cause) => setError(cause instanceof Error ? cause.message : translate(locale, "Unable to load financial policies.", "تعذر تحميل السياسات المالية."))).finally(() => setLoading(false)); }} disabled={loading || busy !== ""} className="rounded-xl bg-[#FF8C1C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#E8750B] disabled:cursor-not-allowed disabled:opacity-50">{loading ? translate(locale, "Refreshing…", "جارٍ التحديث…") : translate(locale, "Refresh", "تحديث")}</button>
       </header>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
@@ -242,7 +243,7 @@ export default function FinancialPoliciesPage() {
         <p className="mt-1 text-sm text-[var(--muted)]">{translate(locale, "Test which approved rule wins for a transaction context. This preview never writes to the ledger or moves money.", "اختبر القاعدة المعتمدة التي تنطبق على سياق معاملة. لا تكتب هذه المعاينة في دفتر الأستاذ ولا تحرك الأموال.")}</p>
         <form onSubmit={previewResolution} className="mt-4">
           <label className={labelClass}>{translate(locale, "Evaluation context (JSON)", "سياق التقييم (JSON)")}<textarea className={inputClass + " min-h-28 font-mono"} value={previewJson} onChange={(e) => setPreviewJson(e.target.value)} spellCheck={false}/></label>
-          <button type="submit" disabled={previewBusy} className="mt-3 rounded-xl border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-ink-950)] hover:border-orange-300 disabled:opacity-50">{previewBusy ? translate(locale, "Evaluating…", "جارٍ التقييم…") : translate(locale, "Evaluate policy", "تقييم السياسة")}</button>
+          <button type="submit" disabled={previewBusy} className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-orange-300 disabled:opacity-50">{previewBusy ? translate(locale, "Evaluating…", "جارٍ التقييم…") : translate(locale, "Evaluate policy", "تقييم السياسة")}</button>
         </form>
         {previewResult !== null && <pre className="mt-4 max-h-80 overflow-auto rounded-xl bg-stone-50 p-4 text-xs leading-5 text-stone-800">{JSON.stringify(previewResult, null, 2)}</pre>}
       </section>
@@ -258,7 +259,7 @@ export default function FinancialPoliciesPage() {
         </div>
         {loading ? <p className="py-8 text-sm text-[var(--muted)]">{translate(locale, "Loading policy versions…", "جارٍ تحميل إصدارات السياسات…")}</p> : versions.length === 0 ? <p className="py-8 text-sm text-[var(--muted)]">{translate(locale, "No policy versions match these filters.", "لا توجد إصدارات مطابقة لعوامل التصفية.")}</p> : (
           <div className="mt-5 space-y-3">
-            {versions.map((version) => <article key={version.id} className="rounded-xl border border-[var(--border)] bg-white p-4">
+            {versions.map((version) => <article key={version.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2"><h3 className="break-all font-semibold text-[var(--color-ink-950)]">{version.rule.key} <span className="text-[var(--muted)]">v{version.version}</span></h3><StatusBadge locale={locale} status={version.approvalStatus} /></div>
@@ -268,7 +269,7 @@ export default function FinancialPoliciesPage() {
                   <details className="mt-3"><summary className="cursor-pointer text-sm font-medium text-[var(--color-ink-800)]">{translate(locale, "View policy value and evidence", "عرض قيمة السياسة والأدلة")}</summary><pre className="mt-2 max-h-56 overflow-auto rounded-lg bg-stone-50 p-3 text-xs text-stone-800">{JSON.stringify(version.value, null, 2)}</pre>{version.sourceReference && <a className="mt-2 inline-block break-all text-sm text-orange-700 underline" href={version.sourceReference} target="_blank" rel="noreferrer">{version.sourceReference}</a>}{version.reviewNotes && <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--muted)]">{version.reviewNotes}</p>}{version.rejectionReason && <p className="mt-2 whitespace-pre-wrap text-sm text-red-700">{version.rejectionReason}</p>}</details>
                 </div>
                 {version.approvalStatus === "PENDING_REVIEW" && <div className="flex shrink-0 flex-wrap gap-2">
-                  {!version.reviewedAt && <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "REVIEW")} className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--color-ink-900)] hover:border-orange-300 disabled:opacity-50">{translate(locale, "Review", "مراجعة")}</button>}
+                  {!version.reviewedAt && <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "REVIEW")} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] hover:border-orange-300 disabled:opacity-50">{translate(locale, "Review", "مراجعة")}</button>}
                   <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "APPROVE")} className="rounded-lg bg-[#FF8C1C] px-3 py-2 text-xs font-semibold text-white hover:bg-[#E8750B] disabled:opacity-50">{translate(locale, "Approve", "اعتماد")}</button>
                   <button type="button" disabled={busy !== ""} onClick={() => void transition(version, "REJECT")} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">{translate(locale, "Reject", "رفض")}</button>
                 </div>}
