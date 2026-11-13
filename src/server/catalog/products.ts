@@ -683,7 +683,7 @@ export async function listPendingProductReviews(now = new Date()) {
       id: true, name: true, slug: true, description: true, createdAt: true,
       store: { select: { id: true, name: true, seller: { select: { id: true, displayName: true, legalName: true } } } },
       media: { where: { isPrimary: true }, take: 1, select: { url: true, altText: true } },
-      variants: { where: { isActive: true }, select: { id: true, sku: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true } } } }
+      variants: { where: { isActive: true }, select: { id: true, sku: true, prices: { select: { marketId: true, currencyCode: true, amountMinor: true, currency: { select: { minorUnit: true } } } } } }
     }
   }).then((products) => products.map((product) => ({
     ...product,
