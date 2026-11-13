@@ -316,14 +316,14 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-9">
+    <main aria-busy={loading} className="min-h-screen bg-[var(--background)] px-4 py-6 sm:px-6 lg:px-9">
       <div className="mx-auto max-w-[1600px]">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.14em] text-[#d97706]">{translate(locale, "MATJAR · OPERATIONS CENTER", "متجر · مركز العمليات")}</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">{translate(locale, "Platform overview", "نظرة عامة على المنصة")}</h1>
           </div>
-          <p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{translate(locale, "Live data from PostgreSQL · transaction filters are applied consistently and currency totals are never combined", "بيانات مباشرة من PostgreSQL · تطبق عوامل تصفية المعاملات باتساق ولا يتم جمع إجماليات العملات المختلفة")}</p>
+          <div className="flex flex-wrap items-center gap-3"><p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{translate(locale, "Live data from PostgreSQL · transaction filters are applied consistently and currency totals are never combined", "بيانات مباشرة من PostgreSQL · تطبق عوامل تصفية المعاملات باتساق ولا يتم جمع إجماليات العملات المختلفة")}</p><button type="button" disabled={loading} onClick={() => void load(filters)} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] transition hover:border-[#FF8C1C] hover:text-[#C65D0A] disabled:opacity-50">{translate(locale, "Refresh", "تحديث")}</button></div>
         </div>
 
         <form onSubmit={submitFilters} className="mt-6 grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-6">
