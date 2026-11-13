@@ -166,10 +166,11 @@ export default function CommissionsPage() {
   const needsCategory = scope === "CATEGORY" || scope === "SELLER_CATEGORY";
 
   return (
-    <main className="mx-auto max-w-[1600px] px-5 py-8">
-      <header>
-        <p className="text-sm font-semibold text-[var(--color-lavender-700)]">{translate(locale, "Platform finance", "الشؤون المالية للمنصة")}</p>
-        <h1 className="mt-1 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Commissions", "العمولات")}</h1>
+    <main aria-busy={loading || Boolean(busy)} className="mx-auto max-w-[1600px] px-5 py-8">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div><p className="text-sm font-semibold text-[var(--color-lavender-700)]">{translate(locale, "Platform finance", "الشؤون المالية للمنصة")}</p>
+        <h1 className="mt-1 text-3xl font-semibold text-[var(--color-ink-950)]">{translate(locale, "Commissions", "العمولات")}</h1></div>
+        <button type="button" disabled={loading || Boolean(busy)} onClick={() => { setLoading(true); void load().catch((cause) => setError(cause instanceof Error ? cause.message : translate(locale, "Commission data is unavailable.", "بيانات العمولات غير متاحة."))).finally(() => setLoading(false)); }} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] transition hover:border-[#FF8C1C] hover:text-[#C65D0A] disabled:opacity-50">{translate(locale, "Refresh", "تحديث")}</button>
         <p className="mt-2 max-w-3xl text-sm text-[var(--muted)]">
           {translate(locale, "Rates apply to each item's merchandise amount after discounts, excluding shipping and tax. The rate and amount are recorded once when payment succeeds; later rule changes never recalculate past sales.", "تُطبّق المعدلات على قيمة بضائع كل منتج بعد الخصومات، باستثناء الشحن والضريبة. يُسجّل المعدل والمبلغ مرة واحدة عند نجاح الدفع؛ ولا تعيد التغييرات اللاحقة احتساب المبيعات السابقة.")}
         </p>
