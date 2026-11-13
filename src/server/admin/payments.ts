@@ -3,7 +3,7 @@ import "server-only";
 import { PaymentStatus, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { requirePermission } from "@/server/identity/permission-guard";
+import { requireAnyPermission } from "@/server/identity/permission-guard";
 
 const listSchema = z.object({
   q: z.string().trim().max(120).optional(),
@@ -15,7 +15,7 @@ const listSchema = z.object({
 
 export async function listAdminPayments(input: unknown, now = new Date()) {
   const filters = listSchema.parse(input);
-  await requirePermission({ permissionKey: "payments:read", now });
+  await requireAnyPermission([{ permissionKey: "payments:read", now }, { permissionKey: "payments:refund", now }], now);
   const q = filters.q || undefined;
   const where: Prisma.PaymentWhereInput = {
     ...(filters.provider ? { provider: filters.provider } : {}),
@@ -106,7 +106,7 @@ export async function listAdminPayments(input: unknown, now = new Date()) {
 
 export async function getAdminPayment(paymentId: string, now = new Date()) {
   const id = z.string().trim().min(1).max(128).parse(paymentId);
-  await requirePermission({ permissionKey: "payments:read", now });
+  await requireAnyPermission([{ permissionKey: "payments:read", now }, { permissionKey: "payments:refund", now }], now);
   const payment = await prisma.payment.findUnique({
     where: { id },
     select: {
