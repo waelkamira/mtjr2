@@ -21,6 +21,10 @@ async function signIn(page: import("@playwright/test").Page, token: string) {
 test.describe("public marketplace journeys", () => {
   test("products, search and category discovery render", async ({ page }) => {
     await page.goto("/products");
+    const marketsResponse = await page.request.get("/api/markets");
+    expect(marketsResponse.status()).toBe(200);
+    const markets = await marketsResponse.json() as { items: Array<{ code: string }> };
+    expect(markets.items.map((market) => market.code)).toEqual(["SY-SYR"]);
     await expect(page.getByRole("heading", { name: /Browse products|تصفّح المنتجات/i })).toBeVisible();
     await expect(page.locator("main h1").first()).toHaveCSS("user-select", "none");
     await expect(page.locator("header input").first()).toHaveCSS("user-select", "text");
@@ -619,7 +623,8 @@ test.describe("seller catalog authoring", () => {
     await page.getByLabel(/Category|الفئة/i).selectOption(phoneCategory!.id);
     await expect(page.getByRole("heading", { name: /Category-specific details|الخصائص الخاصة بالفئة/i })).toBeVisible();
     await expect(page.getByText(attributes.items[0].label, { exact: false }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Product location in Syria|موقع المنتج في سوريا/i })).toBeVisible();
+    const locationSection = page.locator("#product-location");
+    await expect(locationSection.getByRole("heading", { name: /Product location in Syria|موقع المنتج في سوريا/i })).toBeVisible();
     const map = page.getByRole("application", { name: /Product location map|خريطة تحديد موقع المنتج/i });
     await expect(map).toBeVisible();
     await expect(page.getByLabel(/Governorate|المحافظة/i)).toBeVisible();

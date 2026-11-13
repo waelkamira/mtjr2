@@ -290,24 +290,6 @@ async function upsertTranslation(model, where, create, update) {
 
 async function seedDemoCatalog() {
   const now = new Date();
-  const country = await prisma.country.upsert({
-    where: { iso2: "US" },
-    create: { iso2: "US", iso3: "USA", name: "United States", nativeName: "United States", isActive: true },
-    update: { isActive: true },
-  });
-  const currency = await prisma.currency.upsert({
-    where: { code: "USD" },
-    create: { code: "USD", name: "US Dollar", symbol: "$", minorUnit: 2, isActive: true },
-    update: { isActive: true, minorUnit: 2 },
-  });
-  const market = await prisma.market.upsert({
-    where: { code: "DEMO-US" },
-    create: { code: "DEMO-US", name: "Demo United States", countryId: country.id, defaultCurrencyCode: currency.code, status: "ACTIVE" },
-    update: { name: "Demo United States", countryId: country.id, defaultCurrencyCode: currency.code, status: "ACTIVE" },
-  });
-
-  // Syria is the platform's primary launch market; USD remains an enabled
-  // secondary currency for cross-border pricing and seller market selection.
   const syria = await prisma.country.upsert({
     where: { iso2: "SY" },
     create: { iso2: "SY", iso3: "SYR", name: "Syria", nativeName: "سوريا", phoneCallingCode: "+963", isActive: true },
@@ -323,23 +305,20 @@ async function seedDemoCatalog() {
     create: { code: "USD", name: "US Dollar", symbol: "$", minorUnit: 2, isActive: true },
     update: { name: "US Dollar", symbol: "$", minorUnit: 2, isActive: true },
   });
-  const syriaMarket = await prisma.market.upsert({
+  // Syria is the sole operational market. SYP is its default currency; USD
+  // remains an optional currency within the same market, not another market.
+  const market = await prisma.market.upsert({
     where: { code: "SY-SYR" },
     create: { code: "SY-SYR", name: "Syria", countryId: syria.id, defaultCurrencyCode: syrianPound.code, status: "ACTIVE" },
     update: { name: "Syria", countryId: syria.id, defaultCurrencyCode: syrianPound.code, status: "ACTIVE" },
   });
   for (const currencyRow of [syrianPound, usDollar]) {
     await prisma.marketCurrency.upsert({
-      where: { marketId_currencyCode: { marketId: syriaMarket.id, currencyCode: currencyRow.code } },
-      create: { marketId: syriaMarket.id, currencyCode: currencyRow.code, isEnabled: true },
+      where: { marketId_currencyCode: { marketId: market.id, currencyCode: currencyRow.code } },
+      create: { marketId: market.id, currencyCode: currencyRow.code, isEnabled: true },
       update: { isEnabled: true },
     });
   }
-  await prisma.marketCurrency.upsert({
-    where: { marketId_currencyCode: { marketId: market.id, currencyCode: currency.code } },
-    create: { marketId: market.id, currencyCode: currency.code, isEnabled: true },
-    update: { isEnabled: true },
-  });
 
   const stores = [];
   for (const definition of storeDefinitions) {
@@ -503,8 +482,8 @@ async function seedDemoCatalog() {
       });
       const amountMinor = BigInt(price) * 100n;
       await prisma.productPrice.upsert({
-        where: { variantId_marketId_currencyCode: { variantId: variant.id, marketId: market.id, currencyCode: currency.code } },
-        create: { variantId: variant.id, marketId: market.id, currencyCode: currency.code, amountMinor, compareAtMinor: amountMinor + amountMinor / 5n },
+        where: { variantId_marketId_currencyCode: { variantId: variant.id, marketId: market.id, currencyCode: market.defaultCurrencyCode } },
+        create: { variantId: variant.id, marketId: market.id, currencyCode: market.defaultCurrencyCode, amountMinor, compareAtMinor: amountMinor + amountMinor / 5n },
         update: { amountMinor, compareAtMinor: amountMinor + amountMinor / 5n },
       });
 

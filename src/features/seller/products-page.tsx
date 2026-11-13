@@ -89,7 +89,7 @@ export default function SellerProductsPage() {
   type ProductImageDraft = { id: string; file: File; url: string; provider: string; mimeType: string; storageKey?: string; deleteToken?: string; width?: number; height?: number; previewUrl: string; status: "uploading" | "ready" | "failed"; error?: string };
   const [uploadedImages, setUploadedImages] = useState<ProductImageDraft[]>([]);
   const uploadedImagesRef = useRef<ProductImageDraft[]>([]);
-  uploadedImagesRef.current = uploadedImages;
+  useEffect(() => { uploadedImagesRef.current = uploadedImages; }, [uploadedImages]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [imagePreview, setImagePreview] = useState<{ url: string; alt: string } | null>(null);
   const [marketPrices, setMarketPrices] = useState<Record<string, { currencyCode: string; amount: string; compareAt: string }>>({});
@@ -943,7 +943,7 @@ export default function SellerProductsPage() {
               </article>)}
               {!variantSkusValid && <p className="text-xs font-semibold text-amber-800">{translate(locale, "Every variant needs a unique SKU.", "يجب أن يكون لكل متغير رمز SKU فريد.")}</p>}
             </section>
-            <section id="product-location" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_24px_rgba(30,57,83,.045)] sm:p-6"><div className="mb-4"><h3 className="text-sm font-extrabold">{translate(locale, "Product location in Syria", "موقع المنتج في سوريا")}</h3><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Set the actual dispatch or product location to help buyers understand availability.", "حدد موقع المنتج أو نقطة التجهيز الفعلية لمساعدة المشترين على معرفة التوفر.")}</p></div><SyriaLocationPicker locale={locale} value={productLocation} onChange={setProductLocation} /></section>
+            <section id="product-location" className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_24px_rgba(30,57,83,.045)] sm:p-6"><div className="mb-4"><h3 className="text-sm font-extrabold">{translate(locale, "Dispatch location", "موقع التجهيز والشحن")}</h3><p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Set the actual dispatch or product location to help buyers understand availability.", "حدد موقع المنتج أو نقطة التجهيز الفعلية لمساعدة المشترين على معرفة التوفر.")}</p></div><SyriaLocationPicker locale={locale} value={productLocation} onChange={setProductLocation} /></section>
             {isRealEstate && <fieldset id="product-property" className="grid gap-3 rounded-2xl border border-[var(--border)] p-4">
               <legend className="px-1 text-sm font-semibold">{translate(locale, "Property details", "تفاصيل العقار")}</legend>
               <div className="grid gap-3 sm:grid-cols-2">

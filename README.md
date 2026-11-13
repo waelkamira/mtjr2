@@ -301,7 +301,7 @@ Implementation branch: `feat/customer-support-tickets` · [Draft PR #11](https:/
 
 Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR #11. This work is not visible on `main` until the stacked PR chain is reviewed and merged in order.
 
-- `prisma/seed.cjs` now supports an opt-in, repeatable demo marketplace fixture: Netherlands demo market (EUR), active demo seller/store, four illustrated categories, three brands, eight published products, product variants, EUR prices, product images, warehouse and on-hand stock.
+- `prisma/seed.cjs` supports an opt-in, repeatable demo marketplace fixture in the Syria launch market (SYP default; USD is an additional currency within the same market), with active demo sellers/stores, categories, brands, published products, variants, images, warehouses and stock.
 - Demo commerce data is seeded only when both `SEED_DEMO_CATALOG=true` and `ALLOW_DEMO_CATALOG_SEED=true` are supplied; it is explicitly blocked when `NODE_ENV=production`. The normal seed continues to create identity roles/permissions only.
 - On a disposable/local development database only, run in PowerShell:
   ```powershell
@@ -314,7 +314,7 @@ Implementation branch: `feat/storefront-demo-experience`, based on System 09 PR 
 - Storefront homepage now presents a visual category grid with imagery, featured-brand filters, visible sign-in/register, wishlist, order, cart, seller, messages and notification entry points. Existing product discovery search, market/category/brand filtering, sorting and pagination remain connected to the canonical APIs.
 - Product detail retains variant/market pricing, wishlist, store messaging and add-to-cart API actions.
 - No Prisma schema change was needed: all demo records use existing canonical models and constraints. No seed was run against any database during this implementation.
-- The demo market is a fixture to make the storefront demonstrable; it is **not** a launch-country decision or tax/legal configuration. Checkout tax and payment still require explicit market/provider policy.
+- The seeded demo catalog uses the Syria launch market; it is **not** a tax/legal or payment-provider configuration. Checkout tax and payment still require explicit market/provider policy.
 
 ## Storefront release follow-up
 
@@ -365,7 +365,7 @@ System 15 has an initial seller-side preparation slice on `feat/seller-order-pro
 
 ## Demo catalog database
 
-A guarded, repeatable demo catalog seed is available for isolated development databases. It creates 8 active storefront categories and 80 bilingual demo products (10 per category), with demo sellers/stores, USD market pricing, product images, variants, and initial stock. It does not create fabricated customer reviews or orders.
+A guarded, repeatable demo catalog seed is available for isolated development databases. It creates 8 active storefront categories and 80 bilingual demo products (10 per category), with demo sellers/stores, SYP pricing in the single Syria market, product images, variants, and initial stock. USD remains an additional currency within that same market. It does not create fabricated customer reviews or orders.
 
 Setup and safety requirements: [Demo catalog seed guide](docs/implementation/DEMO_CATALOG_SEED.md). Demo seeding requires `SEED_DEMO_CATALOG=true`, `ALLOW_DEMO_CATALOG_SEED=true`, and a separate `DEMO_DATABASE_URL` whose database name includes `demo`, `test`, `ci`, or `dev`; it is blocked in production. No Prisma schema change is needed. Exact-head General CI and disposable PostgreSQL migration/integration plus two consecutive seed runs passed before PR #27 was merged as `0ec09ed`.
 

@@ -51,6 +51,9 @@ async function main() {
   });
   if (!store?.markets.length) throw new Error("Demo seller store has no enabled market.");
   const market = store.markets[0].market;
+  if (store.markets.length !== 1 || market.code !== "SY-SYR") {
+    throw new Error("E2E seller store must be enabled for the Syria launch market only.");
+  }
 
   // Isolated balanced journal fixture for the platform-admin read-only ledger journey.
   const ledgerCash = await prisma.ledgerAccount.upsert({
