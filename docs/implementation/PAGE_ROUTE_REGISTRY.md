@@ -565,3 +565,12 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 | Admin dashboard commerce metrics | `/admin/dashboard` → `GET /api/admin/dashboard` → `getAdminDashboard` → PostgreSQL Order and Payment aggregates | Order metrics use selected date, country, currency, seller and store filters. Payment counts and amounts are associated with orders placed in that selected range (not payment-created timestamps). Currency amounts remain separated by currency. | UI now separates selected-period commerce activity from platform-wide entity totals and open moderation/support queues. New-user counts use the selected date range; active user/seller/store and catalog/review/return/support counts remain global snapshots. Source re-fetched after commit; no build, database or browser verification performed for this clarification. |
 
 **Implementation commits:** `4e13f3f1041d31f99b98e3b6614c84a59d4342cf`, `59db01f20d6587468d0b2191bb8c5cd80698fb`. These commits clarify dashboard presentation and filter semantics; they do not add accounting revenue, payout, refund, dispute or operational-health metrics.
+
+
+## 2026-11-13 — Admin navigation accessibility and route inventory follow-up
+
+- The collapsed desktop sidebar now exposes an explicit accessible name for each icon-only navigation link, and the collapse/expand control references the navigation landmark it controls.
+- The navigation landmark has a stable `admin-navigation-links` identifier for assistive-technology relationships.
+- Spot checks confirmed route entry files exist for dashboard, product management, brands, commissions, tax rates, coupons, search synonyms, store reviews, users, sellers, products, orders, payments, returns, refunds, support, advertising, question reports, review queue, logistics, financial policies and the super-admin control panel surfaces.
+- The registry still identifies the following administrative routes as not audited or missing implementation: market/currency administration, shipping/carrier configuration, role/permission management, standalone audit log, settings, feature flags, webhooks and integrations. These are intentionally not added as active sidebar links until their real page/API/service boundaries exist.
+- Source commit: `65e296e0ad3f573cf95a3f8879bad9619fa0f9b3`. Re-fetch inspection completed. No typecheck, build, browser, or accessibility automation was run for this small UI change.
