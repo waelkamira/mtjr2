@@ -336,6 +336,34 @@ export default function AdminDashboardPage() {
           <button type="submit" disabled={loading} className="rounded-lg bg-[#FF8C1C] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#F0780B] disabled:opacity-60 lg:col-start-6">{translate(locale, "Apply filters", "تطبيق عوامل التصفية")}</button>
         </form>
 
+        {dashboard && (
+          <section aria-label={translate(locale, "Priority actions", "الإجراءات ذات الأولوية")} className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-[var(--foreground)]">{translate(locale, "Priority actions", "الإجراءات ذات الأولوية")}</h2>
+                <p className="mt-1 text-xs text-[var(--muted)]">{translate(locale, "Open the operational queues that need attention first.", "انتقل مباشرة إلى قوائم العمل التي تحتاج إلى متابعة أولاً.")}</p>
+              </div>
+              <span className="text-xs text-[var(--muted)]">{translate(locale, "Live queue counts", "أعداد مباشرة من قوائم العمل")}</span>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                { href: "/admin/sellers", label: translate(locale, "Seller applications", "طلبات البائعين"), count: dashboard.metrics.pendingSellers, tone: "amber" },
+                { href: "/admin/products", label: translate(locale, "Product approvals", "اعتماد المنتجات"), count: dashboard.metrics.pendingProducts, tone: "orange" },
+                { href: "/admin/payments", label: translate(locale, "Failed payments", "المدفوعات الفاشلة"), count: dashboard.metrics.failedPayments, tone: "red" },
+                { href: "/admin/support", label: translate(locale, "Open support tickets", "تذاكر الدعم المفتوحة"), count: dashboard.metrics.openSupportTickets, tone: "blue" }
+              ].map((item) => (
+                <Link key={item.href} href={item.href} className="group flex min-h-[88px] items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 transition hover:-translate-y-0.5 hover:border-orange-200 hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF8C1C]">
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[var(--foreground)] group-hover:text-[#C65D0A]">{item.label}</span>
+                    <span className="mt-1 block text-[11px] text-[var(--muted)]">{translate(locale, "Review queue", "قائمة المراجعة")}</span>
+                  </span>
+                  <span className={`grid size-10 shrink-0 place-items-center rounded-xl text-sm font-bold tabular-nums ${item.count > 0 ? item.tone === "red" ? "bg-red-100 text-red-700" : item.tone === "amber" ? "bg-amber-100 text-amber-800" : item.tone === "orange" ? "bg-orange-100 text-orange-800" : "bg-sky-100 text-sky-800" : "bg-[var(--surface)] text-[var(--muted)]"}`}>{item.count}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
         {loading && !dashboard ? <div className="mt-6 h-48 animate-pulse rounded-2xl bg-[var(--surface-soft)]" /> : dashboard && <>
           <section aria-label="Marketplace metrics" className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
