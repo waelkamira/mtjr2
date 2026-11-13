@@ -350,7 +350,11 @@ export default function AdminDashboardPage() {
                 { href: "/admin/sellers", label: translate(locale, "Seller applications", "طلبات البائعين"), count: dashboard.metrics.pendingSellers, tone: "amber" },
                 { href: "/admin/products", label: translate(locale, "Product approvals", "اعتماد المنتجات"), count: dashboard.metrics.pendingProducts, tone: "orange" },
                 { href: "/admin/payments", label: translate(locale, "Failed payments", "المدفوعات الفاشلة"), count: dashboard.metrics.failedPayments, tone: "red" },
-                { href: "/admin/support", label: translate(locale, "Open support tickets", "تذاكر الدعم المفتوحة"), count: dashboard.metrics.openSupportTickets, tone: "blue" }
+                { href: "/admin/support", label: translate(locale, "Open support tickets", "تذاكر الدعم المفتوحة"), count: dashboard.metrics.openSupportTickets, tone: "blue" },
+                { href: "/admin/orders", label: translate(locale, "Orders awaiting payment", "طلبات بانتظار الدفع"), count: dashboard.metrics.pendingOrders, tone: "amber" },
+                { href: "/admin/returns", label: translate(locale, "Requested returns", "طلبات الإرجاع"), count: dashboard.metrics.requestedReturns, tone: "red" },
+                { href: "/admin/reviews", label: translate(locale, "Product reviews", "مراجعات المنتجات"), count: dashboard.metrics.pendingProductReviews, tone: "blue" },
+                { href: "/admin/store-reviews", label: translate(locale, "Store reviews", "مراجعات المتاجر"), count: dashboard.metrics.pendingStoreReviews, tone: "blue" }
               ].map((item) => (
                 <Link key={item.href} href={item.href} className="group flex min-h-[88px] items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 transition hover:-translate-y-0.5 hover:border-orange-200 hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF8C1C]">
                   <span className="min-w-0">
