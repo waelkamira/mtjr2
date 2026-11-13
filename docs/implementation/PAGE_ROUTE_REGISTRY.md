@@ -514,3 +514,10 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - Source commits: navigation `3651618d286e8e09395e388e8c2baf382b37d77f`; report feature `44eb0a362c7496ec067a1a119844e8343cc86c42` with lifecycle correction `176300f782ee709c25ab07d7441e43a6a9cc929c`; route `1e6aefd8f0b24646ad5c0892964d81cad91cd83b`.
 - Verification boundary: source files were re-fetched from `main` after writes. TypeScript, ESLint, tests, build, database and browser export checks have not been run in this session.
 - The dashboard Priority actions panel now covers eight existing work queues: seller applications, product approvals, failed payments, open support tickets, orders awaiting payment, requested returns, product reviews and store reviews. Counts reuse the existing dashboard API response; no additional query or schema was introduced. Source commit: `490382de035fa13046e2a62adb4ebcc2d857219a`.
+
+## 2026-11-13 — Posted ledger account totals
+
+- `GET /api/admin/finance/ledger?accountId=...` now includes account-wide aggregates from immutable `JournalLine` rows: total posted debit minor units, total posted credit minor units and total line count. Aggregates are calculated independently of the paginated activity list, so loading older pages does not change the totals.
+- `/admin/finance/ledger` displays those totals for the selected account, formatted with the account currency's stored `minorUnit` precision. The UI labels them as all-time posted debits/credits; it does not calculate or imply withdrawable balance, profit, recognized revenue, seller payable or settlement balance.
+- No schema/migration or posting behavior changed. Service commit `124c3a618bdf42c78eef0b071e0063a9ee9006dd`; UI commit `ef91ffd40eea57be9dba92c7cc5e86b2961a4179`.
+- Verification boundary: both source files were re-fetched from `main`; Prisma generation/typecheck, database aggregate execution, API tests, browser rendering and full build remain unverified.
