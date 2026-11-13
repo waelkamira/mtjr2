@@ -48,13 +48,18 @@ export default function AdminReviewsPage() {
     setReports(reportData.items || []);
     setAppeals(appealData.items || []);
   }, [locale]);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the queue state before the locale-scoped async reload
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError("");
-    void Promise.resolve().then(load).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Review queue unavailable.", "قائمة المراجعات غير متاحة.")); })
-      .finally(() => { if (active) setLoading(false); });
+    void Promise.resolve().then(() => {
+      if (!active) return;
+      setLoading(true);
+      setError("");
+      return load();
+    }).catch((cause) => {
+      if (active) queueMicrotask(() => {
+        if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Review queue unavailable.", "قائمة المراجعات غير متاحة."));
+      });
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [load, locale]);
   async function moderate(item: PendingReview, decision: "PUBLISH" | "REJECT") {

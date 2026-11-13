@@ -90,12 +90,9 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
   const { locale } = useLocale();
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpenForPath, setMobileOpenForPath] = useState<string | null>(null);
+  const mobileOpen = mobileOpenForPath === pathname;
   const isArabic = locale === "ar";
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -109,7 +106,7 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
   useEffect(() => {
     if (!mobileOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMobileOpen(false);
+      if (event.key === "Escape") setMobileOpenForPath(null);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -132,13 +129,13 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
     .filter((link) => pathname === link.href || pathname.startsWith(`${link.href}/`))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
-  const closeMobile = () => setMobileOpen(false);
+  const closeMobile = () => setMobileOpenForPath(null);
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setMobileOpen((value) => !value)}
+        onClick={() => setMobileOpenForPath(mobileOpen ? null : pathname)}
         className={`fixed bottom-4 z-50 grid size-12 place-items-center rounded-full bg-[#FF8C1C] text-white shadow-lg shadow-orange-900/20 transition hover:bg-[#F0780B] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 lg:hidden ${isArabic ? "left-4" : "right-4"}`}
         aria-label={translate(locale, "Toggle admin navigation", "فتح قائمة الإدارة")}
         aria-expanded={mobileOpen}

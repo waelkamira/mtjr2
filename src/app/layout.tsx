@@ -49,6 +49,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     if (isPlatformAdministrator) {
       const verifiedAt = session.stepUpVerifiedAt?.getTime();
       const expiresAt = session.stepUpExpiresAt?.getTime();
+      // eslint-disable-next-line react-hooks/purity -- step-up MFA must compare persisted session timestamps with the request-time server clock.
       const now = Date.now();
       showPlatformMfaGate = !(verifiedAt !== undefined && expiresAt !== undefined && verifiedAt <= now && now - verifiedAt <= 10 * 60 * 1000 && expiresAt > now && expiresAt <= verifiedAt + 10 * 60 * 1000);
     }

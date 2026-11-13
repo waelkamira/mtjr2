@@ -42,8 +42,10 @@ export default function AdminReviewPage() {
 
   useEffect(() => {
     let active = true;
-    void refresh().catch((cause: unknown) => {
-      if (active) setError(cause instanceof Error ? cause.message : t("Unable to load moderation queues.", "تعذر تحميل قوائم المراجعة."));
+    void Promise.resolve().then(refresh).catch((cause: unknown) => {
+      if (active) queueMicrotask(() => {
+        if (active) setError(cause instanceof Error ? cause.message : t("Unable to load moderation queues.", "تعذر تحميل قوائم المراجعة."));
+      });
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [refresh]);

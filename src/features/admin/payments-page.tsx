@@ -44,13 +44,14 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError("");
     const params = new URLSearchParams({ page: String(page), limit: "25" });
     if (query) params.set("q", query);
     if (provider) params.set("provider", provider);
     if (status) params.set("status", status);
     void Promise.resolve().then(async () => {
+      if (!active) return;
+      setLoading(true);
+      setError("");
       try {
         const response = await fetch(`/api/admin/payments?${params}`, { cache: "no-store" });
         const result = await response.json() as Result & { error?: string };

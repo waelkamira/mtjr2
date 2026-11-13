@@ -47,12 +47,13 @@ export default function AdminSellersPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError("");
     const params = new URLSearchParams({ page: String(page), limit: "25" });
     if (query.trim()) params.set("q", query.trim());
     if (status) params.set("status", status);
     void Promise.resolve().then(async () => {
+      if (!active) return;
+      setLoading(true);
+      setError("");
       try {
         const response = await fetch(`/api/admin/sellers?${params}`, { cache: "no-store" });
         const result = await response.json() as Result & { error?: string };

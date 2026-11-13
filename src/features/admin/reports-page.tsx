@@ -43,12 +43,10 @@ function downloadCsv(data: ReportData) {
   URL.revokeObjectURL(url);
 }
 
-export default function AdminReportsPage() {
+export default function AdminReportsPage({ initialFrom, initialTo }: { initialFrom: string; initialTo: string }) {
   const { locale } = useLocale();
-  const today = new Date().toISOString().slice(0, 10);
-  const monthAgo = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
-  const [from, setFrom] = useState(monthAgo);
-  const [to, setTo] = useState(today);
+  const [from, setFrom] = useState(initialFrom);
+  const [to, setTo] = useState(initialTo);
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,7 +67,7 @@ export default function AdminReportsPage() {
     }
   }, [locale]);
 
-  useEffect(() => { void load(monthAgo, today); }, [load, monthAgo, today]);
+  useEffect(() => { void Promise.resolve().then(() => load(from, to)); }, [load, from, to]);
 
   const cards = data ? [
     [translate(locale, "Total orders", "إجمالي الطلبات"), data.metrics.totalOrders],

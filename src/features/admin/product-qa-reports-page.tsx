@@ -27,8 +27,11 @@ export default function ProductQaReportsPage() {
   }, [locale]);
   useEffect(() => {
     let active = true;
-    void load().catch(cause => { if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Reports unavailable.", "البلاغات غير متاحة.")); })
-      .finally(() => { if (active) setLoading(false); });
+    void Promise.resolve().then(load).catch(cause => {
+      if (active) queueMicrotask(() => {
+        if (active) setError(cause instanceof Error ? cause.message : translate(locale, "Reports unavailable.", "البلاغات غير متاحة."));
+      });
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [load, locale]);
   async function moderate(id: string, decision: "REVIEW" | "DISMISS") {

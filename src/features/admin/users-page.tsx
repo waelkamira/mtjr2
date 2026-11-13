@@ -32,12 +32,13 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError("");
     const params = new URLSearchParams({ page: String(filters.page), limit: "25" });
     if (filters.q) params.set("q", filters.q);
     if (filters.status) params.set("status", filters.status);
     void Promise.resolve().then(async () => {
+      if (!active) return;
+      setLoading(true);
+      setError("");
       try {
         const response = await fetch(`/api/admin/users?${params}`, { cache: "no-store" });
         const result = await response.json() as Result & { error?: string };

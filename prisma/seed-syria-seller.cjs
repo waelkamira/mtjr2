@@ -2,6 +2,7 @@
 // Run with ALLOW_SYRIA_SELLER_SEED=true and a local DATABASE_URL.
 // This creates clearly marked demo orders; it never creates payment or ledger entries.
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- this file is a CommonJS Prisma seed entrypoint.
 const { prisma, demoCategories, demoSubcategories, demoBrands, upsertTranslation } = require("./seed.cjs");
 
 const SELLER_EMAIL = (process.env.SYRIA_SEED_SELLER_EMAIL || "ramondm4@gmail.com").trim().toLowerCase();

@@ -22,5 +22,9 @@ export default async function AdminReportsRoute() {
     if (error instanceof PermissionDeniedError) notFound();
     throw error;
   }
-  return <AdminReportsPage />;
+  // eslint-disable-next-line react-hooks/purity -- request-time report defaults must use the server clock, not a client render clock.
+  const requestTime = Date.now();
+  const initialTo = new Date(requestTime).toISOString().slice(0, 10);
+  const initialFrom = new Date(requestTime - 29 * 86400000).toISOString().slice(0, 10);
+  return <AdminReportsPage initialFrom={initialFrom} initialTo={initialTo} />;
 }
