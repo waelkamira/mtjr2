@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   reservationFindMany: vi.fn(),
   reservationCreate: vi.fn(),
   reservationUpdate: vi.fn(),
+  reservationUpdateMany: vi.fn(),
   inventoryUpdateMany: vi.fn(),
   executeRaw: vi.fn(),
   cartFindFirst: vi.fn(),
@@ -28,7 +29,7 @@ const tx = {
     findUniqueOrThrow: mocks.quoteFindUniqueOrThrow, update: mocks.quoteUpdate, updateMany: mocks.quoteUpdateMany
   },
   checkoutQuoteLine: { createMany: mocks.quoteLineCreateMany },
-  inventoryReservation: { findMany: mocks.reservationFindMany, create: mocks.reservationCreate, update: mocks.reservationUpdate },
+  inventoryReservation: { findMany: mocks.reservationFindMany, create: mocks.reservationCreate, update: mocks.reservationUpdate, updateMany: mocks.reservationUpdateMany },
   inventory: { updateMany: mocks.inventoryUpdateMany },
   coupon: { findUnique: mocks.couponFindUnique },
   couponRedemption: { count: mocks.couponRedemptionCount },
