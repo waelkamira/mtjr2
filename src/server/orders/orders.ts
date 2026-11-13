@@ -275,10 +275,13 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
         }
       });
       if (changed.count !== 1) throw new Error("Reserved inventory changed. The order was not placed; support reconciliation is required.");
-      await tx.inventoryReservation.update({
-        where: { id: reservation.id },
+      const consumed = await tx.inventoryReservation.updateMany({
+        where: { id: reservation.id, status: InventoryReservationStatus.ACTIVE, expiresAt: { gt: now } },
         data: { status: InventoryReservationStatus.CONSUMED, consumedAt: now }
       });
+      if (consumed.count !== 1) {
+        throw new Error("Inventory reservation expired or was released before order placement. Rebuild checkout.");
+      }
       await tx.inventoryMovement.create({
         data: {
           inventoryId: reservation.inventoryId, type: InventoryMovementType.SALE,
@@ -337,8 +340,16 @@ export async function placeOrderFromCheckoutQuote(guestToken: string, quoteId: s
       }
     }
 
-    await tx.checkoutQuote.update({ where: { id: quote.id }, data: { status: CheckoutQuoteStatus.CONVERTED } });
-    await tx.cart.update({ where: { id: quote.cartId }, data: { status: CartStatus.CHECKED_OUT } });
+    const converted = await tx.checkoutQuote.updateMany({
+      where: { id: quote.id, status: CheckoutQuoteStatus.ACTIVE, expiresAt: { gt: now } },
+      data: { status: CheckoutQuoteStatus.CONVERTED }
+    });
+    if (converted.count !== 1) throw new Error("Checkout quote expired or changed before order placement. Rebuild checkout.");
+    const checkedOut = await tx.cart.updateMany({
+      where: { id: quote.cartId, status: CartStatus.ACTIVE },
+      data: { status: CartStatus.CHECKED_OUT }
+    });
+    if (checkedOut.count !== 1) throw new Error("Cart is no longer active. Refresh checkout before placing the order.");
     await tx.auditLog.create({
       data: {
         actorType: "SYSTEM", action: "order.created", resource: "order", resourceId: order.id,
