@@ -261,7 +261,8 @@ function MetricCard({
 }
 
 
-export default function AdminDashboardPage({ permissions = [] }: { permissions?: string[] }) {\n  const routeHref = (href: string) => canOpenDashboardRoute(permissions, href) ? href : undefined;
+export default function AdminDashboardPage({ permissions = [] }: { permissions?: string[] }) {
+  const routeHref = (href: string) => canOpenDashboardRoute(permissions, href) ? href : undefined;
   const { locale } = useLocale();
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -544,5 +545,6 @@ function QueueLink({ locale, permissions, href, label, count }: { locale: "ar" |
     "Failed payments": "مدفوعات فاشلة",
     "Payments awaiting completion": "مدفوعات بانتظار الإكمال"
   };
-  if (!href || !canOpenDashboardRoute(permissions, href)) return null;\n  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 font-semibold">{count}</span></Link>;
+  if (!href || !canOpenDashboardRoute(permissions, href)) return null;
+  return <Link href={href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-[#D96500]"><span>{translate(locale, label, labels[label] || label)}</span><span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 font-semibold">{count}</span></Link>;
 }
