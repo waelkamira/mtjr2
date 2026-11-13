@@ -21,6 +21,25 @@ type AdminLink = {
   platformOnly?: boolean;
 };
 
+const linkPermissions: Record<string, string[]> = {
+  "/admin/dashboard": ["users:read", "users:manage", "store:read", "store:manage", "catalog:read", "catalog:manage", "orders:read", "orders:manage", "payments:read", "payments:refund", "support:read", "support:manage", "returns:manage", "reviews:manage", "ads:moderate", "platform:manage"],
+  "/admin/users": ["users:read", "users:manage"], "/admin/sellers": ["store:read", "store:manage"],
+  "/admin/products": ["catalog:manage"], "/admin/product-management": ["catalog:read", "catalog:manage"],
+  "/admin/categories": ["catalog:manage"], "/admin/brands": ["catalog:manage"],
+  "/admin/orders": ["orders:read", "orders:manage"], "/admin/payments": ["payments:read", "payments:refund"],
+  "/admin/logistics": ["orders:manage"], "/admin/returns": ["returns:manage"], "/admin/refunds": ["payments:refund"],
+  "/admin/commissions": ["payments:read"], "/admin/tax-rates": ["platform:manage"], "/admin/coupons": ["catalog:manage"],
+  "/admin/advertising": ["ads:moderate"], "/admin/search-synonyms": ["catalog:manage"],
+  "/admin/support": ["support:read", "support:manage"], "/admin/reviews": ["reviews:manage"],
+  "/admin/store-reviews": ["reviews:manage"], "/admin/questions": ["catalog:manage"],
+  "/admin/questions/reports": ["users:manage"], "/admin/review": ["reviews:manage"],
+  "/admin/payment-providers": ["platform:manage"], "/admin/seller-payout-methods": ["platform:manage"],
+  "/admin/financial-policies": ["platform:manage"], "/admin/finance/ledger": ["platform:manage"],
+  "/admin/reports": ["platform:manage"], "/admin/control-panel": ["platform:manage"],
+  "/admin/control-panel/access-catalog": ["platform:manage"], "/admin/control-panel/audit-log": ["platform:manage"],
+  "/admin/control-panel/privilege-requests": ["platform:manage"], "/admin/control-panel/ai-assistant": ["platform:manage"]
+};
+
 const groups: Array<{ label: string; ar: string; links: AdminLink[] }> = [
   {
     label: "Workspace", ar: "مساحة العمل", links: [
@@ -85,7 +104,7 @@ const groups: Array<{ label: string; ar: string; links: AdminLink[] }> = [
   }
 ];
 
-export default function AdminNavigation({ canManagePlatform = false }: { canManagePlatform?: boolean }) {
+export default function AdminNavigation({ canManagePlatform = false, permissions = [] }: { canManagePlatform?: boolean; permissions?: string[] }) {
   const pathname = usePathname();
   const { locale } = useLocale();
   const [query, setQuery] = useState("");
@@ -117,13 +136,14 @@ export default function AdminNavigation({ canManagePlatform = false }: { canMana
     return groups.map((group) => ({
       ...group,
       links: group.links.filter((link) =>
+        (linkPermissions[link.href] ?? []).some((permission) => permissions.includes(permission)) &&
         (!link.platformOnly || canManagePlatform) &&
         (!normalizedQuery || [link.label, link.ar, link.href].some((value) =>
           value.toLocaleLowerCase().includes(normalizedQuery)
         ))
       )
     })).filter((group) => group.links.length > 0);
-  }, [canManagePlatform, query]);
+  }, [canManagePlatform, permissions, query]);
 
   const activeHref = groups.flatMap((group) => group.links)
     .filter((link) => pathname === link.href || pathname.startsWith(`${link.href}/`))
