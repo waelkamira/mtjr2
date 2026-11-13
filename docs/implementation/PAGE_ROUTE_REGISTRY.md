@@ -503,3 +503,13 @@ PR #68 added an automated anonymous boundary sweep covering 165 route/method com
 - Source commit: `37a4d886bd41adbd4ff1d259f944f475c2a1aa57`.
 - Verification boundary: GitHub source update only. No local typecheck, lint, tests, production build, database run or browser visual/interaction check was performed in this session.
 - Next command-center gaps remain: validated financial KPIs backed by posted ledger entries, seller payable/settlement workflow, operational integration health, role-aware actionable alerts, and end-to-end verification of admin work queues.
+
+## 2026-11-13 — Restricted operational reports
+
+| Route | Guard | Data source | Status / boundary |
+|---|---|---|---|
+| `/admin/reports` | Server route requires platform management; login, MFA enrollment/verification and step-up redirects are preserved; unauthorized users receive not-found. | `src/features/admin/reports-page.tsx` → `GET /api/admin/dashboard` → `getAdminDashboard` → PostgreSQL Order, Payment, Seller, Product, ReturnRequest and SupportTicket aggregates. | Implemented in source / unverified. Date filtering uses the existing strict dashboard API (maximum 366 days). CSV export contains daily order counts, order status counts and currency-separated order/payment amount values in minor units; formula-like cells are escaped. This is operational reporting only, not recognized revenue, seller payable or refund/dispute reporting. No new Prisma model or migration. |
+
+- Added `/admin/reports` to the restricted platform-controls navigation; the item is visible only to users with `platform:manage` as exposed by the existing admin shell.
+- Source commits: navigation `3651618d286e8e09395e388e8c2baf382b37d77f`; report feature `44eb0a362c7496ec067a1a119844e8343cc86c42` with lifecycle correction `176300f782ee709c25ab07d7441e43a6a9cc929c`; route `1e6aefd8f0b24646ad5c0892964d81cad91cd83b`.
+- Verification boundary: source files were re-fetched from `main` after writes. TypeScript, ESLint, tests, build, database and browser export checks have not been run in this session.
