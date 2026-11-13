@@ -116,30 +116,36 @@ export async function archiveAdminProducts(input: unknown, now = new Date()) {
     if (!matches.length) return { archived: 0 };
 
     const ids = matches.map(({ id }) => id);
-    const result = await tx.product.updateMany({
-      where: { id: { in: ids }, status: { not: CatalogEntityStatus.ARCHIVED } },
-      data: { status: CatalogEntityStatus.ARCHIVED }
-    });
-    await tx.auditLog.createMany({
-      data: ids.map((productId) => ({
-        actorType: AuditActorType.USER,
-        actorId: actor.userId,
-        action: "catalog.product.archived",
-        resource: "product",
-        resourceId: productId,
-        scopeType: "PRODUCT",
-        scopeId: productId,
-        occurredAt: now,
-        metadata: {
-          reason: data.reason,
-          bulk: ids.length > 1,
-          scope: data.storeId ? { type: "STORE", id: data.storeId }
-            : data.ownerId ? { type: "SELLER_OWNER", id: data.ownerId }
-              : { type: "SELECTION", count: ids.length }
-        }
-      }))
-    });
-    return { archived: result.count };
+    const archivedIds: string[] = [];
+    for (const productId of ids) {
+      const changed = await tx.product.updateMany({
+        where: { id: productId, status: { not: CatalogEntityStatus.ARCHIVED } },
+        data: { status: CatalogEntityStatus.ARCHIVED }
+      });
+      if (changed.count === 1) archivedIds.push(productId);
+    }
+    if (archivedIds.length) {
+      await tx.auditLog.createMany({
+        data: archivedIds.map((productId) => ({
+          actorType: AuditActorType.USER,
+          actorId: actor.userId,
+          action: "catalog.product.archived",
+          resource: "product",
+          resourceId: productId,
+          scopeType: "PRODUCT",
+          scopeId: productId,
+          occurredAt: now,
+          metadata: {
+            reason: data.reason,
+            bulk: archivedIds.length > 1,
+            scope: data.storeId ? { type: "STORE", id: data.storeId }
+              : data.ownerId ? { type: "SELLER_OWNER", id: data.ownerId }
+                : { type: "SELECTION", count: archivedIds.length }
+          }
+        }))
+      });
+    }
+    return { archived: archivedIds.length };
   });
 }
 
