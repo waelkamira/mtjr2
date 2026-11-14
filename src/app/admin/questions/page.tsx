@@ -1,4 +1,4 @@
-import AdminProductQaPage from "@/features/admin/questions-page";
+import AdminProductQaPage from "@/features/admin/product-qa-page";
 import { notFound } from "next/navigation";
 import { requireCurrentSession } from "@/server/identity/current-session";
 import { userHasPermission } from "@/server/identity/permission-repository";

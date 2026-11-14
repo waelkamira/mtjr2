@@ -664,3 +664,10 @@ The following route and UI permission corrections are now present on `main`. The
 - No local TypeScript/build result or browser session with read-only versus manage-role accounts has been run in this pass.
 - Remaining admin pages and every individual action still need an end-to-end role matrix review; a route gate is not a substitute for service-level authorization.
 - The existing Syria-only tax-rate UI is preserved; this audit did not reintroduce a market selector or change market scope.
+
+
+## 2026-11-14 — Admin product Q&A route import correction
+
+- `/admin/questions` remains guarded by the server-derived `users:manage` permission.
+- The route now imports `@/features/admin/product-qa-page`, matching the existing `src/features/admin/product-qa-page.tsx` default export. The previous `@/features/admin/questions-page` target did not exist and caused TypeScript TS2307 plus a Next.js production-build failure.
+- The permission check and API/service boundary were not changed. Exact-head typecheck, production build and Browser E2E must pass on the repair commit before this route correction is considered fully verified.
