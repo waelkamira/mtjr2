@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requirePermission: vi.fn(),
+  requireAnyPermission: vi.fn(),
   paymentCount: vi.fn(),
   paymentFindMany: vi.fn(),
   paymentGroupBy: vi.fn(),
@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/identity/permission-guard", () => ({
-  requirePermission: mocks.requirePermission
+  requireAnyPermission: mocks.requireAnyPermission
 }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -30,7 +30,7 @@ import { getAdminPayment, listAdminPayments } from "@/server/admin/payments";
 describe("admin payment operations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requirePermission.mockResolvedValue({ userId: "admin-1" });
+    mocks.requireAnyPermission.mockResolvedValue({ userId: "admin-1" });
     mocks.paymentCount.mockResolvedValue(1);
     mocks.paymentFindMany.mockResolvedValue([{
       id: "payment-1", orderId: "order-1", provider: "test", status: "FAILED",
@@ -49,7 +49,10 @@ describe("admin payment operations", () => {
       q: "MTJ-1", provider: "test", status: "FAILED", page: "2", limit: "10"
     });
 
-    expect(mocks.requirePermission).toHaveBeenCalledWith({ permissionKey: "payments:read", now: expect.any(Date) });
+    expect(mocks.requireAnyPermission).toHaveBeenCalledWith(expect.arrayContaining([
+      { permissionKey: "payments:read", now: expect.any(Date) },
+      { permissionKey: "payments:refund", now: expect.any(Date) }
+    ]), expect.any(Date));
     expect(mocks.paymentFindMany).toHaveBeenCalledWith(expect.objectContaining({
       skip: 10,
       take: 10,
@@ -91,7 +94,7 @@ describe("admin payment operations", () => {
   });
 
   it("does not read payment data when permission is denied", async () => {
-    mocks.requirePermission.mockRejectedValue(new Error("Permission denied."));
+    mocks.requireAnyPermission.mockRejectedValue(new Error("Permission denied."));
 
     await expect(listAdminPayments({})).rejects.toThrow("Permission denied.");
     expect(mocks.paymentCount).not.toHaveBeenCalled();
