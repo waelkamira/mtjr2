@@ -4999,3 +4999,16 @@ The platform account policy is now explicit: email verification is not required 
 - All three failures had the same test-harness cause: `src/server/admin/payments.ts` now correctly calls `requireAnyPermission` so operators with either `payments:read` or `payments:refund` can inspect payment records, while the test's module mock still exposed only `requirePermission`. This was a stale mock, not a production authorization failure.
 - Updated the mock to provide `requireAnyPermission`, changed the denial test to reject that function, and asserted that the service supplies both accepted permission alternatives. No production permission logic was changed.
 - Exact-head re-run is required before marking the test suite green. Browser E2E for the prior repair commit had built and started the app successfully; Playwright was still running when this entry was prepared.
+
+
+## 2026-11-14 — Exact-main verification completed after seller-Q&A route and payment-test repairs
+
+- Verified code/test head: `4d09c19230ac17d8a47e108a0a953cc7c34744a2` on `main`.
+- The admin Q&A route import now resolves to the existing `src/features/admin/product-qa-page.tsx`; its server-side `users:manage` guard is unchanged.
+- The payment service intentionally accepts either `payments:read` or `payments:refund` for payment inspection. Updated `tests/admin/payments.test.ts` to mock `requireAnyPermission` and assert both alternatives. The prior 3 test failures were caused by the stale mock, not by the permission service.
+- Exact-head CI [43581882204](https://github.com/waelkamira/mtjr2/actions/runs/43581882204) **PASS**: Prisma validate, 87 committed migrations deployed to disposable PostgreSQL, Prisma generate, TypeScript, ESLint, **120 Vitest files / 645 tests passed**, and production build with **180 static pages**. ESLint reported **0 errors / 66 warnings**; warnings were not suppressed.
+- Exact-head Browser E2E [43581882149](https://github.com/waelkamira/mtjr2/actions/runs/43581882149) **PASS (14/14)**. The run built and started the production app before Playwright. It includes seller product draft creation/editing, Syrian administrative location selection, and the Leaflet map journey. The map test verifies zoom levels **7 / 10 / 12 / 15**, mouse-wheel zoom increase, and zoom **16** after neighbourhood-field blur. It also verifies the seller residence address composition.
+- Exact-head Platform PostgreSQL Integration [43581882175](https://github.com/waelkamira/mtjr2/actions/runs/43581882175) **PASS** (4 test files); committed migrations, baseline role seeding, integration suite and repeatable demo seed all completed.
+- Exact-head CodeQL [43581882182](https://github.com/waelkamira/mtjr2/actions/runs/43581882182) **PASS**.
+- Vercel production deployment `dpl_89HFYSzMuztkpCc9ryz5ccQMP3uK` reached **READY** for this exact SHA; GitHub Vercel status is `success`. Production aliases include `mtjr2.vercel.app`. No rate limit, production-setting or secret change occurred in this run.
+- Local execution boundary: the automation container had no outbound GitHub network and no repository checkout, so no local npm command was run. The above results are from the exact-head GitHub Actions jobs and Vercel deployment, not a claimed local test.
