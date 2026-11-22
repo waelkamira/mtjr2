@@ -501,6 +501,7 @@ test.describe("seller catalog authoring", () => {
     const catalog = await catalogResponse.json() as { items: Array<{
       id: string; name: string; status: string; district: string | null;
       media: Array<{ url: string; storageKey: string; isPrimary: boolean; sortOrder: number }>;
+      variants: Array<{ id: string; sku: string; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } }> }>;
     }> };
     const created = catalog.items.find((item) => item.name === productName);
     expect(created).toBeTruthy();
@@ -508,6 +509,10 @@ test.describe("seller catalog authoring", () => {
     expect(created!.district).toBe(selectedDraftDistrict.nameAr ?? selectedDraftDistrict.nameEn);
     expect(created!.media).toHaveLength(1);
     expect(created!.media[0]).toMatchObject({ storageKey: "imgur:e2e-product-image-1", isPrimary: true });
+    expect(created!.variants).toHaveLength(1);
+    expect(created!.variants[0].prices).toHaveLength(1);
+    const createdPrice = created!.variants[0].prices[0];
+    expect(createdPrice.amountMinor).toBe((BigInt("1299") * 10n ** BigInt(createdPrice.currency.minorUnit)).toString());
 
     const productCard = page.locator("article").filter({ hasText: productName }).first();
     await productCard.getByRole("button", { name: /Edit draft|تعديل المسودة/i }).click();
@@ -515,6 +520,10 @@ test.describe("seller catalog authoring", () => {
     await expect(editForm).toBeVisible();
     await editForm.locator("input").nth(0).fill(updatedName);
     await editForm.locator("input").nth(1).fill(`e2e-seller-draft-updated-${stamp}`);
+    const editSellingPrice = editForm.getByLabel(/Selling price|سعر البيع/i);
+    await expect(editSellingPrice).toHaveCount(1);
+    await expect(editSellingPrice).toHaveValue("1299");
+    await editSellingPrice.fill("1399");
 
     // Replace the original image, add a second image, then remove it again.
     // The saved gallery must retain one valid cover image and unlink the old asset.
@@ -540,6 +549,7 @@ test.describe("seller catalog authoring", () => {
     const updatedCatalog = await updatedCatalogResponse.json() as { items: Array<{
       id: string; name: string; status: string;
       media: Array<{ url: string; storageKey: string; isPrimary: boolean; sortOrder: number }>;
+      variants: Array<{ id: string; sku: string; prices: Array<{ marketId: string; currencyCode: string; amountMinor: string; compareAtMinor: string | null; currency: { minorUnit: number } }> }>;
     }> };
     const updatedProduct = updatedCatalog.items.find((item) => item.id === created!.id);
     expect(updatedProduct).toMatchObject({ name: updatedName, status: "DRAFT" });
@@ -547,6 +557,12 @@ test.describe("seller catalog authoring", () => {
     expect(updatedProduct!.media[0].storageKey).toBe("imgur:e2e-product-image-2");
     expect(updatedProduct!.media[0].url).toContain("ixid=e2e-2");
     expect(updatedProduct!.media[0].isPrimary).toBe(true);
+    expect(updatedProduct!.variants).toHaveLength(1);
+    const updatedPrice = updatedProduct!.variants[0].prices.find((price) => price.marketId === createdPrice.marketId);
+    expect(updatedPrice).toBeTruthy();
+    expect(updatedPrice!.currencyCode).toBe(createdPrice.currencyCode);
+    expect(updatedPrice!.amountMinor).toBe((BigInt("1399") * 10n ** BigInt(updatedPrice!.currency.minorUnit)).toString());
+    expect(updatedPrice!.compareAtMinor).toBeNull();
 
     // Moderation and publication are separate, role-gated transitions:
     // an admin approves the edited draft, then its owning seller publishes it.
