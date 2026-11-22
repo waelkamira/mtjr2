@@ -27,6 +27,8 @@ const mocks = vi.hoisted(() => ({
   productMediaFindMany: vi.fn(),
   productMediaDeleteMany: vi.fn(),
   productMediaCreateMany: vi.fn(),
+  productPriceDeleteMany: vi.fn(),
+  productPriceUpsert: vi.fn(),
   deleteProductImage: vi.fn(),
   auditCreate: vi.fn(),
   transaction: vi.fn()
@@ -84,6 +86,7 @@ describe("product lifecycle", () => {
       productTranslation: { upsert: mocks.productTranslationUpsert },
       productPropertyDetails: { upsert: mocks.productPropertyDetailsUpsert, deleteMany: mocks.productPropertyDetailsDeleteMany },
       productMedia: { findMany: mocks.productMediaFindMany, deleteMany: mocks.productMediaDeleteMany, createMany: mocks.productMediaCreateMany },
+      productPrice: { deleteMany: mocks.productPriceDeleteMany, upsert: mocks.productPriceUpsert },
       product: {
         create: mocks.productCreate,
         findUnique: mocks.productFindUniqueTx,
@@ -485,6 +488,32 @@ describe("product lifecycle", () => {
     expect(mocks.userHasScopedPermission).toHaveBeenCalledWith("seller-1", expect.objectContaining({
       permissionKey: "catalog:manage", scope: { type: "STORE", id: "store-1" }
     }));
+  });
+
+  it("updates active SKU prices transactionally in minor units", async () => {
+    mocks.productFindUniqueTx.mockResolvedValue({
+      id: "product-1", storeId: "store-1", status: "DRAFT",
+      variants: [{ id: "variant-1" }],
+      store: { status: "ACTIVE", seller: { status: "ACTIVE", ownerId: "seller-1" }, markets: [{ marketId: "market-1" }] }
+    });
+
+    const result = await updateDraftProduct("product-1", {
+      variants: [{
+        id: "variant-1",
+        prices: [{ marketId: "market-1", currencyCode: "EUR", amountMinor: "3500", compareAtMinor: "4200" }]
+      }]
+    });
+
+    expect(result).toMatchObject({ productId: "product-1", approvalStatus: "PENDING" });
+    expect(mocks.productPriceDeleteMany).toHaveBeenCalledWith({
+      where: { variantId: "variant-1", marketId: "market-1", currencyCode: { not: "EUR" } }
+    });
+    expect(mocks.productPriceUpsert).toHaveBeenCalledWith({
+      where: { variantId_marketId_currencyCode: { variantId: "variant-1", marketId: "market-1", currencyCode: "EUR" } },
+      create: { variantId: "variant-1", marketId: "market-1", currencyCode: "EUR", amountMinor: BigInt("3500"), compareAtMinor: BigInt("4200") },
+      update: { amountMinor: BigInt("3500"), compareAtMinor: BigInt("4200") }
+    });
+    expect(mocks.auditCreate).toHaveBeenCalledOnce();
   });
 
   it("updates draft metadata and resets review status for a fresh review", async () => {
