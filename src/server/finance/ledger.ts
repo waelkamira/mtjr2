@@ -28,7 +28,7 @@ type JournalInput = z.input<typeof journalSchema>;
 
 function canonicalLines(lines: Array<{ accountId: string; debitMinor: bigint; creditMinor: bigint; memo: string | null }>) {
   return [...lines]
-    .sort((a, b) => a.accountId.localeCompare(b.accountId) || a.debitMinor.toString().localeCompare(b.debitMinor.toString()) || a.creditMinor.toString().localeCompare(b.creditMinor.toString()))
+    .sort((a, b) => a.accountId.localeCompare(b.accountId) || a.debitMinor.toString().localeCompare(b.debitMinor.toString()) || a.creditMinor.toString().localeCompare(b.creditMinor.toString()) || (a.memo ?? "").localeCompare(b.memo ?? ""))
     .map((line) => [line.accountId, line.debitMinor.toString(), line.creditMinor.toString(), line.memo ?? ""]);
 }
 

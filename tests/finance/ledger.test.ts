@@ -100,6 +100,35 @@ describe("double-entry journal posting", () => {
     expect(mocks.accountFindMany).not.toHaveBeenCalled();
   });
 
+  it("treats reordered duplicate-account lines with distinct memos as the same idempotent payload", async () => {
+    const input = {
+      ...baseInput,
+      idempotencyKey: "payment-capture:payment-duplicate-lines",
+      lines: [
+        { accountId: "cash-eur", debitMinor: "5000", memo: "First allocation" },
+        { accountId: "cash-eur", debitMinor: "7500", memo: "Second allocation" },
+        { accountId: "sales-eur", creditMinor: "12500", memo: "Gross sales" }
+      ]
+    };
+    const original = existingEntry({
+      id: "journal-duplicate-lines",
+      lines: [
+        { accountId: "cash-eur", debitMinor: 5000n, creditMinor: 0n, memo: "First allocation" },
+        { accountId: "cash-eur", debitMinor: 7500n, creditMinor: 0n, memo: "Second allocation" },
+        { accountId: "sales-eur", debitMinor: 0n, creditMinor: 12500n, memo: "Gross sales" }
+      ]
+    });
+    mocks.journalFindUnique.mockResolvedValue(original);
+
+    const result = await postJournalEntry({
+      ...input,
+      lines: [...input.lines].reverse()
+    });
+
+    expect(result).toMatchObject({ id: "journal-duplicate-lines", alreadyPosted: true });
+    expect(mocks.journalCreate).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["description", { description: "Different description" }],
     ["occurredAt", { occurredAt: new Date("2026-11-12T10:00:01.000Z") }],
