@@ -522,7 +522,7 @@ test.describe("seller catalog authoring", () => {
     await editForm.locator("input").nth(1).fill(`e2e-seller-draft-updated-${stamp}`);
     const editSellingPrice = editForm.getByLabel(/Selling price|سعر البيع/i);
     await expect(editSellingPrice).toHaveCount(1);
-    await expect(editSellingPrice).toHaveValue("1299");
+    await expect(editSellingPrice).toHaveValue("1299.00");
     await editSellingPrice.fill("1399");
 
     // Replace the original image, add a second image, then remove it again.
