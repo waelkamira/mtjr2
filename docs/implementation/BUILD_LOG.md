@@ -5047,3 +5047,12 @@ The platform account policy is now explicit: email verification is not required 
 - Local execution was blocked: attempts to create a Vercel sandbox returned HTTP 400 `bad_request`. This is an execution-environment/API limitation, not an application failure. No local npm/Vitest/Playwright command was run.
 - Vercel deployment [dpl_Fgr6XEoComAhP3Wyap1qCSLCEq8F](https://vercel.com/waelkamiras-projects/mtjr2/Fgr6XEoComAhP3Wyap1qCSLCEq8F) for `b82649e` is **READY**. Deployment [dpl_HaEdcRNjqkNSLFhp5oTAJQDVLR6g](https://vercel.com/waelkamiras-projects/mtjr2/HaEdcRNjqkNSLFhp5oTAJQDVLR6g) for `284859e` is **BUILDING**; no provider rate-limit failure has been observed.
 - Prior completed verification on `194cc08` remains 645/645 unit tests and 14/14 E2E, but those results predate the new price-edit tests and do not verify them.
+
+
+## 2026-11-23 — Seller SKU price-restoration E2E assertion corrected
+
+- Exact-head Browser E2E run [45010140709](https://github.com/waelkamira/mtjr2/actions/runs/45010140709) on `6e5e9cb` finished with **13 passed / 1 failed**. The failed seller product test was an assertion-format mismatch only: edit mode correctly displayed `1299.00`, while the test expected `1299`. The Leaflet geography test (test 13) and the other 13 tests passed. No application defect was observed in the log.
+- Corrected the test assertion in `tests/e2e/marketplace.spec.ts` to expect the formatted value `1299.00`, committed directly to `main` as [e86d1d6](https://github.com/waelkamira/mtjr2/commit/e86d1d62727055faaf5ae4c52e0141357dace53c). This is a test-only change; product code, schema, migrations, secrets and production settings were untouched.
+- CI [45154521297](https://github.com/waelkamira/mtjr2/actions/runs/45154521297), Browser E2E [45154521173](https://github.com/waelkamira/mtjr2/actions/runs/45154521173), and CodeQL [45154521179](https://github.com/waelkamira/mtjr2/actions/runs/45154521179) were still running at the time of this entry (npm install in CI and Browser E2E; CodeQL analysis). Their final results are **not yet verified**.
+- Vercel deployment [dpl_EXjPRQDRcedwVVtusEDQ6SNytRhj](https://vercel.com/waelkamiras-projects/mtjr2/EXjPRQDRcedwVVtusEDQ6SNytRhj) for `e86d1d6` is **READY**. The local container cannot clone/fetch GitHub because DNS resolution for `github.com` fails; local test execution was not performed.
+- The failure is classified as a **test assertion mismatch**, not an application failure or Vercel build/provider error. The price round-trip E2E is pending rerun verification.
