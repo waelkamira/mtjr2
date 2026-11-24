@@ -671,3 +671,10 @@ The following route and UI permission corrections are now present on `main`. The
 - `/admin/questions` remains guarded by the server-derived `users:manage` permission.
 - The route now imports `@/features/admin/product-qa-page`, matching the existing `src/features/admin/product-qa-page.tsx` default export. The previous `@/features/admin/questions-page` target did not exist and caused TypeScript TS2307 plus a Next.js production-build failure.
 - The permission check and API/service boundary were not changed. Exact-head typecheck, production build and Browser E2E must pass on the repair commit before this route correction is considered fully verified.
+
+
+## 2026-11-24 — Seller product edit-price E2E verified
+
+- Seller product create/edit browser journey, including price restoration (`1299.00`), changing to `1399`, persistence/API verification, and clearing compare-at price, is verified by the completed Browser E2E run [45154521173](https://github.com/waelkamira/mtjr2/actions/runs/45154521173) on `e86d1d6`.
+- The existing Leaflet geography/zoom-wheel test also completed in the successful E2E job. Coverage still follows the Damascus path rather than independently exercising all 14 governorates.
+- The three commits after `e86d1d6` through current head `af5d129` are documentation-only, so the verified code/test tree is unchanged. The 24-Nov CI quality job reports 646 passing tests and successful production build.
