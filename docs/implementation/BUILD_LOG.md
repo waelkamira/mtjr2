@@ -5073,3 +5073,9 @@ The platform account policy is now explicit: email verification is not required 
 - Compared `e86d1d6` to the current head `af5d129`: the three intervening commits change only `BUILD_LOG.md` and `PAGE_ROUTE_REGISTRY.md`; no application/test/schema code changed after the verified CI/E2E commit. The current main head Vercel check is `success` and production deployment is `READY`.
 - Vercel error aggregation reports the `/api/markets` Prisma initialization cluster (8 aggregated occurrences, 2 users, last seen 2026-11-23 10:19:52 UTC) with `localhost:5432` unreachable. A separate runtime-log query for the most recent 30 minutes on 2026-11-24 returned no errors; 24-hour raw-log query is unavailable on the Hobby retention window. This remains an external/database configuration issue to investigate without exposing or changing secrets.
 - No local npm/Vitest/Playwright run was performed because local GitHub DNS access remains unavailable. No application code, tests, schema, migrations, secrets, or production settings were changed in this verification pass.
+
+
+### Follow-up on 2026-11-24 verification status
+
+- The requested CodeQL rerun [45154521179](https://github.com/waelkamira/mtjr2/actions/runs/45154521179) did **not** complete analysis: the job was cancelled during Initialize CodeQL and the analysis step was skipped. No CodeQL success is claimed for this verification.
+- The Vercel production deployment created for current documentation head [1cc8972](https://github.com/waelkamira/mtjr2/commit/1cc8972b2d604c0c69f81149a2769602ccd5f182) remained queued at the last check; build events had not yet appeared. This is a provider queue state, not a demonstrated build failure or rate-limit error.
